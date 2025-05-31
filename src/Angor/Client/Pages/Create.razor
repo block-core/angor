@@ -91,7 +91,7 @@
 </div>
 
 <div class="card card-body mt-4 slide-in">
-  
+
     @if (activeTab == 1)
     {
         <div class="animate-fade-in">
@@ -269,13 +269,13 @@
                             <label for="endDate" class="form-label mb-0 fw-semibold">End Date</label>
                         </div>
                         <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period ends (must be before first stage date).</p>
-                            <div class="input-group">
-                                 <InputDate id="endDate" @bind-Value="project.ProjectInfo.EndDate" class="form-control" placeholder="Select end date" title="Investment end date" disabled="@nostrApplicationSpecificDataCreated" @onchange="ValidateEndDate" />
-                                <button  type="button" class="btn btn-border-success" onclick="document.querySelector('input[type=date]:not(:disabled)').showPicker()">
-                                    <Icon IconName="calendar" Height="16" Width="16" />
-                                </button>
- 
-                            </div>
+                        <div class="input-group">
+                            <InputDate id="endDate" @bind-Value="project.ProjectInfo.EndDate" class="form-control" placeholder="Select end date" title="Investment end date" disabled="@nostrApplicationSpecificDataCreated" @onchange="ValidateEndDate" />
+                            <button type="button" class="btn btn-border-success" onclick="document.querySelector('input[type=date]:not(:disabled)').showPicker()">
+                                <Icon IconName="calendar" Height="16" Width="16" />
+                            </button>
+
+                        </div>
                         @if (endDateError)
                         {
                             <div class="text-danger mt-1">End date must be before the first stage date</div>
@@ -368,7 +368,7 @@
                     {
                         var stageIndex = project.ProjectInfo.Stages.IndexOf(stage);
                         var dateInputId = $"stageDate_{stageIndex}";
-                        
+
                         <div class="mb-3">
                             <label class="form-label">The amount in % to allocate for stage @(stageIndex + 1)</label>
                             <div class="input-group">
@@ -563,7 +563,8 @@
 
                                     <button class="btn btn-lg btn-border-success w-100 d-flex align-items-center justify-content-center"
                                             @onclick="ConfirmFinalizeNostrProfileCreation"
-                                            disabled="@nostrMetadataCreated">
+                                            disabled="@(nostrMetadataCreated || isAutoDeploying)">
+
                                         @if (createProfileSpinner)
                                         {
                                             <span class="spinner-border spinner-border-sm me-2"></span>
@@ -601,7 +602,8 @@
 
                                     <button class="btn btn-lg btn-border-success w-100 d-flex align-items-center justify-content-center"
                                             @onclick="ConfirmFinalizeProjectInfoCreation"
-                                            disabled="@(!nostrMetadataCreated || nostrApplicationSpecificDataCreated)">
+                                            disabled="@(!nostrMetadataCreated || nostrApplicationSpecificDataCreated || isAutoDeploying)">
+
                                         @if (createApplicationDataSpinner)
                                         {
                                             <span class="spinner-border spinner-border-sm me-2"></span>
@@ -646,7 +648,8 @@
 
                                     <button class="btn btn-lg btn-border-success w-100 d-flex align-items-center justify-content-center"
                                             @onclick="CreatProjectTransactionAnCheckPassword"
-                                            disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated)">
+                                            disabled="@(creatProjectSpinner || !nostrApplicationSpecificDataCreated || !nostrMetadataCreated || isAutoDeploying)">
+
                                         @if (creatProjectSpinner)
                                         {
                                             <span class="spinner-border spinner-border-sm me-2"></span>
@@ -668,7 +671,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     @if (currentStep > 1)
                     {
-                        <button class="btn btn-border-warning d-flex align-items-center" @onclick="() => currentStep--">
+                        <button class="btn btn-border-warning d-flex align-items-center" @onclick="() => currentStep--" disabled="@isAutoDeploying">
                             <Icon IconName="arrow-left" Width="18" Height="18" Class="me-2" />
                             Previous
                         </button>
@@ -678,444 +681,461 @@
                         <div></div> <!-- Spacer -->
                     }
 
-                    @if (currentStep < 3 && CanProceedToNextStep())
-                    {
-                        <button class="btn btn-border-success d-flex align-items-center" @onclick="() => currentStep++">
-                            Continue
-                            <Icon IconName="arrow-right" Width="18" Height="18" Class="ms-2" />
-                        </button>
-                    }
-                    else
-                    {
-                        <div></div> <!-- Spacer -->
-                    }
-                </div>
-            </div>
-
-
-        </div>
-
-        <div class="info-card mt-4">
-            <div class="d-flex justify-content-between">
-                <button class="btn btn-border-warning d-flex align-items-center" @onclick="() => SetActiveTab(2)">
-                    <Icon IconName="arrow-left" Width="18" Height="18" Class="me-2" />
-                    Previous
-                </button>
-            </div>
-        </div>
-    }
-
-    @if (showCreateModal)
-    {
-        <div class="modal-wrapper">
-            <div class="modal fade show d-block" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content modern-modal">
-                        <div class="modal-header border-0 pb-0">
-                            <div class="d-flex align-items-center">
-                                <Icon IconName="check-circle" Height="32" Width="32" class="me-2" />
-                                <h5 class="modal-title">Confirmation</h5>
-                            </div>
-                            <button class="btn-close-custom" @onclick="() => showCreateModal = false">
-                                <Icon IconName="close-circle" Height="24" Width="24" />
-                            </button>
-                        </div>
-
-                        <div class="modal-body modal-body-scroll py-4">
-
-                            <div class="row g-4 mb-4">
-                                <div class="col-md-12">
-                                    <div class="info-card h-100">
-                                        <div class="info-label">Project Identifier</div>
-                                        <div class="info-value">@project.ProjectInfo.ProjectIdentifier</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-12">
-                                    <div class="info-card h-100">
-                                        <div class="info-label">Founder Key</div>
-                                        <div class="info-value">@project.ProjectInfo.FounderKey</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="info-card h-100">
-                                        <div class="info-label">Target Amount</div>
-                                        <div class="info-value text-success">@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="info-card h-100">
-                                        <div class="info-label">Start Date</div>
-                                        <div class="info-value">@project.ProjectInfo.StartDate) (in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days)</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="info-card h-100">
-                                        <div class="info-label">Expiry Date</div>
-                                        <div class="info-value text-warning">@project.ProjectInfo.ExpiryDate) (in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days)</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="info-card h-100">
-                                        <div class="info-label">Penalty Days</div>
-                                        <div class="info-value text-danger">@project.ProjectInfo.PenaltyDays days</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="info-card h-100">
-                                        <div class="info-label">Miner Fee</div>
-                                        <div class="info-value text-warning">@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="info-card h-100">
-                                        <div class="info-label">Angor Fee</div>
-                                        <div class="info-value text-success">@signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <FeeSelector SendFee="@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
-                                         CoinTicker="@network.CoinTicker"
-                                         FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
-                                         FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
-                                         FeePosition="@feeData.FeePosition"
-                                         FeeMin="@feeData.FeeMin"
-                                         FeeMax="@feeData.FeeMax"
-                                         OnFeeChanged="@HandleFeeChanged" />
-
-                            <h6 class="mt-3 mb-2">Stages</h6>
-                            @foreach (var stage in project.ProjectInfo.Stages)
+                    <div class="d-flex gap-2">
+                        <!-- Auto Deploy Button -->
+                        <button class="btn btn-border-success d-flex align-items-center"
+                                @onclick="AutoDeployProject"
+                                disabled="@(autoDeploySpinner || isAutoDeploying)">
+                            @if (autoDeploySpinner)
                             {
-                                <div class="stage-card mt-4 p-3">
-                                    <div class="stage-content">
-                                        <div class="stage-icon">
-                                            <Icon IconName="percent" Height="32" Width="32" />
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span>Auto Deploying...</span>
+                            }
+                            else
+                            {
+                                <Icon IconName="lightning" Width="18" Height="18" Class="me-2" />
+                                <span>Auto Deploy</span>
+                            }
+                        </button>
+
+                        @if (currentStep < 3 && CanProceedToNextStep() && !isAutoDeploying)
+                        {
+                            <button class="btn btn-border-success d-flex align-items-center" @onclick="() => currentStep++">
+                                Continue
+                                <Icon IconName="arrow-right" Width="18" Height="18" Class="ms-2" />
+                            </button>
+                        }
+                    </div>
+                </div>
+
+
+            </div>
+
+            <div class="info-card mt-4">
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-border-warning d-flex align-items-center" @onclick="() => SetActiveTab(2)">
+                        <Icon IconName="arrow-left" Width="18" Height="18" Class="me-2" />
+                        Previous
+                    </button>
+                </div>
+            </div>
+             
+
+            @if (showCreateModal)
+            {
+                <div class="modal-wrapper">
+                    <div class="modal fade show d-block" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content modern-modal">
+                                <div class="modal-header border-0 pb-0">
+                                    <div class="d-flex align-items-center">
+                                        <Icon IconName="check-circle" Height="32" Width="32" class="me-2" />
+                                        <h5 class="modal-title">Confirmation</h5>
+                                    </div>
+                                    <button class="btn-close-custom" @onclick="() => showCreateModal = false">
+                                        <Icon IconName="close-circle" Height="24" Width="24" />
+                                    </button>
+                                </div>
+
+                                <div class="modal-body modal-body-scroll py-4">
+
+                                    <div class="row g-4 mb-4">
+                                        <div class="col-md-12">
+                                            <div class="info-card h-100">
+                                                <div class="info-label">Project Identifier</div>
+                                                <div class="info-value">@project.ProjectInfo.ProjectIdentifier</div>
+                                            </div>
                                         </div>
-                                        <div class="stage-info">
-                                            <p class="stage-text"><strong>Stage Percent:</strong> @stage.AmountToRelease %</p>
+                                        <div class="col-md-12">
+                                            <div class="info-card h-100">
+                                                <div class="info-label">Founder Key</div>
+                                                <div class="info-value">@project.ProjectInfo.FounderKey</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-card h-100">
+                                                <div class="info-label">Target Amount</div>
+                                                <div class="info-value text-success">@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-card h-100">
+                                                <div class="info-label">Start Date</div>
+                                                <div class="info-value">@project.ProjectInfo.StartDate) (in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days)</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-card h-100">
+                                                <div class="info-label">Expiry Date</div>
+                                                <div class="info-value text-warning">@project.ProjectInfo.ExpiryDate) (in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days)</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-card h-100">
+                                                <div class="info-label">Penalty Days</div>
+                                                <div class="info-value text-danger">@project.ProjectInfo.PenaltyDays days</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-card h-100">
+                                                <div class="info-label">Miner Fee</div>
+                                                <div class="info-value text-warning">@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-card h-100">
+                                                <div class="info-label">Angor Fee</div>
+                                                <div class="info-value text-success">@signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="stage-content">
-                                        <div class="stage-icon">
-                                            <Icon IconName="calendar" Height="32" Width="32" />
+
+                                    <FeeSelector SendFee="@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                                 CoinTicker="@network.CoinTicker"
+                                                 FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                                 FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                                 FeePosition="@feeData.FeePosition"
+                                                 FeeMin="@feeData.FeeMin"
+                                                 FeeMax="@feeData.FeeMax"
+                                                 OnFeeChanged="@HandleFeeChanged" />
+
+                                    <h6 class="mt-3 mb-2">Stages</h6>
+                                    @foreach (var stage in project.ProjectInfo.Stages)
+                                    {
+                                        <div class="stage-card mt-4 p-3">
+                                            <div class="stage-content">
+                                                <div class="stage-icon">
+                                                    <Icon IconName="percent" Height="32" Width="32" />
+                                                </div>
+                                                <div class="stage-info">
+                                                    <p class="stage-text"><strong>Stage Percent:</strong> @stage.AmountToRelease %</p>
+                                                </div>
+                                            </div>
+                                            <div class="stage-content">
+                                                <div class="stage-icon">
+                                                    <Icon IconName="calendar" Height="32" Width="32" />
+                                                </div>
+                                                <div class="stage-info">
+                                                    <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate) - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="stage-info">
-                                            <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate) - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
-                                        </div>
+                                    }
+
+                                    <hr>
+
+                                    <div class="confirmation-section mt-4 text-center">
+                                        <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
+                                        <p class="confirmation-text">
+                                            Please review the transaction details carefully before confirming.
+                                        </p>
                                     </div>
                                 </div>
-                            }
 
-                            <hr>
-
-                            <div class="confirmation-section mt-4 text-center">
-                                <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
-                                <p class="confirmation-text">
-                                    Please review the transaction details carefully before confirming.
-                                </p>
+                                <div class="modal-footer border-0 pt-0">
+                                    <button class="btn btn-border-success" @onclick="Send" disabled="@publishProjectSpinner">
+                                        @if (publishProjectSpinner)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                            <span>Confirming...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Confirm</span>
+                                        }
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="modal-footer border-0 pt-0">
-                            <button class="btn btn-border-success" @onclick="Send" disabled="@publishProjectSpinner">
-                                @if (publishProjectSpinner)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>Confirming...</span>
-                                }
-                                else
-                                {
-                                    <span>Confirm</span>
-                                }
-                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    }
+            }
 
-    @if (showConfirmationModal)
-    {
-        <div class="modal-wrapper">
-            <div class="modal fade show d-block" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content modern-modal">
-                        <div class="modal-header border-0 pb-0">
-                            <div class="d-flex align-items-center">
-                                <Icon IconName="alert-circle" Height="32" Width="32" class="me-2" />
-                                <h5 class="modal-title">Confirmation</h5>
+            @if (showConfirmationModal)
+            {
+                <div class="modal-wrapper">
+                    <div class="modal fade show d-block" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content modern-modal">
+                                <div class="modal-header border-0 pb-0">
+                                    <div class="d-flex align-items-center">
+                                        <Icon IconName="alert-circle" Height="32" Width="32" class="me-2" />
+                                        <h5 class="modal-title">Confirmation</h5>
+                                    </div>
+                                    <button class="btn-close-custom" @onclick="CloseConfirmationModal">
+                                        <Icon IconName="close-circle" Height="24" Width="24" />
+                                    </button>
+                                </div>
+
+                                <div class="modal-body modal-body-scroll">
+                                    <p class="mb-1">@confirmationMessage</p>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-border-warning" @onclick="CloseConfirmationModal">Cancel</button>
+                                    <button type="button" class="btn btn-border-success" @onclick="PerformFinalizeAction">Confirm</button>
+                                </div>
                             </div>
-                            <button class="btn-close-custom" @onclick="CloseConfirmationModal">
-                                <Icon IconName="close-circle" Height="24" Width="24" />
-                            </button>
-                        </div>
-
-                        <div class="modal-body modal-body-scroll">
-                            <p class="mb-1">@confirmationMessage</p>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-border-warning" @onclick="CloseConfirmationModal">Cancel</button>
-                            <button type="button" class="btn btn-border-success" @onclick="PerformFinalizeAction">Confirm</button>
                         </div>
                     </div>
                 </div>
-            </div>
+            }
+
         </div>
     }
 </div>
-
-
+        
 @code {
-
     private bool sendConfirmModal;
-    private bool showCreateModal;
-    private bool isPresetMode = true;
-    private bool showConfirmationModal;
-    private string confirmationMessage;
-    private Action finalizeAction;
+        private bool showCreateModal;
+        private bool isPresetMode = true;
+        private bool showConfirmationModal;
+        private string confirmationMessage;
+        private Action finalizeAction;
 
-    private bool showResetConfirmation;
-    private string resetTarget;
+        private bool showResetConfirmation;
+        private string resetTarget;
 
-    Transaction unsignedTransaction;
-    TransactionInfo signedTransaction;
+        Transaction unsignedTransaction;
+        TransactionInfo signedTransaction;
 
-    private readonly FeeData feeData = new();
+        private readonly FeeData feeData = new();
 
-    private FounderProject project = new();
+        private FounderProject project = new();
 
-    private bool endDateError = false;
+        private bool endDateError = false;
 
-    private readonly Dictionary<string, (int[] Percentages, int IntervalDays)> presets = new()
+        private readonly Dictionary<string, (int[] Percentages, int IntervalDays)> presets = new()
     {
-        { "preset1", (new[] { 10, 30, 60 }, 10) },
-        { "preset2", (new[] { 25, 25, 25, 25 }, 10) },
-        { "preset3", (new[] { 60, 20, 20 }, 15) }
+    { "preset1", (new[] { 10, 30, 60 }, 10) },
+    { "preset2", (new[] { 25, 25, 25, 25 }, 10) },
+    { "preset3", (new[] { 60, 20, 20 }, 15) }
     };
 
-    private decimal targetAmountInBTC
-    {
-        get => Money.Satoshis(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC);
-        set => project.ProjectInfo.TargetAmount = Money.Coins(value).Satoshi;
-    }
-
-    private int activeTab = 1;
-
-    private int totalDuration;
-    private int numberOfStages;
-    private bool isValid = true;
-    private string errorMessage;
-
-    bool createProfileSpinner;
-    bool createApplicationDataSpinner;
-    bool creatProjectSpinner;
-    bool publishProjectSpinner;
-
-    bool nostrMetadataCreated;
-    bool nostrApplicationSpecificDataCreated;
-
-    private int currentStep = 1;
-
-    private int GetProgressPercentage() => (currentStep - 1) * 50;
-
-    private void NextStep()
-    {
-        if (currentStep < 3)
+        private decimal targetAmountInBTC
         {
-            currentStep++;
-        }
-    }
-
-    private void PreviousStep()
-    {
-        if (currentStep > 1)
-        {
-            currentStep--;
-        }
-    }
-
-    private bool CanProceedToNextStep()
-    {
-        return currentStep switch
-        {
-            1 => nostrMetadataCreated,
-            2 => nostrApplicationSpecificDataCreated,
-            _ => false
-        };
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        NavMenuState.SetActivePage("founder");
-
-        if (!hasWallet)
-        {
-            return;
+            get => Money.Satoshis(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC);
+            set => project.ProjectInfo.TargetAmount = Money.Coins(value).Satoshi;
         }
 
-        var projects = storage.GetFounderProjects();
+        private int activeTab = 1;
 
-        var keys = _walletStorage.GetFounderKeys();
+        private int totalDuration;
+        private int numberOfStages;
+        private bool isValid = true;
+        private string errorMessage;
 
-        // if CreationTransactionId is not null this means the project was published to the blockchain
-        var startedProjects = projects.Where(p => !string.IsNullOrEmpty(p.CreationTransactionId)).ToList();
+        bool createProfileSpinner;
+        bool createApplicationDataSpinner;
+        bool creatProjectSpinner;
+        bool publishProjectSpinner;
 
-        if (startedProjects.Count >= keys.Keys.Count)
+        bool nostrMetadataCreated;
+        bool nostrApplicationSpecificDataCreated;
+
+        bool autoDeploySpinner;
+        bool isAutoDeploying;
+
+        private int currentStep = 1;
+
+        private int GetProgressPercentage() => (currentStep - 1) * 50;
+
+        private void NextStep()
         {
-            errorMessage = "All founder keys have been used for this wallet!";
-            isValid = false;
-            return;
-        }
-
-        var latestProject = startedProjects.MaxBy(p => p.ProjectIndex);
-        var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectIndex + 1 ?? 1);
-
-        project = projects.FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier)
-                  ?? CreateDefaultProject(projectsKeys);
-
-        // Set start date to today automatically
-        project.ProjectInfo.StartDate = DateTime.Today;
-
-        // Select a preset if no stages exist
-        if (!project.ProjectInfo.Stages.Any())
-        {
-            isPresetMode = true;
-            OnStagePresetChange(new ChangeEventArgs { Value = "preset1" }); // This might add stages
-        }
-
-        // Set initial EndDate based on stages or today
-        if (project.ProjectInfo.Stages.Any())
-        {
-            // Set EndDate to the date of the first stage (ordered by date)
-            project.ProjectInfo.EndDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
-        }
-        else
-        {
-            // If no stages exist, set EndDate to today
-            project.ProjectInfo.EndDate = DateTime.Today;
-        }
-
-        // Always update expiry date based on stages (or start date if no stages)
-        project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
-
-        if (network.NetworkType == NetworkType.Testnet)
-        {
-            PopulateTestnetData(project);
-        }
-
-        // save project to storage immediately if new
-        if (!projects.Any(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier))
-        {
-            storage.AddFounderProject(project);
-        }
-
-        // check if the project was already published to nostr
-        nostrMetadataCreated = project.NostrProfileCreated;
-        nostrApplicationSpecificDataCreated = !string.IsNullOrEmpty(project.ProjectInfoEventId);
-    }
-
-    private string GetActiveClass(int tabNumber)
-    {
-        if (tabNumber == 2)
-        {
-            if (nostrMetadataCreated && !nostrApplicationSpecificDataCreated)
+            if (currentStep < 3)
             {
-                if (!project.ProjectInfo.Stages.Any())
-                {
-                    // to make it easier for testing we pre add some stages
-                    project.ProjectInfo.Stages = new List<Stage>
-                    {
-                        new() { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
-                        new() { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
-                        new() { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) }
-                    };
-                }
+                currentStep++;
             }
         }
 
-        return activeTab == tabNumber ? "active" : "";
-    }
-
-    private void ConfirmFinalizeNostrProfileCreation()
-    {
-        if (nostrMetadataCreated)
+        private void PreviousStep()
         {
-            notificationComponent.ShowErrorMessage("Nostr profile already created");
-            return;
+            if (currentStep > 1)
+            {
+                currentStep--;
+            }
         }
 
-        if (!ValidateInputData())
+        private bool CanProceedToNextStep()
         {
-            // If validation fails, return early
-            return;
+            return currentStep switch
+            {
+                1 => nostrMetadataCreated,
+                2 => nostrApplicationSpecificDataCreated,
+                _ => false
+            };
         }
 
-        confirmationMessage = "Are you sure you want to create the Nostr Profile?";
-        finalizeAction = FinalizeNostrProfileCreation;
-        showConfirmationModal = true;
-    }
-
-    private async void ConfirmFinalizeProjectInfoCreation()
-    {
-        if (nostrApplicationSpecificDataCreated)
+        protected override async Task OnInitializedAsync()
         {
-            notificationComponent.ShowErrorMessage("Nostr project already created");
-            return;
+            NavMenuState.SetActivePage("founder");
+
+            if (!hasWallet)
+            {
+                return;
+            }
+
+            var projects = storage.GetFounderProjects();
+
+            var keys = _walletStorage.GetFounderKeys();
+
+            // if CreationTransactionId is not null this means the project was published to the blockchain
+            var startedProjects = projects.Where(p => !string.IsNullOrEmpty(p.CreationTransactionId)).ToList();
+
+            if (startedProjects.Count >= keys.Keys.Count)
+            {
+                errorMessage = "All founder keys have been used for this wallet!";
+                isValid = false;
+                return;
+            }
+
+            var latestProject = startedProjects.MaxBy(p => p.ProjectIndex);
+            var projectsKeys = _derivationOperations.GetProjectKey(keys, latestProject?.ProjectIndex + 1 ?? 1);
+
+            project = projects.FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier)
+            ?? CreateDefaultProject(projectsKeys);
+
+            // Set start date to today automatically
+            project.ProjectInfo.StartDate = DateTime.Today;
+
+            // Select a preset if no stages exist
+            if (!project.ProjectInfo.Stages.Any())
+            {
+                isPresetMode = true;
+                OnStagePresetChange(new ChangeEventArgs { Value = "preset1" }); // This might add stages
+            }
+
+            // Set initial EndDate based on stages or today
+            if (project.ProjectInfo.Stages.Any())
+            {
+                // Set EndDate to the date of the first stage (ordered by date)
+                project.ProjectInfo.EndDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
+            }
+            else
+            {
+                // If no stages exist, set EndDate to today
+                project.ProjectInfo.EndDate = DateTime.Today;
+            }
+
+            // Always update expiry date based on stages (or start date if no stages)
+            project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
+
+            if (network.NetworkType == NetworkType.Testnet)
+            {
+                PopulateTestnetData(project);
+            }
+
+            // save project to storage immediately if new
+            if (!projects.Any(p => p.ProjectInfo.ProjectIdentifier == projectsKeys.ProjectIdentifier))
+            {
+                storage.AddFounderProject(project);
+            }
+
+            // check if the project was already published to nostr
+            nostrMetadataCreated = project.NostrProfileCreated;
+            nostrApplicationSpecificDataCreated = !string.IsNullOrEmpty(project.ProjectInfoEventId);
         }
 
-        confirmationMessage = "Are you sure you want to deploy the project info to Nostr?.";
-        finalizeAction = FinalizeProjectInfoCreation;
-        showConfirmationModal = true;
-    }
-
-    private void CloseConfirmationModal()
-    {
-        showConfirmationModal = false;
-        StateHasChanged();
-    }
-
-    private void PerformFinalizeAction()
-    {
-        showConfirmationModal = false;
-        finalizeAction.Invoke();
-    }
-
-    private async void FinalizeNostrProfileCreation()
-    {
-        await CreatNostrProfileAnCheckPassword();
-    }
-
-    private async void FinalizeProjectInfoCreation()
-    {
-        await CreatProjectInfoOnNostrAnCheckPassword();
-    }
-
-    private async Task CreatNostrProfileAnCheckPassword()
-    {
-        if (!passwordComponent.HasPassword())
+        private string GetActiveClass(int tabNumber)
         {
-            passwordComponent.ShowPassword(CreatNostrProfile);
+            if (tabNumber == 2)
+            {
+                if (nostrMetadataCreated && !nostrApplicationSpecificDataCreated)
+                {
+                    if (!project.ProjectInfo.Stages.Any())
+                    {
+                        // to make it easier for testing we pre add some stages
+                        project.ProjectInfo.Stages = new List<Stage>
+    {
+    new() { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
+    new() { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
+    new() { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) }
+    };
+                    }
+                }
+            }
+
+            return activeTab == tabNumber ? "active" : "";
         }
-        else
+
+        private void ConfirmFinalizeNostrProfileCreation()
         {
-            await CreatNostrProfile();
+            if (nostrMetadataCreated)
+            {
+                notificationComponent.ShowErrorMessage("Nostr profile already created");
+                return;
+            }
+
+            if (!ValidateInputData())
+            {
+                // If validation fails, return early
+                return;
+            }
+
+            confirmationMessage = "Are you sure you want to create the Nostr Profile?";
+            finalizeAction = FinalizeNostrProfileCreation;
+            showConfirmationModal = true;
         }
-    }
 
-    private async Task CreatNostrProfile()
-    {
-        createProfileSpinner = true;
-        StateHasChanged();
-        await Task.Delay(10);
-
-        try
+        private async void ConfirmFinalizeProjectInfoCreation()
         {
-            var words = await passwordComponent.GetWalletAsync();
-            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
+            if (nostrApplicationSpecificDataCreated)
+            {
+                notificationComponent.ShowErrorMessage("Nostr project already created");
+                return;
+            }
 
-            var resultId = await _RelayService.CreateNostrProfileAsync(
+            confirmationMessage = "Are you sure you want to deploy the project info to Nostr?.";
+            finalizeAction = FinalizeProjectInfoCreation;
+            showConfirmationModal = true;
+        }
+
+        private void CloseConfirmationModal()
+        {
+            showConfirmationModal = false;
+            StateHasChanged();
+        }
+
+        private void PerformFinalizeAction()
+        {
+            showConfirmationModal = false;
+            finalizeAction.Invoke();
+        }
+
+        private async void FinalizeNostrProfileCreation()
+        {
+            await CreatNostrProfileAnCheckPassword();
+        }
+
+        private async void FinalizeProjectInfoCreation()
+        {
+            await CreatProjectInfoOnNostrAnCheckPassword();
+        }
+
+        private async Task CreatNostrProfileAnCheckPassword()
+        {
+            if (!passwordComponent.HasPassword())
+            {
+                passwordComponent.ShowPassword(CreatNostrProfile);
+            }
+            else
+            {
+                await CreatNostrProfile();
+            }
+        }
+
+        private async Task CreatNostrProfile()
+        {
+            createProfileSpinner = true;
+            StateHasChanged();
+            await Task.Delay(10);
+
+            try
+            {
+                var words = await passwordComponent.GetWalletAsync();
+                var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
+
+                var resultId = await _RelayService.CreateNostrProfileAsync(
                 project.Metadata.ToNostrMetadata(),
                 NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()),
                 _ =>
@@ -1141,54 +1161,54 @@
                 });
 
 
-            if (string.IsNullOrEmpty(resultId))
+                if (string.IsNullOrEmpty(resultId))
+                {
+                    notificationComponent.ShowErrorMessage("Failed to create nostr profile");
+                }
+            }
+            catch (Exception e)
             {
-                notificationComponent.ShowErrorMessage("Failed to create nostr profile");
+                _Logger.LogError(e, "Error creating nostr profile.");
+                notificationComponent.ShowErrorMessage(e.Message, e);
+            }
+            finally
+            {
+                createProfileSpinner = false;
             }
         }
-        catch (Exception e)
+
+        private async Task CreatProjectInfoOnNostrAnCheckPassword()
         {
-            _Logger.LogError(e, "Error creating nostr profile.");
-            notificationComponent.ShowErrorMessage(e.Message, e);
+            if (!project.NostrProfileCreated)
+            {
+                notificationComponent.ShowErrorMessage("You must create the Nostr profile first.");
+                return;
+            }
+
+            if (!passwordComponent.HasPassword())
+            {
+                passwordComponent.ShowPassword(CreatProjectInfoOnNostr);
+            }
+            else
+            {
+                await CreatProjectInfoOnNostr();
+            }
         }
-        finally
+
+        private async Task CreatProjectInfoOnNostr()
         {
-            createProfileSpinner = false;
-        }
-    }
+            createApplicationDataSpinner = true;
+            StateHasChanged();
+            await Task.Delay(10);
 
-    private async Task CreatProjectInfoOnNostrAnCheckPassword()
-    {
-        if (!project.NostrProfileCreated)
-        {
-            notificationComponent.ShowErrorMessage("You must create the Nostr profile first.");
-            return;
-        }
+            try
+            {
+                var words = await passwordComponent.GetWalletAsync();
+                var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
 
-        if (!passwordComponent.HasPassword())
-        {
-            passwordComponent.ShowPassword(CreatProjectInfoOnNostr);
-        }
-        else
-        {
-            await CreatProjectInfoOnNostr();
-        }
-    }
+                var nostrKeyHex = Encoders.Hex.EncodeData(nostrKey.ToBytes());
 
-    private async Task CreatProjectInfoOnNostr()
-    {
-        createApplicationDataSpinner = true;
-        StateHasChanged();
-        await Task.Delay(10);
-
-        try
-        {
-            var words = await passwordComponent.GetWalletAsync();
-            var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
-
-            var nostrKeyHex = Encoders.Hex.EncodeData(nostrKey.ToBytes());
-
-            var resultId = await _RelayService.AddProjectAsync(project.ProjectInfo, nostrKeyHex,
+                var resultId = await _RelayService.AddProjectAsync(project.ProjectInfo, nostrKeyHex,
                 _ =>
                 {
                     createApplicationDataSpinner = false;
@@ -1211,432 +1231,432 @@
                     StateHasChanged();
                 });
 
-            // todo: do we actually need this? does it actualy work to delete?
-            if (string.IsNullOrEmpty(resultId))
+                // todo: do we actually need this? does it actualy work to delete?
+                if (string.IsNullOrEmpty(resultId))
+                {
+                    createApplicationDataSpinner = false;
+                    await _RelayService.DeleteProjectAsync(resultId, nostrKeyHex);
+                    notificationComponent.ShowErrorMessage("Failed to create application data");
+                }
+            }
+            catch (Exception e)
+            {
+                _Logger.LogError(e, e.Message);
+                notificationComponent.ShowErrorMessage(e.Message, e);
+            }
+            finally
             {
                 createApplicationDataSpinner = false;
-                await _RelayService.DeleteProjectAsync(resultId, nostrKeyHex);
-                notificationComponent.ShowErrorMessage("Failed to create application data");
             }
         }
-        catch (Exception e)
+
+        private async Task CreatProjectTransactionAnCheckPassword()
         {
-            _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message, e);
+            if (string.IsNullOrEmpty(project.ProjectInfoEventId))
+            {
+                notificationComponent.ShowErrorMessage("You must publish the project information to Nostr first.");
+                return;
+            }
+
+            if (!passwordComponent.HasPassword())
+            {
+                passwordComponent.ShowPassword(CreatProjectTransaction);
+            }
+            else
+            {
+                await CreatProjectTransaction();
+            }
         }
-        finally
+
+        private async Task CreatProjectTransaction()
         {
-            createApplicationDataSpinner = false;
-        }
-    }
-
-    private async Task CreatProjectTransactionAnCheckPassword()
-    {
-        if (string.IsNullOrEmpty(project.ProjectInfoEventId))
-        {
-            notificationComponent.ShowErrorMessage("You must publish the project information to Nostr first.");
-            return;
-        }
-
-        if (!passwordComponent.HasPassword())
-        {
-            passwordComponent.ShowPassword(CreatProjectTransaction);
-        }
-        else
-        {
-            await CreatProjectTransaction();
-        }
-    }
-
-    private async Task CreatProjectTransaction()
-    {
-        creatProjectSpinner = true;
-        StateHasChanged();
-
-        try
-        {
-            var words = await passwordComponent.GetWalletAsync();
-            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
-            var accountInfo = accountBalanceInfo.AccountInfo;
-
-            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
-            feeData.FeeEstimations.Fees.Clear();
-            feeData.FeeEstimations.Fees.AddRange(fetchFees);
-            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
-
-            unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), NetworkConfiguration.AngorCreateFeeSats, NetworkConfiguration.NostrEventIdKeyType, project.ProjectInfoEventId);
-
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
-
-            showCreateModal = true;
-        }
-        catch (Exception e)
-        {
-            _Logger.LogError(e, e.Message);
-            notificationComponent.ShowErrorMessage(e.Message, e);
-        }
-        finally
-        {
-            creatProjectSpinner = false;
+            creatProjectSpinner = true;
             StateHasChanged();
+
+            try
+            {
+                var words = await passwordComponent.GetWalletAsync();
+                var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
+                var accountInfo = accountBalanceInfo.AccountInfo;
+
+                var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+                feeData.FeeEstimations.Fees.Clear();
+                feeData.FeeEstimations.Fees.AddRange(fetchFees);
+                feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+
+                unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), NetworkConfiguration.AngorCreateFeeSats, NetworkConfiguration.NostrEventIdKeyType, project.ProjectInfoEventId);
+
+                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+
+                showCreateModal = true;
+            }
+            catch (Exception e)
+            {
+                _Logger.LogError(e, e.Message);
+                notificationComponent.ShowErrorMessage(e.Message, e);
+            }
+            finally
+            {
+                creatProjectSpinner = false;
+                StateHasChanged();
+            }
         }
-    }
 
-    private async Task HandleFeeChanged(FeeCalculation feeCalc)
-    {
-        try
+        private async Task HandleFeeChanged(FeeCalculation feeCalc)
         {
-            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
+            try
             {
-                feeData.SetCustomFee(feeCalc.CustomFee.Value);
-            }
-            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= feeData.FeeEstimations.Fees.Count)
-            {
-                feeData.SelectFee(feeCalc.Position.Value);
-            }
+                if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
+                {
+                    feeData.SetCustomFee(feeCalc.CustomFee.Value);
+                }
+                else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= feeData.FeeEstimations.Fees.Count)
+                {
+                    feeData.SelectFee(feeCalc.Position.Value);
+                }
 
-            var words = await passwordComponent.GetWalletAsync();
-            var accountInfo = storage.GetAccountInfo(network.Name);
+                var words = await passwordComponent.GetWalletAsync();
+                var accountInfo = storage.GetAccountInfo(network.Name);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
+                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
                 accountInfo.GetNextChangeReceiveAddress(),
                 unsignedTransaction,
                 words,
                 accountInfo,
                 feeData.SelectedFeeEstimation.FeeRate);
 
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogError(ex, "Error calculating fee");
+                notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
+            }
+        }
+
+        private async Task Send()
+        {
+            publishProjectSpinner = true;
             StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            _Logger.LogError(ex, "Error calculating fee");
-            notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
-        }
-    }
 
-    private async Task Send()
-    {
-        publishProjectSpinner = true;
-        StateHasChanged();
-
-        try
-        {
-            showCreateModal = false;
-
-            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
-
-            if (!response.Success)
+            try
             {
-                notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
-                return;
-            }
+                showCreateModal = false;
 
-            var transactionId = signedTransaction.Transaction.GetHash().ToString();
+                var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
 
-            if (string.IsNullOrEmpty(transactionId))
-            {
-                notificationComponent.ShowErrorMessage("Transaction ID is missing. Cannot store the project.");
-                return;
-            }
-
-            project.CreationTransactionId = transactionId;
-            storage.UpdateFounderProject(project);
-
-            NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
-        }
-        catch (Exception e)
-        {
-            notificationComponent.ShowErrorMessage(e.Message, e);
-        }
-        finally
-        {
-            publishProjectSpinner = false;
-            passwordComponent.ClearPassword();
-            StateHasChanged();
-        }
-    }
-
-    private void AddStage()
-    {
-        if (nostrMetadataCreated)
-        {
-            notificationComponent.ShowErrorMessage("Changes not allowed after the profile was created.");
-            return;
-        }
-
-        project.ProjectInfo.Stages.Add(new Stage { ReleaseDate = DateTime.UtcNow });
-
-        // Update expiry date
-        project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
-        StateHasChanged();
-    }
-
-    private void RemoveStage(Stage stage)
-    {
-        if (nostrMetadataCreated)
-        {
-            notificationComponent.ShowErrorMessage("Changes not allowed after the profile was created.");
-            return;
-        }
-
-        project.ProjectInfo.Stages.Remove(stage);
-
-        // Update expiry date
-        project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
-        StateHasChanged();
-    }
-
-    public MarkupString ConvertToMarkupString(string input)
-    {
-        string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
-        return new MarkupString(sanitizedInput);
-    }
-
-    private async void SetActiveTab(int tabNumber)
-    {
-        if (!nostrMetadataCreated)
-        {
-            // Save the project before switching tabs
-            storage.UpdateFounderProject(project);
-        }
-
-        activeTab = tabNumber;
-        StateHasChanged();
-
-        // Add a slight delay before scrolling to the top
-        // This ensures the tab content has been rendered
-        await Task.Delay(10);
-        await JS.InvokeVoidAsync("window.scrollTo", 0, 0);
-    }
-
-    private string GetProgressMessage()
-    {
-        if (!nostrMetadataCreated)
-        {
-            return "Step 1: Create Nostr Profile";
-        }
-
-        if (!nostrApplicationSpecificDataCreated)
-        {
-            return "Step 2: Enter Project Info";
-        }
-
-        return "Step 3: Finalize Project Creation";
-    }
-
-
-    private void OnStagePresetChange(ChangeEventArgs e)
-    {
-        if (nostrMetadataCreated)
-        {
-            notificationComponent.ShowErrorMessage("Changes not allowed after the profile was created.");
-            return;
-        }
-
-        var selectedPreset = e.Value?.ToString();
-
-        if (selectedPreset != null && presets.TryGetValue(selectedPreset, out var preset))
-        {
-            project.ProjectInfo.Stages.Clear();
-            project.ProjectInfo.Stages = GenerateStages(preset.Percentages, preset.IntervalDays);
-        }
-        else
-        {
-            notificationComponent.ShowErrorMessage("Invalid preset selected.");
-            project.ProjectInfo.Stages.Clear();
-        }
-
-        StateHasChanged();
-    }
-
-    private bool ValidateInputData()
-    {
-        var isTestnet = this.network.NetworkType == NetworkType.Testnet;
-
-        if (!isTestnet)
-        {
-            // test that need to happen in production will go here
-
-            if (project.ProjectInfo.PenaltyDays < 10)
-            {
-                notificationComponent.ShowErrorMessage("Project penalty must be higher than 10 days");
-                return false;
-            }
-
-            if (project.ProjectInfo.Stages.Count() < 3)
-            {
-                notificationComponent.ShowErrorMessage("There must be at least 3 stages");
-                return false;
-            }
-
-            if (targetAmountInBTC < (decimal)0.1)
-            {
-                notificationComponent.ShowErrorMessage("Project target amount must be higher than 0.1 BTC");
-                return false;
-            }
-
-            if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.StartDate)
-            {
-                notificationComponent.ShowErrorMessage("Project must expire after the start date");
-                return false;
-            }
-
-            if (project.ProjectInfo.Stages.Any() && project.ProjectInfo.ExpiryDate < project.ProjectInfo.Stages.Last().ReleaseDate)
-            {
-                notificationComponent.ShowErrorMessage("Project expiry date must be after the last stage date");
-                return false;
-            }
-
-            if (project.ProjectInfo.StartDate < DateTime.UtcNow)
-            {
-                notificationComponent.ShowErrorMessage("Project must start in the future");
-                return false;
-            }
-        }
-
-
-        if (project.Metadata is null)
-        {
-            notificationComponent.ShowErrorMessage("Nostr profile must be filled");
-            return false;
-        }
-
-        if (string.IsNullOrEmpty(project.Metadata.Name))
-        {
-            notificationComponent.ShowErrorMessage("Nostr profile name must be filled");
-            return false;
-        }
-
-        if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
-        {
-            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
-            return false;
-        }
-
-        foreach (var stage in project.ProjectInfo.Stages)
-        {
-            if (stage.AmountToRelease <= 0 || stage.AmountToRelease > 100)
-            {
-                notificationComponent.ShowErrorMessage("Stage percentage must be between 1 and 100.");
-                return false;
-            }
-        }
-
-        var projects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
-
-        if (projects.Any(a => project.ProjectInfo.ProjectIdentifier == a.ProjectInfo.ProjectIdentifier))
-        {
-            notificationComponent.ShowErrorMessage("This wallet already has a project with this index");
-            return false;
-        }
-
-        if (project.ProjectInfo.Stages.Any())
-        {
-            // First check if first stage is after project start
-            if (project.ProjectInfo.Stages.First().ReleaseDate < project.ProjectInfo.StartDate)
-            {
-                notificationComponent.ShowErrorMessage("First stage must be after project start date");
-                return false;
-            }
-
-            // Then check stages are in order
-            var sortedStages = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).ToList();
-            for (int i = 0; i < sortedStages.Count - 1; i++)
-            {
-                if (sortedStages[i].ReleaseDate >= sortedStages[i + 1].ReleaseDate)
+                if (!response.Success)
                 {
-                    notificationComponent.ShowErrorMessage($"Stage {i + 2} must be after stage {i + 1}");
+                    notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
+                    return;
+                }
+
+                var transactionId = signedTransaction.Transaction.GetHash().ToString();
+
+                if (string.IsNullOrEmpty(transactionId))
+                {
+                    notificationComponent.ShowErrorMessage("Transaction ID is missing. Cannot store the project.");
+                    return;
+                }
+
+                project.CreationTransactionId = transactionId;
+                storage.UpdateFounderProject(project);
+
+                NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
+            }
+            catch (Exception e)
+            {
+                notificationComponent.ShowErrorMessage(e.Message, e);
+            }
+            finally
+            {
+                publishProjectSpinner = false;
+                passwordComponent.ClearPassword();
+                StateHasChanged();
+            }
+        }
+
+        private void AddStage()
+        {
+            if (nostrMetadataCreated)
+            {
+                notificationComponent.ShowErrorMessage("Changes not allowed after the profile was created.");
+                return;
+            }
+
+            project.ProjectInfo.Stages.Add(new Stage { ReleaseDate = DateTime.UtcNow });
+
+            // Update expiry date
+            project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
+            StateHasChanged();
+        }
+
+        private void RemoveStage(Stage stage)
+        {
+            if (nostrMetadataCreated)
+            {
+                notificationComponent.ShowErrorMessage("Changes not allowed after the profile was created.");
+                return;
+            }
+
+            project.ProjectInfo.Stages.Remove(stage);
+
+            // Update expiry date
+            project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
+            StateHasChanged();
+        }
+
+        public MarkupString ConvertToMarkupString(string input)
+        {
+            string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
+            return new MarkupString(sanitizedInput);
+        }
+
+        private async void SetActiveTab(int tabNumber)
+        {
+            if (!nostrMetadataCreated)
+            {
+                // Save the project before switching tabs
+                storage.UpdateFounderProject(project);
+            }
+
+            activeTab = tabNumber;
+            StateHasChanged();
+
+            // Add a slight delay before scrolling to the top
+            // This ensures the tab content has been rendered
+            await Task.Delay(10);
+            await JS.InvokeVoidAsync("window.scrollTo", 0, 0);
+        }
+
+        private string GetProgressMessage()
+        {
+            if (!nostrMetadataCreated)
+            {
+                return "Step 1: Create Nostr Profile";
+            }
+
+            if (!nostrApplicationSpecificDataCreated)
+            {
+                return "Step 2: Enter Project Info";
+            }
+
+            return "Step 3: Finalize Project Creation";
+        }
+
+
+        private void OnStagePresetChange(ChangeEventArgs e)
+        {
+            if (nostrMetadataCreated)
+            {
+                notificationComponent.ShowErrorMessage("Changes not allowed after the profile was created.");
+                return;
+            }
+
+            var selectedPreset = e.Value?.ToString();
+
+            if (selectedPreset != null && presets.TryGetValue(selectedPreset, out var preset))
+            {
+                project.ProjectInfo.Stages.Clear();
+                project.ProjectInfo.Stages = GenerateStages(preset.Percentages, preset.IntervalDays);
+            }
+            else
+            {
+                notificationComponent.ShowErrorMessage("Invalid preset selected.");
+                project.ProjectInfo.Stages.Clear();
+            }
+
+            StateHasChanged();
+        }
+
+        private bool ValidateInputData()
+        {
+            var isTestnet = this.network.NetworkType == NetworkType.Testnet;
+
+            if (!isTestnet)
+            {
+                // test that need to happen in production will go here
+
+                if (project.ProjectInfo.PenaltyDays < 10)
+                {
+                    notificationComponent.ShowErrorMessage("Project penalty must be higher than 10 days");
+                    return false;
+                }
+
+                if (project.ProjectInfo.Stages.Count() < 3)
+                {
+                    notificationComponent.ShowErrorMessage("There must be at least 3 stages");
+                    return false;
+                }
+
+                if (targetAmountInBTC < (decimal)0.1)
+                {
+                    notificationComponent.ShowErrorMessage("Project target amount must be higher than 0.1 BTC");
+                    return false;
+                }
+
+                if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.StartDate)
+                {
+                    notificationComponent.ShowErrorMessage("Project must expire after the start date");
+                    return false;
+                }
+
+                if (project.ProjectInfo.Stages.Any() && project.ProjectInfo.ExpiryDate < project.ProjectInfo.Stages.Last().ReleaseDate)
+                {
+                    notificationComponent.ShowErrorMessage("Project expiry date must be after the last stage date");
+                    return false;
+                }
+
+                if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+                {
+                    notificationComponent.ShowErrorMessage("Project must start in the future");
                     return false;
                 }
             }
 
-            // Keep stages sorted
-            project.ProjectInfo.Stages = sortedStages;
+
+            if (project.Metadata is null)
+            {
+                notificationComponent.ShowErrorMessage("Nostr profile must be filled");
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(project.Metadata.Name))
+            {
+                notificationComponent.ShowErrorMessage("Nostr profile name must be filled");
+                return false;
+            }
+
+            if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
+            {
+                notificationComponent.ShowErrorMessage("The stages must sum to 100%");
+                return false;
+            }
+
+            foreach (var stage in project.ProjectInfo.Stages)
+            {
+                if (stage.AmountToRelease <= 0 || stage.AmountToRelease > 100)
+                {
+                    notificationComponent.ShowErrorMessage("Stage percentage must be between 1 and 100.");
+                    return false;
+                }
+            }
+
+            var projects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
+
+            if (projects.Any(a => project.ProjectInfo.ProjectIdentifier == a.ProjectInfo.ProjectIdentifier))
+            {
+                notificationComponent.ShowErrorMessage("This wallet already has a project with this index");
+                return false;
+            }
+
+            if (project.ProjectInfo.Stages.Any())
+            {
+                // First check if first stage is after project start
+                if (project.ProjectInfo.Stages.First().ReleaseDate < project.ProjectInfo.StartDate)
+                {
+                    notificationComponent.ShowErrorMessage("First stage must be after project start date");
+                    return false;
+                }
+
+                // Then check stages are in order
+                var sortedStages = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).ToList();
+                for (int i = 0; i < sortedStages.Count - 1; i++)
+                {
+                    if (sortedStages[i].ReleaseDate >= sortedStages[i + 1].ReleaseDate)
+                    {
+                        notificationComponent.ShowErrorMessage($"Stage {i + 2} must be after stage {i + 1}");
+                        return false;
+                    }
+                }
+
+                // Keep stages sorted
+                project.ProjectInfo.Stages = sortedStages;
+            }
+
+            return true;
         }
 
-        return true;
-    }
-
-    private List<Stage> GenerateStages(int[] percentages, int intervalDays)
-    {
-        var stages = new List<Stage>();
-        var currentDate = project.ProjectInfo.StartDate;
-
-        for (int i = 0; i < percentages.Length; i++)
+        private List<Stage> GenerateStages(int[] percentages, int intervalDays)
         {
-            stages.Add(new Stage
+            var stages = new List<Stage>();
+            var currentDate = project.ProjectInfo.StartDate;
+
+            for (int i = 0; i < percentages.Length; i++)
+            {
+                stages.Add(new Stage
                 {
                     AmountToRelease = percentages[i],
                     ReleaseDate = currentDate
                 });
 
-            if (i > 0)
-            {
-                var daysBetween = (currentDate - stages[i - 1].ReleaseDate).Days;
-                _Logger.LogInformation($"Days between stage {i} and {i + 1}: {daysBetween} days");
+                if (i > 0)
+                {
+                    var daysBetween = (currentDate - stages[i - 1].ReleaseDate).Days;
+                    _Logger.LogInformation($"Days between stage {i} and {i + 1}: @daysBetween days");
+                }
+
+                currentDate = currentDate.AddDays(intervalDays);
             }
 
-            currentDate = currentDate.AddDays(intervalDays);
+            return stages;
         }
 
-        return stages;
-    }
-
-    private void GenerateSmartStages()
-    {
-        if (totalDuration <= 0 || numberOfStages <= 0)
+        private void GenerateSmartStages()
         {
-            notificationComponent.ShowErrorMessage("Please enter valid values for duration and number of stages.");
-            return;
-        }
+            if (totalDuration <= 0 || numberOfStages <= 0)
+            {
+                notificationComponent.ShowErrorMessage("Please enter valid values for duration and number of stages.");
+                return;
+            }
 
-        project.ProjectInfo.Stages.Clear(); // Reset existing stages
+            project.ProjectInfo.Stages.Clear(); // Reset existing stages
 
-        var stageDuration = totalDuration / numberOfStages;
-        var stagePercentage = 100m / numberOfStages;
+            var stageDuration = totalDuration / numberOfStages;
+            var stagePercentage = 100m / numberOfStages;
 
-        for (int i = 0; i < numberOfStages; i++)
-        {
-            project.ProjectInfo.Stages.Add(new Stage
+            for (int i = 0; i < numberOfStages; i++)
+            {
+                project.ProjectInfo.Stages.Add(new Stage
                 {
                     AmountToRelease = stagePercentage,
                     ReleaseDate = project.ProjectInfo.StartDate.AddDays(i * stageDuration)
                 });
+            }
+
+            StateHasChanged();
         }
 
-        StateHasChanged();
-    }
+        private void ToggleStageMode()
+        {
+            isPresetMode = !isPresetMode; // Toggle between Presets and Automatic
+            StateHasChanged(); // Update the UI
+        }
 
-    private void ToggleStageMode()
-    {
-        isPresetMode = !isPresetMode; // Toggle between Presets and Automatic
-        StateHasChanged(); // Update the UI
-    }
-
-    private readonly string[] spacePhotos = new[]
-    {
-        "https://images-assets.nasa.gov/image/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/PIA22081/PIA22081~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000282/GSFC_20171208_Archive_e000282~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001894/GSFC_20171208_Archive_e001894~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/PIA08216/PIA08216~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001465/GSFC_20171208_Archive_e001465~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001518/GSFC_20171208_Archive_e001518~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/PIA25433/PIA25433~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/PIA15415/PIA15415~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002086/GSFC_20171208_Archive_e002086~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/PIA14731/PIA14731~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002020/GSFC_20171208_Archive_e002020~thumb.jpg?as=webp",
-        "https://images-assets.nasa.gov/image/0203048/0203048~thumb.jpg?as=webp"
+        private readonly string[] spacePhotos = new[]
+        {
+    "https://images-assets.nasa.gov/image/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/PIA22081/PIA22081~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000282/GSFC_20171208_Archive_e000282~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001894/GSFC_20171208_Archive_e001894~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/PIA08216/PIA08216~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001465/GSFC_20171208_Archive_e001465~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001518/GSFC_20171208_Archive_e001518~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/PIA25433/PIA25433~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/PIA15415/PIA15415~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002086/GSFC_20171208_Archive_e002086~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/PIA14731/PIA14731~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002020/GSFC_20171208_Archive_e002020~thumb.jpg?as=webp",
+    "https://images-assets.nasa.gov/image/0203048/0203048~thumb.jpg?as=webp"
     };
 
-    private FounderProject CreateDefaultProject(FounderKeys projectsKeys)
-    {
-        return new FounderProject
+        private FounderProject CreateDefaultProject(FounderKeys projectsKeys)
+        {
+            return new FounderProject
             {
                 ProjectIndex = projectsKeys.Index,
                 Metadata = new ProjectMetadata(),
@@ -1652,95 +1672,191 @@
                     TargetAmount = Money.Coins(50).Satoshi
                 }
             };
-    }
-    private void PopulateTestnetData(FounderProject project)
-    {
-        var random = new Random();
-
-         if (string.IsNullOrEmpty(project.Metadata.Banner))
-        {
-            project.Metadata.Banner = spacePhotos[random.Next(spacePhotos.Length)];
         }
-
-        if (string.IsNullOrEmpty(project.Metadata.Picture))
+        private void PopulateTestnetData(FounderProject project)
         {
-            project.Metadata.Picture = spacePhotos[random.Next(spacePhotos.Length)];
-        }
-    }
+            var random = new Random();
 
-    private async Task CopyToClipboard(string text)
-    {
-        await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
-        notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
-    }
-
-
-    private IEnumerable<(string IconName, string Label, string Value)> GetProjectInfo()
-    {
-        return new List<(string, string, string)>
-        {
-            ("name", "Project Name", project.Metadata.Name),
-            ("about", "Project About", ((MarkupString)project.Metadata.About).ToString()),
-            ("identifier", "Project Identifier", project.ProjectInfo.ProjectIdentifier),
-            ("key", "Founder Key", project.ProjectInfo.FounderKey)
-        };
-    }
-
-    private IEnumerable<(string IconName, string Label, string Value)> GetProjectInfoData()
-    {
-        return new List<(string, string, string)>
-        {
-            ("name", "Project Name", project.Metadata.Name),
-            ("about", "Project About", ((MarkupString)project.Metadata.About).ToString()),
-            ("identifier", "Project Identifier", project.ProjectInfo.ProjectIdentifier),
-            ("key", "Founder Key", project.ProjectInfo.FounderKey)
-        };
-    }
-
-    private IEnumerable<(string IconName, string Label, string Value, string color, bool fullWidth)> GetAdditionalProjectInfo()
-    {
-        return new List<(string, string, string, string, bool)>
-        {
-            ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}", "text-success", true),
-            ("calendar", "Funding start date", $"{project.ProjectInfo.StartDate} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days", "text-warning", false),
-            ("calendar", "Funding end date", $"{project.ProjectInfo.EndDate} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days", "text-warning", false),
-            ("unlock", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days", "text-warning", false),
-            ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days", "text-warning", false)
-        };
-    }
-
-    private void ValidateEndDate()
-    {
-        if (project.ProjectInfo.Stages.Any())
-        {
-            var firstStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
-            if (project.ProjectInfo.EndDate >= firstStageDate)
+            if (string.IsNullOrEmpty(project.Metadata.Banner))
             {
-                endDateError = true;
+                project.Metadata.Banner = spacePhotos[random.Next(spacePhotos.Length)];
+            }
+
+            if (string.IsNullOrEmpty(project.Metadata.Picture))
+            {
+                project.Metadata.Picture = spacePhotos[random.Next(spacePhotos.Length)];
+            }
+        }
+
+        private async Task CopyToClipboard(string text)
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
+        }
+
+
+        private IEnumerable<(string IconName, string Label, string Value)> GetProjectInfo()
+        {
+            return new List<(string, string, string)>
+    {
+    ("name", "Project Name", project.Metadata.Name),
+    ("about", "Project About", ((MarkupString)project.Metadata.About).ToString()),
+    ("identifier", "Project Identifier", project.ProjectInfo.ProjectIdentifier),
+    ("key", "Founder Key", project.ProjectInfo.FounderKey)
+    };
+        }
+
+        private IEnumerable<(string IconName, string Label, string Value)> GetProjectInfoData()
+        {
+            return new List<(string, string, string)>
+    {
+    ("name", "Project Name", project.Metadata.Name),
+    ("about", "Project About", ((MarkupString)project.Metadata.About).ToString()),
+    ("identifier", "Project Identifier", project.ProjectInfo.ProjectIdentifier),
+    ("key", "Founder Key", project.ProjectInfo.FounderKey)
+    };
+        }
+
+        private IEnumerable<(string IconName, string Label, string Value, string color, bool fullWidth)> GetAdditionalProjectInfo()
+        {
+            return new List<(string, string, string, string, bool)>
+    {
+    ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}", "text-success", true),
+    ("calendar", "Funding start date", $"{project.ProjectInfo.StartDate} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days", "text-warning", false),
+    ("calendar", "Funding end date", $"{project.ProjectInfo.EndDate} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days", "text-warning", false),
+    ("unlock", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days", "text-warning", false),
+    ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days", "text-warning", false)
+    };
+        }
+
+        private void ValidateEndDate()
+        {
+            if (project.ProjectInfo.Stages.Any())
+            {
+                var firstStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
+                if (project.ProjectInfo.EndDate >= firstStageDate)
+                {
+                    endDateError = true;
+                }
+                else
+                {
+                    endDateError = false;
+                }
+            }
+
+            project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
+            StateHasChanged();
+        }
+
+        private DateTime CalculateExpiryDate()
+        {
+            if (project.ProjectInfo.Stages.Any())
+            {
+                var lastStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).Last().ReleaseDate;
+                return lastStageDate.AddDays(60);
+            }
+
+            return project.ProjectInfo.StartDate.AddDays(60);
+        }
+
+        private async void OpenDatePicker(string inputId)
+        {
+            await JS.InvokeVoidAsync("eval", $"document.getElementById('{inputId}')?.showPicker()");
+        }
+
+        private async Task AutoDeployProject()
+        {
+            if (!passwordComponent.HasPassword())
+            {
+                passwordComponent.ShowPassword(async () => await ExecuteAutoDeployment());
             }
             else
             {
-                endDateError = false;
+                await ExecuteAutoDeployment();
             }
         }
 
-        project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
-        StateHasChanged();
-    }
-
-    private DateTime CalculateExpiryDate()
-    {
-        if (project.ProjectInfo.Stages.Any())
+        private async Task ExecuteAutoDeployment()
         {
-            var lastStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).Last().ReleaseDate;
-            return lastStageDate.AddDays(60);
+            if (!ValidateInputData())
+            {
+                return;
+            }
+
+            autoDeploySpinner = true;
+            isAutoDeploying = true;
+            StateHasChanged();
+
+            try
+            {
+                // Step 1: Create Nostr Profile
+                if (!nostrMetadataCreated)
+                {
+                    currentStep = 1;
+                    StateHasChanged();
+                    await Task.Delay(500); // UI feedback
+
+                    await CreatNostrProfile();
+
+                    // Wait for profile creation to complete
+                    int attempts = 0;
+                    while (!nostrMetadataCreated && attempts < 30) // 30 second timeout
+                    {
+                        await Task.Delay(1000);
+                        attempts++;
+                    }
+
+                    if (!nostrMetadataCreated)
+                    {
+                        notificationComponent.ShowErrorMessage("Failed to create Nostr profile. Auto deployment stopped.");
+                        return;
+                    }
+                }
+
+                // Step 2: Create Project Info
+                if (!nostrApplicationSpecificDataCreated)
+                {
+                    currentStep = 2;
+                    StateHasChanged();
+                    await Task.Delay(500); // UI feedback
+
+                    await CreatProjectInfoOnNostr();
+
+                    // Wait for project info creation to complete
+                    int attempts = 0;
+                    while (!nostrApplicationSpecificDataCreated && attempts < 30) // 30 second timeout
+                    {
+                        await Task.Delay(1000);
+                        attempts++;
+                    }
+
+                    if (!nostrApplicationSpecificDataCreated)
+                    {
+                        notificationComponent.ShowErrorMessage("Failed to publish project info. Auto deployment stopped.");
+                        return;
+                    }
+                }
+
+                // Step 3: Deploy to Blockchain
+                currentStep = 3;
+                StateHasChanged();
+                await Task.Delay(500); // UI feedback
+
+                await CreatProjectTransaction();
+
+                // If transaction creation was successful, the modal will show
+                // The user can then confirm the final deployment
+            }
+            catch (Exception e)
+            {
+                _Logger.LogError(e, "Error during auto deployment");
+                notificationComponent.ShowErrorMessage("Auto deployment failed: " + e.Message);
+            }
+            finally
+            {
+                autoDeploySpinner = false;
+                isAutoDeploying = false;
+                StateHasChanged();
+            }
         }
-
-        return project.ProjectInfo.StartDate.AddDays(60);
     }
-
-    private async void OpenDatePicker(string inputId)
-    {
-        await JS.InvokeVoidAsync("eval", $"document.getElementById('{inputId}')?.showPicker()");
-    }
-}
