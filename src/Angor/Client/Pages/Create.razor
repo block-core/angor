@@ -347,7 +347,7 @@
                                 <div class="modal-wrapper">
                                     <div class="modal fade show d-block">
                                         <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content modern-modal p-4">
+                                            <div class="modal-content modern-modal p-3">
                                                 <div class="modal-header border-0 pb-0">
                                                     <div class="d-flex align-items-center">
                                                         <Icon IconName="server-path" Height="24" Width="24" class="me-2" />
@@ -359,7 +359,7 @@
                                                 </div>
 
                                                 <div class="modal-body modal-body-scroll">
-                                                    <div class="d-flex justify-content-between mb-4 pe-2 position-relative animate-fade-in">
+                                                    <div class="d-flex justify-content-between mb-4 position-relative animate-fade-in">
                                                         @* Progress Line *@
                                                         <div class="position-absolute" style="top: 20px; left: 40px; right: 40px; height: 2px; background-color: var(--angor-secondary); z-index: 0;">
                                                             <div class="position-absolute" 
@@ -408,60 +408,274 @@
                                                     <div>
                                                         @if (wizardStep == 1)
                                                         {
-                                                            <div>
-                                                                <div class="d-flex g-4 flex-column">
-                                                                    <div class="mb-0 info-card">
-                                                                        <div class="h6 fw-semibold mb-3">Stage Presets</div>
-                                                                        <div class="d-flex flex-column gap-3">
-                                                                            @foreach (var preset in presets)
-                                                                            {
-                                                                                <label class="d-flex stage-card flex-column p-3 rounded border form-check-label">
-                                                                                    <div class="d-flex align-items-center">
-                                                                                        <div>
-                                                                                            <div class="fw-semibold fs-6">Preset @preset.Key.Substring(6)</div>
-                                                                                            <div class="text-secondary mt-1">
-                                                                                                (@string.Join(", ", preset.Value.Percentages.Select(p => $"{p}%")))
-                                                                                            </div>
-                                                                                        </div>
-                                                                                        <div class="ms-auto">
-                                                                                            <input type="radio"
-                                                                                                   id="preset-@preset.Key"
-                                                                                                   name="stagePreset"
-                                                                                                   value="@preset.Key"
-                                                                                                   disabled="@nostrApplicationSpecificDataCreated"
-                                                                                                   checked="@(activePreset == preset.Key)"
-                                                                                                   @onclick='() => { activePreset = preset.Key; OnStagePresetChange(preset.Key); }' />
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div class="bg-transparent progress w-100 mt-3 d-flex rounded-pill" style="height:7px; gap:4px;">
-                                                                                        @foreach (var percentage in preset.Value.Percentages)
-                                                                                        {
-                                                                                            <div class="bg-success rounded-pill flex-shrink-0" style="width:@(percentage)%;"></div>
-                                                                                        }
-                                                                                    </div>
-                                                                                </label>
-                                                                            }
+                                                            <div class="animate-fade-in">
+                                                                <div class="info-card mb-4">
+                                                                        
+                                                                    <div class="d-flex align-items-center">
+                                                                        <Icon IconName="server-path" Width="24" Height="24" Class="me-2" />
+                                                                        <h6 class="mb-4">Select Payment Schedule</h6>
+                                                                    </div>
+
+                                                                    
+                                                                    <div class="row g-4 mb-4 align-items-end">
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="wizardStartDate" class="form-label">Start Date</label>
+                                                                                <InputDate id="wizardStartDate"
+                                                                                           @bind-Value="project.ProjectInfo.StartDate"
+                                                                                           class="form-control"
+                                                                                           disabled
+                                                                                           readonly />
+                                                                                <small class="text-muted">Investment period begins today</small>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <div class="mb-3">
+                                                                                <label for="wizardEndDate" class="form-label">End Date</label>
+                                                                                <div class="input-group">
+                                                                                    <InputDate id="wizardEndDate"
+                                                                                               @bind-Value="project.ProjectInfo.EndDate"
+                                                                                               class="form-control"
+                                                                                               min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
+                                                                                               disabled="@nostrApplicationSpecificDataCreated"
+                                                                                               @onchange="CalculateProjectDuration" />
+                                                                                    <button type="button"
+                                                                                            class="btn btn-border-success"
+                                                                                            onclick="document.getElementById('wizardEndDate')?.showPicker()"
+                                                                                            disabled="@nostrApplicationSpecificDataCreated">
+                                                                                        <Icon IconName="calendar" Width="16" Height="16" />
+                                                                                    </button>
+                                                                                </div>
+                                                                                <small class="text-muted">When funding period ends</small>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
-                                                                        <div class="info-card p-3 rounded mt-3 d-flex align-items-center">
-                                                                            <div class="me-3">
-                                                                                <div class="icon-container p-2 rounded-circle d-inline-flex align-items-center justify-content-center" 
-                                                                                    style="width: 46px; height: 46px; 
-                                                                                        background-color: var(--angor-border-color); 
-                                                                                        border: 2px solid var(--angor-secondary);
-                                                                                        transition: all 0.3s ease;">
-                                                                                    <Icon IconName="actions" Width="24" Height="24" Class="text-primary" />
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="flex-grow-1">
-                                                                                <p class="mb-0 fw-bold">
-                                                                                    Important Note
-                                                                                </p>
-                                                                                <span>
-                                                                                    You can customize any preset in the next step
-                                                                                </span>
+                                                                    
+                                                                    <div class="stage-card mb-4">
+                                                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                            <span class="btn btn-border-success btn-sm">Duration: @GetDurationInDays() days</span>
+                                                                            <span class="btn btn-border-success btn-sm">~@(Math.Round(GetDurationInDays()/30.0, 1)) months</span>
+                                                                        </div>
+                                                                        <div class="progress bg-transparent mt-2" style="height: 7px;">
+                                                                            <div class="bg-success rounded-pill flex-shrink-0" style="width: 100%"></div>
+                                                                        </div>
+                                                                        <div class="d-flex justify-content-between text-muted mt-2">
+                                                                            <span>@DateTime.Today.ToString("MMM dd, yyyy")</span>
+                                                                            <span>@project.ProjectInfo.EndDate.ToString("MMM dd, yyyy")</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <div class="stage-card mb-4">
+                                                                        <div class="d-flex align-items-center mb-3">
+                                                                            <Icon IconName="repeat" Width="20" Height="20" Class="me-2 text-primary" />
+                                                                            <h6 class="mb-0 fw-semibold">Payment Schedule</h6>
+                                                                            <span class="badge bg-primary ms-2">@CalculateNumberOfStages() stages</span>
+                                                                        </div>
+                                                                        
+                                                                        <p class="form-text text-muted mt-0 mb-3 small">Select how frequently you want to receive project funding.</p>
+                                                                        
+                                                                        <div class="d-flex flex-wrap gap-2">
+                                                                            @foreach (var interval in new[] {
+                                                                                ("Daily", 1),
+                                                                                ("Weekly", 7), 
+                                                                                ("Biweekly", 14), 
+                                                                                ("Monthly", 30), 
+                                                                                ("Quarterly", 90),
+                                                                                ("Annual", 365),
+                                                                                ("Custom", 0) 
+                                                                            })
+                                                                            {
+                                                                                bool isDisabled = CalculatePossibleStages(interval.Item2) < 1 || nostrApplicationSpecificDataCreated;
+                                                                                string btnClass = selectedInterval == interval.Item2 
+                                                                                    ? "btn-border-success"
+                                                                                    : "btn-border-warning";
+                                                                                
+                                                                                <button class="btn @btnClass @(isDisabled ? "disabled opacity-50" : "")" 
+                                                                                        @onclick="() => SelectInterval(interval.Item2)"
+                                                                                        disabled="@isDisabled"
+                                                                                        title="@(isDisabled ? "Too short duration for this interval" : $"{CalculatePossibleStages(interval.Item2)} stages")">
+                                                                                    @if (selectedInterval == interval.Item2)
+                                                                                    {
+                                                                                        <Icon IconName="check-circle" Width="16" Height="16" Class="me-1" />
+                                                                                    }
+                                                                                    @interval.Item1
+                                                                                </button>
+                                                                            }
+                                                                        </div>
+                                                                        
+                                                                        <div class="stage-card mt-3 p-2 border rounded">
+                                                                            <div class="d-flex align-items-center">
+                                                                                <Icon IconName="info" Width="16" Height="16" Class="me-2 text-primary" />
+                                                                                <small class="text-muted">
+                                                                                    @(selectedInterval == 0 
+                                                                                        ? "Custom mode allows you to define your own stage schedule." 
+                                                                                        : $"{GetIntervalName(selectedInterval)} schedule will create {CalculateNumberOfStages()} evenly spaced stages.")
+                                                                                </small>
                                                                             </div>
                                                                         </div>
+                                                                    </div>
+                                                                    
+                                                                    @if (selectedInterval == 0)
+                                                                    {
+                                                                        <div class="stage-card mb-4">
+                                                                            <h6 class="mb-3">Custom Stages</h6>
+                                                                            <label class="form-label">Number of Stages:</label>
+                                                                            <div class="d-flex align-items-center gap-2 mb-3">
+                                                                                <button class="btn btn-border-warning px-3" 
+                                                                                        @onclick="@(() => UpdateStageCount(Math.Max(2, numberOfStages - 1)))"
+                                                                                        disabled="@(numberOfStages <= 2 || nostrApplicationSpecificDataCreated)">
+                                                                                    <span class="fw-bold">−</span>
+                                                                                </button>
+                                                                                <span class="form-control text-center">@numberOfStages</span>
+                                                                                <button class="btn btn-border-warning px-3" 
+                                                                                        @onclick="@(() => UpdateStageCount(Math.Min(GetMaxStagesBasedOnDuration(), numberOfStages + 1)))"
+                                                                                        disabled="@(numberOfStages >= GetMaxStagesBasedOnDuration() || nostrApplicationSpecificDataCreated)">
+                                                                                    <span class="fw-bold">+</span>
+                                                                                </button>
+                                                                            </div>
+                                                                            <small class="text-muted">Stages will be evenly distributed across your timeline</small>
+                                                                        </div>
+                                                                    }
+                                                                </div>
+
+                                                                <div class="info-card mb-4">
+                                                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                                                        <div class="d-flex align-items-center">
+                                                                            <Icon IconName="server-path" Width="24" Height="24" Class="me-2" />
+                                                                            <h6 class="mb-0">Stage Preview</h6>
+                                                                        </div>
+                                                                        <span class="badge bg-primary">@CalculateNumberOfStages() stages</span>
+                                                                    </div>
+                                                                    
+                                                                    
+                                                                    
+                                                                    <div class="d-flex flex-row justify-content-between mb-4 gap-2">
+                                                                        <div class="stage-card p-2 border rounded flex-grow-1">
+                                                                            <h6 class="text-muted mb-2">Schedule</h6>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <Icon IconName="repeat" Width="16" Height="16" Class="me-2" />
+                                                                                <span>@GetIntervalName(selectedInterval)</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="stage-card p-2 border rounded flex-grow-1">
+                                                                            <h6 class="text-muted mb-2">Per Stage</h6>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <Icon IconName="currency" Width="16" Height="16" Class="text-success me-2" />
+                                                                                <span class="text-success">@((targetAmountInBTC / CalculateNumberOfStages()).ToString("0.####")) @network.CoinTicker</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="stage-card p-2 border rounded flex-grow-1">
+                                                                            <h6 class="text-muted mb-2">Target</h6>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <Icon IconName="balance" Width="16" Height="16" Class="text-success me-2" />
+                                                                                <span class="text-success">@targetAmountInBTC @network.CoinTicker</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <div class="stage-card rounded mb-4">
+                                                                        <div class="table-responsive rounded">
+                                                                            <table class="table table-hover border rounded">
+                                                                                <thead class="bg-opacity-10">
+                                                                                    <tr>
+                                                                                        <th class="fw-semibold">
+                                                                                            <div class="d-flex align-items-center">
+                                                                                                <Icon IconName="server-path" Width="16" Height="16" Class="me-2" />
+                                                                                                Stage
+                                                                                            </div>
+                                                                                        </th>
+                                                                                        <th class="fw-semibold">
+                                                                                            <div class="d-flex align-items-center">
+                                                                                                <Icon IconName="calendar" Width="16" Height="16" Class="me-2" />
+                                                                                                Date
+                                                                                            </div>
+                                                                                        </th>
+                                                                                        <th class="fw-semibold">
+                                                                                            <div class="d-flex align-items-center">
+                                                                                                <Icon IconName="clock-square" Width="16" Height="16" Class="me-2" />
+                                                                                                Timeline
+                                                                                            </div>
+                                                                                        </th>
+                                                                                        <th class="fw-semibold">
+                                                                                            <div class="d-flex align-items-center">
+                                                                                                <Icon IconName="currency" Width="16" Height="16" Class="me-2" />
+                                                                                                Allocation
+                                                                                            </div>
+                                                                                        </th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody>
+                                                                                    @{
+                                                                                        var intervals = CalculateIntervals();
+                                                                                        var percentages = CalculatePercentages();
+                                                                                    }
+                                                                                    @for (int i = 0; i < intervals.Count; i++)
+                                                                                    {
+                                                                                        var stageDay = intervals[i];
+                                                                                        var stageDate = DateTime.Today.AddDays(stageDay);
+                                                                                        var prevDay = i > 0 ? intervals[i-1] : 0;
+                                                                                        var stageDuration = stageDay - prevDay;
+                                                                                        var stageAmount = ((decimal)percentages[i] / 100 * targetAmountInBTC).ToString("0.####");
+                                                                                        
+                                                                                        <tr class="border-bottom">
+                                                                                            <td>
+                                                                                                <div class="d-flex align-items-center">
+                                                                                                    <div class="btn btn-outline-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                                                                                         style="width: 32px; height: 32px; border-radius: 5px;">
+                                                                                                        @(i+1)
+                                                                                                    </div>
+                                                                                                    <span class="badge bg-success bg-opacity-25">
+                                                                                                        <span>@percentages[i]%</span>
+                                                                                                    </span>
+                                                                                                </div>
+                                                                                            </td>
+                                                                                            <td class="align-middle">
+                                                                                                <span class="badge bg-primary bg-opacity-10  px-2 py-1 rounded">
+                                                                                                    @stageDate.ToString("MMM dd, yyyy")
+                                                                                                </span>
+                                                                                            </td>
+                                                                                            <td class="align-middle">
+                                                                                                <div class="d-flex align-items-center">
+                                                                                                    <span class="badge bg-warning bg-opacity-10 px-2 py-1 rounded me-2">
+                                                                                                        Day @stageDay
+                                                                                                    </span>
+                                                                                                    @if (i > 0)
+                                                                                                    {
+                                                                                                        <span class="small text-muted">
+                                                                                                            (+@stageDuration days)
+                                                                                                        </span>
+                                                                                                    }
+                                                                                                </div>
+                                                                                            </td>
+                                                                                            <td class="align-middle">
+                                                                                                <div class="d-flex align-items-center">
+                                                                                                    <Icon IconName="balance" Width="16" Height="16" Class="text-success me-2" />
+                                                                                                    <span class="text-success fw-semibold">
+                                                                                                        @stageAmount @network.CoinTicker
+                                                                                                    </span>
+                                                                                                </div>
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                    }
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>                                                                        
+                                                                    </div>
+                                                                </div>
+                                                                <div class="info-card p-3 rounded mt-3 d-flex align-items-center">
+                                                                    <div class="me-3">
+                                                                        <div class="icon-container p-2 rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                                                            style="width: 46px; height: 46px; 
+                                                                                background-color: var(--angor-border-color); 
+                                                                                border: 2px solid var(--angor-secondary);
+                                                                                transition: all 0.3s ease;">
+                                                                            <Icon IconName="actions" Width="24" Height="24" Class="text-primary" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="flex-grow-1">
+                                                                        <p class="mb-0 fw-bold">Important Note</p>
+                                                                        <span>You can customize stage's in the next step</span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         }
@@ -524,8 +738,8 @@
                                                                 
                                                                 <!-- Stage Checking Parameters -->
                                                                 @{
-                                                                    int totalPercentage = (int)project.ProjectInfo.Stages.Sum(s => (int)s.AmountToRelease);
-                                                                    bool isValidTotal = totalPercentage == 100;
+                                                                    decimal totalPercentage = project.ProjectInfo.Stages.Sum(s => s.AmountToRelease);
+                                                                    bool isValidTotal = totalPercentage == 100m;
                                                                     bool hasZeroStages = project.ProjectInfo.Stages.Any(s => s.AmountToRelease == 0);
                                                                     string statusClass = isValidTotal ? "bg-success" : "bg-danger";
                                                                     string textClass = isValidTotal ? "text-success" : "text-danger";
@@ -639,8 +853,8 @@
                                                         </button>
                                                         <button class="btn btn-border-success"
                                                                 @onclick="NextWizardStep"
-                                                                disabled="@(wizardStep == 2 && (project.ProjectInfo.Stages.Sum(s => (int)s.AmountToRelease) != 100 || project.ProjectInfo.Stages.Any(s => s.AmountToRelease == 0)))">
-                                                            @(wizardStep < 3 ? "Next" : "Finish")
+                                                                disabled="@(wizardStep == 2 && (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100m || project.ProjectInfo.Stages.Any(s => s.AmountToRelease == 0)))">
+                                                                @(wizardStep < 3 ? "Next" : "Finish")
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1179,6 +1393,9 @@
     private bool showCreateModal;
     private bool projectStageModal;
     private bool isPresetMode = true;
+    private int selectedInterval = 1;
+    private int totalDuration = 90;
+    private int numberOfStages = 3;
     private bool showConfirmationModal;
     private string confirmationMessage;
     private Action finalizeAction;
@@ -1194,7 +1411,6 @@
     private FounderProject project = new();
 
     private bool endDateError = false;
-
     private readonly Dictionary<string, (int[] Percentages, int IntervalDays)> presets = new()
     {
         { "preset1", (new[] { 10, 30, 60 }, 10) },
@@ -1211,8 +1427,6 @@
     private int activeTab = 1;
     private string activePreset;
 
-    private int totalDuration;
-    private int numberOfStages;
     private bool isValid = true;
     private string errorMessage;
 
@@ -1243,13 +1457,30 @@
     // Next button
     private void NextWizardStep()
     {
+        //For Storing the stages data after wizard step 1
+        if (wizardStep == 1)
+        {
+            var intervals   = CalculateIntervals();
+            var percentages = CalculatePercentages();
+
+            project.ProjectInfo.Stages.Clear();
+            for (int i = 0; i < intervals.Count; i++)
+            {
+                project.ProjectInfo.Stages.Add(new Stage
+                {
+                    AmountToRelease = percentages[i],
+                    ReleaseDate = project.ProjectInfo.StartDate.AddDays(intervals[i])
+                });
+            }
+        }
+
         if (wizardStep < 3)
         {
             wizardStep++;
         }
         else
         {
-            // Close the Wizard after 3rd stage
+            // Closing the Wizard after 3rd stage
             projectStageModal = false;
             wizardStep = 1;
         }
@@ -1289,6 +1520,137 @@
             2 => nostrApplicationSpecificDataCreated,
             _ => false
         };
+    }
+
+
+
+
+    private void UpdateDuration(int duration)
+    {
+        totalDuration = duration;
+        StateHasChanged();
+    }
+
+    private void SelectInterval(int interval)
+    {
+        selectedInterval = interval;
+    }
+
+    private string GetIntervalName(int interval)
+    {
+        return interval switch
+        {
+            1 => "Daily",
+            7 => "Weekly",
+            14 => "Biweekly",
+            30 => "Monthly",
+            90 => "Quarterly",
+            0 => "Custom",
+            _ => $"Every {interval} days"
+        };
+    }
+
+    private void UpdateStageCount(int count)
+    {
+        numberOfStages = count;
+        StateHasChanged();
+    }
+
+    private List<decimal> CalculatePercentages()
+    {
+        int stageCount = CalculateNumberOfStages();
+        var percentages = new List<decimal>();
+        if (stageCount <= 0)
+            return percentages;
+
+        decimal rawShare = 100m / stageCount;
+        decimal roundedShare = Math.Round(rawShare, 2);
+        decimal sum = roundedShare * stageCount;
+        decimal diff = Math.Round(100m - sum, 2);
+
+        for (int i = 0; i < stageCount; i++)
+        {
+            if (i == stageCount - 1)
+                percentages.Add(roundedShare + diff);
+            else
+                percentages.Add(roundedShare);
+        }
+
+        return percentages;
+    }
+
+    private int GetDurationInDays()
+    {
+        return (project.ProjectInfo.EndDate - DateTime.Today).Days;
+    }
+    
+    private int GetMaxStagesBasedOnDuration()
+    {
+        int days = GetDurationInDays();
+        return Math.Max(2, days);   // Allow one stage per day, but at least 2 stages
+    }
+    
+    private int CalculatePossibleStages(int interval)
+    {
+        if (interval <= 0) return GetMaxStagesBasedOnDuration(); // for custom
+        int days = GetDurationInDays();
+        return days < interval ? 0 : Math.Max(1, days / interval);
+    }
+    
+    private void CalculateProjectDuration()
+    {
+        if (project.ProjectInfo.EndDate <= DateTime.Today)
+        {
+            project.ProjectInfo.EndDate = DateTime.Today.AddDays(30);
+        }
+        
+        // Adjusting no. of stages if custom and current are too high
+        if (selectedInterval == 0 && numberOfStages > GetMaxStagesBasedOnDuration())
+        {
+            numberOfStages = GetMaxStagesBasedOnDuration();
+        }
+        
+        StateHasChanged();
+    }
+    
+    private int CalculateNumberOfStages()
+    {
+        int maxPossible = CalculatePossibleStages(selectedInterval);
+        
+        if (selectedInterval == 0)
+            return Math.Min(numberOfStages, maxPossible);
+        
+        return maxPossible;
+    }
+    
+    private List<int> CalculateIntervals()
+    {
+        int stageCount = CalculateNumberOfStages();
+        var intervals = new List<int>();
+        int totalDays = GetDurationInDays();
+        
+        if (stageCount <= 0)
+            return intervals;
+        
+        if (selectedInterval == 0)
+        {
+            // For custom stages, distribute evenly across the duration
+            for (int i = 0; i < stageCount; i++)
+            {
+                int dayOffset = (int)Math.Round((i + 1) * totalDays / (double)stageCount);
+                intervals.Add(dayOffset);
+            }
+        }
+        else
+        {
+            // For preset intervals, use the selected interval
+            for (int i = 0; i < stageCount; i++)
+            {
+                intervals.Add((i + 1) * selectedInterval);
+            }
+        }
+        
+        return intervals;
     }
 
     protected override async Task OnInitializedAsync()
