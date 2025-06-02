@@ -664,7 +664,6 @@
         int stageIndex = 0;
         foreach (Stage stage in investorProject.ProjectInfo.Stages)
         {
-            bool resolved = false;
             var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
 
             if (!string.IsNullOrEmpty(output.SpentInTransaction))
@@ -690,14 +689,13 @@
 
                         case ProjectScriptTypeEnum.EndOfProject:
                         {
-                            resolved = true;
                             investorProject.EndOfProjectTransactionId = output.SpentInTransaction;
-                            break;
+                            storage.UpdateInvestmentProject(investorProject);
+                            return;
                         }
 
                         case ProjectScriptTypeEnum.InvestorWithPenalty:
                         {
-                            resolved = true;
                             investorProject.RecoveryTransactionId = output.SpentInTransaction;
                             var totalsats = trxInfo.Outputs.SkipLast(1).Sum(s => s.Balance);
                             investorProject.AmountInRecovery = totalsats;
@@ -712,23 +710,18 @@
                                 }
                             }
 
-                            break;
+                            storage.UpdateInvestmentProject(investorProject);
+                            return;
                         }
 
                         case ProjectScriptTypeEnum.InvestorNoPenalty:
                         {
-                            resolved = true;
                             investorProject.UnfundedReleaseTransactionId = output.SpentInTransaction;
-                            break;
+                            storage.UpdateInvestmentProject(investorProject);
+                            return;
                         }
                     }
                 }
-            }
-
-            if (resolved)
-            {
-                storage.UpdateInvestmentProject(investorProject);
-                break;
             }
         }
     }
