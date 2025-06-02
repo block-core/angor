@@ -50,7 +50,7 @@
     <PackageVersion Include="Zafiro.Avalonia" Version="26.0.1" />
     <PackageVersion Include="Zafiro.UI" Version="22.0.0" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="26.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="26.1.4" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />
     <PackageVersion Include="FluentAssertions.Reactive" Version="0.2.0" />

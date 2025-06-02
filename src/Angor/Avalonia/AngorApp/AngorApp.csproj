@@ -53,6 +53,7 @@
         <DependentUpon>FounderProjectDetailsView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Remove="InvestmentStatus.cs" />
     </ItemGroup>
     
     

@@ -45,7 +45,6 @@ public static class GetInvestments
 
             var investmentsMessages = await InvestmentMessages(nostrPubKey);
             var approvals = await ApprovalMessages(nostrPubKey);
-
             var investments = await investmentsMessages
                 .Bind(i => approvals
                     .Map(a => CombineInvestmentsAndApprovals(request.WalletId, projectResult.Value, i, a)));
@@ -53,8 +52,10 @@ public static class GetInvestments
             var projectInvestments = await indexerService.GetInvestmentsAsync(request.ProjectId.Value);
 
             foreach (var investment in investments.Value)
-                investment.InvestorPublicKey = projectInvestments.FirstOrDefault(p => p.TransactionId == investment.InvestmentTransactionId)?.InvestorPublicKey
-                                               ?? string.Empty;
+            {
+                investment.InvestorPublicKey = projectInvestments
+                                                   .FirstOrDefault(p => p.TransactionId == investment.InvestmentTransactionId)?.InvestorPublicKey ?? string.Empty;
+            }
 
             return investments;
         }
