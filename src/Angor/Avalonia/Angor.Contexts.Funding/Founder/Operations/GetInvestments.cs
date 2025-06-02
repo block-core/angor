@@ -5,9 +5,9 @@ using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
+using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 using MediatR;
-using NBitcoin.Protocol;
 using Zafiro.CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
@@ -21,6 +21,7 @@ public static class GetInvestments
     }
 
     public class GetInvestmentsHandler(
+        IIndexerService indexerService,
         IProjectRepository projectRepository,
         ISignService signService,
         INostrDecrypter nostrDecrypter,
@@ -42,24 +43,37 @@ public static class GetInvestments
 
             var nostrPubKey = projectResult.Value.NostrPubKey;
 
-            var investments = await InvestmentMessages(nostrPubKey);
+            var investmentsMessages = await InvestmentMessages(nostrPubKey);
             var approvals = await ApprovalMessages(nostrPubKey);
 
-            return await investments
+            var investments = await investmentsMessages
                 .Bind(i => approvals
-                    .Map(a => CombineInvestmentsAndApprovals(request.WalletId, projectResult.Value, i, a))); 
+                    .Map(a => CombineInvestmentsAndApprovals(request.WalletId, projectResult.Value, i, a)));
+
+            var projectInvestments = await indexerService.GetInvestmentsAsync(request.ProjectId.Value);
+
+            foreach (var investment in investments.Value)
+                investment.InvestorPublicKey = projectInvestments.FirstOrDefault(p => p.TransactionId == investment.InvestmentTransactionId)?.InvestorPublicKey
+                                               ?? string.Empty;
+
+            return investments;
         }
 
-        private async Task<Result<IEnumerable<Investment>>> CombineInvestmentsAndApprovals(Guid walletId, Project project, IList<DirectMessage> messages, IList<ApprovalMessage> approvals)
+        private async Task<Result<IEnumerable<Investment>>> CombineInvestmentsAndApprovals(
+            Guid walletId,
+            Project project,
+            IList<DirectMessage> investmentMessages,
+            IList<ApprovalMessage> approvalMessages)
         {
-            var combineInvestmentsAndApprovals = messages.Select(message =>
+            var combineInvestmentsAndApprovals = investmentMessages.Select(message =>
             {
                 return nostrDecrypter.Decrypt(walletId, project.Id, message)
                     .MapTry(serializer.Deserialize<SignRecoveryRequest>)
                     .Map(request =>
                     {
-                        var isApproved = approvals.Any(a => a.EventIdentifier == message.Id);
-                        return new Investment(message.Created, GetAmount(request.InvestmentTransactionHex), request.InvestmentTransactionHex, message.InvestorNostrPubKey, message.Id, isApproved);;
+                        var tx = networkConfiguration.GetNetwork().CreateTransaction(request!.InvestmentTransactionHex);
+                        var approvalMessageFound = approvalMessages.FirstOrDefault(a => a.EventIdentifier == message.Id);
+                        return new Investment(message.Created, tx.GetHash().ToString(), GetAmount(tx), request.InvestmentTransactionHex, message.InvestorNostrPubKey, approvalMessageFound?.EventIdentifier ?? string.Empty);
                     });
             }).CombineInOrder(", ");
 
@@ -107,10 +121,8 @@ public static class GetInvestments
             }
         }
 
-        private long GetAmount(string transactionHex)
+        private long GetAmount(Transaction investorTrx)
         {
-            var investorTrx = networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
-
             return investorTrx.Outputs.AsIndexedOutputs()
                 .Skip(2)
                 .Take(investorTrx.Outputs.Count - 3)
@@ -118,7 +130,29 @@ public static class GetInvestments
         }
     }
 
-    public record Investment(DateTime Created, long Amount, string InvestmentTransactionHex, string InvestorNostrPubKey, string NostrEventId, bool IsApproved);
+    public class Investment
+    {
+        public Investment(DateTime created, string investmentTransactionId, long amount, string investmentTransactionHex, string investorNostrPubKey, string nostrEventId)
+        {
+            Created = created;
+            InvestmentTransactionId = investmentTransactionId;
+            Amount = amount;
+            InvestmentTransactionHex = investmentTransactionHex;
+            InvestorNostrPubKey = investorNostrPubKey;
+            NostrEventId = nostrEventId;
+        }
+
+        public DateTime Created { get; }
+
+        public string InvestmentTransactionId { get; }
+        public long Amount { get; }
+        public string InvestmentTransactionHex { get; }
+        public string InvestorNostrPubKey { get; }
+        public string NostrEventId { get; }
+        public string InvestorPublicKey { get; set; }
+        public bool IsApproved => !string.IsNullOrEmpty(NostrEventId);
+        public bool IsInvested => !string.IsNullOrEmpty(InvestorPublicKey);
+    }
 
     private record ApprovalMessage(string ProfileIdentifier, DateTime Created, string EventIdentifier);
 }
