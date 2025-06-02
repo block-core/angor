@@ -29,15 +29,30 @@
 
 
 
-            <div class="d-flex align-items-center mb-4">
-                <span class="user-select-none">
-                    <Icon IconName="view" Height="24" Width="24"></Icon>
-                </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        <a href="/view/@FounderProject.ProjectInfo.ProjectIdentifier"> @FounderProject.Metadata.Name</a>
-                    </h5>
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex align-items-center">
+                    <span class="user-select-none">
+                        <Icon IconName="view" Height="24" Width="24" />
+                    </span>
+                    <div class="h-100 ms-3">
+                        <h5 class="mb-0 font-weight-bolder">
+                            <a href="/view/@FounderProject.ProjectInfo.ProjectIdentifier">
+                                @FounderProject.Metadata.Name
+                            </a>
+                        </h5>
+                    </div>
                 </div>
+
+                @if (InvestmentRequests)
+                {
+                    <a class="d-flex align-items-center text-white" 
+                         href=@($"/signatures/{FounderProject.ProjectInfo.ProjectIdentifier}") 
+                         title="Approve investments">
+                        <span class="user-select-none">
+                            <Icon IconName="signature" Height="24" Width="24"></Icon>
+                        </span>
+                    </a>
+                }
             </div>
             <p class="mb-0 line-clamp-3 text-white">@(ConvertToMarkupString(FounderProject.Metadata.About))</p>
 
@@ -64,7 +79,7 @@
                             <strong>
                                 @Money.Satoshis(FounderProject.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC)
                             </strong>
-                            BTC
+                            TBTC
                         </span>
                     </div>
                 </div>
