@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "angor"
-version = "0.0.90"
+version = "0.0.91"
 dependencies = [
  "serde",
  "serde_json",
