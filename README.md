@@ -27,9 +27,6 @@ Angor is a browser-based platform that can be installed as a PWA (Progressive We
 
 It can be downloaded directly from this repository or accessed via the website: [https://angor.io/](https://angor.io/)
 
-## License
-Please visit and review the [Custom License](/LICENSE) before contributing.
-
 ## Contributing
 
 Check out [this page](/CONTRIBUTING.MD)
