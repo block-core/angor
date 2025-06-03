@@ -24,6 +24,7 @@ public static class UIServicesRegistration
             .AddSingleton<ILauncherService>(_ => new LauncherService(topLevel!.Launcher))
             .AddSingleton(DialogService.Create())
             .AddSingleton<IActiveWallet, ActiveWallet>()
+            .AddSingleton(new ShellProperties("Angor"))
             .AddSingleton<IShell, Shell>()
             .AddSingleton<IWalletRoot, WalletRoot>()
             .AddSingleton<INotificationService>(_ => notificationService)
