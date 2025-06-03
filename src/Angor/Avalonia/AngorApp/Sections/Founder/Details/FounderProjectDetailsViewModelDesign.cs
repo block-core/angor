@@ -38,26 +38,8 @@ public class FounderProjectDetailsViewModelDesign : IFounderProjectDetailsViewMo
     public string ShortDescription { get; } = "Short description, Bitcoin ONLY.";
 }
 
-public record InvestmentViewModelDesign(IAmountUI Amount, string InvestorNostrPubKey, DateTimeOffset Created, bool IsApproved) : IInvestmentViewModel
+public record InvestmentViewModelDesign(IAmountUI Amount, string InvestorNostrPubKey, DateTimeOffset Created, bool CanApprove) : IInvestmentViewModel
 {
     public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; }
     public InvestmentStatus Status { get; set; } = InvestmentStatus.Pending;
-}
-
-public interface IInvestmentViewModel
-{
-    public IAmountUI Amount { get; }
-    public string InvestorNostrPubKey { get; }
-    public DateTimeOffset Created { get; }
-    public bool IsApproved { get; }
-    public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; }
-    public InvestmentStatus Status { get; }
-}
-
-public enum InvestmentStatus
-{
-    None,
-    Pending,
-    Approved,
-    Invested,
 }

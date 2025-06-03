@@ -9,7 +9,7 @@
              xmlns:pt="https://github.com/projektanker/icons.avalonia"
              xmlns:details="clr-namespace:AngorApp.Sections.Founder.Details"
              xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="800"
+             mc:Ignorable="d" d:DesignWidth="500"
              x:Class="AngorApp.Sections.Founder.Details.FounderProjectDetailsView" x:DataType="details:IFounderProjectDetailsViewModel">
     <Design.DataContext>
         <details:FounderProjectDetailsViewModelDesign BannerUrl="https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg" />
@@ -43,22 +43,32 @@
 
     <ScrollViewer>
         <StackPanel Spacing="10">
-            <controls:Pane Padding="0" CornerRadius="20">
-                <StackPanel>
-                    <asyncImageLoader:AdvancedImage CornerRadius="20 20 0 0" Height="200" Stretch="UniformToFill" Source="{Binding BannerUrl}" />
-                    <StackPanel Margin="20" Spacing="10">
-                        <TextBlock Classes="SizeBig" Text="{Binding Name}" />
-                        <TextBlock TextWrapping="Wrap" Text="{Binding ShortDescription}" />
-                    </StackPanel>
+            <StackPanel>
+                <asyncImageLoader:AdvancedImage CornerRadius="20 20 0 0" Height="200" Stretch="UniformToFill" Source="{Binding BannerUrl}" />
+                <StackPanel Margin="20" Spacing="10">
+                    <TextBlock Classes="SizeBig" Text="{Binding Name}" />
+                    <TextBlock TextWrapping="Wrap" Text="{Binding ShortDescription}" />
                 </StackPanel>
-            </controls:Pane>
-            <controls:Pane Title="Investments" IsTitleVisible="True">
-                <controls:Pane.TitleRightContent>
+            </StackPanel>
+            <!-- <controls:Pane Padding="0" CornerRadius="20"> -->
+            <!--     <StackPanel> -->
+            <!--         <asyncImageLoader:AdvancedImage CornerRadius="20 20 0 0" Height="200" Stretch="UniformToFill" Source="{Binding BannerUrl}" /> -->
+            <!--         <StackPanel Margin="20" Spacing="10"> -->
+            <!--             <TextBlock Classes="SizeBig" Text="{Binding Name}" /> -->
+            <!--             <TextBlock TextWrapping="Wrap" Text="{Binding ShortDescription}" /> -->
+            <!--         </StackPanel> -->
+            <!--     </StackPanel> -->
+            <!-- </controls:Pane> -->
+            <c:Card Header="Investments">
+                <c:Card.HeaderEndContent>
                     <Button pt:Attached.Icon="fa-rotate-right" Command="{Binding LoadInvestments}" />
-                </controls:Pane.TitleRightContent>
+                </c:Card.HeaderEndContent>
                 <c:Loading IsLoading="{Binding LoadInvestments.IsExecuting^}">
                     <sdg:SlimDataGrid Margin="0 10" ItemsSource="{Binding Investments}">
                         <sdg:SlimDataGrid.Styles>
+                            <Style Selector="sdg|Cell">
+                                <Setter Property="Margin" Value="5 0" />
+                            </Style>
                             <Style Selector="sdg|Row">
                                 <Setter Property="Height" Value="60" />
                                 <Setter Property="Margin" Value="6" />
@@ -70,6 +80,7 @@
                             <Style Selector="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center" />
                                 <Setter Property="HorizontalAlignment" Value="Center" />
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
                             </Style>
                         </sdg:SlimDataGrid.Styles>
                         <sdg:SlimDataGrid.Columns>
@@ -90,14 +101,14 @@
                                     <DataTemplate>
                                         <Button HorizontalAlignment="Center" 
                                                 Command="{Binding Content.Approve}" 
-                                                Content="Approve" IsVisible="{Binding !Content.IsApproved}" />
+                                                Content="Approve" IsVisible="{Binding !Content.CanApprove}" />
                                     </DataTemplate>
                                 </sdg:Column.CellTemplate>
                             </sdg:Column>
                         </sdg:SlimDataGrid.Columns>
                     </sdg:SlimDataGrid>
                 </c:Loading>
-            </controls:Pane>
+            </c:Card>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

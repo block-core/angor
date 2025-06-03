@@ -14,30 +14,26 @@ public partial class InvestmentViewModel : ReactiveObject, IInvestmentViewModel
     public InvestmentViewModel(GetInvestments.Investment investment, Func<Task<Maybe<Result<bool>>>> onApprove)
     {
         this.investment = investment;
-        IsApproved = investment.IsApproved;
-        IsInvested = investment.IsInvested;
         Approve = ReactiveCommand.CreateFromTask(onApprove).Enhance();
-        Approve.Values().Successes().Do(approved => IsApproved = approved).Subscribe();
+        Approve.Values().Successes().Do(approved => CanApprove = approved).Subscribe();
     }
 
-    public bool IsInvested { get; }
     public IAmountUI Amount => new AmountUI(investment.Amount);
     public string InvestorNostrPubKey => investment.InvestorNostrPubKey;
     public DateTimeOffset Created => investment.Created;
-    
     public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; }
     public InvestmentStatus Status
     {
         get
         {
-            if (investment.IsApproved)
-            {
-                return InvestmentStatus.Approved;
-            }
-
             if (investment.IsInvested)
             {
                 return InvestmentStatus.Invested;
+            }
+
+            if (investment.IsApproved)
+            {
+                return InvestmentStatus.Approved;
             }
 
             return InvestmentStatus.Pending;
