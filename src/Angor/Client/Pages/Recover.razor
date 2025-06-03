@@ -776,6 +776,13 @@
 
         var penaltyExpieryDate = Utils.UnixTimeToDateTime(StageInfo.TransactionInfo.Timestamp).AddDays(project.ProjectInfo.PenaltyDays);
 
+        if (!string.IsNullOrEmpty(project.RecoveryTransactionId))
+        {
+            var recoveryTansaction = await _IndexerService.GetTransactionInfoByIdAsync(project.RecoveryTransactionId);
+            if (recoveryTansaction != null) 
+                penaltyExpieryDate = Utils.UnixTimeToDateTime(recoveryTansaction.Timestamp).AddDays(project.ProjectInfo.PenaltyDays);
+        }
+
         foreach (var item in StageInfo.Items)
         {
             if (unconfirmedOutbound.ContainsOutpoint(new Outpoint(StageInfo.TransactionInfo.TransactionId, item.Outputindex)))

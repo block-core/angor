@@ -661,8 +661,7 @@
         var trxHex = await _IndexerService.GetTransactionHexByIdAsync(investorProject.TransactionId);
         Blockcore.Consensus.TransactionInfo.Transaction investmentTransaction = network.CreateTransaction(trxHex);
 
-        int stageIndex = 0;
-        foreach (Stage stage in investorProject.ProjectInfo.Stages)
+        for (int stageIndex = 0; stageIndex < investorProject.ProjectInfo.Stages.Count; stageIndex++)
         {
             var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
 
