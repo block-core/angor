@@ -12,21 +12,21 @@ public class FounderProjectDetailsViewModelDesign : IFounderProjectDetailsViewMo
     {
         new()
         {
-            Content = new InvestmentViewModelDesign(new AmountUI(12122), "nostr pub key", DateTimeOffset.Now, true)
+            Content = new InvestmentViewModelDesign(new AmountUI(12122), "nostr pub key", DateTimeOffset.Now, InvestmentStatus.Approved)
             {
                 Status = InvestmentStatus.Pending,
             }
         },
         new()
         {
-            Content = new InvestmentViewModelDesign(new AmountUI(1234233), "nostr pub key", DateTimeOffset.Now.AddHours(-2), false) 
+            Content = new InvestmentViewModelDesign(new AmountUI(1234233), "nostr pub key", DateTimeOffset.Now.AddHours(-2),  InvestmentStatus.Invested) 
             {
                 Status = InvestmentStatus.Invested,
             }
         },
         new()
         {
-            Content = new InvestmentViewModelDesign(new AmountUI(423445), "nostr pub key", DateTimeOffset.Now.AddHours(-4), true)
+            Content = new InvestmentViewModelDesign(new AmountUI(423445), "nostr pub key", DateTimeOffset.Now.AddHours(-4), InvestmentStatus.Pending)
             {
                 Status = InvestmentStatus.Approved,
             }
@@ -38,8 +38,7 @@ public class FounderProjectDetailsViewModelDesign : IFounderProjectDetailsViewMo
     public string ShortDescription { get; } = "Short description, Bitcoin ONLY.";
 }
 
-public record InvestmentViewModelDesign(IAmountUI Amount, string InvestorNostrPubKey, DateTimeOffset Created, bool CanApprove) : IInvestmentViewModel
+public record InvestmentViewModelDesign(IAmountUI Amount, string InvestorNostrPubKey, DateTimeOffset Created, InvestmentStatus Status) : IInvestmentViewModel
 {
-    public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; }
-    public InvestmentStatus Status { get; set; } = InvestmentStatus.Pending;
+    public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; } = ReactiveCommand.Create(() => Maybe.From(Result.Success(true)), Observable.Return(Status == InvestmentStatus.Pending)).Enhance();
 }

@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Angor.Contexts.Funding.Founder.Operations;
+using Humanizer;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI.Commands;
@@ -8,37 +9,38 @@ namespace AngorApp.Sections.Founder.Details;
 
 public partial class InvestmentViewModel : ReactiveObject, IInvestmentViewModel
 {
-    [Reactive] private bool isApproved;
     private readonly GetInvestments.Investment investment;
+
+    [Reactive]
+    private InvestmentStatus status;
 
     public InvestmentViewModel(GetInvestments.Investment investment, Func<Task<Maybe<Result<bool>>>> onApprove)
     {
         this.investment = investment;
-        Approve = ReactiveCommand.CreateFromTask(onApprove).Enhance();
-        Approve.Values().Successes().Do(approved => CanApprove = approved).Subscribe();
-    }
+        var canApprove = this.WhenAnyValue(model => model.Status, investmentStatus => investmentStatus == InvestmentStatus.Pending );
+        Approve = ReactiveCommand.CreateFromTask(onApprove, canApprove).Enhance();
+        Approve.Values().Successes().Do(_ => Status = InvestmentStatus.Approved).Subscribe();
 
-    public bool CanApprove { get; set; }
+        Status = GetStatus(investment);
+    }
 
     public IAmountUI Amount => new AmountUI(investment.Amount);
     public string InvestorNostrPubKey => investment.InvestorNostrPubKey;
     public DateTimeOffset Created => investment.Created;
     public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; }
-    public InvestmentStatus Status
+
+    private InvestmentStatus GetStatus(GetInvestments.Investment investment1)
     {
-        get
+        if (investment.IsInvested)
         {
-            if (investment.IsInvested)
-            {
-                return InvestmentStatus.Invested;
-            }
-
-            if (investment.IsApproved)
-            {
-                return InvestmentStatus.Approved;
-            }
-
-            return InvestmentStatus.Pending;
+            return InvestmentStatus.Invested;
         }
+
+        if (investment.IsApproved)
+        {
+            return InvestmentStatus.Approved;
+        }
+
+        return InvestmentStatus.Pending;
     }
 }

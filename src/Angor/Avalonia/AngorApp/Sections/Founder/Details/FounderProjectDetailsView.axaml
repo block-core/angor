@@ -9,7 +9,7 @@
              xmlns:pt="https://github.com/projektanker/icons.avalonia"
              xmlns:details="clr-namespace:AngorApp.Sections.Founder.Details"
              xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="500"
+             mc:Ignorable="d" d:DesignWidth="550"
              x:Class="AngorApp.Sections.Founder.Details.FounderProjectDetailsView" x:DataType="details:IFounderProjectDetailsViewModel">
     <Design.DataContext>
         <details:FounderProjectDetailsViewModelDesign BannerUrl="https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg" />
@@ -42,7 +42,7 @@
     </Interaction.Behaviors>
 
     <ScrollViewer>
-        <StackPanel Spacing="10">
+        <StackPanel Spacing="10" MinWidth="550">
             <StackPanel>
                 <asyncImageLoader:AdvancedImage CornerRadius="20 20 0 0" Height="200" Stretch="UniformToFill" Source="{Binding BannerUrl}" />
                 <StackPanel Margin="20" Spacing="10">
@@ -101,7 +101,7 @@
                                     <DataTemplate>
                                         <Button HorizontalAlignment="Center" 
                                                 Command="{Binding Content.Approve}" 
-                                                Content="Approve" IsVisible="{Binding !Content.CanApprove}" />
+                                                Content="Approve" IsVisible="{Binding !Content.Approve.CanExecute^}" />
                                     </DataTemplate>
                                 </sdg:Column.CellTemplate>
                             </sdg:Column>

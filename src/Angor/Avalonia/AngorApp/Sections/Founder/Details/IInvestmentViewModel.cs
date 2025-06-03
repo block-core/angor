@@ -9,5 +9,4 @@ public interface IInvestmentViewModel
     public DateTimeOffset Created { get; }
     public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; }
     public InvestmentStatus Status { get; }
-    public bool CanApprove => Status == InvestmentStatus.Pending;
 }
