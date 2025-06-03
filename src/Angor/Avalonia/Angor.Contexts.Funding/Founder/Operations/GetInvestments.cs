@@ -14,7 +14,7 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class GetInvestments
 {
-    public class GetInvestmentsRequest(Guid walletId, ProjectId projectId) : IRequest<Result<IEnumerable<Investment>>>
+    public class GetInvestmentsRequest(Guid walletId, ProjectId projectId) : IRequest<Result<IEnumerable<Investment2>>>
     {
         public Guid WalletId { get; } = walletId;
         public ProjectId ProjectId { get; } = projectId;
@@ -26,38 +26,60 @@ public static class GetInvestments
         ISignService signService,
         INostrDecrypter nostrDecrypter,
         INetworkConfiguration networkConfiguration,
-        ISerializer serializer) : IRequestHandler<GetInvestmentsRequest, Result<IEnumerable<Investment>>>
+        ISerializer serializer) : IRequestHandler<GetInvestmentsRequest, Result<IEnumerable<Investment2>>>
     {
-        public Task<Result<IEnumerable<Investment>>> Handle(GetInvestmentsRequest request, CancellationToken cancellationToken)
+        public Task<Result<IEnumerable<Investment2>>> Handle(GetInvestmentsRequest request, CancellationToken cancellationToken)
         {
             return GetInvestments(request);
         }
 
-        private async Task<Result<IEnumerable<Investment>>> GetInvestments(GetInvestmentsRequest request)
+        private async Task<Result<IEnumerable<Investment2>>> GetInvestments(GetInvestmentsRequest request)
         {
             var projectResult = await projectRepository.Get(request.ProjectId);
             if (projectResult.IsFailure)
             {
-                return Result.Failure<IEnumerable<Investment>>(projectResult.Error);
+                return Result.Failure<IEnumerable<Investment2>>(projectResult.Error);
             }
 
             var nostrPubKey = projectResult.Value.NostrPubKey;
 
-            var investmentsMessages = await InvestmentMessages(nostrPubKey);
-            var approvals = await ApprovalMessages(nostrPubKey);
-            var investments = await investmentsMessages
-                .Bind(i => approvals
-                    .Map(a => CombineInvestmentsAndApprovals(request.WalletId, projectResult.Value, i, a)));
+            var tupleResult =
+                from requests in Requests(request, nostrPubKey)
+                from approvals in Approvals(nostrPubKey)
+                from alreadyInvested in AlreadyInvested(request)
+                select new { requests, approvals, alreadyInvested };
 
-            var projectInvestments = await indexerService.GetInvestmentsAsync(request.ProjectId.Value);
-
-            foreach (var investment in investments.Value)
+            return await tupleResult.Map(tuple =>
             {
-                investment.InvestorPublicKey = projectInvestments
-                                                   .FirstOrDefault(p => p.TransactionId == investment.InvestmentTransactionId)?.InvestorPublicKey ?? string.Empty;
-            }
+                var list = new List<Investment2>();
+                foreach (var signRequest in tuple.requests)
+                {
+                    var tx = networkConfiguration.GetNetwork().CreateTransaction(signRequest.InvestmentTransactionHex);
+                    var amount = GetAmount(tx);
+                    var isInvested = tuple.alreadyInvested.Any(x => x.TransactionId == tx.GetHash().ToString());
+                    var isApproved = tuple.approvals.Any(message => message.EventIdentifier == signRequest.EventId);
+                    var status = isInvested ? InvestmentStatus.Invested : isApproved ? InvestmentStatus.Approved : InvestmentStatus.Pending;
+                    var investment = new Investment2(signRequest.EventId, DateTime.Now, signRequest.InvestmentTransactionHex, signRequest.InvestorNostrPubKey, amount, status);
+                    list.Add(investment);
+                }
 
-            return investments;
+                return list.AsEnumerable();
+            });
+        }
+
+        private Task<Result<List<ProjectInvestment>>> AlreadyInvested(GetInvestmentsRequest request)
+        {
+            return Result.Try(() => indexerService.GetInvestmentsAsync(request.ProjectId.Value));
+        }
+
+        private async Task<Result<IEnumerable<InvestmentRequest>>> Requests(GetInvestmentsRequest request, string nostrPubKey)
+        {
+            return await InvestmentMessages(nostrPubKey)
+                .MapEach(message => nostrDecrypter.Decrypt(request.WalletId, request.ProjectId, message).Map(s => new { message, s })).CombineSequentially()
+                .MapEach(decrypted => Result.Try(() => serializer.Deserialize<SignRecoveryRequest>(decrypted.s)).EnsureNotNull(() => $"Cannot parse {decrypted.s} to SignRecoveryRequest").Map(recoveryRequest => new { recoveryRequest, decrypted.message }))
+                .Bind(results => results.Combine())
+                .MapEach(arg => new InvestmentRequest(arg.message.Created, arg.message.InvestorNostrPubKey, arg.recoveryRequest.InvestmentTransactionHex, arg.message.Id));
+            //.MapEach(recoveryRequest => new RequestMessage(recoveryRequest.));
         }
 
         private async Task<Result<IEnumerable<Investment>>> CombineInvestmentsAndApprovals(
@@ -82,7 +104,7 @@ public static class GetInvestments
             return result;
         }
 
-        private async Task<Result<IList<ApprovalMessage>>> ApprovalMessages(string nostrPubKey)
+        private async Task<Result<IList<ApprovalMessage>>> Approvals(string nostrPubKey)
         {
             return await GetApprovedStatusObs()
                 .ToList()
@@ -102,10 +124,11 @@ public static class GetInvestments
             }
         }
 
-        private async Task<Result<IList<DirectMessage>>> InvestmentMessages(string nostrPubKey)
+        private async Task<Result<IEnumerable<DirectMessage>>> InvestmentMessages(string nostrPubKey)
         {
             return await InvestmentMessagesObs()
                 .ToList()
+                .Select(list => list.AsEnumerable())
                 .ToResult();
 
             IObservable<DirectMessage> InvestmentMessagesObs()
@@ -122,11 +145,11 @@ public static class GetInvestments
             }
         }
 
-        private long GetAmount(Transaction investorTrx)
+        private static long GetAmount(Transaction transaction)
         {
-            return investorTrx.Outputs.AsIndexedOutputs()
+            return transaction.Outputs.AsIndexedOutputs()
                 .Skip(2)
-                .Take(investorTrx.Outputs.Count - 3)
+                .Take(transaction.Outputs.Count - 3)
                 .Sum(x => x.TxOut.Value.Satoshi);
         }
     }
@@ -156,4 +179,16 @@ public static class GetInvestments
     }
 
     private record ApprovalMessage(string ProfileIdentifier, DateTime Created, string EventIdentifier);
+
+    private class Source
+    {
+        public Source(IList<DirectMessage> msgs, IList<ApprovalMessage> appr, List<ProjectInvestment> currentInvestments)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
+
+internal record InvestmentRequest(DateTime Created, string InvestorNostrPubKey, string InvestmentTransactionHex, string EventId);
+
+public record Investment2(string EventId, DateTime CreatedOn, string InvestmentTransactionHex, string InvestorNostrPubKey, long Amount, InvestmentStatus Status);

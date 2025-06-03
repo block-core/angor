@@ -17,7 +17,7 @@ namespace Angor.Contexts.Funding.Investor;
 
 public static class ApproveInvestment
 {
-    public record ApproveInvestmentRequest(Guid WalletId, ProjectId ProjectId, GetInvestments.Investment InvestmentRequest) : IRequest<Result>;
+    public record ApproveInvestmentRequest(Guid WalletId, ProjectId ProjectId, Investment2 InvestmentRequest) : IRequest<Result>;
 
     public class ApproveInvestmentHandler(
         IProjectRepository projectRepository,
@@ -34,7 +34,7 @@ public static class ApproveInvestment
         {
             var signatureItem = new SignatureItem()
             {
-                EventId = request.InvestmentRequest.NostrEventId,
+                EventId = request.InvestmentRequest.EventId,
                 SignRecoveryRequest = new SignRecoveryRequest()
                 {
                     InvestmentTransactionHex = request.InvestmentRequest.InvestmentTransactionHex,

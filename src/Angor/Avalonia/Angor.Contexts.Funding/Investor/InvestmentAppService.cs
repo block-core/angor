@@ -19,12 +19,12 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
         return mediator.Send(new RequestInvestment.RequestFounderSignaturesRequest(sourceWalletId, projectId, draft));
     }
 
-    public Task<Result<IEnumerable<GetInvestments.Investment>>> GetInvestments(Guid walletId, ProjectId projectId)
+    public Task<Result<IEnumerable<Investment2>>> GetInvestments(Guid walletId, ProjectId projectId)
     {
         return mediator.Send(new GetInvestments.GetInvestmentsRequest(walletId, projectId));
     }
 
-    public Task<Result> ApproveInvestment(Guid walletId, ProjectId projectId, GetInvestments.Investment investment)
+    public Task<Result> ApproveInvestment(Guid walletId, ProjectId projectId, Investment2 investment)
     {
         return mediator.Send(new ApproveInvestment.ApproveInvestmentRequest(walletId, projectId, investment));
     }

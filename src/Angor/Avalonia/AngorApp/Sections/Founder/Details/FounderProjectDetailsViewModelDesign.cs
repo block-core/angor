@@ -1,4 +1,4 @@
-using Angor.Contexts.Funding.Founder.Operations;
+using Angor.Contexts.Funding.Founder;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
 
@@ -38,7 +38,7 @@ public class FounderProjectDetailsViewModelDesign : IFounderProjectDetailsViewMo
     public string ShortDescription { get; } = "Short description, Bitcoin ONLY.";
 }
 
-public record InvestmentViewModelDesign(IAmountUI Amount, string InvestorNostrPubKey, DateTimeOffset Created, InvestmentStatus Status) : IInvestmentViewModel
+public record InvestmentViewModelDesign(IAmountUI Amount, string InvestorNostrPubKey, DateTimeOffset CreatedOn, InvestmentStatus Status) : IInvestmentViewModel
 {
     public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; } = ReactiveCommand.Create(() => Maybe.From(Result.Success(true)), Observable.Return(Status == InvestmentStatus.Pending)).Enhance();
 }

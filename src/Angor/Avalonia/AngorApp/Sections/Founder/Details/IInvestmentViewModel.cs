@@ -6,7 +6,7 @@ public interface IInvestmentViewModel
 {
     public IAmountUI Amount { get; }
     public string InvestorNostrPubKey { get; }
-    public DateTimeOffset Created { get; }
+    public DateTimeOffset CreatedOn { get; }
     public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; }
-    public InvestmentStatus Status { get; }
+    public Angor.Contexts.Funding.Founder.InvestmentStatus Status { get; }
 }

@@ -9,6 +9,7 @@
              xmlns:pt="https://github.com/projektanker/icons.avalonia"
              xmlns:details="clr-namespace:AngorApp.Sections.Founder.Details"
              xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
+             xmlns:founder="clr-namespace:Angor.Contexts.Funding.Founder;assembly=Angor.Contexts.Funding"
              mc:Ignorable="d" d:DesignWidth="550"
              x:Class="AngorApp.Sections.Founder.Details.FounderProjectDetailsView" x:DataType="details:IFounderProjectDetailsViewModel">
     <Design.DataContext>
@@ -17,17 +18,17 @@
     
     <UserControl.Resources>
         <converters:ControlThemeConverter x:Key="InvestmentStatusConverter">
-            <ControlTheme x:Key="{x:Static details:InvestmentStatus.Pending}" 
+            <ControlTheme x:Key="{x:Static founder:InvestmentStatus.Pending}" 
                           TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="Background" Value="Yellow" />
                 <Setter Property="Content" Value="Pending" />
             </ControlTheme>
-            <ControlTheme x:Key="{x:Static details:InvestmentStatus.Approved}" 
+            <ControlTheme x:Key="{x:Static founder:InvestmentStatus.Approved}" 
                           TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="Background" Value="GreenYellow" />
                 <Setter Property="Content" Value="Approved" />
             </ControlTheme>
-            <ControlTheme x:Key="{x:Static details:InvestmentStatus.Invested}" 
+            <ControlTheme x:Key="{x:Static founder:InvestmentStatus.Invested}" 
                           TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="Background" Value="LightGreen" />
                 <Setter Property="Content" Value="Invested" />
@@ -85,7 +86,7 @@
                         </sdg:SlimDataGrid.Styles>
                         <sdg:SlimDataGrid.Columns>
                             <sdg:Column Header="Amount" Binding="{Binding Content.Amount.BtcString}" />
-                            <sdg:Column Header="Date" Binding="{Binding Content.Created, Converter={x:Static controls:MiscConverters.HumanizeDate}}" />
+                            <sdg:Column Header="Date" Binding="{Binding Content.CreatedOn, Converter={x:Static controls:MiscConverters.HumanizeDate}}" />
                             <sdg:Column Header="Investor" Binding="{Binding Content.InvestorNostrPubKey}" />
                             <sdg:Column Header="Status" Width="100" Binding="{Binding Content}">
                                 <sdg:Column.CellTemplate>
@@ -101,7 +102,7 @@
                                     <DataTemplate>
                                         <Button HorizontalAlignment="Center" 
                                                 Command="{Binding Content.Approve}" 
-                                                Content="Approve" IsVisible="{Binding !Content.Approve.CanExecute^}" />
+                                                Content="Approve" IsVisible="{Binding $self.IsEffectivelyEnabled}" />
                                     </DataTemplate>
                                 </sdg:Column.CellTemplate>
                             </sdg:Column>
