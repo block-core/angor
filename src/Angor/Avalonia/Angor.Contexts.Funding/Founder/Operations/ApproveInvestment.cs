@@ -1,6 +1,5 @@
 using Angor.Client.Services;
 using Angor.Contests.CrossCutting;
-using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
@@ -13,11 +12,11 @@ using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
 
-namespace Angor.Contexts.Funding.Investor;
+namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class ApproveInvestment
 {
-    public record ApproveInvestmentRequest(Guid WalletId, ProjectId ProjectId, Investment2 InvestmentRequest) : IRequest<Result>;
+    public record ApproveInvestmentRequest(Guid WalletId, ProjectId ProjectId, Investment InvestmentRequest) : IRequest<Result>;
 
     public class ApproveInvestmentHandler(
         IProjectRepository projectRepository,

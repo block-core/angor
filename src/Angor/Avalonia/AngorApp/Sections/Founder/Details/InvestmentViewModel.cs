@@ -9,12 +9,12 @@ namespace AngorApp.Sections.Founder.Details;
 
 public partial class InvestmentViewModel : ReactiveObject, IInvestmentViewModel
 {
-    private readonly Investment2 investment;
+    private readonly Investment investment;
 
     [Reactive]
     private InvestmentStatus status;
 
-    public InvestmentViewModel(Investment2 investment, Func<Task<Maybe<Result<bool>>>> onApprove)
+    public InvestmentViewModel(Investment investment, Func<Task<Maybe<Result<bool>>>> onApprove)
     {
         this.investment = investment;
         var canApprove = this.WhenAnyValue(model => model.Status, investmentStatus => investmentStatus == InvestmentStatus.Pending);

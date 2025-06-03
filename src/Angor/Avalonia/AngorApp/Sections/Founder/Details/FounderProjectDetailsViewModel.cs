@@ -37,7 +37,7 @@ public class FounderProjectDetailsViewModel : IFounderProjectDetailsViewModel
         Investments = pendingInvestments;
     }
 
-    private static async Task<Maybe<Result<bool>>> Approve(ProjectDto project, IInvestmentAppService investmentAppService, UIServices uiServices, IWallet wallet, Investment2 investment)
+    private static async Task<Maybe<Result<bool>>> Approve(ProjectDto project, IInvestmentAppService investmentAppService, UIServices uiServices, IWallet wallet, Investment investment)
     {
         var confirmationResult = await uiServices.Dialog.ShowConfirmation("Approve investment", "Do you want to approve this investment?");
     
