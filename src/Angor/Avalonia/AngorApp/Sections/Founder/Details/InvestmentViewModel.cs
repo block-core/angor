@@ -18,6 +18,8 @@ public partial class InvestmentViewModel : ReactiveObject, IInvestmentViewModel
         Approve.Values().Successes().Do(approved => CanApprove = approved).Subscribe();
     }
 
+    public bool CanApprove { get; set; }
+
     public IAmountUI Amount => new AmountUI(investment.Amount);
     public string InvestorNostrPubKey => investment.InvestorNostrPubKey;
     public DateTimeOffset Created => investment.Created;
