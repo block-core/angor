@@ -6,5 +6,5 @@ namespace Angor.UI.Model;
 public interface ITransactionDraft
 {
     public IAmountUI TotalFee { get; set; }
-    Task<Result<TxId>> Submit();
+    Task<Result<TxId>> Confirm();
 }

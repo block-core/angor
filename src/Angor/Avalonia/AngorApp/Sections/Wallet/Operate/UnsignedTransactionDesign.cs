@@ -15,7 +15,7 @@ public class TransactionDraftDesign : ITransactionDraft
     public int UtxoCount { get; set; }
     public string ViewRawJson { get; set; }
     
-    public async Task<Result<TxId>> Submit()
+    public async Task<Result<TxId>> Confirm()
     {
         await Task.Delay(3000);
         return new TxId("test");
