@@ -46,7 +46,7 @@ public static class GetInvestments
             var dataResult = await GetInvestmentData(request, nostrPubKey);
 
             return dataResult
-                .Map(data => data.requests.Select(request => CreateInvestment(request, data.approvals, data.alreadyInvested))
+                .Map(data => data.requests.Select(req => CreateInvestment(req, data.approvals, data.alreadyInvested))
             );
         }
         
@@ -118,12 +118,46 @@ public static class GetInvestments
         private async Task<Result<IEnumerable<InvestmentRequest>>> Requests(GetInvestmentsRequest request, string nostrPubKey)
         {
             return await InvestmentMessages(nostrPubKey)
-                .MapEach(message => nostrDecrypter.Decrypt(request.WalletId, request.ProjectId, message).Map(s => new { message, s })).CombineSequentially()
-                .MapEach(decrypted => Result.Try(() => serializer.Deserialize<SignRecoveryRequest>(decrypted.s)).EnsureNotNull(() => $"Cannot parse {decrypted.s} to SignRecoveryRequest").Map(recoveryRequest => new { recoveryRequest, decrypted.message }))
-                .Bind(results => results.Combine())
-                .MapEach(arg => new InvestmentRequest(arg.message.Created, arg.message.InvestorNostrPubKey, arg.recoveryRequest.InvestmentTransactionHex, arg.message.Id));
+                .Bind(messages => DecryptMessages(request, messages))
+                .Bind(DeserializeRecoveryRequests)
+                .MapEach(tuple => CreateInvestmentRequest(tuple.originalMessage, tuple.recoveryRequest));
+        }
+        
+        private Task<Result<IEnumerable<(DirectMessage originalMessage, string decryptedContent)>>> DecryptMessages(
+            GetInvestmentsRequest request, 
+            IEnumerable<DirectMessage> messages)
+        {
+            return messages
+                .Select(dm => nostrDecrypter.Decrypt(request.WalletId, request.ProjectId, dm)
+                    .Map(decryptedContent => (originalMessage: dm, decryptedContent)))
+                .CombineSequentially();
+        }
+        
+        private Result<IEnumerable<(DirectMessage originalMessage, SignRecoveryRequest recoveryRequest)>> DeserializeRecoveryRequests(
+            IEnumerable<(DirectMessage originalMessage, string decryptedContent)> decryptedMessages)
+        {
+            return decryptedMessages
+                .Select(TryDeserializeRecoveryRequest)
+                .Combine();
+        }
+        
+        private Result<(DirectMessage originalMessage, SignRecoveryRequest recoveryRequest)> TryDeserializeRecoveryRequest(
+            (DirectMessage originalMessage, string decryptedContent) decryption)
+        {
+            return Result.Try(() => serializer.Deserialize<SignRecoveryRequest>(decryption.decryptedContent))
+                .EnsureNotNull(() => $"Cannot parse {decryption.decryptedContent} to SignRecoveryRequest")
+                .Map(recoveryRequest => (decryption.originalMessage, recoveryRequest));
         }
 
+        private static InvestmentRequest CreateInvestmentRequest(DirectMessage originalMessage, SignRecoveryRequest recoveryRequest)
+        {
+            return new InvestmentRequest(
+                originalMessage.Created, 
+                originalMessage.InvestorNostrPubKey, 
+                recoveryRequest.InvestmentTransactionHex, 
+                originalMessage.Id);
+        }
+        
         private async Task<Result<IEnumerable<ApprovalMessage>>> Approvals(string nostrPubKey)
         {
             return await GetApprovedStatusObs()
