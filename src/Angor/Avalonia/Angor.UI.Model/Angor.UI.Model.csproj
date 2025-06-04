@@ -6,8 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
-    <ItemGroup><!--        <PackageReference Include="Zafiro.UI"/>-->
-    
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Http" />
       <PackageReference Include="Zafiro" />
     </ItemGroup>
 
