@@ -1,3 +1,4 @@
+using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Angor.Contexts.Wallet.Application;
@@ -22,28 +23,39 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
     [ObservableAsProperty] private ITransactionDraft? draft;
     [ObservableAsProperty] private IAmountUI? fee;
     private readonly BehaviorSubject<bool> isCalculatingDraft = new(false);
+    private readonly CompositeDisposable disposable = new();
 
-    public TransactionDraftViewModel(WalletId walletId, 
-        IWalletAppService walletAppService, 
-        SendAmount sendAmount, 
-        UIServices uiServices)
+    public TransactionDraftViewModel(WalletId walletId, IWalletAppService walletAppService, SendAmount sendAmount, UIServices uiServices)
     {
         this.walletId = walletId;
         this.walletAppService = walletAppService;
         this.uiServices = uiServices;
+        
+        isCalculatingDraft.DisposeWith(disposable);
 
-        draftHelper = this.WhenAnyValue(x => x.Feerate)
+        var createDraft = this.WhenAnyValue(x => x.Feerate)
             .WhereNotNull()
-            .SelectLatest(f => CreateDraftTo(sendAmount.Amount, sendAmount.BitcoinAddress, f.Value), isCalculatingDraft, TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
+            .SelectLatest(feerate => CreateDraftTo(sendAmount.Amount, sendAmount.BitcoinAddress, feerate.Value), isCalculatingDraft, TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
             .ObserveOn(RxApp.MainThreadScheduler)
+            .Publish();
+            
+        createDraft.HandleErrorsWith(uiServices.NotificationService, "Could not create transaction preview").DisposeWith(disposable);
+        
+        IsCalculating = isCalculatingDraft.AsObservable().ObserveOn(RxApp.MainThreadScheduler);
+        
+        draftHelper = createDraft
             .Successes()
-            .ToProperty(this, model => model.Draft);
+            .ToProperty(this, model => model.Draft)
+            .DisposeWith(disposable);
 
-        var canConfirm = this.WhenAnyValue(model => model.Draft).NotNull().CombineLatest(isCalculatingDraft, (hasDraft, calculating) => hasDraft && !calculating);
-        Confirm = ReactiveCommand.CreateFromTask(() => Draft!.Submit(), canConfirm);
+        var canConfirm = this.WhenAnyValue(model => model.Draft)
+            .NotNull()
+            .CombineLatest(IsCalculating, (hasDraft, calculating) => hasDraft && !calculating);
+        
+        Confirm = ReactiveCommand.CreateFromTask(() => Draft!.Confirm(), canConfirm).DisposeWith(disposable);
         IsSending = Confirm.IsExecuting;
-        feeHelper = this.WhenAnyValue(model => model.Draft!.TotalFee).ToProperty(this, model => model.Fee);
-        IsCalculating = isCalculatingDraft.AsObservable();
+        feeHelper = this.WhenAnyValue(model => model.Draft!.TotalFee).ToProperty(this, model => model.Fee).DisposeWith(disposable);
+        createDraft.Connect().DisposeWith(disposable);
     }
 
     public IObservable<bool> IsCalculating { get; }
