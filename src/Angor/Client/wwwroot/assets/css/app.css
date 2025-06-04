@@ -1264,7 +1264,7 @@ button:hover:not(:disabled) {
 }
 
 .animate-scale:hover {
-    transform: scale(1.05)
+    transform: scale(1.05) !important
 }
 
 .action-buttons a {
@@ -4127,6 +4127,64 @@ body.dark .message-item.outgoing .message-bubble {
     min-height:130px;
 }
 
+.info-icon-container {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.info-icon-container:hover {
+    opacity: 1;
+}
+
+.info-icon {
+    transition: transform 0.2s ease;
+}
+
+.info-icon-container:hover .info-icon {
+    transform: scale(1.1);
+}
+
+.info-icon-container::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -140%;
+    right: 10%;
+    background-color: rgba(2,34,41,.5);
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: .9rem;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: normal;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: opacity .3s ease,transform .3s ease,visibility .3s ease;
+    z-index: 10;
+    pointer-events: none;
+    min-width: 200px;
+    max-width: 350px;
+    width: max-content;
+    word-wrap: break-word;
+    text-align: left;
+}
+
+.info-icon-container:hover::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dark .info-icon-container::before {
+    background-color: rgba(8, 59, 70, 0.9);
+    color: var(--angor-light);
+}
+
 @-webkit-keyframes spin {
     0% {
         -webkit-transform: rotate(0deg)
@@ -4392,3 +4450,221 @@ body.dark .message-item.outgoing .message-bubble {
         transform: translateY(0)
     }
 }
+     .fee-selector-container {
+        border: 1px solid var(--form-border);
+        border-radius: var(--angor-border-radius-lg);
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .fee-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--form-border);
+    }
+
+    .fee-display .fee-label {
+        color: var(--form-label);
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .fee-amount {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+    }
+
+    .fee-amount .amount {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--angor-primary);
+    }
+
+    .fee-amount .currency {
+        font-size: 0.875rem;
+        color: var(--form-label);
+    }
+
+    .confirmation-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.25rem;
+    }
+
+    .confirmation-badge {
+        background: var(--angor-secondary);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--angor-border-radius);
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .dark .fee-rate-badge {
+        background: var(--angor-section-bg-dark, rgba(255, 255, 255, 0.05));
+     }
+    
+    .fee-rate-badge {
+        background: var(--angor-section-bg, rgba(0, 0, 0, 0.05));
+        color: var(--angor-primary);
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--angor-border-radius);
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .fee-options {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        transition: opacity 0.3s ease;
+    }
+
+    .fee-options.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    .fee-option {
+        flex: 1;
+        background: var(--form-bg);
+        border: 1px solid var(--form-border);
+        border-radius: var(--angor-border-radius);
+        padding: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .fee-option:hover {
+        border-color: var(--angor-secondary);
+        transform: translateY(-1px);
+    }
+
+    .fee-option.selected {
+        background: linear-gradient(135deg,rgba(8,108,129,.1),rgba(8,108,129,.2));
+        border-color: var(--angor-secondary)
+    }
+
+    .option-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .option-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        margin-bottom: 0.25rem;
+    }
+
+    .option-icon.priority {
+        background: #dc3545;
+    }
+
+    .option-icon.standard {
+        background: #ffc107;
+        color: #000;
+    }
+
+    .option-icon.economy {
+        background: #28a745;
+    }
+
+    .option-info .option-name {
+        font-weight: 500;
+        font-size: 0.875rem;
+        color: var(--form-text);
+    }
+
+    .option-info .option-time {
+        font-size: 0.75rem;
+        color: var(--form-label);
+    }
+
+    .custom-fee-toggle {
+        margin-bottom: 0.75rem;
+    }
+
+    .custom-fee-input {
+        margin-top: 0.5rem;
+    }
+
+    .input-wrapper {
+        position: relative;
+        margin-bottom: 0.5rem;
+    }
+
+    .input-wrapper .form-control {
+        padding-right: 70px;
+    }
+
+    .input-wrapper .form-control.warning {
+        border-color: #ffc107;
+    }
+
+    .input-suffix {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--form-label);
+        font-size: 0.75rem;
+        pointer-events: none;
+    }
+
+    .validation-warning {
+        color: #ebb000;
+        font-size: 0.75rem;
+        padding: 0.25rem 0;
+    }
+
+    .validation-info {
+        color: #f34242;
+        font-size: 0.75rem;
+        padding: 0.25rem 0;
+    }
+
+    @media
+    (max-width: 768px) {
+        .fee-header {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        .confirmation-info {
+            align-items: flex-start;
+            flex-direction: row;
+            gap: 0.5rem;
+        }
+
+        .fee-options {
+            flex-direction: column;
+        }
+
+        .option-content {
+            flex-direction: row;
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        .option-icon {
+            margin-bottom: 0;
+            margin-right: 0.5rem;
+        }
+    }
+ 

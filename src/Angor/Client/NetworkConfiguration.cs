@@ -187,9 +187,9 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "Primal", Url = "https://primal.net/dms", IsPrimary = false },
             };
     }
-    public Dictionary<string, bool> GetFeatureFlags()
+    public Dictionary<string, bool> GetDefaultFeatureFlags(string network)
     {
-        return currentNetwork.Name switch
+        return network switch
         {
             "Main" => new() {},
             "Testnet" => new() { },

@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared.Services
 {
+    
+    [Obsolete("This class is deprecated and will be removed in future versions. Please use the new MempoolSpaceIndexerApi instead.")]
     public class IndexerService : IIndexerService
     {
         private readonly INetworkConfiguration _networkConfiguration;
@@ -141,6 +143,11 @@ namespace Angor.Shared.Services
             var utxo = await response.Content.ReadFromJsonAsync<List<UtxoData>>();
 
             return utxo;
+        }
+
+        public Task<List<QueryTransaction>?> FetchAddressHistoryAsync(string address, string? afterTrxId)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations)

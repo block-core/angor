@@ -2,11 +2,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
         xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
-        xmlns:wizards="clr-namespace:Zafiro.Avalonia.Controls.Wizards;assembly=Zafiro.Avalonia"
         xmlns:zafiro="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
         xmlns:views="clr-namespace:Zafiro.Avalonia.Dialogs.Views;assembly=Zafiro.Avalonia.Dialogs"
-        xmlns:classic="clr-namespace:Zafiro.Avalonia.Controls.Wizards.Classic;assembly=Zafiro.Avalonia"
-        xmlns:slim="clr-namespace:Zafiro.Avalonia.Controls.Wizards.Slim;assembly=Zafiro.Avalonia">
+        xmlns:slim="clr-namespace:Zafiro.Avalonia.Controls.Wizards.Slim;assembly=Zafiro.Avalonia"
+        xmlns:classic="clr-namespace:Zafiro.Avalonia.Controls.Wizards.Classic;assembly=Zafiro.Avalonia">
 
     <Styles.Resources>
         <Color x:Key="Level1">#F5FDFF</Color>
@@ -79,15 +78,6 @@
     <Style Selector="TextBlock.SizeSmall">
         <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
     </Style>
-    
-    <Style Selector="zafiro|Pane.BoldTitle ContentPresenter#PART_HeaderTitle">
-        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
-        <Setter Property="FontWeight" Value="Bold" />
-    </Style>
-    
-    <Style Selector="zafiro|Pane ContentPresenter#PART_HeaderTitle">
-        <Setter Property="Padding" Value="0 0 0 6" />
-    </Style>
 
     <Style Selector="TextBlock.Wrap">
         <Setter Property="TextWrapping" Value="Wrap" />
@@ -109,7 +99,18 @@
         <Setter Property="Foreground" Value="{StaticResource Level5}" />
     </Style>
 
+    
+    <Style Selector="views|DialogControl" >
+        <Setter Property="MinWidth" Value="400" />
+        <Setter Property="MinHeight" Value="300" />
+    </Style>
+    
     <Style Selector="views|DialogControl slim|SlimWizardControl">
+        <Setter Property="Width" Value="500" />
+        <Setter Property="MinHeight" Value="340" />
+    </Style>
+    
+    <Style Selector="views|DialogControl classic|WizardControl">
         <Setter Property="Width" Value="500" />
         <Setter Property="MinHeight" Value="340" />
     </Style>

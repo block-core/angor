@@ -14,6 +14,6 @@
     <DockPanel Margin="10">
         <shell:Sidebar Margin="10 20 10 10" />
         <shell:Network DockPanel.Dock="Top" Margin="10 20 10 0" />
-        <ContentControl MinWidth="300" MinHeight="300" Margin="10 10 10 10" Content="{Binding Shell.SelectedSection.Content}" ClipToBounds="False" />
+        <ContentControl MinWidth="300" MinHeight="300" Margin="10 10 10 10" Content="{Binding Shell.SelectedSection.Content^}" ClipToBounds="False" />
     </DockPanel>
 </UserControl>

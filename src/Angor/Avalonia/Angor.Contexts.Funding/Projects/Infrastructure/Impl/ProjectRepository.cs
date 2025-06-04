@@ -18,9 +18,9 @@ public class ProjectRepository(
         return TryGet(id).Bind(maybe => maybe.ToResult("Project not found"));
     }
 
-    public Task<IList<Project>> Latest()
+    public Task<Result<IList<Project>>> Latest()
     {
-        return ProjectsFrom(indexerService.GetLatest()).ToList().ToTask();
+        return Result.Try(() => ProjectsFrom(indexerService.GetLatest()).ToList().ToTask());
     }
 
     public Task<Result<Maybe<Project>>> TryGet(ProjectId projectId)

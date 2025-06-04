@@ -17,5 +17,5 @@ public interface INetworkConfiguration
 
     int GetAngorInvestFeePercentage { get; }
     string GetAngorKey();
-    Dictionary<string, bool> GetFeatureFlags();
+    Dictionary<string, bool> GetDefaultFeatureFlags(string network);
 }

@@ -17,7 +17,7 @@
     </Design.DataContext>
 
     <StackPanel Spacing="20">
-        <c:Pane Header="Enter recipient address:">
+        <c:Card Header="Enter recipient address:">
             <TextBox Text="{Binding Address}" Classes="clearButton" Watermark="Enter address" AcceptsReturn="False">
                 <Interaction.Behaviors>
                     <b:UntouchedClassBehavior />
@@ -26,14 +26,14 @@
                     <i:Icon Value="fa-solid fa-pen-to-square" Margin="10 0 0 0" />
                 </TextBox.InnerLeftContent>
             </TextBox>
-        </c:Pane>
-        <c:Pane Header="Enter amount to send:">
+        </c:Card>
+        <c:Card Header="Enter amount to send:">
             <controls:AmountControl Padding="0" Satoshis="{Binding Amount}">
                 <Interaction.Behaviors>
                     <b:UntouchedClassBehavior />
                 </Interaction.Behaviors>
             </controls:AmountControl>
-        </c:Pane>
+        </c:Card>
         <TextBlock Text="{Binding WalletBalance.BtcString, StringFormat='Available balance: {0}'}" />
     </StackPanel>
 

@@ -4,8 +4,10 @@
 @using Blockcore.NBitcoin
 @using Angor.Client.Models
 @using Angor.Shared
+@using Angor.Shared.Protocol
 @using Angor.Shared.Services
 @using Blockcore.NBitcoin.DataEncoders
+@using Nostr.Client.Messages.Direct
 
 @inject ILogger<Investor> _Logger
 @inject NavMenuState NavMenuState
@@ -19,6 +21,7 @@
 @inject ISignService _SignService
 @inject ISerializer serializer
 @inject IEncryptionService _encryptionService
+@inject IInvestorTransactionActions _InvestorTransactionActions
 
 @inherits BaseComponent
 
@@ -259,6 +262,21 @@
                                     }
                                 </div>
                             </div>
+                       
+                            <div class="stat-row">
+                                <span class="stat-label">Messages</span>
+                                <div class="stat-value-group">
+                                    @if (pubkeyWithMessages.Contains(project.InvestorNPub))
+                                    {
+                                        <span class="status-badge status-success">Pending Messages</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-inactive">None</span>
+                                    }
+                                </div>
+                            </div>
+
                         </div>
                         <div class="project-actions d-flex flex-column flex-lg-row gap-2">
                             @if (hasInvestmentReleaseRequests && project.UnfundedReleaseTransactionId == null)
@@ -335,6 +353,7 @@
             var refreshTask = RefreshBalance();
             CheckSignatureFromFounder();
             CheckReleaseFromFounder();
+            await ScanForDmMessages();
             await refreshTask;
         }
     }
@@ -504,7 +523,7 @@
                 {
                     _Logger.LogError(e, "failed to get handle investment list event from relay");
                 }
-            }, storageAccountKey);
+            }, new[] { storageAccountKey });
     }
 
     //TODO David check if we should replace the logic to get all projects first and then get signatures for them?
@@ -606,6 +625,8 @@
 
                                         if (res.ProjectIdentifier == investorProject.ProjectInfo.ProjectIdentifier)
                                         {
+                                            res.SignatureRequestEventId = eventId;
+                                            res.TimeOfSignatureRequest = createdAt;
                                             investorProject.SignaturesInfo = res;
                                         }
 
@@ -614,10 +635,15 @@
                                             projects.Add(investorProject);
                                             storage.AddInvestmentProject(investorProject);
 
+                                            await ScanInvestmentSpends(investorProject);
+
                                             RefreshBalanceTriggered = false;
                                             StateHasChanged();
                                         }
                                     });
+
+                             
+
                             }).GetAwaiter().GetResult();
                     },
                     investorProject.ProjectInfo.NostrPubKey);
@@ -625,10 +651,108 @@
             projectIndexerData.NostrEventId);
     }
 
+    private async Task ScanInvestmentSpends(InvestorProject investorProject)
+    {
+        var trxInfo = await _IndexerService.GetTransactionInfoByIdAsync(investorProject.TransactionId);
+
+        if (trxInfo == null)
+            return;
+
+        var trxHex = await _IndexerService.GetTransactionHexByIdAsync(investorProject.TransactionId);
+        Blockcore.Consensus.TransactionInfo.Transaction investmentTransaction = network.CreateTransaction(trxHex);
+
+        for (int stageIndex = 0; stageIndex < investorProject.ProjectInfo.Stages.Count; stageIndex++)
+        {
+            var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
+
+            if (!string.IsNullOrEmpty(output.SpentInTransaction))
+            {
+                var spentInfo = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+
+                if (spentInfo == null)
+                    continue;
+
+                var spentInput = spentInfo.Inputs.FirstOrDefault(input => (input.InputTransactionId == investorProject.TransactionId) && (input.InputIndex == output.Index));
+
+                if (spentInput != null)
+                {
+                    var scriptType = _InvestorTransactionActions.DiscoverUsedScript(investorProject.ProjectInfo, investmentTransaction, stageIndex, spentInput.WitScript);
+
+                    switch (scriptType.ScriptType)
+                    {
+                        case ProjectScriptTypeEnum.Founder:
+                        {
+                            // check the next stage
+                            continue;
+                        }
+
+                        case ProjectScriptTypeEnum.EndOfProject:
+                        {
+                            investorProject.EndOfProjectTransactionId = output.SpentInTransaction;
+                            storage.UpdateInvestmentProject(investorProject);
+                            return;
+                        }
+
+                        case ProjectScriptTypeEnum.InvestorWithPenalty:
+                        {
+                            investorProject.RecoveryTransactionId = output.SpentInTransaction;
+                            var totalsats = trxInfo.Outputs.SkipLast(1).Sum(s => s.Balance);
+                            investorProject.AmountInRecovery = totalsats;
+
+                            var spentRecoveryInfo = await _IndexerService.GetTransactionInfoByIdAsync(investorProject.RecoveryTransactionId);
+
+                            if (spentRecoveryInfo != null)
+                            {
+                                if (spentRecoveryInfo.Outputs.SkipLast(1).Any(_ => !string.IsNullOrEmpty(_.SpentInTransaction)))
+                                {
+                                    investorProject.RecoveryReleaseTransactionId = spentRecoveryInfo.Outputs.First(_ => !string.IsNullOrEmpty(_.SpentInTransaction)).SpentInTransaction;
+                                }
+                            }
+
+                            storage.UpdateInvestmentProject(investorProject);
+                            return;
+                        }
+
+                        case ProjectScriptTypeEnum.InvestorNoPenalty:
+                        {
+                            investorProject.UnfundedReleaseTransactionId = output.SpentInTransaction;
+                            storage.UpdateInvestmentProject(investorProject);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private void NavigateToPenalties()
     {
         NavigationManager.NavigateTo("/penalties");
     }
 
+    HashSet<string> pubkeyWithMessages = new();
 
+    protected async Task ScanForDmMessages()
+    {
+        foreach (var project in projects)
+        {
+            if (!pubkeyWithMessages.Contains(project.InvestorNPub))
+            {
+                await _RelayService.LookupDirectMessagesForPubKeyAsync(
+                    project.InvestorNPub,
+                    project.LastRequestForMessagesTime?.AddSeconds(1),
+                    1,
+                    _ =>
+                    {
+                        NostrEncryptedEvent nostrEncryptedEvent = (NostrEncryptedEvent)_;
+                        if (!string.IsNullOrEmpty(nostrEncryptedEvent.RecipientPubkey))
+                        {
+                            pubkeyWithMessages.Add(nostrEncryptedEvent.RecipientPubkey);
+                            InvokeAsync(StateHasChanged);
+                        }
+                        return Task.CompletedTask;
+                    }, new[] { project.ProjectInfo.NostrPubKey });
+            }
+        }
+    }
 }
