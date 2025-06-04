@@ -1,5 +1,4 @@
 ﻿using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 using Newtonsoft.Json;
@@ -7,7 +6,6 @@ using Nostr.Client.Keys;
 using Nostr.Client.Messages;
 using Nostr.Client.Requests;
 using Nostr.Client.Responses;
-using Polly;
 
 namespace Angor.Shared.Services
 {
@@ -299,48 +297,32 @@ namespace Angor.Shared.Services
                     response.ReceivedTimestamp));
         }
 
-        public Task<Result<EventSendResponse>> PostInvestmentRequestApproval2<T>(KeyIdentifier keyIdentifier, T content, string investorNostrPubKey, string eventId)
+        public Task<Result<EventSendResponse>> PostInvestmentRequestApproval2<T>(KeyIdentifier keyIdentifier, T content,
+            string investorNostrPubKey, string eventId)
         {
-            return 
-                from key in sensitiveNostrData.GetNostrPrivateKeyHex(keyIdentifier).Map(NostrPrivateKey.FromHex)
-                from serializedContent in Serialize(content)
-                from encryptedContent in EncryptContent(serializedContent, investorNostrPubKey, key)
-                from nostrEvent in CreateInvestmentOfferResponseEvent(investorNostrPubKey, eventId, encryptedContent, key)
-                from sent in Send(nostrEvent)
-                select new EventSendResponse(sent.Accepted, sent.EventId, sent.Message, sent.ReceivedTimestamp);
-        }
-
-        private Result<string> Serialize<T>(T content)
-        {
-            return Result.Try(() => serializer.Serialize(content));
-        }
-
-        private Task<Result<NostrOkResponse>> Send(NostrEvent nostrEvent)
-        {
-            return nostrService.Send(nostrEvent).Ensure(response => response.Accepted, "Failed to send event");
-        }
-
-        private Task<Result<string>> EncryptContent(string jsonContent, string investorNostrPubKey, NostrPrivateKey parsedKey)
-        {
-            return Result.Try(() => nostrEncryption.Nip4Encryption(jsonContent, parsedKey.Hex, investorNostrPubKey));
-        }
-
-        private static Result<NostrEvent> CreateInvestmentOfferResponseEvent(string investorNostrPubKey, string eventId, string encryptedContent, NostrPrivateKey nostrPrivateKey)
-        {
-            return Result.Try(() =>
-            {
-                var ev = new NostrEvent
+            return sensitiveNostrData.GetNostrPrivateKeyHex(keyIdentifier)
+                .Map(key => (ParsedKey: NostrPrivateKey.FromHex(key), JsonContent: serializer.Serialize(content)))
+                .Bind(data => Result.Try(() => nostrEncryption.Nip4Encryption(data.JsonContent, data.ParsedKey.Hex, investorNostrPubKey))
+                    .Ensure(s => !string.IsNullOrEmpty(s), "Failed to encrypt content")
+                    .Map((encryptedContent) => new { data.ParsedKey, encryptedContent }))
+                .Map(data =>
                 {
-                    Kind = NostrKind.EncryptedDm,
-                    CreatedAt = DateTime.UtcNow,
-                    Content = encryptedContent,
-                    Tags = new NostrEventTags(
-                        NostrEventTag.Profile(investorNostrPubKey),
-                        NostrEventTag.Event(eventId),
-                        new NostrEventTag("subject", "Re:Investment offer"))
-                };
-                return ev.Sign(nostrPrivateKey);
-            });
+                    var ev = new NostrEvent
+                    {
+                        Kind = NostrKind.EncryptedDm,
+                        CreatedAt = DateTime.UtcNow,
+                        Content = data.encryptedContent,
+                        Tags = new NostrEventTags(
+                            NostrEventTag.Profile(investorNostrPubKey),
+                            NostrEventTag.Event(eventId),
+                            new NostrEventTag("subject", "Re:Investment offer"))
+                    };
+                    return ev.Sign(data.ParsedKey);
+                })
+                .Bind(data => nostrService.Send(data)
+                    .Ensure(response => response.Accepted, "Failed to send event"))
+                .Map(response => new EventSendResponse(response.Accepted, response.EventId, response.Message,
+                    response.ReceivedTimestamp));
         }
 
         public class NostrFilterWithSubject : NostrFilter
