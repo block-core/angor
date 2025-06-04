@@ -2,16 +2,18 @@
 @using Angor.Client.Models
 @using Angor.Client.Storage
 @using System.Text.RegularExpressions
- 
+@using Blockcore.NBitcoin
 
 @inject IRelayService RelayService;
 @inject IClientStorage Storage;
 @inject IHtmlStripperService HtmlStripperService;
+@inject IIndexerService _IndexerService
 
 
 
-<div class="col d-flex align-items-stretch">
+<div class="col d-flex align-items-stretch hover-effect">
     <div class="card mt-4 w-100 project-card">
+        <a role="button" href=@($"/view/{FounderProject.ProjectInfo.ProjectIdentifier}")>
         <a class="d-block">
 
             <div class="banner-container">
@@ -27,62 +29,69 @@
 
 
 
-            <div class="d-flex align-items-center mb-4">
-                <span class="user-select-none">
-                    <Icon IconName="view" Height="24" Width="24"></Icon>
-                </span>
-                <div class="h-100 ms-3">
-                    <h5 class="mb-0 font-weight-bolder">
-                        <a href="/view/@FounderProject.ProjectInfo.ProjectIdentifier"> @FounderProject.Metadata.Name</a>
-                    </h5>
-                </div>
-            </div>
-            <p class="mb-0 line-clamp-3">@(ConvertToMarkupString(FounderProject.Metadata.About))</p>
-
-
-
-        </div>
-        <div class="card-footer pt-0">
-            <hr class="horizontal light mt-3">
-
-            <a role="button" class="d-flex align-items-center btn btn-border w-100-m" href=@($"/view/{FounderProject.ProjectInfo.ProjectIdentifier}")>
-                <span class="user-select-none">
-                    <Icon IconName="view-project" Height="24" Width="24"></Icon>
-                </span>
-                <div class="h-100 ms-3">
-                    <span class="mb-0 font-weight-bolder text-primary">
-                        View Project
-                    </span>
-                </div>
-            </a>
-            <hr class="horizontal light mt-3">
-            <a role="button" class="d-flex align-items-center btn btn-border-success w-100-m" href=@($"/spend/{FounderProject.ProjectInfo.ProjectIdentifier}")>
-                <span class="user-select-none">
-                    <Icon IconName="wallet" Height="24" Width="24"></Icon>
-                </span>
-                <div class="h-100 ms-3">
-                    <span class="mb-0 font-weight-bolder text-primary">
-                        Manage Funds
-                    </span>
-                </div>
-            </a>
-
-            @if (InvestmentRequests)
-            {
-                <hr class="horizontal light mt-3">
-                <a role="button" class="d-flex align-items-center btn btn-border w-100-m" href=@($"/signatures/{FounderProject.ProjectInfo.ProjectIdentifier}")>
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex align-items-center">
                     <span class="user-select-none">
-                        <Icon IconName="signature" Height="24" Width="24"></Icon>
+                        <Icon IconName="view" Height="24" Width="24" />
                     </span>
                     <div class="h-100 ms-3">
-                        <span class="mb-0 font-weight-bolder">
-                            Approve investments
+                        <h5 class="mb-0 font-weight-bolder">
+                            <a href="/view/@FounderProject.ProjectInfo.ProjectIdentifier">
+                                @FounderProject.Metadata.Name
+                            </a>
+                        </h5>
+                    </div>
+                </div>
+
+                @if (InvestmentRequests)
+                {
+                    <a class="d-flex align-items-center text-white" 
+                         href=@($"/signatures/{FounderProject.ProjectInfo.ProjectIdentifier}") 
+                         title="Approve investments">
+                        <span class="user-select-none">
+                            <Icon IconName="signature" Height="24" Width="24"></Icon>
+                        </span>
+                    </a>
+                }
+            </div>
+            <p class="mb-0 line-clamp-3 text-white">@(ConvertToMarkupString(FounderProject.Metadata.About))</p>
+
+
+
+            </div>
+            <div class="card-footer pt-0">
+
+                <hr class="horizontal light mt-3 mb-4">
+
+                <div class="row align-items-center mb-2 text-white">
+                    <div class="col-12 col-md-6 d-flex align-items-center mb-2 mb-md-0">
+                        <Icon IconName="users" Height="20" Width="20" class="me-2"></Icon>
+                        <span class="font-weight-bolder">
+                            @projectStats.TotalInvestors Investors
                         </span>
                     </div>
-                </a>
-            }
-
+                    <div class="col-12 col-md-6 text-md-end">
+                        <span class="font-weight-bolder">
+                            <strong>
+                                @Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC)
+                            </strong>
+                            /
+                            <strong>
+                                @Money.Satoshis(FounderProject.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC)
+                            </strong>
+                            @CoinTicker
+                        </span>
+                    </div>
+                </div>
+                <div class="w-full mt-3">
+                    <div class="progress rounded-pill mb-3" style="height: 16px; background-color: var(--btn-border);">
+                        <div class="progress-bar-striped bg-success  rounded-pill text-center" role="progressbar"
+                            style="width: @projectStats.FundingProgressPercent%;"
+                        </div>
+                    </div>
+                </div>
         </div>
+        </a>
     </div>
 </div>
 
@@ -92,7 +101,26 @@
     [Parameter]
     public FounderProject FounderProject { get; set; }
 
+    [Parameter]
+    public string CoinTicker { get; set; } = string.Empty;
+
     public bool InvestmentRequests { get; set; }
+
+    public class ProjectStats
+    {
+        public bool Loading { get; set; }
+        public long TotalRaised { get; set; }
+        public int TotalInvestors { get; set; }
+        public int FundingProgressPercent { get; set; }
+    }
+
+    readonly ProjectStats projectStats = new()
+    {
+        Loading = true,
+        TotalRaised = 0,
+        TotalInvestors = 0,
+        FundingProgressPercent = 0
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -101,13 +129,44 @@
             {
                 if (InvestmentRequests)
                     return;
+   
+            InvestmentRequests = true;
+            StateHasChanged();
+        });
 
-                InvestmentRequests = true;
-                StateHasChanged();
-            });
+        await fetchProjectDetails();
+        StateHasChanged();
+
     }
 
- 
+    private async Task fetchProjectDetails()
+    {
+        try
+        {
+            projectStats.Loading = true;
+
+            if (FounderProject?.ProjectInfo != null)
+            {
+                var data = await _IndexerService.GetProjectStatsAsync(FounderProject.ProjectInfo.ProjectIdentifier);
+
+                if (data != null)
+                {
+                    projectStats.TotalInvestors = (int)data.InvestorCount;
+                    projectStats.TotalRaised = data.AmountInvested;
+
+                    if (FounderProject.ProjectInfo.TargetAmount > 0)
+                    {
+                        projectStats.FundingProgressPercent = (int)(projectStats.TotalRaised * 100 / FounderProject.ProjectInfo.TargetAmount);
+                    }
+                }
+            }
+        }
+        finally
+        {
+            projectStats.Loading = false;
+            StateHasChanged();
+        }
+    }
 
     public MarkupString ConvertToMarkupString(string input)
     {
