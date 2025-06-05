@@ -29,4 +29,18 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
     {
         return mediator.Send(new ApproveInvestment.ApproveInvestmentRequest(walletId, projectId, investment));
     }
+
+    public async Task<Result<IEnumerable<InvestedProjectDto>>> GetInvestorProjects(Guid idValue)
+    {
+        await Task.Delay(2000);
+        return Result.Success<IEnumerable<InvestedProjectDto>>([new InvestedProjectDto()
+        {
+            Id = "1",
+            Name = "Project 1",
+            LogoUri = new Uri("https://test.angor.io/assets/img/no-image.jpg"),
+            FounderStatus = FounderStatus.Approved,
+            Target = new Amount(12000000),
+            Raised = new Amount(14000),
+        }]);
+    }
 }

@@ -1,3 +1,6 @@
+using Angor.Contexts.Funding.Investor;
+using Zafiro.UI.Commands;
+
 namespace AngorApp.Sections.Portfolio;
 
 public class PortfolioSectionViewModelDesign : IPortfolioSectionViewModel
@@ -14,4 +17,18 @@ public class PortfolioSectionViewModelDesign : IPortfolioSectionViewModel
     }
 
     public IReadOnlyCollection<PortfolioItem> Items { get; }
+    public IEnumerable<IInvestedProject> InvestedProjects { get; } = new List<IInvestedProject>();
+    public IEnhancedCommand<Result<IEnumerable<InvestedProjectDto>>> Load { get; }
+}
+
+public class InvestedProjectDesign : IInvestedProject
+{
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public IAmountUI Target { get; set; }
+    public IAmountUI Raised { get; set; }
+    public IAmountUI InRecovery { get; set; }
+    public ProjectStatus Status { get; set; }
+    public FounderStatus FounderStatus { get; set; }
+    public Uri LogoUri { get; set; }
 }

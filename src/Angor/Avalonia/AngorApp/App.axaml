@@ -10,7 +10,6 @@
     <Application.DataTemplates>
         <misc:NamingConventionViewLocator />
         <misc:DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
-        <misc:DataTemplateInclude Source="avares://Zafiro.Avalonia/Controls/Wizards/WizardTemplate.axaml" />
         <DataTemplate DataType="password:IIcon">
             <avalonia:Icon FontSize="40" VerticalAlignment="Center" Value="{Binding Key}" />
         </DataTemplate>

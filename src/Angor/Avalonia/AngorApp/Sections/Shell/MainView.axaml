@@ -12,5 +12,5 @@
         <shell:MainViewModelDesign />
     </Design.DataContext>
 
-    <zs:ShellView Shell="{Binding Shell}" />
+    <zs:ShellView OpenPaneLength="200" Shell="{Binding Shell}" />
 </UserControl>

@@ -2,79 +2,150 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Portfolio.PortfolioSectionView"
              xmlns:founder="clr-namespace:AngorApp.Sections.Portfolio"
-             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             x:DataType="founder:IPortfolioSectionViewModel" >
+             xmlns:b="clr-namespace:AngorApp.UI.Controls"
+             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             x:DataType="founder:IPortfolioSectionViewModel">
 
     <Design.DataContext>
-        <founder:PortfolioSectionViewModelDesign />
+        <founder:PortfolioSectionViewModelDesign>
+            <founder:PortfolioSectionViewModelDesign.InvestedProjects>
+                <founder:InvestedProjectDesign Status="Funding" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                    <founder:InvestedProjectDesign.Target>
+                        <angorApp:DesignTimeAmount Sats="12000000" />
+                    </founder:InvestedProjectDesign.Target>
+                    <founder:InvestedProjectDesign.Raised>
+                        <angorApp:DesignTimeAmount Sats="4400000" />
+                    </founder:InvestedProjectDesign.Raised>
+                </founder:InvestedProjectDesign>
+                <founder:InvestedProjectDesign FounderStatus="Approved" Name="Project 2" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                    <founder:InvestedProjectDesign.Target>
+                        <angorApp:DesignTimeAmount Sats="12000000" />
+                    </founder:InvestedProjectDesign.Target>
+                    <founder:InvestedProjectDesign.Raised>
+                        <angorApp:DesignTimeAmount Sats="14000" />
+                    </founder:InvestedProjectDesign.Raised>
+                </founder:InvestedProjectDesign>
+            </founder:PortfolioSectionViewModelDesign.InvestedProjects>
+        </founder:PortfolioSectionViewModelDesign>
     </Design.DataContext>
 
-    <UserControl.Styles>
-
-        <Style Selector="TextBox">
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{StaticResource Level3}" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-        </Style>
-
-        <Style Selector="i|Icon">
-            <Setter Property="FontSize" Value="25" />
-        </Style>
-
-        <Style Selector="TextBlock">
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-
-        <Style Selector="ItemsControl#PortfolioItems TextBlock">
-            <Setter Property="HorizontalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="ItemsControl#PortfolioItems controls|Pane">
-            <Setter Property="Margin" Value="20" />
-        </Style>
-        <Style Selector="ItemsControl#PortfolioItems controls|Pane > StackPanel">
-            <Setter Property="Spacing" Value="10" />
-            <Setter Property="Margin" Value="20" />
-        </Style>
-
-    </UserControl.Styles>
-
-    <StackPanel Spacing="20">
-
-        <controls:Pane Title="Portfolio" IsTitleVisible="True" Subtitle="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required">
-            <controls:Pane.TitleIcon>
-                <i:Icon Value="fa-solid fa-hand-holding-dollar" />
-            </controls:Pane.TitleIcon>
-            <controls:Pane.TitleRightContent>
-                <controls:IconButton DockPanel.Dock="Right" VerticalAlignment="Top" Content="PENALTIES">
-                    <controls:IconButton.Icon>
-                        <i:Icon Value="fa-regular fa-face-frown" FontSize="20" />
-                    </controls:IconButton.Icon>
-                </controls:IconButton>
-            </controls:Pane.TitleRightContent>
-        </controls:Pane>
-
-        <ItemsControl x:Name="PortfolioItems" ItemsSource="{Binding Items}" Margin="-20">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <controls:Pane>
-                        <StackPanel>
-                            <i:Icon Value="fa-solid fa-money-bills" />
-                            <TextBlock Text="Funded projects" />
-                            <TextBlock Text="0" />
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="founder:IInvestedProject">
+            <z:Card Header="{Binding Name}">
+                <z:Card.HeaderStartContent>
+                    <asyncImageLoader:AdvancedImage Width="96" Height="96" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
+                </z:Card.HeaderStartContent>
+                <z:Card.HeaderEndContent>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Complete investment" />
+                    </StackPanel>
+                </z:Card.HeaderEndContent>
+                <StackPanel Spacing="10">
+                    <Panel>
+                        <TextBlock>Target</TextBlock>
+                        <TextBlock Classes="SizeBig" HorizontalAlignment="Right" Text="{Binding Target.DecimalString}" />
+                    </Panel>
+                    <Panel>
+                        <TextBlock>Raised</TextBlock>
+                        <TextBlock Classes="SizeBig" HorizontalAlignment="Right" Text="{Binding Raised.DecimalString}" />
+                    </Panel>
+                    <Panel>
+                        <TextBlock>Progress</TextBlock>
+                        <StackPanel HorizontalAlignment="Right">
+                            <ProgressBar Maximum="{Binding Target.Sats}" Value="{Binding Raised.Sats}" />
                         </StackPanel>
-                    </controls:Pane>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <UniformGrid />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-        </ItemsControl>
+                    </Panel>
+                    <Panel>
+                        <TextBlock>Project Status</TextBlock>
+                        <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding Status}">
+                            <TextBlock Text="{Binding Status}" />
+                            <Border.Styles>
+                                <Style Selector="Border[Tag=Invalid]">
+                                    <Setter Property="Background" Value="Red" />
+                                </Style>
+                                <Style Selector="Border[Tag=Invalid] TextBlock">
+                                    <Setter Property="Foreground" Value="White" />
+                                </Style>
+                                <Style Selector="Border[Tag=Funding]">
+                                    <Setter Property="Background" Value="#52FFA500" />
+                                </Style>
+                                <Style Selector="Border[Tag=Funding] TextBlock">
+                                    <Setter Property="Foreground" Value="Orange" />
+                                </Style>
+                            </Border.Styles>
+                        </Border>
+                    </Panel>
+                    <Panel>
+                        <TextBlock>My investment</TextBlock>
+                        <TextBlock Classes="SizeBig" Foreground="Orange" HorizontalAlignment="Right" Text="{Binding Raised.DecimalString}" />
+                    </Panel>
+                    <Panel>
+                        <TextBlock>Founder Status</TextBlock>
+                        <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding FounderStatus}">
+                            <TextBlock Text="{Binding FounderStatus}" />
+                            <Border.Styles>
+                                <Style Selector="Border[Tag=Invalid]">
+                                    <Setter Property="Background" Value="Red" />
+                                </Style>
+                                <Style Selector="Border[Tag=Invalid] TextBlock">
+                                    <Setter Property="Foreground" Value="White" />
+                                </Style>
+                                <Style Selector="Border[Tag=Approved]">
+                                    <Setter Property="Background" Value="#5200FF3C" />
+                                </Style>
+                                <Style Selector="Border[Tag=Approved] TextBlock">
+                                    <Setter Property="Foreground" Value="Green" />
+                                </Style>
+                            </Border.Styles>
+                        </Border>
+                    </Panel>
+                </StackPanel>
+            </z:Card>
+        </DataTemplate>
+        <DataTemplate DataType="ui:Icon">
+            <avalonia:Icon Value="{Binding Source}" />
+        </DataTemplate>
+    </UserControl.DataTemplates>
 
-    </StackPanel>
+
+    <DockPanel>
+
+       
+        <z:Card DockPanel.Dock="Top" Header="Portfolio" Subheader="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required">
+            <z:Card.HeaderEndContent>
+                <StackPanel Spacing="10" Orientation="Horizontal">
+                    <b:IconButton Command="{Binding Load}">
+                        Refresh
+                        <b:IconButton.Icon>
+                            <ui:Icon Source="fa-arrows-rotate" />
+                        </b:IconButton.Icon>
+                    </b:IconButton>
+                    <b:IconButton>
+                        Penalties
+                        <b:IconButton.Icon>
+                            <ui:Icon Source="fa-unlock" />
+                        </b:IconButton.Icon>
+                    </b:IconButton>
+                </StackPanel>
+            </z:Card.HeaderEndContent>
+        </z:Card>
+
+        <z:Loading IsLoading="{Binding Load.IsExecuting^}">
+            <ItemsControl ItemsSource="{Binding InvestedProjects}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="10"></StackPanel>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </z:Loading>
+
+    </DockPanel>
 </UserControl>
