@@ -1487,7 +1487,7 @@
                 return false;
             }
 
-            if (project.ProjectInfo.StartDate < DateTime.UtcNow)
+            if (project.ProjectInfo.StartDate < DateTime.Today)
             {
                 notificationComponent.ShowErrorMessage("Project must start in the future");
                 return false;
