@@ -1,6 +1,6 @@
 {
   "name": "angor",
-  "version": "0.0.92",
+  "version": "0.0.93",
   "license": "MIT",
   "scripts": {
     "version": "node -p \"require('./package.json').version\"",
