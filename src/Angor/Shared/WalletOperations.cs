@@ -55,9 +55,12 @@ public class WalletOperations : IWalletOperations
             throw new ApplicationException("No coins found to fund the transaction.");
 
         var builder = new TransactionBuilder(network)
-            .AddCoins(coins)
-            .SetChange(BitcoinAddress.Create(changeAddress, network))
-            .ContinueToBuild(transaction) // Add the predefined outputs
+            .AddCoins(coins);
+
+        if (!spendAll)
+            builder.SetChange(BitcoinAddress.Create(changeAddress, network));
+
+        builder.ContinueToBuild(transaction) // Add the predefined outputs
             .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
             .CoverTheRest(); // Ensure enough input value covers outputs + fee, adjusting change if needed
 
@@ -128,13 +131,27 @@ public class WalletOperations : IWalletOperations
         if (coins.coins == null)
             throw new ApplicationException("No coins found");
 
-        var builder = new TransactionBuilder(network)
-            .AddCoins(coins.coins)
-            .AddKeys(coins.keys.ToArray())
-            .SetChange(BitcoinAddress.Create(changeAddress, network))
-            .ContinueToBuild(transaction)
-            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
-            .CoverTheRest();
+        TransactionBuilder builder;
+        if (spendAll)
+        {
+            builder = new TransactionBuilder(network)
+                .AddCoins(coins.coins)
+                .AddKeys(coins.keys.ToArray())
+                .SubtractFees()
+                .ContinueToBuild(transaction)
+                .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
+                .CoverTheRest();
+        }
+        else
+        {
+            builder = new TransactionBuilder(network)
+                .AddCoins(coins.coins)
+                .AddKeys(coins.keys.ToArray())
+                .SetChange(BitcoinAddress.Create(changeAddress, network))
+                .ContinueToBuild(transaction)
+                .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
+                .CoverTheRest();
+        }
 
         var signTransaction = builder.BuildTransaction(true);
 

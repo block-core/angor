@@ -572,7 +572,8 @@ else
     string InvestorPubKey;
 
     private AccountBalanceInfo WalletBalance = new AccountBalanceInfo();
- 
+    private bool spendAll = false;
+
     private FeeData feeData = new();
 
     protected override async Task OnInitializedAsync()
@@ -842,8 +843,13 @@ else
             }
 
             long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
-            if (investmentAmount == WalletBalance.TotalBalance)
+            if (spendAll)
             {
+                if (investmentAmount != WalletBalance.TotalBalance)
+                {
+                    throw new InvalidOperationException("Investment amount does not match the total wallet balance.");
+                }
+
                 int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
                 long angorFee = (WalletBalance.TotalBalance * angorFeePercentage) / 100;
                 investmentAmount -= angorFee;
@@ -853,14 +859,14 @@ else
 
             if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
-                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
+                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate, spendAll: spendAll);
 
                 signedTransaction = _WalletOperations.SignPsbt(psbt, words);    
             }
             else
             {
                 signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(), 
-                    unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
+                    unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate, spendAll);
             }
 
             showCreateModal = true;
@@ -926,6 +932,7 @@ else
 
     private void SetMaxInvestment()
     {
+        spendAll = true;
         UpdateStagesBreakdown(new ChangeEventArgs { Value = WalletBalance.TotalBalance.ToUnitBtc() });
         StateHasChanged();
     }
