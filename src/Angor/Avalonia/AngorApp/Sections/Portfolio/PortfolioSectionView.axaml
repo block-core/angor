@@ -31,7 +31,7 @@
     <Design.DataContext>
         <founder:PortfolioSectionViewModelDesign>
             <founder:PortfolioSectionViewModelDesign.InvestedProjects>
-                <founder:InvestedProjectDesign Status="Funding" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                <founder:InvestedProjectDesign Status="Funding"  FounderStatus="Approved" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
                     <founder:InvestedProjectDesign.Target>
                         <angorApp:DesignTimeAmount Sats="12000000" />
                     </founder:InvestedProjectDesign.Target>
@@ -39,12 +39,12 @@
                         <angorApp:DesignTimeAmount Sats="4400000" />
                     </founder:InvestedProjectDesign.Raised>
                 </founder:InvestedProjectDesign>
-                <founder:InvestedProjectDesign FounderStatus="Approved" Name="Project 2" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                <founder:InvestedProjectDesign FounderStatus="Approved" Status="Funding" Name="Project 2" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
                     <founder:InvestedProjectDesign.Target>
                         <angorApp:DesignTimeAmount Sats="12000000" />
                     </founder:InvestedProjectDesign.Target>
                     <founder:InvestedProjectDesign.Raised>
-                        <angorApp:DesignTimeAmount Sats="14000" />
+                        <angorApp:DesignTimeAmount Sats="5404000" />
                     </founder:InvestedProjectDesign.Raised>
                 </founder:InvestedProjectDesign>
             </founder:PortfolioSectionViewModelDesign.InvestedProjects>
@@ -53,9 +53,56 @@
 
     <UserControl.DataTemplates>
         <DataTemplate DataType="founder:IInvestedProject">
-            <Card Header="{Binding Name}">
+            <Card Header="{Binding}" HeaderPadding="10 0" Padding="20 0 20 20">
+                <Card.HeaderTemplate>
+                    <DataTemplate DataType="founder:IInvestedProject">
+                        <StackPanel Spacing="12" Margin="20">
+                            <TextBlock Classes="SizeBig" TextAlignment="Center" Text="{Binding Name}" />
+                            <!-- Indicadores de monto -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Cantidad recaudada -->
+                                <StackPanel Grid.Column="0" HorizontalAlignment="Left">
+                                    <TextBlock Text="Raised" FontSize="11" Opacity="0.6" Margin="0,0,0,2" />
+                                    <TextBlock Text="{Binding Raised.DecimalString}"
+                                               Classes="SizeBig"
+                                               Foreground="Orange"
+                                               FontWeight="SemiBold" />
+                                </StackPanel>
+
+                                <!-- Meta objetivo -->
+                                <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                    <TextBlock Text="Target" FontSize="11" Opacity="0.6" HorizontalAlignment="Right" Margin="0,0,0,2" />
+                                    <TextBlock Text="{Binding Target.DecimalString}"
+                                               Classes="SizeBig"
+                                               HorizontalAlignment="Right" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Barra de progreso con porcentaje -->
+                            <StackPanel Spacing="5">
+                                <ProgressBar Maximum="{Binding Target.Sats}"
+                                             Value="{Binding Raised.Sats}"
+                                             Height="16"
+                                             CornerRadius="8" />
+
+                                <!-- Porcentaje debajo de la barra -->
+                                <TextBlock Text="{Binding Progress, StringFormat='{}{0:P1}'}"
+                                           HorizontalAlignment="Center"
+                                           FontWeight="SemiBold"
+                                           FontSize="12"
+                                           Foreground="Orange" />
+                            </StackPanel>
+                        </StackPanel>
+
+                    </DataTemplate>
+                </Card.HeaderTemplate>
                 <Card.HeaderStartContent>
-                    <asyncImageLoader:AdvancedImage Width="96" Height="96" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
+                    <asyncImageLoader:AdvancedImage Width="120" Height="120" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
                 </Card.HeaderStartContent>
                 <Card.HeaderEndContent>
                     <StackPanel Orientation="Horizontal">
@@ -63,50 +110,6 @@
                     </StackPanel>
                 </Card.HeaderEndContent>
                 <StackPanel Spacing="10">
-
-                    <StackPanel Spacing="12" MaxWidth="300">
-                        <!-- Indicadores de monto -->
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Cantidad recaudada -->
-                            <StackPanel Grid.Column="0" HorizontalAlignment="Left">
-                                <TextBlock Text="Raised" FontSize="11" Opacity="0.6" Margin="0,0,0,2" />
-                                <TextBlock Text="{Binding Raised.DecimalString}"
-                                           Classes="SizeBig"
-                                           Foreground="Orange"
-                                           FontWeight="SemiBold" />
-                            </StackPanel>
-
-                            <!-- Meta objetivo -->
-                            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                                <TextBlock Text="Target" FontSize="11" Opacity="0.6" HorizontalAlignment="Right" Margin="0,0,0,2" />
-                                <TextBlock Text="{Binding Target.DecimalString}"
-                                           Classes="SizeBig"
-                                           HorizontalAlignment="Right" />
-                            </StackPanel>
-                        </Grid>
-
-                        <!-- Barra de progreso con porcentaje -->
-                        <StackPanel Spacing="5">
-                            <ProgressBar Maximum="{Binding Target.Sats}"
-                                         Value="{Binding Raised.Sats}"
-                                         Height="16"
-                                         CornerRadius="8" />
-
-                            <!-- Porcentaje debajo de la barra -->
-                            <TextBlock Text="{Binding Progress, StringFormat='{}{0:P1}'}"
-                                       HorizontalAlignment="Center"
-                                       FontWeight="SemiBold"
-                                       FontSize="12"
-                                       Foreground="Orange" />
-                        </StackPanel>
-                    </StackPanel>
-
-
                     <HeaderedContainer Header="Project Status">
                         <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding Status}">
                             <TextBlock Text="{Binding Status}" />
@@ -158,7 +161,7 @@
 
 
     <DockPanel>
-        <Card DockPanel.Dock="Top" Header="Portfolio" Subheader="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required">
+        <Card DockPanel.Dock="Top" Header="Portfolio" Subheader="Check your project investments">
             <Card.HeaderEndContent>
                 <StackPanel Spacing="10" Orientation="Horizontal">
                     <b:IconButton Command="{Binding Load}">
@@ -179,11 +182,9 @@
 
         <Loading IsLoading="{Binding Load.IsExecuting^}">
             <ItemsControl ItemsSource="{Binding InvestedProjects}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Spacing="10"></StackPanel>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
+                <Empty.Content>
+                    <TextBlock Margin="10" TextAlignment="Center">Oops! You have not invested in any project yet</TextBlock>
+                </Empty.Content>
             </ItemsControl>
         </Loading>
 
