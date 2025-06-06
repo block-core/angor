@@ -8,7 +8,7 @@ using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Portfolio;
 
-public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewModel
+public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewModel, IDisposable
 {
     private readonly CompositeDisposable disposable = new();
     
@@ -36,7 +36,9 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
             .EditDiff(project => project.Id)
             .Transform(IInvestedProject (project) => new InvestedProject(project))
             .Bind(out var investedProjects)
-            .Subscribe();
+            .Subscribe().DisposeWith(disposable);
+
+        Load.Execute().Subscribe().DisposeWith(disposable);
         
         InvestedProjects = investedProjects;
     }
@@ -45,4 +47,9 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
 
     public IReadOnlyCollection<PortfolioItem> Items { get; }
     public IEnumerable<IInvestedProject> InvestedProjects { get; }
+
+    public void Dispose()
+    {
+        disposable.Dispose();
+    }
 }

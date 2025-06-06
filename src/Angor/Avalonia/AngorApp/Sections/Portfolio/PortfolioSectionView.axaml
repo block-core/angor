@@ -6,12 +6,27 @@
              x:Class="AngorApp.Sections.Portfolio.PortfolioSectionView"
              xmlns:founder="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:b="clr-namespace:AngorApp.UI.Controls"
-             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              x:DataType="founder:IPortfolioSectionViewModel">
+
+    <UserControl.Resources>
+        <ControlTheme x:Key="Item" TargetType="HeaderedContainer">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <EdgePanel StartContent="{TemplateBinding Header}" EndContent="{TemplateBinding Content}" />
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Card StackPanel > HeaderedContainer">
+            <Setter Property="Theme" Value="{StaticResource Item}"></Setter>
+        </Style>
+    </UserControl.Styles>
 
     <Design.DataContext>
         <founder:PortfolioSectionViewModelDesign>
@@ -38,32 +53,61 @@
 
     <UserControl.DataTemplates>
         <DataTemplate DataType="founder:IInvestedProject">
-            <z:Card Header="{Binding Name}">
-                <z:Card.HeaderStartContent>
+            <Card Header="{Binding Name}">
+                <Card.HeaderStartContent>
                     <asyncImageLoader:AdvancedImage Width="96" Height="96" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
-                </z:Card.HeaderStartContent>
-                <z:Card.HeaderEndContent>
+                </Card.HeaderStartContent>
+                <Card.HeaderEndContent>
                     <StackPanel Orientation="Horizontal">
                         <Button Content="Complete investment" />
                     </StackPanel>
-                </z:Card.HeaderEndContent>
+                </Card.HeaderEndContent>
                 <StackPanel Spacing="10">
-                    <Panel>
-                        <TextBlock>Target</TextBlock>
-                        <TextBlock Classes="SizeBig" HorizontalAlignment="Right" Text="{Binding Target.DecimalString}" />
-                    </Panel>
-                    <Panel>
-                        <TextBlock>Raised</TextBlock>
-                        <TextBlock Classes="SizeBig" HorizontalAlignment="Right" Text="{Binding Raised.DecimalString}" />
-                    </Panel>
-                    <Panel>
-                        <TextBlock>Progress</TextBlock>
-                        <StackPanel HorizontalAlignment="Right">
-                            <ProgressBar Maximum="{Binding Target.Sats}" Value="{Binding Raised.Sats}" />
+
+                    <StackPanel Spacing="12" MaxWidth="300">
+                        <!-- Indicadores de monto -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Cantidad recaudada -->
+                            <StackPanel Grid.Column="0" HorizontalAlignment="Left">
+                                <TextBlock Text="Raised" FontSize="11" Opacity="0.6" Margin="0,0,0,2" />
+                                <TextBlock Text="{Binding Raised.DecimalString}"
+                                           Classes="SizeBig"
+                                           Foreground="Orange"
+                                           FontWeight="SemiBold" />
+                            </StackPanel>
+
+                            <!-- Meta objetivo -->
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                <TextBlock Text="Target" FontSize="11" Opacity="0.6" HorizontalAlignment="Right" Margin="0,0,0,2" />
+                                <TextBlock Text="{Binding Target.DecimalString}"
+                                           Classes="SizeBig"
+                                           HorizontalAlignment="Right" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Barra de progreso con porcentaje -->
+                        <StackPanel Spacing="5">
+                            <ProgressBar Maximum="{Binding Target.Sats}"
+                                         Value="{Binding Raised.Sats}"
+                                         Height="16"
+                                         CornerRadius="8" />
+
+                            <!-- Porcentaje debajo de la barra -->
+                            <TextBlock Text="{Binding Progress, StringFormat='{}{0:P1}'}"
+                                       HorizontalAlignment="Center"
+                                       FontWeight="SemiBold"
+                                       FontSize="12"
+                                       Foreground="Orange" />
                         </StackPanel>
-                    </Panel>
-                    <Panel>
-                        <TextBlock>Project Status</TextBlock>
+                    </StackPanel>
+
+
+                    <HeaderedContainer Header="Project Status">
                         <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding Status}">
                             <TextBlock Text="{Binding Status}" />
                             <Border.Styles>
@@ -81,13 +125,11 @@
                                 </Style>
                             </Border.Styles>
                         </Border>
-                    </Panel>
-                    <Panel>
-                        <TextBlock>My investment</TextBlock>
+                    </HeaderedContainer>
+                    <HeaderedContainer Header="My investment">
                         <TextBlock Classes="SizeBig" Foreground="Orange" HorizontalAlignment="Right" Text="{Binding Raised.DecimalString}" />
-                    </Panel>
-                    <Panel>
-                        <TextBlock>Founder Status</TextBlock>
+                    </HeaderedContainer>
+                    <HeaderedContainer Header="Founder Status">
                         <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding FounderStatus}">
                             <TextBlock Text="{Binding FounderStatus}" />
                             <Border.Styles>
@@ -105,9 +147,9 @@
                                 </Style>
                             </Border.Styles>
                         </Border>
-                    </Panel>
+                    </HeaderedContainer>
                 </StackPanel>
-            </z:Card>
+            </Card>
         </DataTemplate>
         <DataTemplate DataType="ui:Icon">
             <avalonia:Icon Value="{Binding Source}" />
@@ -116,10 +158,8 @@
 
 
     <DockPanel>
-
-       
-        <z:Card DockPanel.Dock="Top" Header="Portfolio" Subheader="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required">
-            <z:Card.HeaderEndContent>
+        <Card DockPanel.Dock="Top" Header="Portfolio" Subheader="To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required">
+            <Card.HeaderEndContent>
                 <StackPanel Spacing="10" Orientation="Horizontal">
                     <b:IconButton Command="{Binding Load}">
                         Refresh
@@ -134,10 +174,10 @@
                         </b:IconButton.Icon>
                     </b:IconButton>
                 </StackPanel>
-            </z:Card.HeaderEndContent>
-        </z:Card>
+            </Card.HeaderEndContent>
+        </Card>
 
-        <z:Loading IsLoading="{Binding Load.IsExecuting^}">
+        <Loading IsLoading="{Binding Load.IsExecuting^}">
             <ItemsControl ItemsSource="{Binding InvestedProjects}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -145,7 +185,7 @@
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
-        </z:Loading>
+        </Loading>
 
     </DockPanel>
 </UserControl>
