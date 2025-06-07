@@ -3,48 +3,164 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:portfolio="clr-namespace:AngorApp.Sections.Portfolio"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.Sections.Portfolio.ProgressView">
-    <StackPanel Spacing="12" MaxWidth="300" x:DataType="portfolio:IInvestedProject">
-        <!-- Indicadores de monto -->
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+             xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:l="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Portfolio.ProgressView" x:DataType="portfolio:IInvestedProject">
 
-            <!-- Cantidad recaudada -->
-            <StackPanel Grid.Column="0" HorizontalAlignment="Left">
-                <TextBlock Text="Raised" FontSize="11" Opacity="0.6" Margin="0,0,0,2" />
-                <TextBlock Text="{Binding Raised.DecimalString}"
-                           Classes="SizeBig"
-                           Foreground="Orange"
-                           FontWeight="SemiBold" />
+    <Design.DataContext>
+        <portfolio:InvestedProjectDesign Status="Funding" FounderStatus="Approved" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+            <portfolio:InvestedProjectDesign.Target>
+                <angorApp:DesignTimeAmount Sats="12000000" />
+            </portfolio:InvestedProjectDesign.Target>
+            <portfolio:InvestedProjectDesign.Raised>
+                <angorApp:DesignTimeAmount Sats="4400000" />
+            </portfolio:InvestedProjectDesign.Raised>
+        </portfolio:InvestedProjectDesign>
+    </Design.DataContext>
+
+    <AdaptivePanel>
+        <AdaptivePanel.OverflowContent>
+            <StackPanel Spacing="8">
+                <!-- Header compacto con progreso prominente -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding Name}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" />
+
+                    <!-- Badge de progreso circular -->
+                    <Border Grid.Column="1"
+                            Background="Orange"
+                            CornerRadius="12"
+                            Padding="8,4"
+                            MinWidth="50">
+                        <TextBlock Text="{Binding Progress, StringFormat='{}{0:P0}'}"
+                                   Foreground="White"
+                                   FontWeight="Bold"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center" />
+                    </Border>
+                </Grid>
+
+                <!-- Barra de progreso estilizada -->
+                <ProgressBar Maximum="{Binding Target.Sats}"
+                             Value="{Binding Raised.Sats}"
+                             Height="16"
+                             CornerRadius="8" />
+
+                <!-- Información financiera en layout vertical compacto -->
+                <Grid Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="4" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Raised -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="RAISED"
+                                   FontSize="9"
+                                   Opacity="0.7"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,2" />
+                        <TextBlock Text="{Binding Raised.DecimalString}"
+                                   FontSize="14"
+                                   FontWeight="Bold"
+                                   Foreground="Orange"
+                                   TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+
+                    <!-- Separador visual sutil -->
+                    <Rectangle Grid.Column="1"
+                               Width="1"
+                               Fill="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                               Margin="0,8" />
+
+                    <!-- Target -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="TARGET"
+                                   FontSize="9"
+                                   Opacity="0.7"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Right"
+                                   Margin="0,0,0,2" />
+                        <TextBlock Text="{Binding Target.DecimalString}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Right"
+                                   TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Status pill si está disponible -->
+                <Border Background="{DynamicResource SystemControlBackgroundBaseMediumLowBrush}"
+                        CornerRadius="8"
+                        Padding="8,3"
+                        HorizontalAlignment="Center"
+                        Margin="0,4,0,0">
+                    <TextBlock Text="{Binding Status}"
+                               FontSize="10"
+                               FontWeight="SemiBold"
+                               Opacity="0.8"
+                               HorizontalAlignment="Center" />
+                </Border>
             </StackPanel>
 
-            <!-- Meta objetivo -->
-            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                <TextBlock Text="Target" FontSize="11" Opacity="0.6" HorizontalAlignment="Right" Margin="0,0,0,2" />
-                <TextBlock Text="{Binding Target.DecimalString}"
-                           Classes="SizeBig"
-                           HorizontalAlignment="Right" />
+        </AdaptivePanel.OverflowContent>
+        <AdaptivePanel.Content>
+            <StackPanel Spacing="12" Margin="20">
+                <TextBlock Classes="SizeBig" TextAlignment="Center" Text="{Binding Name}" />
+                <!-- Indicadores de monto -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Cantidad recaudada -->
+                    <StackPanel Grid.Column="0" HorizontalAlignment="Left">
+                        <TextBlock Text="Raised" FontSize="11" Opacity="0.6" Margin="0,0,0,2" />
+                        <TextBlock Text="{Binding Raised.DecimalString}"
+                                   Classes="SizeBig"
+                                   Foreground="Orange"
+                                   FontWeight="SemiBold" />
+                    </StackPanel>
+
+                    <!-- Meta objetivo -->
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                        <TextBlock Text="Target" FontSize="11" Opacity="0.6" HorizontalAlignment="Right" Margin="0,0,0,2" />
+                        <TextBlock Text="{Binding Target.DecimalString}"
+                                   Classes="SizeBig"
+                                   HorizontalAlignment="Right" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Barra de progreso con porcentaje -->
+                <StackPanel Spacing="5">
+                    <ProgressBar Maximum="{Binding Target.Sats}"
+                                 Value="{Binding Raised.Sats}"
+                                 Height="16"
+                                 CornerRadius="8" />
+
+                    <!-- Porcentaje debajo de la barra -->
+                    <TextBlock Text="{Binding Progress, StringFormat='{}{0:P1}'}"
+                               HorizontalAlignment="Center"
+                               FontWeight="SemiBold"
+                               FontSize="12"
+                               Foreground="Orange" />
+
+                </StackPanel>
             </StackPanel>
-        </Grid>
+        </AdaptivePanel.Content>
+    </AdaptivePanel>
 
-        <!-- Barra de progreso con porcentaje -->
-        <StackPanel Spacing="5">
-            <ProgressBar Maximum="{Binding Target.Sats}"
-                         Value="{Binding Raised.Sats}"
-                         Height="16"
-                         CornerRadius="8" />
-
-            <!-- Porcentaje debajo de la barra -->
-            <TextBlock Text="{Binding Progress, StringFormat='{}{0:P1}'}"
-                       HorizontalAlignment="Center"
-                       FontWeight="SemiBold"
-                       FontSize="12"
-                       Foreground="Orange" />
-        </StackPanel>
-    </StackPanel>
 
 </UserControl>
