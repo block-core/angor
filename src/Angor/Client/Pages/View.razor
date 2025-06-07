@@ -268,15 +268,12 @@
                                     <b>
                                         @{
                                             var endDate = project.ProjectInfo.EndDate;
+                                            if (endDate == default(DateTime) || endDate == DateTime.MinValue)
+                                            {
+                                                throw new InvalidOperationException("Project must have a valid End Date. Projects without End Date are not supported.");
+                                            }
                                         }
-                                        @if (endDate == default(DateTime) || endDate == DateTime.MinValue)
-                                        {
-                                            <span>No End Date - Always Open</span>
-                                        }
-                                        else
-                                        {
-                                            @endDate
-                                        }
+                                        @endDate
                                     </b>
                                 </p>
                             </div>
@@ -397,10 +394,6 @@
                                             {
                                                 var daysUntilStart = (startDate - currentDate).Days;
                                                 <h4 class="mb-0">@daysUntilStart days until start</h4>
-                                            }
-                                            else if (investmentEndDate == default(DateTime) || investmentEndDate == DateTime.MinValue)
-                                            {
-                                                <h4 class="mb-0">Always Open</h4>
                                             }
                                             else if (currentDate >= startDate && currentDate <= investmentEndDate)
                                             {
