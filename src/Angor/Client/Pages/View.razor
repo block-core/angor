@@ -878,7 +878,6 @@
             {
                 founder = true;
                 NavMenuState.SetActivePage("founder");
-                // If project belongs to founder, fetch pending signatures
                 if (project is FounderProject founderProject)
                 {
                     await _RelayService.LookupSignaturesDirectMessagesForPubKeyAsync(founderProject.ProjectInfo.NostrPubKey, founderProject.LastRequestForSignaturesTime?.AddSeconds(1), 1,
@@ -934,14 +933,14 @@
 
                                 if (project is { ProjectInfo: null }) { project.ProjectInfo = projectInfo; }
                             },
-                            async () =>
+                            () =>
                             {
                                 _RelayService.LookupNostrProfileForNPub(
                                     (projectNpub, metadata) =>
                                     {
                                         if (project is { Metadata: null }) { project.Metadata = metadata; }
                                     },
-                                    async () =>
+                                    () =>
                                     {
                                         findInProgress = false;
                                         if (project?.ProjectInfo != null)
@@ -961,7 +960,7 @@
                                     },
                                     project.ProjectInfo.NostrPubKey);
 
-                                await SetProjectLinksAndRefreshBalance();
+                                SetProjectLinksAndRefreshBalance();
 
                             }, projectIndexerData.NostrEventId);
             }
