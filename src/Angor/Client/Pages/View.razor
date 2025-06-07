@@ -21,13 +21,11 @@
 @inject IRelayService _RelayService
 @inject ISerializer serializer
 @inject IJSRuntime Js;
-@inject ILogger<Signatures> SignatureLogger;
 @inject ILogger<Browse> Logger;
 @inject IHtmlStripperService HtmlStripperService;
 @inject IApplicationLogicService applicationLogicService;
 @inject NostrConversionHelper NostrHelper
 @inject NavMenuState NavMenuState
-@inject ISignService SignService
 
 
 @inherits BaseComponent
@@ -808,7 +806,6 @@
     private Project? project;
 
     private bool sendConfirmModal;
-    private List<SignatureItem> signaturesRequests = new();
 
     string myProjectExplorerLink;
     string projectExplorerLink;
@@ -822,6 +819,7 @@
     private bool isGeneratingNsec;
     private string errorMessage = string.Empty;
     private bool isRepublishing = false;
+    private bool hasPendingMessages = false;
 
     private string error;
 
@@ -883,7 +881,15 @@
                 // If project belongs to founder, fetch pending signatures
                 if (project is FounderProject founderProject)
                 {
-                    await FetchPendingSignatures(founderProject);
+                    await _RelayService.LookupSignaturesDirectMessagesForPubKeyAsync(founderProject.ProjectInfo.NostrPubKey, founderProject.LastRequestForSignaturesTime?.AddSeconds(1), 1,
+                        _ =>
+                        {
+                            if (hasPendingMessages)
+                                return;
+
+                            hasPendingMessages = true;
+                            InvokeAsync(StateHasChanged);
+                        });
                 }
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
@@ -973,73 +979,6 @@
             error = $"An error occurred: {ex.Message}";
             projectStats.Loading = false;
             StateHasChanged();
-        }
-    }
-
-    private bool hasPendingMessages = false;
-
-    HashSet<string> pubkeyWithMessages = new();
-
-    private async Task FetchPendingSignatures(FounderProject founderProject)
-    {
-        if (founderProject?.ProjectInfo?.NostrPubKey == null) return;
-
-        await SignService.LookupInvestmentRequestsAsync(founderProject.ProjectInfo.NostrPubKey, null, null,
-            (eventId, investorNostrPubKey, encryptedMessage, timeArrived) =>
-            {
-                var sigReq = signaturesRequests.FirstOrDefault(_ => _.investorNostrPubKey == investorNostrPubKey && _.EventId == eventId);
-
-                if (sigReq != null)
-                {
-                    if (sigReq.TimeArrived >= timeArrived)
-                    {
-                        return; 
-                    }
-                    signaturesRequests.Remove(sigReq);
-                }
-
-                var signatureRequest = new SignatureItem
-                    {
-                        investorNostrPubKey = investorNostrPubKey,
-                        TimeArrived = timeArrived,
-                        EncryptedMessage = encryptedMessage, 
-                        EventId = eventId
-                    };
-                signaturesRequests.Add(signatureRequest);
-                Console.WriteLine($"Added signature request for investor: {investorNostrPubKey} at {timeArrived}");
-            },
-            () =>
-            {
-                ScanForDmMessages();
-                InvokeAsync(StateHasChanged);
-            });
-    }
-
-
-    protected async Task ScanForDmMessages()
-    {
-        var lastScanList = SessionStorage.GetFounderMessagesTimes();
-
-        if (founder && project is FounderProject founderProject)
-        {
-            foreach (var signatureRequest in signaturesRequests)
-            {
-                await _RelayService.LookupDirectMessagesForPubKeyAsync(
-                    founderProject.ProjectInfo.NostrPubKey,
-                    lastScanList.TryGet(signatureRequest.investorNostrPubKey)?.AddSeconds(1),
-                    1,
-                    _ =>
-                    {
-                        if (!string.IsNullOrEmpty(_.Pubkey))
-                        {
-                            hasPendingMessages = true;
-                            pubkeyWithMessages.Add(_.Pubkey);
-                            InvokeAsync(StateHasChanged);
-                        }
-                        return Task.CompletedTask;
-                    }, new[] { signatureRequest.investorNostrPubKey });
-
-            }
         }
     }
 
@@ -1373,22 +1312,6 @@
             isRepublishing = false;
             StateHasChanged();
         }
-    }
-
-    public class SignatureItem
-    {
-        public string investorNostrPubKey { get; set; }
-
-        public long? AmountToInvest { get; set; }
-
-        public DateTime TimeArrived { get; set; }
-        public DateTime? TimeApproved { get; set; }
-
-        public SignRecoveryRequest? SignRecoveryRequest { get; set; }
-        public string? EncryptedMessage { get; set; }
-
-        public string EventId { get; set; }
-        public ProjectInvestment? Invested { get; set; }
     }
 }
 
