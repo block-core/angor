@@ -392,10 +392,26 @@
                                         <div>
                                             <h6 class="text-muted">Investment Status</h6>
                                             @{
-                                                var daysLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
+                                                var currentDate = DateTime.UtcNow;
+                                                var startDate = project.ProjectInfo.StartDate;
+                                                var investmentEndDate = project.ProjectInfo.EndDate;
+                                                
+                                                if (investmentEndDate == default(DateTime) || investmentEndDate == DateTime.MinValue)
+                                                {
+                                                    if (project.ProjectInfo.Stages?.Any() == true)
+                                                    {
+                                                        investmentEndDate = project.ProjectInfo.Stages.First().ReleaseDate;
+                                                    }
+                                                }
                                             }
-                                            @if (daysLeft >= 0)
+                                            @if (currentDate < startDate)
                                             {
+                                                var daysUntilStart = (startDate - currentDate).Days;
+                                                <h4 class="mb-0">@daysUntilStart days until start</h4>
+                                            }
+                                            else if (currentDate >= startDate && currentDate <= investmentEndDate)
+                                            {
+                                                var daysLeft = (investmentEndDate - currentDate).Days;
                                                 <h4 class="mb-0">@daysLeft days left</h4>
                                             }
                                             else
