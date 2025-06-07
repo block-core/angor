@@ -30,6 +30,7 @@ public class ShellDesign : IShell
 
     public object Header { get; set; } = "Angor";
 
+    public IObservable<object> ContentHeader => Observable.Return(new object());
     public IEnumerable<ISection> Sections { get; }
     public IContentSection SelectedSection { get; set; }
 }

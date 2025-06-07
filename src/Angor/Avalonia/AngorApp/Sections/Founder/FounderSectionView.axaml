@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="800"
+             mc:Ignorable="d" d:DesignWidth="900"
              x:Class="AngorApp.Sections.Founder.FounderSectionView"
              xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
              xmlns:co="clr-namespace:AngorApp.UI.Controls"
@@ -31,16 +31,16 @@
 
     <UserControl.DataTemplates>
         <DataTemplate DataType="founder:IFounderProjectViewModel">
-            <Button Margin="10" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" Command="{Binding GoToDetails}">
-                <Border ClipToBounds="True" CornerRadius="10" Background="White">
-                    <Grid RowDefinitions="Auto *">
+            <Button Padding="0" Margin="10" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" Command="{Binding GoToDetails}">
+                <Border ClipToBounds="True" CornerRadius="10">
+                    <Grid RowDefinitions="200 Auto *">
                         <asyncImageLoader:AdvancedImage
+                            Background="Red"
                             DockPanel.Dock="Top"
-                            Source="{Binding Banner}" VerticalAlignment="Top" />
-                        <StackPanel Grid.Row="1" Margin="10" Spacing="10">
-                            <TextBlock TextWrapping="Wrap" HorizontalAlignment="Center" Classes="SizeBig" Text="{Binding Name}" />
-                            <TextBlock MaxLines="4" TextElement.FontWeight="Normal" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Text="{Binding ShortDescription}" />
-                        </StackPanel>
+                            Stretch="UniformToFill"
+                            Source="{Binding Banner}" />
+                        <TextBlock Grid.Row="1" Margin="15" TextWrapping="Wrap" DockPanel.Dock="Top" HorizontalAlignment="Center" Classes="SizeBig" Text="{Binding Name}" />
+                        <TextBlock Grid.Row="2" Margin="20 0" TextElement.FontWeight="Normal" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Text="{Binding ShortDescription}" />
                     </Grid>
                 </Border>
             </Button>
@@ -49,37 +49,28 @@
 
     <ScrollViewer>
         <StackPanel Spacing="20">
-
-            <co:Pane Title="Founder" IsTitleVisible="True">
-                <co:Pane.TitleRightContent>
+            <z:Card Header="Founder">
+                <z:Card.HeaderEndContent>
                     <co:IconButton DockPanel.Dock="Right" VerticalAlignment="Top">
                         CREATE PROJECT
                         <co:IconButton.Icon>
                             <i:Icon Value="mdi-plus-box-outline" FontSize="20" />
                         </co:IconButton.Icon>
                     </co:IconButton>
-                </co:Pane.TitleRightContent>
-                <co:Pane.TitleIcon>
-                    <i:Icon Value="mdi-shield-account-outline" />
-                </co:Pane.TitleIcon>
-            </co:Pane>
-
-            <co:Pane>
-                To create a new project or view your existing projects, an on-chain transaction and a Nostr DID are required
-            </co:Pane>
-
-            <co:Pane Title="Projects" IsTitleVisible="True">
-                <co:Pane.TitleRightContent>
+                </z:Card.HeaderEndContent>
+                <z:Card.HeaderStartContent>
+                    <i:Icon FontSize="40" Value="mdi-shield-account-outline" />
+                </z:Card.HeaderStartContent>
+            </z:Card>
+            <z:Card Header="Projects">
+                <z:Card.HeaderEndContent>
                     <Button i:Attached.Icon="fa-arrow-rotate-right" Command="{Binding LoadProjects}" Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" />
-                </co:Pane.TitleRightContent>
-            </co:Pane>
-
-            <z:Card>
+                </z:Card.HeaderEndContent>
                 <z:Loading LoadingText="Loading projects. Please wait." VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" IsLoading="{Binding LoadProjects.IsExecuting^}">
                     <ItemsControl ItemsSource="{Binding ProjectsList}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel ItemWidth="300" ItemHeight="350" />
+                                <WrapPanel ItemWidth="400" ItemHeight="360" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>

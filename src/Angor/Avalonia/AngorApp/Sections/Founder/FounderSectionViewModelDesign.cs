@@ -22,7 +22,7 @@ public class FounderSectionViewModelDesign : IFounderSectionViewModel
         {
             Name = "Second project",
             Picture = new Uri("https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"),
-            Banner = new Uri("https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg"),
+            Banner = new Uri("https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg"),
             ShortDescription = "Sample project",
             TargetAmount = 1234,
         },

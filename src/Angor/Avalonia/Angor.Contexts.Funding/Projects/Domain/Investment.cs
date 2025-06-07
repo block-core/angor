@@ -1,3 +1,5 @@
+using Angor.Contexts.Funding.Founder;
+
 namespace Angor.Contexts.Funding.Projects.Domain;
 
 public class Investment
@@ -22,11 +24,5 @@ public class Investment
             Status = InvestmentStatus.Pending,
             TransactionId = transactionId,
         };
-    }
-    
-    public void ConfirmTransaction(string transactionId)
-    {
-        TransactionId = transactionId;
-        Status = InvestmentStatus.Confirmed;
     }
 }
