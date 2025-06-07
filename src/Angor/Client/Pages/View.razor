@@ -258,28 +258,25 @@
                             <div class="d-flex align-items-center mb-2">
                                 <Icon IconName="date" Height="24" Width="24" Class="me-3" />
                                 <h6 class="mb-0">Investment End Date</h6>
-
                                 <div class="info-icon-container ms-auto"
                                      data-tooltip="This is when the investment period ends">
                                     <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
                                 </div>
                             </div>
-
                             <div class="d-flex flex-column justify-content-center">
                                 <p class="text-break mb-0 mt-2">
                                     <b>
                                         @{
                                             var endDate = project.ProjectInfo.EndDate;
-                                            if (endDate == default(DateTime) || endDate == DateTime.MinValue)
-                                            {
-                                                // If EndDate is not set, use the first stage date
-                                                if (project.ProjectInfo.Stages?.Any() == true)
-                                                {
-                                                    endDate = project.ProjectInfo.Stages.First().ReleaseDate;
-                                                }
-                                            }
                                         }
-                                        @endDate
+                                        @if (endDate == default(DateTime) || endDate == DateTime.MinValue)
+                                        {
+                                            <span>No End Date - Always Open</span>
+                                        }
+                                        else
+                                        {
+                                            @endDate
+                                        }
                                     </b>
                                 </p>
                             </div>
@@ -395,19 +392,15 @@
                                                 var currentDate = DateTime.UtcNow;
                                                 var startDate = project.ProjectInfo.StartDate;
                                                 var investmentEndDate = project.ProjectInfo.EndDate;
-                                                
-                                                if (investmentEndDate == default(DateTime) || investmentEndDate == DateTime.MinValue)
-                                                {
-                                                    if (project.ProjectInfo.Stages?.Any() == true)
-                                                    {
-                                                        investmentEndDate = project.ProjectInfo.Stages.First().ReleaseDate;
-                                                    }
-                                                }
                                             }
                                             @if (currentDate < startDate)
                                             {
                                                 var daysUntilStart = (startDate - currentDate).Days;
                                                 <h4 class="mb-0">@daysUntilStart days until start</h4>
+                                            }
+                                            else if (investmentEndDate == default(DateTime) || investmentEndDate == DateTime.MinValue)
+                                            {
+                                                <h4 class="mb-0">Always Open</h4>
                                             }
                                             else if (currentDate >= startDate && currentDate <= investmentEndDate)
                                             {
