@@ -6,17 +6,17 @@
              xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:l="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
-             x:Class="AngorApp.Sections.Portfolio.ProgressView" x:DataType="portfolio:IInvestedProject">
+             x:Class="AngorApp.Sections.Portfolio.ProgressView" x:DataType="portfolio:IPortfolioProject">
 
     <Design.DataContext>
-        <portfolio:InvestedProjectDesign Status="Funding" FounderStatus="Approved" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
-            <portfolio:InvestedProjectDesign.Target>
+        <portfolio:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+            <portfolio:PortfolioProjectDesign.Target>
                 <angorApp:DesignTimeAmount Sats="12000000" />
-            </portfolio:InvestedProjectDesign.Target>
-            <portfolio:InvestedProjectDesign.Raised>
+            </portfolio:PortfolioProjectDesign.Target>
+            <portfolio:PortfolioProjectDesign.Raised>
                 <angorApp:DesignTimeAmount Sats="4400000" />
-            </portfolio:InvestedProjectDesign.Raised>
-        </portfolio:InvestedProjectDesign>
+            </portfolio:PortfolioProjectDesign.Raised>
+        </portfolio:PortfolioProjectDesign>
     </Design.DataContext>
 
     <AdaptivePanel>

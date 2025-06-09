@@ -34,7 +34,7 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
 
         Load.Successes()
             .EditDiff(project => project.Id)
-            .Transform(IInvestedProject (project) => new InvestedProject(project))
+            .Transform(IPortfolioProject (project) => new PortfolioProject(project, investmentAppService, uiServices))
             .Bind(out var investedProjects)
             .Subscribe().DisposeWith(disposable);
 
@@ -46,7 +46,7 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
     public IEnhancedCommand<Result<IEnumerable<InvestedProjectDto>>> Load { get; }
 
     public IReadOnlyCollection<PortfolioItem> Items { get; }
-    public IEnumerable<IInvestedProject> InvestedProjects { get; }
+    public IEnumerable<IPortfolioProject> InvestedProjects { get; }
 
     public void Dispose()
     {

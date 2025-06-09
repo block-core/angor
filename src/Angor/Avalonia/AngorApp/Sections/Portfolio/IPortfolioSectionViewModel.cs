@@ -6,11 +6,11 @@ namespace AngorApp.Sections.Portfolio;
 public interface IPortfolioSectionViewModel
 {
     IReadOnlyCollection<PortfolioItem> Items { get; }
-    public IEnumerable<IInvestedProject> InvestedProjects { get; }
+    public IEnumerable<IPortfolioProject> InvestedProjects { get; }
     public IEnhancedCommand<Result<IEnumerable<InvestedProjectDto>>> Load { get; }
 }
 
-public interface IInvestedProject
+public interface IPortfolioProject
 {
     public string Name { get; }
     public string Description { get; }
@@ -21,6 +21,7 @@ public interface IInvestedProject
     public FounderStatus FounderStatus { get; }
     public Uri LogoUri { get; }
     public double Progress => Target.Sats == 0 ? 0 : Raised.Sats / (double)Target.Sats;
+    public IEnhancedCommand<Result> CompleteInvestment { get; }
 }
 
 public class Property

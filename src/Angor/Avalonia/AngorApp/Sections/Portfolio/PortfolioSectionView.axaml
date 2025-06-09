@@ -29,31 +29,31 @@
     <Design.DataContext>
         <founder:PortfolioSectionViewModelDesign>
             <founder:PortfolioSectionViewModelDesign.InvestedProjects>
-                <founder:InvestedProjectDesign Status="Funding" FounderStatus="Approved" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
-                    <founder:InvestedProjectDesign.Target>
+                <founder:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                    <founder:PortfolioProjectDesign.Target>
                         <angorApp:DesignTimeAmount Sats="12000000" />
-                    </founder:InvestedProjectDesign.Target>
-                    <founder:InvestedProjectDesign.Raised>
+                    </founder:PortfolioProjectDesign.Target>
+                    <founder:PortfolioProjectDesign.Raised>
                         <angorApp:DesignTimeAmount Sats="4400000" />
-                    </founder:InvestedProjectDesign.Raised>
-                </founder:InvestedProjectDesign>
-                <founder:InvestedProjectDesign FounderStatus="Approved" Status="Funding" Name="Project 2" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
-                    <founder:InvestedProjectDesign.Target>
+                    </founder:PortfolioProjectDesign.Raised>
+                </founder:PortfolioProjectDesign>
+                <founder:PortfolioProjectDesign FounderStatus="Approved" Status="Funding" Name="Project 2" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                    <founder:PortfolioProjectDesign.Target>
                         <angorApp:DesignTimeAmount Sats="12000000" />
-                    </founder:InvestedProjectDesign.Target>
-                    <founder:InvestedProjectDesign.Raised>
+                    </founder:PortfolioProjectDesign.Target>
+                    <founder:PortfolioProjectDesign.Raised>
                         <angorApp:DesignTimeAmount Sats="5404000" />
-                    </founder:InvestedProjectDesign.Raised>
-                </founder:InvestedProjectDesign>
+                    </founder:PortfolioProjectDesign.Raised>
+                </founder:PortfolioProjectDesign>
             </founder:PortfolioSectionViewModelDesign.InvestedProjects>
         </founder:PortfolioSectionViewModelDesign>
     </Design.DataContext>
 
     <UserControl.DataTemplates>
-        <DataTemplate DataType="founder:IInvestedProject">
+        <DataTemplate DataType="founder:IPortfolioProject">
             <Card Header="{Binding}" HeaderPadding="10" Padding="20">
                 <Card.HeaderTemplate>
-                    <DataTemplate DataType="founder:IInvestedProject">
+                    <DataTemplate DataType="founder:IPortfolioProject">
                         <founder:HeaderView />
                     </DataTemplate>
                 </Card.HeaderTemplate>

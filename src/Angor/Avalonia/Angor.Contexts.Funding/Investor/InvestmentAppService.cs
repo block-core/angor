@@ -43,4 +43,9 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
             Raised = new Amount(14000),
         }]);
     }
+
+    public async Task<Result> ConfirmInvestment(int investmentId)
+    {
+        return Result.Success();
+    }
 }

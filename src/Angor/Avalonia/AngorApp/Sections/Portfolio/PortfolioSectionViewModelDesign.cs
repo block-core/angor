@@ -17,11 +17,11 @@ public class PortfolioSectionViewModelDesign : IPortfolioSectionViewModel
     }
 
     public IReadOnlyCollection<PortfolioItem> Items { get; }
-    public IEnumerable<IInvestedProject> InvestedProjects { get; } = new List<IInvestedProject>();
+    public IEnumerable<IPortfolioProject> InvestedProjects { get; } = new List<IPortfolioProject>();
     public IEnhancedCommand<Result<IEnumerable<InvestedProjectDto>>> Load { get; }
 }
 
-public class InvestedProjectDesign : IInvestedProject
+public class PortfolioProjectDesign : IPortfolioProject
 {
     public string Name { get; set; }
     public string Description { get; set; }
@@ -31,4 +31,5 @@ public class InvestedProjectDesign : IInvestedProject
     public ProjectStatus Status { get; set; }
     public FounderStatus FounderStatus { get; set; }
     public Uri LogoUri { get; set; }
+    public IEnhancedCommand<Result> CompleteInvestment { get; } 
 }

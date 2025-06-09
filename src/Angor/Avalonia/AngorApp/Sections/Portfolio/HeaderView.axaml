@@ -5,18 +5,18 @@
              xmlns:portfolio="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:al="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="600" 
-             x:Class="AngorApp.Sections.Portfolio.HeaderView" x:DataType="portfolio:IInvestedProject">
+             mc:Ignorable="d" d:DesignWidth="600"
+             x:Class="AngorApp.Sections.Portfolio.HeaderView" x:DataType="portfolio:IPortfolioProject">
 
     <Design.DataContext>
-        <portfolio:InvestedProjectDesign Status="Funding" FounderStatus="Approved" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
-            <portfolio:InvestedProjectDesign.Target>
+        <portfolio:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+            <portfolio:PortfolioProjectDesign.Target>
                 <angorApp:DesignTimeAmount Sats="12000000" />
-            </portfolio:InvestedProjectDesign.Target>
-            <portfolio:InvestedProjectDesign.Raised>
+            </portfolio:PortfolioProjectDesign.Target>
+            <portfolio:PortfolioProjectDesign.Raised>
                 <angorApp:DesignTimeAmount Sats="4400000" />
-            </portfolio:InvestedProjectDesign.Raised>
-        </portfolio:InvestedProjectDesign>
+            </portfolio:PortfolioProjectDesign.Raised>
+        </portfolio:PortfolioProjectDesign>
     </Design.DataContext>
 
     <AdaptivePanel>
@@ -24,13 +24,17 @@
             <StackPanel Spacing="20">
                 <al:AdvancedImage Height="200" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
                 <portfolio:ProgressView />
-                <Button HorizontalAlignment="Center" Content="Complete investment" />
+                <Button IsVisible="{Binding $self.IsEffectivelyEnabled}" Command="{Binding CompleteInvestment}" HorizontalAlignment="Center" Content="Complete investment" />
             </StackPanel>
         </AdaptivePanel.OverflowContent>
         <AdaptivePanel.Content>
             <EdgePanel>
-                <EdgePanel.EndContent><Button Content="Complete investment" /></EdgePanel.EndContent>
-                <EdgePanel.StartContent><al:AdvancedImage Width="120" Height="120" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" /></EdgePanel.StartContent>
+                <EdgePanel.EndContent>
+                    <Button IsVisible="{Binding $self.IsEffectivelyEnabled}" Command="{Binding CompleteInvestment}" HorizontalAlignment="Center" Content="Complete investment" />
+                </EdgePanel.EndContent>
+                <EdgePanel.StartContent>
+                    <al:AdvancedImage Width="120" Height="120" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
+                </EdgePanel.StartContent>
                 <portfolio:ProgressView />
             </EdgePanel>
         </AdaptivePanel.Content>
