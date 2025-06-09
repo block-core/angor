@@ -24,7 +24,7 @@ public static class WalletContextServices
         services.TryAddSingleton<IStore>(new InMemoryStore());
         services.AddSingleton<IWalletAppService, WalletAppService>();
         services.AddSingleton<IHdOperations, HdOperations>();
-        var networkConfiguration = new NetworkConfiguration2();
+        var networkConfiguration = new NetworkConfiguration();
         services.AddSingleton<INetworkConfiguration>(networkConfiguration);
         services.AddSingleton<INetworkService, NetworkService>();
         services.AddSingleton<INetworkStorage, NetworkStorage>();

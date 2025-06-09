@@ -5,7 +5,7 @@ using Blockcore.Networks;
 
 namespace Angor.Contests.CrossCutting;
 
-public class NetworkConfiguration2 : INetworkConfiguration
+public class NetworkConfiguration : INetworkConfiguration
 {
     public static string AngorTestKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
     

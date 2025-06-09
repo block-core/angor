@@ -6,7 +6,6 @@ using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
-using Angor.Shared.Networks;
 using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
@@ -21,7 +20,7 @@ public static class FundingContextServices
 {
     public static ServiceCollection Register(ServiceCollection services, ILogger logger)
     {
-        var networkConfiguration = new NetworkConfiguration2();
+        var networkConfiguration = new NetworkConfiguration();
 
         services.AddSingleton<IProjectAppService, ProjectAppService>();
         services.AddSingleton<IInvestmentAppService, InvestmentAppService>();
