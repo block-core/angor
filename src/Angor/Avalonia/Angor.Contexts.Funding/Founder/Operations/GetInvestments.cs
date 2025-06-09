@@ -104,18 +104,18 @@ public static class GetInvestments
             GetInvestmentData(GetInvestmentsRequest request, string nostrPubKey)
         {
             return
-                from requests in Requests(request, nostrPubKey)
-                from approvals in Approvals(nostrPubKey)
-                from alreadyInvested in AlreadyInvested(request)
+                from requests in LookupRemoteRequests(request, nostrPubKey)
+                from approvals in LookupRemoteApprovals(nostrPubKey)
+                from alreadyInvested in LookupCurrentInvesments(request)
                 select (requests, approvals, alreadyInvested);
         }
 
-        private Task<Result<List<ProjectInvestment>>> AlreadyInvested(GetInvestmentsRequest request)
+        private Task<Result<List<ProjectInvestment>>> LookupCurrentInvesments(GetInvestmentsRequest request)
         {
             return Result.Try(() => indexerService.GetInvestmentsAsync(request.ProjectId.Value));
         }
 
-        private async Task<Result<IEnumerable<InvestmentRequest>>> Requests(GetInvestmentsRequest request, string nostrPubKey)
+        private async Task<Result<IEnumerable<InvestmentRequest>>> LookupRemoteRequests(GetInvestmentsRequest request, string nostrPubKey)
         {
             return await InvestmentMessages(nostrPubKey)
                 .Bind(messages => DecryptMessages(request, messages))
@@ -158,7 +158,7 @@ public static class GetInvestments
                 originalMessage.Id);
         }
         
-        private async Task<Result<IEnumerable<ApprovalMessage>>> Approvals(string nostrPubKey)
+        private async Task<Result<IEnumerable<ApprovalMessage>>> LookupRemoteApprovals(string nostrPubKey)
         {
             return await GetApprovedStatusObs()
                 .ToList()
