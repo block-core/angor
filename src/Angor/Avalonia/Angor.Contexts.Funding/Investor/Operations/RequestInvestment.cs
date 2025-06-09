@@ -20,7 +20,7 @@ public static class RequestInvestment
         INetworkConfiguration networkConfiguration,
         ISerializer serializer,
         IWalletOperations walletOperations,
-        ISignService signService) : IRequestHandler<RequestFounderSignaturesRequest, Result>
+        ISignaturesService signatureService) : IRequestHandler<RequestFounderSignaturesRequest, Result>
     {
         public async Task<Result> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
         {
@@ -33,14 +33,14 @@ public static class RequestInvestment
 
             if (projectResult.IsFailure)
             {
-                return Result.Failure<EventSendResponse>(projectResult.Error);
+                return Result.Failure<ISignaturesService.EventSendResponse>(projectResult.Error);
             }
 
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId);
 
             if (sensitiveDataResult.IsFailure)
             {
-                return Result.Failure<EventSendResponse>(sensitiveDataResult.Error);
+                return Result.Failure<ISignaturesService.EventSendResponse>(sensitiveDataResult.Error);
             }
 
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
@@ -49,7 +49,7 @@ public static class RequestInvestment
             return await SendSignatureRequest(request.WalletId, walletWords, project, strippedInvestmentTransaction.ToHex());
         }
 
-        private async Task<Result<EventSendResponse>> SendSignatureRequest(Guid walletId, WalletWords walletWords, Project project, string signedTransactionHex)
+        private async Task<Result<ISignaturesService.EventSendResponse>> SendSignatureRequest(Guid walletId, WalletWords walletWords, Project project, string signedTransactionHex)
         {
             try
             {
@@ -57,7 +57,7 @@ public static class RequestInvestment
 
                 if (releaseAddressResult.IsFailure)
                 {
-                    return Result.Failure<EventSendResponse>(releaseAddressResult.Error);
+                    return Result.Failure<ISignaturesService.EventSendResponse>(releaseAddressResult.Error);
                 }
                 
                 var releaseAddress = releaseAddressResult.Value;
@@ -70,12 +70,12 @@ public static class RequestInvestment
                 };
 
                 var key = new KeyIdentifier(walletId, project.NostrPubKey);
-                return await signService.PostInvestmentRequest2(key, serializer.Serialize(signRecoveryRequest),  project.NostrPubKey);
+                return await signatureService.PostInvestmentRequest(key, serializer.Serialize(signRecoveryRequest),  project.NostrPubKey);
 
             }
             catch (Exception ex)
             {
-                return Result.Failure<EventSendResponse>($"Error while sending the signature request {ex.Message}");
+                return Result.Failure<ISignaturesService.EventSendResponse>($"Error while sending the signature request {ex.Message}");
             }
         }
 

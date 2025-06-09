@@ -48,9 +48,6 @@ builder.Services.AddTransient<IRelayService, RelayService>();
 builder.Services.AddTransient<ISignService, SignService>();
 builder.Services.AddTransient<INostrService, NostrService>();
 
-// TODO: Inject the correct implementation
-builder.Services.AddTransient<ISensitiveNostrData, SensitiveNostrData>();
-
 builder.Services.AddTransient<IFounderTransactionActions, FounderTransactionActions>();
 builder.Services.AddTransient<ISeederTransactionActions, SeederTransactionActions>();
 builder.Services.AddTransient<IInvestorTransactionActions, InvestorTransactionActions>();

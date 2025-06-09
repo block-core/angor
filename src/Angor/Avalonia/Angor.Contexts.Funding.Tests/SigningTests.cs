@@ -38,13 +38,13 @@ public class SigningTests(ITestOutputHelper output)
         var keyIdenfier = new KeyIdentifier(WalletAppService.SingleWalletId.Value, founderPubKey);
             
         // Act
-        var result = await sut.PostInvestmentRequest2(keyIdenfier, "TEST", founderNostrPubKey);
+        var result = await sut.PostInvestmentRequest(keyIdenfier, "TEST", founderNostrPubKey);
         
         // Assert
         Assert.True(result.IsSuccess);
     }
 
-    private ISignService CreateSignService()
+    private ISignaturesService CreateSignService()
     {
         var logger1 = new LoggerConfiguration()
             .WriteTo.TestOutput(output)
@@ -62,6 +62,6 @@ public class SigningTests(ITestOutputHelper output)
         serviceCollection.AddSingleton<ISensitiveWalletDataProvider>(walletSensitiveDateProvider);
         var provider = serviceCollection.BuildServiceProvider();
 
-        return provider.GetRequiredService<ISignService>();
+        return provider.GetRequiredService<ISignaturesService>();
     }
 }

@@ -21,8 +21,4 @@ public interface ISignService
     void GetInvestmentRevocation(string investorNostrPubKey, string projectNostrPubKey, DateTime? releaseRequestSentTime, string releaseRequestEventId, Action<string> action, Action onAllMessagesReceived);
 
     void GetAllInvestmentRevocations(string projectNostrPubKey, Action<SignServiceLookupItem> action, Action onAllMessagesReceived);
-    Task<Result<EventSendResponse>> PostInvestmentRequest2<T>(KeyIdentifier keyIdentifier, T content, string founderNostrPubKey);
-    Task<Result<EventSendResponse>> PostInvestmentRequestApproval2<T>(KeyIdentifier keyIdentifier, T content, string investorNostrPubKey, string eventId);
 }
-
-public record EventSendResponse(bool IsAccepted, string? EventId, string? Message, DateTime Received);

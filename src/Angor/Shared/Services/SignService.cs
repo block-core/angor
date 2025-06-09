@@ -10,13 +10,10 @@ using Nostr.Client.Responses;
 namespace Angor.Shared.Services
 {
     public class SignService(
-        ISensitiveNostrData sensitiveNostrData,
-        ISerializer serializer,
-        INostrEncryption nostrEncryption,
+
         INostrCommunicationFactory communicationFactory,
         INetworkService networkService,
-        IRelaySubscriptionsHandling subscriptionsHanding,
-        INostrService nostrService)
+        IRelaySubscriptionsHandling subscriptionsHanding)
         : ISignService
     {
         public (DateTime, string) PostInvestmentRequest(string encryptedContent, string investorNostrPrivateKey,
@@ -272,58 +269,7 @@ namespace Angor.Shared.Services
             subscriptionsHanding.Dispose();
         }
 
-        public async Task<Result<EventSendResponse>> PostInvestmentRequest2<T>(KeyIdentifier keyIdentifier, T content,
-            string founderNostrPubKey)
-        {
-            var key = await sensitiveNostrData.GetNostrPrivateKeyHex(keyIdentifier);
-            var parsedKey = NostrPrivateKey.FromHex(key.Value);
-            var jsonContent = serializer.Serialize(content);
-            var encryptedContent = await nostrEncryption.Nip4Encryption(jsonContent, key.Value, founderNostrPubKey);
-            var ev = new NostrEvent
-            {
-                Kind = NostrKind.EncryptedDm,
-                CreatedAt = DateTime.UtcNow,
-                Content = encryptedContent,
-                Tags = new NostrEventTags(
-                    NostrEventTag.Profile(founderNostrPubKey),
-                    new NostrEventTag("subject", "Investment offer"))
-            };
-            
-            var signed = ev.Sign(parsedKey);
-
-            return await nostrService.Send(signed)
-                .Ensure(response => response.Accepted, "Failed to send event")
-                .Map(response => new EventSendResponse(response.Accepted, response.EventId, response.Message,
-                    response.ReceivedTimestamp));
-        }
-
-        public Task<Result<EventSendResponse>> PostInvestmentRequestApproval2<T>(KeyIdentifier keyIdentifier, T content,
-            string investorNostrPubKey, string eventId)
-        {
-            return sensitiveNostrData.GetNostrPrivateKeyHex(keyIdentifier)
-                .Map(key => (ParsedKey: NostrPrivateKey.FromHex(key), JsonContent: serializer.Serialize(content)))
-                .Bind(data => Result.Try(() => nostrEncryption.Nip4Encryption(data.JsonContent, data.ParsedKey.Hex, investorNostrPubKey))
-                    .Ensure(s => !string.IsNullOrEmpty(s), "Failed to encrypt content")
-                    .Map((encryptedContent) => new { data.ParsedKey, encryptedContent }))
-                .Map(data =>
-                {
-                    var ev = new NostrEvent
-                    {
-                        Kind = NostrKind.EncryptedDm,
-                        CreatedAt = DateTime.UtcNow,
-                        Content = data.encryptedContent,
-                        Tags = new NostrEventTags(
-                            NostrEventTag.Profile(investorNostrPubKey),
-                            NostrEventTag.Event(eventId),
-                            new NostrEventTag("subject", "Re:Investment offer"))
-                    };
-                    return ev.Sign(data.ParsedKey);
-                })
-                .Bind(data => nostrService.Send(data)
-                    .Ensure(response => response.Accepted, "Failed to send event"))
-                .Map(response => new EventSendResponse(response.Accepted, response.EventId, response.Message,
-                    response.ReceivedTimestamp));
-        }
+        
 
         public class NostrFilterWithSubject : NostrFilter
         {
