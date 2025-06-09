@@ -46,7 +46,7 @@ public static class GetInvestments
             var dataResult = await GetInvestmentData(request, nostrPubKey);
 
             return dataResult
-                .Map(data => data.requests.Select(req => CreateInvestment(req, data.approvals, data.alreadyInvested))
+                .Map(data => data.requests.Select(req => CreateInvestment(req, data.approvals, data.alreadyInvested, projectResult.Value))
             );
         }
         
@@ -75,13 +75,13 @@ public static class GetInvestments
             return approvals.Any(approval => approval.EventIdentifier == eventId);
         }
         
-        private Investment CreateInvestment(
-            InvestmentRequest signRequest, 
-            IEnumerable<ApprovalMessage> approvals, 
-            List<ProjectInvestment> alreadyInvested)
+        private Investment CreateInvestment(InvestmentRequest signRequest,
+            IEnumerable<ApprovalMessage> approvals,
+            List<ProjectInvestment> alreadyInvested,
+            Project project)
         {
             var transaction = networkConfiguration.GetNetwork().CreateTransaction(signRequest.InvestmentTransactionHex);
-            var amount = GetAmount(transaction);
+            var amount = GetAmount(transaction, project);
             var transactionId = transaction.GetHash().ToString();
     
             var investmentStatus = DetermineInvestmentStatus(
@@ -200,11 +200,11 @@ public static class GetInvestments
             }
         }
 
-        private static long GetAmount(Transaction transaction)
+        private static long GetAmount(Transaction transaction, Project project)
         {
             return transaction.Outputs.AsIndexedOutputs()
                 .Skip(2)
-                .Take(transaction.Outputs.Count - 3)
+                .Take(project.Stages.Count())
                 .Sum(x => x.TxOut.Value.Satoshi);
         }
     }
