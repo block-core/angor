@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="1000"
+             mc:Ignorable="d" d:DesignWidth="360"
              x:Class="AngorApp.Sections.Portfolio.PortfolioSectionView"
              xmlns:founder="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
@@ -22,7 +22,7 @@
 
     <UserControl.Styles>
         <Style Selector="Card StackPanel > HeaderedContainer">
-            <Setter Property="Theme" Value="{StaticResource Item}"></Setter>
+            <Setter Property="Theme" Value="{StaticResource Item}" />
         </Style>
     </UserControl.Styles>
 
@@ -109,22 +109,22 @@
     </UserControl.DataTemplates>
 
     <DockPanel>
-        <Card DockPanel.Dock="Top" Header="Portfolio" Subheader="Check your project investments">
+        <Card DockPanel.Dock="Top" Header="Portfolio" IsAdaptiveFlowEnabled="True" Subheader="Check your project investments">
             <Card.HeaderEndContent>
-                <StackPanel Spacing="10" Orientation="Horizontal">
-                    <IconButton Command="{Binding Load}">
+                <UniformGrid ColumnSpacing="20" Rows="1">
+                    <IconButton HorizontalAlignment="Stretch" Command="{Binding Load}">
                         Refresh
                         <IconButton.Icon>
                             <ui:Icon Source="fa-arrows-rotate" />
                         </IconButton.Icon>
                     </IconButton>
-                    <IconButton>
+                    <IconButton HorizontalAlignment="Stretch">
                         Penalties
                         <IconButton.Icon>
                             <ui:Icon Source="fa-unlock" />
                         </IconButton.Icon>
                     </IconButton>
-                </StackPanel>
+                </UniformGrid>
             </Card.HeaderEndContent>
         </Card>
 
