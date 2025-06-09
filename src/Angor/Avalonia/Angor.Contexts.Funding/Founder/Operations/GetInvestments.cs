@@ -106,11 +106,11 @@ public static class GetInvestments
             return
                 from requests in LookupRemoteRequests(request, nostrPubKey)
                 from approvals in LookupRemoteApprovals(nostrPubKey)
-                from alreadyInvested in LookupCurrentInvesments(request)
+                from alreadyInvested in LookupCurrentInvestments(request)
                 select (requests, approvals, alreadyInvested);
         }
 
-        private Task<Result<List<ProjectInvestment>>> LookupCurrentInvesments(GetInvestmentsRequest request)
+        private Task<Result<List<ProjectInvestment>>> LookupCurrentInvestments(GetInvestmentsRequest request)
         {
             return Result.Try(() => indexerService.GetInvestmentsAsync(request.ProjectId.Value));
         }
