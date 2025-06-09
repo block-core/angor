@@ -265,16 +265,7 @@
                             </div>
                             <div class="d-flex flex-column justify-content-center">
                                 <p class="text-break mb-0 mt-2">
-                                    <b>
-                                        @{
-                                            var endDate = project.ProjectInfo.EndDate;
-                                            if (endDate == default(DateTime) || endDate == DateTime.MinValue)
-                                            {
-                                                throw new InvalidOperationException("Project must have a valid End Date. Projects without End Date are not supported.");
-                                            }
-                                        }
-                                        @endDate
-                                    </b>
+                                    <b>@project.ProjectInfo.EndDate</b>
                                 </p>
                             </div>
                         </div>
