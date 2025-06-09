@@ -61,6 +61,28 @@
     <script src="nostr-tools-methods.js?v=1" type="module"></script>
     <script src="/assets/js/appUpdate.js?v=1"></script>
     <script src="/assets/js/app.js?v=1"></script>
+    <script>
+    window.ModalScrollManager = {
+        enableScrollLock: function () {
+        const body = document.body;
+        if (!body.classList.contains('modal-open')) {
+            const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+            if (scrollBarWidth > 0) {
+            body.style.paddingRight = scrollBarWidth + 'px';
+            }
+            body.classList.add('modal-open'); // this will disable scroll
+        }
+        },
+        disableScrollLock: function () {
+        const body = document.body;
+        if (body.classList.contains('modal-open')) {
+            body.classList.remove('modal-open');
+            body.style.paddingRight = '';
+        }
+        }
+    };
+    </script>
+
     <script src="_framework/blazor.webassembly.js?v=1"></script>
 </body>
 

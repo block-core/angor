@@ -16,6 +16,7 @@
 @inject ILogger<Settings> Logger;
 @inject NavigationManager _navManager
 @inject IFeatureFlagService _featureFlagService
+@inject ModalScrollService ScrollService
 @inherits BaseComponent
 <NotificationComponent @ref="notificationComponent" />
 
@@ -55,7 +56,7 @@
             </div>
             <div>
 
-                <button class="btn btn-border-danger" @onclick="() => showChangeNetworkModal = true">
+                <button class="btn btn-border-danger" @onclick="OpenChangeNetworkModal">
                     <Icon IconName="change" Height="24" Width="24" />
                     <span class="ms-2 d-none d-md-inline">Change Network</span>
                 </button>
@@ -71,7 +72,7 @@
                                             <Icon IconName="network" Height="32" Width="32" class="me-2" />
                                             <h5 class="modal-title">Change Network</h5>
                                         </div>
-                                        <button class="btn-close-custom" @onclick="() => showChangeNetworkModal = false">
+                                        <button class="btn-close-custom" @onclick="CloseChangeNetworkModal">
                                             <Icon IconName="close-circle" Height="24" Width="24" />
                                         </button>
                                     </div>
@@ -444,7 +445,7 @@
                     <p class="text-muted mb-0">Irreversible actions</p>
                 </div>
             </div>
-            <button class="btn btn-border-danger" @onclick="() => showWipeallModal = true">
+            <button class="btn btn-border-danger" @onclick="OpenWipeModal">
                 <Icon IconName="delete" Height="24" Width="24" />
                 <span class="ms-2 d-none d-md-inline">Wipe Data</span>
             </button>
@@ -462,7 +463,7 @@
                                 <Icon IconName="remove" Height="32" Width="32" class="me-2" />
                                 <h5 class="modal-title">Wipe Storage</h5>
                             </div>
-                            <button class="btn-close-custom" @onclick="() => showWipeallModal = false">
+                            <button class="btn-close-custom" @onclick="CloseWipeModal">
                                 <Icon IconName="close-circle" Height="24" Width="24" />
                             </button>
                         </div>
@@ -552,6 +553,31 @@
 
         return base.OnInitializedAsync();
     }
+    
+    private async Task OpenChangeNetworkModal()
+    {
+        showChangeNetworkModal = true;
+        await ScrollService.LockScrollAsync();
+    }
+
+    private async Task CloseChangeNetworkModal()
+    {
+        showChangeNetworkModal = false;
+        await ScrollService.UnlockScrollAsync();
+    }
+
+    private async Task CloseWipeModal()
+    {
+        showWipeallModal = false;
+        await ScrollService.UnlockScrollAsync();
+    }
+
+    private async Task OpenWipeModal()
+    {
+        showWipeallModal = true;
+        await ScrollService.LockScrollAsync();
+    }
+
     private void OnFeatureFlagChanged(string key, bool value)
     {
         _featureFlags[key] = value;
@@ -868,7 +894,7 @@
         }
     }
 
-    private void WipeAllData()
+    private async void WipeAllData()
     {
         try
         {
@@ -886,6 +912,7 @@
             showWipeallModal = false;
             showConfirmWipeMessage = false;
             confirmWipe = false;
+            await ScrollService.UnlockScrollAsync();
 
             // Update network settings
             _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
@@ -911,7 +938,7 @@
         }
     }
 
-    private void ChangeNetwork()
+    private async void ChangeNetwork()
     {
         try
         {
@@ -929,6 +956,7 @@
             showChangeNetworkModal = false;
             showConfirmWipeMessage = false;
             confirmWipe = false;
+            await ScrollService.UnlockScrollAsync();
 
             // Update network settings
             _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower(), selectedNetwork);
