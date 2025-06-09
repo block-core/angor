@@ -515,12 +515,20 @@
                             </i>
                             Manage funds
                         </a>
-                        <a href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-warning animate-scale">
-                            <i class="me-2">
-                                <Icon IconName="signature" />
-                            </i>
-                            Approve investments
-                        </a>
+                        <div class="position-relative d-inline-block mx-2">
+                            <a href="@($"/signatures/{project.ProjectInfo.ProjectIdentifier}")" class="btn btn-border-warning animate-scale">
+                                <i class="me-2">
+                                    <Icon IconName="signature" />
+                                </i>
+                                Approve investments
+                            </a>
+                            @if (hasPendingMessages)
+                            {
+                                <span class="position-absolute top-0 start-100 translate-middle rounded-circle btn-border-warning" style="width: 16px; height: 16px; z-index: 1; background-color: #7e7537;">
+                                    <span class="visually-hidden">New activity</span>
+                                </span>
+                            }
+                        </div>
 
                         <a href=@($"/unfunded/{project.ProjectInfo.ProjectIdentifier}")
                            class="btn btn-border-danger animate-scale @(CanReleaseUnfundedProject() ? "" : "disabled")">
@@ -811,6 +819,7 @@
     private bool isGeneratingNsec;
     private string errorMessage = string.Empty;
     private bool isRepublishing = false;
+    private bool hasPendingMessages = false;
 
     private string error;
 
@@ -869,6 +878,18 @@
             {
                 founder = true;
                 NavMenuState.SetActivePage("founder");
+                if (project is FounderProject founderProject)
+                {
+                    await _RelayService.LookupSignaturesDirectMessagesForPubKeyAsync(founderProject.ProjectInfo.NostrPubKey, founderProject.LastRequestForSignaturesTime?.AddSeconds(1), 1,
+                        _ =>
+                        {
+                            if (hasPendingMessages)
+                                return;
+
+                            hasPendingMessages = true;
+                            InvokeAsync(StateHasChanged);
+                        });
+                }
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
                 return;
