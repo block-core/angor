@@ -46,6 +46,7 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
 
     public async Task<Result> ConfirmInvestment(int investmentId)
     {
+        await Task.Delay(2000);
         return Result.Success();
     }
 }

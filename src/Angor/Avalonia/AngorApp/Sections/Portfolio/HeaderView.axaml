@@ -5,7 +5,10 @@
              xmlns:portfolio="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:al="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="600"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d"
+             d:DesignWidth="300"
              x:Class="AngorApp.Sections.Portfolio.HeaderView" x:DataType="portfolio:IPortfolioProject">
 
     <Design.DataContext>
@@ -19,24 +22,40 @@
         </portfolio:PortfolioProjectDesign>
     </Design.DataContext>
 
-    <AdaptivePanel>
-        <AdaptivePanel.OverflowContent>
-            <StackPanel Spacing="20">
-                <al:AdvancedImage Height="200" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
-                <portfolio:ProgressView />
-                <Button IsVisible="{Binding $self.IsEffectivelyEnabled}" Command="{Binding CompleteInvestment}" HorizontalAlignment="Center" Content="Complete investment" />
-            </StackPanel>
-        </AdaptivePanel.OverflowContent>
-        <AdaptivePanel.Content>
+    <StackPanel>
+        <AdaptivePanel>
+            <AdaptivePanel.OverflowContent>
+                <StackPanel Spacing="20">
+                    <al:AdvancedImage Height="200" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
+                    <portfolio:ProgressView />
+                </StackPanel>
+            </AdaptivePanel.OverflowContent>
+            <AdaptivePanel.Content>
+                <EdgePanel>
+                    <EdgePanel.StartContent>
+                        <al:AdvancedImage Width="120" Height="120" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
+                    </EdgePanel.StartContent>
+                    <portfolio:ProgressView />
+                </EdgePanel>
+            </AdaptivePanel.Content>
+        </AdaptivePanel>
+        <StackPanel Spacing="10" HorizontalAlignment="Center" IsVisible="{Binding CompleteInvestment.CanExecute^}">
             <EdgePanel>
-                <EdgePanel.EndContent>
-                    <Button IsVisible="{Binding $self.IsEffectivelyEnabled}" Command="{Binding CompleteInvestment}" HorizontalAlignment="Center" Content="Complete investment" />
-                </EdgePanel.EndContent>
                 <EdgePanel.StartContent>
-                    <al:AdvancedImage Width="120" Height="120" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
+                    <ContentControl Height="30" Width="30" Foreground="Blue" VerticalAlignment="Center">
+                        <ContentControl.Styles>
+                            <Style Selector="avalonia|Icon">
+                                <Setter Property="Foreground" Value="Orange" />
+                            </Style>
+                        </ContentControl.Styles>
+                        <ui:Icon Source="fa-circle-info" />
+                    </ContentControl>
                 </EdgePanel.StartContent>
-                <portfolio:ProgressView />
+                <TextBlock TextWrapping="Wrap">
+                    <Bold>Good news!</Bold> The founder has accepted your investment request. Complete it to finalize the investment process.
+                </TextBlock>
             </EdgePanel>
-        </AdaptivePanel.Content>
-    </AdaptivePanel>
+            <Button Command="{Binding CompleteInvestment}" HorizontalAlignment="Center">Complete investment</Button>
+        </StackPanel>
+    </StackPanel>
 </UserControl>

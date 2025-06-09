@@ -4,12 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:portfolio="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:angorApp="clr-namespace:AngorApp"
-             xmlns:l="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Portfolio.ProgressView" x:DataType="portfolio:IPortfolioProject">
 
     <Design.DataContext>
-        <portfolio:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+        <portfolio:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" Name="Project 2" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
             <portfolio:PortfolioProjectDesign.Target>
                 <angorApp:DesignTimeAmount Sats="12000000" />
             </portfolio:PortfolioProjectDesign.Target>
@@ -22,7 +21,6 @@
     <AdaptivePanel>
         <AdaptivePanel.OverflowContent>
             <StackPanel Spacing="8">
-                <!-- Header compacto con progreso prominente -->
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -50,7 +48,6 @@
                     </Border>
                 </Grid>
 
-                <!-- Barra de progreso estilizada -->
                 <ProgressBar Maximum="{Binding Target.Sats}"
                              Value="{Binding Raised.Sats}"
                              Height="16"
@@ -117,7 +114,7 @@
         </AdaptivePanel.OverflowContent>
         <AdaptivePanel.Content>
             <StackPanel Spacing="12" Margin="20">
-                <TextBlock Classes="SizeBig" TextAlignment="Center" Text="{Binding Name}" />
+                <TextBlock Classes="SizeBig" TextAlignment="Left" Text="{Binding Name}" />
                 <!-- Indicadores de monto -->
                 <Grid>
                     <Grid.ColumnDefinitions>
