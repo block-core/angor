@@ -4,6 +4,7 @@ using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Investment = Angor.Contexts.Funding.Founder.Operations.Investment;
 
 namespace Angor.Contexts.Funding.Investor;
 
@@ -19,12 +20,12 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
         return mediator.Send(new RequestInvestment.RequestFounderSignaturesRequest(sourceWalletId, projectId, draft));
     }
 
-    public Task<Result<IEnumerable<GetInvestments.Investment>>> GetInvestments(Guid walletId, ProjectId projectId)
+    public Task<Result<IEnumerable<Investment>>> GetInvestments(Guid walletId, ProjectId projectId)
     {
         return mediator.Send(new GetInvestments.GetInvestmentsRequest(walletId, projectId));
     }
 
-    public Task<Result> ApproveInvestment(Guid walletId, ProjectId projectId, GetInvestments.Investment investment)
+    public Task<Result> ApproveInvestment(Guid walletId, ProjectId projectId, Investment investment)
     {
         return mediator.Send(new ApproveInvestment.ApproveInvestmentRequest(walletId, projectId, investment));
     }

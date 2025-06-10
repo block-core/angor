@@ -8,12 +8,33 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:pt="https://github.com/projektanker/icons.avalonia"
              xmlns:details="clr-namespace:AngorApp.Sections.Founder.Details"
-             mc:Ignorable="d" d:DesignWidth="800"
+             xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
+             xmlns:founder="clr-namespace:Angor.Contexts.Funding.Founder;assembly=Angor.Contexts.Funding"
+             mc:Ignorable="d" d:DesignWidth="550"
              x:Class="AngorApp.Sections.Founder.Details.FounderProjectDetailsView" x:DataType="details:IFounderProjectDetailsViewModel">
-
     <Design.DataContext>
         <details:FounderProjectDetailsViewModelDesign BannerUrl="https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg" />
     </Design.DataContext>
+    
+    <UserControl.Resources>
+        <converters:ControlThemeConverter x:Key="InvestmentStatusConverter">
+            <ControlTheme x:Key="{x:Static founder:InvestmentStatus.Pending}" 
+                          TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                <Setter Property="Background" Value="Yellow" />
+                <Setter Property="Content" Value="Pending" />
+            </ControlTheme>
+            <ControlTheme x:Key="{x:Static founder:InvestmentStatus.Approved}" 
+                          TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                <Setter Property="Background" Value="GreenYellow" />
+                <Setter Property="Content" Value="Approved" />
+            </ControlTheme>
+            <ControlTheme x:Key="{x:Static founder:InvestmentStatus.Invested}" 
+                          TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                <Setter Property="Background" Value="LightGreen" />
+                <Setter Property="Content" Value="Invested" />
+            </ControlTheme>
+        </converters:ControlThemeConverter>
+    </UserControl.Resources>
 
     <Interaction.Behaviors>
         <DataContextChangedTrigger>
@@ -22,23 +43,22 @@
     </Interaction.Behaviors>
 
     <ScrollViewer>
-        <StackPanel Spacing="10">
-            <controls:Pane Padding="0" CornerRadius="20">
-                <StackPanel>
-                    <asyncImageLoader:AdvancedImage CornerRadius="20 20 0 0" Height="200" Stretch="UniformToFill" Source="{Binding BannerUrl}" />
-                    <StackPanel Margin="20" Spacing="10">
-                        <TextBlock Classes="SizeBig" Text="{Binding Name}" />
-                        <TextBlock TextWrapping="Wrap" Text="{Binding ShortDescription}" />
-                    </StackPanel>
-                </StackPanel>
-            </controls:Pane>
-            <controls:Pane Title="Investments" IsTitleVisible="True">
-                <controls:Pane.TitleRightContent>
-                    <Button pt:Attached.Icon="fa-rotate-right" Command="{Binding LoadInvestments}" />
-                </controls:Pane.TitleRightContent>
+        <StackPanel Spacing="10" MinWidth="550">
+            <asyncImageLoader:AdvancedImage Height="200" Stretch="UniformToFill" Source="{Binding BannerUrl}" />
+            <StackPanel Margin="20" Spacing="10">
+                <TextBlock Classes="SizeBig" Text="{Binding Name}" />
+                <TextBlock TextWrapping="Wrap" Text="{Binding ShortDescription}" />
+            </StackPanel>
+            <c:Card Header="Investments">
+                <c:Card.HeaderEndContent>
+                    <Button ToolTip.Tip="Reload" pt:Attached.Icon="fa-rotate-right" Command="{Binding LoadInvestments}" />
+                </c:Card.HeaderEndContent>
                 <c:Loading IsLoading="{Binding LoadInvestments.IsExecuting^}">
                     <sdg:SlimDataGrid Margin="0 10" ItemsSource="{Binding Investments}">
                         <sdg:SlimDataGrid.Styles>
+                            <Style Selector="sdg|Cell">
+                                <Setter Property="Margin" Value="5 0" />
+                            </Style>
                             <Style Selector="sdg|Row">
                                 <Setter Property="Height" Value="60" />
                                 <Setter Property="Margin" Value="6" />
@@ -50,42 +70,35 @@
                             <Style Selector="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center" />
                                 <Setter Property="HorizontalAlignment" Value="Center" />
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
                             </Style>
                         </sdg:SlimDataGrid.Styles>
                         <sdg:SlimDataGrid.Columns>
                             <sdg:Column Header="Amount" Binding="{Binding Content.Amount.BtcString}" />
-                            <sdg:Column Header="Date" Binding="{Binding Content.Created, Converter={x:Static controls:MiscConverters.HumanizeDate}}" />
+                            <sdg:Column Header="Date" Binding="{Binding Content.CreatedOn, Converter={x:Static controls:MiscConverters.HumanizeDate}}" />
                             <sdg:Column Header="Investor" Binding="{Binding Content.InvestorNostrPubKey}" />
-                            <sdg:Column Header="Status" Binding="{Binding Content.IsApproved}">
+                            <sdg:Column Header="Status" Width="100" Binding="{Binding Content}">
                                 <sdg:Column.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel VerticalAlignment="Center">
-                                            <StackPanel.Styles>
-                                                <Style Selector="Border">
-                                                    <Setter Property="Width" Value="140" />
-                                                </Style>
-                                            </StackPanel.Styles>
-                                            <Border HorizontalAlignment="Center" IsVisible="{Binding }" CornerRadius="10" Background="Blue" Padding="10 5">
-                                                <TextBlock Text="Approved" Foreground="White" />
-                                            </Border>
-                                            <Border HorizontalAlignment="Center" IsVisible="{Binding !.}" CornerRadius="10" Background="Green" Padding="10 5">
-                                                <TextBlock Text="Pending approval" Foreground="White" />
-                                            </Border>
-                                        </StackPanel>
-                                    </DataTemplate>
+                                   <DataTemplate DataType="details:IInvestmentViewModel">
+                                       <Button
+                                           HorizontalAlignment="Stretch"
+                                           Theme="{Binding Status, Converter={StaticResource InvestmentStatusConverter}}" />
+                                   </DataTemplate>
                                 </sdg:Column.CellTemplate>
                             </sdg:Column>
                             <sdg:Column Header="" Binding="{Binding}">
                                 <sdg:Column.CellTemplate>
                                     <DataTemplate>
-                                        <Button HorizontalAlignment="Center" Command="{Binding Content.Approve}" Content="Approve" IsVisible="{Binding !Content.IsApproved}" />
+                                        <Button HorizontalAlignment="Center" 
+                                                Command="{Binding Content.Approve}" 
+                                                Content="Approve" IsVisible="{Binding $self.IsEffectivelyEnabled}" />
                                     </DataTemplate>
                                 </sdg:Column.CellTemplate>
                             </sdg:Column>
                         </sdg:SlimDataGrid.Columns>
                     </sdg:SlimDataGrid>
                 </c:Loading>
-            </controls:Pane>
+            </c:Card>
         </StackPanel>
     </ScrollViewer>
 </UserControl>
