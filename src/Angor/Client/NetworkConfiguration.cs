@@ -65,6 +65,7 @@ public class NetworkConfiguration : INetworkConfiguration
                 {
                     new SettingsUrl { Name = "", Url = "https://test.indexer.angor.io", IsPrimary = true },
                     new SettingsUrl { Name = "", Url = "https://mempool.thedude.pro", IsPrimary = false },
+                    new SettingsUrl { Name = "", Url = "https://signet.angor.online", IsPrimary = false },
                 };
             }
 
@@ -130,6 +131,7 @@ public class NetworkConfiguration : INetworkConfiguration
                 {
                     new SettingsUrl { Name = "", Url = "https://test.explorer.angor.io", IsPrimary = true },
                     new SettingsUrl { Name = "", Url = "https://explorer.thedude.pro", IsPrimary = false },
+                    new SettingsUrl { Name = "", Url = "https://signet.angor.online", IsPrimary = false },
                 };
             }
 
