@@ -37,6 +37,7 @@ public static class FundingContextServices
         services.TryAddSingleton<IIndexerService,MempoolSpaceIndexerApi>();
         services.TryAddSingleton<INetworkConfiguration>(networkConfiguration);
         services.TryAddSingleton<INetworkService, NetworkService>();
+        services.TryAddSingleton<INetworkStorage, NetworkStorage>();
         services.TryAddSingleton<IEncryptionService, EncryptionService>();
         services.TryAddSingleton<INostrCommunicationFactory, NostrCommunicationFactory>();
         services.TryAddSingleton<IInvestorTransactionActions, InvestorTransactionActions>();
