@@ -1,5 +1,6 @@
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Investor;
+using AngorApp.Sections.Portfolio.Items;
 using AngorApp.UI.Services;
 using Avalonia.Controls.ApplicationLifetimes;
 using DynamicData;
@@ -34,7 +35,7 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
 
         Load.Successes()
             .EditDiff(project => project.Id)
-            .Transform(IPortfolioProject (project) => new PortfolioProject(project, investmentAppService, uiServices))
+            .Transform(IPortfolioProject (project) => new Items.PortfolioProject(project, investmentAppService, uiServices))
             .Bind(out var investedProjects)
             .Subscribe().DisposeWith(disposable);
 

@@ -49,5 +49,20 @@
         <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj" />
         <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Sections\Portfolio\Items\NotCompletedProjectView.axaml.cs">
+        <DependentUpon>NotCompletedProjectView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Sections\Portfolio\Items\ProgressView.axaml.cs">
+        <DependentUpon>ProgressView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Sections\Portfolio\PortfolioSectionView.axaml.cs">
+        <DependentUpon>PortfolioSectionView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
     
 </Project>

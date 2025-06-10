@@ -1,4 +1,5 @@
 using Angor.Contexts.Funding.Investor;
+using AngorApp.Sections.Portfolio.Items;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Portfolio;
@@ -31,5 +32,6 @@ public class PortfolioProjectDesign : IPortfolioProject
     public ProjectStatus Status { get; set; }
     public FounderStatus FounderStatus { get; set; }
     public Uri LogoUri { get; set; }
-    public IEnhancedCommand<Result> CompleteInvestment { get; } 
+    public IEnhancedCommand<Result> CompleteInvestment { get; }
+    public bool IsInvestmentCompleted { get; set; }
 }

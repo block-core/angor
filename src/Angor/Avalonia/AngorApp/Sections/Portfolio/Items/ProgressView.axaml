@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:portfolio="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:angorApp="clr-namespace:AngorApp"
-             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
-             x:Class="AngorApp.Sections.Portfolio.ProgressView" x:DataType="portfolio:IPortfolioProject">
+             mc:Ignorable="d" d:DesignWidth="180"
+             x:Class="AngorApp.Sections.Portfolio.Items.ProgressView" x:DataType="portfolio:IPortfolioProject">
 
     <Design.DataContext>
         <portfolio:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" Name="Project 2" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
@@ -21,37 +21,23 @@
     <AdaptivePanel>
         <AdaptivePanel.OverflowContent>
             <StackPanel Spacing="8">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                <Grid ColumnDefinitions="*,Auto">
 
-                    <TextBlock Grid.Column="0"
-                               Text="{Binding Name}"
-                               FontSize="16"
-                               FontWeight="SemiBold"
-                               VerticalAlignment="Center"
-                               TextTrimming="CharacterEllipsis" />
-
-                    <!-- Badge de progreso circular -->
-                    <Border Grid.Column="1"
-                            Background="Orange"
-                            CornerRadius="12"
-                            Padding="8,4"
-                            MinWidth="50">
-                        <TextBlock Text="{Binding Progress, StringFormat='{}{0:P0}'}"
-                                   Foreground="White"
-                                   FontWeight="Bold"
-                                   FontSize="12"
-                                   HorizontalAlignment="Center" />
-                    </Border>
                 </Grid>
 
-                <ProgressBar Maximum="{Binding Target.Sats}"
-                             Value="{Binding Raised.Sats}"
-                             Height="16"
-                             CornerRadius="8" />
+                <Panel>
+                    <ProgressBar Maximum="{Binding Target.Sats}"
+                                 MinWidth="0"
+                                 Value="{Binding Raised.Sats}"
+                                 Height="16"
+                                 CornerRadius="8" />
+                    <TextBlock Text="{Binding Progress, StringFormat='{}{0:P0}'}"
+                               Foreground="White"
+                               FontWeight="Bold"
+                               FontSize="12"
+                               HorizontalAlignment="Center" />
+                </Panel>
+
 
                 <!-- Información financiera en layout vertical compacto -->
                 <Grid Margin="0,4,0,0">
@@ -113,8 +99,7 @@
 
         </AdaptivePanel.OverflowContent>
         <AdaptivePanel.Content>
-            <StackPanel Spacing="12" Margin="20">
-                <TextBlock Classes="SizeBig" TextAlignment="Left" Text="{Binding Name}" />
+            <StackPanel Spacing="12">
                 <!-- Indicadores de monto -->
                 <Grid>
                     <Grid.ColumnDefinitions>

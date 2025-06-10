@@ -1,4 +1,5 @@
 using Angor.Contexts.Funding.Investor;
+using AngorApp.Sections.Portfolio.Items;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Portfolio;
@@ -22,6 +23,7 @@ public interface IPortfolioProject
     public Uri LogoUri { get; }
     public double Progress => Target.Sats == 0 ? 0 : Raised.Sats / (double)Target.Sats;
     public IEnhancedCommand<Result> CompleteInvestment { get; }
+    public bool IsInvestmentCompleted { get; set; }
 }
 
 public class Property

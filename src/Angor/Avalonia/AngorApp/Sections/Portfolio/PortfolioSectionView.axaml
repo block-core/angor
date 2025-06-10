@@ -8,6 +8,8 @@
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:items="clr-namespace:AngorApp.Sections.Portfolio.Items"
              x:DataType="founder:IPortfolioSectionViewModel">
 
     <UserControl.Resources>
@@ -29,7 +31,7 @@
     <Design.DataContext>
         <founder:PortfolioSectionViewModelDesign>
             <founder:PortfolioSectionViewModelDesign.InvestedProjects>
-                <founder:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                <founder:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" IsInvestmentCompleted="False" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
                     <founder:PortfolioProjectDesign.Target>
                         <angorApp:DesignTimeAmount Sats="12000000" />
                     </founder:PortfolioProjectDesign.Target>
@@ -37,7 +39,7 @@
                         <angorApp:DesignTimeAmount Sats="4400000" />
                     </founder:PortfolioProjectDesign.Raised>
                 </founder:PortfolioProjectDesign>
-                <founder:PortfolioProjectDesign FounderStatus="Approved" Status="Funding" Name="Project 2" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                <founder:PortfolioProjectDesign FounderStatus="Approved" Status="Funding" Name="Project 2" IsInvestmentCompleted="True" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
                     <founder:PortfolioProjectDesign.Target>
                         <angorApp:DesignTimeAmount Sats="12000000" />
                     </founder:PortfolioProjectDesign.Target>
@@ -51,14 +53,20 @@
 
     <UserControl.DataTemplates>
         <DataTemplate DataType="founder:IPortfolioProject">
-            <Card Header="{Binding}" HeaderPadding="10" Padding="20">
+            <Card Header="{Binding }" HeaderPadding="10" Padding="20">
                 <Card.HeaderTemplate>
                     <DataTemplate DataType="founder:IPortfolioProject">
-                        <founder:HeaderView />
+                        <DockPanel Margin="10">
+                            <TextBlock DockPanel.Dock="Top" Classes="SizeBig"  Text="{Binding Name}" />
+                            <items:ProgressView />
+                        </DockPanel>
                     </DataTemplate>
                 </Card.HeaderTemplate>
-
+                <Card.HeaderStartContent>
+                    <asyncImageLoader:AdvancedImage Width="150" Height="150" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
+                </Card.HeaderStartContent>
                 <StackPanel Spacing="10">
+                    <items:NotCompletedProjectView IsVisible="{Binding !IsInvestmentCompleted}" />
                     <HeaderedContainer Header="Project Status">
                         <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding Status}">
                             <TextBlock Text="{Binding Status}" />
@@ -125,7 +133,7 @@
             </Card.HeaderEndContent>
         </Card>
 
-        <Loading IsLoading="{Binding Load.IsExecuting^}">
+        <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading projects...">
             <ScrollViewer>
                 <ItemsControl ItemsSource="{Binding InvestedProjects}">
                     <Empty.Content>
