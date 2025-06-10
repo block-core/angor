@@ -11,7 +11,7 @@ public class SignaturesService(
     ISerializer serializer)
     : ISignaturesService
 {
-    public async Task<Result<ISignaturesService.EventSendResponse>> PostInvestmentRequest<T>(KeyIdentifier keyIdentifier, T content,
+    public async Task<Result<EventSendResponse>> PostInvestmentRequest<T>(KeyIdentifier keyIdentifier, T content,
         string founderNostrPubKey)
     {
         var key = await sensitiveNostrData.GetNostrPrivateKeyHex(keyIdentifier);
@@ -32,11 +32,11 @@ public class SignaturesService(
 
         return await nostrService.Send(signed)
             .Ensure(response => response.Accepted, "Failed to send event")
-            .Map(response => new ISignaturesService.EventSendResponse(response.Accepted, response.EventId, response.Message,
+            .Map(response => new EventSendResponse(response.Accepted, response.EventId, response.Message,
                 response.ReceivedTimestamp));
     }
 
-    public Task<Result<ISignaturesService.EventSendResponse>> PostInvestmentRequestApproval<T>(KeyIdentifier keyIdentifier, T content,
+    public Task<Result<EventSendResponse>> PostInvestmentRequestApproval<T>(KeyIdentifier keyIdentifier, T content,
         string investorNostrPubKey, string eventId)
     {
         return sensitiveNostrData.GetNostrPrivateKeyHex(keyIdentifier)
@@ -60,7 +60,7 @@ public class SignaturesService(
             })
             .Bind(data => nostrService.Send(data)
                 .Ensure(response => response.Accepted, "Failed to send event"))
-            .Map(response => new ISignaturesService.EventSendResponse(response.Accepted, response.EventId, response.Message,
+            .Map(response => new EventSendResponse(response.Accepted, response.EventId, response.Message,
                 response.ReceivedTimestamp));
     }
 }

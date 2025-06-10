@@ -25,7 +25,6 @@ public class NostrDecrypterTests(ITestOutputHelper output)
         Assert.NotEmpty(clientKeyResult.Value);
     }
     
-    
     private NostrDecrypter CreateSut()
     {
         var serviceCollection = new ServiceCollection();

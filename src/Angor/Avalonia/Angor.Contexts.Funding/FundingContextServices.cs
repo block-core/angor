@@ -5,9 +5,7 @@ using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Shared;
-using Angor.Shared.Networks;
 using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
@@ -34,7 +32,6 @@ public static class FundingContextServices
         services.TryAddSingleton<ISerializer, Serializer>();
         services.TryAddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
         services.TryAddSingleton<IRelayService, RelayService>();
-        //services.TryAddSingleton<INetworkStorage, NetworkStorage>();
         //TODO change the call to use the factory
         services.TryAddScoped<HttpClient>(x => x.GetRequiredService<IHttpClientFactory>().CreateClient());
         services.TryAddSingleton<IIndexerService,MempoolSpaceIndexerApi>();
@@ -50,6 +47,7 @@ public static class FundingContextServices
         services.TryAddSingleton<IDerivationOperations, DerivationOperations>();
         services.TryAddSingleton<IHdOperations, HdOperations>();
         services.TryAddSingleton<ISignService, SignService>();
+        services.TryAddSingleton<ISignaturesService, SignaturesService>();
         services.TryAddSingleton<ISpendingTransactionBuilder, SpendingTransactionBuilder>();
         services.TryAddSingleton<IInvestmentTransactionBuilder, InvestmentTransactionBuilder>();
         services.TryAddSingleton<ITaprootScriptBuilder, TaprootScriptBuilder>();
