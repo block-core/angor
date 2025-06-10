@@ -12,6 +12,7 @@ public class InvestedProjectDto
     public Amount Raised { get; set; }
     public string Description { get; set; }
     public Amount InRecovery { get; set; }
+    public bool IsInvesmentCompleted { get; set; }
 }
 
 public enum FounderStatus

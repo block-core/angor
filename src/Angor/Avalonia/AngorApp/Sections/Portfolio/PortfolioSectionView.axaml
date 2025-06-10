@@ -4,13 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="560"
              x:Class="AngorApp.Sections.Portfolio.PortfolioSectionView"
-             xmlns:founder="clr-namespace:AngorApp.Sections.Portfolio"
+             xmlns:p="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:items="clr-namespace:AngorApp.Sections.Portfolio.Items"
-             x:DataType="founder:IPortfolioSectionViewModel">
+             x:DataType="p:IPortfolioSectionViewModel">
 
     <UserControl.Resources>
         <ControlTheme x:Key="Item" TargetType="HeaderedContainer">
@@ -29,89 +29,27 @@
     </UserControl.Styles>
 
     <Design.DataContext>
-        <founder:PortfolioSectionViewModelDesign>
-            <founder:PortfolioSectionViewModelDesign.InvestedProjects>
-                <founder:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" IsInvestmentCompleted="False" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
-                    <founder:PortfolioProjectDesign.Target>
+        <p:PortfolioSectionViewModelDesign>
+            <p:PortfolioSectionViewModelDesign.InvestedProjects>
+                <p:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" IsInvestmentCompleted="False" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                    <p:PortfolioProjectDesign.Target>
                         <angorApp:DesignTimeAmount Sats="12000000" />
-                    </founder:PortfolioProjectDesign.Target>
-                    <founder:PortfolioProjectDesign.Raised>
+                    </p:PortfolioProjectDesign.Target>
+                    <p:PortfolioProjectDesign.Raised>
                         <angorApp:DesignTimeAmount Sats="4400000" />
-                    </founder:PortfolioProjectDesign.Raised>
-                </founder:PortfolioProjectDesign>
-                <founder:PortfolioProjectDesign FounderStatus="Approved" Status="Funding" Name="Project 2" IsInvestmentCompleted="True" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
-                    <founder:PortfolioProjectDesign.Target>
+                    </p:PortfolioProjectDesign.Raised>
+                </p:PortfolioProjectDesign>
+                <p:PortfolioProjectDesign FounderStatus="Approved" Status="Funding" Name="Project 2" IsInvestmentCompleted="True" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                    <p:PortfolioProjectDesign.Target>
                         <angorApp:DesignTimeAmount Sats="12000000" />
-                    </founder:PortfolioProjectDesign.Target>
-                    <founder:PortfolioProjectDesign.Raised>
+                    </p:PortfolioProjectDesign.Target>
+                    <p:PortfolioProjectDesign.Raised>
                         <angorApp:DesignTimeAmount Sats="5404000" />
-                    </founder:PortfolioProjectDesign.Raised>
-                </founder:PortfolioProjectDesign>
-            </founder:PortfolioSectionViewModelDesign.InvestedProjects>
-        </founder:PortfolioSectionViewModelDesign>
+                    </p:PortfolioProjectDesign.Raised>
+                </p:PortfolioProjectDesign>
+            </p:PortfolioSectionViewModelDesign.InvestedProjects>
+        </p:PortfolioSectionViewModelDesign>
     </Design.DataContext>
-
-    <UserControl.DataTemplates>
-        <DataTemplate DataType="founder:IPortfolioProject">
-            <Card Header="{Binding }" HeaderPadding="10" Padding="20">
-                <Card.HeaderTemplate>
-                    <DataTemplate DataType="founder:IPortfolioProject">
-                        <DockPanel Margin="10">
-                            <TextBlock DockPanel.Dock="Top" Classes="SizeBig"  Text="{Binding Name}" />
-                            <items:ProgressView />
-                        </DockPanel>
-                    </DataTemplate>
-                </Card.HeaderTemplate>
-                <Card.HeaderStartContent>
-                    <asyncImageLoader:AdvancedImage Width="150" Height="150" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
-                </Card.HeaderStartContent>
-                <StackPanel Spacing="10">
-                    <items:NotCompletedProjectView IsVisible="{Binding !IsInvestmentCompleted}" />
-                    <HeaderedContainer Header="Project Status">
-                        <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding Status}">
-                            <TextBlock Text="{Binding Status}" />
-                            <Border.Styles>
-                                <Style Selector="Border[Tag=Invalid]">
-                                    <Setter Property="Background" Value="Red" />
-                                </Style>
-                                <Style Selector="Border[Tag=Invalid] TextBlock">
-                                    <Setter Property="Foreground" Value="White" />
-                                </Style>
-                                <Style Selector="Border[Tag=Funding]">
-                                    <Setter Property="Background" Value="#52FFA500" />
-                                </Style>
-                                <Style Selector="Border[Tag=Funding] TextBlock">
-                                    <Setter Property="Foreground" Value="Orange" />
-                                </Style>
-                            </Border.Styles>
-                        </Border>
-                    </HeaderedContainer>
-                    <HeaderedContainer Header="My investment">
-                        <TextBlock Classes="SizeBig" Foreground="Orange" HorizontalAlignment="Right" Text="{Binding Raised.DecimalString}" />
-                    </HeaderedContainer>
-                    <HeaderedContainer Header="Founder Status">
-                        <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding FounderStatus}">
-                            <TextBlock Text="{Binding FounderStatus}" />
-                            <Border.Styles>
-                                <Style Selector="Border[Tag=Invalid]">
-                                    <Setter Property="Background" Value="Red" />
-                                </Style>
-                                <Style Selector="Border[Tag=Invalid] TextBlock">
-                                    <Setter Property="Foreground" Value="White" />
-                                </Style>
-                                <Style Selector="Border[Tag=Approved]">
-                                    <Setter Property="Background" Value="#5200FF3C" />
-                                </Style>
-                                <Style Selector="Border[Tag=Approved] TextBlock">
-                                    <Setter Property="Foreground" Value="Green" />
-                                </Style>
-                            </Border.Styles>
-                        </Border>
-                    </HeaderedContainer>
-                </StackPanel>
-            </Card>
-        </DataTemplate>
-    </UserControl.DataTemplates>
 
     <DockPanel>
         <Card DockPanel.Dock="Top" Header="Portfolio" IsAdaptiveFlowEnabled="True" Subheader="Check your project investments">
@@ -136,6 +74,11 @@
         <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading projects...">
             <ScrollViewer>
                 <ItemsControl ItemsSource="{Binding InvestedProjects}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <items:PortfolioProjectView />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
                     <Empty.Content>
                         <TextBlock Margin="10" TextAlignment="Center">Oops! You have not invested in any project yet</TextBlock>
                     </Empty.Content>
