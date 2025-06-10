@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:portfolio="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:angorApp="clr-namespace:AngorApp"
-             mc:Ignorable="d" d:DesignWidth="180"
+             mc:Ignorable="d" d:DesignWidth="280"
              x:Class="AngorApp.Sections.Portfolio.Items.ProgressView" x:DataType="portfolio:IPortfolioProject">
 
     <Design.DataContext>
@@ -84,7 +84,7 @@
                 </Grid>
 
                 <!-- Status pill si está disponible -->
-                <Border Background="{DynamicResource SystemControlBackgroundBaseMediumLowBrush}"
+                <Border Background="Orange"
                         CornerRadius="8"
                         Padding="8,3"
                         HorizontalAlignment="Center"
