@@ -34,7 +34,7 @@
                     <controls:SectionItem.RightContent>
                         <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}">
                             <Button.CommandParameter>
-                                <MultiBinding Converter="{x:Static conv:StringConverters.Concat}">
+                                <MultiBinding Converter="{x:Static conv:ZafiroStringConverters.Concat}">
                                     <Binding>
                                         <Binding.Source>
                                             <x:String>https://hub.angor.io/profile/</x:String>
@@ -56,7 +56,7 @@
                     <controls:SectionItem.RightContent>
                         <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}">
                             <Button.CommandParameter>
-                                <MultiBinding Converter="{x:Static conv:StringConverters.Concat}">
+                                <MultiBinding Converter="{x:Static conv:ZafiroStringConverters.Concat}">
                                     <Binding>
                                         <Binding.Source>
                                             <x:String>https://hub.angor.io/profile/</x:String>

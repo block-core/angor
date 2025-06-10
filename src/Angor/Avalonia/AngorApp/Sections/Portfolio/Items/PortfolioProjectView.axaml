@@ -1,0 +1,81 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:p="clr-namespace:AngorApp.Sections.Portfolio"
+             xmlns:items="clr-namespace:AngorApp.Sections.Portfolio.Items"
+             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:a="clr-namespace:AngorApp"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Portfolio.Items.PortfolioProjectView" x:DataType="p:IPortfolioProject">
+    
+    <Design.DataContext>
+        <p:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" IsInvestmentCompleted="False" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+            <p:PortfolioProjectDesign.Target>
+                <a:DesignTimeAmount Sats="12000000" />
+            </p:PortfolioProjectDesign.Target>
+            <p:PortfolioProjectDesign.Raised>
+                <a:DesignTimeAmount Sats="4400000" />
+            </p:PortfolioProjectDesign.Raised>
+        </p:PortfolioProjectDesign>
+    </Design.DataContext>
+    
+    <Card Header="{Binding }" HeaderPadding="10" Padding="20">
+        <Card.HeaderTemplate>
+            <DataTemplate DataType="p:IPortfolioProject">
+                <DockPanel Margin="10">
+                    <TextBlock DockPanel.Dock="Top" Classes="SizeBig" TextWrapping="Wrap" Text="{Binding Name}" />
+                    <items:ProgressView />
+                </DockPanel>
+            </DataTemplate>
+        </Card.HeaderTemplate>
+        <Card.HeaderStartContent>
+            <asyncImageLoader:AdvancedImage Width="150" Height="150" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
+        </Card.HeaderStartContent>
+        <StackPanel Spacing="10">
+            <items:NotCompletedProjectView IsVisible="{Binding !IsInvestmentCompleted}" />
+            <HeaderedContainer Header="Project Status">
+                <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding Status}">
+                    <TextBlock Text="{Binding Status}" />
+                    <Border.Styles>
+                        <Style Selector="Border[Tag=Invalid]">
+                            <Setter Property="Background" Value="Red" />
+                        </Style>
+                        <Style Selector="Border[Tag=Invalid] TextBlock">
+                            <Setter Property="Foreground" Value="White" />
+                        </Style>
+                        <Style Selector="Border[Tag=Funding]">
+                            <Setter Property="Background" Value="#52FFA500" />
+                        </Style>
+                        <Style Selector="Border[Tag=Funding] TextBlock">
+                            <Setter Property="Foreground" Value="Orange" />
+                        </Style>
+                    </Border.Styles>
+                </Border>
+            </HeaderedContainer>
+            <HeaderedContainer Header="My investment">
+                <TextBlock Classes="SizeBig" Foreground="Orange" HorizontalAlignment="Right" Text="{Binding Raised.DecimalString}" />
+            </HeaderedContainer>
+            <HeaderedContainer Header="Founder Status">
+                <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding FounderStatus}">
+                    <TextBlock Text="{Binding FounderStatus}" />
+                    <Border.Styles>
+                        <Style Selector="Border[Tag=Invalid]">
+                            <Setter Property="Background" Value="Red" />
+                        </Style>
+                        <Style Selector="Border[Tag=Invalid] TextBlock">
+                            <Setter Property="Foreground" Value="White" />
+                        </Style>
+                        <Style Selector="Border[Tag=Approved]">
+                            <Setter Property="Background" Value="#5200FF3C" />
+                        </Style>
+                        <Style Selector="Border[Tag=Approved] TextBlock">
+                            <Setter Property="Foreground" Value="Green" />
+                        </Style>
+                    </Border.Styles>
+                </Border>
+            </HeaderedContainer>
+        </StackPanel>
+    </Card>
+
+</UserControl>

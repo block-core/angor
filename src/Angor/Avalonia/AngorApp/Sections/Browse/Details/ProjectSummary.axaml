@@ -71,7 +71,7 @@
                             <p:Icon Value="fa-database" />
                         </controls:SectionItem.LeftContent>
                         <controls:SectionItem.Content>
-                            <MultiBinding Converter="{x:Static converters:StringConverters.JoinWithSpaces}">
+                            <MultiBinding Converter="{x:Static converters:ZafiroStringConverters.JoinWithSpaces}">
                                 <Binding>
                                     <Binding.Source>Target amount:</Binding.Source>
                                 </Binding>
@@ -84,7 +84,7 @@
                             <p:Icon Value="fa-regular fa-calendar-days" />
                         </controls:SectionItem.LeftContent>
                         <controls:SectionItem.Content>
-                            <MultiBinding Converter="{x:Static converters:StringConverters.JoinWithSpaces}">
+                            <MultiBinding Converter="{x:Static converters:ZafiroStringConverters.JoinWithSpaces}">
                                 <Binding>
                                     <Binding.Source>Penalty duration:</Binding.Source>
                                 </Binding>

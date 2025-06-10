@@ -1,5 +1,3 @@
-using Angor.Contexts.Funding.Founder.Operations;
-using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using CSharpFunctionalExtensions;
@@ -13,4 +11,6 @@ public interface IInvestmentAppService
     Task<Result<Guid>> Invest(Guid sourceWalletId, ProjectId projectId, CreateInvestment.Draft draft);
     Task<Result<IEnumerable<Investment>>> GetInvestments(Guid walletId, ProjectId projectId);
     Task<Result> ApproveInvestment(Guid walletId, ProjectId projectId, Investment investment);
+    Task<Result<IEnumerable<InvestedProjectDto>>> GetInvestorProjects(Guid idValue);
+    Task<Result> ConfirmInvestment(int investmentId);
 }

@@ -3,17 +3,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:shell="clr-namespace:AngorApp.Sections.Shell"
+             xmlns:zs="clr-namespace:Zafiro.Avalonia.Controls.Shell;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="AngorApp.Sections.Shell.MainView"
-             x:DataType="shell:MainViewModel">
+             x:DataType="shell:IMainViewModel">
 
     <Design.DataContext>
         <shell:MainViewModelDesign />
     </Design.DataContext>
 
-    <DockPanel Margin="10">
-        <shell:Sidebar Margin="10 20 10 10" />
-        <shell:Network DockPanel.Dock="Top" Margin="10 20 10 0" />
-        <ContentControl MinWidth="300" MinHeight="300" Margin="10 10 10 10" Content="{Binding Shell.SelectedSection.Content^}" ClipToBounds="False" />
-    </DockPanel>
+    <zs:ShellView OpenPaneLength="200" Shell="{Binding Shell}" />
 </UserControl>

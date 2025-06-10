@@ -2,7 +2,7 @@
   <!-- https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <AvaloniaVersion>11.3.0</AvaloniaVersion>
+    <AvaloniaVersion>11.3.1</AvaloniaVersion>
   </PropertyGroup>
   <ItemGroup>
     <!-- Avalonia packages -->
@@ -32,30 +32,33 @@
     <PackageVersion Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.6.2" />
     <PackageVersion Include="Projektanker.Icons.Avalonia.MaterialDesign" Version="9.6.2" />
     <PackageVersion Include="QRCoder" Version="1.6.0" />
-    <PackageVersion Include="ReactiveUI" Version="20.2.45" />
-    <PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.1.27">
+    <PackageVersion Include="ReactiveUI" Version="20.3.1" />
+    <PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.2.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageVersion>
-    <PackageVersion Include="ReactiveUI.SourceGenerators.Analyzers.CodeFixes" Version="2.1.27">
+    <PackageVersion Include="ReactiveUI.SourceGenerators.Analyzers.CodeFixes" Version="2.2.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageVersion>
     <PackageVersion Include="Serilog" Version="4.3.0" />
-    <PackageVersion Include="Serilog.Extensions.Logging" Version="9.0.1" />
+    <PackageVersion Include="Serilog.Extensions.Logging" Version="9.0.2" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageVersion Include="Serilog.Sinks.XUnit" Version="3.0.19" />
-    <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.1" />
+    <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
     <PackageVersion Include="Zafiro" Version="23.0.1" />
-    <PackageVersion Include="Zafiro.Avalonia" Version="26.1.5" />
-    <PackageVersion Include="Zafiro.UI" Version="23.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia" Version="27.0.8" />
+    <PackageVersion Include="Zafiro.UI" Version="22.0.0" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="26.1.5" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="27.0.8" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />
     <PackageVersion Include="FluentAssertions.Reactive" Version="0.2.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageVersion Include="xunit" Version="2.9.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageVersion>
   </ItemGroup>
 </Project>

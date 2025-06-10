@@ -1,5 +1,3 @@
-using Angor.Client.Models;
-using Angor.Client.Services;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
