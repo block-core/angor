@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:shell="clr-namespace:AngorApp.Sections.Shell"
              xmlns:zs="clr-namespace:Zafiro.Avalonia.Controls.Shell;assembly=Zafiro.Avalonia"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="AngorApp.Sections.Shell.MainView"
              x:DataType="shell:IMainViewModel">
@@ -11,6 +12,24 @@
     <Design.DataContext>
         <shell:MainViewModelDesign />
     </Design.DataContext>
+    
+    <zs:ShellView OpenPaneLength="200" MobileColumns="5" Shell="{Binding Shell}">
+        <zs:ShellView.IconTemplate>
+            <DataTemplate DataType="ui:IIcon">
+                <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
+            </DataTemplate>
+        </zs:ShellView.IconTemplate>
+        <zs:ShellView.HeaderContentTemplate>
+            <DataTemplate DataType="x:Object">
+                <ContentControl
+                    TextElement.FontWeight="Bold"
+                    TextElement.FontSize="18"
+                    TextBlock.TextAlignment="Center"
+                    TextBlock.TextTrimming="CharacterEllipsis"
+                    VerticalContentAlignment="Center"
+                    Background="{DynamicResource SystemListLowColor}" Content="{Binding}" />
+            </DataTemplate>
+        </zs:ShellView.HeaderContentTemplate>
+    </zs:ShellView>
 
-    <zs:ShellView OpenPaneLength="200" Shell="{Binding Shell}" />
 </UserControl>

@@ -15,7 +15,6 @@ public static class ViewModels
     public static IServiceCollection Register(this IServiceCollection services)
     {
         return services
-            .AddScoped<Lazy<IMainViewModel>>(sp => new Lazy<IMainViewModel>(sp.GetRequiredService<IMainViewModel>))
             .AddScoped<IHomeSectionViewModel, HomeSectionViewModel>()
             .AddScoped<IWalletSectionViewModel, WalletSectionViewModel>()
             .AddScoped<IBrowseSectionViewModel, BrowseSectionViewModel>()

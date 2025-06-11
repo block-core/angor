@@ -3,12 +3,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="900"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="1000"
              x:Class="AngorApp.Sections.Founder.FounderSectionView"
              xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
              xmlns:co="clr-namespace:AngorApp.UI.Controls"
              xmlns:z="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
-             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              x:DataType="founder:IFounderSectionViewModel">
 
     <Design.DataContext>
@@ -21,62 +22,55 @@
         </DataContextChangedTrigger>
     </Interaction.Behaviors>
 
-    <UserControl.Resources>
-        <ControlTheme TargetType="z:Card" x:Key="RoundPane" BasedOn="{StaticResource {x:Type z:Card}}">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="10" />
-        </ControlTheme>
-    </UserControl.Resources>
-
     <UserControl.DataTemplates>
+
         <DataTemplate DataType="founder:IFounderProjectViewModel">
-            <Button Padding="0" Margin="10" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" Command="{Binding GoToDetails}">
-                <Border ClipToBounds="True" CornerRadius="10">
-                    <Grid RowDefinitions="200 Auto *">
-                        <asyncImageLoader:AdvancedImage
-                            Background="Red"
-                            DockPanel.Dock="Top"
-                            Stretch="UniformToFill"
-                            Source="{Binding Banner}" />
-                        <TextBlock Grid.Row="1" Margin="15" TextWrapping="Wrap" DockPanel.Dock="Top" HorizontalAlignment="Center" Classes="SizeBig" Text="{Binding Name}" />
-                        <TextBlock Grid.Row="2" Margin="20 0" TextElement.FontWeight="Normal" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Text="{Binding ShortDescription}" />
-                    </Grid>
-                </Border>
-            </Button>
+            <OverlayBorder Padding="0" Theme="{StaticResource CardOverlayBorder}">
+                <Grid RowDefinitions="180 Auto Auto *">
+                    <Panel>
+                        <av:AdvancedImage Stretch="UniformToFill" Source="{Binding Picture}" />
+                        <Panel VerticalAlignment="Bottom" HorizontalAlignment="Left">
+                            <av:AdvancedImage Width="80" CornerRadius="40" Stretch="UniformToFill"
+                                              Margin="10" Height="80" Source="{Binding Banner}" />
+                            <Border CornerRadius="40" Width="80" Height="80" BorderBrush="White" BorderThickness="4" />
+                        </Panel>
+                    </Panel>
+                    <StackPanel Spacing="10" Grid.Row="1" Margin="15">
+                        <TextBlock Classes="SizeBig" TextAlignment="Center" TextWrapping="Wrap" Grid.Row="1" Text="{Binding Name}" />
+                        <TextBlock ToolTip.Tip="{Binding $self.Text}" TextTrimming="CharacterEllipsis" TextAlignment="Center" TextWrapping="Wrap" MaxLines="4" Grid.Row="2" Text="{Binding ShortDescription}" />
+                    </StackPanel>
+                </Grid>
+
+                <Interaction.Behaviors>
+                    <TappedTrigger>
+                        <InvokeCommandAction Command="{Binding GoToDetails}" />
+                    </TappedTrigger>
+                </Interaction.Behaviors>
+
+            </OverlayBorder>
         </DataTemplate>
     </UserControl.DataTemplates>
 
-    <ScrollViewer>
-        <StackPanel Spacing="20">
-            <z:Card Header="Founder">
-                <z:Card.HeaderEndContent>
-                    <co:IconButton DockPanel.Dock="Right" VerticalAlignment="Top">
-                        CREATE PROJECT
-                        <co:IconButton.Icon>
-                            <i:Icon Value="mdi-plus-box-outline" FontSize="20" />
-                        </co:IconButton.Icon>
-                    </co:IconButton>
-                </z:Card.HeaderEndContent>
-                <z:Card.HeaderStartContent>
-                    <i:Icon FontSize="40" Value="mdi-shield-account-outline" />
-                </z:Card.HeaderStartContent>
-            </z:Card>
-            <z:Card Header="Projects">
-                <z:Card.HeaderEndContent>
-                    <Button i:Attached.Icon="fa-arrow-rotate-right" Command="{Binding LoadProjects}" Padding="20 10" Background="#A8C4C9" HorizontalAlignment="Center" />
-                </z:Card.HeaderEndContent>
-                <z:Loading LoadingText="Loading projects. Please wait." VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" IsLoading="{Binding LoadProjects.IsExecuting^}">
-                    <ItemsControl ItemsSource="{Binding ProjectsList}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel ItemWidth="400" ItemHeight="360" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                    </ItemsControl>
+    <co:PageContainer>
+        <ScrollViewer>
+            <DockPanel>
+                <z:Card Header="Founder" DockPanel.Dock="Top">
+                    <z:Card.HeaderEndContent>
+                        <IconButton DockPanel.Dock="Right" VerticalAlignment="Top">
+                            CREATE PROJECT
+                            <IconButton.Icon>
+                                <ui:Icon Source="mdi-plus-box-outline" />
+                            </IconButton.Icon>
+                        </IconButton>
+                    </z:Card.HeaderEndContent>
+                    <z:Card.HeaderStartContent>
+                        <i:Icon FontSize="40" Value="mdi-shield-account-outline" />
+                    </z:Card.HeaderStartContent>
+                </z:Card>
+                <z:Loading LoadingText="Loading projects. Please wait." IsLoading="{Binding LoadProjects.IsExecuting^}">
+                    <co:CardGrid ItemsSource="{Binding ProjectsList}" />
                 </z:Loading>
-            </z:Card>
-
-        </StackPanel>
-    </ScrollViewer>
+            </DockPanel>
+        </ScrollViewer>
+    </co:PageContainer>
 </UserControl>

@@ -2,14 +2,21 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:pt="https://github.com/projektanker/icons.avalonia"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:portfolio="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:angorApp="clr-namespace:AngorApp"
              mc:Ignorable="d" d:DesignWidth="500"
              x:Class="AngorApp.Sections.Portfolio.Items.NotCompletedProjectView" x:DataType="portfolio:IPortfolioProject">
-    
-   <Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="pt|Icon">
+            <Setter Property="Foreground" Value="Orange" />
+            <Setter Property="FontSize" Value="20" />
+        </Style>
+    </UserControl.Styles>
+
+    <Design.DataContext>
        <portfolio:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" IsInvestmentCompleted="False" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
            <portfolio:PortfolioProjectDesign.Target>
                <angorApp:DesignTimeAmount Sats="12000000" />
@@ -23,14 +30,7 @@
     <StackPanel Spacing="10" HorizontalAlignment="Center" IsVisible="{Binding !IsInvestmentCompleted}">
         <EdgePanel>
             <EdgePanel.StartContent>
-                <ContentControl Height="30" Width="30" Foreground="Blue" VerticalAlignment="Center">
-                    <ContentControl.Styles>
-                        <Style Selector="avalonia|Icon">
-                            <Setter Property="Foreground" Value="Orange" />
-                        </Style>
-                    </ContentControl.Styles>
-                    <ui:Icon Source="fa-circle-info" />
-                </ContentControl>
+                <ui:Icon Source="fa-circle-info" />
             </EdgePanel.StartContent>
             <TextBlock TextWrapping="Wrap">
                 <Bold>Good news!</Bold> The founder has accepted your investment request. Complete it to finalize the investment process.

@@ -5,32 +5,19 @@
         xmlns:zafiro="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
         xmlns:views="clr-namespace:Zafiro.Avalonia.Dialogs.Views;assembly=Zafiro.Avalonia.Dialogs"
         xmlns:slim="clr-namespace:Zafiro.Avalonia.Controls.Wizards.Slim;assembly=Zafiro.Avalonia"
-        xmlns:classic="clr-namespace:Zafiro.Avalonia.Controls.Wizards.Classic;assembly=Zafiro.Avalonia">
+        xmlns:classic="clr-namespace:Zafiro.Avalonia.Controls.Wizards.Classic;assembly=Zafiro.Avalonia"
+        xmlns:controls="clr-namespace:Zafiro.Avalonia.Controls"
+        xmlns:ui="clr-namespace:AngorApp.UI">
 
     <Styles.Resources>
-        <Color x:Key="Level1">#F5FDFF</Color>
-        <Color x:Key="Level2">#F1FAFC</Color>
-        <Color x:Key="Level3">#C7DBDF</Color>
-        <Color x:Key="Level4">#1F5D6A</Color>
-        <Color x:Key="Level5">#022229</Color>
+       
         
         <x:Double x:Key="FontSizeLarge">24</x:Double>
         <x:Double x:Key="FontSizeBig">20</x:Double>
         <x:Double x:Key="FontSizeNormal">16</x:Double>
         <x:Double x:Key="FontSizeSmall">12</x:Double>
         
-        <SolidColorBrush x:Key="SystemRegionBrush" Color="{StaticResource Level3}" />
-        <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource Level3}" />
-        <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="{StaticResource Level2}" />
-        <SolidColorBrush x:Key="SystemControlHighlightAccentBrush" Color="{StaticResource Level4}" />
-        
-        <SolidColorBrush x:Key="SystemControlHighlightListAccentLowBrush" Color="{StaticResource Level2}" />
-        
         <x:Double x:Key="FlyoutThemeMaxWidth">700</x:Double>
-
-        <ControlTheme x:Key="Regular" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource Level4}" />
-        </ControlTheme>
 
         <ControlTheme x:Key="PaneTitle" TargetType="TextBlock" BasedOn="{StaticResource Regular}">
             <Setter Property="FontWeight" Value="Bold" />
@@ -41,15 +28,15 @@
         </ControlTheme>
 
         <ControlTheme x:Key="{x:Type z:SlimDataGrid}" TargetType="z:SlimDataGrid" BasedOn="{StaticResource {x:Type z:SlimDataGrid}}">
-            <Setter Property="Background" Value="{StaticResource Level1}" />
+            <!-- <Setter Property="Background" Value="{StaticResource Level1}" /> -->
             <Setter Property="HeaderPadding" Value="10" />
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{StaticResource Level3}" />
+            <!-- <Setter Property="BorderBrush" Value="{StaticResource Level3}" /> -->
             <Setter Property="RowTheme">
                 <ControlTheme TargetType="z:Row" BasedOn="{StaticResource {x:Type z:Row}}">
                     <Setter Property="BorderThickness" Value="0 1 0 0" />
-                    <Setter Property="BorderBrush" Value="{StaticResource Level3}" />
+                    <!-- <Setter Property="BorderBrush" Value="{StaticResource Level3}" /> -->
                     <Setter Property="Padding" Value="10 10" />
                 </ControlTheme>
             </Setter>
@@ -61,7 +48,7 @@
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="TextBlock.FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{StaticResource Level5}" />
+            <!-- <Setter Property="Foreground" Value="{StaticResource Level5}" /> -->
         </ControlTheme>
 
         <ControlTheme x:Key="DarkerButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
@@ -70,7 +57,7 @@
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="TextBlock.FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{StaticResource Level5}" />
+            <!-- <Setter Property="Foreground" Value="{StaticResource Level5}" /> -->
         </ControlTheme>
 
     </Styles.Resources>
@@ -96,13 +83,24 @@
     </Style>
 
     <Style Selector="avalonia|Icon">
-        <Setter Property="Foreground" Value="{StaticResource Level5}" />
+        <!-- <Setter Property="Foreground" Value="{StaticResource Level5}" /> -->
     </Style>
-
     
     <Style Selector="views|DialogControl" >
-        <Setter Property="MinWidth" Value="400" />
-        <Setter Property="MinHeight" Value="300" />
+        <Setter Property="MinWidth">
+            <Setter.Value>
+                <OnFormFactor>
+                    <OnFormFactor.Desktop><x:Double>400</x:Double></OnFormFactor.Desktop>
+                </OnFormFactor>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="MinHeight">
+            <Setter.Value>
+                <OnFormFactor>
+                    <OnFormFactor.Desktop><x:Double>300</x:Double></OnFormFactor.Desktop>
+                </OnFormFactor>
+            </Setter.Value>
+        </Setter>
     </Style>
     
     <Style Selector="views|DialogControl slim|SlimWizardControl">
@@ -135,8 +133,8 @@
     </Style>
     
     <Style Selector="zafiro|StepIndicator">
-        <Setter Property="Background" Value="{StaticResource Level3}" />
-        <Setter Property="Foreground" Value="{StaticResource Level4}" />
+        <!-- <Setter Property="Background" Value="{StaticResource Level3}" /> -->
+        <!-- <Setter Property="Foreground" Value="{StaticResource Level4}" /> -->
     </Style>
     
     <Style Selector="Button.HorizontalStretch">

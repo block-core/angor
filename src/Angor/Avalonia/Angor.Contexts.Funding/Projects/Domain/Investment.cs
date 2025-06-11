@@ -21,7 +21,7 @@ public class Investment
             InvestorPubKey = investorId,
             Amount = amount,
             InvestmentDate = DateTime.UtcNow,
-            Status = InvestmentStatus.Pending,
+            Status = InvestmentStatus.PendingFounderSignatures,
             TransactionId = transactionId,
         };
     }

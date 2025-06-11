@@ -2,16 +2,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
-             xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="650"
              x:Class="AngorApp.Sections.Wallet.Operate.WalletView"
              x:DataType="operate:IWalletViewModel">
+    
+    <Design.DataContext>
+        <operate:WalletViewModelDesign />
+    </Design.DataContext>
+    
     <DockPanel>
-        <controls:Pane IsTitleVisible="True" Title="Wallet"
-                       Subtitle="Wallet and balances" DockPanel.Dock="Top">
-            <controls:Pane.TitleRightContent>
+        <Card Header="Wallet" Subheader="Wallet and balances" DockPanel.Dock="Top" IsAdaptiveFlowEnabled="True">
+            <Card.HeaderEndContent>
                 <UniformGrid Rows="1">
                     <UniformGrid.Styles>
                         <Style Selector="Button">
@@ -28,11 +31,11 @@
                         </Button.Flyout>
                     </Button>
                 </UniformGrid>
-            </controls:Pane.TitleRightContent>
-            <controls:Pane.TitleIcon>
-                <i:Icon Value="fa-wallet" />
-            </controls:Pane.TitleIcon>
-        </controls:Pane>
+            </Card.HeaderEndContent>
+            <Card.HeaderStartContent>
+                <ui:Icon Source="fa-wallet" />
+            </Card.HeaderStartContent>
+        </Card>
 
         <operate:Balance DockPanel.Dock="Top" />
 

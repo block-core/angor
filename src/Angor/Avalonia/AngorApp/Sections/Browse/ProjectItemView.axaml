@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
+             mc:Ignorable="d" d:DesignWidth="300"
+             x:Class="AngorApp.Sections.Browse.ProjectItemView" 
+             x:DataType="browse:IProjectViewModel">
+
+    <Design.DataContext>
+        <browse:ProjectViewModelDesign>
+            <browse:ProjectViewModelDesign.Project>
+                <browse:ProjectDesign />
+            </browse:ProjectViewModelDesign.Project>
+        </browse:ProjectViewModelDesign>
+    </Design.DataContext>
+    
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+    </UserControl.Styles>
+
+    <OverlayBorder Padding="0 0 0 20" Theme="{StaticResource CardOverlayBorder}" x:DataType="browse:IProjectViewModel">
+        <Grid RowDefinitions="180 *" RowSpacing="15">
+            <Panel>
+                <av:AdvancedImage Stretch="UniformToFill" Source="{Binding Project.Banner}" />
+            </Panel>
+            <StackPanel Grid.Row="1" Spacing="15">
+                <StackPanel Spacing="10" Grid.Row="1" Margin="15 0">
+                    <TextBlock Classes="SizeBig" Text="{Binding Project.Name}" />
+                    <Separator>
+                        <Separator.Background>
+                            <LinearGradientBrush StartPoint="0%,100%" EndPoint="100%,100%">
+                                <GradientStop Color="Transparent" Offset="0"/>
+                                <GradientStop Color="{DynamicResource SystemChromeHighColor}" Offset="0.3"/>
+                                <GradientStop Color="{DynamicResource SystemChromeHighColor}" Offset="0.8"/>
+                                <GradientStop Color="Transparent" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Separator.Background>
+                    </Separator>
+                    <TextBlock ToolTip.Tip="{Binding $self.Text}"
+                               MaxLines="6" Grid.Row="2" Text="{Binding Project.ShortDescription}" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <Interaction.Behaviors>
+            <TappedTrigger>
+                <InvokeCommandAction Command="{Binding GoToDetails}" />
+            </TappedTrigger>
+        </Interaction.Behaviors>
+
+    </OverlayBorder>
+
+</UserControl>

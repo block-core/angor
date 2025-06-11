@@ -4,6 +4,7 @@ using AngorApp.Features.Invest;
 using AngorApp.UI.Services;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI;
+using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Browse.Details;
 
@@ -18,15 +19,15 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
         this.project = project;
         this.investWizard = investWizard;
         this.uiServices = uiServices;
-        Invest = ReactiveCommand.CreateFromTask(DoInvest);
+        Invest = ReactiveCommand.CreateFromTask(DoInvest).Enhance();
 
         Invest.HandleErrorsWith(uiServices.NotificationService, "Investment failed");
     }
 
-    public object Icon => project.Banner;
-    public object Picture => project.Picture;
+    public object Icon => project.Picture;
+    public object Picture => project.Banner;
 
-    public ReactiveCommand<Unit, Result> Invest { get; }
+    public IEnhancedCommand<Result> Invest { get; }
 
     public IEnumerable<INostrRelay> Relays { get; } =
     [
