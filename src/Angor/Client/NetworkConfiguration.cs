@@ -63,8 +63,8 @@ public class NetworkConfiguration : INetworkConfiguration
             {
                 return new List<SettingsUrl>
                 {
+                    new SettingsUrl { Name = "", Url = "https://test.indexer.angor.io", IsPrimary = true },
                     new SettingsUrl { Name = "", Url = "https://mempool.thedude.pro", IsPrimary = false },
-                    new SettingsUrl { Name = "", Url = "https://test.indexer.angor.io", IsPrimary = false },
                 };
             }
 
