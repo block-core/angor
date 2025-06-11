@@ -494,7 +494,7 @@
                     </div>
                 </div>
             }
-        </div>
+        </div>        
 
         <div class="info-card">
             <div class="text-center mb-4">
@@ -502,49 +502,45 @@
                 <p class="text-muted mb-0">Complete the deployment process to make your project live</p>
             </div>
 
-            @if (!hasErrors && !isManualMode)
+            @if (hasErrors)
             {
                 <div class="text-center mb-4">
-                    <div class="info-card d-inline-flex align-items-center p-2">
-                        <Icon IconName="lightning" Width="16" Height="16" Class="me-2 text-success" />
-                        <span class="text-success">Automatic Mode</span>
-                        <button class="btn btn-sm btn-border-warning ms-2" @onclick="SwitchToManualMode">
-                            Switch to Manual
-                        </button>
+                    <div class="alert alert-danger d-flex align-items-center justify-content-center">
+                        <Icon IconName="warning" Width="20" Height="20" Class="me-2 text-warning" />
+                        <span class="fw-semibold">Deployment Failed - Manual Completion Required</span>
+                    </div>
+                    <div class="alert alert-info mt-2">
+                        <small class="text-muted">
+                            <Icon IconName="info" Width="16" Height="16" Class="me-2" />
+                            Completed steps have been saved. Continue manually from where the process stopped.
+                        </small>
                     </div>
                 </div>
             }
-            else if (isManualMode && !hasErrors)
+            else if (isManualMode)
             {
                 <div class="text-center mb-4">
-                    <div class="info-card d-inline-flex align-items-center p-2">
-                        <Icon IconName="settings" Width="16" Height="16" Class="me-2 text-primary" />
-                        <span class="text-primary">Manual Mode</span>
-                        <button class="btn btn-sm btn-border-warning ms-2" @onclick="ReturnToAutoMode" disabled="@isAutoDeploying">
+                    <div class="alert alert-primary d-flex align-items-center justify-content-center">
+                        <Icon IconName="settings" Width="20" Height="20" Class="me-2 text-primary" />
+                        <span class="fw-semibold">Manual Mode Active</span>
+                        <button class="btn btn-sm btn-outline-primary ms-3" @onclick="ReturnToAutoMode" disabled="@isAutoDeploying">
                             Return to Auto
                         </button>
                     </div>
                 </div>
-            }
-            else if (hasErrors)
-            {
-                <div class="text-center mb-4">
-                    <div class="d-inline-flex align-items-center p-2 rounded border border-warning">
-                        <Icon IconName="warning" Width="16" Height="16" Class="me-2 text-warning" />
-                        <span class="fw-semibold text-warning">Manual Mode Required</span>
-                        <small class="ms-2 text-muted">(Auto deployment failed)</small>
-                    </div>
-                </div>
-            }
-
+            }            
             <!-- Progress Steps -->
             <div class="row mb-4">
                 <div class="col-4">
                     <div class="d-flex flex-column align-items-center">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrMetadataCreated ? "bg-success text-white" : currentStep == 1 ? "border border-2 border-primary" : "border") mb-2" style="width: 48px; height: 48px;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrMetadataCreated ? "bg-success text-white" : currentStep == 1 ? "border border-2 border-primary" : "border") mb-2 width-40 height-40">
                             @if (nostrMetadataCreated)
                             {
                                 <Icon IconName="check" Width="20" Height="20" />
+                            }
+                            else if (currentStep == 1 && isAutoDeploying)
+                            {
+                                <div class="spinner-border spinner-border-sm text-primary"></div>
                             }
                             else
                             {
@@ -556,10 +552,14 @@
                 </div>
                 <div class="col-4">
                     <div class="d-flex flex-column align-items-center">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrApplicationSpecificDataCreated ? "bg-success text-white" : currentStep == 2 ? "border border-2 border-primary" : "border") mb-2" style="width: 48px; height: 48px;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrApplicationSpecificDataCreated ? "bg-success text-white" : currentStep == 2 ? "border border-2 border-primary" : "border") mb-2 width-40 height-40">
                             @if (nostrApplicationSpecificDataCreated)
                             {
                                 <Icon IconName="check" Width="20" Height="20" />
+                            }
+                            else if (currentStep == 2 && isAutoDeploying)
+                            {
+                                <div class="spinner-border spinner-border-sm text-primary"></div>
                             }
                             else
                             {
@@ -571,23 +571,64 @@
                 </div>
                 <div class="col-4">
                     <div class="d-flex flex-column align-items-center">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center @(currentStep == 3 ? "border border-2 border-primary" : "border") mb-2" style="width: 48px; height: 48px;">
-                            <span class="fw-bold">3</span>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center @(!string.IsNullOrEmpty(project.CreationTransactionId) ? "bg-success text-white" : currentStep == 3 ? "border border-2 border-primary" : "border") mb-2 width-40 height-40">
+                            @if (!string.IsNullOrEmpty(project.CreationTransactionId))
+                            {
+                                <Icon IconName="check" Width="20" Height="20" />
+                            }
+                            else if (currentStep == 3 && isAutoDeploying)
+                            {
+                                <div class="spinner-border spinner-border-sm text-primary"></div>
+                            }
+                            else
+                            {
+                                <span class="fw-bold">3</span>
+                            }
                         </div>
-                        <span class="small fw-semibold @(currentStep == 3 ? "text-primary" : "text-muted")">Deploy</span>
+                        <span class="small fw-semibold @(!string.IsNullOrEmpty(project.CreationTransactionId) ? "text-success" : currentStep == 3 ? "text-primary" : "text-muted")">Deploy</span>
                     </div>
                 </div>
-            </div>
-
+            </div>            
             <!-- Automatic Mode Content -->
             @if (!hasErrors && !isManualMode)
             {
                 <div class="info-card text-center p-4">
                     <div class="mb-3">
-                        <Icon IconName="lightning" Width="48" Height="48" Class="text-success" />
+                        <Icon IconName="rocket" Width="48" Height="48" Class="text-success" />
                     </div>
                     <h5 class="mb-3">Ready to Deploy</h5>
-                    <p class="text-muted mb-4">All steps will be completed automatically in sequence</p>
+                    <p class="text-muted mb-4">All deployment steps will be completed automatically</p>
+
+                    @if (isAutoDeploying)
+                    {
+                        <!-- Show current step progress during deployment -->
+                        <div class="deployment-progress mb-4">
+                            <div class="d-flex align-items-center justify-content-center mb-3">
+                                <div class="spinner-border text-primary me-3"></div>
+                                <div class="text-start">
+                                    <h6 class="mb-1">
+                                        @if (currentStep == 1)
+                                        {
+                                            <span>Creating Nostr Profile...</span>
+                                        }
+                                        else if (currentStep == 2)
+                                        {
+                                            <span>Publishing Project Information...</span>
+                                        }
+                                        else if (currentStep == 3)
+                                        {
+                                            <span>Deploying to Blockchain...</span>
+                                        }
+                                    </h6>
+                                    <small class="text-muted">Please wait while we complete this step...</small>
+                                </div>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success " role="progressbar" style="width: @((currentStep * 33))%" aria-valuenow="@(currentStep * 33)" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <small class="text-muted mt-2 d-block">Step @currentStep of 3</small>
+                        </div>
+                    }
 
                     <button class="btn btn-border-success w-100" @onclick="AutoDeployProject" disabled="@isAutoDeploying">
                         @if (isAutoDeploying)
@@ -597,13 +638,12 @@
                         }
                         else
                         {
-                            <Icon IconName="lightning" Width="20" Height="20" Class="me-2" />
-                            <span>Start Auto Deploy</span>
+                            <Icon IconName="rocket" Width="20" Height="20" Class="me-2" />
+                            <span>Deploy Project</span>
                         }
                     </button>
                 </div>
-            }
-
+            }            
             <!-- Manual Mode Content -->
             @if (hasErrors || isManualMode)
             {
@@ -613,10 +653,21 @@
                         <Icon IconName="warning" Width="20" Height="20" Class="me-2" />
                         <span>Automatic deployment encountered issues. Manual completion required.</span>
                     </div>
-                }                    <!-- Step 1: Profile -->
+                }
+                
+                <!-- Step 1: Profile -->
                 <div class="info-card">
                     <div class="d-flex align-items-center mb-3">
-                        <Icon IconName="user" Width="24" Height="24" Class="me-3" />
+                        <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrMetadataCreated ? "bg-success text-white" : "bg-light border") me-3 width-40 height-40" >
+                            @if (nostrMetadataCreated)
+                            {
+                                <Icon IconName="check" Width="16" Height="16" />
+                            }
+                            else
+                            {
+                                <Icon IconName="user" Width="16" Height="16" />
+                            }
+                        </div>
                         <div>
                             <h6 class="mb-1">Create Nostr Profile</h6>
                             <p class="text-muted small mb-0">Establish your project's identity on the Nostr network</p>
@@ -646,12 +697,22 @@
                         </div>
                     }
                 </div>
+
                 <!-- Step 2: Project Info -->
                 @if (nostrMetadataCreated)
                 {
                     <div class="info-card mt-4">
                         <div class="d-flex align-items-center mb-3">
-                            <Icon IconName="project" Width="24" Height="24" Class="me-3" />
+                            <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrApplicationSpecificDataCreated ? "bg-success text-white" : "bg-light border") me-3 width-40 height-40">
+                                @if (nostrApplicationSpecificDataCreated)
+                                {
+                                    <Icon IconName="check" Width="16" Height="16" />
+                                }
+                                else
+                                {
+                                    <Icon IconName="project" Width="16" Height="16" />
+                                }
+                            </div>
                             <div>
                                 <h6 class="mb-1">Publish Project Information</h6>
                                 <p class="text-muted small mb-0">Define technical details and funding structure</p>
@@ -682,12 +743,22 @@
                         }
                     </div>
                 }
+
                 <!-- Step 3: Deploy -->
                 @if (nostrMetadataCreated && nostrApplicationSpecificDataCreated)
                 {
                     <div class="info-card mt-4">
                         <div class="d-flex align-items-center mb-3">
-                            <Icon IconName="deploy" Width="24" Height="24" Class="me-3" />
+                            <div class="rounded-circle d-flex align-items-center justify-content-center @(!string.IsNullOrEmpty(project.CreationTransactionId) ? "bg-success text-white" : "bg-light border") me-3 width-40 height-40">
+                                @if (!string.IsNullOrEmpty(project.CreationTransactionId))
+                                {
+                                    <Icon IconName="check" Width="16" Height="16" />
+                                }
+                                else
+                                {
+                                    <Icon IconName="deploy" Width="16" Height="16" />
+                                }
+                            </div>
                             <div>
                                 <h6 class="mb-1">Deploy to Blockchain</h6>
                                 <p class="text-muted small mb-0">Create the on-chain contract for your project</p>
@@ -723,43 +794,14 @@
                         }
                     </div>
                 }
-                <!-- Navigation - Hidden in manual mode since steps advance automatically -->
-                @if (!isManualMode)
-                {
-                    <div class="d-flex justify-content-between mt-4">
-                        @if (currentStep > 1)
-                        {
-                            <button class="btn btn-outline-secondary" @onclick="() => currentStep--" disabled="@isAutoDeploying">
-                                <Icon IconName="arrow-left" Width="16" Height="16" Class="me-2" />
-                                Previous
-                            </button>
-                        }
-                        else
-                        {
-                            <div></div>
-                        }
 
-                        @if (currentStep < 3 && CanProceedToNextStep())
-                        {
-                            <button class="btn btn-border-success" @onclick="() => currentStep++">
-                                >
-                                Next
-                                <Icon IconName="arrow-right" Width="16" Height="16" Class="ms-2" />
-                            </button>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <!-- In manual mode, show information about automatic progression -->
-                    <div class="text-center mt-4">
-                        <small class="text-muted">
-                            <Icon IconName="info" Width="16" Height="16" Class="me-2" />
-                            Steps will advance automatically when completed
-                        </small>
-                    </div>
-                }
-
+                <!-- Progress Info for Manual Mode -->
+                <div class="text-center mt-4">
+                    <small class="text-muted">
+                        <Icon IconName="info" Width="16" Height="16" Class="me-2" />
+                        Steps will advance automatically when completed
+                    </small>
+                </div>
             }
         </div>
 
@@ -1027,19 +1069,21 @@
 
     private void ReturnToAutoMode()
     {
-        if (!isAutoDeploying && !hasErrors)
+        if (!isAutoDeploying && hasErrors)
         {
+            hasErrors = false;
             isManualMode = false;
 
+            // Reset to appropriate step
             if (!nostrMetadataCreated)
             {
                 currentStep = 1;
             }
-            else if (nostrMetadataCreated && !nostrApplicationSpecificDataCreated)
+            else if (!nostrApplicationSpecificDataCreated)
             {
                 currentStep = 2;
             }
-            else if (nostrMetadataCreated && nostrApplicationSpecificDataCreated)
+            else if (string.IsNullOrEmpty(project.CreationTransactionId))
             {
                 currentStep = 3;
             }
@@ -1871,6 +1915,7 @@
 
         autoDeploySpinner = true;
         isAutoDeploying = true;
+        hasErrors = false; // Reset error state
         StateHasChanged();
 
         try
@@ -1880,23 +1925,15 @@
             {
                 currentStep = 1;
                 StateHasChanged();
-                await Task.Delay(500); // UI feedback
+                await Task.Delay(500);
 
                 await CreatNostrProfile();
 
-                // Wait for profile creation to complete
-                int attempts = 0;
-                while (!nostrMetadataCreated && attempts < 30) // 30 second timeout
+                // Wait for profile creation with proper timeout
+                var profileCreated = await WaitForCondition(() => nostrMetadataCreated, TimeSpan.FromSeconds(30));
+                if (!profileCreated)
                 {
-                    await Task.Delay(1000);
-                    attempts++;
-                }
-                if (!nostrMetadataCreated)
-                {
-                    notificationComponent.ShowErrorMessage("Failed to create Nostr profile. Auto deployment stopped.");
-                    hasErrors = true;
-                    isManualMode = true;
-                    return;
+                    throw new Exception("Failed to create Nostr profile within timeout period.");
                 }
             }
 
@@ -1905,40 +1942,54 @@
             {
                 currentStep = 2;
                 StateHasChanged();
-                await Task.Delay(500); // UI feedback
+                await Task.Delay(500);
 
                 await CreatProjectInfoOnNostr();
 
-                // Wait for project info creation to complete
-                int attempts = 0;
-                while (!nostrApplicationSpecificDataCreated && attempts < 30) // 30 second timeout
+                // Wait for project info creation with proper timeout
+                var projectInfoCreated = await WaitForCondition(() => nostrApplicationSpecificDataCreated, TimeSpan.FromSeconds(30));
+                if (!projectInfoCreated)
                 {
-                    await Task.Delay(1000);
-                    attempts++;
-                }
-                if (!nostrApplicationSpecificDataCreated)
-                {
-                    notificationComponent.ShowErrorMessage("Failed to publish project info. Auto deployment stopped.");
-                    hasErrors = true;
-                    isManualMode = true;
-                    return;
+                    throw new Exception("Failed to publish project info within timeout period.");
                 }
             }
 
             // Step 3: Deploy to Blockchain
-            currentStep = 3;
-            StateHasChanged();
-            await Task.Delay(500); // UI feedback
+            if (string.IsNullOrEmpty(project.CreationTransactionId))
+            {
+                currentStep = 3;
+                StateHasChanged();
+                await Task.Delay(500);
 
-            await CreatProjectTransaction();
-
-            // If transaction creation was successful, the modal will show
-            // The user can then confirm the final deployment
+                await CreatProjectTransaction();
+                // The modal will show for final confirmation
+            }
+            else
+            {
+                // Already deployed, navigate to project
+                NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
+            }
         }
         catch (Exception e)
         {
             _Logger.LogError(e, "Error during auto deployment");
             notificationComponent.ShowErrorMessage("Auto deployment failed: " + e.Message);
+            hasErrors = true;
+            isManualMode = true;
+            
+            // Set current step to the first incomplete step
+            if (!nostrMetadataCreated)
+            {
+                currentStep = 1;
+            }
+            else if (!nostrApplicationSpecificDataCreated)
+            {
+                currentStep = 2;
+            }
+            else
+            {
+                currentStep = 3;
+            }
         }
         finally
         {
@@ -1948,11 +1999,21 @@
         }
     }
 
+    private async Task<bool> WaitForCondition(Func<bool> condition, TimeSpan timeout)
+    {
+        var startTime = DateTime.UtcNow;
+        while (!condition() && DateTime.UtcNow - startTime < timeout)
+        {
+            await Task.Delay(500);
+        }
+        return condition();
+    }
+
     private async Task CheckAndAdvanceStep()
     {
-        if (!isManualMode) return;
+        if (!isAutoDeploying) return; // Only advance during auto deployment
 
-        await Task.Delay(500);
+        await Task.Delay(100); // Small delay for UI
 
         if (currentStep == 1 && nostrMetadataCreated)
         {
