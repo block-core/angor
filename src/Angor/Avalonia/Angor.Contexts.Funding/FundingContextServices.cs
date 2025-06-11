@@ -1,5 +1,5 @@
-﻿using Angor.Contests.CrossCutting;
-using Angor.Contexts.Funding.Investor;
+﻿using Angor.Contexts.Funding.Investor;
+using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -13,6 +13,7 @@ using Angor.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
+using EncryptionService = Angor.Contexts.Funding.Projects.Infrastructure.Impl.EncryptionService;
 
 namespace Angor.Contexts.Funding;
 
@@ -31,12 +32,12 @@ public static class FundingContextServices
         services.TryAddSingleton<ISerializer, Serializer>();
         services.TryAddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
         services.TryAddSingleton<IRelayService, RelayService>();
-        //services.TryAddSingleton<INetworkStorage, NetworkStorage>();
         //TODO change the call to use the factory
         services.TryAddScoped<HttpClient>(x => x.GetRequiredService<IHttpClientFactory>().CreateClient());
         services.TryAddSingleton<IIndexerService,MempoolSpaceIndexerApi>();
         services.TryAddSingleton<INetworkConfiguration>(networkConfiguration);
         services.TryAddSingleton<INetworkService, NetworkService>();
+        services.TryAddSingleton<INetworkStorage, NetworkStorage>();
         services.TryAddSingleton<IEncryptionService, EncryptionService>();
         services.TryAddSingleton<INostrCommunicationFactory, NostrCommunicationFactory>();
         services.TryAddSingleton<IInvestorTransactionActions, InvestorTransactionActions>();
@@ -47,11 +48,17 @@ public static class FundingContextServices
         services.TryAddSingleton<IDerivationOperations, DerivationOperations>();
         services.TryAddSingleton<IHdOperations, HdOperations>();
         services.TryAddSingleton<ISignService, SignService>();
+        services.TryAddSingleton<ISignaturesService, SignaturesService>();
         services.TryAddSingleton<ISpendingTransactionBuilder, SpendingTransactionBuilder>();
         services.TryAddSingleton<IInvestmentTransactionBuilder, InvestmentTransactionBuilder>();
         services.TryAddSingleton<ITaprootScriptBuilder, TaprootScriptBuilder>();
         services.TryAddSingleton<IWalletOperations, WalletOperations>();
         services.AddHttpClient();
+        
+        // Nostr
+        services.AddSingleton<INostrEncryption, NostrEncryption>();
+        services.AddSingleton<ISensitiveNostrData, SensitiveNostrData>();
+        services.TryAddSingleton<INostrService, NostrService>();
 
         return services;
     }

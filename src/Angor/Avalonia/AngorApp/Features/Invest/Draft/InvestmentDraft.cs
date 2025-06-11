@@ -11,8 +11,8 @@ public class InvestmentDraft(IInvestmentAppService investmentAppService, IWallet
 
     public AmountUI TotalFee => new AmountUI(DraftModel.TotalFee.Sats);
 
-    public Task<Result<Guid>> Confirm()
+    public async Task<Result> Confirm()
     {
-        return investmentAppService.Invest(wallet.Id.Value, new ProjectId(project.Id), DraftModel);
+        return await investmentAppService.Invest(wallet.Id.Value, new ProjectId(project.Id), DraftModel);
     }
 }
