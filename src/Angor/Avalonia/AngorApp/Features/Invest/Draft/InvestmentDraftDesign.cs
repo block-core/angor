@@ -7,7 +7,7 @@ public class InvestmentDraftDesign : IInvestmentDraft
 {
     public CreateInvestment.Draft DraftModel { get; }
     public AmountUI TotalFee { get; }
-    public Task<Result<Guid>> Confirm()
+    public Task<Result> Confirm()
     {
         throw new NotSupportedException();
     }

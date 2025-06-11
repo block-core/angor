@@ -27,7 +27,7 @@ public static class WalletContextServices
         var networkConfiguration = new NetworkConfiguration();
         services.AddSingleton<INetworkConfiguration>(networkConfiguration);
         services.AddSingleton<INetworkService, NetworkService>();
-        services.AddSingleton<INetworkStorage, NetworkStorage>();
+        services.TryAddSingleton<INetworkStorage, NetworkStorage>();
         //TODO change the call to use the factory
         services.TryAddScoped<HttpClient>(x => x.GetRequiredService<IHttpClientFactory>().CreateClient());
         services.TryAddSingleton<IIndexerService,MempoolSpaceIndexerApi>();

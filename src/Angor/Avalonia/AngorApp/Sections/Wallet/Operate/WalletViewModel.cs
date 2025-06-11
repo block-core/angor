@@ -28,7 +28,8 @@ public partial class WalletViewModel : ReactiveObject, IWalletViewModel
         GetReceiveAddress = ReactiveCommand.CreateFromTask(async () => new ResultViewModel<string>(await Wallet.GenerateReceiveAddress()));
         receiveAddressResultHelper = GetReceiveAddress.ToProperty(this, x => x.ReceiveAddressResult);
         
-        wallet.History.ToObservableChangeSet(x => x.Id)
+        wallet.History
+            .ToObservableChangeSet(x => x.Id)
             .Transform(transaction => new TransactionViewModel(transaction, uiServices))
             .TransformWithInlineUpdate<IdentityContainer<ITransactionViewModel>, TransactionViewModel, string>(x => new IdentityContainer<ITransactionViewModel> { Content = x }, (x, e) => x.Content = e)
             .SortAndBind(out var idContainers, SortExpressionComparer<IdentityContainer<ITransactionViewModel>>.Descending(x => x.Content.Transaction.BlockTime ?? DateTimeOffset.MinValue))
