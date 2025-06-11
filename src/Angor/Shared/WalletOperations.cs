@@ -36,7 +36,7 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
 
-    public PsbtData CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null)
+    public PsbtData CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null, bool spendAll = false)
     {
         if (string.IsNullOrEmpty(accountInfo.RootExtPubKey))
         {
@@ -48,16 +48,19 @@ public class WalletOperations : IWalletOperations
 
         changeAddress = changeAddress ?? accountInfo.GetNextChangeReceiveAddress();
 
-        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
+        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo, spendAll);
         var coins = utxoDataWithPaths.Select(u => new Coin(uint256.Parse(u.UtxoData.outpoint.transactionId), (uint)u.UtxoData.outpoint.outputIndex, Money.Satoshis(u.UtxoData.value), Script.FromHex(u.UtxoData.scriptHex))).ToList();
 
         if (!coins.Any())
             throw new ApplicationException("No coins found to fund the transaction.");
 
         var builder = new TransactionBuilder(network)
-            .AddCoins(coins)
-            .SetChange(BitcoinAddress.Create(changeAddress, network))
-            .ContinueToBuild(transaction) // Add the predefined outputs
+            .AddCoins(coins);
+
+        if (!spendAll)
+            builder.SetChange(BitcoinAddress.Create(changeAddress, network));
+
+        builder.ContinueToBuild(transaction) // Add the predefined outputs
             .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
             .CoverTheRest(); // Ensure enough input value covers outputs + fee, adjusting change if needed
 
@@ -118,23 +121,37 @@ public class WalletOperations : IWalletOperations
     }
 
     public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo, long feeRate)
+        WalletWords walletWords, AccountInfo accountInfo, long feeRate, bool spendAll = false)
     {
         Network network = _networkConfiguration.GetNetwork();
 
-        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
+        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo, spendAll);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
         if (coins.coins == null)
             throw new ApplicationException("No coins found");
 
-        var builder = new TransactionBuilder(network)
-            .AddCoins(coins.coins)
-            .AddKeys(coins.keys.ToArray())
-            .SetChange(BitcoinAddress.Create(changeAddress, network))
-            .ContinueToBuild(transaction)
-            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
-            .CoverTheRest();
+        TransactionBuilder builder;
+        if (spendAll)
+        {
+            builder = new TransactionBuilder(network)
+                .AddCoins(coins.coins)
+                .AddKeys(coins.keys.ToArray())
+                .SubtractFees()
+                .ContinueToBuild(transaction)
+                .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
+                .CoverTheRest();
+        }
+        else
+        {
+            builder = new TransactionBuilder(network)
+                .AddCoins(coins.coins)
+                .AddKeys(coins.keys.ToArray())
+                .SetChange(BitcoinAddress.Create(changeAddress, network))
+                .ContinueToBuild(transaction)
+                .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
+                .CoverTheRest();
+        }
 
         var signTransaction = builder.BuildTransaction(true);
 
@@ -310,7 +327,7 @@ public class WalletOperations : IWalletOperations
         return new OperationResult<Transaction> { Success = false, Message = res };
     }
 
-    public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
+    public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo, bool spendAll = false)
     {
         var utxosToSpend = new List<UtxoDataWithPath>();
 
@@ -328,13 +345,13 @@ public class WalletOperations : IWalletOperations
 
             total += utxoData.utxo.value;
 
-            if (total > sendAmountat)
+            if (!spendAll && total > sendAmountat)
             {
                 break;
             }
         }
 
-        if (total < sendAmountat)
+        if (!spendAll && total < sendAmountat)
         {
             throw new ApplicationException($"Not enough funds, expected {Money.Satoshis(sendAmountat)} BTC, found {Money.Satoshis(total)} BTC");
         }
