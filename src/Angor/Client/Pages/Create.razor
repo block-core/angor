@@ -517,18 +517,7 @@
                     </div>
                 </div>
             }
-            else if (isManualMode)
-            {
-                <div class="text-center mb-4">
-                    <div class="alert alert-primary d-flex align-items-center justify-content-center">
-                        <Icon IconName="settings" Width="20" Height="20" Class="me-2 text-primary" />
-                        <span class="fw-semibold">Manual Mode Active</span>
-                        <button class="btn btn-sm btn-outline-primary ms-3" @onclick="ReturnToAutoMode" disabled="@isAutoDeploying">
-                            Return to Auto
-                        </button>
-                    </div>
-                </div>
-            }            
+         
             <!-- Progress Steps -->
             <div class="row mb-4">
                 <div class="col-4">
@@ -538,7 +527,7 @@
                             {
                                 <Icon IconName="check" Width="20" Height="20" />
                             }
-                            else if (currentStep == 1 && isAutoDeploying)
+                            else if (currentStep == 1 && isDeploying)
                             {
                                 <div class="spinner-border spinner-border-sm text-primary"></div>
                             }
@@ -557,7 +546,7 @@
                             {
                                 <Icon IconName="check" Width="20" Height="20" />
                             }
-                            else if (currentStep == 2 && isAutoDeploying)
+                            else if (currentStep == 2 && isDeploying)
                             {
                                 <div class="spinner-border spinner-border-sm text-primary"></div>
                             }
@@ -576,7 +565,7 @@
                             {
                                 <Icon IconName="check" Width="20" Height="20" />
                             }
-                            else if (currentStep == 3 && isAutoDeploying)
+                            else if (currentStep == 3 && isDeploying)
                             {
                                 <div class="spinner-border spinner-border-sm text-primary"></div>
                             }
@@ -589,8 +578,7 @@
                     </div>
                 </div>
             </div>            
-            <!-- Automatic Mode Content -->
-            @if (!hasErrors && !isManualMode)
+            @if (!hasErrors)
             {
                 <div class="info-card text-center p-4">
                     <div class="mb-3">
@@ -599,7 +587,7 @@
                     <h5 class="mb-3">Ready to Deploy</h5>
                     <p class="text-muted mb-4">All deployment steps will be completed automatically</p>
 
-                    @if (isAutoDeploying)
+                    @if (isDeploying)
                     {
                         <!-- Show current step progress during deployment -->
                         <div class="deployment-progress mb-4">
@@ -630,8 +618,8 @@
                         </div>
                     }
 
-                    <button class="btn btn-border-success w-100" @onclick="AutoDeployProject" disabled="@isAutoDeploying">
-                        @if (isAutoDeploying)
+                    <button class="btn btn-border-success w-100" @onclick="AutoDeployProject" disabled="@isDeploying">
+                        @if (isDeploying)
                         {
                             <span class="spinner-border spinner-border-sm me-2"></span>
                             <span>Deploying...</span>
@@ -644,8 +632,8 @@
                     </button>
                 </div>
             }            
-            <!-- Manual Mode Content -->
-            @if (hasErrors || isManualMode)
+
+            @if (hasErrors)
             {
                 @if (hasErrors)
                 {
@@ -795,14 +783,14 @@
                     </div>
                 }
 
-                <!-- Progress Info for Manual Mode -->
-                <div class="text-center mt-4">
+                 <div class="text-center mt-4">
                     <small class="text-muted">
                         <Icon IconName="info" Width="16" Height="16" Class="me-2" />
                         Steps will advance automatically when completed
                     </small>
                 </div>
             }
+       
         </div>
 
         <div class="info-card mt-4">
@@ -1026,9 +1014,8 @@
 
     bool nostrMetadataCreated;
     bool nostrApplicationSpecificDataCreated; bool autoDeploySpinner;
-    bool isAutoDeploying;
+    bool isDeploying;
     bool hasErrors;
-    bool isManualMode;
 
     private int currentStep = 1;
 
@@ -1058,38 +1045,6 @@
             2 => nostrApplicationSpecificDataCreated,
             _ => false
         };
-    }
-
-    private void SwitchToManualMode()
-    {
-        isManualMode = true;
-        hasErrors = false;
-        StateHasChanged();
-    }
-
-    private void ReturnToAutoMode()
-    {
-        if (!isAutoDeploying && hasErrors)
-        {
-            hasErrors = false;
-            isManualMode = false;
-
-            // Reset to appropriate step
-            if (!nostrMetadataCreated)
-            {
-                currentStep = 1;
-            }
-            else if (!nostrApplicationSpecificDataCreated)
-            {
-                currentStep = 2;
-            }
-            else if (string.IsNullOrEmpty(project.CreationTransactionId))
-            {
-                currentStep = 3;
-            }
-
-            StateHasChanged();
-        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -1914,7 +1869,7 @@
         }
 
         autoDeploySpinner = true;
-        isAutoDeploying = true;
+        isDeploying = true;
         hasErrors = false; // Reset error state
         StateHasChanged();
 
@@ -1975,7 +1930,6 @@
             _Logger.LogError(e, "Error during auto deployment");
             notificationComponent.ShowErrorMessage("Auto deployment failed: " + e.Message);
             hasErrors = true;
-            isManualMode = true;
             
             // Set current step to the first incomplete step
             if (!nostrMetadataCreated)
@@ -1994,7 +1948,7 @@
         finally
         {
             autoDeploySpinner = false;
-            isAutoDeploying = false;
+            isDeploying = false;
             StateHasChanged();
         }
     }
@@ -2011,7 +1965,7 @@
 
     private async Task CheckAndAdvanceStep()
     {
-        if (!isAutoDeploying) return; // Only advance during auto deployment
+        if (!isDeploying) return; // Only advance during auto deployment
 
         await Task.Delay(100); // Small delay for UI
 
