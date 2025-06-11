@@ -612,7 +612,13 @@
                                 </div>
                             </div>
                             <div class="progress">
-                                <div class="progress-bar bg-success " role="progressbar" style="width: @((currentStep * 33))%" aria-valuenow="@(currentStep * 33)" aria-valuemin="0" aria-valuemax="100"></div>
+                                <div class="progress-bar bg-success progress-bar-animated" 
+                                     role="progressbar" 
+                                     style="width: @((currentStep * 33))%" 
+                                     aria-valuenow="@(currentStep * 33)" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
                             </div>
                             <small class="text-muted mt-2 d-block">Step @currentStep of 3</small>
                         </div>
@@ -1870,7 +1876,8 @@
 
         autoDeploySpinner = true;
         isDeploying = true;
-        hasErrors = false; // Reset error state
+        hasErrors = false;
+        var completedSteps = new List<string>(); 
         StateHasChanged();
 
         try
@@ -1883,13 +1890,12 @@
                 await Task.Delay(500);
 
                 await CreatNostrProfile();
-
-                // Wait for profile creation with proper timeout
                 var profileCreated = await WaitForCondition(() => nostrMetadataCreated, TimeSpan.FromSeconds(30));
                 if (!profileCreated)
                 {
                     throw new Exception("Failed to create Nostr profile within timeout period.");
                 }
+                completedSteps.Add("Profile Created");
             }
 
             // Step 2: Create Project Info
@@ -1900,13 +1906,12 @@
                 await Task.Delay(500);
 
                 await CreatProjectInfoOnNostr();
-
-                // Wait for project info creation with proper timeout
                 var projectInfoCreated = await WaitForCondition(() => nostrApplicationSpecificDataCreated, TimeSpan.FromSeconds(30));
                 if (!projectInfoCreated)
                 {
                     throw new Exception("Failed to publish project info within timeout period.");
                 }
+                completedSteps.Add("Project Info Published");
             }
 
             // Step 3: Deploy to Blockchain
@@ -1917,33 +1922,29 @@
                 await Task.Delay(500);
 
                 await CreatProjectTransaction();
-                // The modal will show for final confirmation
+                completedSteps.Add("Ready for Blockchain Deployment");
             }
             else
             {
-                // Already deployed, navigate to project
                 NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
             }
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, "Error during auto deployment");
-            notificationComponent.ShowErrorMessage("Auto deployment failed: " + e.Message);
+            _Logger.LogError(e, "Error during auto deployment. Completed steps: {CompletedSteps}", string.Join(", ", completedSteps));
+            
+            // Show more informative error message
+            var errorMessage = $"Auto deployment failed at step {currentStep}: {e.Message}";
+            if (completedSteps.Any())
+            {
+                errorMessage += $"\n\nCompleted steps: {string.Join(", ", completedSteps)}";
+            }
+            
+            notificationComponent.ShowErrorMessage(errorMessage);
             hasErrors = true;
             
             // Set current step to the first incomplete step
-            if (!nostrMetadataCreated)
-            {
-                currentStep = 1;
-            }
-            else if (!nostrApplicationSpecificDataCreated)
-            {
-                currentStep = 2;
-            }
-            else
-            {
-                currentStep = 3;
-            }
+            SetCurrentStepBasedOnProgress();
         }
         finally
         {
@@ -1956,28 +1957,39 @@
     private async Task<bool> WaitForCondition(Func<bool> condition, TimeSpan timeout)
     {
         var startTime = DateTime.UtcNow;
-        while (!condition() && DateTime.UtcNow - startTime < timeout)
+        
+        while (DateTime.UtcNow - startTime < timeout)
         {
-            await Task.Delay(500);
+            if (condition())
+            {
+                return true;
+            }
+            
+            await Task.Delay(100);
         }
-        return condition();
+        
+        return false;
+    }
+
+    private void SetCurrentStepBasedOnProgress()
+    {
+        if (!nostrMetadataCreated)
+        {
+            currentStep = 1;
+        }
+        else if (!nostrApplicationSpecificDataCreated)
+        {
+            currentStep = 2;
+        }
+        else
+        {
+            currentStep = 3;
+        }
     }
 
     private async Task CheckAndAdvanceStep()
     {
-        if (!isDeploying) return; // Only advance during auto deployment
-
-        await Task.Delay(100); // Small delay for UI
-
-        if (currentStep == 1 && nostrMetadataCreated)
-        {
-            currentStep = 2;
-            StateHasChanged();
-        }
-        else if (currentStep == 2 && nostrApplicationSpecificDataCreated)
-        {
-            currentStep = 3;
-            StateHasChanged();
-        }
+        StateHasChanged();
+        await Task.Delay(100);
     }
 }
