@@ -17,14 +17,12 @@ public static class RequestInvestmentSignatures
     public class RequestFounderSignaturesHandler(
         IProjectRepository projectRepository,
         ISeedwordsProvider seedwordsProvider,
-        IDerivationOperations derivationOperations,
-        IEncryptionService encryptionService,
         INetworkConfiguration networkConfiguration,
         ISerializer serializer,
         IWalletOperations walletOperations,
-        ISignService signService) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
+        ISignaturesService signatureService) : IRequestHandler<RequestFounderSignaturesRequest, Result>
     {
-        public async Task<Result<Guid>> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
         {
             var txnHex = request.Draft.SignedTxHex;
             var network = networkConfiguration.GetNetwork();
@@ -35,52 +33,31 @@ public static class RequestInvestmentSignatures
 
             if (projectResult.IsFailure)
             {
-                return Result.Failure<Guid>(projectResult.Error);
+                return Result.Failure<EventSendResponse>(projectResult.Error);
             }
 
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId);
 
             if (sensitiveDataResult.IsFailure)
             {
-                return Result.Failure<Guid>(sensitiveDataResult.Error);
+                return Result.Failure<EventSendResponse>(sensitiveDataResult.Error);
             }
 
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
             var project = projectResult.Value;
 
-            var sendSignatureResult = await SendSignatureRequest(walletWords, project, strippedInvestmentTransaction.ToHex());
-
-            if (sendSignatureResult.IsFailure)
-            {
-                return Result.Failure<Guid>(sendSignatureResult.Error);
-            }
-
-            var requestId = sendSignatureResult.Value;
-            // TODO: Don't forget to uncomment. We really need to save info
-            //var saveResult = await Save(requestId, txnHex, requestFounderSignaturesRequest.InvestmentTransaction.InvestorKey, requestFounderSignaturesRequest.ProjectId);
-            //return saveResult.Sats;
-            return Result.Success(Guid.Empty);
+            return await SendSignatureRequest(request.WalletId, walletWords, project, strippedInvestmentTransaction.ToHex());
         }
 
-        private async Task<Result<Guid>> Save(string requestId, string transactionHex, string investorKey, ProjectId projectId)
-        {
-            // TODO: Implement the save logic
-            throw new NotImplementedException();
-        }
-
-        private async Task<Result<string>> SendSignatureRequest(WalletWords walletWords, Project project, string signedTransactionHex)
+        private async Task<Result<EventSendResponse>> SendSignatureRequest(Guid walletId, WalletWords walletWords, Project project, string signedTransactionHex)
         {
             try
             {
-                string nostrPubKey = project.NostrPubKey;
-
-                var investorNostrPrivateKey = await derivationOperations.DeriveProjectNostrPrivateKeyAsync(walletWords, project.FounderKey);
-                var investorNostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
                 var releaseAddressResult = await GetUnfundedReleaseAddress(walletWords);
 
                 if (releaseAddressResult.IsFailure)
                 {
-                    return Result.Failure<string>(releaseAddressResult.Error);
+                    return Result.Failure<EventSendResponse>(releaseAddressResult.Error);
                 }
                 
                 var releaseAddress = releaseAddressResult.Value;
@@ -92,20 +69,13 @@ public static class RequestInvestmentSignatures
                     UnfundedReleaseAddress = releaseAddress,
                 };
 
-                var serializedRecoveryRequest = serializer.Serialize(signRecoveryRequest);
-                
-                var encryptedContent = await encryptionService.EncryptNostrContentAsync(
-                    investorNostrPrivateKeyHex,
-                    nostrPubKey,
-                    serializedRecoveryRequest);
+                var key = new KeyIdentifier(walletId, project.NostrPubKey);
+                return await signatureService.PostInvestmentRequest(key, serializer.Serialize(signRecoveryRequest),  project.NostrPubKey);
 
-                var (time, id) = signService.RequestInvestmentSigs(encryptedContent, investorNostrPrivateKeyHex, project.NostrPubKey, _ => { });
-
-                return Result.Success(id);
             }
             catch (Exception ex)
             {
-                return Result.Failure<string>($"Error while sending the signature request {ex.Message}");
+                return Result.Failure<EventSendResponse>($"Error while sending the signature request {ex.Message}");
             }
         }
 
@@ -121,7 +91,7 @@ public static class RequestInvestmentSignatures
         }
     }
     
-    public class RequestFounderSignaturesRequest(Guid walletId, ProjectId projectId, CreateInvestment.Draft draft) : IRequest<Result<Guid>>
+    public class RequestFounderSignaturesRequest(Guid walletId, ProjectId projectId, CreateInvestment.Draft draft) : IRequest<Result>
     {
         public ProjectId ProjectId { get; } = projectId;
         public CreateInvestment.Draft Draft { get; } = draft;

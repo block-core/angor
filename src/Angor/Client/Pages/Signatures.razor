@@ -498,7 +498,7 @@
 
     private async Task FetchPendingSignatures(FounderProject project)
     {
-        await SignService.LookupInvestmentRequestsAsync(project.ProjectInfo.NostrPubKey, null, null,// project.LastRequestForSignaturesTime , async
+        await SignService.GetAllInvestmentRequests(project.ProjectInfo.NostrPubKey, null, null,// project.LastRequestForSignaturesTime , async
             (eventId, investorNostrPubKey, encryptedMessage, timeArrived) =>
             {
                 Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
@@ -549,7 +549,7 @@
 
     private void FetchFounderApprovalsSignatures(FounderProject project)
     {
-        SignService.LookupInvestmentRequestApprovals(project.ProjectInfo.NostrPubKey,
+        SignService.GetAllInvestmentRequestApprovals(project.ProjectInfo.NostrPubKey,
             (investorNostrPubKey, timeApproved, reqEventId) =>
             {
                 Logger.LogDebug($"Sig response event received investorNostrPubKey: {investorNostrPubKey} - timeApproved: {timeApproved} - reqEventId: {reqEventId}");
@@ -708,7 +708,7 @@
 
             var encryptedContent = await encryption.EncryptNostrContentAsync(nostrPrivateKeyHex, signature.investorNostrPubKey, sigJson);
 
-            FounderProject.LastRequestForSignaturesTime = SignService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
+            FounderProject.LastRequestForSignaturesTime = SignService.PostInvestmentRequestApproval(encryptedContent, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
 
             Storage.UpdateFounderProject(FounderProject);
 

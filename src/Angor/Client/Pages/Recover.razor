@@ -670,7 +670,7 @@
 
     protected void CheckReleaseSignatures()
     {
-        SignService.LookupReleaseSigs(
+        SignService.GetInvestmentRevocation(
             project.InvestorNPub,
             project.ProjectInfo.NostrPubKey,
             null,
