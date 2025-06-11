@@ -1,0 +1,34 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:AngorApp.UI.Controls">
+    <Design.PreviewWith>
+        <controls:PageContainer Width="620" Height="200">
+        </controls:PageContainer>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <ControlTheme TargetType="controls:PageContainer" x:Key="{x:Type controls:PageContainer}">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <ScrollViewer>
+                        <Border Container.Name="Root" Container.Sizing="Width">
+                            <ContentPresenter x:Name="ContentPresenter" Content="{TemplateBinding Content}" />
+                        </Border>
+                    </ScrollViewer>
+                </ControlTemplate>
+            </Setter>
+
+            <ContainerQuery Name="Root" Query="min-width:0">
+                <Style Selector="ContentPresenter#ContentPresenter">
+                    <Setter Property="Margin" Value="0" />
+                </Style>
+            </ContainerQuery>
+            <ContainerQuery Name="Root" Query="min-width:600">
+                <Style Selector="ContentPresenter#ContentPresenter">
+                    <Setter Property="Margin" Value="20" />
+                </Style>
+            </ContainerQuery>
+        </ControlTheme>
+    </Styles.Resources>
+
+</Styles>

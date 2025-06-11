@@ -1,20 +1,8 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:home="clr-namespace:AngorApp.Sections.Home"
-             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:a="clr-namespace:AngorApp.UI.Controls"
-             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
-             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="1300"
-             x:Class="AngorApp.Sections.Home.HomeSectionView" x:DataType="home:IHomeSectionViewModel">
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Design.DataContext>
-        <home:HomeSectionViewModelDesign IsWalletSetup="False" />
-    </Design.DataContext>
-
-    <UserControl.Resources>
-        <ControlTheme x:Key="{x:Type Card}" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
+    <Styles.Resources>
+        <ControlTheme x:Key="InfoCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Margin" Value="8" />
@@ -68,7 +56,7 @@
 
         </ControlTheme>
 
-        <ControlTheme x:Key="BigCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
+        <ControlTheme x:Key="BigCard" TargetType="Card" BasedOn="{StaticResource InfoCard}">
             <Setter Property="Template">
                 <ControlTemplate>
                     <Border x:Name="Root"
@@ -105,7 +93,7 @@
 
         </ControlTheme>
 
-        <ControlTheme x:Key="SmallCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
+        <ControlTheme x:Key="SmallCard" TargetType="Card" BasedOn="{StaticResource InfoCard}">
             <Style Selector="^ /template/ ContentPresenter#Header">
                 <Setter Property="TextBlock.FontSize" Value="30" />
                 <Setter Property="TextBlock.TextAlignment" Value="Center" />
@@ -125,76 +113,11 @@
                 <Setter Property="Margin" Value="10" />
             </Style>
         </ControlTheme>
-
-    </UserControl.Resources>
-
-    <UserControl.Styles>
-        <Style Selector="Card">
-            <Setter Property="Height" Value="250" />
-        </Style>
-        <Style Selector="TextBlock">
-            <Setter Property="TextWrapping" Value="Wrap" />
-        </Style>
-    </UserControl.Styles>
-
-    <a:PageContainer>
-        <StackPanel MaxWidth="1200" VerticalAlignment="Center">
-
-            <StackPanel.Styles>
-                <ContainerQuery Name="Root" Query="min-width:0">
-                    <Style Selector="StackPanel">
-                        <Setter Property="Margin" Value="0" />
-                    </Style>
-                    <Style Selector="Card">
-                        <Setter Property="Margin" Value="5" />
-                    </Style>
-                </ContainerQuery>
-                <ContainerQuery Name="Root" Query="min-width:600">
-                    <Style Selector="StackPanel">
-                        <Setter Property="Margin" Value="20" />
-                    </Style>
-                </ContainerQuery>
-            </StackPanel.Styles>
-
-            <Card Height="400"
-                  Theme="{StaticResource BigCard}"
-                  Header="Welcome to Angor"
-                  Subheader="A P2P funding protocol built on Bitcoin and Nostr">
-                <Card.HeaderStartContent>
-                    <ui:Icon Source="svg:/Assets/angor-icon.svg" />
-                </Card.HeaderStartContent>
-            </Card>
-
-            <a:CardGrid>
-                <a:CardGrid.ItemsSource>
-                    <collections:ArrayList>
-                        <Card Theme="{StaticResource SmallCard}" Header="Create your wallet" Subheader="Create a new wallet or recover your existing one to get started with Angor">
-                            <Card.HeaderStartContent>
-                                <ui:Icon Source="svg:/Assets/wallet.svg" />
-                            </Card.HeaderStartContent>
-                        </Card>
-                        <Card Theme="{StaticResource SmallCard}" Header="Explore Opportunities" Subheader="Browse through innovative projects and find your next investment">
-                            <Card.HeaderStartContent>
-                                <ui:Icon Source="svg:/Assets/browse.svg" />
-                            </Card.HeaderStartContent>
-                        </Card>
-                        <Card Theme="{StaticResource SmallCard}" Header="Launch Your Project" Subheader="Start your fundraising journey and launch your project on Angor">
-                            <Card.HeaderStartContent>
-                                <ui:Icon Source="svg:/Assets/user.svg" />
-                            </Card.HeaderStartContent>
-                        </Card>
-                        <Card Theme="{StaticResource SmallCard}" Header="Invest Grow" Subheader="Invest in promising projects and be part of their success story">
-                            <Card.HeaderStartContent>
-                                <ui:Icon Source="svg:/Assets/portfolio.svg" />
-                            </Card.HeaderStartContent>
-                        </Card>
-                    </collections:ArrayList>
-                </a:CardGrid.ItemsSource>
-            </a:CardGrid>
-
-        </StackPanel>
-
-    </a:PageContainer>
-
-
-</UserControl>
+    </Styles.Resources>
+    
+    <Design.PreviewWith>
+        <Grid Height="400" Width="500" RowDefinitions="1*, 2*">
+            <Card Grid.Row="1" Theme="{StaticResource BigCard}" />
+        </Grid>
+    </Design.PreviewWith>
+</Styles>
