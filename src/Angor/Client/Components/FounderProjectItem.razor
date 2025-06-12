@@ -85,8 +85,10 @@
                 </div>
                 <div class="w-full mt-3">
                     <div class="progress rounded-pill mb-3" style="height: 16px; background-color: var(--btn-border);">
-                        <div class="progress-bar-striped bg-success  rounded-pill text-center" role="progressbar"
-                            style="width: @projectStats.FundingProgressPercent%;"
+                        <div class="progress rounded-pill mb-3" style="height: 16px; background-color: var(--btn-border);">  
+                            <div class="progress-bar-striped bg-success rounded-pill text-center" role="progressbar"  
+                                style="width: @(projectStats.FundingProgressPercent + "%");">  
+                            </div>  
                         </div>
                     </div>
                 </div>
