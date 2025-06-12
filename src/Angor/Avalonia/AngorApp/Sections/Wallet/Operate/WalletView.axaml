@@ -12,12 +12,6 @@
         <operate:WalletViewModelDesign />
     </Design.DataContext>
     
-    <UserControl.Styles>
-        <Style Selector="Card EdgePanel i|Icon">
-            <Setter Property="FontSize" Value="40" ></Setter>
-        </Style>
-    </UserControl.Styles>
-    
     <DockPanel>
         <Card Header="Wallet" Subheader="Wallet and balances" DockPanel.Dock="Top" IsAdaptiveFlowEnabled="True">
             <Card.HeaderEndContent>

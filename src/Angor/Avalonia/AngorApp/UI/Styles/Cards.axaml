@@ -1,13 +1,26 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+        xmlns:pt="https://github.com/projektanker/icons.avalonia">
+    
     <Styles.Resources>
         
         <ControlTheme x:Key="{x:Type Card}"
                       TargetType="Card"
                       BasedOn="{StaticResource {x:Type Card}}">
             <Setter Property="Padding" Value="20 0" />
-            <Setter Property="HeaderPadding" Value="10 10 0 10" />
+            <Setter Property="HeaderPadding" Value="10" />
+            <Setter Property="HeaderStartContentTemplate">
+                <DataTemplate DataType="x:Object">
+                    <ContentPresenter Content="{Binding}">
+                        <ContentPresenter.Styles>
+                            <Style Selector="pt|Icon">
+                                <Setter Property="FontSize" Value="40" />
+                            </Style>
+                        </ContentPresenter.Styles>
+                    </ContentPresenter>
+                </DataTemplate>
+            </Setter>
         </ControlTheme>
         
         <ControlTheme x:Key="InfoCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
@@ -125,7 +138,11 @@
     
     <Design.PreviewWith>
         <Grid Height="400" Width="500" RowDefinitions="1*, 2*">
-            <Card Grid.Row="1" Theme="{StaticResource BigCard}" />
+            <Card>
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="fa-wallet" />
+                </Card.HeaderStartContent>
+            </Card>
         </Grid>
     </Design.PreviewWith>
 </Styles>
