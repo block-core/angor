@@ -2,6 +2,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Styles.Resources>
+        
+        <ControlTheme x:Key="{x:Type Card}"
+                      TargetType="Card"
+                      BasedOn="{StaticResource {x:Type Card}}">
+            <Setter Property="Padding" Value="20 0" />
+            <Setter Property="HeaderPadding" Value="10 10 0 10" />
+        </ControlTheme>
+        
         <ControlTheme x:Key="InfoCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />

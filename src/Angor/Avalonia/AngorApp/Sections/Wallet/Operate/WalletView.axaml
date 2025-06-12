@@ -18,15 +18,6 @@
         </Style>
     </UserControl.Styles>
     
-    <UserControl.Resources>
-        <ControlTheme x:Key="{x:Type Card}"
-                      TargetType="Card"
-                      BasedOn="{StaticResource {x:Type Card}}">
-            <Setter Property="Padding" Value="20 0" />
-            <Setter Property="HeaderPadding" Value="10 10 0 10" />
-        </ControlTheme>
-    </UserControl.Resources>
-    
     <DockPanel>
         <Card Header="Wallet" Subheader="Wallet and balances" DockPanel.Dock="Top" IsAdaptiveFlowEnabled="True">
             <Card.HeaderEndContent>
