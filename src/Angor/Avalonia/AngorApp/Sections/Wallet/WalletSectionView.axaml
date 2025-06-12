@@ -22,12 +22,12 @@
     <a:PageContainer>
         <Panel>
             <Panel>
-                <a:Pane VerticalAlignment="Top" Title="Setup your wallet" IsTitleVisible="True" IsVisible="{Binding CanCreateWallet}">
+                <Card VerticalAlignment="Top" Header="Setup your wallet" IsVisible="{Binding CanCreateWallet}">
                     <WrapPanel HorizontalAlignment="Center" Margin="-10">
                         <Button Content="Create wallet" Command="{Binding CreateWallet}" />
                         <Button Content="Recover wallet" Command="{Binding RecoverWallet}" />
                     </WrapPanel>
-                </a:Pane>
+                </Card>
                 <Panel IsVisible="{Binding Path=HasWallet^}">
                     <operate:WalletView DataContext="{Binding ActiveWallet}" />
                 </Panel>

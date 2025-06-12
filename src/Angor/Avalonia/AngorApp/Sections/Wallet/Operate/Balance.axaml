@@ -12,14 +12,10 @@
         <operate:WalletViewModelDesign />
     </Design.DataContext>
     
-    <controls:Pane IsTitleVisible="True">
-        <controls:Pane.Title>
-            <Binding Path="Wallet.Balance" Converter="{x:Static controls:MiscConverters.SatsToBtcString}" />
-        </controls:Pane.Title>
-        <controls:Pane.TitleIcon>
-            <i:Icon Value="fa-database" />
-        </controls:Pane.TitleIcon>
-
-    </controls:Pane>
+    <Card Header="{Binding Wallet.Balance.DecimalString}">
+        <!-- <Card.Header > -->
+        <!--     <Binding Path="Wallet.Balance" Converter="{x:Static controls:MiscConverters.SatsToBtcString}" /> -->
+        <!-- </Card.Header> -->
+    </Card>
 
 </UserControl>

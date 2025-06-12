@@ -7,7 +7,7 @@ namespace Angor.UI.Model;
 public interface IWallet
 {
     public ReadOnlyObservableCollection<IBroadcastedTransaction> History { get; }
-    long Balance { get; }
+    IAmountUI Balance { get; }
     Result IsAddressValid(string address);
     WalletId Id { get; }
     public Task<Result<string>> GenerateReceiveAddress();

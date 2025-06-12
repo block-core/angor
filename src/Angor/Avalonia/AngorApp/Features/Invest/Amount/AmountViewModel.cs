@@ -9,7 +9,6 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
 {
     [Reactive] private long? amount;
     [ObservableAsProperty] private IEnumerable<Breakdown> stageBreakdowns;
-    [ObservableAsProperty] private long walletBalance;
     
     public AmountViewModel(IWallet wallet, IProject project)
     {
@@ -20,7 +19,7 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
         
         var isValidAmount = this
             .WhenAnyValue(x => x.Amount)
-            .WithLatestFrom(wallet.WhenAnyValue(x => x.Balance), (a, b) => a is null || a <= b);
+            .WithLatestFrom(wallet.WhenAnyValue(x => x.Balance), (amount, walletBalance) => amount is null || amount <= walletBalance.Sats);
         
         this.ValidationRule(x => x.Amount, isValidAmount, "Amount exceeds balance");
 
@@ -32,5 +31,4 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
 
     public IProject Project { get; }
     public IObservable<bool> IsValid => this.IsValid();
-    public bool AutoAdvance => false;
 }
