@@ -5,6 +5,8 @@
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:password="clr-namespace:Angor.UI.Model.Implementation.Wallet.Password;assembly=Angor.UI.Model.Implementation"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Wallet.Operate.Balance" x:DataType="operate:IWalletViewModel">
     
@@ -16,6 +18,9 @@
         <!-- <Card.Header > -->
         <!--     <Binding Path="Wallet.Balance" Converter="{x:Static controls:MiscConverters.SatsToBtcString}" /> -->
         <!-- </Card.Header> -->
+        <Card.HeaderStartContent>
+            <ui:Icon Source="fa-database" />
+        </Card.HeaderStartContent>
     </Card>
 
 </UserControl>
