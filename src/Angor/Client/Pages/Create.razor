@@ -22,6 +22,7 @@
 @inject IHtmlStripperService HtmlStripperService;
 @inject IJSRuntime JS;
 @inject NavMenuState NavMenuState
+@inject ModalScrollService ScrollService
 
 @inject IWalletUIService _walletUIService;
 
@@ -1038,7 +1039,7 @@
         return activeTab == tabNumber ? "active" : "";
     }
 
-    private void ConfirmFinalizeNostrProfileCreation()
+    private async void ConfirmFinalizeNostrProfileCreation()
     {
         if (nostrMetadataCreated)
         {
@@ -1055,6 +1056,7 @@
         confirmationMessage = "Are you sure you want to create the Nostr Profile?";
         finalizeAction = FinalizeNostrProfileCreation;
         showConfirmationModal = true;
+        await ScrollService.LockScrollAsync();
     }
 
     private async void ConfirmFinalizeProjectInfoCreation()
@@ -1068,17 +1070,20 @@
         confirmationMessage = "Are you sure you want to deploy the project info to Nostr?.";
         finalizeAction = FinalizeProjectInfoCreation;
         showConfirmationModal = true;
+        await ScrollService.LockScrollAsync();
     }
 
-    private void CloseConfirmationModal()
+    private async void CloseConfirmationModal()
     {
         showConfirmationModal = false;
+        await ScrollService.UnlockScrollAsync();
         StateHasChanged();
     }
 
-    private void PerformFinalizeAction()
+    private async void PerformFinalizeAction()
     {
         showConfirmationModal = false;
+        await ScrollService.UnlockScrollAsync();
         finalizeAction.Invoke();
     }
 
