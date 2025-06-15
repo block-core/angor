@@ -26,6 +26,7 @@ builder.Services.AddBlazoredSessionStorage();
 
 builder.Services.AddSingleton<ISerializer, Serializer>();
 builder.Services.AddSingleton<INetworkConfiguration, NetworkConfiguration>();
+builder.Services.AddSingleton<ModalScrollService>();
 builder.Services.AddTransient<IHdOperations, HdOperations>();
 builder.Services.AddTransient<IClientStorage, ClientStorage>();
 builder.Services.AddTransient<INetworkStorage, ClientStorage>();
