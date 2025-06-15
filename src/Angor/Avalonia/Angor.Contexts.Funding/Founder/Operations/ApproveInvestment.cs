@@ -67,7 +67,7 @@ public static class ApproveInvestment
                 
                 var encryptedContent = await encryption.EncryptNostrContentAsync(nostrPrivateKeyHex, signatureInvestorNostrPubKey, sigJson);
                 
-                signService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signatureInvestorNostrPubKey, signatureEventId);
+                signService.PostInvestmentRequestApproval(encryptedContent, nostrPrivateKeyHex, signatureInvestorNostrPubKey, signatureEventId);
             });
         }
 

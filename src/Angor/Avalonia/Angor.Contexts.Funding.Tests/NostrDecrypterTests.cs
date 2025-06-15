@@ -2,7 +2,6 @@ using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Tests.TestDoubles;
-using Angor.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Xunit.Abstractions;
@@ -26,14 +25,13 @@ public class NostrDecrypterTests(ITestOutputHelper output)
         Assert.NotEmpty(clientKeyResult.Value);
     }
     
-    
     private NostrDecrypter CreateSut()
     {
         var serviceCollection = new ServiceCollection();
 
         var logger = new LoggerConfiguration().WriteTo.TestOutput(output).CreateLogger();
         FundingContextServices.Register(serviceCollection, logger);
-        serviceCollection.AddSingleton<ISeedwordsProvider>(sp => new TestingSeedwordsProvider("oven suggest panda hip orange cheap kite focus cross never tornado forget", "", sp.GetRequiredService<IDerivationOperations>()));
+        serviceCollection.AddSingleton<ISeedwordsProvider>(sp => new TestingSeedwordsProvider("oven suggest panda hip orange cheap kite focus cross never tornado forget", ""));
 
         var serviceProvider = serviceCollection.BuildServiceProvider();
 
