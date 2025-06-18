@@ -5,8 +5,6 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
 
