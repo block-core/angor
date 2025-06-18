@@ -5,14 +5,12 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
 
 namespace Angor.Contexts.Funding.Investor.Operations;
 
-public static class RequestInvestment
+public static class RequestInvestmentSignatures
 {
     public class RequestFounderSignaturesHandler(
         IProjectRepository projectRepository,

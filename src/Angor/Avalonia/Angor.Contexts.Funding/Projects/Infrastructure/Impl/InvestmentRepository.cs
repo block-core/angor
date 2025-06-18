@@ -1,5 +1,6 @@
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Investor.Dtos;
+using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
@@ -30,14 +31,14 @@ public class InvestmentRepository(
             confirmedInvestments.Add(newInvestment);
         }
 
-        var investmentStates = confirmedInvestments.Select(inv => new InvestmentState
+        var investmentStates = confirmedInvestments.Select(inv => new InvestorPositionRecord
         {
             ProjectIdentifier = inv.ProjectId.Value,
             InvestorPubKey = inv.InvestorPubKey,
             InvestmentTransactionHash = inv.TransactionId
         }).ToList();
 
-        var investments = new Investments { ProjectIdentifiers = investmentStates };
+        var investments = new InvestmentRecords { ProjectIdentifiers = investmentStates };
 
         // Encrypt and send the investments
         var sensiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
