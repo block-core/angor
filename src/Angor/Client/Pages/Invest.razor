@@ -638,7 +638,7 @@ else
             {
                 await ScanForPendingSignatures();
 
-                await ScanForDmMessages();
+                ScanForDmMessages();
             }
             else
             {
@@ -1335,13 +1335,13 @@ else
 
     bool hasMessges = false;
    
-    protected async Task ScanForDmMessages()
+    protected void ScanForDmMessages()
     {
         if (project is InvestorProject)
         {
             var investorProject = project as InvestorProject;
 
-            await _RelayService.LookupDirectMessagesForPubKeyAsync(
+            _RelayService.LookupDirectMessagesForPubKey(
                 investorProject.InvestorNPub,
                 investorProject.LastRequestForMessagesTime?.AddSeconds(1),
                 1,

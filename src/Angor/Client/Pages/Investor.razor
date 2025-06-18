@@ -353,7 +353,7 @@
             var refreshTask = RefreshBalance();
             CheckSignatureFromFounder();
             CheckReleaseFromFounder();
-            await ScanForDmMessages();
+            ScanForDmMessages();
             await refreshTask;
         }
     }
@@ -470,7 +470,8 @@
     private async Task AddProjectStats(string projectId)
     {
         var projectStats = await _IndexerService.GetProjectStatsAsync(projectId);
-        Stats.Add(projectId, projectStats);
+        if (projectStats.stats != null)
+            Stats.Add(projectId, projectStats.stats);
     }
 
     private async Task GetProjectsAndUpdateAsync()
@@ -492,7 +493,7 @@
 
         CheckSignatureFromFounder();
 
-        await _RelayService.LookupDirectMessagesForPubKeyAsync(storageAccountKey, null, 1,
+        _RelayService.LookupDirectMessagesForPubKey(storageAccountKey, null, 1,
             async x =>
             {
                 try
@@ -732,13 +733,13 @@
 
     HashSet<string> pubkeyWithMessages = new();
 
-    protected async Task ScanForDmMessages()
+    protected void ScanForDmMessages()
     {
         foreach (var project in projects)
         {
             if (!pubkeyWithMessages.Contains(project.InvestorNPub))
             {
-                await _RelayService.LookupDirectMessagesForPubKeyAsync(
+                _RelayService.LookupDirectMessagesForPubKey(
                     project.InvestorNPub,
                     project.LastRequestForMessagesTime?.AddSeconds(1),
                     1,

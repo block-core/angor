@@ -6,7 +6,7 @@ public interface IIndexerService
 {
     Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit);
     Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId);
-    Task<ProjectStats?> GetProjectStatsAsync(string projectId);
+    Task<(string projectId, ProjectStats? stats)> GetProjectStatsAsync(string projectId);
     Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId);
     Task<ProjectInvestment?> GetInvestmentAsync(string projectId, string investorPubKey);
     
