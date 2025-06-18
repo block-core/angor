@@ -121,7 +121,7 @@ namespace Angor.Client.Services
 
                 NotifyStateChanged();
 
-                await _relayService.LookupDirectMessagesForPubKeyAsync(
+                _relayService.LookupDirectMessagesForPubKey(
                     _currentUserHexPub,
                     _sinceTime,
                     100,
@@ -130,7 +130,7 @@ namespace Angor.Client.Services
                     true
                 );
 
-                await _relayService.LookupDirectMessagesForPubKeyAsync(
+                _relayService.LookupDirectMessagesForPubKey(
                     _otherUserHexPub,
                     _sinceTime,
                     100,
