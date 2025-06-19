@@ -61,85 +61,169 @@
     </div>
 </div>
 
-<div class="row mt-4 slide-in">
-    <div class="card card-body">
-        <div class="header-container">
-            <div class="header-content">
-                <div class="header-title animate-fade-in">
-                    <span class="header-icon-wrapper">
-                        <Icon IconName="info" Width="32" Height="32" />
-                    </span>
-                    <h5 class="header-text">Investment Information</h5>
+@if (showWizard)
+{
+    <div class="investor-wizard mt-3">
+        <div class="wizard-stepper-container">
+            <div class="wizard-progress-track">
+                <div class="wizard-progress-fill" style="width: @((currentWizardStep - 1) * 50)%;"></div>
+            </div>
+
+            <div class="wizard-step">
+                <div class="wizard-step-indicator @(currentWizardStep == 1 ? "is-current" : (currentWizardStep > 1 ? "is-active" : "is-upcoming"))">
+                    @if (currentWizardStep > 1)
+                    {
+                        <Icon IconName="check" Width="20" Height="20" />
+                    }
+                    else
+                    {
+                        <span class="wizard-step-number">1</span>
+                    }
+                </div>
+                <span class="wizard-step-label @(currentWizardStep > 1 ? "is-active-label" : "is-upcoming-label")">
+                    @if (project is InvestorProject investorProj && investorProj.ReceivedFounderSignatures())
+                    {
+                        <span>Agreement Signed</span>
+                    }
+                    else
+                    {
+                        <span>Agreement to be<br>Signed</span>
+                    }
+                </span>
+            </div>
+
+            <div class="wizard-step">
+                <div class="wizard-step-indicator @(currentWizardStep == 2 ? "is-current" : (currentWizardStep > 2 ? "is-active" : "is-upcoming"))">
+                    @if (currentWizardStep > 2)
+                    {
+                        <Icon IconName="check" Width="20" Height="20" />
+                    }
+                    else
+                    {
+                        <span class="wizard-step-number">2</span>
+                    }
+                </div>
+                <span class="wizard-step-label @(currentWizardStep > 2 ? "is-active-label" : "is-upcoming-label")">Preview Investment <br> Details</span>
+            </div>
+
+            <div class="wizard-step">
+                <div class="wizard-step-indicator @(currentWizardStep >= 3 ? "is-active" : "is-upcoming")">
+                    @if (currentWizardStep > 3)
+                    {
+                        <Icon IconName="check" Width="20" Height="20" />
+                    }
+                    else
+                    {
+                        <span class="wizard-step-number">3</span>
+                    }
+                </div>
+                <span class="wizard-step-label @(currentWizardStep >= 3 ? "is-active-label" : "is-pending-label")">Confirm & <br> Transfer Funds</span>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="stats-container mt-4">
+    <div class="stats-card" style="border-color: rgba(var(--angor-secondary-rgb),.5);">
+        <div class="stats-content">
+            <div class="stats-icon">
+                <Icon IconName="balance" Height="32" Width="32" />
+            </div>
+            <div class="stats-info">
+                <h3 class="stats-title text-muted">Target Amount</h3>
+                <p class="stats-value">@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</p>
+                <div class="stats-about d-flex align-items-center">
+                    <div class="progress rounded-pill flex-grow-1" style="height: 6px; background-color: #000000">
+                        <div class="progress-bar progress-bar-xs rounded-pill" role="progressbar" style="width: @projectStats.FundingProgressPercent%; background-color: #28a745;" />
+                    </div>
+                    <div class="ms-1" style="min-width: 35px; text-align: right;">@projectStats.FundingProgressPercent%</div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <p class="mb-4 mt-4">
-            To invest in this project, the founder must sign a recovery agreement.
-            This ensures that you can recover your funds if the project does not succeed.
-        </p>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="stat-card p-3 rounded-3 border hover-effect animate-fade-in">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-muted">Target Amount</h6>
-                            <h4 class="mb-0">@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</h4>
-                        </div>
-                        <div class="stat-icon">
-                            <Icon IconName="balance" Height="32" Width="32" />
-                        </div>
-                    </div>
-                </div>
+    <div class="stats-card" style="border-color: rgba(var(--angor-secondary-rgb),.5);">
+        <div class="stats-content">
+            <div class="stats-icon">
+                <Icon IconName="calendar" Height="32" Width="32" />
             </div>
-
-            <div class="col-md-4">
-                <div class="stat-card p-3 rounded-3 border hover-effect animate-fade-in">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-muted">Start Date</h6>
-                            <h4 class="mb-0">@project.ProjectInfo.StartDate.ToString("dd/MM/yyyy")</h4>
-                        </div>
-                        <div class="stat-icon">
-                            <Icon IconName="calendar" Height="32" Width="32" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="stat-card p-3 rounded-3 border hover-effect animate-fade-in">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-muted">Total Stages</h6>
-                            <h4 class="mb-0">@project.ProjectInfo.Stages.Count()</h4>
-                        </div>
-                        <div class="stat-icon">
-                            <Icon IconName="stages" Height="32" Width="32" />
-                        </div>
-                    </div>
-                </div>
+            <div class="stats-info">
+                <h3 class="stats-title text-muted">Start Date</h3>
+                <p class="stats-value">@project.ProjectInfo.StartDate.ToString("dd/MM/yyyy")</p>
+                <p class="stats-about">
+                    @{
+                        var dayDiff = (project.ProjectInfo.StartDate - DateTime.Now).Days;
+                        @(dayDiff < 0 ? $"{Math.Abs(dayDiff)} Days ago" : $"{dayDiff} Days remaining")
+                    }
+                </p>
             </div>
         </div>
-
-
+    </div>
+    <div class="stats-card" style="border-color: rgba(var(--angor-secondary-rgb),.5);">
+        <div class="stats-content">
+            <div class="stats-icon">
+                <Icon IconName="stages" Height="32" Width="32" />
+            </div>
+            <div class="stats-info">
+                <h3 class="stats-title text-muted">Total Stages</h3>
+                <p class="stats-value">@project.ProjectInfo.Stages.Count()</p>
+                <p class="stats-about">Phased release</p>
+            </div>
+        </div>
     </div>
 </div>
 
 
+@if (project is InvestorProject ip && !ip.InvestedInProject())
+{
+    if (ip.ReceivedFounderSignatures())
+    {
+        <div class="status-banner mt-2">
+            <div class="status-banner-icon-container-success">
+                <Icon IconName="circle-check" Width="28" Height="28" Color="#4CAF50" />
+            </div>
+            <div class="status-banner-text-content">
+                <h4 class="status-banner-title">Founder has signed</h4>
+                <p class="status-banner-description">
+                    The founder has signed a transaction agreement ensuring that
+                    you can recover your funds if the project does not succeed.
+                </p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="status-banner mt-2">
+            <div class="status-banner-icon-container-warning">
+                <Icon IconName="hour-glass" Width="28" Height="28" Color="#fb8c00" />
+            </div>
+            <div class="status-banner-text-content">
+                <h4 class="status-banner-title">Waiting for founder signature</h4>
+                <p class="status-banner-description">
+                    The founder needs to sign a recovery agreement before you can invest. This ensures
+                    your funds can be recovered if the project doesn't succeed.
+                </p>
+            </div>
+        </div>
+    }
+}
+
 
 @if (invested)
 {
-    <div class="row mt-4">
-        <div class="card card-body angor-alert-info pt-2 pb-2 animate-fade-in">
-            <div class="d-flex align-items-center align-items-center">
-                <span class="me-3 user-select-none">
-                    <Icon IconName="info" Width="40" Height="40" Color="var(--angor-primary)" />
-                </span>
-                <span class="text-white">
-                    You already invested.
-                </span>
-            </div>
+    <div class="status-banner mt-4 animate-fade-in">
+        <div class="status-banner-icon-container-success">
+            <Icon IconName="circle-check" Width="28" Height="28" Color="#4CAF50" />
+        </div>
+        <div class="status-banner-text-content">
+            <h4 class="status-banner-title">Investment Confirmed</h4>
+            <p class="status-banner-description">
+                You have already successfully invested in this project.
+            </p>
+        </div>
+        <div class="btn btn-border-success gap-2" style="pointer-events: none; opacity: 0.8;">
+            <Icon IconName="shield-check" Width="22" Height="22" Color="#4CAF50" />
+            <span style="color: var(--form-text);">Completed</span>
         </div>
     </div>
     return;
@@ -464,58 +548,68 @@ else
     {
         @if (investorProject.ReceivedFounderSignatures() && !investorProject.InvestedInProject())
         {
-            <div class="card mt-4 animate-fade-in">
-                <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-                    <h4 class="mb-0">Founder has signed</h4>
-                    <button type="button" class="btn btn-border-danger animate-scale mt-2 mt-md-0" @onclick="CancelInvestment">
-                        <Icon IconName="cancel" Width="20" Height="20" class="me-1" />
-                        <span>Cancel</span>
-                    </button>
-                </div>
-                <div class="card-body">
-                    <p class="modal-title">
-                        The founder has signed a transaction agreement ensuring that you can recover your funds if the project does not succeed, you may now invest.
-                    </p>
-                    <div class="d-flex justify-content-center align-items-center mt-4">
-                        <button type="button" class="btn btn-border-success animate-scale" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner">
-                            @if (publishSpinner)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                <span>Confirm...</span>
-                            }
-                            else
-                            {
-                                <Icon IconName="shield-star" Width="32" Height="32" class="me-1" />
-                                <h4 class="mb-0">Invest</h4>
-                            }
-                        </button>
+            <div class="mt-4 animate-fade-in investment-section-card">
+                <div class="investment-completion-container">
+                    <div class="investment-details-panel">
+                        <h3 class="panel-title mb-4" style="">
+                            <Icon IconName="trending-up" Width="24" Height="24" Color="#4CAF50" />
+                            <span>Investment Details</span>
+                        </h3>
+
+                        @if (investorProject?.SignaturesInfo != null)
+                        {
+                            <div class="detail-item">
+                                <span class="detail-label">Your Investment</span>
+                                <span class="detail-value fw-bold">@Money.Satoshis((investorProject.AmountInvested ?? 0)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
+                            </div>
+                            <hr class="detail-divider my-3" />
+                            <div class="detail-item">
+                                <span class="detail-label">Project Name</span>
+                                <span class="detail-value fw-bold">@investorProject?.Metadata?.Name</span>
+                            </div>
+                            <hr class="detail-divider my-3" />
+                            <div class="detail-item">
+                                <span class="detail-label">Transaction Date</span>
+                                <span class="detail-value">
+                                    <Icon IconName="clock-square" Width="16" Height="16" class="me-1 detail-value-icon" />
+                                    @investorProject?.SignaturesInfo?.TimeOfSignatureRequest?.ToString("dd/MM/yyyy HH:mm")
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">Investment details are not yet available.</p>
+                        }
                     </div>
 
-                    @if (investorProject.SignaturesInfo != null)
-                    {
-                        <div class="transaction-details mt-4">
-                            <h5 class="section-title">
-                                <Icon IconName="details" Height="20" Width="20" class="me-2" />
-                                Transaction Details
-                            </h5>
-                            <div class="info-card p-3 rounded-3 border animate-fade-in">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <strong>Amount to invest:</strong>
-                                        <p>@Money.Satoshis((investorProject.AmountInvested ?? 0)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</p>
-                                    </div>
-                                    <div>
-                                        <strong>Date:</strong>
-                                        <p>@investorProject?.SignaturesInfo?.TimeOfSignatureRequest?.ToString("dd/MM/yyyy HH:mm")</p>
-                                    </div>
-                                </div>
+                    <div class="complete-investment-panel">
+                        <h3 class="panel-title text-center">Complete Your Investment</h3>
+                        <div class="d-flex mt-4 flex-column flex-md-row p-3 button-container gap-3">
+                            <button type="button" class="btn btn-border-danger btn-lg levelup-icon flex-fill animate-scale d-flex align-items-center justify-content-center" @onclick="CancelInvestment" style="gap: 0.7rem;">
                                 <div>
-                                    <strong>Project Name:</strong>
-                                    <p>@investorProject?.Metadata?.Name</p>
+                                    <Icon IconName="close-circle" Width="20" Height="20" />
                                 </div>
-                            </div>
+                                <div>Cancel</div>
+                            </button>
+                            <button type="button" class="btn btn-border-success btn-lg levelup-icon flex-fill animate-scale d-flex align-items-center justify-content-center" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner" style="gap: 0.7rem;">
+                                @if (publishSpinner)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Confirming...</span>
+                                }
+                                else
+                                {
+                                    <div>
+                                        <Icon IconName="shield-star" Width="20" Height="20" />
+                                    </div>
+                                    <div>Invest @Money.Satoshis((investorProject.AmountInvested ?? 0)).ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
+                                }
+                            </button>
                         </div>
-                    }
+                        <p class="agreement-text text-center">
+                            By investing, you agree to the project terms and recovery agreement
+                        </p>
+                    </div>
                 </div>
             </div>
         }
@@ -525,7 +619,7 @@ else
 
 @if (showMessageModal)
 {
-    <MessageComponent 
+    <MessageComponent
         OtherUserPubkeyHex="@project.ProjectInfo.NostrPubKey"
         CurrentUserPrvKeyHex="@currentUserPrivateKeyHex"
         MessageTitle="Founder"
@@ -539,6 +633,28 @@ else
     [Parameter]
     public string ProjectId { get; set; }
 
+    private Project? project;
+
+    public class ProjectStats
+    {
+        public bool Loading { get; set; }
+        public long TotalRaised { get; set; }
+        public int TotalInvestors { get; set; }
+        public int TotalSeeders { get; set; }
+        public int TimeLeft { get; set; }
+        public int FundingProgressPercent { get; set; }
+    }
+
+    readonly ProjectStats projectStats = new()
+    {
+        Loading = true,
+        TimeLeft = 0,
+        TotalInvestors = 0,
+        TotalRaised = 0,
+        TotalSeeders = 0,
+        FundingProgressPercent = 0
+    };
+
     private bool buildSpinner = false;
     private bool investSpinner = false;
     private bool publishSpinner = false;
@@ -551,13 +667,14 @@ else
     private string npubValue = "";
     private string founderNpub = "";
     private string currentUserPrivateKeyHex = "";
+    private int currentWizardStep = 0;
+    private bool showWizard = true;
 
     public InvestmentModel Investment { get; set; } = new InvestmentModel { InvestmentAmountBtc = 0.01m };
     private bool IsSeederTimePassed { get; set; }
     private List<StageBreakdown> StagesBreakdown { get; set; } = new();
     bool founder = false;
     bool invested = false;
-    private Project? project;
     private bool showCreateModal;
     TransactionInfo? signedTransaction;
     Transaction unSignedTransaction;
@@ -616,6 +733,8 @@ else
         await CheckIfSeederTimeHasPassed();
 
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmountBtc });
+        RefreshWizardState();
+        ScanforProjectStats();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -626,6 +745,52 @@ else
             {
                 await RefreshSignatures();
             }
+            RefreshWizardState();
+            ScanforProjectStats();
+            StateHasChanged();
+        }
+    }
+
+    private void RefreshWizardState()
+    {
+        if (project == null || invested || founder)
+        {
+            showWizard = false;
+            currentWizardStep = 1;
+            return;
+        }
+
+        if (project is not InvestorProject)
+        {
+            showWizard = false;
+            currentWizardStep = 1;
+        }
+        else if (project is InvestorProject ip)
+        {
+            showWizard = true;
+
+            if (ip.InvestedInProject())
+            {
+                showWizard = false;
+                currentWizardStep = 3;
+            }
+            else if (ip.ReceivedFounderSignatures())
+            {
+                currentWizardStep = 2;
+            }
+            else if (ip.WaitingForFounderResponse())
+            {
+                currentWizardStep = 1;
+            }
+            else
+            {
+                currentWizardStep = 1;
+            }
+        }
+        else
+        {
+            showWizard = false;
+            currentWizardStep = 1;
         }
     }
 
@@ -644,6 +809,51 @@ else
             {
                 passwordComponent.ShowPassword(ScanForPendingSignatures);
             }
+        }
+        RefreshWizardState();
+        ScanforProjectStats();
+        StateHasChanged();
+    }
+
+    private async Task ScanforProjectStats()
+    {
+        try
+        {
+            projectStats.Loading = true;
+
+            if (project?.ProjectInfo != null)
+            {
+                var data = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
+
+                if (data != null)
+                {
+                    projectStats.TotalInvestors = (int)data.InvestorCount;
+                    projectStats.TotalRaised = data.AmountInvested;
+
+                    if (DateTime.UtcNow < project.ProjectInfo.StartDate)
+                    {
+                        projectStats.TimeLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
+                    }
+                    else
+                    {
+                        projectStats.TimeLeft = 0;
+                    }
+
+                    if (project.ProjectInfo.TargetAmount > 0)
+                    {
+                        projectStats.FundingProgressPercent = (int)(projectStats.TotalRaised * 100 / project.ProjectInfo.TargetAmount);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            notificationComponent.ShowErrorMessage(ex.Message, ex);
+        }
+        finally
+        {
+            projectStats.Loading = false;
+            StateHasChanged();
         }
     }
 
@@ -685,6 +895,7 @@ else
                 refreshSpinner = false;
             }
 
+            RefreshWizardState();
             StateHasChanged();
             await Task.Delay(10);
         }
@@ -843,7 +1054,7 @@ else
         {
             buildSpinner = false;
         }
-
+        RefreshWizardState();
         StateHasChanged();
     }
 
@@ -1001,7 +1212,7 @@ else
             investSpinner = false;
             passwordComponent.ClearPassword();
         }
-
+        RefreshWizardState();
         StateHasChanged();
     }
 
@@ -1020,6 +1231,7 @@ else
         if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
         {
             investorProject.SignaturesInfo.Signatures = res.Signatures;
+            RefreshWizardState();
             StateHasChanged();
         }
     }
@@ -1050,6 +1262,8 @@ else
 
         investorProject.SignaturesInfo = null;
         project = SessionStorage.GetProjectById(ProjectId);
+        RefreshWizardState();
+        StateHasChanged();
     }
 
     public async Task PublishSignedTransactionAsync()
@@ -1090,6 +1304,7 @@ else
             investorProject.CompleteProjectInvestment(signedTransaction.Transaction);
 
             storage.UpdateInvestmentProject(investorProject);
+            invested = true;
 
             await SaveInvestmentsListToNostrAsync();
 
