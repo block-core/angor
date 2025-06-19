@@ -8,12 +8,14 @@
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 @using Angor.Shared.Utilities
+@using ConcurrentCollections
 @using ITransactionSignature = NBitcoin.ITransactionSignature
 @using System.Text.Json
 @using Angor.Client.Models
 @using Angor.Client.Shared
 @using Angor.Client.Components
 @using Angor.Shared.Protocol
+@using System.Collections.Concurrent
 
 
 @inject IClientStorage storage;
@@ -786,7 +788,48 @@
             _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
         }
     }
-
+    private ConcurrentHashSet<string> txids = [];
+    private ConcurrentDictionary<string, QueryTransaction> queryTransactionCache = [];
+    private ConcurrentDictionary<string, Transaction> transactionCache = [];
+    private ConcurrentDictionary<string, SemaphoreSlim> semaphoreStore = [];
+    private async Task<T> GetCache<T>(string txid, string type){
+        bool fetchTransaction = false;//false;
+        string txid_type = txid + type;
+        lock(txids){
+            txids.TryGetValue(txid_type, out string? txid_out);
+            if(txid_out == null){
+                fetchTransaction = true;
+                txids.Add(txid_type);
+                SemaphoreSlim semaphore = new(1);
+                semaphoreStore[txid_type] = semaphore;
+                semaphoreStore[txid_type].Wait();
+            }
+        }
+        bool isQueryTransaction = (typeof(T) == typeof(QueryTransaction));
+        if(fetchTransaction){
+            if(isQueryTransaction){
+                QueryTransaction? queryTransaction = await _IndexerService.GetTransactionInfoByIdAsync(txid);
+                queryTransactionCache.TryAdd(txid_type, queryTransaction);
+                semaphoreStore[txid_type].Release();
+                return (T)(object)queryTransaction;
+            }else{
+                var fetchTrx = await _IndexerService.GetTransactionHexByIdAsync(txid);
+                var investmentTransaction = network.CreateTransaction(fetchTrx);
+                transactionCache.TryAdd(txid_type, investmentTransaction);
+                semaphoreStore[txid_type].Release();
+                return (T)(object)investmentTransaction;
+            }
+        }
+        await semaphoreStore[txid_type].WaitAsync();
+        semaphoreStore[txid_type].Release();
+        return isQueryTransaction ? (T)(object)queryTransactionCache[txid_type] : (T)(object)transactionCache[txid_type]; 
+    }
+    private async Task<QueryTransaction> GetQueryTransactionCache(string txid){
+        return await GetCache<QueryTransaction>(txid, "qtrx");
+    }
+    private async Task<Transaction> GetTransactionCache(string txid){
+        return await GetCache<Transaction>(txid, "trx");
+    }
     private async Task processStageItem(StageDataTrx item, List<QueryTransaction> trxs, StageData stageData, List<Outpoint> unconfirmedOutbound){
         // if the item is already spent by founder or investor, we skip it
         // because we have already processed this item and we know the outcome.
@@ -810,12 +853,11 @@
             updateUnconfirmedOutbound |= unconfirmedOutbound.TryRemoveOutpoint(new Outpoint(item.Trxid, item.Outputindex));
 
             // try to resolve the destination
-            var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+            var spentInTransaction = await GetQueryTransactionCache(output.SpentInTransaction); //await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
 
             var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == item.Trxid && input.InputIndex == item.Outputindex);
             
-            var fetchTrx = await _IndexerService.GetTransactionHexByIdAsync(item.Trxid);
-            var investmentTransaction = network.CreateTransaction(fetchTrx);
+            var investmentTransaction = await GetTransactionCache(item.Trxid); //network.CreateTransaction(fetchTrx);
     
             if (input != null && investmentTransaction != null)
             {
