@@ -766,89 +766,87 @@
         }
     }
 
-    Dictionary<string, Transaction> trxsHexCache = new();
-
+    private bool updateUnconfirmedOutbound = false;
     private async Task CheckSpentFund()
     {
         List<QueryTransaction> trxs = new();
         var unconfirmedOutbound = _cacheStorage.GetUnconfirmedOutboundFunds();
         bool updateUnconfirmedOutbound = false;
-
+        List<Task> tasks = [];
         foreach (StageData stageData in stageDatas)
         {
             foreach (var item in stageData.Items)
             {
-                // if the item is already spent by founder or investor, we skip it
-                // because we have already processed this item and we know the outcome.
-                if (item.IsSpent && ((item.SpentType != "founder") || (item.SpentType != "investor")))
-                    continue;
-
-                QueryTransaction? trx = trxs.FirstOrDefault(f => f.TransactionId == item.Trxid);
-
-                if (trx == null)
-                {
-                    trx = await _IndexerService.GetTransactionInfoByIdAsync(item.Trxid);
-                    trxs.Add(trx);
-                }
-
-                var output = trx.Outputs.First(outp => outp.Index == item.Outputindex);
-
-                if (!string.IsNullOrEmpty(output.SpentInTransaction))
-                {
-                    item.IsSpent = true;
-
-                    updateUnconfirmedOutbound |= unconfirmedOutbound.TryRemoveOutpoint(new Outpoint(item.Trxid, item.Outputindex));
-
-                    // try to resolve the destination
-                    var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
-
-                    var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == item.Trxid && input.InputIndex == item.Outputindex);
-
-                    var investmentTransaction = trxsHexCache.TryGet(item.Trxid);
-                    if (investmentTransaction == null)
-                    {
-                        var fetchTrx = await _IndexerService.GetTransactionHexByIdAsync(item.Trxid);
-                        investmentTransaction = network.CreateTransaction(fetchTrx);
-                        trxsHexCache.Add(item.Trxid, investmentTransaction);
-                    }
-
-                    if (input != null && investmentTransaction != null)
-                    {
-                        item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project, investmentTransaction, stageData.StageIndex - 1, input.WitScript);
-
-                        switch (item.ProjectScriptType.ScriptType)
-                        {
-                            case ProjectScriptTypeEnum.Founder:
-                            {
-                                item.SpentType = "founder";
-                                break;
-                            }
-                            case ProjectScriptTypeEnum.InvestorWithPenalty:
-                            case ProjectScriptTypeEnum.EndOfProject:
-                            case ProjectScriptTypeEnum.InvestorNoPenalty:
-                            {
-                                item.SpentType = "investor";
-                                break;
-                            }
-                        }
-                    }
-
-                    continue;
-                }
-
-                item.IsSpent = unconfirmedOutbound.ContainsOutpoint(new Outpoint(item.Trxid, item.Outputindex));
-                if (item.IsSpent)
-                {
-                    // the trx is unconfirmed, we wait till
-                    // it gets confirmed to discover who spent it
-                    item.SpentType = "pending"; 
-                }
+                tasks.Add(processStageItem(item, trxs, stageData, unconfirmedOutbound));
             }
         }
-
+        await Task.WhenAll(tasks);
         if (updateUnconfirmedOutbound)
         {
             _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
+        }
+    }
+
+    private async Task processStageItem(StageDataTrx item, List<QueryTransaction> trxs, StageData stageData, List<Outpoint> unconfirmedOutbound){
+        // if the item is already spent by founder or investor, we skip it
+        // because we have already processed this item and we know the outcome.
+        if (item.IsSpent && ((item.SpentType != "founder") || (item.SpentType != "investor")))
+            return;
+
+        QueryTransaction? trx = trxs.FirstOrDefault(f => f.TransactionId == item.Trxid);
+
+        if (trx == null)
+        {
+            trx = await _IndexerService.GetTransactionInfoByIdAsync(item.Trxid);
+            trxs.Add(trx);
+        }
+
+        var output = trx.Outputs.First(outp => outp.Index == item.Outputindex);
+
+        if (!string.IsNullOrEmpty(output.SpentInTransaction))
+        {
+            item.IsSpent = true;
+
+            updateUnconfirmedOutbound |= unconfirmedOutbound.TryRemoveOutpoint(new Outpoint(item.Trxid, item.Outputindex));
+
+            // try to resolve the destination
+            var spentInTransaction = await _IndexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+
+            var input = spentInTransaction?.Inputs.FirstOrDefault(input => input.InputTransactionId == item.Trxid && input.InputIndex == item.Outputindex);
+            
+            var fetchTrx = await _IndexerService.GetTransactionHexByIdAsync(item.Trxid);
+            var investmentTransaction = network.CreateTransaction(fetchTrx);
+    
+            if (input != null && investmentTransaction != null)
+            {
+                item.ProjectScriptType = _InvestorTransactionActions.DiscoverUsedScript(project, investmentTransaction, stageData.StageIndex - 1, input.WitScript);
+
+                switch (item.ProjectScriptType.ScriptType)
+                {
+                    case ProjectScriptTypeEnum.Founder:
+                    {
+                        item.SpentType = "founder";
+                        break;
+                    }
+                    case ProjectScriptTypeEnum.InvestorWithPenalty:
+                    case ProjectScriptTypeEnum.EndOfProject:
+                    case ProjectScriptTypeEnum.InvestorNoPenalty:
+                    {
+                        item.SpentType = "investor";
+                        break;
+                    }
+                }
+            }
+
+            return;
+        }
+
+        item.IsSpent = unconfirmedOutbound.ContainsOutpoint(new Outpoint(item.Trxid, item.Outputindex));
+        if (item.IsSpent)
+        {
+            // the trx is unconfirmed, we wait till
+            // it gets confirmed to discover who spent it
+            item.SpentType = "pending"; 
         }
     }
 
