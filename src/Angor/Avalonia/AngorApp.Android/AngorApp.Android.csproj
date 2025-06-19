@@ -1,28 +1,41 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0-android</TargetFramework>
-    <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
-    <Nullable>enable</Nullable>
-    <ApplicationId>com.CompanyName.AngorApp</ApplicationId>
-    <ApplicationVersion>1</ApplicationVersion>
-    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <AndroidPackageFormat>apk</AndroidPackageFormat>
-    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0-android</TargetFramework>
+        <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+        <Nullable>enable</Nullable>
+        <ApplicationId>io.Angor.AngorApp</ApplicationId>
+        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <AndroidPackageFormat>apk</AndroidPackageFormat>
+        <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+        <Optimize>true</Optimize>
+        <PublishTrimmed>false</PublishTrimmed>
+        <TrimMode>none</TrimMode>
+        <OptimizationPreference>Speed</OptimizationPreference>
+        <PublishAot>false</PublishAot>
+        <DebugSymbols>false</DebugSymbols>
+        <DebugType>none</DebugType>
+        <RunAOTCompilation>false</RunAOTCompilation>
+        <EnableAssemblyILStripping>false</EnableAssemblyILStripping>
+        <NoWarn>$(NoWarn);IL2026;IL2111</NoWarn>
+        <AspectInjectorEnabled>false</AspectInjectorEnabled>
+    </PropertyGroup>
+    <ItemGroup>
+        <AndroidResource Include="Icon.png">
+            <Link>Resources\drawable\Icon.png</Link>
+        </AndroidResource>
+    </ItemGroup>
 
-  <ItemGroup>
-    <AndroidResource Include="Icon.png">
-      <Link>Resources\drawable\Icon.png</Link>
-    </AndroidResource>
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Avalonia.Android" />
+        <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Avalonia.Android" />
-    <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\AngorApp\AngorApp.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\AngorApp\AngorApp.csproj" />
+    </ItemGroup>
 </Project>
