@@ -7,6 +7,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Zafiro.CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Funding.Investor.Operations;
 
@@ -25,180 +26,89 @@ public static class Investments
 
         public async Task<Result<IEnumerable<InvestedProjectDto>>> Handle(InvestmentsPortfolioRequest request, CancellationToken cancellationToken)
         {
-            var words = await seedwordsProvider.GetSensitiveData(request.WalletId);
-            var storageAccountKey = _DerivationOperations.DeriveNostrStoragePubKeyHex(words.Value.ToWalletWords());
-            var password = _DerivationOperations.DeriveNostrStoragePassword(words.Value.ToWalletWords());
-            
-            if (string.IsNullOrEmpty(storageAccountKey) || string.IsNullOrEmpty(password))
-            {
-                return Result.Failure<IEnumerable<InvestedProjectDto>>("Storage account key or password is empty.");
-            }
+            var result = await RetrieveStorageCredentials(request);
+            if (result.IsFailure)
+                return Result.Failure<IEnumerable<InvestedProjectDto>>("Failed to retrieve storage credentials: " + result.Error);
 
-            var investmentRecordsLookup = await GetInvestmentRecordsFromRelayTask(storageAccountKey, password);
+            var investmentRecordsLookup = await GetInvestmentRecordsFromRelayTask(result.Value.storageAccountKey, result.Value.password);
 
             if (investmentRecordsLookup.IsFailure)
                 return Result.Failure<IEnumerable<InvestedProjectDto>>("Failed to retrieve investment records: " + investmentRecordsLookup.Error);
+            
+            if (investmentRecordsLookup.Value.ProjectIdentifiers.Count == 0)
+                return Result.Success(Enumerable.Empty<InvestedProjectDto>());
+            
+            var eventIds = await GatherProjectIdentifiers(investmentRecordsLookup);
 
+            if (eventIds.Any() == false)
+                return Result.Success(Enumerable.Empty<InvestedProjectDto>());
+
+
+            return await GetProjectInfoForEventIds(eventIds.ToArray()) //Get project info for event IDs
+                .ToList()
+                .SingleOrDefaultAsync()
+                .Select(projectInfos => GetProfileForPublicKey(projectInfos
+                        .Select(result => result.NostrPubKey)
+                        .ToArray())
+                    .Select(result =>
+                    {
+                        var projectInfo = projectInfos.First(data => data.NostrPubKey == result.Value.pubKey);
+
+                        var profile = result.Value.profile;
+
+                        return Result.Success(new InvestedProjectDto
+                        {
+                            Description = profile.About,
+                            Name = profile.Name,
+                            LogoUri = Uri.TryCreate(profile.Website, UriKind.RelativeOrAbsolute, out var uri)
+                                ? uri
+                                : null, //TODO handle invalid URIs
+                            Id = projectInfo.ProjectIdentifier,
+                            Target = new Amount(projectInfo.TargetAmount),
+                            //TODO
+                            //FounderStatus = stats.Value.Value.stats?.FounderStatus ?? FounderStatus.Invalid,
+                            //IsInvesmentCompleted = 
+                        });
+                    }))
+                .Merge()
+                .Bind<InvestedProjectDto,InvestedProjectDto>(async investorProjectDto =>
+                {
+                    var stats = await indexerService.GetProjectStatsAsync(investorProjectDto.Id);
+                    investorProjectDto.Raised = new Amount(stats.stats?.AmountInvested ?? 0);
+                    investorProjectDto.InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0);
+                    return investorProjectDto;
+                })
+                .Where(x => x.IsSuccess)
+                .Select(x => x.Value)
+                .ToList()
+                .Select(x => x.AsEnumerable())
+                .ToResult();
+        }
+
+        private async Task<IEnumerable<string>> GatherProjectIdentifiers(Result<InvestmentRecords> investmentRecordsLookup)
+        {
             var projectLookupsTasks = investmentRecordsLookup.Value.ProjectIdentifiers.Select(x =>
-                 Result.Try(() => indexerService.GetProjectByIdAsync(x.ProjectIdentifier))
-            ).ToList();
-
-            var projectStatsTasks = investmentRecordsLookup.Value.ProjectIdentifiers.Select(x =>
-                Result.Try(() => indexerService.GetProjectStatsAsync(x.ProjectIdentifier))
+                Result.Try(() => indexerService.GetProjectByIdAsync(x.ProjectIdentifier))
             ).ToList();
             
             await Task.WhenAll(projectLookupsTasks);
 
-            var eventIds = projectLookupsTasks
+            return projectLookupsTasks
                 .Where(x => x.Result.IsSuccess)
-                .Select(x => x.Result.Value.NostrEventId)
-                .ToArray();
+                .Select(x => x.Result.Value.NostrEventId);
+        }
 
-            if (eventIds.Length == 0)
-                return Result.Success(Enumerable.Empty<InvestedProjectDto>());
-
-
-            var projectInfos = await GetProjectInfoForEventIds(eventIds)
-                .ToList();
-
-            var metadatas = await GetProfileForPublicKey(projectInfos
-                    .Select(result => result.NostrPubKey)
-                    .ToArray())
-                .ToList();
-
-            await Task.WhenAll(projectStatsTasks);
-
-            return Result.Try(() =>  metadatas
-                .Where(x => x.IsSuccess)
-                .Select(tuple =>
+        private async Task<Result<(string storageAccountKey, string password)>> RetrieveStorageCredentials(InvestmentsPortfolioRequest request)
+        {
+            var words = await seedwordsProvider.GetSensitiveData(request.WalletId);
+            if (words.IsFailure)
             {
-                var projectInfo = projectInfos.FirstOrDefault(data => data.NostrPubKey == tuple.Value.pubKey);
-                if (projectInfo == null)
-                    return null;
-
-                var stats = projectStatsTasks
-                    .FirstOrDefault(x => x.Result.IsSuccess && x.Result.Value.projectId == projectInfo.ProjectIdentifier)?.Result;
-                    
-                if (stats == null || stats.HasValue && stats.Value.IsFailure)
-                    return null;
-                
-                return new InvestedProjectDto
-                {
-                    Description = tuple.Value.profile.About,
-                    Name = tuple.Value.profile.Name,
-                    LogoUri = Uri.TryCreate(tuple.Value.profile.Website, UriKind.RelativeOrAbsolute, out var uri)
-                        ? uri
-                        : null, //TODO handle invalid URIs
-                    Id = projectInfo.ProjectIdentifier,
-                    Target = new Amount(projectInfo.TargetAmount),
-                    Raised = new Amount(stats.Value.Value.stats?.AmountInvested ?? 0),
-                    InRecovery = new Amount(stats.Value.Value.stats?.AmountInPenalties ?? 0 ),
-                   //TODO
-                    //FounderStatus = stats.Value.Value.stats?.FounderStatus ?? FounderStatus.Invalid,
-                   //IsInvesmentCompleted = 
-                };
-            }));
-            //
-            //
-            // var investedProjectDtos = await GetProjectInfoForEventIds(eventIds)
-            //     .ToList()
-            //     .SelectMany(resultListOfProjectInfo => //<IList<ProjectInfo>, (ProjectMetadata profile, ProjectInfo projectInfo)>
-            //         GetProfileForPublicKey(resultListOfProjectInfo.Select(result => result.NostrPubKey).ToArray())
-            //             .Map(tuple =>
-            //             {
-            //                 var projectInfo = resultListOfProjectInfo
-            //                     .FirstOrDefault(data => data.NostrPubKey == tuple.pubKey);
-            //                 var profile = tuple.profile;
-            //                 return new InvestedProjectDto
-            //                 {
-            //                     Description = profile.About,
-            //                     Name = profile.Name,
-            //                     LogoUri = Uri.TryCreate(profile.Website, UriKind.RelativeOrAbsolute, out var uri)
-            //                         ? uri
-            //                         : null, //TODO handle invalid URIs
-            //                     Id = projectInfo.ProjectIdentifier,
-            //                     Target = new Amount(projectInfo.TargetAmount),
-            //                 };
-            //             }))//.ToTask(cancellationToken))
-            //        //     .Select(x => x.Value))
-            //     //.Merge()
-            //     // .Map<(ProjectMetadata profile,ProjectInfo projectInfo),InvestedProjectDto?>(x =>
-            //     // {
-            //     //     if (x.IsFailure )
-            //     //         return null;
-            //     //     
-            //     //     var profile = x.Value.profile;
-            //     //     var projectInfo = x.Value.projectInfo;
-            //     //     return new InvestedProjectDto
-            //     //     {
-            //     //         Description = profile.About,
-            //     //         Name = profile.Name,
-            //     //         LogoUri = Uri.TryCreate(profile.Website, UriKind.RelativeOrAbsolute, out var uri) ? uri : null, //TODO handle invalid URIs
-            //     //         Id = projectInfo.ProjectIdentifier,
-            //     //         Target = new Amount(projectInfo.TargetAmount),
-            //     //     };
-            //     // })
-            //     //.Where(x => x.IsSuccess)
-            //    // .Select(x => x!)
-            //     .Where(x => x.IsSuccess)
-            //     .Select(x => x.Value)
-            //     .ToList()
-            //     .ToTask(cancellationToken);
-            //
-            // await Task.WhenAll(projectStatsTasks);
-            //
-            // foreach (var lookupsTask in projectStatsTasks)
-            // {
-            //     var investmentProject = investedProjectDtos
-            //         .FirstOrDefault(x => x. Id == lookupsTask.Result.Value.projectId);
-            //
-            //     if (lookupsTask.Result.IsSuccess || lookupsTask.Result.Value.stats == null)
-            //         continue;
-            //     
-            //     investmentProject.Raised = new Amount(lookupsTask.Result.Value.stats.AmountInvested);
-            //     investmentProject.InRecovery = new Amount(lookupsTask.Result.Value.stats.AmountInPenalties);
-            // }
-            //
-            // return Result.Success(investedProjectDtos.AsEnumerable());
+                return Result.Failure<(string, string)>("Failed to retrieve sensitive data: " + words.Error);
+            }
+            var storageAccountKey = _DerivationOperations.DeriveNostrStoragePubKeyHex(words.Value.ToWalletWords());
+            var password = _DerivationOperations.DeriveNostrStoragePassword(words.Value.ToWalletWords());
             
-            // var projectsTasks = TestAsync.Value.ProjectIdentifiers.Select(x =>
-            //     Result.Try(() => indexerService.GetProjectByIdAsync(x.ProjectIdentifier)));
-            //
-            // var statsTasks = TestAsync.Value.ProjectIdentifiers.Select(x =>
-            //     Result.Try(() => indexerService.GetProjectStatsAsync(x.ProjectIdentifier)));
-            //
-            // var InvestmentStats = TestAsync.Value.ProjectIdentifiers.Select(x => 
-            //     Result.Try(() => indexerService.GetInvestmentAsync(x.ProjectIdentifier, x.InvestorPubKey)));
-            //
-            // var projectInfos = TestAsync.Value.ProjectIdentifiers.Select(x => x.e)
-            //
-            // var investmentRecords = await GetInvestmentRecordsFromRelay(storageAccountKey, password)
-            //     .SingleOrDefaultAsync()
-            //     .Bind(x =>  
-            //         x.ProjectIdentifiers
-            //             .Select(record => 
-            //                 Result.Try(() => indexerService.GetProjectStatsAsync(record.ProjectIdentifier))
-            //                     .ToObservable()
-            //                     .Map(projectStats => new { projectStats,record}))
-            //             .Merge()
-            //             .ToTask(cancellationToken))
-            //     .Bind(x => Result.Try(() => relayService.LookupNostrProfileForNPub(x.projectStats.)) )
-            //
-            //
-            //
-            // var investmentRecords = await GetInvestmentRecordsFromRelay(storageAccountKey, password)
-            //     .SingleOrDefaultAsync()
-            //     .Bind(x => Result.Try(() => 
-            //         x.ProjectIdentifiers
-            //             .Select<InvestorPositionRecord, IObservable<ProjectInvestment?>>(record => 
-            //                 indexerService.GetInvestmentAsync(record.ProjectIdentifier, record.InvestorPubKey)
-            //             .ToObservable())
-            //         .Merge()))
-            //     .Bind(x => relayService.LookupNostrProfileForNPub())
-            //     // .Select(x => new InvestedProjectDto
-            //     // {
-            //     //     Description = x!.Description,
-            //     //     ProjectId = x.ProjectId,
+            return (storageAccountKey, password);
         }
 
         private Task<Result<InvestmentRecords>> GetInvestmentRecordsFromRelayTask(string storageAccountKey,
