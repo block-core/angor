@@ -38,16 +38,12 @@ public static class Investments
             if (investmentRecordsLookup.Value.ProjectIdentifiers.Count == 0)
                 return Result.Success(Enumerable.Empty<InvestedProjectDto>());
             
-            var eventIds = await GatherProjectIdentifiers(investmentRecordsLookup);
-
-            if (eventIds.Any() == false)
-                return Result.Success(Enumerable.Empty<InvestedProjectDto>());
-
-
-            return await GetProjectInfoForEventIds(eventIds.ToArray()) //Get project info for event IDs
+            return await GatherProjectIdentifiers(investmentRecordsLookup)
+                .ToList()
+                .SelectMany(eventIds => GetProjectInfoForEventIds(eventIds.ToArray())) //Get project info for event IDs
                 .ToList()
                 .SingleOrDefaultAsync()
-                .Select(projectInfos => GetProfileForPublicKey(projectInfos
+                .Select(projectInfos => GetProfileForPublicKey(projectInfos //Get the profiles for the project public keys
                         .Select(result => result.NostrPubKey)
                         .ToArray())
                     .Select(result =>
@@ -56,7 +52,7 @@ public static class Investments
 
                         var profile = result.Value.profile;
 
-                        return Result.Success(new InvestedProjectDto
+                        return Result.Success(new InvestedProjectDto //Create InvestedProjectDto from project info and profile
                         {
                             Description = profile.About,
                             Name = profile.Name,
@@ -73,10 +69,10 @@ public static class Investments
                 .Merge()
                 .Bind<InvestedProjectDto,InvestedProjectDto>(async investorProjectDto =>
                 {
-                    var stats = await indexerService.GetProjectStatsAsync(investorProjectDto.Id);
+                    var stats = await indexerService.GetProjectStatsAsync(investorProjectDto.Id); // Get project stats for the project ID
                     investorProjectDto.Raised = new Amount(stats.stats?.AmountInvested ?? 0);
                     investorProjectDto.InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0);
-                    return investorProjectDto;
+                    return investorProjectDto; // Return the updated InvestedProjectDto with stats
                 })
                 .Where(x => x.IsSuccess)
                 .Select(x => x.Value)
@@ -85,7 +81,7 @@ public static class Investments
                 .ToResult();
         }
 
-        private async Task<IEnumerable<string>> GatherProjectIdentifiers(Result<InvestmentRecords> investmentRecordsLookup)
+        private async Task<IEnumerable<string>> GatherProjectIdentifiers1(Result<InvestmentRecords> investmentRecordsLookup)
         {
             var projectLookupsTasks = investmentRecordsLookup.Value.ProjectIdentifiers.Select(x =>
                 Result.Try(() => indexerService.GetProjectByIdAsync(x.ProjectIdentifier))
@@ -96,6 +92,15 @@ public static class Investments
             return projectLookupsTasks
                 .Where(x => x.Result.IsSuccess)
                 .Select(x => x.Result.Value.NostrEventId);
+        }
+        
+        private IObservable<string> GatherProjectIdentifiers(Result<InvestmentRecords> investmentRecordsLookup)
+        {
+            return investmentRecordsLookup.Value.ProjectIdentifiers.ToObservable()
+                .ToResult()
+                .Bind(projectId => Result.Try(() => indexerService.GetProjectByIdAsync(projectId.ProjectIdentifier)))
+                .Where(x => x.IsSuccess)
+                .Select(x => x.Value.NostrEventId);
         }
 
         private async Task<Result<(string storageAccountKey, string password)>> RetrieveStorageCredentials(InvestmentsPortfolioRequest request)
