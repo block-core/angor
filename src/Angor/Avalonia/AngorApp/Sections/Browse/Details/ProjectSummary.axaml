@@ -32,7 +32,7 @@
             <OverflowBehavior />
         </Interaction.Behaviors>
 
-        <Panel>
+        <Panel Height="200">
             <zc:CircularProgressBar MaxWidth="200" x:Name="Days" Maximum="{Binding TotalDays}" Value="{Binding CurrentDays}" />
             <TextBlock VerticalAlignment="Center" Classes="SizeBig" HorizontalAlignment="Center">
                 <TextBlock.Text>

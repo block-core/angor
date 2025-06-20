@@ -4,11 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
              xmlns:recoverySeedWords="clr-namespace:AngorApp.Sections.Wallet.CreateAndRecover.Steps.RecoverySeedWords"
-             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
+             mc:Ignorable="d"
              x:Class="AngorApp.Sections.Wallet.CreateAndRecover.Steps.RecoverySeedWords.RecoverySeedWordsView" x:DataType="recoverySeedWords:IRecoverySeedWordsViewModel">
     <StackPanel Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Center">
         <TextBlock Text="Please, enter your 12 seed words in order" TextAlignment="Center" />
-        <TextBox Watermark="Seed words" Width="400" Text="{Binding RawWordList}" MinLines="4" TextWrapping="Wrap" MaxWidth="400">
+        <TextBox Watermark="Seed words" Text="{Binding RawWordList}" MinLines="4" TextWrapping="Wrap" MaxWidth="400">
             <Interaction.Behaviors>
                 <behaviors:UntouchedClassBehavior />
             </Interaction.Behaviors>

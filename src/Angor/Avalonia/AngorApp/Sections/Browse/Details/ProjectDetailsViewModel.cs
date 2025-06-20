@@ -2,6 +2,7 @@ using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using AngorApp.Features.Invest;
 using AngorApp.UI.Services;
+using Avalonia.Threading;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
@@ -55,9 +56,12 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
                 .Bind(wallet => investWizard.Invest(wallet, project)));
     }
 
-    private async Task<Maybe<Unit>> ShowNoWalletMessage()
+    private Task<Maybe<Unit>> ShowNoWalletMessage()
     {
-        await uiServices.Dialog.ShowMessage("No wallet found", "Please create or recover a wallet to invest in this project.");
-        return Maybe<Unit>.None;
+        return Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            await uiServices.Dialog.ShowMessage("No wallet found", "Please create or recover a wallet to invest in this project.");
+            return Maybe<Unit>.None;
+        });
     }
 }
