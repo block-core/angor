@@ -6,7 +6,7 @@
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:f="clr-namespace:AngorApp.UI"
              x:Class="AngorApp.App"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Dark">
     <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.Styles>
@@ -23,7 +23,7 @@
                                        BaseHigh="#FF022229"
                                        BaseLow="#FFE6F1F2"
                                        BaseMedium="#FF93BCC1"
-                                       BaseMediumHigh="#FF669CA1"
+                                       BaseMediumHigh="#3E686D"
                                        BaseMediumLow="#FFBAD5D9"
                                        ChromeAltLow="#FF669CA1"
                                        ChromeBlackHigh="Black"

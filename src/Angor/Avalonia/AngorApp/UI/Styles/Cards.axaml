@@ -3,6 +3,9 @@
         xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI">
     
     <Styles.Resources>
+        
+        <SolidColorBrush x:Key="HeaderBrush" Color="{DynamicResource SystemBaseHighColor}" />
+        <SolidColorBrush x:Key="SubheaderBrush" Color="{DynamicResource SystemBaseMediumHighColor}" />
 
         <DataTemplate x:Key="RegularIcon" DataType="x:Object">
             <ContentPresenter Content="{Binding}">
@@ -72,7 +75,9 @@
                                               Content="{TemplateBinding HeaderStartContent}"
                                               ContentTemplate="{TemplateBinding HeaderStartContentTemplate}" />
                             <ContentPresenter x:Name="Header" Content="{TemplateBinding Header}"
-                                              ContentTemplate="{TemplateBinding HeaderTemplate}" />
+                                              ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                              TextElement.Foreground="{StaticResource HeaderBrush}"
+                                              />
                             <ContentPresenter x:Name="Subheader" Content="{TemplateBinding Subheader}"
                                               ContentTemplate="{TemplateBinding SubheaderTemplate}" />
                             <ContentPresenter x:Name="Content" Content="{TemplateBinding Content}"
@@ -108,17 +113,19 @@
             <Setter Property="HeaderStartContentTemplate" Value="{StaticResource HugeIcon}" />
             <Setter Property="HeaderTemplate">
                 <Setter.Value>
-                    <DataTemplate>
-                        <ContentControl TextElement.FontSize="30" TextBlock.TextAlignment="Center" Content="{Binding}" />
+                    <DataTemplate DataType="x:Object">
+                        <ContentControl TextElement.FontSize="30"
+                                        TextElement.Foreground="{StaticResource HeaderBrush}"
+                                        TextBlock.TextAlignment="Center" Content="{Binding}" />
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
             <Setter Property="SubheaderTemplate">
                 <Setter.Value>
                     <DataTemplate DataType="x:Object">
-                        <ContentControl Opacity="0.8"
-                                        TextElement.Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                        TextElement.FontSize="20" TextBlock.TextAlignment="Center" Content="{Binding}" />
+                        <ContentControl TextElement.FontSize="20"
+                                        TextElement.Foreground="{StaticResource SubheaderBrush}"
+                                        TextBlock.TextAlignment="Center" Content="{Binding}" />
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
@@ -128,16 +135,18 @@
             <Setter Property="HeaderTemplate">
                 <Setter.Value>
                     <DataTemplate DataType="x:Object">
-                        <ContentControl TextElement.FontSize="20" TextBlock.TextAlignment="Center" Content="{Binding}" />
+                        <ContentControl TextElement.FontSize="20"
+                                        TextElement.Foreground="{StaticResource HeaderBrush}"
+                                        TextBlock.TextAlignment="Center" Content="{Binding}" />
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
             <Setter Property="SubheaderTemplate">
                 <Setter.Value>
-                    <DataTemplate>
+                    <DataTemplate DataType="x:Object">
                         <ContentControl TextElement.FontSize="14"
-                                        TextElement.Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                        Opacity="0.8" TextBlock.TextAlignment="Center" Content="{Binding}" />
+                                        TextElement.Foreground="{StaticResource SubheaderBrush}"
+                                        TextBlock.TextAlignment="Center" Content="{Binding}" />
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
