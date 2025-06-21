@@ -718,8 +718,8 @@
             .Where(a => trxList.All(b => b.TrxId != a.TransactionId))
             .Select(async _ =>
             {
-                var hex = await _IndexerService.GetTransactionHexByIdAsync(_.TransactionId);
-                return new { hex, _.TransactionId };
+                Transaction trx = await GetTransactionCache(_.TransactionId); // await _IndexerService.GetTransactionHexByIdAsync(_.TransactionId);
+                return new { trx, _.TransactionId };
             });
 
         var trxHexList = await Task.WhenAll(tasks);
@@ -729,7 +729,7 @@
 
         foreach (var trx in trxHexList)
         {
-            trxList.Add((network.CreateTransaction(trx.hex), trx.TransactionId));
+            trxList.Add((trx.trx, trx.TransactionId));
         }
 
         if (!stageDatas.Any())
@@ -785,47 +785,32 @@
             _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
         }
     }
-    private HashSet<string> txids = [];
-    private Dictionary<string, QueryTransaction> queryTransactionCache = [];
-    private Dictionary<string, Transaction> transactionCache = [];
-    private Dictionary<string, SemaphoreSlim> semaphoreStore = [];
+    private Dictionary<string, Task<QueryTransaction>> queryTransactionCache = [];
+    private Dictionary<string, Task<Transaction>> transactionCache = [];
 
-    private async Task<T> GetCache<T>(string txid, string type){
-        bool fetchTransaction = false;
-        string txid_type = txid + type;
-        lock(txids){
-            txids.TryGetValue(txid_type, out string? txid_out);
-            if(txid_out == null){
-                fetchTransaction = true;
-                txids.Add(txid_type);
-                SemaphoreSlim semaphore = new(0);
-                semaphoreStore[txid_type] = semaphore;
-            }
-        }
-        bool isQueryTransaction = (typeof(T) == typeof(QueryTransaction));
-        if(fetchTransaction){
-            if(isQueryTransaction){
-                QueryTransaction? queryTransaction = await _IndexerService.GetTransactionInfoByIdAsync(txid);
-                queryTransactionCache.TryAdd(txid_type, queryTransaction);
-                semaphoreStore[txid_type].Release();
-                return (T)(object)queryTransaction;
-            }else{
-                var fetchTrx = await _IndexerService.GetTransactionHexByIdAsync(txid);
-                var investmentTransaction = network.CreateTransaction(fetchTrx);
-                transactionCache.TryAdd(txid_type, investmentTransaction);
-                semaphoreStore[txid_type].Release();
-                return (T)(object)investmentTransaction;
-            }
-        }
-        await semaphoreStore[txid_type].WaitAsync();
-        semaphoreStore[txid_type].Release();
-        return isQueryTransaction ? (T)(object)queryTransactionCache[txid_type] : (T)(object)transactionCache[txid_type]; 
+    private async Task<QueryTransaction> GetQueryTransactionCache(string txid)
+    {
+        if (queryTransactionCache.TryGetValue(txid, out var cachedTask))
+            return await cachedTask;
+
+        var task = _IndexerService.GetTransactionInfoByIdAsync(txid);
+        queryTransactionCache[txid] = task;
+        return await task;
     }
-    private async Task<QueryTransaction> GetQueryTransactionCache(string txid){
-        return await GetCache<QueryTransaction>(txid, "qtrx");
-    }
-    private async Task<Transaction> GetTransactionCache(string txid){
-        return await GetCache<Transaction>(txid, "trx");
+
+    private async Task<Transaction> GetTransactionCache(string txid)
+    {
+        if (transactionCache.TryGetValue(txid, out var cachedTask))
+            return await cachedTask;
+
+        var task = Task.Run(async () =>
+        {
+            var fetchTrx = await _IndexerService.GetTransactionHexByIdAsync(txid);
+            return network.CreateTransaction(fetchTrx);
+        });
+        
+        transactionCache[txid] = task;
+        return await task;
     }
     private async Task processStageItem(StageDataTrx item, StageData stageData, List<Outpoint> unconfirmedOutbound){
         // if the item is already spent by founder or investor, we skip it
