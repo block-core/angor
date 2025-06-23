@@ -484,7 +484,7 @@
                                 }
                                 else
                                 {
-                                    <span>Confirm Investment</span>
+                                    <span>Send Request</span>
                                 }
                             </button>
                         </div>
@@ -570,7 +570,7 @@ else
                             <hr class="detail-divider my-3" />
                             <div class="detail-item">
                                 <span class="detail-label">Transaction Date</span>
-                                <span class="detail-value">
+                                <span class="detail-value fw-normal">
                                     <Icon IconName="clock-square" Width="16" Height="16" class="me-1 detail-value-icon" />
                                     @investorProject?.SignaturesInfo?.TimeOfSignatureRequest?.ToString("dd/MM/yyyy HH:mm")
                                 </span>
@@ -745,8 +745,6 @@ else
             {
                 await RefreshSignatures();
             }
-            RefreshWizardState();
-            ScanforProjectStats();
             StateHasChanged();
         }
     }
@@ -895,7 +893,6 @@ else
                 refreshSpinner = false;
             }
 
-            RefreshWizardState();
             StateHasChanged();
             await Task.Delay(10);
         }
@@ -1231,7 +1228,6 @@ else
         if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
         {
             investorProject.SignaturesInfo.Signatures = res.Signatures;
-            RefreshWizardState();
             StateHasChanged();
         }
     }

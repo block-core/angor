@@ -3436,7 +3436,7 @@ input[type=number] {
 
 .detail-label {
     font-size: 0.9rem;
-    color: #A0AEC0;
+    color: var(--form-label);
 }
 
 .detail-value {
