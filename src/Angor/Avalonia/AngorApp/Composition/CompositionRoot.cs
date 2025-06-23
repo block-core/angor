@@ -56,10 +56,10 @@ public static class CompositionRoot
         services.RegisterSections(builder => builder
             .Add<IHomeSectionViewModel>("Home", new Icon { Source = "svg:/Assets/angor-icon.svg" })
             .Separator()
-            .Add<IWalletSectionViewModel>("Wallet", new Icon { Source = "fa-wallet" })
-            .Add<IBrowseSectionViewModel>("Browse", new Icon { Source = "fa-magnifying-glass" })
-            .Add<IPortfolioSectionViewModel>("Portfolio",  new Icon { Source = "fa-hand-holding-dollar" })
-            .Add<IFounderSectionViewModel>("Founder", new Icon { Source = "fa-money-bills" }) 
+            .Add<IWalletSectionViewModel>("Wallet", new Icon { Source = "svg:/Assets/wallet.svg" })
+            .Add<IBrowseSectionViewModel>("Browse", new Icon { Source = "svg:/Assets/browse.svg" })
+            .Add<IPortfolioSectionViewModel>("Portfolio",  new Icon { Source = "svg:/Assets/portfolio.svg" })
+            .Add<IFounderSectionViewModel>("Founder", new Icon { Source = "svg:/Assets/user.svg" }) 
             .Command("Angor Hub", provider => ReactiveCommand.CreateFromTask(() => provider.GetRequiredService<ILauncherService>().LaunchUri(new Uri("https://hub.angor.io"))), new Icon { Source = "fa-gear" } , false)
         );
     }

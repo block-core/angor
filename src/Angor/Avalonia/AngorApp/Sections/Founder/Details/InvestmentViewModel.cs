@@ -17,9 +17,9 @@ public partial class InvestmentViewModel : ReactiveObject, IInvestmentViewModel
     public InvestmentViewModel(Investment investment, Func<Task<Maybe<Result<bool>>>> onApprove)
     {
         this.investment = investment;
-        var canApprove = this.WhenAnyValue(model => model.Status, investmentStatus => investmentStatus == InvestmentStatus.Pending);
+        var canApprove = this.WhenAnyValue(model => model.Status, investmentStatus => investmentStatus == InvestmentStatus.PendingFounderSignatures);
         Approve = ReactiveCommand.CreateFromTask(onApprove, canApprove).Enhance();
-        Approve.Values().Successes().Do(_ => Status = InvestmentStatus.Approved).Subscribe();
+        Approve.Values().Successes().Do(_ => Status = InvestmentStatus.FounderSignaturesReceived).Subscribe();
 
         Status = investment.Status;
     }

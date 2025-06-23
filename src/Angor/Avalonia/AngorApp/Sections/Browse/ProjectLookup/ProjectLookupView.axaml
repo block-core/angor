@@ -19,7 +19,7 @@
         <DataTemplate DataType="browse:IProjectViewModel">
             <Panel>
                 <DockPanel Background="Transparent">
-                    <asyncImageLoader:AdvancedImage MaxWidth="200" MaxHeight="200" Margin="10" Source="{Binding Project.Banner}" />
+                    <asyncImageLoader:AdvancedImage MaxWidth="200" MaxHeight="200" Margin="10" Source="{Binding Project.Picture}" />
                     <StackPanel Spacing="10" VerticalAlignment="Center" Margin="10">
                         <TextBlock Classes="SizeBig" TextWrapping="Wrap" Text="{Binding Project.Name}" TextTrimming="CharacterEllipsis" />
                         <TextBlock Classes="SizeNormal" MaxLines="3" TextWrapping="Wrap" Text="{Binding Project.ShortDescription}" TextTrimming="CharacterEllipsis" />
@@ -36,58 +36,55 @@
 
     </UserControl.DataTemplates>
 
-    <HeaderedContentControl Header="Project Lookup">
-        <StackPanel Spacing="10" Margin="0 10 0 0">
-            <TextBlock>You can look for a project directly by entering its <Bold>Project Id</Bold> here</TextBlock>
-            <TextBox x:Name="SearchBox" Text="{Binding ProjectId}" Watermark="Enter Angor project identifier">
-                <TextBox.InnerRightContent>
-                    <StackPanel Orientation="Horizontal">
-                        <avaloniaProgressRing:ProgressRing Width="20" Height="20" IsVisible="{Binding IsBusy^}" />
-                        <i:Icon Value="fa-magnifying-glass" Margin="10" />
-                    </StackPanel>
-                </TextBox.InnerRightContent>
-                <Interaction.Behaviors>
-                    <KeyDownTrigger EventRoutingStrategy="Tunnel" Key="Enter">
-                        <InvokeCommandAction Command="{Binding GoToSelectedProject}" />
-                    </KeyDownTrigger>
-                </Interaction.Behaviors>
-            </TextBox>
-            <Popup Placement="BottomEdgeAlignedLeft" PlacementTarget="{Binding #SearchBox}">
-                <Popup.IsOpen>
-                    <MultiBinding Converter="{x:Static BoolConverters.And}">
-                        <Binding Path="#SearchBox.IsKeyboardFocusWithin" />
-                        <Binding Path="ProjectId" Converter="{x:Static StringConverters.IsNotNullOrEmpty}" />
-                    </MultiBinding>
-                </Popup.IsOpen>
-                <Border x:Name="PopupBorder" Background="White" ClipToBounds="True" BorderThickness="1 0 1 1 " BorderBrush="{StaticResource Level3}" CornerRadius="0 0 10 10">
+    <StackPanel Spacing="10" Margin="0 10 0 0">
+        <TextBox x:Name="SearchBox" Text="{Binding ProjectId}" Watermark="Enter Angor project identifier">
+            <TextBox.InnerRightContent>
+                <StackPanel Orientation="Horizontal">
+                    <avaloniaProgressRing:ProgressRing Width="20" Height="20" IsVisible="{Binding IsBusy^}" />
+                    <i:Icon Value="fa-magnifying-glass" Margin="10" />
+                </StackPanel>
+            </TextBox.InnerRightContent>
+            <Interaction.Behaviors>
+                <KeyDownTrigger EventRoutingStrategy="Tunnel" Key="Enter">
+                    <InvokeCommandAction Command="{Binding GoToSelectedProject}" />
+                </KeyDownTrigger>
+            </Interaction.Behaviors>
+        </TextBox>
+        <Popup Placement="BottomEdgeAlignedLeft" PlacementTarget="{Binding #SearchBox}">
+            <Popup.IsOpen>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="#SearchBox.IsKeyboardFocusWithin" />
+                    <Binding Path="ProjectId" Converter="{x:Static StringConverters.IsNotNullOrEmpty}" />
+                </MultiBinding>
+            </Popup.IsOpen>
+            <Border x:Name="PopupBorder" Background="White" ClipToBounds="True" BorderThickness="1 0 1 1 " CornerRadius="0 0 10 10">
+                <Panel>
                     <Panel>
-                        <Panel>
-                            <TextBlock Margin="20">
-                                No results
-                                <TextBlock.IsVisible>
-                                    <MultiBinding FallbackValue="False" Converter="{x:Static BoolConverters.And}">
-                                        <Binding Path="!Lookup.IsExecuting^" />
-                                        <Binding Path="LookupResults.HasNoValue" />
-                                    </MultiBinding>
-                                </TextBlock.IsVisible>
-                            </TextBlock>
-                            <ListBox SelectedItem="{Binding SelectedProject}"
-                                     ItemsSource="{Binding LookupResults.Value}">
-                                <ListBox.IsVisible>
-                                    <MultiBinding FallbackValue="False" Converter="{x:Static BoolConverters.And}">
-                                        <Binding Path="!Lookup.IsExecuting^" />
-                                        <Binding Path="LookupResults.HasValue" />
-                                    </MultiBinding>
-                                </ListBox.IsVisible>
-                            </ListBox>
-                        </Panel>
-                        <StackPanel Spacing="10" Orientation="Horizontal" IsVisible="{Binding Lookup.IsExecuting^, FallbackValue=False}" Margin="20">
-                            <avaloniaProgressRing:ProgressRing Width="20" Height="20" />
-                            <TextBlock>Searching...</TextBlock>
-                        </StackPanel>
+                        <TextBlock Margin="20">
+                            No results
+                            <TextBlock.IsVisible>
+                                <MultiBinding FallbackValue="False" Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="!Lookup.IsExecuting^" />
+                                    <Binding Path="LookupResults.HasNoValue" />
+                                </MultiBinding>
+                            </TextBlock.IsVisible>
+                        </TextBlock>
+                        <ListBox SelectedItem="{Binding SelectedProject}"
+                                 ItemsSource="{Binding LookupResults.Value}">
+                            <ListBox.IsVisible>
+                                <MultiBinding FallbackValue="False" Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="!Lookup.IsExecuting^" />
+                                    <Binding Path="LookupResults.HasValue" />
+                                </MultiBinding>
+                            </ListBox.IsVisible>
+                        </ListBox>
                     </Panel>
-                </Border>
-            </Popup>
-        </StackPanel>
-    </HeaderedContentControl>
+                    <StackPanel Spacing="10" Orientation="Horizontal" IsVisible="{Binding Lookup.IsExecuting^, FallbackValue=False}" Margin="20">
+                        <avaloniaProgressRing:ProgressRing Width="20" Height="20" />
+                        <TextBlock>Searching...</TextBlock>
+                    </StackPanel>
+                </Panel>
+            </Border>
+        </Popup>
+    </StackPanel>
 </UserControl>

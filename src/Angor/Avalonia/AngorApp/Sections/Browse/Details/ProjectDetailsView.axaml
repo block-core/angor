@@ -5,42 +5,52 @@
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="450"
+             xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:b="clr-namespace:AngorApp.Sections.Browse"
+             mc:Ignorable="d" d:DesignWidth="700"
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
         <dt:ProjectDetailsViewModelDesign />
     </Design.DataContext>
 
-    <Panel>
+    <controls:PageContainer>
         <ScrollViewer>
-            <Grid ColumnDefinitions="1* 5* 1*">
-                <StackPanel Grid.Column="1" Spacing="20">
-                    <Panel>
-                        <dt:ProjectSummary />
-                        <Border CornerRadius="20" Background="White" Padding="10" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="20 20">
-                            <Button Command="{Binding Invest}">INVEST NOW</Button>
-                        </Border>
-                    </Panel>
-
-                    <dt:Stages />
-
-                    <controls:Pane>
-                        <StackPanel HorizontalAlignment="Center" Spacing="20">
-                            <PathIcon Height="100" Width="200" Data="{StaticResource ShieldStar}" />
-                            <TextBlock Text="Seize the opportunity to invest in this project" TextAlignment="Center" />
-                            <Button HorizontalAlignment="Center" Command="{Binding Invest}">INVEST NOW</Button>
+            <StackPanel>
+                <OverlayBorder Padding="0 0 0 20" Theme="{StaticResource CardOverlayBorder}" x:DataType="dt:IProjectDetailsViewModel">
+                    <Grid RowDefinitions="180 *" RowSpacing="15">
+                        <Panel>
+                            <av:AdvancedImage Stretch="UniformToFill" Source="{Binding Project.Banner}" />
+                        </Panel>
+                        <StackPanel Grid.Row="1" Spacing="15">
+                            <StackPanel Spacing="10" Grid.Row="1" Margin="15 0">
+                                <TextBlock Classes="SizeBig" Text="{Binding Project.Name}" />
+                                <Separator>
+                                    <Separator.Background>
+                                        <LinearGradientBrush StartPoint="0%,100%" EndPoint="100%,100%">
+                                            <GradientStop Color="Transparent" Offset="0" />
+                                            <GradientStop Color="{DynamicResource SystemChromeHighColor}" Offset="0.3" />
+                                            <GradientStop Color="{DynamicResource SystemChromeHighColor}" Offset="0.8" />
+                                            <GradientStop Color="Transparent" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Separator.Background>
+                                </Separator>
+                                <TextBlock ToolTip.Tip="{Binding $self.Text}"
+                                           MaxLines="6" Grid.Row="2" Text="{Binding Project.ShortDescription}" />
+                            </StackPanel>
                         </StackPanel>
-                    </controls:Pane>
-
-                    <dt:NostProperties />
-
-                </StackPanel>
-
-            </Grid>
+                    </Grid>
+                </OverlayBorder>
+                <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
+                    <StackPanel HorizontalAlignment="Center" Spacing="20">
+                        <PathIcon Height="100" Width="200" Data="{StaticResource ShieldStar}" />
+                        <TextBlock Text="Seize the opportunity to invest in this project" TextAlignment="Center" />
+                        <ReactiveButton HorizontalAlignment="Center" Command="{Binding Invest}">INVEST NOW</ReactiveButton>
+                    </StackPanel>
+                </OverlayBorder>
+                <dt:ProjectSummary />
+                <dt:Stages />
+            </StackPanel>
         </ScrollViewer>
-        <Border Background="White" Opacity="0.6" IsVisible="{Binding Invest.IsExecuting^}">
-            <fa:ProgressRing IsIndeterminate="True" Width="100" Height="100" />
-        </Border>
-    </Panel>
+    </controls:PageContainer>
 </UserControl>

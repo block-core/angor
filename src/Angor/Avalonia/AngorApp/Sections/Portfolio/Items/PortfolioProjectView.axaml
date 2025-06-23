@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:p="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:items="clr-namespace:AngorApp.Sections.Portfolio.Items"
-             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:a="clr-namespace:AngorApp"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Portfolio.Items.PortfolioProjectView" x:DataType="p:IPortfolioProject">
@@ -20,7 +20,13 @@
         </p:PortfolioProjectDesign>
     </Design.DataContext>
     
-    <Card Header="{Binding }" HeaderPadding="10" Padding="20">
+    <Card Header="{Binding }" HeaderPadding="10" Padding="20" 
+          HeaderStartContent="{Binding LogoUri}">
+        <Card.HeaderStartContentTemplate>
+            <DataTemplate DataType="x:Uri">
+                <av:AdvancedImage Width="150" Height="150" Stretch="UniformToFill" CornerRadius="20" Source="{Binding }" />
+            </DataTemplate>
+        </Card.HeaderStartContentTemplate>
         <Card.HeaderTemplate>
             <DataTemplate DataType="p:IPortfolioProject">
                 <DockPanel Margin="10">
@@ -29,9 +35,6 @@
                 </DockPanel>
             </DataTemplate>
         </Card.HeaderTemplate>
-        <Card.HeaderStartContent>
-            <asyncImageLoader:AdvancedImage Width="150" Height="150" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
-        </Card.HeaderStartContent>
         <StackPanel Spacing="10">
             <items:NotCompletedProjectView IsVisible="{Binding !IsInvestmentCompleted}" />
             <HeaderedContainer Header="Project Status">

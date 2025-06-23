@@ -12,7 +12,6 @@ public partial class AddressAndAmountViewModel : ReactiveValidationObject, IAddr
     public AddressAndAmountViewModel(IWallet wallet)
     {
         walletBalanceHelper = wallet.WhenAnyValue(w => w.Balance)
-            .Select(l => new AmountUI(l))
             .ToProperty(this, model => model.WalletBalance);
         
         this.ValidationRule(x => x.Amount, x => x is null or > 0, _ => "Amount must be greater than zero");

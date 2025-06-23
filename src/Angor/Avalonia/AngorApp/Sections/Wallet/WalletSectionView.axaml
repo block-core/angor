@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
              xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
-             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:a="clr-namespace:AngorApp.UI.Controls"
              xmlns:c="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Name="RootView"
@@ -19,22 +19,26 @@
         </Style>
     </UserControl.Styles>
 
-    <Panel>
+    <a:PageContainer>
         <Panel>
-            <controls:Pane VerticalAlignment="Top" Title="Setup your wallet" IsTitleVisible="True" IsVisible="{Binding CanCreateWallet}">
-                <WrapPanel HorizontalAlignment="Center" Margin="-10">
-                    <Button Content="Create wallet" Command="{Binding CreateWallet}" />
-                    <Button Content="Recover wallet" Command="{Binding RecoverWallet}" />
-                </WrapPanel>
-            </controls:Pane>
-            <Panel IsVisible="{Binding Path=HasWallet^}">
-                <operate:WalletView DataContext="{Binding ActiveWallet}" />
+            <Panel>
+                <Card VerticalAlignment="Top" Header="Setup your wallet" IsVisible="{Binding CanCreateWallet}" IsAdaptiveFlowEnabled="True">
+                    <Card.HeaderEndContent>
+                        <WrapPanel HorizontalAlignment="Center" Margin="-10">
+                            <Button Content="Create wallet" Command="{Binding CreateWallet}" />
+                            <Button Content="Recover wallet" Command="{Binding RecoverWallet}" />
+                        </WrapPanel>
+                    </Card.HeaderEndContent>
+                </Card>
+                <Panel IsVisible="{Binding Path=HasWallet^}">
+                    <operate:WalletView DataContext="{Binding ActiveWallet}" />
+                </Panel>
             </Panel>
+            <StackPanel IsVisible="{Binding IsBusy^}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock TextAlignment="Center">We are loading your wallet</TextBlock>
+                <TextBlock TextAlignment="Center">Please, wait</TextBlock>
+                <c:ProgressRing Foreground="{DynamicResource SystemAccentColor}" IsIndeterminate="True" Height="100" Width="100" />
+            </StackPanel>
         </Panel>
-        <StackPanel IsVisible="{Binding IsBusy^}" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <TextBlock TextAlignment="Center">We are loading your wallet</TextBlock>
-            <TextBlock TextAlignment="Center">Please, wait</TextBlock>
-            <c:ProgressRing IsIndeterminate="True" Height="100" Width="100" />
-        </StackPanel>
-    </Panel>
+    </a:PageContainer>
 </UserControl>

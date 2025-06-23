@@ -9,18 +9,7 @@
              mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
              x:Class="AngorApp.Sections.Wallet.CreateAndRecover.Steps.CreateWelcome.WelcomeView"
              x:DataType="createWelcome:WelcomeViewModel">
-
-    <UserControl.Styles>
-        <Style Selector="Border.Alert">
-            <Setter Property="Background" Value="#fff3cd" />
-            <Setter Property="BorderBrush" Value="#ffeeba" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="Padding" Value="16" />
-            <Setter Property="Margin" Value="0,16" />
-        </Style>
-    </UserControl.Styles>
-
+    
     <DockPanel>
         <CheckBox Name="ConfirmationCheckbox"
                   DockPanel.Dock="Bottom"

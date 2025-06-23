@@ -10,13 +10,13 @@ public static class ProjectExtensions
     {
         return new Project
         {
-            Banner = dto.Banner,
+            Picture = dto.Picture,
             Id = dto.Id.Value,
             InformationUri = dto.InformationUri,
             Name = dto.Name,
             NpubKey = dto.NostrNpubKey,
             NostrNpubKey = dto.NostrNpubKey,
-            Picture = dto.Picture,
+            Banner = dto.Banner,
             ShortDescription = dto.ShortDescription,
             Stages = dto.Stages
                 .Select(stage => new Stage

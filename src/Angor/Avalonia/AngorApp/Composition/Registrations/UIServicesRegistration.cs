@@ -1,3 +1,4 @@
+using Angor.Shared;
 using AngorApp.UI.Services;
 using Avalonia.Controls.Notifications;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +25,14 @@ public static class UIServicesRegistration
             .AddSingleton<ILauncherService>(_ => new LauncherService(topLevel!.Launcher))
             .AddSingleton(DialogService.Create())
             .AddSingleton<IActiveWallet, ActiveWallet>()
-            .AddSingleton(new ShellProperties("Angor"))
+            .AddSingleton(sp => new ShellProperties("Angor", o =>
+            {
+                var config = sp.GetRequiredService<INetworkConfiguration>();
+                var network = config.GetNetwork();
+                var name = network.Name;
+                var networkType = network.NetworkType;
+                return Observable.Return($"{name} - {networkType}");
+            }))
             .AddSingleton<IShell, Shell>()
             .AddSingleton<IWalletRoot, WalletRoot>()
             .AddSingleton<INotificationService>(_ => notificationService)

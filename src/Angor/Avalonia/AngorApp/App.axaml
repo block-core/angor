@@ -3,23 +3,62 @@
              xmlns:misc="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia"
              xmlns:password="clr-namespace:Angor.UI.Model.Implementation.Wallet.Password;assembly=Angor.UI.Model.Implementation"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:f="clr-namespace:AngorApp.UI"
              x:Class="AngorApp.App"
-             RequestedThemeVariant="Light">
+             RequestedThemeVariant="Dark">
     <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
-    <Application.DataTemplates>
-        <misc:NamingConventionViewLocator />
-        <misc:DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
-        <DataTemplate DataType="password:IIcon">
-            <avalonia:Icon FontSize="40" VerticalAlignment="Center" Value="{Binding Key}" />
-        </DataTemplate>
-    </Application.DataTemplates>
-
     <Application.Styles>
-        <FluentTheme />
-        
+
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Light"
+                                       Accent="#086c81"
+                                       AltHigh="White"
+                                       AltLow="White"
+                                       AltMedium="White"
+                                       AltMediumHigh="White"
+                                       AltMediumLow="White"
+                                       BaseHigh="#FF022229"
+                                       BaseLow="#FFE6F1F2"
+                                       BaseMedium="#FF93BCC1"
+                                       BaseMediumHigh="#3E686D"
+                                       BaseMediumLow="#FFBAD5D9"
+                                       ChromeAltLow="#FF669CA1"
+                                       ChromeBlackHigh="Black"
+                                       ChromeBlackLow="#FFE6F1F2"
+                                       ChromeBlackMedium="#FF669CA1"
+                                       ChromeBlackMediumLow="#FF93BCC1"
+                                       ChromeDisabledHigh="#FFE6F1F2"
+                                       ChromeDisabledLow="#FF93BCC1"
+                                       ChromeGray="#FFBAD5D9"
+                                       ChromeHigh="#FFE6F1F2"
+                                       ChromeLow="#FFF2F8F9"
+                                       ChromeMedium="#FFEAF2F3"
+                                       ChromeMediumLow="#FFF2F8F9"
+                                       ChromeWhite="White"
+                                       ListLow="#FFEAF2F3"
+                                       ListMedium="#FFE6F1F2"
+                                       RegionColor="#FFF9FCFD" />
+
+                <ColorPaletteResources x:Key="Dark"
+                                       Accent="#ffcbdde1"
+                                       AltHigh="Black" AltLow="Black" AltMedium="Black" AltMediumHigh="Black" AltMediumLow="Black" BaseHigh="White" BaseLow="#ff046479" BaseMedium="#ff75b5c2"
+                                       BaseMediumHigh="#ff91c9d4" BaseMediumLow="#ff3c8c9d" ChromeAltLow="#ff91c9d4" ChromeBlackHigh="Black" 
+                                       ChromeBlackLow="#ff91c9d4" 
+                                       ChromeBlackMedium="Black" ChromeBlackMediumLow="Black"
+                                       ChromeDisabledHigh="#ff046479" ChromeDisabledLow="#ff75b5c2" ChromeGray="#ff59a1b0" 
+                                       ChromeHigh="#ff59a1b0" ChromeLow="#ff013147" ChromeMedium="#ff023e54" 
+                                       ChromeMediumLow="#083B46"
+                                       ChromeWhite="White" 
+                                       ListLow="#083B46" ListMedium="#ff046479" RegionColor="#ff022229" />
+            </FluentTheme.Palettes>
+
+        </FluentTheme>
+
         <StyleInclude Source="UI/Styles/Themes/Light.axaml" />
-        
+
         <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
         <StyleInclude Source="avares://Zafiro.Avalonia.Dialogs/Styles.axaml" />
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
@@ -33,17 +72,43 @@
         <StyleInclude Source="Sections/Wallet/CreateAndRecover/Steps/SeedWordsGeneration/SeedWordList.axaml" />
         <StyleInclude Source="UI/Controls/IconButton.axaml" />
         <StyleInclude Source="UI/Controls/FeerateSelector.axaml" />
+        <StyleInclude Source="UI/Controls/CardGrid.axaml" />
+        <StyleInclude Source="UI/Controls/PageContainer.axaml" />
+        <StyleInclude Source="UI/Styles/Cards.axaml" />
     </Application.Styles>
 
     <Application.Resources>
         <ResourceDictionary>
+            
+            <IconDataTemplate x:Key="IconDataTemplate" Converter="{x:Static f:AngorIconConverter.Instance}" />
+
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <ImageBrush x:Key="AppBackground" Source="avares://AngorApp/Assets/darkbg.jpg" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <ImageBrush Stretch="UniformToFill" x:Key="AppBackground" Source="avares://AngorApp/Assets/darkbg.jpg" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/ProgressRingStyles.axaml"/>
-                <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/NumberBoxStyles.axaml"/>
+                <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/ProgressRingStyles.axaml" />
+                <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/NumberBoxStyles.axaml" />
                 <MergeResourceInclude Source="UI/Controls/Header.axaml" />
                 <MergeResourceInclude Source="UI/Controls/SectionItem.axaml" />
                 <MergeResourceInclude Source="UI/Resources/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
+    
+    <Application.DataTemplates>
+        <DataTemplate DataType="ui:IIcon">
+            <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
+        </DataTemplate>
+        <misc:NamingConventionViewLocator />
+        <misc:DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
+        <DataTemplate DataType="password:IIcon">
+            <avalonia:Icon FontSize="40" VerticalAlignment="Center" Value="{Binding Key}" />
+        </DataTemplate>
+    </Application.DataTemplates>
+    
 </Application>

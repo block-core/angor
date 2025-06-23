@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using Angor.UI.Model;
+using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Browse.Details;
 
@@ -14,7 +15,7 @@ public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
     public object Icon { get; }
     public object Picture { get; }
 
-    public ReactiveCommand<Unit, Result> Invest { get; }
+    public IEnhancedCommand<Result> Invest { get; }
 
     public IEnumerable<INostrRelay> Relays { get; } =
     [

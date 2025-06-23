@@ -21,7 +21,7 @@
     <Styles.Resources>
         <ControlTheme x:Key="{x:Type zd:DialogControl}" TargetType="zd:DialogControl" BasedOn="{StaticResource {x:Type zd:DialogControl}}">
             <Setter Property="Padding" Value="30 15 30 30" />
-            <Setter Property="Background" Value="{StaticResource Level2}" />
+            <!-- <Setter Property="Background" Value="{StaticResource Level2}" /> -->
         </ControlTheme>
     </Styles.Resources>
     

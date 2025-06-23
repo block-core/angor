@@ -1,0 +1,71 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:a="using:AngorApp.UI.Controls"
+        xmlns:c="clr-namespace:AngorApp.UI.Controls"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+        xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI">
+
+    <Design.PreviewWith>
+        <a:CardGrid Width="1200">
+            <a:CardGrid.ItemsSource>
+                <generic:List x:TypeArguments="x:Object">
+                    <Card Header="Create your wallet" 
+                          Subheader="Create a new wallet or recover your existing one to get started with Angor">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="fa-wallet" />
+                        </Card.HeaderStartContent>
+                    </Card>
+                    <Card Header="Explore Opportunities" 
+                          Subheader="Browse through innovative projects and find your next investment" />
+                    <Card Header="Launch Your Project" 
+                          Subheader="Start your fundraising journey and launch your project on Angor" />
+                    <Card Header="Invest Grow" 
+                          Subheader="Invest in promising projects and be part of their success story" />
+                </generic:List>
+            </a:CardGrid.ItemsSource>
+        </a:CardGrid>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <ControlTheme x:Key="{x:Type a:CardGrid}" TargetType="c:CardGrid">
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Container.Name="ResponsiveContainer" Container.Sizing="Width" Padding="{TemplateBinding Padding}">
+                        <Border.Styles>
+                            <ContainerQuery Name="ResponsiveContainer" Query="min-width:0">
+                                <Style Selector="UniformGrid">
+                                    <Setter Property="Columns" Value="1" />
+                                </Style>
+                            </ContainerQuery>
+                            <ContainerQuery Name="ResponsiveContainer" Query="min-width:500">
+                                <Style Selector="UniformGrid">
+                                    <Setter Property="Columns" Value="2" />
+                                </Style>
+                            </ContainerQuery>
+                            <ContainerQuery Name="ResponsiveContainer" Query="min-width:750">
+                                <Style Selector="UniformGrid">
+                                    <Setter Property="Columns" Value="3" />
+                                </Style>
+                            </ContainerQuery>
+                            <ContainerQuery Name="ResponsiveContainer" Query="min-width:1000">
+                                <Style Selector="UniformGrid">
+                                    <Setter Property="Columns" Value="4" />
+                                </Style>
+                            </ContainerQuery>
+                        </Border.Styles>
+                        <ItemsControl ItemTemplate="{TemplateBinding ItemTemplate}" ItemsSource="{TemplateBinding ItemsSource}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+
+    </Styles.Resources>
+    
+</Styles>

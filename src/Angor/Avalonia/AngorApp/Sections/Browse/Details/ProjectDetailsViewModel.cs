@@ -2,8 +2,10 @@ using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using AngorApp.Features.Invest;
 using AngorApp.UI.Services;
+using Avalonia.Threading;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI;
+using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Browse.Details;
 
@@ -18,15 +20,15 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
         this.project = project;
         this.investWizard = investWizard;
         this.uiServices = uiServices;
-        Invest = ReactiveCommand.CreateFromTask(DoInvest);
+        Invest = ReactiveCommand.CreateFromTask(DoInvest).Enhance();
 
         Invest.HandleErrorsWith(uiServices.NotificationService, "Investment failed");
     }
 
-    public object Icon => project.Banner;
-    public object Picture => project.Picture;
+    public object Icon => project.Picture;
+    public object Picture => project.Banner;
 
-    public ReactiveCommand<Unit, Result> Invest { get; }
+    public IEnhancedCommand<Result> Invest { get; }
 
     public IEnumerable<INostrRelay> Relays { get; } =
     [
@@ -54,9 +56,12 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
                 .Bind(wallet => investWizard.Invest(wallet, project)));
     }
 
-    private async Task<Maybe<Unit>> ShowNoWalletMessage()
+    private Task<Maybe<Unit>> ShowNoWalletMessage()
     {
-        await uiServices.Dialog.ShowMessage("No wallet found", "Please create or recover a wallet to invest in this project.");
-        return Maybe<Unit>.None;
+        return Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            await uiServices.Dialog.ShowMessage("No wallet found", "Please create or recover a wallet to invest in this project.");
+            return Maybe<Unit>.None;
+        });
     }
 }

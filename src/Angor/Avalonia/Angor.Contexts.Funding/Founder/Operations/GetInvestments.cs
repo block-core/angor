@@ -60,9 +60,9 @@ public static class GetInvestments
                 return InvestmentStatus.Invested;
     
             if (IsApproved(eventId, approvals))
-                return InvestmentStatus.Approved;
+                return InvestmentStatus.FounderSignaturesReceived;
     
-            return InvestmentStatus.Pending;
+            return InvestmentStatus.PendingFounderSignatures;
         }
 
         private static bool IsAlreadyInvested(string transactionId, List<ProjectInvestment> alreadyInvested)
