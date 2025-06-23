@@ -1,4 +1,6 @@
 using System.Linq;
+// ReSharper disable once RedundantUsingDirective
+using ReactiveUI.Validation.Extensions;
 
 namespace AngorApp.Sections.Wallet.CreateAndRecover.Steps.SeedWordsConfirmation;
 
