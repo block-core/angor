@@ -38,7 +38,7 @@ public static class Investments
             if (investmentRecordsLookup.Value.ProjectIdentifiers.Count == 0)
                 return Result.Success(Enumerable.Empty<InvestedProjectDto>());
             
-            return await GatherProjectIdentifiers(investmentRecordsLookup)
+            return await GatherProjectIdentifiers(investmentRecordsLookup.Value)
                 .ToList()
                 .SelectMany(eventIds => GetProjectInfoForEventIds(eventIds.ToArray())) //Get project info for event IDs
                 .ToList()
@@ -81,7 +81,7 @@ public static class Investments
                 .ToResult();
         }
 
-        private async Task<IEnumerable<string>> GatherProjectIdentifiers1(Result<InvestmentRecords> investmentRecordsLookup)
+        private async Task<IEnumerable<string>> GatherProjectIdentifiersAsync(Result<InvestmentRecords> investmentRecordsLookup)
         {
             var projectLookupsTasks = investmentRecordsLookup.Value.ProjectIdentifiers.Select(x =>
                 Result.Try(() => indexerService.GetProjectByIdAsync(x.ProjectIdentifier))
@@ -94,9 +94,9 @@ public static class Investments
                 .Select(x => x.Result.Value.NostrEventId);
         }
         
-        private IObservable<string> GatherProjectIdentifiers(Result<InvestmentRecords> investmentRecordsLookup)
+        private IObservable<string> GatherProjectIdentifiers(InvestmentRecords investmentRecordsLookup)
         {
-            return investmentRecordsLookup.Value.ProjectIdentifiers.ToObservable()
+            return investmentRecordsLookup.ProjectIdentifiers.ToObservable()
                 .ToResult()
                 .Bind(projectId => Result.Try(() => indexerService.GetProjectByIdAsync(projectId.ProjectIdentifier)))
                 .Where(x => x.IsSuccess)
