@@ -63,7 +63,6 @@
         <StyleInclude Source="avares://Zafiro.Avalonia.Dialogs/Styles.axaml" />
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
         <StyleInclude Source="UI/Controls/Pane.axaml" />
-        <StyleInclude Source="UI/Controls/Dialog.axaml" />
         <StyleInclude Source="UI/Controls/TextBox.axaml" />
         <StyleInclude Source="UI/Controls/AmountControl.axaml" />
         <StyleInclude Source="UI/Controls/List.axaml" />
