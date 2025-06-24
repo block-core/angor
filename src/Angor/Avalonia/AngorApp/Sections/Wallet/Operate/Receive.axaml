@@ -45,7 +45,7 @@
             </c:Card>
 
             <Image Width="300" Height="300"
-                   Source="{Binding Path=ReceiveAddressResult.Value, Converter={x:Static controls:MiscConverters.StringToQRCode}}" />
+                   Source="{Binding Path=ReceiveAddressResult.Value, Converter={x:Static controls:AngorConverters.StringToQRCode}}" />
         </StackPanel>
     </c:Loading>
 </UserControl>

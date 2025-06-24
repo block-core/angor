@@ -5,13 +5,13 @@
              xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:amount1="clr-namespace:AngorApp.Features.Invest.Amount"
+             xmlns:c="clr-namespace:AngorApp.Features.Invest.Amount"
              mc:Ignorable="d"
              d:DesignWidth="500"
-             x:Class="AngorApp.Features.Invest.Amount.AmountView" x:DataType="amount1:IAmountViewModel">
+             x:Class="AngorApp.Features.Invest.Amount.AmountView" x:DataType="c:IAmountViewModel">
 
     <Design.DataContext>
-        <amount1:AmountViewModelDesign />
+        <c:AmountViewModelDesign />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -21,26 +21,14 @@
     </UserControl.Styles>
 
     <Panel>
-        <StackPanel Spacing="20">
-            <StackPanel Spacing="10" Grid.IsSharedSizeScope="True">
+        <StackPanel Spacing="10" Grid.IsSharedSizeScope="True">
 
-                <controls:AmountControl Satoshis="{Binding Amount}">
-                    <Interaction.Behaviors>
-                        <behaviors:UntouchedClassBehavior />
-                    </Interaction.Behaviors>
-                </controls:AmountControl>
-                <controls:IconButton HorizontalAlignment="Right" Content="Stages breakdown"
-                                     IsVisible="{Binding !!Amount}">
-                    <controls:IconButton.Icon>
-                        <avalonia:Icon Value="fa-info" />
-                    </controls:IconButton.Icon>
-                    <controls:IconButton.Flyout>
-                        <Flyout Placement="BottomEdgeAlignedLeft">
-                            <amount1:StagesBreakdown />
-                        </Flyout>
-                    </controls:IconButton.Flyout>
-                </controls:IconButton>
-            </StackPanel>
+            <controls:AmountControl Satoshis="{Binding Amount}">
+                <Interaction.Behaviors>
+                    <behaviors:UntouchedClassBehavior />
+                </Interaction.Behaviors>
+            </controls:AmountControl>
+            <c:StagesBreakdown IsVisible="{Binding !!Amount}" />
         </StackPanel>
     </Panel>
 </UserControl>

@@ -3,21 +3,51 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:amount1="clr-namespace:AngorApp.Features.Invest.Amount"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.Features.Invest.Amount.StagesBreakdown" x:DataType="amount1:IAmountViewModel">
+             xmlns:a="clr-namespace:AngorApp.Features.Invest.Amount"
+             mc:Ignorable="d" d:DesignWidth="500"
+             x:Class="AngorApp.Features.Invest.Amount.StagesBreakdown" x:DataType="a:IAmountViewModel">
 
 
     <Design.DataContext>
-        <amount1:AmountViewModelDesign />
+        <a:AmountViewModelDesign />
     </Design.DataContext>
+    
+    <UserControl.Styles>
+            <Style Selector="ItemsControl">
+                <Setter Property="ItemsPanel">
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1" />
+                    </ItemsPanelTemplate>
+                </Setter>
+            </Style>
+            <Style Selector="ItemsControl:overflow">
+                <Setter Property="ItemsPanel">
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="1" />
+                    </ItemsPanelTemplate>
+                </Setter>
+            </Style>
+    </UserControl.Styles>
 
     <ItemsControl ItemsSource="{Binding StageBreakdowns}">
+        <Interaction.Behaviors>
+            <OverflowBehavior />
+        </Interaction.Behaviors>
         <ItemsControl.ItemTemplate>
             <DataTemplate>
-                <controls:SectionItem Margin="6" Padding="10">
-                    <TextBlock DockPanel.Dock="Top" Text="{Binding Description}" />
-                </controls:SectionItem>
+                <StackPanel>
+                    <!-- <Card Header="{Binding Index, StringFormat='Stage {0}'}" -->
+                    <!--       HeaderEndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.HumanizeDate}}" -->
+                    <!--       Content="{Binding Amount.SatsString}"> -->
+                    <!-- </Card> -->
+                    <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
+                        <StackPanel Spacing="10">
+                            <TextBlock Classes="SizeNormal" Text="{Binding Index, StringFormat='Stage {0}'}" />
+                            <TextBlock Classes="SizeBig" Text="{Binding Amount.SatsString}" />
+                            <TextBlock HorizontalAlignment="Right" Classes="SizeSmall" TextWrapping="Wrap" Text="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.HumanizeDate}}" />
+                        </StackPanel>
+                    </OverlayBorder>
+                </StackPanel>
             </DataTemplate>
         </ItemsControl.ItemTemplate>
     </ItemsControl>
