@@ -9,7 +9,9 @@ public class InvestmentDraft(IInvestmentAppService investmentAppService, IWallet
 {
     public CreateInvestment.Draft DraftModel { get; } = draftModel;
 
-    public AmountUI TotalFee => new AmountUI(DraftModel.TotalFee.Sats);
+    public IAmountUI TransactionFee => new AmountUI(DraftModel.TotalFee.Sats);
+    public IAmountUI MinerFee => new AmountUI(DraftModel.MinerFee.Sats);
+    public IAmountUI AngorFee => new AmountUI(DraftModel.TotalFee.Sats);
 
     public Task<Result<Guid>> Confirm()
     {

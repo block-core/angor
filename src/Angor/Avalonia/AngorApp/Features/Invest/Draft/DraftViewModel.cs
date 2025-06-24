@@ -14,6 +14,7 @@ namespace AngorApp.Features.Invest.Draft;
 
 public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposable
 {
+    public IProject Project { get; }
     private readonly UIServices uiServices;
     [ObservableAsProperty] private IInvestmentDraft? draft;
     [Reactive] private long? feerate;
@@ -23,6 +24,7 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposab
 
     public DraftViewModel(IInvestmentAppService investmentAppService, IWallet wallet, long sats, IProject project, UIServices uiServices)
     {
+        Project = project;
         this.uiServices = uiServices;
 
         isCalculatingDraft.DisposeWith(disposable);
@@ -35,7 +37,7 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposab
         
         createDraft.HandleErrorsWith(uiServices.NotificationService, "Could not create investment preview").DisposeWith(disposable);
         
-        IsCalculating = isCalculatingDraft.AsObservable().ObserveOn(RxApp.MainThreadScheduler);
+        IsCalculatingDraft = isCalculatingDraft.AsObservable().ObserveOn(RxApp.MainThreadScheduler);
 
         draftHelper = createDraft
             .Successes()
@@ -45,15 +47,15 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposab
 
         var canConfirm = this.WhenAnyValue(model => model.Draft)
             .NotNull()
-            .CombineLatest(IsCalculating, (hasDraft, calculating) => hasDraft && !calculating);
+            .CombineLatest(IsCalculatingDraft, (hasDraft, calculating) => hasDraft && !calculating);
 
         Confirm = ReactiveCommand.CreateFromTask(() => Draft!.Confirm(), canConfirm).DisposeWith(disposable);
         IsSending = Confirm.IsExecuting;
-        feeHelper = this.WhenAnyValue(model => model.Draft!.TotalFee).ToProperty(this, model => model.Fee).DisposeWith(disposable);
+        feeHelper = this.WhenAnyValue(model => model.Draft!.TransactionFee).ToProperty(this, model => model.Fee).DisposeWith(disposable);
         createDraft.Connect().DisposeWith(disposable);
     }
 
-    public IObservable<bool> IsCalculating { get; }
+    public IObservable<bool> IsCalculatingDraft { get; }
     public IObservable<bool> IsSending { get; }
     public ReactiveCommand<Unit, Result<Guid>> Confirm { get; }
     public IEnumerable<IFeeratePreset> Presets => uiServices.FeeratePresets;

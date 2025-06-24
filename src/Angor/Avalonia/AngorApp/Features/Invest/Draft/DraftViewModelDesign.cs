@@ -1,3 +1,4 @@
+using AngorApp.Sections.Browse;
 using AngorApp.UI.Controls;
 
 namespace AngorApp.Features.Invest.Draft;
@@ -10,9 +11,10 @@ public class DraftViewModelDesign : IDraftViewModel
     public IAmountUI? Fee { get; }
     public IFeeCalculator FeeCalculator { get; } = new FeeCalculatorDesignTime();
     public IEnumerable<IFeeratePreset> Presets { get; }
-    public IObservable<bool> IsCalculating { get; }
+    public IObservable<bool> IsCalculatingDraft { get; }
     public IObservable<bool> IsSending { get; }
-
+    public IProject Project { get; } = new ProjectDesign();
+    
     private static string TransactionJson()
     {
         return """

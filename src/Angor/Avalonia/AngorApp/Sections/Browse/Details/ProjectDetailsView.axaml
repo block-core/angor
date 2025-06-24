@@ -4,9 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-             xmlns:b="clr-namespace:AngorApp.Sections.Browse"
              mc:Ignorable="d" d:DesignWidth="700"
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="dt:IProjectDetailsViewModel">
 
@@ -35,8 +33,8 @@
                                         </LinearGradientBrush>
                                     </Separator.Background>
                                 </Separator>
-                                <TextBlock ToolTip.Tip="{Binding $self.Text}"
-                                           MaxLines="6" Grid.Row="2" Text="{Binding Project.ShortDescription}" />
+                                <TextBlock ToolTip.Tip="{Binding $self.Text}" TextWrapping="Wrap"
+                                           Text="{Binding Project.ShortDescription}" />
                             </StackPanel>
                         </StackPanel>
                     </Grid>

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:a="clr-namespace:AngorApp.Features.Invest.Amount"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              mc:Ignorable="d" d:DesignWidth="500"
              x:Class="AngorApp.Features.Invest.Amount.StagesBreakdown" x:DataType="a:IAmountViewModel">
 
@@ -11,22 +12,22 @@
     <Design.DataContext>
         <a:AmountViewModelDesign />
     </Design.DataContext>
-    
+
     <UserControl.Styles>
-            <Style Selector="ItemsControl">
-                <Setter Property="ItemsPanel">
-                    <ItemsPanelTemplate>
-                        <UniformGrid Rows="1" />
-                    </ItemsPanelTemplate>
-                </Setter>
-            </Style>
-            <Style Selector="ItemsControl:overflow">
-                <Setter Property="ItemsPanel">
-                    <ItemsPanelTemplate>
-                        <UniformGrid Columns="1" />
-                    </ItemsPanelTemplate>
-                </Setter>
-            </Style>
+        <Style Selector="ItemsControl">
+            <Setter Property="ItemsPanel">
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" />
+                </ItemsPanelTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="ItemsControl:overflow">
+            <Setter Property="ItemsPanel">
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="1" />
+                </ItemsPanelTemplate>
+            </Setter>
+        </Style>
     </UserControl.Styles>
 
     <ItemsControl ItemsSource="{Binding StageBreakdowns}">
@@ -40,13 +41,27 @@
                     <!--       HeaderEndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.HumanizeDate}}" -->
                     <!--       Content="{Binding Amount.SatsString}"> -->
                     <!-- </Card> -->
-                    <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
+                    <Card HeaderStartContent="{Binding Index, StringFormat='Stage {0}'}" HeaderEndContent="{Binding Amount.DecimalString}">
+                        <Card.HeaderEndContentTemplate>
+                            <DataTemplate DataType="x:Object">
+                                <Border Padding="10" CornerRadius="10" Background="{DynamicResource SystemChromeHighColor}">
+                                    <ContentPresenter Content="{Binding}" FontWeight="Bold" FontSize="12" />
+                                </Border>
+                            </DataTemplate>
+                        </Card.HeaderEndContentTemplate>
                         <StackPanel Spacing="10">
-                            <TextBlock Classes="SizeNormal" Text="{Binding Index, StringFormat='Stage {0}'}" />
-                            <TextBlock Classes="SizeBig" Text="{Binding Amount.SatsString}" />
-                            <TextBlock HorizontalAlignment="Right" Classes="SizeSmall" TextWrapping="Wrap" Text="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.HumanizeDate}}" />
+                            <EdgePanel Content="{Binding ReleaseDate, StringFormat='Release: {0:d}'}">
+                                <EdgePanel.StartContent>
+                                    <ui:Icon Source="fa-calendar" />
+                                </EdgePanel.StartContent>
+                            </EdgePanel>
+                            <EdgePanel Content="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.HumanizeDate}}">
+                                <EdgePanel.StartContent>
+                                    <ui:Icon Source="fa-clock" />
+                                </EdgePanel.StartContent>
+                            </EdgePanel>
                         </StackPanel>
-                    </OverlayBorder>
+                    </Card>
                 </StackPanel>
             </DataTemplate>
         </ItemsControl.ItemTemplate>

@@ -4,9 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:df="clr-namespace:AngorApp.Features.Invest.Draft"
-             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" x:Class="AngorApp.Features.Invest.Draft.DraftView"
-             Height="390"
+             d:DesignWidth="500"
              x:DataType="df:IDraftViewModel">
 
     <Design.DataContext>
@@ -19,15 +18,38 @@
         </Style>
     </UserControl.Styles>
 
-
-    <StackPanel Spacing="8" IsEnabled="{Binding !IsSending^}">
-        <z:Card Header="Select transaction speed:">
+    <StackPanel IsEnabled="{Binding !IsSending^}">
+        <Card Header="Project" Subheader="{Binding Project.Name}"></Card>
+        <Card Header="Transaction speed">
             <controls:FeerateSelector Feerate="{Binding Feerate}"
                                       Presets="{Binding Presets}" />
-        </z:Card>
-        <z:Loading IsLoading="{Binding IsCalculating^}" LoadingText="Calculating fee. Please wait.">
+        </Card>
+        <Loading IsLoading="{Binding IsCalculatingDraft^}">
+            <Card Header="Fees">
+                <Card.Styles>
+                    <Style Selector="HeaderedContainer /template/ ContentPresenter:nth-child(2)">
+                        <Setter Property="TextElement.FontSize" Value="26" />
+                    </Style>
+                    <Style Selector="HeaderedContainer /template/ ContentPresenter:nth-child(1)">
+                        <Setter Property="TextElement.FontSize" Value="13" />
+                        <Setter Property="TextElement.FontWeight" Value="Light" />
+                    </Style>
+                </Card.Styles>
+                <ItemsControl>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel ItemSpacing="10" LineSpacing="10" ItemWidth="200" Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <HeaderedContainer Header="Miner Fee" Content="{Binding Draft.MinerFee.SatsString}" />
+                    <HeaderedContainer Header="Angor Fee" Content="{Binding Draft.AngorFee.SatsString}" />
+                    <HeaderedContainer Header="Transaction Fee" Content="{Binding Draft.TransactionFee.SatsString}" />
+                </ItemsControl>
+            </Card>
+        </Loading>
+        <Loading IsLoading="{Binding IsCalculatingDraft^}" LoadingText="Calculating fee. Please wait.">
             <TextBlock Text="{Binding Fee.SatsString, StringFormat='Total fee: {0}'}" />
-        </z:Loading>
-        <z:Loading LoadingText="Sending transaction..." IsLoading="{Binding IsSending^}" />
+        </Loading>
+        <Loading LoadingText="Sending transaction..." IsLoading="{Binding IsSending^}" />
     </StackPanel>
 </UserControl>

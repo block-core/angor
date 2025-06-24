@@ -27,8 +27,12 @@ public static class CreateInvestment
         }
     }
     
-    public record Draft(string InvestorKey, string SignedTxHex, string TransactionId, Amount TotalFee);
-    
+    public record Draft(string InvestorKey, string SignedTxHex, string TransactionId, Amount TotalFee)
+    {
+        public Amount MinerFee { get; }
+        public Amount Angor { get;  }
+    }
+
     public class CreateInvestmentTransactionHandler(
         IProjectRepository projectRepository,
         IInvestorTransactionActions investorTransactionActions,

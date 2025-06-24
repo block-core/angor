@@ -82,8 +82,8 @@
     <Style Selector="views|DialogControl" >
         <Setter Property="MinWidth" Value="{OnFormFactor Desktop=400, x:TypeArguments=x:Double}" />
         <Setter Property="MinHeight" Value="{OnFormFactor Desktop=300, x:TypeArguments=x:Double}" />
-        <Setter Property="MaxWidth" Value="{OnFormFactor Desktop=800, x:TypeArguments=x:Double}" />
-        <Setter Property="MaxHeight" Value="{OnFormFactor Desktop=500, x:TypeArguments=x:Double}" />
+        <!-- <Setter Property="MaxWidth" Value="{OnFormFactor Desktop=800, x:TypeArguments=x:Double}" /> -->
+        <!-- <Setter Property="MaxHeight" Value="{OnFormFactor Desktop=500, x:TypeArguments=x:Double}" /> -->
     </Style>
     
     <Style Selector="Separator">
