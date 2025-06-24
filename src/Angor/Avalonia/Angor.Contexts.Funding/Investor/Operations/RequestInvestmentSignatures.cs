@@ -67,7 +67,7 @@ public static class RequestInvestmentSignatures
                     UnfundedReleaseAddress = releaseAddress,
                 };
 
-                var key = new KeyIdentifier(walletId, project.NostrPubKey);
+                var key = new KeyIdentifier(walletId, project.FounderKey);
                 return await signatureService.PostInvestmentRequest(key, serializer.Serialize(signRecoveryRequest),  project.NostrPubKey);
 
             }
