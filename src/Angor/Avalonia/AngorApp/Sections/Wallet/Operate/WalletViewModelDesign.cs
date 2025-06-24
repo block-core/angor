@@ -17,44 +17,46 @@ public class WalletViewModelDesign : ReactiveObject, IWalletViewModel
     ReactiveCommand<Unit, ResultViewModel<string>> IWalletViewModel.GetReceiveAddress => getReceiveAddress;
 
     public ResultViewModel<string> ReceiveAddressResult { get; }
-    public StoppableCommand<Unit, Result<BroadcastedTransaction>> Sync { get; set; }
-    public IEnumerable<IdentityContainer<ITransactionViewModel>> History { get; } = 
-        [
-            new()
+
+    public IEnumerable<IdentityContainer<ITransactionViewModel>> History { get; } =
+    [
+        new()
+        {
+            Content = new TransactionViewModelDesign()
             {
-                Content = new TransactionViewModelDesign()
+                Transaction = new BroadcastedTransactionDesign()
                 {
-                    Transaction = new BroadcastedTransactionDesign()
-                    {
-                        Balance = new AmountUI(200),
-                        BlockTime = DateTimeOffset.Now,
-                        Id = "12345"
-                    }
-                },
+                    Balance = new AmountUI(200),
+                    BlockTime = DateTimeOffset.Now,
+                    Id = "12345"
+                }
             },
-            new()
+        },
+        new()
+        {
+            Content = new TransactionViewModelDesign()
             {
-                Content = new TransactionViewModelDesign()
+                Transaction = new BroadcastedTransactionDesign()
                 {
-                    Transaction = new BroadcastedTransactionDesign()
-                    {
-                        Balance = new AmountUI(-400),
-                        BlockTime = DateTimeOffset.Now  - 1.Days(),
-                        Id = "12345"
-                    }
-                },
+                    Balance = new AmountUI(-400),
+                    BlockTime = DateTimeOffset.Now - 1.Days(),
+                    Id = "12345"
+                }
             },
-            new()
+        },
+        new()
+        {
+            Content = new TransactionViewModelDesign()
             {
-                Content = new TransactionViewModelDesign()
+                Transaction = new BroadcastedTransactionDesign()
                 {
-                    Transaction = new BroadcastedTransactionDesign()
-                    {
-                        Balance = new AmountUI(0),
-                        BlockTime = DateTimeOffset.Now  - 2.Days(),
-                        Id = "12345"
-                    }
-                },
+                    Balance = new AmountUI(0),
+                    BlockTime = DateTimeOffset.Now - 2.Days(),
+                    Id = "12345"
+                }
             },
-        ];
+        },
+    ];
+
+    public string Title { get; set; } = "Testing";
 }

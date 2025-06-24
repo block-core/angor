@@ -80,15 +80,6 @@
         <ResourceDictionary>
             
             <IconDataTemplate x:Key="IconDataTemplate" Converter="{x:Static f:AngorIconConverter.Instance}" />
-
-            <ResourceDictionary.ThemeDictionaries>
-                <ResourceDictionary x:Key="Light">
-                    <ImageBrush x:Key="AppBackground" Source="avares://AngorApp/Assets/darkbg.jpg" />
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="Dark">
-                    <ImageBrush Stretch="UniformToFill" x:Key="AppBackground" Source="avares://AngorApp/Assets/darkbg.jpg" />
-                </ResourceDictionary>
-            </ResourceDictionary.ThemeDictionaries>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/ProgressRingStyles.axaml" />
                 <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/NumberBoxStyles.axaml" />

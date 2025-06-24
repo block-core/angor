@@ -71,11 +71,7 @@
                     </StackPanel.DataTemplates>
                     <ListBox Background="Transparent" SelectedItem="{Binding $parent[controls:FeerateSelector].Controller.SelectedFeeRate}"
                              ItemsSource="{Binding $parent[controls:FeerateSelector].Controller.FeeRates}">
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <ui:CustomUniformWithBottomPanel />
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
+                      
                     </ListBox>
                 </StackPanel>
             </ControlTemplate>
