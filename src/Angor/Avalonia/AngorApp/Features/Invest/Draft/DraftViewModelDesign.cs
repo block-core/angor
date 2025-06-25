@@ -5,8 +5,8 @@ namespace AngorApp.Features.Invest.Draft;
 
 public class DraftViewModelDesign : IDraftViewModel
 {
-    public long SatsToInvest { get; } = 1000;
     public IInvestmentDraft Draft { get; } = new InvestmentDraftDesign();
+    public IAmountUI AmountToOffer { get; } = new AmountUI(123456789);
     public long? Feerate { get; set; } = 321;
     public IAmountUI? Fee { get; }
     public IFeeCalculator FeeCalculator { get; } = new FeeCalculatorDesignTime();

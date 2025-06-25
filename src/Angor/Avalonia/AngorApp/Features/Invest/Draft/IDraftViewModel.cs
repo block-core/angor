@@ -11,4 +11,5 @@ public interface IDraftViewModel
     public IObservable<bool> IsSending { get; }
     IProject Project { get; }
     IInvestmentDraft? Draft { get; }
+    public IAmountUI AmountToOffer { get; }
 }
