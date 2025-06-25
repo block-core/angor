@@ -61,17 +61,17 @@
     </div>
 </div>
 
-@if (showWizard)
+@if (showProgress)
 {
     <div class="investor-wizard mt-3">
         <div class="wizard-stepper-container">
             <div class="wizard-progress-track">
-                <div class="wizard-progress-fill" style="width: @((currentWizardStep - 1) * 50)%;"></div>
+                <div class="wizard-progress-fill" style="width: @((currentProgressStep - 1) * 50)%;"></div>
             </div>
 
             <div class="wizard-step">
-                <div class="wizard-step-indicator @(currentWizardStep == 1 ? "is-current" : (currentWizardStep > 1 ? "is-active" : "is-upcoming"))">
-                    @if (currentWizardStep > 1)
+                <div class="wizard-step-indicator @(currentProgressStep == 1 ? "is-current" : (currentProgressStep > 1 ? "is-active" : "is-upcoming"))">
+                    @if (currentProgressStep > 1)
                     {
                         <Icon IconName="check" Width="20" Height="20" />
                     }
@@ -80,7 +80,7 @@
                         <span class="wizard-step-number">1</span>
                     }
                 </div>
-                <span class="wizard-step-label @(currentWizardStep > 1 ? "is-active-label" : "is-upcoming-label")">
+                <span class="wizard-step-label @(currentProgressStep > 1 ? "is-active-label" : "is-upcoming-label")">
                     @if (project is InvestorProject investorProj && investorProj.ReceivedFounderSignatures())
                     {
                         <span>Agreement Signed</span>
@@ -93,8 +93,8 @@
             </div>
 
             <div class="wizard-step">
-                <div class="wizard-step-indicator @(currentWizardStep == 2 ? "is-current" : (currentWizardStep > 2 ? "is-active" : "is-upcoming"))">
-                    @if (currentWizardStep > 2)
+                <div class="wizard-step-indicator @(currentProgressStep == 2 ? "is-current" : (currentProgressStep > 2 ? "is-active" : "is-upcoming"))">
+                    @if (currentProgressStep > 2)
                     {
                         <Icon IconName="check" Width="20" Height="20" />
                     }
@@ -103,12 +103,12 @@
                         <span class="wizard-step-number">2</span>
                     }
                 </div>
-                <span class="wizard-step-label @(currentWizardStep > 2 ? "is-active-label" : "is-upcoming-label")">Preview Investment <br> Details</span>
+                <span class="wizard-step-label @(currentProgressStep > 2 ? "is-active-label" : "is-upcoming-label")">Preview Investment <br> Details</span>
             </div>
 
             <div class="wizard-step">
-                <div class="wizard-step-indicator @(currentWizardStep >= 3 ? "is-active" : "is-upcoming")">
-                    @if (currentWizardStep > 3)
+                <div class="wizard-step-indicator @(currentProgressStep >= 3 ? "is-active" : "is-upcoming")">
+                    @if (currentProgressStep > 3)
                     {
                         <Icon IconName="check" Width="20" Height="20" />
                     }
@@ -117,7 +117,7 @@
                         <span class="wizard-step-number">3</span>
                     }
                 </div>
-                <span class="wizard-step-label @(currentWizardStep >= 3 ? "is-active-label" : "is-pending-label")">Confirm & <br> Transfer Funds</span>
+                <span class="wizard-step-label @(currentProgressStep >= 3 ? "is-active-label" : "is-pending-label")">Confirm & <br> Transfer Funds</span>
             </div>
         </div>
     </div>
@@ -667,8 +667,8 @@ else
     private string npubValue = "";
     private string founderNpub = "";
     private string currentUserPrivateKeyHex = "";
-    private int currentWizardStep = 0;
-    private bool showWizard = true;
+    private int currentProgressStep = 0;
+    private bool showProgress = true;
 
     public InvestmentModel Investment { get; set; } = new InvestmentModel { InvestmentAmountBtc = 0.01m };
     private bool IsSeederTimePassed { get; set; }
@@ -733,7 +733,7 @@ else
         await CheckIfSeederTimeHasPassed();
 
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmountBtc });
-        RefreshWizardState();
+        RefreshProgressState();
         ScanforProjectStats();
     }
 
@@ -749,46 +749,46 @@ else
         }
     }
 
-    private void RefreshWizardState()
+    private void RefreshProgressState()
     {
         if (project == null || invested || founder)
         {
-            showWizard = false;
-            currentWizardStep = 1;
+            showProgress = false;
+            currentProgressStep = 1;
             return;
         }
 
         if (project is not InvestorProject)
         {
-            showWizard = false;
-            currentWizardStep = 1;
+            showProgress = false;
+            currentProgressStep = 1;
         }
         else if (project is InvestorProject ip)
         {
-            showWizard = true;
+            showProgress = true;
 
             if (ip.InvestedInProject())
             {
-                showWizard = false;
-                currentWizardStep = 3;
+                showProgress = false;
+                currentProgressStep = 3;
             }
             else if (ip.ReceivedFounderSignatures())
             {
-                currentWizardStep = 2;
+                currentProgressStep = 2;
             }
             else if (ip.WaitingForFounderResponse())
             {
-                currentWizardStep = 1;
+                currentProgressStep = 1;
             }
             else
             {
-                currentWizardStep = 1;
+                currentProgressStep = 1;
             }
         }
         else
         {
-            showWizard = false;
-            currentWizardStep = 1;
+            showProgress = false;
+            currentProgressStep = 1;
         }
     }
 
@@ -808,7 +808,7 @@ else
                 passwordComponent.ShowPassword(ScanForPendingSignatures);
             }
         }
-        RefreshWizardState();
+        RefreshProgressState();
         ScanforProjectStats();
         StateHasChanged();
     }
@@ -1051,7 +1051,7 @@ else
         {
             buildSpinner = false;
         }
-        RefreshWizardState();
+        RefreshProgressState();
         StateHasChanged();
     }
 
@@ -1209,7 +1209,7 @@ else
             investSpinner = false;
             passwordComponent.ClearPassword();
         }
-        RefreshWizardState();
+        RefreshProgressState();
         StateHasChanged();
     }
 
@@ -1228,7 +1228,7 @@ else
         if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
         {
             investorProject.SignaturesInfo.Signatures = res.Signatures;
-            RefreshWizardState();
+            RefreshProgressState();
             StateHasChanged();
         }
     }
@@ -1259,7 +1259,7 @@ else
 
         investorProject.SignaturesInfo = null;
         project = SessionStorage.GetProjectById(ProjectId);
-        RefreshWizardState();
+        RefreshProgressState();
         StateHasChanged();
     }
 
