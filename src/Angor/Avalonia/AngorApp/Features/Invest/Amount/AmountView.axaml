@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
-             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:c="clr-namespace:AngorApp.Features.Invest.Amount"
              mc:Ignorable="d"
@@ -22,12 +21,17 @@
 
     <Panel>
         <StackPanel Spacing="10" Grid.IsSharedSizeScope="True">
-
-            <controls:AmountControl Satoshis="{Binding Amount}">
-                <Interaction.Behaviors>
-                    <behaviors:UntouchedClassBehavior />
-                </Interaction.Behaviors>
-            </controls:AmountControl>
+            <HeaderedContainer>
+                <HeaderedContainer.Header>
+                    <TextBlock Padding="10 0">
+                        Investment offer
+                    </TextBlock>
+                </HeaderedContainer.Header>
+                <controls:AmountControl Satoshis="{Binding Amount}">
+                    <Interaction.Behaviors>
+                        <behaviors:UntouchedClassBehavior />
+                    </Interaction.Behaviors>
+                </controls:AmountControl></HeaderedContainer>
             <c:StagesBreakdown IsVisible="{Binding !!Amount}" />
         </StackPanel>
     </Panel>
