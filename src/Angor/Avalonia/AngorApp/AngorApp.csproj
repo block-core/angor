@@ -17,7 +17,6 @@
         <PackageReference Include="Avalonia.Svg" />
         <PackageReference Include="Avalonia.Themes.Fluent" />
         <PackageReference Include="Avalonia.Fonts.Inter" />
-        <PackageReference Include="Avalonia.Xaml.Behaviors" />
         <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
         <PackageReference Include="CSharpFunctionalExtensions" />
         <PackageReference Include="Humanizer.Core" />
