@@ -5,6 +5,8 @@
              xmlns:success="clr-namespace:AngorApp.UI.Controls.Common.Success"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              mc:Ignorable="d" 
+             d:DesignHeight="500"
+             d:DesignWidth="500"
              x:Class="AngorApp.UI.Controls.Common.Success.SuccessView" x:DataType="success:ISuccessViewModel">
     
     <Design.DataContext>
@@ -12,19 +14,21 @@
     </Design.DataContext>
     
     <UserControl.Styles>
-        <Style Selector="EdgePanel ContentControl#StartContent">
+        <Style Selector="ContentControl">
             <Setter Property="Foreground" Value="Green" />
-            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontSize" Value="30" />
         </Style>
-        <Style Selector="EdgePanel ContentControl#MainContent">
+        <Style Selector="TextBlock">
             <Setter Property="FontSize" Value="15" />
-            <Setter Property="TextBlock.TextWrapping" Value="Wrap" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextAlignment" Value="Center" />
         </Style>
     </UserControl.Styles>
     
-    <EdgePanel MaxWidth="400" Content="{Binding Message}">
-        <EdgePanel.StartContent>
+    <StackPanel Spacing="10" MaxWidth="400" VerticalAlignment="Center">
+        <ContentControl>
             <ui:Icon Source="fa-solid fa-check" />
-        </EdgePanel.StartContent>
-    </EdgePanel>
+        </ContentControl>
+        <TextBlock Text="{Binding Message}"></TextBlock>
+    </StackPanel>
 </UserControl>

@@ -41,25 +41,16 @@
                     <!--       HeaderEndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.HumanizeDate}}" -->
                     <!--       Content="{Binding Amount.SatsString}"> -->
                     <!-- </Card> -->
-                    <Card HeaderStartContent="{Binding Index, StringFormat='Stage {0}'}" HeaderEndContent="{Binding Amount.DecimalString}">
+                    <Card Padding="10 5 10 10" HeaderPadding="5 5 5 0" HeaderStartContent="{Binding Index, StringFormat='Stage {0}'}" HeaderEndContent="{Binding Amount.DecimalString}">
                         <Card.HeaderEndContentTemplate>
                             <DataTemplate DataType="x:Object">
-                                <Border Padding="10" CornerRadius="10" Background="{DynamicResource SystemChromeHighColor}">
-                                    <ContentPresenter Content="{Binding}" FontWeight="Bold" FontSize="12" />
+                                <Border Padding="5" CornerRadius="10" Background="{DynamicResource SystemChromeHighColor}">
+                                    <ContentPresenter Content="{Binding}" FontWeight="Bold" FontSize="10" />
                                 </Border>
                             </DataTemplate>
                         </Card.HeaderEndContentTemplate>
-                        <StackPanel Spacing="10">
-                            <EdgePanel Content="{Binding ReleaseDate, StringFormat='Release: {0:d}'}">
-                                <EdgePanel.StartContent>
-                                    <ui:Icon Source="fa-calendar" />
-                                </EdgePanel.StartContent>
-                            </EdgePanel>
-                            <EdgePanel Content="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.HumanizeDate}}">
-                                <EdgePanel.StartContent>
-                                    <ui:Icon Source="fa-clock" />
-                                </EdgePanel.StartContent>
-                            </EdgePanel>
+                        <StackPanel Spacing="4">
+                            <EdgePanel StartContent="{Binding ReleaseDate, StringFormat='Release: {0:d}'}" EndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.HumanizeDate}}" />
                         </StackPanel>
                     </Card>
                 </StackPanel>
