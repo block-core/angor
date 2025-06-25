@@ -607,7 +607,7 @@ else
                             </button>
                         </div>
                         <p class="agreement-text text-center">
-                            By investing, you agree to the project terms and recovery agreement
+                            By investing, you acknowledge that early withdrawal requires a @project.ProjectInfo.PenaltyDays day waiting period
                         </p>
                     </div>
                 </div>
@@ -1228,6 +1228,7 @@ else
         if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
         {
             investorProject.SignaturesInfo.Signatures = res.Signatures;
+            RefreshWizardState();
             StateHasChanged();
         }
     }
@@ -1300,7 +1301,6 @@ else
             investorProject.CompleteProjectInvestment(signedTransaction.Transaction);
 
             storage.UpdateInvestmentProject(investorProject);
-            invested = true;
 
             await SaveInvestmentsListToNostrAsync();
 
