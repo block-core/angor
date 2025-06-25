@@ -3185,7 +3185,8 @@ textarea.form-control-lg {
 
     .input-group > .form-control,
     .input-group > .form-select,
-    .input-group > .form-floating {
+    .input-group > .form-floating,
+    .input-group > .create-field-input{
         position: relative;
         flex: 1 1 auto;
         width: 1%;
