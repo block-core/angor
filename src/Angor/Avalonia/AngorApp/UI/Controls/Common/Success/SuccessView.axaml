@@ -25,7 +25,7 @@
         </Style>
     </UserControl.Styles>
     
-    <StackPanel Spacing="10" MaxWidth="400" VerticalAlignment="Center">
+    <StackPanel Spacing="10" MaxWidth="450" VerticalAlignment="Center">
         <ContentControl>
             <ui:Icon Source="fa-solid fa-check" />
         </ContentControl>
