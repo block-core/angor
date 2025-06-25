@@ -30,13 +30,11 @@
         </PackageReference>
         <PackageReference Include="Serilog.Extensions.Logging" />
         <PackageReference Include="Serilog.Sinks.Console" />
-<!--        <PackageReference Include="Zafiro.Avalonia" />-->
-<!--        <PackageReference Include="Zafiro.Avalonia.Dialogs" />-->
+        <PackageReference Include="Zafiro.Avalonia" />
+        <PackageReference Include="Zafiro.Avalonia.Dialogs" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia.Dialogs\Zafiro.Avalonia.Dialogs.csproj" />
-        <ProjectReference Include="..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\Zafiro.Avalonia.csproj" />
         <ProjectReference Include="..\Angor.Contexts.Integration.WalletFunding\Angor.Contexts.Integration.WalletFunding.csproj" />
         <ProjectReference Include="..\Angor.UI.Model.Implementation\Angor.UI.Model.Implementation.csproj" />
         <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj" />

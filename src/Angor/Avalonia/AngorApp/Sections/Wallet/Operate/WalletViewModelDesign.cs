@@ -1,7 +1,6 @@
 using System.Windows.Input;
 using Angor.Contexts.Wallet.Domain;
 using Humanizer;
-using ReactiveUI.SourceGenerators;
 using Zafiro.UI;
 
 namespace AngorApp.Sections.Wallet.Operate;
