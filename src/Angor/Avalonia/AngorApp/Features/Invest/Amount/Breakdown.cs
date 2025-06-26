@@ -1,13 +1,6 @@
 namespace AngorApp.Features.Invest.Amount;
 
-public record Breakdown(
-    int Index,
-    long Amount,
-    double RatioOfTotal,
-    DateTime ReleaseDate)
+public record Breakdown(int Index, IAmountUI InvestAmount, double RatioOfTotal, DateTimeOffset ReleaseDate)
 {
-    public long InvestmentSats => (long)(Amount * RatioOfTotal);
-
-    public string Description =>
-        $"Stage {Index}: invest {InvestmentSats} sats that will be released on {ReleaseDate:d}";
+    public IAmountUI Amount => new AmountUI((long)(InvestAmount.Sats * RatioOfTotal));
 }

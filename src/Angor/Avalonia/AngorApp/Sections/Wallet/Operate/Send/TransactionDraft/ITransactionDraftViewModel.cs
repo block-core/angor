@@ -1,6 +1,4 @@
-using Angor.Contexts.Wallet.Domain;
 using AngorApp.UI.Controls;
-using Zafiro.UI.Wizards.Classic.Builder;
 
 namespace AngorApp.Sections.Wallet.Operate.Send.TransactionDraft;
 

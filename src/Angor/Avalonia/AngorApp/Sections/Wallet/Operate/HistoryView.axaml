@@ -52,7 +52,7 @@
                         </DataTemplate>
                     </z:Column.CellTemplate>
                 </z:Column>
-                <z:Column Header="Date" Width="*" Binding="{Binding Content.Transaction.BlockTime, Converter={x:Static controls:MiscConverters.HumanizeDate}}">
+                <z:Column Header="Date" Width="*" Binding="{Binding Content.Transaction.BlockTime, Converter={x:Static controls:AngorConverters.HumanizeDate}}">
                     <z:Column.HeaderTemplate>
                         <DataTemplate>
                             <TextBlock x:DataType="x:Object" TextAlignment="Center" Text="{Binding}" />

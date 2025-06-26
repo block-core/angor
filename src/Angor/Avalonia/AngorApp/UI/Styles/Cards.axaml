@@ -52,7 +52,30 @@
             <Setter Property="HeaderSpacing" Value="16" />
         </ControlTheme>
 
-
+        <ControlTheme x:Key="RemarkableSubheaderCard"
+                      TargetType="Card"
+                      BasedOn="{StaticResource {x:Type Card}}">
+    
+            <Setter Property="SubheaderTemplate">
+                <Setter.Value>
+                    <DataTemplate DataType="x:Object">
+                        <ContentControl TextElement.FontSize="18"
+                                        TextElement.Foreground="{StaticResource HeaderBrush}"
+                                        Content="{Binding}" />
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="HeaderTemplate">
+                <Setter.Value>
+                    <DataTemplate DataType="x:Object">
+                        <ContentControl TextElement.FontSize="12"
+                                        TextElement.Foreground="{StaticResource SubheaderBrush}"
+                                        Content="{Binding}" />
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </ControlTheme>
+        
         <ControlTheme x:Key="InfoCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -197,6 +220,7 @@
                     <ui:Icon Source="fa-wallet" />
                 </Card.HeaderStartContent>
             </Card>
+            <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="RemarkableSubheaderCard" Subheader="Subheader" />
         </StackPanel>
 
     </Design.PreviewWith>

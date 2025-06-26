@@ -9,7 +9,7 @@ using Zafiro.UI.Navigation.Sections;
 
 namespace AngorApp.UI.Controls;
 
-public static class MiscConverters
+public static class AngorConverters
 {
     public static readonly FuncValueConverter<string, object> StringToIcon = new(str =>
     {

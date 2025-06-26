@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using Angor.Contexts.Funding.Investor;
@@ -14,6 +15,8 @@ namespace AngorApp.Features.Invest.Draft;
 
 public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposable
 {
+    public IProject Project { get; }
+    public IAmountUI AmountToOffer { get; }
     private readonly UIServices uiServices;
     [ObservableAsProperty] private IInvestmentDraft? draft;
     [Reactive] private long? feerate;
@@ -21,21 +24,23 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposab
     private readonly BehaviorSubject<bool> isCalculatingDraft = new(false);
     private readonly CompositeDisposable disposable = new();
 
-    public DraftViewModel(IInvestmentAppService investmentAppService, IWallet wallet, long sats, IProject project, UIServices uiServices)
+    public DraftViewModel(IInvestmentAppService investmentAppService, IWallet wallet, IAmountUI amountToOffer, IProject project, UIServices uiServices)
     {
+        AmountToOffer = amountToOffer;
+        Project = project;
         this.uiServices = uiServices;
 
         isCalculatingDraft.DisposeWith(disposable);
 
         var createDraft = this.WhenAnyValue(x => x.Feerate)
             .WhereNotNull()
-            .SelectLatest(feerate => investmentAppService.CreateInvestmentDraft(wallet.Id.Value, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(sats)), isCalculatingDraft, TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
+            .SelectLatest(feerate => investmentAppService.CreateInvestmentDraft(wallet.Id.Value, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(amountToOffer.Sats), new DomainFeerate(feerate!.Value)), isCalculatingDraft, TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Publish();
         
         createDraft.HandleErrorsWith(uiServices.NotificationService, "Could not create investment preview").DisposeWith(disposable);
         
-        IsCalculating = isCalculatingDraft.AsObservable().ObserveOn(RxApp.MainThreadScheduler);
+        IsCalculatingDraft = isCalculatingDraft.AsObservable().ObserveOn(RxApp.MainThreadScheduler);
 
         draftHelper = createDraft
             .Successes()
@@ -45,15 +50,17 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposab
 
         var canConfirm = this.WhenAnyValue(model => model.Draft)
             .NotNull()
-            .CombineLatest(IsCalculating, (hasDraft, calculating) => hasDraft && !calculating);
+            .CombineLatest(IsCalculatingDraft, (hasDraft, calculating) => hasDraft && !calculating);
 
         Confirm = ReactiveCommand.CreateFromTask(() => Draft!.Confirm(), canConfirm).DisposeWith(disposable);
         IsSending = Confirm.IsExecuting;
-        feeHelper = this.WhenAnyValue(model => model.Draft!.TotalFee).ToProperty(this, model => model.Fee).DisposeWith(disposable);
+        feeHelper = this.WhenAnyValue(model => model.Draft!.TransactionFee).ToProperty(this, model => model.Fee).DisposeWith(disposable);
         createDraft.Connect().DisposeWith(disposable);
+        SelectedPreset = Presets.FirstOrDefault(preset => preset.Name.Contains("Standard"));
     }
 
-    public IObservable<bool> IsCalculating { get; }
+    public IFeeratePreset? SelectedPreset { get; set; }
+    public IObservable<bool> IsCalculatingDraft { get; }
     public IObservable<bool> IsSending { get; }
     public ReactiveCommand<Unit, Result<Guid>> Confirm { get; }
     public IEnumerable<IFeeratePreset> Presets => uiServices.FeeratePresets;
