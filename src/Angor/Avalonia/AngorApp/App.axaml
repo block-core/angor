@@ -73,6 +73,7 @@
         <StyleInclude Source="UI/Controls/FeerateSelector.axaml" />
         <StyleInclude Source="UI/Controls/CardGrid.axaml" />
         <StyleInclude Source="UI/Controls/PageContainer.axaml" />
+        <StyleInclude Source="UI/Controls/Badge.axaml" />
         <StyleInclude Source="UI/Styles/Cards.axaml" />
     </Application.Styles>
 

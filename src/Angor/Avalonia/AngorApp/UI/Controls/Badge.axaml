@@ -1,0 +1,32 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:AngorApp.UI.Controls">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <controls:Badge Color="Orange">Hola</controls:Badge>
+        </Border>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <ControlTheme x:Key="{x:Type controls:Badge}" TargetType="controls:Badge">
+            <Setter Property="Padding" Value="12 5"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="TextElement.FontWeight" Value="Light"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Padding="{TemplateBinding Padding}"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                        <Border.Background>
+                            <SolidColorBrush Color="{Binding $parent[controls:Badge].Color}" Opacity="0.5" />
+                        </Border.Background>
+                        <ContentPresenter Content="{TemplateBinding Content}">
+                            <ContentPresenter.Foreground>
+                                <SolidColorBrush Color="{Binding $parent[controls:Badge].Color}"  />
+                            </ContentPresenter.Foreground>
+                        </ContentPresenter>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </Styles.Resources>
+</Styles>
