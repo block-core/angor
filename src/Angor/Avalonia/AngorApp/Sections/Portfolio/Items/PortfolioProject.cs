@@ -31,6 +31,7 @@ public partial class PortfolioProject : ReactiveObject, IPortfolioProject
     public FounderStatus FounderStatus => FounderStatus.Approved;
     public Uri LogoUri => projectDto.LogoUri;
     public IEnhancedCommand<Result> CompleteInvestment { get; }
+    public IAmountUI Invested { get; } = new AmountUI(1234000);
     private IObservable<bool> CanCompleteInvestment => this.WhenAnyValue(project => project.IsInvestmentCompleted).Not();
     [ReactiveUI.SourceGenerators.Reactive] private bool isInvestmentCompleted;
 }

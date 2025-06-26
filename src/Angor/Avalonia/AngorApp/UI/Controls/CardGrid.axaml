@@ -54,7 +54,9 @@
                                 </Style>
                             </ContainerQuery>
                         </Border.Styles>
-                        <ItemsControl ItemTemplate="{TemplateBinding ItemTemplate}" ItemsSource="{TemplateBinding ItemsSource}">
+                        <ItemsControl ItemContainerTheme="{TemplateBinding ItemContainerTheme}" 
+                                      ItemTemplate="{TemplateBinding ItemTemplate}" 
+                                      ItemsSource="{TemplateBinding ItemsSource}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <UniformGrid />

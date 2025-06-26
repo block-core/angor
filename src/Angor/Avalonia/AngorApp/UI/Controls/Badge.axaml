@@ -3,13 +3,14 @@
         xmlns:controls="clr-namespace:AngorApp.UI.Controls">
     <Design.PreviewWith>
         <Border Padding="20">
-            <controls:Badge Color="Orange">Hola</controls:Badge>
+            <controls:Badge>Hola</controls:Badge>
         </Border>
     </Design.PreviewWith>
 
     <Styles.Resources>
         <ControlTheme x:Key="{x:Type controls:Badge}" TargetType="controls:Badge">
             <Setter Property="Padding" Value="12 5"/>
+            <Setter Property="Color" Value="{DynamicResource SystemBaseHighColor}"/>
             <Setter Property="CornerRadius" Value="5"/>
             <Setter Property="TextElement.FontWeight" Value="Light"/>
             <Setter Property="Template">

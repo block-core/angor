@@ -6,9 +6,11 @@
              xmlns:items="clr-namespace:AngorApp.Sections.Portfolio.Items"
              xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:a="clr-namespace:AngorApp"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
+             mc:Ignorable="d" d:DesignWidth="900"
              x:Class="AngorApp.Sections.Portfolio.Items.PortfolioProjectView" x:DataType="p:IPortfolioProject">
-    
+
     <Design.DataContext>
         <p:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" IsInvestmentCompleted="False" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
             <p:PortfolioProjectDesign.Target>
@@ -20,7 +22,41 @@
         </p:PortfolioProjectDesign>
     </Design.DataContext>
     
-    <Card Header="{Binding }" HeaderPadding="10" Padding="20" 
+    <UserControl.Resources>
+        <ControlTheme x:Key="Inline" TargetType="HeaderedContainer">
+            <Setter Property="ClipToBounds" Value="False"></Setter>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Panel ClipToBounds="False">
+                        <OverlayBorder BorderThickness="{TemplateBinding BorderThickness}"
+                                       ClipToBounds="False"
+                                       BorderBrush="{TemplateBinding BorderBrush}"
+                                       CornerRadius="{TemplateBinding CornerRadius}"
+                                       BoxShadow="{TemplateBinding BoxShadow}"
+                                       Background="{TemplateBinding Background}">
+                            <Panel>
+                                <ContentPresenter x:Name="Header" Background="{TemplateBinding HeaderBackground}" 
+                                                  Padding="{TemplateBinding HeaderPadding}"
+                                                  Opacity="0.7"
+                                                  HorizontalAlignment="Left"
+                                                  VerticalAlignment="Center"
+                                                  IsVisible="{Binding $parent[HeaderedContainer].Header, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                  Content="{TemplateBinding Header}" ContentTemplate="{TemplateBinding HeaderTemplate}" />
+                                <ContentPresenter x:Name="Content"
+                                                  FontWeight="Bold"
+                                                  HorizontalAlignment="Right"
+                                                  VerticalAlignment="Center"
+                                                  IsVisible="{Binding $parent[HeaderedContainer].Content, Converter={x:Static ObjectConverters.IsNotNull}}" Padding="{TemplateBinding Padding}" Content="{TemplateBinding Content}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            </Panel>
+                        </OverlayBorder>
+                    </Panel>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </UserControl.Resources>
+
+    <Card Header="{Binding }" HeaderPadding="10" Padding="20"
           HeaderStartContent="{Binding LogoUri}">
         <Card.HeaderStartContentTemplate>
             <DataTemplate DataType="x:Uri">
@@ -37,47 +73,91 @@
         </Card.HeaderTemplate>
         <StackPanel Spacing="10">
             <items:NotCompletedProjectView IsVisible="{Binding !IsInvestmentCompleted}" />
-            <HeaderedContainer Header="Project Status">
-                <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding Status}">
-                    <TextBlock Text="{Binding Status}" />
-                    <Border.Styles>
-                        <Style Selector="Border[Tag=Invalid]">
-                            <Setter Property="Background" Value="Red" />
-                        </Style>
-                        <Style Selector="Border[Tag=Invalid] TextBlock">
-                            <Setter Property="Foreground" Value="White" />
-                        </Style>
-                        <Style Selector="Border[Tag=Funding]">
-                            <Setter Property="Background" Value="#52FFA500" />
-                        </Style>
-                        <Style Selector="Border[Tag=Funding] TextBlock">
-                            <Setter Property="Foreground" Value="Orange" />
-                        </Style>
-                    </Border.Styles>
-                </Border>
-            </HeaderedContainer>
-            <HeaderedContainer Header="My investment">
-                <TextBlock Classes="SizeBig" Foreground="Orange" HorizontalAlignment="Right" Text="{Binding Raised.DecimalString}" />
-            </HeaderedContainer>
-            <HeaderedContainer Header="Founder Status">
-                <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding FounderStatus}">
-                    <TextBlock Text="{Binding FounderStatus}" />
-                    <Border.Styles>
-                        <Style Selector="Border[Tag=Invalid]">
-                            <Setter Property="Background" Value="Red" />
-                        </Style>
-                        <Style Selector="Border[Tag=Invalid] TextBlock">
-                            <Setter Property="Foreground" Value="White" />
-                        </Style>
-                        <Style Selector="Border[Tag=Approved]">
-                            <Setter Property="Background" Value="#5200FF3C" />
-                        </Style>
-                        <Style Selector="Border[Tag=Approved] TextBlock">
-                            <Setter Property="Foreground" Value="Green" />
-                        </Style>
-                    </Border.Styles>
-                </Border>
-            </HeaderedContainer>
+            <!-- <HeaderedContainer Header="Project Status"> -->
+            <!--     <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding Status}"> -->
+            <!--         <TextBlock Text="{Binding Status}" /> -->
+            <!--         <Border.Styles> -->
+            <!--             <Style Selector="Border[Tag=Invalid]"> -->
+            <!--                 <Setter Property="Background" Value="Red" /> -->
+            <!--             </Style> -->
+            <!--             <Style Selector="Border[Tag=Invalid] TextBlock"> -->
+            <!--                 <Setter Property="Foreground" Value="White" /> -->
+            <!--             </Style> -->
+            <!--             <Style Selector="Border[Tag=Funding]"> -->
+            <!--                 <Setter Property="Background" Value="#52FFA500" /> -->
+            <!--             </Style> -->
+            <!--             <Style Selector="Border[Tag=Funding] TextBlock"> -->
+            <!--                 <Setter Property="Foreground" Value="Orange" /> -->
+            <!--             </Style> -->
+            <!--         </Border.Styles> -->
+            <!--     </Border> -->
+            <!-- </HeaderedContainer> -->
+            <!-- <HeaderedContainer Header="My investment"> -->
+            <!--     <TextBlock Classes="SizeBig" Foreground="Orange" HorizontalAlignment="Right" Text="{Binding Raised.DecimalString}" /> -->
+            <!-- </HeaderedContainer> -->
+            <!-- <HeaderedContainer Header="Founder Status"> -->
+            <!--     <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding FounderStatus}"> -->
+            <!--         <TextBlock Text="{Binding FounderStatus}" /> -->
+            <!--         <Border.Styles> -->
+            <!--             <Style Selector="Border[Tag=Invalid]"> -->
+            <!--                 <Setter Property="Background" Value="Red" /> -->
+            <!--             </Style> -->
+            <!--             <Style Selector="Border[Tag=Invalid] TextBlock"> -->
+            <!--                 <Setter Property="Foreground" Value="White" /> -->
+            <!--             </Style> -->
+            <!--             <Style Selector="Border[Tag=Approved]"> -->
+            <!--                 <Setter Property="Background" Value="#5200FF3C" /> -->
+            <!--             </Style> -->
+            <!--             <Style Selector="Border[Tag=Approved] TextBlock"> -->
+            <!--                 <Setter Property="Foreground" Value="Green" /> -->
+            <!--             </Style> -->
+            <!--         </Border.Styles> -->
+            <!--     </Border> -->
+            <!-- </HeaderedContainer> -->
+            <controls:CardGrid DockPanel.Dock="Top">
+                <controls:CardGrid.ItemsSource>
+                    <collections:ArrayList>
+                        <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
+                            <UniformGrid Columns="1">
+                                <HeaderedContainer Theme="{StaticResource Inline}" Header="Target">
+                                    <TextBlock Text="{Binding Target.DecimalString}" />
+                                </HeaderedContainer>
+                                <HeaderedContainer Theme="{StaticResource Inline}" Header="Raised">
+                                    <TextBlock Text="{Binding Target.DecimalString}" />
+                                </HeaderedContainer>
+                                <HeaderedContainer Theme="{StaticResource Inline}" Header="Founder Status">
+                                    <controls:Badge>
+                                        <TextBlock>Approved</TextBlock>
+                                    </controls:Badge>
+                                </HeaderedContainer>
+                            </UniformGrid>
+                        </OverlayBorder>
+                        <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
+                            <UniformGrid Columns="1" VerticalAlignment="Top">
+                                <HeaderedContainer Theme="{StaticResource Inline}" Header="My Investment">
+                                    <TextBlock Text="{Binding Invested.DecimalString}" />
+                                </HeaderedContainer>
+                                <HeaderedContainer Theme="{StaticResource Inline}" Header="Investment Status">
+                                    <controls:Badge>
+                                        <TextBlock>Approved</TextBlock>
+                                    </controls:Badge>
+                                </HeaderedContainer>
+                            </UniformGrid>
+                        </OverlayBorder>
+                        <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
+                            <UniformGrid Columns="1" VerticalAlignment="Top">
+                                <HeaderedContainer Theme="{StaticResource Inline}" Header="In Recovery">
+                                    <TextBlock Text="{Binding InRecovery.DecimalString}" />
+                                </HeaderedContainer>
+                                <HeaderedContainer Theme="{StaticResource Inline}" Header="Recovery Status">
+                                    <TextBlock Text="None" />
+                                </HeaderedContainer>
+                            </UniformGrid>
+                        </OverlayBorder>
+                    </collections:ArrayList>
+                </controls:CardGrid.ItemsSource>
+            </controls:CardGrid>
+
         </StackPanel>
     </Card>
 

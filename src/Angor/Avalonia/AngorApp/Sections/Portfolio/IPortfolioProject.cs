@@ -15,4 +15,5 @@ public interface IPortfolioProject
     public double Progress => Target.Sats == 0 ? 0 : Raised.Sats / (double)Target.Sats;
     public IEnhancedCommand<Result> CompleteInvestment { get; }
     public bool IsInvestmentCompleted { get; set; }
+    public IAmountUI Invested { get; }
 }
