@@ -1,4 +1,4 @@
-namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+namespace Angor.Contexts.Funding.Projects.Domain;
 
 public class InvestorPositionRecord
 {

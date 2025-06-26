@@ -1,9 +1,9 @@
 using System.Threading.Tasks;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Founder.Operations;
+using Angor.Contexts.Funding.Projects.Domain;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI.Commands;
+using Investment = Angor.Contexts.Funding.Founder.Operations.Investment;
 
 namespace AngorApp.Sections.Founder.Details;
 

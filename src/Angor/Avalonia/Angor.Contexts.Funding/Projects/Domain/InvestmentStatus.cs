@@ -1,5 +1,5 @@
 
-namespace Angor.Contexts.Funding.Founder;
+namespace Angor.Contexts.Funding.Projects.Domain;
 
 public enum InvestmentStatus
 {

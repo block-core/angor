@@ -18,7 +18,8 @@ public static class RequestInvestmentSignatures
         INetworkConfiguration networkConfiguration,
         ISerializer serializer,
         IWalletOperations walletOperations,
-        ISignaturesService signatureService) : IRequestHandler<RequestFounderSignaturesRequest, Result>
+        ISignaturesService signatureService,
+        IInvestmentRepository investmentRepository) : IRequestHandler<RequestFounderSignaturesRequest, Result>
     {
         public async Task<Result> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
         {
@@ -44,7 +45,24 @@ public static class RequestInvestmentSignatures
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
             var project = projectResult.Value;
 
-            return await SendSignatureRequest(request.WalletId, walletWords, project, strippedInvestmentTransaction.ToHex());
+            var result = await SendSignatureRequest(request.WalletId, walletWords, project,
+                strippedInvestmentTransaction.ToHex());
+
+            if (!result.IsSuccess)
+                return result;
+
+
+            var investmentAmount = strippedInvestmentTransaction.Outputs.AsIndexedOutputs().Skip(2)
+                .Take(projectResult.Value.Stages.Count())
+                .Sum(f => f.TxOut.Value.Satoshi);
+
+            await investmentRepository.AddAsync(request.WalletId, Investment.Create(
+                project.Id,
+                project.FounderKey,
+                new Amount(investmentAmount),
+                strippedInvestmentTransaction.GetHash().ToString()));
+
+            return result;
         }
 
         private async Task<Result<EventSendResponse>> SendSignatureRequest(Guid walletId, WalletWords walletWords, Project project, string signedTransactionHex)

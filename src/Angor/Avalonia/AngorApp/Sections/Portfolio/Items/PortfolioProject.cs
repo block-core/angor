@@ -19,7 +19,7 @@ public partial class PortfolioProject : ReactiveObject, IPortfolioProject
         CompleteInvestment = ReactiveCommand.CreateFromTask(() => investmentAppService.ConfirmInvestment(1234), CanCompleteInvestment).Enhance().DisposeWith(disposable);
         CompleteInvestment.Successes().Do(_ => IsInvestmentCompleted = true).Subscribe().DisposeWith(disposable);
         CompleteInvestment.Successes().Select(a => uiServices.Dialog.ShowMessage("Investment completed", "The investment has been completed")).Subscribe().DisposeWith(disposable);
-        IsInvestmentCompleted = projectDto.IsInvesmentCompleted;
+        IsInvestmentCompleted = projectDto.IsInvestmentCompleted;
     }
 
     public string Name => projectDto.Name;

@@ -10,6 +10,7 @@
              xmlns:details="clr-namespace:AngorApp.Sections.Founder.Details"
              xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
              xmlns:founder="clr-namespace:Angor.Contexts.Funding.Founder;assembly=Angor.Contexts.Funding"
+             xmlns:domain="clr-namespace:Angor.Contexts.Funding.Projects.Domain;assembly=Angor.Contexts.Funding"
              mc:Ignorable="d" d:DesignWidth="550"
              x:Class="AngorApp.Sections.Founder.Details.FounderProjectDetailsView" x:DataType="details:IFounderProjectDetailsViewModel">
     <Design.DataContext>
@@ -18,19 +19,19 @@
     
     <UserControl.Resources>
         <converters:ControlThemeConverter x:Key="InvestmentStatusConverter">
-            <ControlTheme x:Key="{x:Static founder:InvestmentStatus.PendingFounderSignatures}" 
+            <ControlTheme x:Key="{x:Static domain:InvestmentStatus.PendingFounderSignatures}" 
                           TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="Background" Value="Yellow" />
                 <Setter Property="Content" Value="Pending" />
                 <Setter Property="ToolTip.Tip" Value="This is an investment request in your project" />
             </ControlTheme>
-            <ControlTheme x:Key="{x:Static founder:InvestmentStatus.FounderSignaturesReceived}" 
+            <ControlTheme x:Key="{x:Static domain:InvestmentStatus.FounderSignaturesReceived}" 
                           TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="Background" Value="GreenYellow" />
                 <Setter Property="Content" Value="Approved" />
                 <Setter Property="ToolTip.Tip" Value="You approved this investment. Waiting for the investor to complete the investment process." />
             </ControlTheme>
-            <ControlTheme x:Key="{x:Static founder:InvestmentStatus.Invested}" 
+            <ControlTheme x:Key="{x:Static domain:InvestmentStatus.Invested}" 
                           TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="Background" Value="LightGreen" />
                 <Setter Property="Content" Value="Invested" />

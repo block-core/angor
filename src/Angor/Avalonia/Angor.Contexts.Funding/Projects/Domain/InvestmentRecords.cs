@@ -1,6 +1,4 @@
-using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
-
-namespace Angor.Contexts.Funding.Investor.Operations;
+namespace Angor.Contexts.Funding.Projects.Domain;
 
 public class InvestmentRecords
 {
