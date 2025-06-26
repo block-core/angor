@@ -20,6 +20,7 @@ public class InvestedProjectDto
 public enum FounderStatus
 {
     Invalid,
+    Requested,
     Approved,
     Invested
 }
