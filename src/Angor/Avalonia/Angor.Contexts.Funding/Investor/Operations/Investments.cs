@@ -18,19 +18,14 @@ public static class Investments
     public class InvestmentsPortfolioHandler(ISeedwordsProvider seedwordsProvider,
         IDerivationOperations _DerivationOperations,
         IRelayService relayService,
-        IEncryptionService _encryptionService,
-        ISerializer serializer,
-        IIndexerService indexerService
+        IIndexerService indexerService,
+        IInvestmentRepository investmentRepository
     ) : IRequestHandler<InvestmentsPortfolioRequest,Result<IEnumerable<InvestedProjectDto>>>
     {
 
         public async Task<Result<IEnumerable<InvestedProjectDto>>> Handle(InvestmentsPortfolioRequest request, CancellationToken cancellationToken)
         {
-            var result = await RetrieveStorageCredentials(request);
-            if (result.IsFailure)
-                return Result.Failure<IEnumerable<InvestedProjectDto>>("Failed to retrieve storage credentials: " + result.Error);
-
-            var investmentRecordsLookup = await GetInvestmentRecordsFromRelayTask(result.Value.storageAccountKey, result.Value.password);
+            var investmentRecordsLookup = await investmentRepository.GetByWallet(request.WalletId);
 
             if (investmentRecordsLookup.IsFailure)
                 return Result.Failure<IEnumerable<InvestedProjectDto>>("Failed to retrieve investment records: " + investmentRecordsLookup.Error);
@@ -114,29 +109,6 @@ public static class Investments
             var password = _DerivationOperations.DeriveNostrStoragePassword(words.Value.ToWalletWords());
             
             return (storageAccountKey, password);
-        }
-
-        private Task<Result<InvestmentRecords>> GetInvestmentRecordsFromRelayTask(string storageAccountKey,
-            string password)
-        {
-            var tcs = new TaskCompletionSource<Result<InvestmentRecords>>();
-            
-            relayService.LookupDirectMessagesForPubKey(storageAccountKey, null, 1, async (nostrEvent) =>
-            {
-                try
-                {
-                    var decrypted = await _encryptionService.DecryptData(nostrEvent.Content, password);
-                    var investmentRecords = serializer.Deserialize<InvestmentRecords>(decrypted);
-                    tcs.SetResult(investmentRecords);
-                }
-                catch (Exception e)
-                {
-                    tcs.SetException(e);
-                }
-
-            }, new[] { storageAccountKey });
-
-            return tcs.Task;
         }
 
         private IObservable<ProjectInfo> GetProjectInfoForEventIds(params string[] eventIds)
