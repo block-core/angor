@@ -1,5 +1,4 @@
 using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
@@ -10,6 +9,7 @@ using CSharpFunctionalExtensions;
 using MediatR;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Mixins;
+using Zafiro.Reactive;
 
 namespace Angor.Contexts.Funding.Investor.Operations;
 
@@ -57,61 +57,95 @@ public static class Investments
             {
                 projectIds = investments.Value.Select(investment => investment.ProjectId.Value);    
             }
+            //
+            // var test = GatherAllProjectPublicDataPipeline(projectIds.ToArray())
+            //     .SelectMany<IEnumerable<PipelineDto>, PipelineDto>(list => list.ToObservable())
+            //     .Bind<PipelineDto, PipelineDto>(async dto =>
+            //     {
+            //         var investorKey = await GetProjectInvestorPubKey(dto.FounderKey, request.WalletId);
+            //         var investment = await indexerService.GetInvestmentAsync(dto.Id, investorKey);
+            //         dto.Investment = new Amount(investment?.TotalAmount ?? 0);
+            //         return dto;
+            //     });
+                
 
-            return await GatherAllProjectPublicDataPipeline(projectIds.ToArray());
-        }
-
-        private IObservable<Result<IEnumerable<InvestedProjectDto>>> GatherAllProjectPublicDataPipeline(params string[] projectIds)
-        {
-            return LookupProjectCreationDataByIdentifiers(projectIds)
-                .ToList()
-                .SelectMany(eventIds => GetProjectInfoForEventIds(eventIds.ToArray())) //Get project info for event IDs
-                .ToList()
-                .SingleOrDefaultAsync() //Only one list of project infos
-                .Select(projectInfos => 
-                    GetProfileForPublicKey(projectInfos //Get the profiles for the project public keys
-                            .Select(result => result.NostrPubKey)
-                            .ToArray())
-                        .Select(result =>
-                        {
-                            var projectInfo = projectInfos.First(data => data.NostrPubKey == result.Value.pubKey);
-
-                            var profile = result.Value.profile;
-
-                            return Result.Success(new InvestedProjectDto //Create InvestedProjectDto from project info and profile
-                            {
-                                Description = profile.About,
-                                Name = profile.Name,
-                                LogoUri = Uri.TryCreate(profile.Website, UriKind.RelativeOrAbsolute, out var uri)
-                                    ? uri
-                                    : null, //TODO handle invalid URIs
-                                Id = projectInfo.ProjectIdentifier,
-                                Target = new Amount(projectInfo.TargetAmount),
-                            });
-                        }))
-                .Merge()
-                .Bind<InvestedProjectDto,InvestedProjectDto>(async investorProjectDto =>
-                {
-                    var stats = await indexerService.GetProjectStatsAsync(investorProjectDto.Id); // Get project stats for the project ID
-                    investorProjectDto.Raised = new Amount(stats.stats?.AmountInvested ?? 0);
-                    investorProjectDto.InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0);
-                    return investorProjectDto; // Return the updated InvestedProjectDto with stats
-                })
-                .Where(x => x.IsSuccess)
-                .Select(x => x.Value)
+            return await GatherAllProjectPublicDataPipeline(projectIds.ToArray())
+                .Select(InvestedProjectDto (x) => x)
                 .ToList()
                 .Select(x => x.AsEnumerable())
                 .ToResult();
         }
+
+        private IObservable<PipelineDto> GatherAllProjectPublicDataPipeline(params string[] projectIds)
+        {
+            return LookupProjectCreationDataByIdentifiers(projectIds)
+                .Select(data => new PipelineDto
+                {
+                    FounderKey = data.FounderKey,
+                    Id = data.ProjectIdentifier,
+                    ProjectInfoEventId = data.NostrEventId
+                })
+                .ToList()
+                .SelectMany(pipelineDtoList => 
+                    GetProjectInfoForEventIds(pipelineDtoList.Select(x => x.ProjectInfoEventId).ToArray())
+                        .Select(x =>
+                        {
+                            var dto = pipelineDtoList.FirstOrDefault(p => p.Id == x.ProjectIdentifier);
+                            dto.Target = new Amount(x.TargetAmount);
+                            return dto;
+                        })) //Get project info for event IDs
+                .ToList()
+                .SingleOrDefaultAsync() //Only one list of project infos
+                .SelectMany(projectInfos => //Get profiles information
+                    GetProfileForPublicKey(projectInfos.Select(result => result.NostrPubKey).ToArray())
+                        .Select(result =>
+                        {
+                            var dto = projectInfos.FirstOrDefault(p => p.NostrPubKey == result.Value.pubKey);
+                            
+                            if (dto == null)
+                                return Result.Failure<PipelineDto>("Project DTO not found for public key: " + result.Value.pubKey);
+                            
+                            dto.Description = result.Value.profile.About;
+                            dto.Name = result.Value.profile.Name;
+                            dto.LogoUri = Uri.TryCreate(result.Value.profile.Website, UriKind.RelativeOrAbsolute, out var uri)
+                                ? uri
+                                : null; //TODO handle invalid URIs
+
+                            return dto;
+                        }))
+                .Bind<PipelineDto,PipelineDto>(async dto =>
+                {
+                    var stats = await indexerService.GetProjectStatsAsync(dto.Id); // Get project stats for the project ID
+                    dto.Raised = new Amount(stats.stats?.AmountInvested ?? 0);
+                    dto.InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0);
+                    return dto; // Return the updated InvestedProjectDto with stats
+                })
+                .Where(x => x.IsSuccess)
+                .Select(PipelineDto (x) => x.Value) // Convert PipelineDto to InvestedProjectDto
+;
+        }
+
+        private async Task<string> GetProjectInvestorPubKey(string founderPubkey, Guid walletId)
+        {
+            var words = await seedwordsProvider.GetSensitiveData(walletId);
+            return _DerivationOperations.DeriveInvestorKey(words.Value.ToWalletWords(),founderPubkey);;
+        }
+
+        private class PipelineDto : InvestedProjectDto
+        {
+            public string FounderKey { get; set; }
+            public string NostrPubKey { get; set; }
+            public string ProjectInfoEventId { get; set; }
+        }
         
-        private IObservable<string> LookupProjectCreationDataByIdentifiers(params string[] projectIdentifiers)
+        private IObservable<ProjectIndexerData> LookupProjectCreationDataByIdentifiers(params string[] projectIdentifiers)
         {
             return projectIdentifiers
                 .ToObservable()
                 .ToResult()
                 .Bind(projectId => Result.Try(() => indexerService.GetProjectByIdAsync(projectId)))
                 .Where(x => x.IsSuccess)
-                .Select(x => x.Value.NostrEventId);
+                .Select(x => x.Value);
         }
 
         private async Task<Result<(string storageAccountKey, string password)>> RetrieveStorageCredentials(InvestmentsPortfolioRequest request)
