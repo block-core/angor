@@ -149,7 +149,7 @@
             </div>
             <div class="stats-info">
                 <h3 class="stats-title text-muted">Start Date</h3>
-                <p class="stats-value">@project.ProjectInfo.StartDate.ToString("dd/MM/yyyy")</p>
+                <p class="stats-value">@project.ProjectInfo.StartDate.FormatDate()</p>
                 <p class="stats-about">
                     @{
                         var dayDiff = (project.ProjectInfo.StartDate - DateTime.Now).Days;
@@ -352,7 +352,7 @@
                                 <div class="stage-body">
                                     <p class="mb-2">
                                         <Icon IconName="calendar" Height="16" Width="16" class="me-2" />
-                                        Release: @stage.StageDateTime.ToString("dd/MM/yyyy")
+                                        Release: @stage.StageDateTime.FormatDate()
                                     </p>
                                     <p class="mb-0">
                                         <Icon IconName="clock-square" Height="16" Width="16" class="me-2" />
@@ -451,7 +451,7 @@
                                                     </div>
                                                     <div>
                                                         <div class="info-label">Release:</div>
-                                                        <div class="info-value">@stage.ReleaseDate.ToString("dd/MM/yyyy")</div>
+                                                        <div class="info-value">@stage.ReleaseDate.FormatDate()</div>
                                                     </div>
                                                 </div>
                                                 <div class="text-muted small mt-2">
@@ -572,7 +572,7 @@ else
                                 <span class="detail-label">Transaction Date</span>
                                 <span class="detail-value fw-normal">
                                     <Icon IconName="clock-square" Width="16" Height="16" class="me-1 detail-value-icon" />
-                                    @investorProject?.SignaturesInfo?.TimeOfSignatureRequest?.ToString("dd/MM/yyyy HH:mm")
+                                    @investorProject?.SignaturesInfo?.TimeOfSignatureRequest?.FormatDateTime()
                                 </span>
                             </div>
                         }
