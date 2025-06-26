@@ -8,7 +8,7 @@
              xmlns:a="clr-namespace:AngorApp"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
-             mc:Ignorable="d" d:DesignWidth="900"
+             mc:Ignorable="d" d:DesignWidth="600"
              x:Class="AngorApp.Sections.Portfolio.Items.PortfolioProjectView" x:DataType="p:IPortfolioProject">
 
     <Design.DataContext>
@@ -72,7 +72,7 @@
             </DataTemplate>
         </Card.HeaderTemplate>
         <StackPanel Spacing="10">
-            <items:NotCompletedProjectView IsVisible="{Binding !IsInvestmentCompleted}" />
+            <items:OfferAcceptedView IsVisible="{Binding !IsInvestmentCompleted}" />
             <!-- <HeaderedContainer Header="Project Status"> -->
             <!--     <Border Padding="6" CornerRadius="10" HorizontalAlignment="Right" Tag="{Binding Status}"> -->
             <!--         <TextBlock Text="{Binding Status}" /> -->
@@ -118,28 +118,13 @@
                 <controls:CardGrid.ItemsSource>
                     <collections:ArrayList>
                         <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
-                            <UniformGrid Columns="1">
-                                <HeaderedContainer Theme="{StaticResource Inline}" Header="Target">
-                                    <TextBlock Text="{Binding Target.DecimalString}" />
-                                </HeaderedContainer>
-                                <HeaderedContainer Theme="{StaticResource Inline}" Header="Raised">
-                                    <TextBlock Text="{Binding Target.DecimalString}" />
-                                </HeaderedContainer>
-                                <HeaderedContainer Theme="{StaticResource Inline}" Header="Founder Status">
-                                    <controls:Badge>
-                                        <TextBlock>Approved</TextBlock>
-                                    </controls:Badge>
-                                </HeaderedContainer>
-                            </UniformGrid>
-                        </OverlayBorder>
-                        <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
                             <UniformGrid Columns="1" VerticalAlignment="Top">
                                 <HeaderedContainer Theme="{StaticResource Inline}" Header="My Investment">
                                     <TextBlock Text="{Binding Invested.DecimalString}" />
                                 </HeaderedContainer>
                                 <HeaderedContainer Theme="{StaticResource Inline}" Header="Investment Status">
-                                    <controls:Badge>
-                                        <TextBlock>Approved</TextBlock>
+                                    <controls:Badge Color="Orange">
+                                        <TextBlock>Pending</TextBlock>
                                     </controls:Badge>
                                 </HeaderedContainer>
                             </UniformGrid>
