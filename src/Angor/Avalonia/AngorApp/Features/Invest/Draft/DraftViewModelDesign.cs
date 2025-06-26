@@ -12,9 +12,9 @@ public class DraftViewModelDesign : IDraftViewModel
     public IFeeCalculator FeeCalculator { get; } = new FeeCalculatorDesignTime();
     public IEnumerable<IFeeratePreset> Presets { get; }
     public IObservable<bool> IsCalculatingDraft { get; }
-    public IObservable<bool> IsSending { get; }
+    public IObservable<bool> IsSending { get; set; }
     public IProject Project { get; } = new ProjectDesign();
-    
+
     private static string TransactionJson()
     {
         return """

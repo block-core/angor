@@ -14,7 +14,7 @@ public class InvestWizard(IInvestmentAppService investmentAppService, UIServices
 {
     public Task<Maybe<Unit>> Invest(IWallet wallet, IProject project)
     {
-        var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project), model => ReactiveCommand.Create(() => Result.Success(model.Amount), model.IsValid).Enhance("Next"), $"Invest in \"{project.Name}\"")
+        var wizard = WizardBuilder.StartWith(() => new AmountViewModel(wallet, project), model => ReactiveCommand.Create(() => Result.Success(model.Amount), model.IsValid).Enhance("Next"), $"Enter the amount you want")
             .Then(amount => new DraftViewModel(investmentAppService, wallet, new AmountUI(amount!.Value), project, uiServices), model => model.Confirm.Enhance("Place Offer"), "Offer investment")
             .Then(_ => new SuccessViewModel($"The investment offer to {project.Name} has been sent. The project founder will review your investment offer soon and either accept it or reject it"), _ => ReactiveCommand.Create(() => Result.Success(Unit.Default)).Enhance("Close"), "Investment Successful")
             .WithCompletionFinalStep();

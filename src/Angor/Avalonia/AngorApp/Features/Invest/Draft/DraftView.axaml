@@ -9,7 +9,7 @@
              x:DataType="df:IDraftViewModel">
 
     <Design.DataContext>
-        <df:DraftViewModelDesign />
+        <df:DraftViewModelDesign IsSending="{Return True}" />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -30,7 +30,6 @@
                 </controls:FeerateSelector>
             </Card>
             <Card Header="Fees">
-                
                 <Loading Theme="{StaticResource LoadingCover}" IsLoading="{Binding IsCalculatingDraft^}">
                     <Panel>
                         <ItemsControl IsVisible="{Binding Feerate, Converter={x:Static ObjectConverters.IsNotNull}}">
@@ -59,6 +58,5 @@
                 </Loading>
             </Card>
         </UniformGrid>
-        <Loading LoadingText="Sending investment offer..." IsLoading="{Binding IsSending^}" />
     </StackPanel>
 </UserControl>

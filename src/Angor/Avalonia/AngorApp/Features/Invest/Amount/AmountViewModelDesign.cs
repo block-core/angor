@@ -10,4 +10,6 @@ public class AmountViewModelDesign : IAmountViewModel
         new(2, new AmountUI(120), 0.4, DateTime.Now.AddMonths(1)),
         new(3, new AmountUI(120), 0.6, DateTime.Now.AddMonths(2).AddDays(5)),
     };
+
+    public IObservable<bool> IsValid { get; } = Observable.Return(true);
 }

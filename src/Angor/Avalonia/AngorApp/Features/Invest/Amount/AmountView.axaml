@@ -24,15 +24,23 @@
             <HeaderedContainer>
                 <HeaderedContainer.Header>
                     <TextBlock Padding="10 0">
-                        Investment offer
+                        Enter the amount you want to invest
                     </TextBlock>
                 </HeaderedContainer.Header>
                 <controls:AmountControl Satoshis="{Binding Amount}">
                     <Interaction.Behaviors>
                         <behaviors:UntouchedClassBehavior />
                     </Interaction.Behaviors>
-                </controls:AmountControl></HeaderedContainer>
-            <c:StagesBreakdown IsVisible="{Binding !!Amount}" />
+                </controls:AmountControl>
+            </HeaderedContainer>
+            <HeaderedContainer IsVisible="{Binding IsValid^}" >
+                <HeaderedContainer.Header>
+                    <TextBlock Padding="10 0">
+                        Stage breakdown
+                    </TextBlock>
+                </HeaderedContainer.Header>
+                <c:StagesBreakdown />
+            </HeaderedContainer>
         </StackPanel>
     </Panel>
 </UserControl>
