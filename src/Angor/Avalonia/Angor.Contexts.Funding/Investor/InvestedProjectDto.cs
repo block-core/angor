@@ -8,6 +8,8 @@ public class InvestedProjectDto
     public FounderStatus FounderStatus { get; set; }
     public Uri LogoUri { get; set; }
     public Amount Target { get; set; }
+    
+    public Amount Investment { get; set; }
     public string Name { get; set; }
     public Amount Raised { get; set; }
     public string Description { get; set; }
@@ -19,4 +21,5 @@ public enum FounderStatus
 {
     Invalid,
     Approved,
+    Invested
 }
