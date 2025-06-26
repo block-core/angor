@@ -6,6 +6,8 @@ using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Zafiro.CSharpFunctionalExtensions;
@@ -22,7 +24,10 @@ public static class Investments
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations,
         IProjectRepository projectRepository,
-        ISignService signService
+        ISignService signService,
+        INetworkConfiguration networkConfiguration,
+        ISerializer serializer ,
+        IEncryptionService decrypter
     ) : IRequestHandler<InvestmentsPortfolioRequest,Result<IEnumerable<InvestedProjectDto>>>
     {
 
@@ -100,18 +105,21 @@ public static class Investments
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
             var pubKey =
                 derivationOperations.DeriveNostrPubKey(sensitiveDataResult.Value.ToWalletWords(), project.FounderKey);
-
+            var nostrPrivateKey =
+                await derivationOperations.DeriveProjectNostrPrivateKeyAsync(sensitiveDataResult.Value.ToWalletWords(), project.FounderKey);
+    
+            var privateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+            
             var createdAt = DateTime.MinValue;
             var eventId = string.Empty;
 
             var founderStatus = FounderStatus.Invalid;
-
+            var amount = new Amount(0);
             var tcs = new TaskCompletionSource<FounderStatus>();
 
             
             // TODO replace the old logic with better optimized one
-            await signService.LookupInvestmentRequestsAsync(project.NostrPubKey, pubKey, null,
-                (id, publisherPubKey, content, eventTime) =>
+            await signService.LookupInvestmentRequestsAsync(project.NostrPubKey, pubKey, null, async (id, publisherPubKey, content, eventTime) =>
                 {
                     if (createdAt >= eventTime) return;
 
@@ -119,6 +127,19 @@ public static class Investments
                     eventId = id;
                     founderStatus = FounderStatus.Requested;
 
+                    try
+                    {
+                        var decrypted = await decrypter.DecryptNostrContentAsync(privateKeyHex,publisherPubKey, content);
+
+                        var investmentRequest = serializer.Deserialize<SignRecoveryRequest>(decrypted);
+                        var trx = networkConfiguration.GetNetwork().CreateTransaction(investmentRequest.InvestmentTransactionHex);
+
+                        amount = new Amount(trx.Outputs.Sum(x => x.Value));
+                    }
+                    catch (Exception e)
+                    {
+                        //TODO log the error
+                    }
                 }, () =>
                 {
                     signService.LookupSignatureForInvestmentRequest(pubKey, project.NostrPubKey, createdAt, eventId,
@@ -135,7 +156,7 @@ public static class Investments
 
             await tcs.Task.ToObservable().Timeout(TimeSpan.FromSeconds(10));
 
-            return (new Amount(0), founderStatus);
+            return (amount, founderStatus);
         }
     }
 }
