@@ -45,9 +45,13 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
     }
 
     public IEnhancedCommand<Result<IEnumerable<InvestedProjectDto>>> Load { get; }
+    public int FundedProjects { get; } = 123;
+    public IAmountUI TotalInvested { get; } = new AmountUI(1000000);
+    public IAmountUI RecoveredToPenalty { get; } = new AmountUI(240000);
+    public int ProjectsInRecovery { get; } = 6;
 
-    public IReadOnlyCollection<PortfolioItem> Items { get; }
     public IEnumerable<IPortfolioProject> InvestedProjects { get; }
+    public IReadOnlyCollection<PortfolioItem> Items { get; }
 
     public void Dispose()
     {
