@@ -17,12 +17,12 @@ public static class Investments
     public record InvestmentsPortfolioRequest(Guid WalletId) : IRequest<Result<IEnumerable<InvestedProjectDto>>>;
     
     public class InvestmentsPortfolioHandler(
-        IRelayService relayService,
         IIndexerService indexerService,
         IInvestmentRepository investmentRepository,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations,
-        IProjectRepository projectRepository
+        IProjectRepository projectRepository,
+        ISignService signService
     ) : IRequestHandler<InvestmentsPortfolioRequest,Result<IEnumerable<InvestedProjectDto>>>
     {
 
@@ -47,10 +47,8 @@ public static class Investments
                     {
                         var investment =
                             await GetInvestmentDetails(project.Id.Value, project.FounderKey, request.WalletId);
-                        
-                        //TODO need to pull the DMs from the relay and get missing data in case of investmet == null
-                        
-                        return Result.Success(new InvestedProjectDto
+
+                        var dto = new InvestedProjectDto
                         {
                             Id = project.Id.Value,
                             Name = project.Name,
@@ -59,7 +57,15 @@ public static class Investments
                             Target = new Amount(project.TargetAmount),
                             FounderStatus = investment == null ? FounderStatus.Approved : FounderStatus.Invested,
                             Investment = new Amount(investment?.TotalAmount ?? 0) //TODO get the trx from 
-                        });
+                        };
+
+                        if (investment != null) return Result.Success(dto);
+                        
+                        var (amount, founderStatus) = await GetInvestmentStatusFromDms(request.WalletId, project);
+                        dto.Investment = amount;
+                        dto.FounderStatus = founderStatus;
+
+                        return Result.Success(dto);
                     });
                 })
                 .Select(x => x.Result)
@@ -76,12 +82,6 @@ public static class Investments
                 .ToList()
                 .Select(x => x.AsEnumerable())
                 .ToResult();
-            
-            
-            // return await PullProjectPublicDataPipeline(investmentRecordsLookup)
-            //     .ToList()
-            //     .Select(x => x.AsEnumerable())
-            //     .ToResult();;
         }
 
         private async Task<ProjectInvestment?> GetInvestmentDetails(string projectId, string founderKey, Guid walletId)
@@ -94,95 +94,49 @@ public static class Investments
 
             return result.Result.IsSuccess ? result.Result.Value : null;
         }
-        
-        // private IObservable<InvestedProjectDto> PullProjectPublicDataPipeline(Result<InvestmentRecords> investmentRecordsLookup)
-        // {
-        //     return GatherProjectIdentifiers(investmentRecordsLookup.Value)
-        //         .ToList()
-        //         .SelectMany(eventIds => GetProjectInfoForEventIds(eventIds.ToArray())) //Get project info for event IDs
-        //         .ToList()
-        //         .SingleOrDefaultAsync()
-        //         .Select(projectInfos => GetProfileForPublicKey(
-        //                 projectInfos //Get the profiles for the project public keys
-        //                     .Select(result => result.NostrPubKey)
-        //                     .ToArray())
-        //             .Select(result =>
-        //             {
-        //                 var projectInfo = projectInfos.First(data => data.NostrPubKey == result.Value.pubKey);
-        //
-        //                 var profile = result.Value.profile;
-        //
-        //                 return Result.Success(
-        //                     new InvestedProjectDto //Create InvestedProjectDto from project info and profile
-        //                     {
-        //                         Description = profile.About,
-        //                         Name = profile.Name,
-        //                         LogoUri = Uri.TryCreate(profile.Website, UriKind.RelativeOrAbsolute, out var uri)
-        //                             ? uri
-        //                             : null, //TODO handle invalid URIs
-        //                         Id = projectInfo.ProjectIdentifier,
-        //                         Target = new Amount(projectInfo.TargetAmount),
-        //                     });
-        //             }))
-        //         .Merge()
-        //         .Bind<InvestedProjectDto, InvestedProjectDto>(async investorProjectDto =>
-        //         {
-        //             var stats = await indexerService.GetProjectStatsAsync(investorProjectDto
-        //                 .Id); // Get project stats for the project ID
-        //             investorProjectDto.Raised = new Amount(stats.stats?.AmountInvested ?? 0);
-        //             investorProjectDto.InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0);
-        //             return investorProjectDto; // Return the updated InvestedProjectDto with stats
-        //         })
-        //         .Where(x => x.IsSuccess)
-        //         .Select(x => x.Value);
-        // }
-        //
-        // private IObservable<string> GatherProjectIdentifiers(InvestmentRecords investmentRecordsLookup)
-        // {
-        //     return investmentRecordsLookup.ProjectIdentifiers.ToObservable()
-        //         .ToResult()
-        //         .Bind(projectId => Result.Try(() => indexerService.GetProjectByIdAsync(projectId.ProjectIdentifier)))
-        //         .Where(x => x.IsSuccess)
-        //         .Select(x => x.Value.NostrEventId);
-        // }
-        //
-        //
-        // private IObservable<ProjectInfo> GetProjectInfoForEventIds(params string[] eventIds)
-        // {
-        //     return Observable.Create<ProjectInfo>(observable =>
-        //     {
-        //         var tcs = new TaskCompletionSource<bool>();
-        //         
-        //         relayService.LookupProjectsInfoByEventIds<ProjectInfo>(
-        //             observable.OnNext, () =>
-        //             {
-        //                 observable.OnCompleted();
-        //                 tcs.SetResult(true);
-        //             }, eventIds);
-        //
-        //         return tcs.Task;
-        //     });
-        // }
-        //
-        // private IObservable<Result<(string pubKey,ProjectMetadata profile)>> GetProfileForPublicKey(params string[] publicKey)
-        // {
-        //     return Observable.Create<Result<(string,ProjectMetadata)>>(observable =>
-        //     {
-        //         var tcs = new TaskCompletionSource<bool>();
-        //         
-        //         relayService.LookupNostrProfileForNPub(
-        //             (x,y) =>
-        //                 Result.Try(() => observable.OnNext((x, y))),
-        //             () =>
-        //             {
-        //                 observable.OnCompleted();
-        //                 tcs.SetResult(true);
-        //             },
-        //             publicKey);
-        //         
-        //         return tcs.Task;
-        //     });
-        // }
+
+        private async Task<(Amount, FounderStatus)> GetInvestmentStatusFromDms(Guid walletId, Project project)
+        {
+            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
+            var pubKey =
+                derivationOperations.DeriveNostrPubKey(sensitiveDataResult.Value.ToWalletWords(), project.FounderKey);
+
+            var createdAt = DateTime.MinValue;
+            var eventId = string.Empty;
+
+            var founderStatus = FounderStatus.Invalid;
+
+            var tcs = new TaskCompletionSource<FounderStatus>();
+
+            
+            // TODO replace the old logic with better optimized one
+            await signService.LookupInvestmentRequestsAsync(project.NostrPubKey, pubKey, null,
+                (id, publisherPubKey, content, eventTime) =>
+                {
+                    if (createdAt >= eventTime) return;
+
+                    createdAt = eventTime;
+                    eventId = id;
+                    founderStatus = FounderStatus.Requested;
+
+                }, () =>
+                {
+                    signService.LookupSignatureForInvestmentRequest(pubKey, project.NostrPubKey, createdAt, eventId,
+                        signature =>
+                        {
+                            founderStatus = FounderStatus.Approved;
+                            return tcs.Task;
+                        },
+                        () =>
+                        {
+                            tcs.SetResult(founderStatus);
+                        });
+                });
+
+            await tcs.Task.ToObservable().Timeout(TimeSpan.FromSeconds(10));
+
+            return (new Amount(0), founderStatus);
+        }
     }
 }
 

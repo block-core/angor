@@ -7,7 +7,7 @@ public interface ISignService
 {
     (DateTime eventTime, string eventId) RequestInvestmentSigs(string encryptedContent, string investorNostrPrivateKey,
         string founderNostrPubKey, Action<NostrOkResponse> okResponse);
-    void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime? sigRequestSentTime, string sigRequestEventId, Func<string, Task> action);
+    void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime? sigRequestSentTime, string sigRequestEventId, Func<string, Task> action,Action onAllMessagesReceived = null);
 
     Task LookupInvestmentRequestsAsync(string nostrPubKey, string? senderNpub, DateTime? since, Action<string, string, string, DateTime> action,
         Action onAllMessagesReceived);
