@@ -7,5 +7,5 @@ public interface IInvestmentDraft
 {
     CreateInvestment.Draft DraftModel { get; }
     AmountUI TotalFee { get; }
-    Task<Result<Guid>> Confirm();
+    Task<Result> Confirm();
 }

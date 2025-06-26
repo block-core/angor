@@ -1,7 +1,7 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 
-namespace Angor.Contexts.Wallet.Infrastructure.Impl;
+namespace Angor.Contests.CrossCutting;
 
 public class NetworkStorage : INetworkStorage
 {

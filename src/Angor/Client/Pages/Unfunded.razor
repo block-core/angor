@@ -360,7 +360,7 @@
 
         scanningForSigRequests = true;
 
-        await SignService.LookupInvestmentRequestsAsync(FounderProject.ProjectInfo.NostrPubKey, null, null,
+        await SignService.GetAllInvestmentRequests(FounderProject.ProjectInfo.NostrPubKey, null, null,
             (eventId, investorNostrPubKey, encryptedMessage, timeArrived) =>
             {
                 Logger.LogDebug($"Sig request event received investorNostrPubKey: {investorNostrPubKey} - timeArrived: {timeArrived}");
@@ -447,7 +447,7 @@
     {
         scanningForApprovals = true;
 
-        SignService.LookupInvestmentRequestApprovals(FounderProject.ProjectInfo.NostrPubKey,
+        SignService.GetAllInvestmentRequestApprovals(FounderProject.ProjectInfo.NostrPubKey,
             (investorNostrPubKey, timeEventCreated, reqEventId) =>
             {
                 Logger.LogDebug($"Sig response event received investorNostrPubKey: {investorNostrPubKey} - timeApproved: {timeEventCreated} - reqEventId: {reqEventId}");
@@ -489,7 +489,7 @@
     {
         scanningForReleaseApprovals = true;
 
-        SignService.LookupSignedReleaseSigs(FounderProject.ProjectInfo.NostrPubKey,
+        SignService.GetAllInvestmentRevocations(FounderProject.ProjectInfo.NostrPubKey,
             (item) =>
             {
                 Logger.LogDebug($"Sig release response event received investorNostrPubKey: {item.ProfileIdentifier} - timeReleased: {item.EventCreatedAt} - reqEventId: {item.EventIdentifier}");
@@ -627,7 +627,7 @@
             var encryptedContent = await encryption.EncryptNostrContentAsync(
                 nostrPrivateKeyHex, signature.investorNostrPubKey, sigJson);
 
-            signature.TimeReleased = SignService.SendReleaseSigsToInvestor(encryptedContent, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
+            signature.TimeReleased = SignService.PostInvestmentRevocation(encryptedContent, nostrPrivateKeyHex, signature.investorNostrPubKey, signature.EventId);
 
             return new OperationResult { Success = true };
         }

@@ -426,7 +426,7 @@
         {
             investmentRequestsMap[project.ProjectInfo.NostrPubKey] = false;
 
-            _SignService.LookupSignatureForInvestmentRequest(
+            _SignService.GetInvestmentRequestApproval(
                 project.InvestorNPub,
                 project.ProjectInfo.NostrPubKey,
                 project.SignaturesInfo.TimeOfSignatureRequest.Value,
@@ -442,7 +442,7 @@
         {
             releaseRequestsMap[project.ProjectInfo.NostrPubKey] = false;
 
-            _SignService.LookupReleaseSigs(
+            _SignService.GetInvestmentRevocation(
                 project.InvestorNPub,
                 project.ProjectInfo.NostrPubKey,
                 null,
@@ -601,7 +601,7 @@
                     (_, metadata) => { investorProject.Metadata ??= metadata; },
                     () =>
                     {
-                        _SignService.LookupInvestmentRequestsAsync(investorProject.ProjectInfo.NostrPubKey, investorProject.InvestorNPub, null,
+                        _SignService.GetAllInvestmentRequests(investorProject.ProjectInfo.NostrPubKey, investorProject.InvestorNPub, null,
                             (id, publisherPubKey, content, eventTime) =>
                             {
                                 if (createdAt == null || createdAt < eventTime)
@@ -611,7 +611,7 @@
                                 }
                             }, () =>
                             {
-                                _SignService.LookupSignatureForInvestmentRequest(investorProject.InvestorNPub, investorProject.ProjectInfo.NostrPubKey,
+                                _SignService.GetInvestmentRequestApproval(investorProject.InvestorNPub, investorProject.ProjectInfo.NostrPubKey,
                                     createdAt!.Value, eventId!,
                                     async encryptedSignatures =>
                                     {
