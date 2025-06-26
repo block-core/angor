@@ -864,7 +864,7 @@
 
         try
         {
-            NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
+            NostrClients = storage.GetSettingsInfo().Relays.Select(_ => _.Url.ToString()).ToList();
 
             project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
             if (project != null)
