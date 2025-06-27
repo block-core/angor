@@ -1,11 +1,13 @@
-﻿using System.Reactive.Linq;
-using Angor.Shared.Models;
-using Nostr.Client.Requests;
+﻿using Angor.Shared.Models;
 using Microsoft.Extensions.Logging;
+using Nostr.Client.Json;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
+using Nostr.Client.Messages.Contacts;
 using Nostr.Client.Messages.Metadata;
+using Nostr.Client.Requests;
 using Nostr.Client.Responses;
+using System.Reactive.Linq;
 
 namespace Angor.Shared.Services
 {
@@ -276,7 +278,37 @@ namespace Angor.Shared.Services
             
             return Task.FromResult(deleteEvent.Id);
         }
-        
+
+        public Task<string> CreateNostrRelayNip65Async(string[] relays, string hexPrivateKey, Action<NostrOkResponse> action)
+        {
+            Nostr.Client.Messages.Contacts.NostrRelays relayList = new NostrRelays(relays.ToDictionary(a => a, s => new NostrRelayConfig()));
+            
+            var key = NostrPrivateKey.FromHex(hexPrivateKey);
+
+            var content = _serializer.Serialize(relayList);
+
+            var signed = new NostrEvent
+            {
+                Kind = NostrKind.Metadata,
+                CreatedAt = DateTime.UtcNow,
+                Content = content
+            }.Sign(key);
+
+            var signed1 = new NostrContactEvent(content)
+            {
+                Kind = NostrKind.RelayListMetadata,
+                CreatedAt = DateTime.UtcNow,
+            }.Sign(key);
+
+            _subscriptionsHandling.TryAddOKAction(signed.Id, action);
+
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+
+            nostrClient.Send(new NostrEventRequest(signed));
+
+            return Task.FromResult(signed.Id);
+        }
+
         private static NostrEvent GetNip3030NostrEvent( string content)
         {
             // https://github.com/block-core/nips/blob/peer-to-peer-decentralized-funding/3030.md
