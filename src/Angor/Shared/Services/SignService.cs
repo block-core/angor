@@ -52,7 +52,7 @@ namespace Angor.Shared.Services
 
         public void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey,
             DateTime? sigRequestSentTime, string sigRequestEventId, Func<string, Task> action,
-            Action onAllMessagesReceived)
+            Action? onAllMessagesReceived = null)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
@@ -67,8 +67,9 @@ namespace Angor.Shared.Services
                 _subscriptionsHanding.TryAddRelaySubscription(projectNostrPubKey, subscription);
 
             }
-            
-            _subscriptionsHanding.TryAddEoseAction(projectNostrPubKey, onAllMessagesReceived);
+
+            if (onAllMessagesReceived != null)
+                _subscriptionsHanding.TryAddEoseAction(projectNostrPubKey, onAllMessagesReceived);
 
             nostrClient.Send(new NostrRequest(projectNostrPubKey, new NostrFilter
             {

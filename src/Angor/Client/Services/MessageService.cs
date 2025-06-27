@@ -127,8 +127,7 @@ namespace Angor.Client.Services
                     100,
                     async eventMessage => await ProcessDirectMessage(eventMessage),
                     new [] { _otherUserHexPub },
-                    true
-                );
+                    true, () => { });
 
                 _relayService.LookupDirectMessagesForPubKey(
                     _otherUserHexPub,
@@ -136,8 +135,7 @@ namespace Angor.Client.Services
                     100,
                     async eventMessage => await ProcessDirectMessage(eventMessage),
                     new [] { _currentUserHexPub },
-                    true
-                );
+                    true, () => { });
 
                 _subscriptionActive = true;
             }

@@ -124,7 +124,7 @@ namespace Angor.Shared.Services
             return Task.CompletedTask;
         }
 
-        public void LookupDirectMessagesForPubKey(string nostrPubKey, DateTime? since, int? limit, Func<NostrEvent,Task> onResponseAction, string[]? sendersPubkey = null, bool keepActive = false)
+        public void LookupDirectMessagesForPubKey(string nostrPubKey, DateTime? since, int? limit, Func<NostrEvent,Task> onResponseAction, string[]? sendersPubkey = null, bool keepActive = false, Action? onEndOfStreamAction = null)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
@@ -141,6 +141,11 @@ namespace Angor.Shared.Services
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription, keepActive);
             }
 
+            if (onEndOfStreamAction != null)
+            {
+                _subscriptionsHandling.TryAddEoseAction(subscriptionKey, onEndOfStreamAction);
+            }
+            
             var nostrFilter = new NostrFilter
             {
                 P = new[] { nostrPubKey },
