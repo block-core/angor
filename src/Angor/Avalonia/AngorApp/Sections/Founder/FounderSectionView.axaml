@@ -68,7 +68,11 @@
                     </z:Card.HeaderStartContent>
                 </z:Card>
                 <z:Loading LoadingText="Loading projects. Please wait." IsLoading="{Binding LoadProjects.IsExecuting^}">
-                    <co:CardGrid ItemsSource="{Binding ProjectsList}" />
+                    <co:CardGrid ItemsSource="{Binding ProjectsList}">
+                        <z:Empty.Content>
+                            <TextBlock VerticalAlignment="Center" TextAlignment="Center">Nothing to show</TextBlock>
+                        </z:Empty.Content>
+                    </co:CardGrid>
                 </z:Loading>
             </DockPanel>
         </ScrollViewer>

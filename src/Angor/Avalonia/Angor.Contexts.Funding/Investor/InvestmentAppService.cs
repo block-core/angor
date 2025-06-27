@@ -1,3 +1,4 @@
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Investor.Operations;
@@ -46,7 +47,7 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
                 Target = new Amount(50000000), // 0.5 BTC
                 Raised = new Amount(23500000), // 0.235 BTC
                 InRecovery = new Amount(0),
-                IsInvesmentCompleted = true,
+                InvestmentStatus = InvestmentStatus.FounderSignaturesReceived
             },
             new InvestedProjectDto
             {
@@ -57,8 +58,8 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
                 FounderStatus = FounderStatus.Approved,
                 Target = new Amount(30000000), // 0.3 BTC
                 Raised = new Amount(28750000), // 0.28750 BTC
-                InRecovery = new Amount(1200000), // 0.012 BTC
-                IsInvesmentCompleted = false,
+                InRecovery = new Amount(1200000), // 0.012 BTC,
+                InvestmentStatus = InvestmentStatus.PendingFounderSignatures
             },
             new InvestedProjectDto
             {
@@ -70,7 +71,7 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
                 Target = new Amount(75000000), // 0.75 BTC
                 Raised = new Amount(8900000), // 0.089 BTC
                 InRecovery = new Amount(0),
-                IsInvesmentCompleted = false,
+                InvestmentStatus = InvestmentStatus.Invested
             },
             new InvestedProjectDto
             {
@@ -82,7 +83,7 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
                 Target = new Amount(100000000), // 1.0 BTC
                 Raised = new Amount(67800000), // 0.678 BTC
                 InRecovery = new Amount(3400000), // 0.034 BTC
-                IsInvesmentCompleted = true,
+                InvestmentStatus = InvestmentStatus.PendingFounderSignatures
             },
             new InvestedProjectDto
             {
@@ -94,7 +95,7 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
                 Target = new Amount(25000000), // 0.25 BTC
                 Raised = new Amount(25000000), // 0.25 BTC (fully funded)
                 InRecovery = new Amount(0),
-                IsInvesmentCompleted = true,
+                InvestmentStatus = InvestmentStatus.FounderSignaturesReceived
             }
         };
 
