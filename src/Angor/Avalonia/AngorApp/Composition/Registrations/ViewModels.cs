@@ -3,7 +3,7 @@ using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder;
 using AngorApp.Sections.Founder.Details;
 using AngorApp.Sections.Home;
-using AngorApp.Sections.Penalties;
+using AngorApp.Sections.Portfolio.Penalties;
 using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;

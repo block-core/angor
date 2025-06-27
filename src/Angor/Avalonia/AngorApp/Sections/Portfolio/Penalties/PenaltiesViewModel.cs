@@ -2,7 +2,7 @@ using AngorApp.Core;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 
-namespace AngorApp.Sections.Penalties;
+namespace AngorApp.Sections.Portfolio.Penalties;
 
 public partial class PenaltiesViewModel : ReactiveObject, IPenaltiesViewModel
 {

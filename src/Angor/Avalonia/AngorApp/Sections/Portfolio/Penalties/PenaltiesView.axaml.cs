@@ -1,6 +1,6 @@
 using AngorApp.UI.Controls;
 
-namespace AngorApp.Sections.Penalties;
+namespace AngorApp.Sections.Portfolio.Penalties;
 
 public partial class PenaltiesView : PageContainer
 {

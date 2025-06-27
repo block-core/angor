@@ -1,4 +1,4 @@
-namespace AngorApp.Sections.Penalties;
+namespace AngorApp.Sections.Portfolio.Penalties;
 
 public class PenaltiesViewModelDesign : IPenaltiesViewModel
 {
