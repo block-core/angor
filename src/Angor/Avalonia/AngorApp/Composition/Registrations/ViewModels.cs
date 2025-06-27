@@ -3,6 +3,7 @@ using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder;
 using AngorApp.Sections.Founder.Details;
 using AngorApp.Sections.Home;
+using AngorApp.Sections.Penalties;
 using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
@@ -19,6 +20,7 @@ public static class ViewModels
             .AddScoped<IWalletSectionViewModel, WalletSectionViewModel>()
             .AddScoped<IBrowseSectionViewModel, BrowseSectionViewModel>()
             .AddScoped<IPortfolioSectionViewModel, PortfolioSectionViewModel>()
+            .AddScoped<IPenaltiesViewModel, PenaltiesViewModel>()
             .AddScoped<IFounderSectionViewModel, FounderSectionViewModel>()
             .AddScoped<Func<ProjectDto, IFounderProjectViewModel>>(provider => dto => ActivatorUtilities.CreateInstance<FounderProjectViewModel>(provider, dto))
             .AddScoped<Func<ProjectDto, IFounderProjectDetailsViewModel>>(provider => dto => ActivatorUtilities.CreateInstance<FounderProjectDetailsViewModel>(provider, dto))

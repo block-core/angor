@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:penalties="clr-namespace:AngorApp.Sections.Penalties"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:a="clr-namespace:AngorApp.UI.Controls"
+             mc:Ignorable="d" d:DesignWidth="1600" d:DesignHeight="600"
+             x:Class="AngorApp.Sections.Penalties.PenaltiesView" x:DataType="penalties:IPenaltiesViewModel">
+
+    <Design.DataContext>
+        <penalties:PenaltiesViewModelDesign />
+    </Design.DataContext>
+    
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Styles>
+
+    <a:PageContainer>
+        <StackPanel MaxWidth="1200" VerticalAlignment="Center">
+            <Card Height="400"
+                  Theme="{StaticResource BigCard}"
+                  Header="Penalties"
+                  Subheader="Manage and monitor penalties for project compliance">
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="fa-exclamation-triangle" />
+                </Card.HeaderStartContent>
+            </Card>
+            
+            <!-- Penalties content will be added here -->
+            <TextBlock Text="Penalties section content will be implemented here" 
+                       HorizontalAlignment="Center" 
+                       Margin="0,20" 
+                       Opacity="0.7" />
+        </StackPanel>
+    </a:PageContainer>
+</UserControl>

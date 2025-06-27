@@ -1,11 +1,15 @@
 using System.Reactive.Disposables;
+using System.Windows.Input;
 using Angor.Contexts.Funding.Investor;
+using AngorApp.Sections.Penalties;
 using AngorApp.Sections.Portfolio.Items;
 using AngorApp.UI.Services;
-using Avalonia.Controls.ApplicationLifetimes;
 using DynamicData;
+using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI.Commands;
+using Zafiro.UI.Navigation;
+using Zafiro.UI.Shell;
 
 namespace AngorApp.Sections.Portfolio;
 
@@ -13,7 +17,7 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
 {
     private readonly CompositeDisposable disposable = new();
     
-    public PortfolioSectionViewModel(IInvestmentAppService investmentAppService, UIServices uiServices)
+    public PortfolioSectionViewModel(IInvestmentAppService investmentAppService, UIServices uiServices, IShell shell, INavigator navigator)
     {
         Items =
         [
@@ -41,6 +45,8 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
 
         Load.Execute().Subscribe().DisposeWith(disposable);
         
+        GoToPenalties = ReactiveCommand.Create(() => navigator.Go<IPenaltiesViewModel>());
+        
         InvestedProjects = investedProjects;
     }
 
@@ -48,6 +54,7 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
 
     public IReadOnlyCollection<PortfolioItem> Items { get; }
     public IEnumerable<IPortfolioProject> InvestedProjects { get; }
+    public ICommand GoToPenalties { get; }
 
     public void Dispose()
     {
