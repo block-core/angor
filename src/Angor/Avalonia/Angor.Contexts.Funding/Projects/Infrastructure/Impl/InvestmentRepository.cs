@@ -89,25 +89,29 @@ public class InvestmentRepository(
     private async Task<Result<InvestmentRecords>> GetInvestmentRecordsFromRelayAsync(string storageAccountKey,
         string password)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         var tcs = new TaskCompletionSource<Result<InvestmentRecords>>();
             
         cts.Token.Register(() => tcs.TrySetCanceled());
-        
-        relayService.LookupDirectMessagesForPubKey(storageAccountKey, null, 1, async (nostrEvent) =>
-        {
-            try
-            {
-                var decrypted = await encryptionService.DecryptData(nostrEvent.Content, password);
-                var investmentRecords = serializer.Deserialize<InvestmentRecords>(decrypted);
-                tcs.SetResult(investmentRecords);
-            }
-            catch (Exception e)
-            {
-                tcs.SetException(e);
-            }
 
-        }, new[] { storageAccountKey });
+        relayService.LookupDirectMessagesForPubKey(storageAccountKey, null, 1, async (nostrEvent) =>
+            {
+                try
+                {
+                    var decrypted = await encryptionService.DecryptData(nostrEvent.Content, password);
+                    var investmentRecords = serializer.Deserialize<InvestmentRecords>(decrypted);
+                    tcs.SetResult(investmentRecords);
+                }
+                catch (Exception e)
+                {
+                    tcs.SetException(e);
+                }
+
+            }, new[] { storageAccountKey }, false,
+            () =>
+            {
+                tcs.SetResult(Result.Success(new InvestmentRecords(){ProjectIdentifiers = [] }));
+            });
 
         
         try

@@ -105,7 +105,7 @@ public class ProjectRepository(
             );
 
             return Disposable.Empty;
-        }).Timeout(TimeSpan.FromSeconds(10))
+        }).Timeout(TimeSpan.FromSeconds(30))
           .Catch<ProjectInfo, Exception>(ex => Observable.Empty<ProjectInfo>());
         
     }
@@ -120,7 +120,7 @@ public class ProjectRepository(
                 projectInfos.ToArray());
 
             return Disposable.Empty;
-        }).Timeout(TimeSpan.FromSeconds(10))
+        }).Timeout(TimeSpan.FromSeconds(30))
           .Catch<(string, ProjectMetadata), Exception>(ex => Observable.Empty<(string, ProjectMetadata)>());
     }
 }
