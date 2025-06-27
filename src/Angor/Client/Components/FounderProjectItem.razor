@@ -151,10 +151,10 @@
             {
                 var data = await _IndexerService.GetProjectStatsAsync(FounderProject.ProjectInfo.ProjectIdentifier);
 
-                if (data != null)
+                if (data.stats != null)
                 {
-                    projectStats.TotalInvestors = (int)data.InvestorCount;
-                    projectStats.TotalRaised = data.AmountInvested;
+                    projectStats.TotalInvestors = (int)data.stats.InvestorCount;
+                    projectStats.TotalRaised = data.stats.AmountInvested;
 
                     if (FounderProject.ProjectInfo.TargetAmount > 0)
                     {

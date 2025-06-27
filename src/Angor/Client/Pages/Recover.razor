@@ -652,7 +652,7 @@
 
             await CheckSpentFund();
 
-            await ScanForDmMessages();
+            ScanForDmMessages();
         }
         catch (Exception e)
         {
@@ -1398,11 +1398,11 @@
 
     bool hasMessges = false;
 
-    protected async Task ScanForDmMessages()
+    protected void ScanForDmMessages()
     {
         if (project != null)
         {
-            await _RelayService.LookupDirectMessagesForPubKeyAsync(
+            _RelayService.LookupDirectMessagesForPubKey(
                 project.InvestorNPub  ,
             project.LastRequestForMessagesTime?.AddSeconds(1),
                 1,

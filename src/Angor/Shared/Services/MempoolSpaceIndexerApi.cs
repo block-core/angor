@@ -155,11 +155,11 @@ public class MempoolSpaceIndexerApi : IIndexerService
         return await response.Content.ReadFromJsonAsync<ProjectIndexerData>();
     }
 
-    public async Task<ProjectStats?> GetProjectStatsAsync(string projectId)
+    public async Task<(string projectId, ProjectStats? stats)> GetProjectStatsAsync(string projectId)
     {
         if (string.IsNullOrEmpty(projectId))
         {
-            return null;
+            return (projectId, null);
         }
 
         var response = await GetIndexerClient()
@@ -168,10 +168,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
-            return null;
+            return (projectId, null);
         }
 
-        return await response.Content.ReadFromJsonAsync<ProjectStats>();
+        return (projectId, await response.Content.ReadFromJsonAsync<ProjectStats>());
     }
 
     public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)

@@ -864,13 +864,13 @@
 
     HashSet<string> pubkeyWithMessages = new();
 
-    protected async Task ScanForDmMessages()
+    protected void ScanForDmMessages()
     {
         var lastScanList = SessionStorage.GetFounderMessagesTimes();
 
         foreach (var signatureRequest in signaturesRequests)
         {
-            await _RelayService.LookupDirectMessagesForPubKeyAsync(
+            _RelayService.LookupDirectMessagesForPubKey(
                 FounderProject.ProjectInfo.NostrPubKey,
                 lastScanList.TryGet(signatureRequest.investorNostrPubKey)?.AddSeconds(1),
                 1,

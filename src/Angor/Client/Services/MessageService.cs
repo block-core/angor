@@ -121,23 +121,21 @@ namespace Angor.Client.Services
 
                 NotifyStateChanged();
 
-                await _relayService.LookupDirectMessagesForPubKeyAsync(
+                _relayService.LookupDirectMessagesForPubKey(
                     _currentUserHexPub,
                     _sinceTime,
                     100,
                     async eventMessage => await ProcessDirectMessage(eventMessage),
                     new [] { _otherUserHexPub },
-                    true
-                );
+                    true, () => { });
 
-                await _relayService.LookupDirectMessagesForPubKeyAsync(
+                _relayService.LookupDirectMessagesForPubKey(
                     _otherUserHexPub,
                     _sinceTime,
                     100,
                     async eventMessage => await ProcessDirectMessage(eventMessage),
                     new [] { _currentUserHexPub },
-                    true
-                );
+                    true, () => { });
 
                 _subscriptionActive = true;
             }

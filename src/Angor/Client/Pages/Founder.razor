@@ -226,7 +226,7 @@
 
         return new FounderProject
             {
-                ProjectInfo = projectInfo ?? new ProjectInfo { NostrPubKey = e.Pubkey },
+                ProjectInfo = projectInfo ?? new ProjectInfo { ProjectIdentifier = founderProjectsToLookup[e.Pubkey].ProjectIdentifier,  NostrPubKey = e.Pubkey },
                 ProjectIndex = projectIndex,
                 CreationTransactionId = trxId,
                 NostrProfileCreated = true,
