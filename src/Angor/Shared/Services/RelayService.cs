@@ -279,30 +279,21 @@ namespace Angor.Shared.Services
             return Task.FromResult(deleteEvent.Id);
         }
 
-        public Task<string> CreateNostrRelayNip65Async(string[] relays, string hexPrivateKey, Action<NostrOkResponse> action)
+        public Task<string> CreateNostrRelayNip65Async(string hexPrivateKey)
         {
-            Nostr.Client.Messages.Contacts.NostrRelays relayList = new NostrRelays(relays.ToDictionary(a => a, s => new NostrRelayConfig()));
+            Nostr.Client.Messages.Contacts.NostrRelays relayList = new NostrRelays(_networkService.GetRelays()
+                .Select(relay => relay.Url).ToDictionary(a => a, s => new NostrRelayConfig()));
             
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 
-            var content = _serializer.Serialize(relayList);
-
-            var signed = new NostrEvent
-            {
-                Kind = NostrKind.Metadata,
-                CreatedAt = DateTime.UtcNow,
-                Content = content
-            }.Sign(key);
-
-            var signed1 = new NostrContactEvent(content)
+            var signed = new NostrEvent()
             {
                 Kind = NostrKind.RelayListMetadata,
                 CreatedAt = DateTime.UtcNow,
+                Tags = new NostrEventTags(relayList.Select(a=> new NostrEventTag("r", a.Key))),
             }.Sign(key);
 
-            _subscriptionsHandling.TryAddOKAction(signed.Id, action);
-
-            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            var nostrClient = _communicationFactory.GetOrCreateDiscoveryClients(_networkService);
 
             nostrClient.Send(new NostrEventRequest(signed));
 
