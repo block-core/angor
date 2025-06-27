@@ -6,7 +6,7 @@
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:f="clr-namespace:AngorApp.UI"
              x:Class="AngorApp.App"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Dark">
     <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.Styles>
@@ -45,13 +45,13 @@
                 <ColorPaletteResources x:Key="Dark"
                                        Accent="#ffcbdde1"
                                        AltHigh="Black" AltLow="Black" AltMedium="Black" AltMediumHigh="Black" AltMediumLow="Black" BaseHigh="White" BaseLow="#ff046479" BaseMedium="#ff75b5c2"
-                                       BaseMediumHigh="#ff91c9d4" BaseMediumLow="#ff3c8c9d" ChromeAltLow="#ff91c9d4" ChromeBlackHigh="Black" 
-                                       ChromeBlackLow="#ff91c9d4" 
+                                       BaseMediumHigh="#ff91c9d4" BaseMediumLow="#ff3c8c9d" ChromeAltLow="#ff91c9d4" ChromeBlackHigh="Black"
+                                       ChromeBlackLow="#ff91c9d4"
                                        ChromeBlackMedium="Black" ChromeBlackMediumLow="Black"
-                                       ChromeDisabledHigh="#ff046479" ChromeDisabledLow="#ff75b5c2" ChromeGray="#ff59a1b0" 
-                                       ChromeHigh="#ff59a1b0" ChromeLow="#ff013147" ChromeMedium="#ff023e54" 
+                                       ChromeDisabledHigh="#ff046479" ChromeDisabledLow="#ff75b5c2" ChromeGray="#ff59a1b0"
+                                       ChromeHigh="#ff59a1b0" ChromeLow="#ff013147" ChromeMedium="#ff023e54"
                                        ChromeMediumLow="#083B46"
-                                       ChromeWhite="White" 
+                                       ChromeWhite="White"
                                        ListLow="#083B46" ListMedium="#ff046479" RegionColor="#ff022229" />
             </FluentTheme.Palettes>
 
@@ -79,7 +79,7 @@
 
     <Application.Resources>
         <ResourceDictionary>
-            
+
             <IconDataTemplate x:Key="IconDataTemplate" Converter="{x:Static f:AngorIconConverter.Instance}" />
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/ProgressRingStyles.axaml" />
@@ -90,7 +90,7 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
-    
+
     <Application.DataTemplates>
         <DataTemplate DataType="ui:IIcon">
             <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
@@ -101,5 +101,5 @@
             <avalonia:Icon FontSize="40" VerticalAlignment="Center" Value="{Binding Key}" />
         </DataTemplate>
     </Application.DataTemplates>
-    
+
 </Application>

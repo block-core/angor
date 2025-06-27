@@ -97,15 +97,15 @@
                                     <c:Badge Tag="{Binding InvestmentStatus}">
                                         <c:Badge.Styles>
                                             <Style Selector="c|Badge[Tag=PendingFounderSignatures]">
-                                                <Setter Property="Color" Value="Orange" />
+                                                <Setter Property="Color" Value="DarkOrange" />
                                                 <Setter Property="Content" Value="Pending" />
                                             </Style>
                                             <Style Selector="c|Badge[Tag=FounderSignaturesReceived]">
-                                                <Setter Property="Color" Value="#FFFC69" />
+                                                <Setter Property="Color" Value="Goldenrod" />
                                                 <Setter Property="Content" Value="Approved" />
                                             </Style>
                                             <Style Selector="c|Badge[Tag=Invested]">
-                                                <Setter Property="Color" Value="GreenYellow" />
+                                                <Setter Property="Color" Value="LimeGreen" />
                                                 <Setter Property="Content" Value="Invested" />
                                             </Style>
                                             <Style Selector="c|Badge[Tag=Invalid]">
