@@ -5,9 +5,7 @@ using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
-using ReactiveUI;
 using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.Reactive;
 using Stage = Angor.Contexts.Funding.Projects.Domain.Stage;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -107,7 +105,9 @@ public class ProjectRepository(
             );
 
             return Disposable.Empty;
-        });
+        }).Timeout(TimeSpan.FromSeconds(10))
+          .Catch<ProjectInfo, Exception>(ex => Observable.Empty<ProjectInfo>());
+        
     }
 
     private IObservable<(string, ProjectMetadata)> ProjectMetadatas(IEnumerable<string> projectInfos)
@@ -120,6 +120,7 @@ public class ProjectRepository(
                 projectInfos.ToArray());
 
             return Disposable.Empty;
-        });
+        }).Timeout(TimeSpan.FromSeconds(10))
+          .Catch<(string, ProjectMetadata), Exception>(ex => Observable.Empty<(string, ProjectMetadata)>());
     }
 }

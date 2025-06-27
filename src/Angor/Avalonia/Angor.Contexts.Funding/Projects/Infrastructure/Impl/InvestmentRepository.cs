@@ -86,11 +86,14 @@ public class InvestmentRepository(
             .Map(investments => investments.Select(inv => Domain.Investment.Create(projectId, inv.InvestorPublicKey, new Amount(inv.TotalAmount), inv.TransactionId)));
     }
     
-    private Task<Result<InvestmentRecords>> GetInvestmentRecordsFromRelayAsync(string storageAccountKey,
+    private async Task<Result<InvestmentRecords>> GetInvestmentRecordsFromRelayAsync(string storageAccountKey,
         string password)
     {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         var tcs = new TaskCompletionSource<Result<InvestmentRecords>>();
             
+        cts.Token.Register(() => tcs.TrySetCanceled());
+        
         relayService.LookupDirectMessagesForPubKey(storageAccountKey, null, 1, async (nostrEvent) =>
         {
             try
@@ -106,6 +109,15 @@ public class InvestmentRepository(
 
         }, new[] { storageAccountKey });
 
-        return tcs.Task;
+        
+        try
+        {
+            return await tcs.Task;
+        }
+        catch (OperationCanceledException)
+        {
+            return Result.Failure<InvestmentRecords>("Operation timed out");
+        }
+
     }
 }
