@@ -1,3 +1,5 @@
+using Angor.Contexts.Funding.Founder;
+using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Portfolio;
@@ -9,11 +11,11 @@ public interface IPortfolioProject
     public IAmountUI Target { get; }
     public IAmountUI Raised { get; }
     public IAmountUI InRecovery { get; }
-    public ProjectStatus Status { get; }
+    public InvestmentStatus InvestmentStatus { get; }
     public FounderStatus FounderStatus { get; }
     public Uri LogoUri { get; }
     public double Progress => Target.Sats == 0 ? 0 : Raised.Sats / (double)Target.Sats;
     public IEnhancedCommand<Result> CompleteInvestment { get; }
-    public bool IsInvestmentCompleted { get; set; }
+    public bool IsInvestmentCompleted { get; }
     public IAmountUI Invested { get; }
 }

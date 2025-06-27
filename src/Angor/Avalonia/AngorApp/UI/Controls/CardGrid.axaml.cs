@@ -52,4 +52,22 @@ public class CardGrid : TemplatedControl
         get => GetValue(ItemContainerThemeProperty);
         set => SetValue(ItemContainerThemeProperty, value);
     }
+
+    public static readonly StyledProperty<double> MinColumnWidthProperty = AvaloniaProperty.Register<CardGrid, double>(
+        nameof(MinColumnWidth), 300d);
+
+    public double MinColumnWidth
+    {
+        get => GetValue(MinColumnWidthProperty);
+        set => SetValue(MinColumnWidthProperty, value);
+    }
+
+    public static readonly StyledProperty<double> MaxColumnWidthProperty = AvaloniaProperty.Register<CardGrid, double>(
+        nameof(MaxColumnWidth), 500d);
+
+    public double MaxColumnWidth
+    {
+        get => GetValue(MaxColumnWidthProperty);
+        set => SetValue(MaxColumnWidthProperty, value);
+    }
 }

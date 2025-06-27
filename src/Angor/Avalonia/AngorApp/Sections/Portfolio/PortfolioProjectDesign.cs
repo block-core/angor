@@ -1,3 +1,4 @@
+using Angor.Contexts.Funding.Founder;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Portfolio;
@@ -9,7 +10,7 @@ public class PortfolioProjectDesign : IPortfolioProject
     public IAmountUI Target { get; set; } = new AmountUI(14000);
     public IAmountUI Raised { get; set; } = new AmountUI(63000);
     public IAmountUI InRecovery { get; set; } = new AmountUI(123000);
-    public ProjectStatus Status { get; set; }
+    public InvestmentStatus InvestmentStatus { get; set; }
     public FounderStatus FounderStatus { get; set; }
     public Uri LogoUri { get; set; }
     public IEnhancedCommand<Result> CompleteInvestment { get; }
