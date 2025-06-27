@@ -179,7 +179,7 @@
                                                                !string.IsNullOrWhiteSpace(userVerificationInputs[wordIndex]))
                                                                 {
                                                                     var suggestions = GetFilteredWordSuggestions(userVerificationInputs[wordIndex]);
-                                                                    if (!(suggestions.Count() == 1 && suggestions.First().Equals(userVerificationInputs[wordIndex], StringComparison.OrdinalIgnoreCase)) && suggestions.Any())
+                                                                    if(suggestions.Any() && suggestions.First() != userVerificationInputs[wordIndex]) 
                                                                     {
                                                                         <div class="word-suggestions-dropdown">
                                                                             <div class="suggestions-container">
