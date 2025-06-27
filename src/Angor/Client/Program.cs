@@ -20,7 +20,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddHttpClient();
 
-
+builder.Services.AddMemoryCache();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddBlazoredSessionStorage();
 
@@ -40,7 +40,8 @@ builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ICurrencyRateService, CurrencyRateService>();
 builder.Services.AddScoped<IFeatureFlagService, FeatureFlagService>();
 //builder.Services.AddScoped<IIndexerService, IndexerService>();
-builder.Services.AddScoped<IIndexerService, MempoolSpaceIndexerApi>();
+builder.Services.AddScoped<MempoolSpaceIndexerApi>();
+builder.Services.AddScoped<IIndexerService, CachedIndexerService>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
 
 builder.Services.AddTransient<IRelayService, RelayService>();
