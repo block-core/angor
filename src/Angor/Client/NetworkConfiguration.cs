@@ -98,6 +98,8 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "", Url = "wss://relay2.angor.io", IsPrimary = true },
                 new SettingsUrl { Name = "", Url = "wss://relay.damus.io", IsPrimary = true },
                 new SettingsUrl { Name = "", Url = "wss://nos.lol", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "wss://nostr-01.yakihonne.com", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "wss://nostr-02.yakihonne.com", IsPrimary = true },
             };
         }
 

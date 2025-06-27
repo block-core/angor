@@ -263,7 +263,7 @@
                             <label for="startDate" class="form-label mb-0 fw-semibold">Start Date</label>
                         </div>
                         <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period begins (automatically set to today).</p>
-                        <div class="form-control disabled">@DateTime.Today</div>
+                        <div class="form-control disabled">@DateTime.Today.FormatDate()</div>
                         <input type="hidden" @bind="project.ProjectInfo.StartDate" />
                     </div>
 
@@ -310,7 +310,7 @@
                             <label for="expiryDate" class="form-label mb-0 fw-semibold">Expiry Date</label>
                         </div>
                         <p class="form-text text-muted mt-0 mb-2 small">Emergency date when all remaining funds can be released in case of project abandonment. Automatically set to 60 days after the last stage.</p>
-                        <div class="form-control disabled">@CalculateExpiryDate()</div>
+                        <div class="form-control disabled">@CalculateExpiryDate().FormatDate()</div>
                         <input type="hidden" @bind="project.ProjectInfo.ExpiryDate" />
                     </div>
                 </div>
@@ -489,7 +489,7 @@
                             <Icon IconName="calendar" Height="32" Width="32" />
                         </div>
                         <div class="stage-info">
-                            <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
+                            <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate.FormatDate() - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
                         </div>
                     </div>
                 </div>
@@ -849,13 +849,13 @@
                                     <div class="col-md-6">
                                         <div class="info-card h-100">
                                             <div class="info-label">Start Date</div>
-                                            <div class="info-value">@project.ProjectInfo.StartDate) (in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days)</div>
+                                            <div class="info-value">@project.ProjectInfo.StartDate.FormatDate() (in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days)</div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="info-card h-100">
                                             <div class="info-label">Expiry Date</div>
-                                            <div class="info-value text-warning">@project.ProjectInfo.ExpiryDate) (in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days)</div>
+                                            <div class="info-value text-warning">@project.ProjectInfo.ExpiryDate.FormatDate() (in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days)</div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -904,7 +904,7 @@
                                                 <Icon IconName="calendar" Height="32" Width="32" />
                                             </div>
                                             <div class="stage-info">
-                                                <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate) - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
+                                                <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate.FormatDate() - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1812,10 +1812,10 @@
         return new List<(string, string, string, string, bool)>
     {
     ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}", "text-success", true),
-    ("calendar", "Funding start date", $"{project.ProjectInfo.StartDate} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days", "text-warning", false),
-    ("calendar", "Funding end date", $"{project.ProjectInfo.EndDate} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days", "text-warning", false),
+    ("calendar", "Funding start date", $"{project.ProjectInfo.StartDate.FormatDate()} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days", "text-warning", false),
+    ("calendar", "Funding end date", $"{project.ProjectInfo.EndDate.FormatDate()} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days", "text-warning", false),
     ("unlock", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days", "text-warning", false),
-    ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days", "text-warning", false)
+    ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate.FormatDate()} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days", "text-warning", false)
     };
     }
 
