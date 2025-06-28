@@ -22,4 +22,6 @@ public interface IRelayService
         Action<NostrOkResponse> onResponseAction);
     
     void DisconnectSubscription(string subscription);
+
+    Task<string> CreateNostrRelayNip65Async(string hexPrivateKey);
 }

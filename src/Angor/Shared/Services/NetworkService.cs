@@ -242,6 +242,15 @@ namespace Angor.Shared.Services
             return settings.Relays;
         }
 
+        public List<SettingsUrl> GetDiscoveryRelays()
+        {
+            return new List<SettingsUrl>
+            {
+                new SettingsUrl { Name = "wss://purplerelay.com", Url = "wss://purplerelay.com" },
+                new SettingsUrl { Name = "wss://discovery.eu.nostria.app", Url = "wss://discovery.eu.nostria.app" },
+            };
+        }
+
         public SettingsUrl GetPrimaryExplorer()
         {
             var settings = _networkStorage.GetSettings();
