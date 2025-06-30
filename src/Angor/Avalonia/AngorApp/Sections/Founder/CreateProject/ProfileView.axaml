@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Founder.CreateProject.ProfileView">
+    <StackPanel Spacing="20">
+        <HeaderedContainer Header="Project name">
+            <TextBox Watermark="Enter the name of the project" />
+        </HeaderedContainer>
+        <HeaderedContainer Header="About">
+            <TextBox Watermark="Provide a brief description of the project" />
+        </HeaderedContainer>
+        <HeaderedContainer Header="Project website">
+            <TextBox Watermark="Enter the name of the project" />
+        </HeaderedContainer>
+        <HeaderedContainer Header="Banner Image URL (Recommended size: 820×312px)">
+            <TextBox Watermark="Enter the URL for the project banner image" />
+        </HeaderedContainer>
+        <HeaderedContainer Header="Avatar Image Url (Recommended size: 170×170px)">
+            <TextBox Watermark="Enter the URL for the project logo or profile picture" />
+        </HeaderedContainer>
+    </StackPanel>
+</UserControl>
