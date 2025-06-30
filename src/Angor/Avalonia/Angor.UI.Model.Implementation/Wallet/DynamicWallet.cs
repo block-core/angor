@@ -17,7 +17,7 @@ namespace Angor.UI.Model.Implementation.Wallet;
 public partial class DynamicWallet : ReactiveObject, IWallet, IDisposable
 {
     [ObservableAsProperty]
-    private long balance;
+    private IAmountUI balance;
     [ObservableAsProperty] private ResultViewModel loadResult;
     
     private readonly IWalletAppService walletAppService;
@@ -44,7 +44,10 @@ public partial class DynamicWallet : ReactiveObject, IWallet, IDisposable
 
         History = transactions;
 
-        balanceHelper = changes.Sum(transaction => transaction.GetBalance().Sats).ToProperty(this, x => x.Balance);
+        balanceHelper = changes
+            .Sum(transaction => transaction.GetBalance().Sats)
+            .Select(l => new AmountUI(l))
+            .ToProperty(this, x => x.Balance);
     }
     public StoppableCommand<Unit, Result<Event>> Sync { get; }
 

@@ -2,7 +2,7 @@
   <!-- https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <AvaloniaVersion>11.3.1</AvaloniaVersion>
+    <AvaloniaVersion>11.3.2</AvaloniaVersion>
   </PropertyGroup>
   <ItemGroup>
     <!-- Avalonia packages -->
@@ -20,15 +20,14 @@
     <PackageVersion Include="Avalonia.Svg" Version="11.3.0" />
     <PackageVersion Include="AsyncImageLoader.Avalonia" Version="3.3.0" />
     <PackageVersion Include="AspectInjector" Version="2.8.2" />
-    <PackageVersion Include="Avalonia.Xaml.Behaviors" Version="11.3.0.6" />
-    <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.0.3" />
+    <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.0.4" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageVersion Include="Humanizer.Core" Version="2.14.1" />
     <PackageVersion Include="JetBrains.Annotations" Version="2024.3.0" />
     <PackageVersion Include="MediatR" Version="12.5.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.5" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.6" />
     <PackageVersion Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.6.2" />
     <PackageVersion Include="Projektanker.Icons.Avalonia.MaterialDesign" Version="9.6.2" />
     <PackageVersion Include="QRCoder" Version="1.6.0" />
@@ -46,11 +45,11 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageVersion Include="Serilog.Sinks.XUnit" Version="3.0.19" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
-    <PackageVersion Include="Zafiro" Version="23.0.1" />
-    <PackageVersion Include="Zafiro.Avalonia" Version="27.0.8" />
+    <PackageVersion Include="Zafiro" Version="25.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia" Version="29.0.1" />
     <PackageVersion Include="Zafiro.UI" Version="22.0.0" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="27.0.8" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="29.0.1" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />
     <PackageVersion Include="FluentAssertions.Reactive" Version="0.2.0" />

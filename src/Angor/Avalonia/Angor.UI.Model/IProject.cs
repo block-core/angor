@@ -4,8 +4,8 @@ public interface IProject
 {
     public string Id { get; set; }
     public string Name { get; }
-    public Uri Picture { get; }
     public Uri Banner { get; }
+    public Uri Picture { get; }
     public string ShortDescription { get; }
     string BitcoinAddress { get; }
     public decimal TargetAmount { get; }

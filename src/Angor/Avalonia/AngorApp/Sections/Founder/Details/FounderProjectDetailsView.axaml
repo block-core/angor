@@ -18,20 +18,23 @@
     
     <UserControl.Resources>
         <converters:ControlThemeConverter x:Key="InvestmentStatusConverter">
-            <ControlTheme x:Key="{x:Static founder:InvestmentStatus.Pending}" 
+            <ControlTheme x:Key="{x:Static founder:InvestmentStatus.PendingFounderSignatures}" 
                           TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="Background" Value="Yellow" />
                 <Setter Property="Content" Value="Pending" />
+                <Setter Property="ToolTip.Tip" Value="This is an investment request in your project" />
             </ControlTheme>
-            <ControlTheme x:Key="{x:Static founder:InvestmentStatus.Approved}" 
+            <ControlTheme x:Key="{x:Static founder:InvestmentStatus.FounderSignaturesReceived}" 
                           TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="Background" Value="GreenYellow" />
                 <Setter Property="Content" Value="Approved" />
+                <Setter Property="ToolTip.Tip" Value="You approved this investment. Waiting for the investor to complete the investment process." />
             </ControlTheme>
             <ControlTheme x:Key="{x:Static founder:InvestmentStatus.Invested}" 
                           TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="Background" Value="LightGreen" />
                 <Setter Property="Content" Value="Invested" />
+                <Setter Property="ToolTip.Tip" Value="Investment completed" />
             </ControlTheme>
         </converters:ControlThemeConverter>
     </UserControl.Resources>
@@ -43,7 +46,7 @@
     </Interaction.Behaviors>
 
     <ScrollViewer>
-        <StackPanel Spacing="10" MinWidth="550">
+        <StackPanel Spacing="10">
             <asyncImageLoader:AdvancedImage Height="200" Stretch="UniformToFill" Source="{Binding BannerUrl}" />
             <StackPanel Margin="20" Spacing="10">
                 <TextBlock Classes="SizeBig" Text="{Binding Name}" />
@@ -75,7 +78,7 @@
                         </sdg:SlimDataGrid.Styles>
                         <sdg:SlimDataGrid.Columns>
                             <sdg:Column Header="Amount" Binding="{Binding Content.Amount.BtcString}" />
-                            <sdg:Column Header="Date" Binding="{Binding Content.CreatedOn, Converter={x:Static controls:MiscConverters.HumanizeDate}}" />
+                            <sdg:Column Header="Date" Binding="{Binding Content.CreatedOn, Converter={x:Static controls:AngorConverters.HumanizeDate}}" />
                             <sdg:Column Header="Investor" Binding="{Binding Content.InvestorNostrPubKey}" />
                             <sdg:Column Header="Status" Width="100" Binding="{Binding Content}">
                                 <sdg:Column.CellTemplate>

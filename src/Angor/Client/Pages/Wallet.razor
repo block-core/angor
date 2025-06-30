@@ -164,12 +164,13 @@
                                                         var wordIndex = selectedWordsToVerify[i].index;
                                                         <div class="col-md-4 col-sm-6 mt-0">
                                                             <div class="mb-3 position-relative">
-                                                                <label class="form-label">Word #@wordIndex</label>
+                                                                <label class="form-label">Word @wordIndex</label>
                                                                 <input type="text" class="form-control"
                                                                        value="@userVerificationInputs[wordIndex]"
                                                                        @oninput="(e) => HandleWordInput(wordIndex, e)"
                                                                        @onfocus="() => ShowSuggestionsIfNeeded(wordIndex)"
-                                                                       placeholder="Enter word #@wordIndex" />
+                                                                       @onblur="async () => await HideSuggestionsWithDelay(wordIndex)"
+                                                                       placeholder="@wordIndex" />
                                                                 @if (invalidWordIndices.TryGetValue(wordIndex, out var isInvalid) && isInvalid)
                                                                 {
                                                                     <div class="text-danger small mt-1">Not a valid BIP-39 word</div>
@@ -179,7 +180,7 @@
                                                                !string.IsNullOrWhiteSpace(userVerificationInputs[wordIndex]))
                                                                 {
                                                                     var suggestions = GetFilteredWordSuggestions(userVerificationInputs[wordIndex]);
-                                                                    @if (suggestions.Any())
+                                                                    if(suggestions.Any() && suggestions.First() != userVerificationInputs[wordIndex]) 
                                                                     {
                                                                         <div class="word-suggestions-dropdown">
                                                                             <div class="suggestions-container">
@@ -2026,6 +2027,13 @@ else
         StateHasChanged();
     }
 
+    private async Task HideSuggestionsWithDelay(int wordIndex)
+    {
+        await Task.Delay(200);
+        showSuggestions[wordIndex] = false;
+        StateHasChanged();
+    }
+    
     private IEnumerable<string> GetFilteredWordSuggestions(string input)
     {
         var wordlist = NBitcoin.Wordlist.English;

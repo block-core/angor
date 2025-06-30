@@ -15,14 +15,6 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
     
     public PortfolioSectionViewModel(IInvestmentAppService investmentAppService, UIServices uiServices)
     {
-        Items =
-        [
-            new PortfolioItem("Ariton", "0"),
-            new PortfolioItem("Total invested", "0 TBTC"),
-            new PortfolioItem("Wallet", "0 TBTC"),
-            new PortfolioItem("In Recovery", "0 TBTC"),
-        ];
-
         var reactiveCommand = ReactiveCommand.CreateFromTask(() =>
         {
             var bind = uiServices.WalletRoot.GetDefaultWalletAndActivate()
@@ -35,7 +27,7 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
 
         Load.Successes()
             .EditDiff(project => project.Id)
-            .Transform(IPortfolioProject (project) => new Items.PortfolioProject(project, investmentAppService, uiServices))
+            .Transform(IPortfolioProject (project) => new PortfolioProjectViewModel(project, investmentAppService, uiServices))
             .Bind(out var investedProjects)
             .Subscribe().DisposeWith(disposable);
 
@@ -45,8 +37,10 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
     }
 
     public IEnhancedCommand<Result<IEnumerable<InvestedProjectDto>>> Load { get; }
-
-    public IReadOnlyCollection<PortfolioItem> Items { get; }
+    public int FundedProjects { get; } = 123;
+    public IAmountUI TotalInvested { get; } = new AmountUI(1000000);
+    public IAmountUI RecoveredToPenalty { get; } = new AmountUI(240000);
+    public int ProjectsInRecovery { get; } = 6;
     public IEnumerable<IPortfolioProject> InvestedProjects { get; }
 
     public void Dispose()

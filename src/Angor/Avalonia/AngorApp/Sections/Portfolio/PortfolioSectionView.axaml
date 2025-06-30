@@ -2,14 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="560"
+             mc:Ignorable="d" d:DesignWidth="860"
              x:Class="AngorApp.Sections.Portfolio.PortfolioSectionView"
              xmlns:p="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:angorApp="clr-namespace:AngorApp"
-             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
-             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:items="clr-namespace:AngorApp.Sections.Portfolio.Items"
+             xmlns:a="clr-namespace:AngorApp.UI.Controls"
+             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              x:DataType="p:IPortfolioSectionViewModel">
 
     <UserControl.Resources>
@@ -29,9 +29,15 @@
     </UserControl.Styles>
 
     <Design.DataContext>
-        <p:PortfolioSectionViewModelDesign>
+        <p:PortfolioSectionViewModelDesign FundedProjects="1" ProjectsInRecovery="4">
+            <p:PortfolioSectionViewModelDesign.RecoveredToPenalty>
+                <angorApp:DesignTimeAmount Sats="4321" />
+            </p:PortfolioSectionViewModelDesign.RecoveredToPenalty>
+            <p:PortfolioSectionViewModelDesign.TotalInvested>
+                <angorApp:DesignTimeAmount Sats="1234" />
+            </p:PortfolioSectionViewModelDesign.TotalInvested>
             <p:PortfolioSectionViewModelDesign.InvestedProjects>
-                <p:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" IsInvestmentCompleted="False" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                <p:PortfolioProjectDesign InvestmentStatus="FounderSignaturesReceived" FounderStatus="Approved" IsInvestmentCompleted="False" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
                     <p:PortfolioProjectDesign.Target>
                         <angorApp:DesignTimeAmount Sats="12000000" />
                     </p:PortfolioProjectDesign.Target>
@@ -39,7 +45,15 @@
                         <angorApp:DesignTimeAmount Sats="4400000" />
                     </p:PortfolioProjectDesign.Raised>
                 </p:PortfolioProjectDesign>
-                <p:PortfolioProjectDesign FounderStatus="Approved" Status="Funding" Name="Project 2" IsInvestmentCompleted="True" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                <p:PortfolioProjectDesign FounderStatus="Approved" InvestmentStatus="PendingFounderSignatures" Name="Project 2" IsInvestmentCompleted="True" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                    <p:PortfolioProjectDesign.Target>
+                        <angorApp:DesignTimeAmount Sats="12000000" />
+                    </p:PortfolioProjectDesign.Target>
+                    <p:PortfolioProjectDesign.Raised>
+                        <angorApp:DesignTimeAmount Sats="5404000" />
+                    </p:PortfolioProjectDesign.Raised>
+                </p:PortfolioProjectDesign>
+                <p:PortfolioProjectDesign FounderStatus="Approved" InvestmentStatus="Invested" Name="Project 2" IsInvestmentCompleted="True" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
                     <p:PortfolioProjectDesign.Target>
                         <angorApp:DesignTimeAmount Sats="12000000" />
                     </p:PortfolioProjectDesign.Target>
@@ -51,28 +65,55 @@
         </p:PortfolioSectionViewModelDesign>
     </Design.DataContext>
 
-    <DockPanel>
-        <Card DockPanel.Dock="Top" Header="Portfolio" IsAdaptiveFlowEnabled="True" Subheader="Check your project investments">
-            <Card.HeaderEndContent>
-                <UniformGrid ColumnSpacing="20" Rows="1">
-                    <IconButton HorizontalAlignment="Stretch" Command="{Binding Load}">
-                        Refresh
-                        <IconButton.Icon>
-                            <ui:Icon Source="fa-arrows-rotate" />
-                        </IconButton.Icon>
-                    </IconButton>
-                    <IconButton HorizontalAlignment="Stretch">
-                        Penalties
-                        <IconButton.Icon>
-                            <ui:Icon Source="fa-unlock" />
-                        </IconButton.Icon>
-                    </IconButton>
-                </UniformGrid>
-            </Card.HeaderEndContent>
-        </Card>
+    <a:PageContainer>
+        <DockPanel>
+            <Card DockPanel.Dock="Top" Header="Portfolio" IsAdaptiveFlowEnabled="True" Subheader="Check your project investments">
+                <Card.HeaderEndContent>
+                    <UniformGrid ColumnSpacing="20" Rows="1">
+                        <IconButton HorizontalAlignment="Stretch" Command="{Binding Load}">
+                            Refresh
+                            <IconButton.Icon>
+                                <ui:Icon Source="fa-arrows-rotate" />
+                            </IconButton.Icon>
+                        </IconButton>
+                        <IconButton HorizontalAlignment="Stretch">
+                            Penalties
+                            <IconButton.Icon>
+                                <ui:Icon Source="fa-unlock" />
+                            </IconButton.Icon>
+                        </IconButton>
+                    </UniformGrid>
+                </Card.HeaderEndContent>
+            </Card>
+            
+            <a:CardGrid DockPanel.Dock="Top">
+                <a:CardGrid.ItemsSource>
+                    <collections:ArrayList>
+                        <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Funded Projects" Subheader="{Binding FundedProjects}">
+                            <Card.HeaderStartContent>
+                                <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                            </Card.HeaderStartContent>
+                        </Card>
+                        <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Total Invested" Subheader="{Binding TotalInvested.DecimalString}">
+                            <Card.HeaderStartContent>
+                                <ui:Icon Source="svg:/Assets/btc.svg" />
+                            </Card.HeaderStartContent>
+                        </Card>
+                        <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Recovered To Penalty" Subheader="{Binding RecoveredToPenalty.DecimalString}">
+                            <Card.HeaderStartContent>
+                                <ui:Icon Source="svg:/Assets/recovery.svg" />
+                            </Card.HeaderStartContent>
+                        </Card>
+                        <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Projects In Recovery" Subheader="{Binding ProjectsInRecovery}">
+                            <Card.HeaderStartContent>
+                                <ui:Icon Source="svg:/Assets/recovery.svg" />
+                            </Card.HeaderStartContent>
+                        </Card>
+                    </collections:ArrayList>
+                </a:CardGrid.ItemsSource>
+            </a:CardGrid>
 
-        <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading projects...">
-            <ScrollViewer>
+            <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading projects...">
                 <ItemsControl ItemsSource="{Binding InvestedProjects}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -83,8 +124,8 @@
                         <TextBlock Margin="10" TextAlignment="Center">Oops! You have not invested in any project yet</TextBlock>
                     </Empty.Content>
                 </ItemsControl>
-            </ScrollViewer>
-        </Loading>
-        
-    </DockPanel>
+            </Loading>
+
+        </DockPanel>
+    </a:PageContainer>
 </UserControl>

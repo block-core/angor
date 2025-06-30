@@ -20,18 +20,8 @@ public class PortfolioSectionViewModelDesign : IPortfolioSectionViewModel
     public IReadOnlyCollection<PortfolioItem> Items { get; }
     public IEnumerable<IPortfolioProject> InvestedProjects { get; } = new List<IPortfolioProject>();
     public IEnhancedCommand<Result<IEnumerable<InvestedProjectDto>>> Load { get; }
-}
-
-public class PortfolioProjectDesign : IPortfolioProject
-{
-    public string Name { get; set; }
-    public string Description { get; set; }
-    public IAmountUI Target { get; set; }
-    public IAmountUI Raised { get; set; }
-    public IAmountUI InRecovery { get; set; }
-    public ProjectStatus Status { get; set; }
-    public FounderStatus FounderStatus { get; set; }
-    public Uri LogoUri { get; set; }
-    public IEnhancedCommand<Result> CompleteInvestment { get; }
-    public bool IsInvestmentCompleted { get; set; }
+    public int FundedProjects { get; set; }
+    public IAmountUI TotalInvested { get; set; }
+    public int ProjectsInRecovery { get; set; }
+    public IAmountUI RecoveredToPenalty { get; set; }
 }

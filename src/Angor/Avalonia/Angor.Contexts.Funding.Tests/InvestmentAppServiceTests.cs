@@ -29,7 +29,7 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
         var projectId = new ProjectId("angor1qkmmqqktfhe79wxp20555cdp5gfardr4s26wr00");
         
         // Act
-        var result = await sut.CreateInvestmentDraft(Guid.Empty, projectId, new Amount(12345));
+        var result = await sut.CreateInvestmentDraft(Guid.Empty, projectId, new Amount(12345), new DomainFeerate(123));
         
         // Assert
         Assert.True(result.IsSuccess, result.IsFailure ? result.Error : string.Empty);

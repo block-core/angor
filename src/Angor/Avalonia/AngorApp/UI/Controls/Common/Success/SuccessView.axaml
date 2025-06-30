@@ -2,12 +2,33 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:success="clr-namespace:AngorApp.UI.Controls.Common.Success"
-             mc:Ignorable="d" d:DesignHeight="450"
-             x:Class="AngorApp.UI.Controls.Common.Success.SuccessView" x:DataType="success:SuccessViewModel">
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="240" MaxWidth="400">
-        <avalonia:Icon Value="fa-solid fa-check" Foreground="Green" FontSize="20" Margin="10" />
-        <TextBlock Text="{Binding Message}" VerticalAlignment="Center" TextWrapping="Wrap" />
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             mc:Ignorable="d" 
+             d:DesignHeight="500"
+             d:DesignWidth="500"
+             x:Class="AngorApp.UI.Controls.Common.Success.SuccessView" x:DataType="success:ISuccessViewModel">
+    
+    <Design.DataContext>
+        <success:SuccessViewModelDesign Message="This is a very, very long message that is here to test how success messages are rendered on-screen" />
+    </Design.DataContext>
+    
+    <UserControl.Styles>
+        <Style Selector="ContentControl">
+            <Setter Property="Foreground" Value="Green" />
+            <Setter Property="FontSize" Value="30" />
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+    
+    <StackPanel Spacing="10" MaxWidth="450" VerticalAlignment="Center">
+        <ContentControl>
+            <ui:Icon Source="fa-solid fa-check" />
+        </ContentControl>
+        <TextBlock Text="{Binding Message}"></TextBlock>
     </StackPanel>
 </UserControl>

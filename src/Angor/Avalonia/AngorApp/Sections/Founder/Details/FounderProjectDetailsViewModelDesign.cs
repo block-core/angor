@@ -12,9 +12,9 @@ public class FounderProjectDetailsViewModelDesign : IFounderProjectDetailsViewMo
     {
         new()
         {
-            Content = new InvestmentViewModelDesign(new AmountUI(12122), "nostr pub key", DateTimeOffset.Now, InvestmentStatus.Approved)
+            Content = new InvestmentViewModelDesign(new AmountUI(12122), "nostr pub key", DateTimeOffset.Now, InvestmentStatus.FounderSignaturesReceived)
             {
-                Status = InvestmentStatus.Pending,
+                Status = InvestmentStatus.PendingFounderSignatures,
             }
         },
         new()
@@ -26,9 +26,9 @@ public class FounderProjectDetailsViewModelDesign : IFounderProjectDetailsViewMo
         },
         new()
         {
-            Content = new InvestmentViewModelDesign(new AmountUI(423445), "nostr pub key", DateTimeOffset.Now.AddHours(-4), InvestmentStatus.Pending)
+            Content = new InvestmentViewModelDesign(new AmountUI(423445), "nostr pub key", DateTimeOffset.Now.AddHours(-4), InvestmentStatus.PendingFounderSignatures)
             {
-                Status = InvestmentStatus.Approved,
+                Status = InvestmentStatus.FounderSignaturesReceived,
             }
         },
     };
@@ -40,5 +40,5 @@ public class FounderProjectDetailsViewModelDesign : IFounderProjectDetailsViewMo
 
 public record InvestmentViewModelDesign(IAmountUI Amount, string InvestorNostrPubKey, DateTimeOffset CreatedOn, InvestmentStatus Status) : IInvestmentViewModel
 {
-    public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; } = ReactiveCommand.Create(() => Maybe.From(Result.Success(true)), Observable.Return(Status == InvestmentStatus.Pending)).Enhance();
+    public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; } = ReactiveCommand.Create(() => Maybe.From(Result.Success(true)), Observable.Return(Status == InvestmentStatus.PendingFounderSignatures)).Enhance();
 }

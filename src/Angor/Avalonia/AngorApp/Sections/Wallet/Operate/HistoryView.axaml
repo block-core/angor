@@ -7,7 +7,8 @@
              xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Wallet.Operate.HistoryView"
              x:DataType="operate:IWalletViewModel">
 
@@ -15,12 +16,11 @@
         <operate:WalletViewModelDesign />
     </Design.DataContext>
 
-    <controls:Pane IsTitleVisible="True" Title="History">
-        <controls:Pane.TitleIcon>
-            <i:Icon Value="fa-solid fa-cube" />
-        </controls:Pane.TitleIcon>
-
-        <z:SlimDataGrid HeaderPadding="0 10" Margin="0 25" ItemsSource="{Binding History}">
+    <Card Header="History">
+        <Card.HeaderStartContent>
+            <ui:Icon Source="fa-solid fa-cube" />
+        </Card.HeaderStartContent>
+        <z:SlimDataGrid ItemsSource="{Binding History}">
             <z:SlimDataGrid.Styles>
                 <Style Selector="TextBlock">
                     <Setter Property="VerticalAlignment" Value="Center" />
@@ -52,7 +52,7 @@
                         </DataTemplate>
                     </z:Column.CellTemplate>
                 </z:Column>
-                <z:Column Header="Date" Width="*" Binding="{Binding Content.Transaction.BlockTime, Converter={x:Static controls:MiscConverters.HumanizeDate}}">
+                <z:Column Header="Date" Width="*" Binding="{Binding Content.Transaction.BlockTime, Converter={x:Static controls:AngorConverters.HumanizeDate}}">
                     <z:Column.HeaderTemplate>
                         <DataTemplate>
                             <TextBlock x:DataType="x:Object" TextAlignment="Center" Text="{Binding}" />
@@ -79,6 +79,6 @@
                 </z:Column>
             </z:SlimDataGrid.Columns>
         </z:SlimDataGrid>
-    </controls:Pane>
+    </Card>
 
 </UserControl>
