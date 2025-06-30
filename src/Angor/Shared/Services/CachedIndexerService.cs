@@ -107,7 +107,7 @@ namespace Angor.Shared.Services
             });
         }
 
-        public async Task<ProjectStats?> GetProjectStatsAsync(string projectId)
+        public async Task<(string projectId, ProjectStats? stats)>GetProjectStatsAsync(string projectId)
         {
             var cacheKey = $"project_stats_{projectId}";
             return await _cache.GetOrCreateAsync(cacheKey, async entry =>
