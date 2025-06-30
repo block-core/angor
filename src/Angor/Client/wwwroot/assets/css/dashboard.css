@@ -21036,6 +21036,12 @@ fieldset:disabled .btn {
         padding: 1.5rem;
         background-color: transparent;
     }
+    
+    @media (max-width: 575.98px) {
+        .card .card-body {
+            padding: 0.6rem;
+        }
+    }
 
 .author {
     display: flex;
@@ -24786,6 +24792,13 @@ body:not(.dark) .sidenav.bg-transparent .collapse .nav-item .nav-link.active.tex
 .progress-bar {
     height: 16px;
 }
+
+    .progress-bar.progress-bar-xs {
+        height: 6px;
+    }
+    .progress-bar.progress-bar-lg {
+        height: 20px;
+    }
 
 .progress {
     overflow: visible;

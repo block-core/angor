@@ -120,7 +120,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="text-muted">Expiry Date</h6>
-                                <h4 class="mb-0">@project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")</h4>
+                                <h4 class="mb-0">@project.ProjectInfo.ExpiryDate.FormatDate()</h4>
                             </div>
                             <div class="stat-icon">
                                 <Icon IconName="calendar" Height="32" Width="32" />

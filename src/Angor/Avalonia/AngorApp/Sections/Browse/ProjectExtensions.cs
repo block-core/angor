@@ -17,7 +17,7 @@ public static class ProjectExtensions
             NpubKey = dto.NostrNpubKey,
             NostrNpubKey = dto.NostrNpubKey,
             Banner = dto.Banner,
-            ShortDescription = dto.ShortDescription,
+            ShortDescription = dto.ShortDescription?.Trim(),
             Stages = dto.Stages
                 .Select(stage => new Stage
                 {

@@ -35,7 +35,7 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
 
         var createDraft = this.WhenAnyValue(x => x.Feerate)
             .WhereNotNull()
-            .SelectLatest(feerate => CreateDraftTo(sendAmount.Amount, sendAmount.BitcoinAddress, feerate.Value), isCalculatingDraft, TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
+            .SelectLatest(feerate => CreateDraftTo(sendAmount.Amount, sendAmount.BitcoinAddress, feerate!.Value), isCalculatingDraft, TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Publish();
             

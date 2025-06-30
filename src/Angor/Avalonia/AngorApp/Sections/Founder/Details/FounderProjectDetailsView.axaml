@@ -78,7 +78,7 @@
                         </sdg:SlimDataGrid.Styles>
                         <sdg:SlimDataGrid.Columns>
                             <sdg:Column Header="Amount" Binding="{Binding Content.Amount.BtcString}" />
-                            <sdg:Column Header="Date" Binding="{Binding Content.CreatedOn, Converter={x:Static controls:MiscConverters.HumanizeDate}}" />
+                            <sdg:Column Header="Date" Binding="{Binding Content.CreatedOn, Converter={x:Static controls:AngorConverters.HumanizeDate}}" />
                             <sdg:Column Header="Investor" Binding="{Binding Content.InvestorNostrPubKey}" />
                             <sdg:Column Header="Status" Width="100" Binding="{Binding Content}">
                                 <sdg:Column.CellTemplate>

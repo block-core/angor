@@ -153,7 +153,7 @@
                                                     @Money.Satoshis(signature.AmountToInvest ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
                                                 </span>
                                                 <small class="text-muted ms-3">
-                                                    @signature.TimeArrived.ToString("dd/MM/yyyy HH:mm")
+                                                    @signature.TimeArrived.FormatDateTime()
                                                 </small>
                                             </div>
 
@@ -165,7 +165,7 @@
                                                     @if (signature.Invested != null)
                                                     {
                                                         <div class="badge bg-success d-flex align-items-center"
-                                                             title="Approved on @signature.TimeApproved?.ToString("dd/MM/yyyy HH:mm")">
+                                                             title="Approved on @signature.TimeApproved?.FormatDateTime()">
                                                             <Icon IconName="invest" Width="14" Height="14" Class="me-1" />
                                                             <span>Invested</span>
                                                         </div>
@@ -173,7 +173,7 @@
                                                     else
                                                     {
                                                         <span class="badge bg-info d-flex align-items-center"
-                                                              title="Approved on @signature.TimeApproved?.ToString("dd/MM/yyyy HH:mm")">
+                                                              title="Approved on @signature.TimeApproved?.FormatDateTime()">
                                                             <Icon IconName="check" Width="14" Height="14" Class="me-1" />
                                                             <span>Approved</span>
                                                         </span>

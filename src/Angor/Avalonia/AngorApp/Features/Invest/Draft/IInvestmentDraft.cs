@@ -5,7 +5,8 @@ namespace AngorApp.Features.Invest.Draft;
 
 public interface IInvestmentDraft
 {
-    CreateInvestment.Draft DraftModel { get; }
-    AmountUI TotalFee { get; }
+    IAmountUI TransactionFee { get; }
+    IAmountUI MinerFee { get; }
+    IAmountUI AngorFee { get; }
     Task<Result<Guid>> Confirm();
 }

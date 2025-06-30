@@ -71,11 +71,11 @@
                     </StackPanel.DataTemplates>
                     <ListBox Background="Transparent" SelectedItem="{Binding $parent[controls:FeerateSelector].Controller.SelectedFeeRate}"
                              ItemsSource="{Binding $parent[controls:FeerateSelector].Controller.FeeRates}">
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <ui:CustomUniformWithBottomPanel />
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
+                        <ListBox.ItemContainerTheme>
+                            <ControlTheme TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                <Setter Property="Padding" Value="4" />
+                            </ControlTheme>
+                        </ListBox.ItemContainerTheme>
                     </ListBox>
                 </StackPanel>
             </ControlTemplate>

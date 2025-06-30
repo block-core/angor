@@ -18,17 +18,23 @@ public static class CreateInvestment
         public Guid WalletId { get; }
         public ProjectId ProjectId { get; }
         public Amount Amount { get; }
+        public DomainFeerate Feerate { get; }
 
-        public CreateInvestmentTransactionRequest(Guid walletId, ProjectId projectId, Amount amount)
+        public CreateInvestmentTransactionRequest(Guid walletId, ProjectId projectId, Amount amount, DomainFeerate feerate)
         {
             WalletId = walletId;
             ProjectId = projectId;
             Amount = amount;
+            Feerate = feerate;
         }
     }
     
-    public record Draft(string InvestorKey, string SignedTxHex, string TransactionId, Amount TotalFee);
-    
+    public record Draft(string InvestorKey, string SignedTxHex, string TransactionId, Amount TransactionFee)
+    {
+        public Amount MinerFee { get; set; } = new Amount(-1);
+        public Amount AngorFee { get; set; } = new Amount(-1);
+    }
+
     public class CreateInvestmentTransactionHandler(
         IProjectRepository projectRepository,
         IInvestorTransactionActions investorTransactionActions,
@@ -40,6 +46,10 @@ public static class CreateInvestment
         {
             try
             {
+                // TODO: Don't forget to use the feerate to create the Draft. It's not used currently.
+                // feerate is the feerate that the user selected as "transaction speed" in the UI.
+                var feerate = transactionRequest.Feerate;
+                
                 // Get the project and investor key
                 var projectResult = await projectRepository.Get(transactionRequest.ProjectId);
                 if (projectResult.IsFailure)
@@ -77,7 +87,12 @@ public static class CreateInvestment
                 return new Draft(investorKey,
                     signedTxHex,
                     signedTxResult.Value.Transaction.GetHash().ToString(),
-                    new Amount(totalFee));
+                    new Amount(totalFee))
+                {
+                    // TODO: Please, fill this with the correct values
+                    // MinerFee = new Amount(1234),
+                    // AngorFee = new Amount(5678),
+                };
             }
             catch (Exception ex)
             {

@@ -1,6 +1,7 @@
 using Angor.Shared;
 using AngorApp.UI.Services;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
 using Microsoft.Extensions.DependencyInjection;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Services;
@@ -23,7 +24,11 @@ public static class UIServicesRegistration
         
         return services
             .AddSingleton<ILauncherService>(_ => new LauncherService(topLevel!.Launcher))
-            .AddSingleton(DialogService.Create())
+            .AddSingleton<IDialog>(new AdornerDialog(() =>
+            {
+                var adornerLayer = AdornerLayer.GetAdornerLayer(parent);
+                return adornerLayer!;
+            }))
             .AddSingleton<IActiveWallet, ActiveWallet>()
             .AddSingleton(sp => new ShellProperties("Angor", o =>
             {

@@ -246,7 +246,7 @@
 
                             <div class="d-flex flex-column justify-content-center">
                                 <p class="text-break mb-0 mt-2">
-                                    <b>@project.ProjectInfo.StartDate</b>
+                                    <b>@project.ProjectInfo.StartDate.FormatDate()</b>
                                 </p>
 
                             </div>
@@ -265,7 +265,7 @@
                             </div>
                             <div class="d-flex flex-column justify-content-center">
                                 <p class="text-break mb-0 mt-2">
-                                    <b>@project.ProjectInfo.EndDate</b>
+                                    <b>@project.ProjectInfo.EndDate.FormatDate()</b>
                                 </p>
                             </div>
                         </div>
@@ -301,7 +301,7 @@
                             </div>
                             <div class="d-flex flex-column justify-content-center">
                                 <p class="text-break mb-0 mt-2">
-                                    <b>@project.ProjectInfo.ExpiryDate</b>
+                                    <b>@project.ProjectInfo.ExpiryDate.FormatDate()</b>
                                 </p>
                             </div>
                         </div>
@@ -447,7 +447,7 @@
                             <tr>
                                 <td>@(index + 1)</td>
                                 <td>@stage.AmountToRelease %</td>
-                                <td>@stage.ReleaseDate.ToString("dd/MM/yyyy")</td>
+                                <td>@stage.ReleaseDate.FormatDate()</td>
                                 <td>
                                     @if (daysUntilStage == 0)
                                     {
@@ -864,7 +864,7 @@
 
         try
         {
-            NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
+            NostrClients = storage.GetSettingsInfo().Relays.Select(_ => _.Url.ToString()).ToList();
 
             project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
             if (project != null)

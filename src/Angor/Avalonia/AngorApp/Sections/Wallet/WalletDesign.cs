@@ -23,7 +23,6 @@ public class WalletDesign : IWallet
     {
         await Task.Delay(1000);
 
-        //return Result.Failure<ITransaction>("Transaction creation failed");
         return new TransactionDraftDesign
         {
             Address = address,
