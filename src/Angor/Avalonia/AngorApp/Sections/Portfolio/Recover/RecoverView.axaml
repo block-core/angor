@@ -46,38 +46,20 @@
                 <StackPanel HorizontalAlignment="Stretch" Spacing="20">
                     <TextBlock Text="Recovery Details" FontWeight="Bold" FontSize="20" Margin="0,10,0,10"/>
                     <!-- Project ID Box -->
-                    <Border Background="#14343C" CornerRadius="10" Padding="16" Margin="0,0,0,0" HorizontalAlignment="Stretch">
-                        <TextBlock Text="Project ID: angor1quyhgedvff22h2fmjc3lwvlruxx6xv76gzptm50" FontSize="16" Foreground="#B0BEC5"/>
-                    </Border>
+                    <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Project ID" Subheader="angor1quyhgedvff22h2fmjc3lwvlruxx6xv76gzptm50" />
+
                     <!-- Info Cards -->
                     <UniformGrid Columns="2" Rows="2" ColumnSpacing="20" RowSpacing="20" Margin="0,10,0,0">
-                        <Border Background="#14343C" CornerRadius="10" Padding="20">
-                            <StackPanel>
-                                <TextBlock Text="Total Funds" Foreground="#B0BEC5" FontSize="14"/>
-                                <TextBlock Text="0 TBTC" FontSize="28" FontWeight="Bold" />
-                            </StackPanel>
-                        </Border>
-                        <Border Background="#14343C" CornerRadius="10" Padding="20">
-                            <StackPanel>
-                                <TextBlock Text="Expiry Date" Foreground="#B0BEC5" FontSize="14"/>
-                                <TextBlock Text="05/09/2025" FontSize="28" FontWeight="Bold" />
-                            </StackPanel>
-                        </Border>
-                        <Border Background="#14343C" CornerRadius="10" Padding="20">
-                            <StackPanel>
-                                <TextBlock Text="Penalty Period" Foreground="#B0BEC5" FontSize="14"/>
-                                <TextBlock Text="90 days" FontSize="28" FontWeight="Bold" />
-                            </StackPanel>
-                        </Border>
-                        <Border Background="#14343C" CornerRadius="10" Padding="20">
-                            <StackPanel>
-                                <TextBlock Text="Transaction" Foreground="#B0BEC5" FontSize="14"/>
-                                <Button Content="View" Width="80" Height="36" Margin="0,10,0,0"/>
-                            </StackPanel>
-                        </Border>
+                        <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Total Funds" Subheader="0 TBTC" />
+                        <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Expiry Date" Subheader="05/09/2025" />
+                        <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Penalty Period" Subheader="90 days" />
+                        <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Transaction">
+                            <Button Content="View" Width="80" Height="36" Margin="0,10,0,0"/>
+                        </Card>
                     </UniformGrid>
+
                     <!-- Table -->
-                    <Border Background="#14343C" CornerRadius="10" Padding="20" HorizontalAlignment="Stretch">
+                    <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Stages">
                         <StackPanel>
                             <!-- Table Header -->
                             <Grid ColumnDefinitions="1.5*,2*,2*" Margin="0,0,0,10" HorizontalAlignment="Stretch">
@@ -124,9 +106,10 @@
                                 </Button>
                             </Grid>
                         </StackPanel>
-                    </Border>
+                    </Card>
                 </StackPanel>
             </Loading>
         </DockPanel>
     </a:PageContainer>
 </UserControl>
+                               
