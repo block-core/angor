@@ -158,7 +158,7 @@
                                     <label class="create-field-label create-field-label-with-icon" for="startDate">
                                         Funding Start
                                     </label>
-                                    <div class="create-field-input disabled">@DateTime.Today</div>
+                                    <div class="create-field-input disabled">@DateTime.Today.FormatDate()</div>
                                     <input type="hidden" @bind="project.ProjectInfo.StartDate" />
                                     <p class="create-field-help">When the investment period begins</p>
                                 </div>
@@ -192,7 +192,7 @@
                                     <label class="create-field-label create-field-label-with-icon" for="expiryDate">
                                         Emergency Expiry
                                     </label>
-                                    <div class="create-field-input disabled">@CalculateExpiryDate()</div>
+                                    <div class="create-field-input disabled">@CalculateExpiryDate().FormatDate()</div>
                                     <input type="hidden" @bind="project.ProjectInfo.ExpiryDate" />
                                     <p class="create-field-help">Emergency date for fund release</p>
                                 </div>
