@@ -1,6 +1,7 @@
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
@@ -60,15 +61,16 @@ public static class Investments
                             Description = project.ShortDescription,
                             LogoUri = project.Picture,
                             Target = new Amount(project.TargetAmount),
-                            FounderStatus = investment == null ? FounderStatus.Approved : FounderStatus.Invested,
+                            FounderStatus = investment == null ? FounderStatus.Approved : FounderStatus.Requested,
+                            InvestmentStatus = investment == null ? InvestmentStatus.Invalid : InvestmentStatus.Invested,
                             Investment = new Amount(investment?.TotalAmount ?? 0) //TODO get the trx from 
                         };
-
+                        
                         if (investment != null) return Result.Success(dto);
                         
-                        var (amount, founderStatus) = await GetInvestmentStatusFromDms(request.WalletId, project);
+                        var (amount, investmentStatus) = await GetInvestmentStatusFromDms(request.WalletId, project);
                         dto.Investment = amount;
-                        dto.FounderStatus = founderStatus;
+                        dto.InvestmentStatus = investmentStatus;
 
                         return Result.Success(dto);
                     });
@@ -100,7 +102,7 @@ public static class Investments
             return result.Result.IsSuccess ? result.Result.Value : null;
         }
 
-        private async Task<(Amount, FounderStatus)> GetInvestmentStatusFromDms(Guid walletId, Project project)
+        private async Task<(Amount, InvestmentStatus)> GetInvestmentStatusFromDms(Guid walletId, Project project)
         {
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
             var pubKey =
@@ -113,9 +115,9 @@ public static class Investments
             var createdAt = DateTime.MinValue;
             var eventId = string.Empty;
 
-            var founderStatus = FounderStatus.Invalid;
+            var investmentStatus = InvestmentStatus.Invalid;
             var amount = new Amount(0);
-            var tcs = new TaskCompletionSource<FounderStatus>();
+            var tcs = new TaskCompletionSource<InvestmentStatus>();
 
             
             // TODO replace the old logic with better optimized one
@@ -125,7 +127,7 @@ public static class Investments
 
                     createdAt = eventTime;
                     eventId = id;
-                    founderStatus = FounderStatus.Requested;
+                    investmentStatus = InvestmentStatus.PendingFounderSignatures;
 
                     try
                     {
@@ -145,18 +147,18 @@ public static class Investments
                     signService.LookupSignatureForInvestmentRequest(pubKey, project.NostrPubKey, createdAt, eventId,
                         signature =>
                         {
-                            founderStatus = FounderStatus.Approved;
+                            investmentStatus = InvestmentStatus.FounderSignaturesReceived;
                             return tcs.Task;
                         },
                         () =>
                         {
-                            tcs.SetResult(founderStatus);
+                            tcs.SetResult(investmentStatus);
                         });
                 });
 
             await tcs.Task.ToObservable().Timeout(TimeSpan.FromSeconds(10));
 
-            return (amount, founderStatus);
+            return (amount, investmentStatus);
         }
     }
 }

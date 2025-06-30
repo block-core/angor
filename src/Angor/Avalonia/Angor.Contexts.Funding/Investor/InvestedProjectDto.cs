@@ -22,6 +22,5 @@ public enum FounderStatus
 {
     Invalid,
     Requested,
-    Approved,
-    Invested
+    Approved
 }
