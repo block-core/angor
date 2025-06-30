@@ -25,5 +25,9 @@ public class PortfolioSectionViewModelDesign : IPortfolioSectionViewModel
     public IReadOnlyCollection<PortfolioItem> Items { get; }
     public IEnumerable<IPortfolioProject> InvestedProjects { get; } = new List<IPortfolioProject>();
     public IEnhancedCommand<Result<IEnumerable<InvestedProjectDto>>> Load { get; }
+    public int FundedProjects { get; set; }
+    public IAmountUI TotalInvested { get; set; }
+    public int ProjectsInRecovery { get; set; }
+    public IAmountUI RecoveredToPenalty { get; set; }
     public ICommand GoToPenalties { get; }
 }

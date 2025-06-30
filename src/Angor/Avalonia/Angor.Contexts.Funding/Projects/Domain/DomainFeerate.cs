@@ -1,3 +1,3 @@
 ﻿namespace Angor.Contexts.Funding.Projects.Domain;
 
-public record class ModelFeeRate;
+public record DomainFeerate(long SatsPerVByte);

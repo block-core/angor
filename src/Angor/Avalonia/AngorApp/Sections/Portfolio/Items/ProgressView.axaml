@@ -8,7 +8,7 @@
              x:Class="AngorApp.Sections.Portfolio.Items.ProgressView" x:DataType="portfolio:IPortfolioProject">
 
     <Design.DataContext>
-        <portfolio:PortfolioProjectDesign Status="Funding" FounderStatus="Approved" Name="Project 2" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+        <portfolio:PortfolioProjectDesign InvestmentStatus="PendingFounderSignatures" FounderStatus="Approved" Name="Project 2" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
             <portfolio:PortfolioProjectDesign.Target>
                 <angorApp:DesignTimeAmount Sats="12000000" />
             </portfolio:PortfolioProjectDesign.Target>
@@ -89,7 +89,7 @@
                         Padding="8,3"
                         HorizontalAlignment="Center"
                         Margin="0,4,0,0">
-                    <TextBlock Text="{Binding Status}"
+                    <TextBlock Text="{Binding InvestmentStatus}"
                                FontSize="10"
                                FontWeight="SemiBold"
                                Opacity="0.8"

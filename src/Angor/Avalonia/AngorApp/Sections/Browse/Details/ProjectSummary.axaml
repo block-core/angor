@@ -60,7 +60,7 @@
                         <Binding>
                             <Binding.Source>Target amount:</Binding.Source>
                         </Binding>
-                        <Binding Path="Project.TargetAmount" StringFormat="{x:Static controls:MiscConverters.BigBtcFormat}" />
+                        <Binding Path="Project.TargetAmount" StringFormat="{x:Static controls:AngorConverters.BigBtcFormat}" />
                     </MultiBinding>
                 </controls:SectionItem.Content>
             </controls:SectionItem>
@@ -73,7 +73,7 @@
                         <Binding>
                             <Binding.Source>Penalty duration:</Binding.Source>
                         </Binding>
-                        <Binding Path="Project.PenaltyDuration" Converter="{x:Static controls:MiscConverters.HumanizeTimeSpan}" />
+                        <Binding Path="Project.PenaltyDuration" Converter="{x:Static controls:AngorConverters.HumanizeTimeSpan}" />
                     </MultiBinding>
 
                 </controls:SectionItem.Content>

@@ -55,7 +55,7 @@ public class SensitiveWalletDataProvider(IWalletStore walletStore, IWalletSecuri
         var decryptedResult = await walletSecurityContext.WalletEncryption.Decrypt(encryptedWalletResult.Value, encryptionKey.Value);
         if (decryptedResult.IsFailure)
         {
-            return Result.Failure<(string, Maybe<string>)>("Invalid encryption key");
+            return Result.Failure<(string, Maybe<string>)>($"Could not decrypt your wallet: {decryptedResult.Error}");
         }
 
         Maybe<string> passphrase = Maybe<string>.None;

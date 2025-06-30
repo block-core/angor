@@ -2,6 +2,7 @@ using System.Collections;
 using Avalonia;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
+using Avalonia.Styling;
 
 namespace AngorApp.UI.Controls;
 
@@ -41,5 +42,32 @@ public class CardGrid : TemplatedControl
     {
         get => GetValue(ColumnSpacingProperty);
         set => SetValue(ColumnSpacingProperty, value);
+    }
+
+    public static readonly StyledProperty<ControlTheme> ItemContainerThemeProperty = AvaloniaProperty.Register<CardGrid, ControlTheme>(
+        nameof(ItemContainerTheme));
+
+    public ControlTheme ItemContainerTheme
+    {
+        get => GetValue(ItemContainerThemeProperty);
+        set => SetValue(ItemContainerThemeProperty, value);
+    }
+
+    public static readonly StyledProperty<double> MinColumnWidthProperty = AvaloniaProperty.Register<CardGrid, double>(
+        nameof(MinColumnWidth), 300d);
+
+    public double MinColumnWidth
+    {
+        get => GetValue(MinColumnWidthProperty);
+        set => SetValue(MinColumnWidthProperty, value);
+    }
+
+    public static readonly StyledProperty<double> MaxColumnWidthProperty = AvaloniaProperty.Register<CardGrid, double>(
+        nameof(MaxColumnWidth), 500d);
+
+    public double MaxColumnWidth
+    {
+        get => GetValue(MaxColumnWidthProperty);
+        set => SetValue(MaxColumnWidthProperty, value);
     }
 }

@@ -332,7 +332,7 @@
                         </div>
 
                         <p class="card-subtitle text-muted mb-2 mt-4">
-                            Estimated completion: @stage.Stage.ReleaseDate.ToString("dd/MM/yyyy")
+                            Estimated completion: @stage.Stage.ReleaseDate.FormatDate()
                         </p>
 
                         @if (stage.StageIndex == expandedStageId)

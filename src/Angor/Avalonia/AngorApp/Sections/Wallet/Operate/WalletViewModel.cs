@@ -38,6 +38,7 @@ public partial class WalletViewModel : ReactiveObject, IWalletViewModel
     }
 
     public IEnumerable<IdentityContainer<ITransactionViewModel>> History { get; }
+    public string Title { get; set; } = "Testing";
 
     public IWallet Wallet { get; }
 

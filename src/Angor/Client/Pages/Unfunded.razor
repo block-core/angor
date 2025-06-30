@@ -8,6 +8,7 @@
 @using Angor.Shared.Services
 @using System.Security.Cryptography
 @using Angor.Shared.Protocol
+@using Angor.Shared.Utilities
 @using Blockcore.Consensus.TransactionInfo
 
 @inject ILogger<Release> Logger
@@ -140,7 +141,7 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <Icon IconName="calendar" Width="24" Height="24" class="me-2" />
-                                                <span>@signature.TimeArrived.ToString("g")</span>
+                                                <span>@signature.TimeArrived.FormatDateTime()</span>
                                             </div>
                                         </td>
                                         <td>
@@ -148,7 +149,7 @@
                                             {
                                                 <div class="d-flex align-items-center">
                                                     <Icon IconName="check" Width="24" Height="24" class="me-2 text-success" />
-                                                    <span>@signature.TimeApproved?.ToString("g")</span>
+                                                    <span>@signature.TimeApproved?.FormatDateTime()</span>
                                                 </div>
                                             }
                                             else
@@ -161,7 +162,7 @@
                                             {
                                                 <div class="d-flex align-items-center">
                                                     <Icon IconName="released" Width="24" Height="24" class="me-2 text-success" />
-                                                    <span>@signature.TimeReleased?.ToString("g")</span>
+                                                    <span>@signature.TimeReleased?.FormatDateTime()</span>
                                                 </div>
                                             }
                                             else
