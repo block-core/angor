@@ -3,13 +3,13 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Angor.Shared.Services
 {
-    public class CachedIndexerService : IIndexerService
+    public class CachedIndexerService : ICachedIndexerService
     {
-        private readonly MempoolSpaceIndexerApi _indexer;
+        private readonly IIndexerService _indexer;
         private readonly IMemoryCache _cache;
         private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(5);
 
-        public CachedIndexerService(MempoolSpaceIndexerApi indexerService, IMemoryCache cache)
+        public CachedIndexerService(IIndexerService indexerService, IMemoryCache cache)
         {
             _indexer = indexerService;
             _cache = cache;
