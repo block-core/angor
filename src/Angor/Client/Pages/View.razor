@@ -1015,10 +1015,10 @@
             {
                 var data = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
 
-                if (data != null)
+                if (data.stats != null)
                 {
-                    projectStats.TotalInvestors = (int)data.InvestorCount;
-                    projectStats.TotalRaised = data.AmountInvested;
+                    projectStats.TotalInvestors = (int)data.stats.InvestorCount;
+                    projectStats.TotalRaised = data.stats.AmountInvested;
 
                     // Calculate time left based on the project start and expiry dates
                     if (DateTime.UtcNow < project.ProjectInfo.StartDate)

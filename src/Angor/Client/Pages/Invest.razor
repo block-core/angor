@@ -801,7 +801,7 @@ else
             {
                 await ScanForPendingSignatures();
 
-                await ScanForDmMessages();
+                ScanForDmMessages();
             }
             else
             {
@@ -823,10 +823,10 @@ else
             {
                 var data = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
 
-                if (data != null)
+                if (data.stats != null)
                 {
-                    projectStats.TotalInvestors = (int)data.InvestorCount;
-                    projectStats.TotalRaised = data.AmountInvested;
+                    projectStats.TotalInvestors = (int)data.stats.InvestorCount;
+                    projectStats.TotalRaised = data.stats.AmountInvested;
 
                     if (DateTime.UtcNow < project.ProjectInfo.StartDate)
                     {
@@ -1546,13 +1546,13 @@ else
 
     bool hasMessges = false;
    
-    protected async Task ScanForDmMessages()
+    protected void ScanForDmMessages()
     {
         if (project is InvestorProject)
         {
             var investorProject = project as InvestorProject;
 
-            await _RelayService.LookupDirectMessagesForPubKeyAsync(
+            _RelayService.LookupDirectMessagesForPubKey(
                 investorProject.InvestorNPub,
                 investorProject.LastRequestForMessagesTime?.AddSeconds(1),
                 1,
