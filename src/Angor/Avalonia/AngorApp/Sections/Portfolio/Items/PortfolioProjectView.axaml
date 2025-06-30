@@ -29,7 +29,7 @@
 
     <UserControl.Resources>
         <ControlTheme x:Key="Inline" TargetType="HeaderedContainer">
-            <Setter Property="ClipToBounds" Value="False"></Setter>
+            <Setter Property="ClipToBounds" Value="False" />
             <Setter Property="Template">
                 <ControlTemplate>
                     <Panel ClipToBounds="False">

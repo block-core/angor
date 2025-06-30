@@ -75,6 +75,7 @@
         <StyleInclude Source="UI/Controls/PageContainer.axaml" />
         <StyleInclude Source="UI/Controls/Badge.axaml" />
         <StyleInclude Source="UI/Styles/Cards.axaml" />
+        <StyleInclude Source="UI/Styles/HeaderedContainer.axaml" />
     </Application.Styles>
 
     <Application.Resources>
@@ -88,6 +89,55 @@
                 <MergeResourceInclude Source="UI/Controls/SectionItem.axaml" />
                 <MergeResourceInclude Source="UI/Resources/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
+            
+              <DataTemplate x:Key="SmallIcon" DataType="x:Object">
+            <ContentPresenter Content="{Binding}">
+                <ContentPresenter.DataTemplates>
+                    <DataTemplate DataType="ui:Icon">
+                        <Viewbox Height="20" Width="20">
+                            <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
+                        </Viewbox>
+                    </DataTemplate>
+                </ContentPresenter.DataTemplates>
+            </ContentPresenter>
+        </DataTemplate>
+        
+        <DataTemplate x:Key="RegularIcon" DataType="x:Object">
+            <ContentPresenter Content="{Binding}">
+                <ContentPresenter.DataTemplates>
+                    <DataTemplate DataType="ui:Icon">
+                        <Viewbox Height="30" Width="30">
+                            <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
+                        </Viewbox>
+                    </DataTemplate>
+                </ContentPresenter.DataTemplates>
+            </ContentPresenter>
+        </DataTemplate>
+        
+        <DataTemplate x:Key="BigIcon" DataType="x:Object">
+            <ContentPresenter Content="{Binding}">
+                <ContentPresenter.DataTemplates>
+                    <DataTemplate DataType="ui:Icon">
+                        <Viewbox Height="40" Width="40">
+                            <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
+                        </Viewbox>
+                    </DataTemplate>
+                </ContentPresenter.DataTemplates>
+            </ContentPresenter>
+        </DataTemplate>
+
+        <DataTemplate x:Key="HugeIcon" DataType="x:Object">
+            <ContentPresenter Content="{Binding}">
+                <ContentPresenter.DataTemplates>
+                    <DataTemplate DataType="ui:Icon">
+                        <Viewbox Height="80" Width="80">
+                            <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
+                        </Viewbox>
+                    </DataTemplate>
+                </ContentPresenter.DataTemplates>
+            </ContentPresenter>
+        </DataTemplate>
+            
         </ResourceDictionary>
     </Application.Resources>
 
@@ -100,6 +150,7 @@
         <DataTemplate DataType="password:IIcon">
             <avalonia:Icon FontSize="40" VerticalAlignment="Center" Value="{Binding Key}" />
         </DataTemplate>
+        
     </Application.DataTemplates>
 
 </Application>

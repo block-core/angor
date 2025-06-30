@@ -2,7 +2,96 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.Sections.Founder.CreateProject.DetailsView">
-    Welcome to Avalonia!
+             xmlns:a="clr-namespace:AngorApp"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.Sections.Founder.CreateProject.DetailsView"
+             x:DataType="a:ICreateProjectViewModel">
+
+    <Design.DataContext>
+        <a:CreateProjectViewModelDesign>
+            <a:CreateProjectViewModelDesign.Stages>
+                <a:CreateProjectStageDesign Percent="10" StartDate="10/12/2025" />
+            </a:CreateProjectViewModelDesign.Stages>
+        </a:CreateProjectViewModelDesign>
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="Card Card">
+            <Setter Property="Theme" Value="{StaticResource TransparentCard}" />
+            <Setter Property="HeaderStartContentTemplate" Value="{StaticResource SmallIcon}" />
+            <Setter Property="Margin" Value="25 0 0 0" />
+        </Style>
+
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel>
+            <Card Header="Target Fundraising Goal" Subheader="Set up your investment campaign parameters">
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="fa-wallet" />
+                </Card.HeaderStartContent>
+                <Card Header="Target Amount" Subheader="Minimum TBTC this project is trying to raise">
+                    <controls:AmountControl />
+                </Card>
+            </Card>
+            <Card Header="Fund Raising Window">
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="fa-regular fa-calendar" />
+                </Card.HeaderStartContent>
+                <StackPanel>
+                    <Card Header="Start Date" Subheader="This is when the investment period begins (automatically set today).">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="fa-regular fa-calendar-days" />
+                        </Card.HeaderStartContent>
+                        <TextBox IsReadOnly="True" Text="{Binding StartDate}" />
+                    </Card>
+                    <Card Header="End Date" Subheader="This is when the investment period ends (must be before first stage date).">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="fa-regular fa-calendar-days" />
+                        </Card.HeaderStartContent>
+                        <CalendarDatePicker SelectedDate="{Binding EndDate}" />
+                    </Card>
+                </StackPanel>
+            </Card>
+            <Card Header="Advanced Parameters">
+                <StackPanel>
+                    <Card Header="Penalty Days" Subheader="Number of days to lock funds for departing investors who wish to withdraw early.">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="mdi-lock-open" />
+                        </Card.HeaderStartContent>
+                        <TextBox Watermark="Enter the penalty days" />
+                    </Card>
+                    <Card Header="Expiry Date" Subheader="Emergency date when all remaining funds can be released in case of project abandonment. Automatically set to 60 days after the last stage.">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="fa-regular fa-calendar-days" />
+                        </Card.HeaderStartContent>
+                        <CalendarDatePicker />
+                    </Card>
+                </StackPanel>
+            </Card>
+            <Card Header="Stages">
+                <ItemsControl ItemsSource="{Binding Stages}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="a:ICreateProjectStage">
+                            <Grid ColumnDefinitions="20* 100*" ColumnSpacing="20">
+                                <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}">
+                                    <TextBox TextAlignment="Center" Text="{Binding Percent}">
+                                        <TextBox.InnerRightContent>
+                                            <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock>
+                                        </TextBox.InnerRightContent>
+                                    </TextBox>
+                                </HeaderedContainer>
+                                <HeaderedContainer Grid.Column="1" Header="Date" Theme="{StaticResource InlineHeaderedContainer}">
+                                    <DatePicker HorizontalAlignment="Center" SelectedDate="{Binding StartDate}" />
+                                </HeaderedContainer>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Card>
+        </StackPanel>
+    </ScrollViewer>
+
 </UserControl>
