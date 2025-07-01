@@ -58,6 +58,10 @@ public class FounderTransactionActions : IFounderTransactionActions
         {
             var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
 
+            _logger.LogInformation($"scriptStageRecover={Encoders.Hex.EncodeData(scriptStages.Recover.ToBytes())} " +
+                                   $"scriptStageFounder={Encoders.Hex.EncodeData(scriptStages.Founder.ToBytes())} " +
+                                   $"scriptStageEndOfProject={Encoders.Hex.EncodeData(scriptStages.EndOfProject .ToBytes())}");
+            
             var tapScript = new NBitcoin.Script(scriptStages.Recover.ToBytes()).ToTapScript(TapLeafVersion.C0);
             var execData = new TaprootExecutionData(stageIndex, tapScript.LeafHash) { SigHash = sigHash };
             var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
@@ -66,7 +70,7 @@ public class FounderTransactionActions : IFounderTransactionActions
 
             var hashHex = Encoders.Hex.EncodeData(hash.ToBytes());
 
-            _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; scriptStageRecover={Encoders.Hex.EncodeData(scriptStages.Recover.ToBytes())} leafHash={tapScript.LeafHash} hash={hash}; encodedHash={hashHex} signature-hex={sig}");
+            _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; leafHash={tapScript.LeafHash} hash={hash}; encodedHash={hashHex} signature-hex={sig}");
 
             var result = key.PubKey.GetTaprootFullPubKey().VerifySignature(hash, TaprootSignature.Parse(sig).SchnorrSignature);
 

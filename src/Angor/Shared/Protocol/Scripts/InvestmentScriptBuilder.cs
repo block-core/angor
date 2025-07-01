@@ -1,16 +1,20 @@
 using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.DataEncoders;
+using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared.Protocol.Scripts;
 
 public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 {
+    private ILogger<InvestmentScriptBuilder> _logger;
     private readonly ISeederScriptTreeBuilder _seederScriptTreeBuilder;
 
-    public InvestmentScriptBuilder(ISeederScriptTreeBuilder seederScriptTreeBuilder)
+    public InvestmentScriptBuilder(ISeederScriptTreeBuilder seederScriptTreeBuilder, ILogger<InvestmentScriptBuilder> logger)
     {
         _seederScriptTreeBuilder = seederScriptTreeBuilder;
+        _logger = logger;
     }
 
     public Script GetInvestorPenaltyTransactionScript(string investorKey, int punishmentLockDays)
@@ -44,6 +48,10 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
             Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
         };
 
+        _logger.LogInformation(
+            $"recovery ops:{Encoders.Hex.EncodeData(recoveryOps.SelectMany(op => op.ToBytes()).ToArray())}");
+        
+        
         var secretHashOps = hashOfSecret == null
             ? new List<Op> { OpcodeType.OP_CHECKSIG }
             : new List<Op>
@@ -56,19 +64,23 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         
         recoveryOps.AddRange(secretHashOps);
 
+        _logger.LogInformation(
+            $"recovery ops + hashes:{Encoders.Hex.EncodeData(recoveryOps.SelectMany(op => op.ToBytes()).ToArray())}");
+        
         var seeders = hashOfSecret == null && projectInfo.ProjectSeeders.SecretHashes.Any()
             ? _seederScriptTreeBuilder.BuildSeederScriptTree(investorKey,
                 projectInfo.ProjectSeeders.Threshold,
                 projectInfo.ProjectSeeders.SecretHashes).ToList()
             : new List<Script>();
         
-        return new()
+        var result = new ProjectScripts()
         {
             Founder = GetFounderSpendScript(projectInfo.FounderKey, projectInfo.Stages[stageIndex].ReleaseDate),
             Recover = new Script(recoveryOps),
             EndOfProject = GetEndOfProjectInvestorSpendScript(investorKey, projectInfo.ExpiryDate),
             Seeders = seeders
         };
+        return result;
     }
 
     private static Script GetFounderSpendScript(string founderKey, DateTime stageReleaseDate)
