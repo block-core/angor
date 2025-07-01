@@ -21,7 +21,6 @@
             @if (!UseCustomFee)
             {
                 <div class="confirmation-badge">
-                    <Icon IconName="block" Height="20" Width="20"></Icon>
                     ~@FeeBlockCount blocks
                 </div>
             }
@@ -37,9 +36,6 @@
             <div class="fee-option @(FeePosition == 1 && !UseCustomFee ? "selected" : "")"
                 @onclick="() => SetFeePosition(1)">
                 <div class="option-content">
-                    <div class="option-icon priority">
-                        <Icon IconName="priority" Height="16" Width="16"></Icon>
-                    </div>
                     <div class="option-info">
                         <div class="option-name">Priority</div>
                         <div class="option-time">~1-3 blocks</div>
@@ -50,9 +46,6 @@
             <div class="fee-option @(FeePosition == 2 && !UseCustomFee ? "selected" : "")"
                 @onclick="() => SetFeePosition(2)">
                 <div class="option-content">
-                    <div class="option-icon standard">
-                        <Icon IconName="standard" Height="16" Width="16"></Icon>
-                    </div>
                     <div class="option-info">
                         <div class="option-name">Standard</div>
                         <div class="option-time">~3-6 blocks</div>
@@ -63,9 +56,6 @@
             <div class="fee-option @(FeePosition == 3 && !UseCustomFee ? "selected" : "")"
                 @onclick="() => SetFeePosition(3)">
                 <div class="option-content">
-                    <div class="option-icon economy">
-                        <Icon IconName="economy" Height="16" Width="16"></Icon>
-                    </div>
                     <div class="option-info">
                         <div class="option-name">Economy</div>
                         <div class="option-time">~6+ blocks</div>
