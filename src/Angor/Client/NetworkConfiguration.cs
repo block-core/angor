@@ -154,6 +154,15 @@ public class NetworkConfiguration : INetworkConfiguration
         throw new ApplicationException("Network not set");
     }
 
+    public List<SettingsUrl> GetDiscoveryRelays()
+    {
+        return new List<SettingsUrl>
+        {
+            new SettingsUrl { Name = "wss://purplerelay.com", Url = "wss://purplerelay.com" },
+            new SettingsUrl { Name = "wss://discovery.eu.nostria.app", Url = "wss://discovery.eu.nostria.app" },
+        };
+    }
+
     public string GetGenesisBlockHash()
     {
         // Determine the correct genesis block hash based on the network type
