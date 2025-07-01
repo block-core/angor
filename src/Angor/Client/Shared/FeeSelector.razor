@@ -26,7 +26,10 @@
                 </div>
             }
             <div class="fee-rate-badge @(UseCustomFee ? "custom" : "")">
-                @(UseCustomFee? CustomFeeRate : FeeRate) sats/byte
+                @{
+                    var rate = UseCustomFee ? ((decimal)CustomFeeRate) / 1000 : ((decimal)FeeRate) / 1000;
+                }
+                @(rate.ToString("0.##")) sat/vB
             </div>
         </div>
     </div>
