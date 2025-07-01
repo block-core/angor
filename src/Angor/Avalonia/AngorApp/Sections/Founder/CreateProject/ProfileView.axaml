@@ -5,34 +5,48 @@
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
-             mc:Ignorable="d" d:DesignWidth="700" 
+             mc:Ignorable="d" d:DesignWidth="700"
              x:Class="AngorApp.Sections.Founder.CreateProject.ProfileView">
     <Card Header="Project Profile">
         <Card.HeaderStartContent>
             <ui:Icon Source="fa-briefcase" />
         </Card.HeaderStartContent>
-        <StackPanel Spacing="10">
-            <controls:CardGrid ColumnSpacing="10" RowSpacing="10">
+        <StackPanel Spacing="20">
+            <controls:CardGrid>
                 <controls:CardGrid.ItemsSource>
                     <collections:ArrayList>
-                        <HeaderedContainer Header="Project name">
-                            <TextBox Watermark="Enter the name of the project" />
+                        <HeaderedContainer Header="Project Name">
+                            <TextBox Watermark="Enter the name of your project" />
                         </HeaderedContainer>
-                        <HeaderedContainer Header="About">
-                            <TextBox Watermark="Provide a brief description of the project" />
+                        <HeaderedContainer Header="Project Website">
+                            <TextBox Watermark="Enter the URL of project website" />
                         </HeaderedContainer>
                     </collections:ArrayList>
                 </controls:CardGrid.ItemsSource>
             </controls:CardGrid>
-            <HeaderedContainer Header="Project website">
-                <TextBox Watermark="Enter the name of the project" />
+            <HeaderedContainer Header="About Your Project">
+                <TextBox MinLines="6" Watermark="Provide a brief description of the project" />
             </HeaderedContainer>
-            <HeaderedContainer Header="Banner Image URL (Recommended size: 820×312px)">
-                <TextBox Watermark="Enter the URL for the project banner image" />
-            </HeaderedContainer>
-            <HeaderedContainer Header="Avatar Image Url (Recommended size: 170×170px)">
-                <TextBox Watermark="Enter the URL for the project logo or profile picture" />
-            </HeaderedContainer>
+            <Card Margin="0" Padding="0 5 0 0" HeaderPadding=" 0 0 0 5" Header="Visual Identity" Theme="{StaticResource TransparentCard}">
+                <controls:CardGrid>
+                    <controls:CardGrid.ItemsSource>
+                        <collections:ArrayList>
+                            <HeaderedContainer Header="Banner Image URL">
+                                <StackPanel Spacing="5">
+                                    <TextBox Watermark="Enter the URL for the project banner image" />
+                                    <TextBlock Classes="Dimmed">Recommended size: 820×312px</TextBlock>
+                                </StackPanel>
+                            </HeaderedContainer>
+                            <HeaderedContainer Header="Avatar Image Url">
+                                <StackPanel>
+                                    <TextBox Watermark="Enter the URL for the project logo or profile picture" />
+                                    <TextBlock Classes="Dimmed">Recommended size: 170×170px</TextBlock>
+                                </StackPanel>
+                            </HeaderedContainer>
+                        </collections:ArrayList>
+                    </controls:CardGrid.ItemsSource>
+                </controls:CardGrid>
+            </Card>
         </StackPanel>
     </Card>
 </UserControl>

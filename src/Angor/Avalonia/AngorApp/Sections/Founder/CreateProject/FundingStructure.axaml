@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:c="clr-namespace:AngorApp.UI.Controls"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:createProject="clr-namespace:AngorApp.Sections.Founder.CreateProject"
+             xmlns:col="clr-namespace:System.Collections;assembly=System.Runtime"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.Sections.Founder.CreateProject.FundingStructure"
+             x:DataType="createProject:ICreateProjectViewModel">
+
+    <Design.DataContext>
+        <createProject:CreateProjectViewModelDesign StartDate="1/2/2026" ExpiryDate="12/12/2025" EndDate="12/12/2025">
+            <createProject:CreateProjectViewModelDesign.Stages>
+                <createProject:CreateProjectStageDesign Percent="10" StartDate="10/5/2025" />
+                <createProject:CreateProjectStageDesign Percent="30" StartDate="10/9/2025" />
+                <createProject:CreateProjectStageDesign Percent="70" StartDate="12/12/2025" />
+            </createProject:CreateProjectViewModelDesign.Stages>
+        </createProject:CreateProjectViewModelDesign>
+    </Design.DataContext>
+
+    <Card Header="Funding Structure">
+        <Card.HeaderStartContent>
+            <ui:Icon Source="svg:/Assets/clock-square.svg" />
+        </Card.HeaderStartContent>
+        <StackPanel>
+            <Card Header="Target Amount" Subheader="Minimum BTC this project is trying to raise">
+                <c:AmountControl />
+            </Card>
+            <c:CardGrid>
+                <c:CardGrid.ItemsSource>
+                    <col:ArrayList>
+                        <Card Header="Funding Start" Subheader="When the investment period begins (automatically set today)">
+                            <TextBox VerticalAlignment="Bottom" IsReadOnly="True" Text="{Binding StartDate, StringFormat='d'}" />
+                        </Card>
+                        <Card Header="End Date" Subheader="When the investment period ends">
+                            <CalendarDatePicker VerticalAlignment="Bottom" SelectedDate="{Binding EndDate}" />
+                        </Card>
+                    </col:ArrayList>
+                </c:CardGrid.ItemsSource>
+            </c:CardGrid>
+            <c:CardGrid>
+                <c:CardGrid.ItemsSource>
+                    <col:ArrayList>
+                        <Card Header="Penalty Days" Subheader="Days to lock funds for departing investors">
+                            <TextBox Watermark="Enter the penalty days" Text="{Binding PenaltyDays}" />
+                        </Card>
+                        <Card Header="Emergency Expiry" Subheader="Emergency date for fund release">
+                            <CalendarDatePicker SelectedDate="{Binding ExpiryDate}" />
+                        </Card>
+                    </col:ArrayList>
+                </c:CardGrid.ItemsSource>
+            </c:CardGrid>
+        </StackPanel>
+    </Card>
+
+</UserControl>

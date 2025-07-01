@@ -1,25 +1,37 @@
+using System;
 using Avalonia;
+using Avalonia.Controls;
 
 namespace AngorApp.UI.Controls
 {
     public class MinMaxUniformGrid : Panel
     {
-        // Styled properties para los límites de ancho de columna
         public static readonly StyledProperty<double> MinColumnWidthProperty =
             AvaloniaProperty.Register<MinMaxUniformGrid, double>(
-                nameof(MinColumnWidth), 
+                nameof(MinColumnWidth),
                 0d);
 
         public static readonly StyledProperty<double> MaxColumnWidthProperty =
             AvaloniaProperty.Register<MinMaxUniformGrid, double>(
-                nameof(MaxColumnWidth), 
+                nameof(MaxColumnWidth),
                 double.PositiveInfinity);
+
+        public static readonly StyledProperty<double> ColumnSpacingProperty =
+            AvaloniaProperty.Register<MinMaxUniformGrid, double>(
+                nameof(ColumnSpacing),
+                0d);
+
+        public static readonly StyledProperty<double> RowSpacingProperty =
+            AvaloniaProperty.Register<MinMaxUniformGrid, double>(
+                nameof(RowSpacing),
+                0d);
 
         static MinMaxUniformGrid()
         {
-            // Indica que cambios en estas propiedades invalidan la medida
             AffectsMeasure<MinMaxUniformGrid>(MinColumnWidthProperty);
             AffectsMeasure<MinMaxUniformGrid>(MaxColumnWidthProperty);
+            AffectsMeasure<MinMaxUniformGrid>(ColumnSpacingProperty);
+            AffectsMeasure<MinMaxUniformGrid>(RowSpacingProperty);
         }
 
         public double MinColumnWidth
@@ -34,41 +46,59 @@ namespace AngorApp.UI.Controls
             set => SetValue(MaxColumnWidthProperty, value);
         }
 
+        public double ColumnSpacing
+        {
+            get => GetValue(ColumnSpacingProperty);
+            set => SetValue(ColumnSpacingProperty, value);
+        }
+
+        public double RowSpacing
+        {
+            get => GetValue(RowSpacingProperty);
+            set => SetValue(RowSpacingProperty, value);
+        }
+
         protected override Size MeasureOverride(Size availableSize)
         {
-            // Ensure min ≤ max
             if (MinColumnWidth > MaxColumnWidth)
-                throw new InvalidOperationException("MinColumnWidth debe ser ≤ MaxColumnWidth");
+                throw new InvalidOperationException("MinColumnWidth must be ≤ MaxColumnWidth");
 
             int count = Children.Count;
             if (count == 0)
                 return new Size();
 
-            double width = availableSize.Width;
-            // Determine number of columns based on limits
+            double totalWidth = availableSize.Width;
             int columns = count;
-            if (!double.IsInfinity(width) && width > 0)
+
+            if (!double.IsInfinity(totalWidth) && totalWidth > 0)
             {
-                double cellWidth = width / count;
-                if (cellWidth > MaxColumnWidth)
-                    columns = (int)Math.Ceiling(width / MaxColumnWidth);
-                else if (cellWidth < MinColumnWidth)
-                    columns = (int)Math.Floor(width / MinColumnWidth);
+                // Compute tentative columns based on width and limits
+                double cellWidthGuess = (totalWidth - ColumnSpacing * (count - 1)) / count;
+                if (cellWidthGuess > MaxColumnWidth)
+                    columns = (int)Math.Ceiling((totalWidth + ColumnSpacing) / (MaxColumnWidth + ColumnSpacing));
+                else if (cellWidthGuess < MinColumnWidth)
+                    columns = (int)Math.Floor((totalWidth + ColumnSpacing) / (MinColumnWidth + ColumnSpacing));
 
                 columns = Math.Min(Math.Max(columns, 1), count);
             }
 
-            double actualCellWidth = double.IsInfinity(width) ? MaxColumnWidth : width / columns;
-            double maxCellHeight = 0;
+            double availableCellWidth = double.IsInfinity(totalWidth)
+                ? MaxColumnWidth
+                : (totalWidth - ColumnSpacing * (columns - 1)) / columns;
 
+            double maxCellHeight = 0;
             foreach (var child in Children)
             {
-                child.Measure(new Size(actualCellWidth, availableSize.Height));
+                child.Measure(new Size(availableCellWidth, availableSize.Height));
                 maxCellHeight = Math.Max(maxCellHeight, child.DesiredSize.Height);
             }
 
             int rows = (int)Math.Ceiling(count / (double)columns);
-            return new Size(actualCellWidth * columns, maxCellHeight * rows);
+
+            double totalHeight = maxCellHeight * rows + RowSpacing * (rows - 1);
+            double measuredWidth = availableCellWidth * columns + ColumnSpacing * (columns - 1);
+
+            return new Size(measuredWidth, totalHeight);
         }
 
         protected override Size ArrangeOverride(Size finalSize)
@@ -77,33 +107,35 @@ namespace AngorApp.UI.Controls
             if (count == 0)
                 return finalSize;
 
-            double width = finalSize.Width;
+            double totalWidth = finalSize.Width;
             int columns = count;
-            if (width > 0)
+
+            if (totalWidth > 0)
             {
-                double cellWidth = width / count;
-                if (cellWidth > MaxColumnWidth)
-                    columns = (int)Math.Ceiling(width / MaxColumnWidth);
-                else if (cellWidth < MinColumnWidth)
-                    columns = (int)Math.Floor(width / MinColumnWidth);
+                double cellWidthGuess = (totalWidth - ColumnSpacing * (count - 1)) / count;
+                if (cellWidthGuess > MaxColumnWidth)
+                    columns = (int)Math.Ceiling((totalWidth + ColumnSpacing) / (MaxColumnWidth + ColumnSpacing));
+                else if (cellWidthGuess < MinColumnWidth)
+                    columns = (int)Math.Floor((totalWidth + ColumnSpacing) / (MinColumnWidth + ColumnSpacing));
 
                 columns = Math.Min(Math.Max(columns, 1), count);
             }
 
             int rows = (int)Math.Ceiling(count / (double)columns);
-            double cellWidthFinal = finalSize.Width / columns;
-            double cellHeightFinal = finalSize.Height / rows;
+
+            double cellWidthFinal = (finalSize.Width - ColumnSpacing * (columns - 1)) / columns;
+            double cellHeightFinal = (finalSize.Height - RowSpacing * (rows - 1)) / rows;
 
             for (int i = 0; i < count; i++)
             {
                 int row = i / columns;
                 int column = i % columns;
+
+                double x = column * (cellWidthFinal + ColumnSpacing);
+                double y = row * (cellHeightFinal + RowSpacing);
+
                 // Arrange each child in its cell
-                Children[i].Arrange(new Rect(
-                    column * cellWidthFinal,
-                    row * cellHeightFinal,
-                    cellWidthFinal,
-                    cellHeightFinal));
+                Children[i].Arrange(new Rect(x, y, cellWidthFinal, cellHeightFinal));
             }
 
             return finalSize;

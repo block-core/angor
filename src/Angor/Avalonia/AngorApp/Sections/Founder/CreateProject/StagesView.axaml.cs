@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace AngorApp.Sections.Founder.CreateProject;
 
-public partial class DetailsView : UserControl
+public partial class StagesView : UserControl
 {
-    public DetailsView()
+    public StagesView()
     {
         InitializeComponent();
     }

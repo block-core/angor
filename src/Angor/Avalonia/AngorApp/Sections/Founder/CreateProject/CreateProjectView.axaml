@@ -5,10 +5,24 @@
              xmlns:cp="clr-namespace:AngorApp.Sections.Founder.CreateProject"
              mc:Ignorable="d" d:DesignWidth="800" 
              x:Class="AngorApp.Sections.Founder.CreateProject.CreateProjectView">
+    
+    <UserControl.Styles>
+        <Style Selector="Card Card">
+            <Setter Property="Theme" Value="{StaticResource TransparentCard}" />
+            <Setter Property="HeaderStartContentTemplate" Value="{StaticResource SmallIcon}" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="HeaderPadding" Value="8" />
+        </Style>
+        <Style Selector="CalendarDatePicker">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+    </UserControl.Styles>
+    
     <ScrollViewer>
         <StackPanel Spacing="10">
             <cp:ProfileView />
-            <cp:DetailsView />
+            <cp:FundingStructure />
+            <cp:StagesView />
         </StackPanel>
     </ScrollViewer>
 

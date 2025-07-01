@@ -9,5 +9,5 @@ public interface ICreateProjectViewModel
     public DateTime? EndDate { get; set; }
     public IEnhancedCommand AddStage { get; }
     public int? PenaltyDays { get; set; }
-    public DateTime? ExpiryDate { get; }
+    public DateTime? ExpiryDate { get; set; }
 }
