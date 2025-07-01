@@ -8,10 +8,10 @@ namespace Angor.Shared.Protocol.Scripts;
 
 public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 {
-    private ILogger<InvestmentScriptBuilder> _logger;
+    private readonly ILogger<InvestmentScriptBuilder>? _logger;
     private readonly ISeederScriptTreeBuilder _seederScriptTreeBuilder;
 
-    public InvestmentScriptBuilder(ISeederScriptTreeBuilder seederScriptTreeBuilder, ILogger<InvestmentScriptBuilder> logger)
+    public InvestmentScriptBuilder(ISeederScriptTreeBuilder seederScriptTreeBuilder, ILogger<InvestmentScriptBuilder>? logger = null)
     {
         _seederScriptTreeBuilder = seederScriptTreeBuilder;
         _logger = logger;
@@ -48,7 +48,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
             Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
         };
 
-        _logger.LogInformation(
+        _logger?.LogInformation(
             $"recovery ops:{Encoders.Hex.EncodeData(recoveryOps.SelectMany(op => op.ToBytes()).ToArray())}");
         
         
@@ -64,7 +64,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         
         recoveryOps.AddRange(secretHashOps);
 
-        _logger.LogInformation(
+        _logger?.LogInformation(
             $"recovery ops + hashes:{Encoders.Hex.EncodeData(recoveryOps.SelectMany(op => op.ToBytes()).ToArray())}");
         
         var seeders = hashOfSecret == null && projectInfo.ProjectSeeders.SecretHashes.Any()
