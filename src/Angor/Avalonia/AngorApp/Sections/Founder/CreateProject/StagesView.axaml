@@ -4,13 +4,15 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:createProject="clr-namespace:AngorApp.Sections.Founder.CreateProject"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
              mc:Ignorable="d" d:DesignWidth="600"
              x:Class="AngorApp.Sections.Founder.CreateProject.StagesView"
              x:DataType="createProject:ICreateProjectViewModel">
 
     <UserControl.Styles>
         <Style Selector="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBox">
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="DatePicker">

@@ -3,9 +3,21 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:cp="clr-namespace:AngorApp.Sections.Founder.CreateProject"
-             mc:Ignorable="d" d:DesignWidth="800" 
-             x:Class="AngorApp.Sections.Founder.CreateProject.CreateProjectView">
+             xmlns:c="clr-namespace:AngorApp.UI.Controls"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.Sections.Founder.CreateProject.CreateProjectView"
+             x:DataType="cp:ICreateProjectViewModel">
     
+    <Design.DataContext>
+        <cp:CreateProjectViewModelDesign StartDate="1/2/2026" ExpiryDate="12/12/2025" EndDate="12/12/2025">
+            <cp:CreateProjectViewModelDesign.Stages>
+                <cp:CreateProjectStageDesign Percent="10" StartDate="10/5/2025" />
+                <cp:CreateProjectStageDesign Percent="30" StartDate="10/9/2025" />
+                <cp:CreateProjectStageDesign Percent="70" StartDate="12/12/2025" />
+            </cp:CreateProjectViewModelDesign.Stages>
+        </cp:CreateProjectViewModelDesign>
+    </Design.DataContext>
+
     <UserControl.Styles>
         <Style Selector="Card Card">
             <Setter Property="Theme" Value="{StaticResource TransparentCard}" />
@@ -17,13 +29,16 @@
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
     </UserControl.Styles>
-    
+
     <ScrollViewer>
-        <StackPanel Spacing="10">
-            <cp:ProfileView />
-            <cp:FundingStructure />
-            <cp:StagesView />
-        </StackPanel>
+        <c:PageContainer>
+            <StackPanel Spacing="10">
+                <cp:ProfileView />
+                <cp:FundingStructure />
+                <cp:StagesView />
+                <Button HorizontalAlignment="Center" Content="Create" Command="{Binding Create}" />
+            </StackPanel>
+        </c:PageContainer>
     </ScrollViewer>
 
 </UserControl>

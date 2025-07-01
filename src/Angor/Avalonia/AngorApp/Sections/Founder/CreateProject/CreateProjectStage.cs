@@ -16,11 +16,11 @@ public partial class CreateProjectStage : ReactiveValidationObject, ICreateProje
     public CreateProjectStage(Action<ICreateProjectStage> remove)
     {
         Remove = ReactiveCommand.Create(() => remove(this)).Enhance();
-        this.ValidationRule(stage => stage.Percent, x => x is > 0, "Percent must be greater than 0");
+        this.ValidationRule(stage => stage.Percent, x => x is >= 1, "Percent must be greater than 1");
         this.ValidationRule(stage => stage.Percent, x => x != null, "Enter a percentage");
         this.ValidationRule(stage => stage.StartDate, x => x != null, "Enter a date");
         StartDate = DateTimeOffset.Now;
-        Percent = 0;
+        Percent = 1;
     }
 
     public IEnhancedCommand Remove { get; }

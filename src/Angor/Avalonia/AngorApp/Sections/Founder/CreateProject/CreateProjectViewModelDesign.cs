@@ -10,4 +10,11 @@ public class CreateProjectViewModelDesign : ICreateProjectViewModel
     public IEnhancedCommand AddStage { get; }
     public int? PenaltyDays { get; set; }
     public DateTime? ExpiryDate { get; set; }
+    public IEnhancedCommand Create { get; }
+    public string? WebsiteUri { get; set; }
+    public string? Description { get; set; }
+    public string? AvatarUri { get; set; }
+    public string? BannerUri { get; set; }
+    public string? ProjectName { get; set; }
+    public long? Sats { get; set; }
 }

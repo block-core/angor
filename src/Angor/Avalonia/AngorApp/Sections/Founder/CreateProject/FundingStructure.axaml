@@ -26,7 +26,7 @@
         </Card.HeaderStartContent>
         <StackPanel>
             <Card Header="Target Amount" Subheader="Minimum BTC this project is trying to raise">
-                <c:AmountControl />
+                <c:AmountControl Satoshis="{Binding Sats, Mode=TwoWay}" />
             </Card>
             <c:CardGrid>
                 <c:CardGrid.ItemsSource>
