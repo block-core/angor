@@ -291,6 +291,7 @@ namespace Angor.Shared.Services
                 Kind = NostrKind.RelayListMetadata,
                 CreatedAt = DateTime.UtcNow,
                 Tags = new NostrEventTags(relayList.Select(a=> new NostrEventTag("r", a.Key))),
+                Content = string.Empty
             }.Sign(key);
 
             var nostrClient = _communicationFactory.GetOrCreateDiscoveryClients(_networkService);
@@ -300,7 +301,7 @@ namespace Angor.Shared.Services
             return Task.FromResult(signed.Id);
         }
 
-        private static NostrEvent GetNip3030NostrEvent( string content)
+        private static NostrEvent GetNip3030NostrEvent(string content)
         {
             // https://github.com/block-core/nips/blob/peer-to-peer-decentralized-funding/3030.md
 
