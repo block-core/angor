@@ -2,21 +2,21 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:a="clr-namespace:AngorApp"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:createProject="clr-namespace:AngorApp.Sections.Founder.CreateProject"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.CreateProject.DetailsView"
-             x:DataType="a:ICreateProjectViewModel">
+             x:DataType="createProject:ICreateProjectViewModel">
 
     <Design.DataContext>
-        <a:CreateProjectViewModelDesign StartDate="1/2/2026" ExpiryDate="12/12/2025" EndDate="12/12/2025">
-            <a:CreateProjectViewModelDesign.Stages>
-                <a:CreateProjectStageDesign Percent="10" StartDate="10/5/2025" />
-                <a:CreateProjectStageDesign Percent="30" StartDate="10/9/2025" />
-                <a:CreateProjectStageDesign Percent="70" StartDate="12/12/2025" />
-            </a:CreateProjectViewModelDesign.Stages>
-        </a:CreateProjectViewModelDesign>
+        <createProject:CreateProjectViewModelDesign StartDate="1/2/2026" ExpiryDate="12/12/2025" EndDate="12/12/2025">
+            <createProject:CreateProjectViewModelDesign.Stages>
+                <createProject:CreateProjectStageDesign Percent="10" StartDate="10/5/2025" />
+                <createProject:CreateProjectStageDesign Percent="30" StartDate="10/9/2025" />
+                <createProject:CreateProjectStageDesign Percent="70" StartDate="12/12/2025" />
+            </createProject:CreateProjectViewModelDesign.Stages>
+        </createProject:CreateProjectViewModelDesign>
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -85,7 +85,7 @@
                     </IconButton>
                     <ItemsControl ItemsSource="{Binding Stages}">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="a:ICreateProjectStage">
+                            <DataTemplate DataType="createProject:ICreateProjectStage">
                                 <Grid ColumnDefinitions="Auto 100* Auto" Margin="0 5" ColumnSpacing="20">
                                     <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}">
                                         <TextBox TextAlignment="Center" Text="{Binding Percent}">

@@ -1,6 +1,6 @@
 using Zafiro.UI.Commands;
 
-namespace AngorApp;
+namespace AngorApp.Sections.Founder.CreateProject;
 
 public class CreateProjectViewModelDesign : ICreateProjectViewModel
 {
@@ -10,11 +10,4 @@ public class CreateProjectViewModelDesign : ICreateProjectViewModel
     public IEnhancedCommand AddStage { get; }
     public int? PenaltyDays { get; set; }
     public DateTime? ExpiryDate { get; set; }
-}
-
-public class CreateProjectStageDesign : ICreateProjectStage
-{
-    public double Percent { get; set; }
-    public DateTimeOffset? StartDate { get; set; }
-    public IEnhancedCommand Remove { get; }
 }

@@ -19,11 +19,11 @@
                                                   DockPanel.Dock="Left"
                                                   Padding="{TemplateBinding HeaderPadding}"
                                                   Opacity="0.7"
+                                                  FontWeight="Bold"
                                                   VerticalAlignment="Center"
                                                   IsVisible="{Binding $parent[HeaderedContainer].Header, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                   Content="{TemplateBinding Header}" ContentTemplate="{TemplateBinding HeaderTemplate}" />
                                 <ContentPresenter x:Name="Content"
-                                                  FontWeight="Bold"
                                                   VerticalAlignment="Center"
                                                   IsVisible="{Binding $parent[HeaderedContainer].Content, Converter={x:Static ObjectConverters.IsNotNull}}" Padding="{TemplateBinding Padding}" Content="{TemplateBinding Content}"
                                                   ContentTemplate="{TemplateBinding ContentTemplate}" />
@@ -34,10 +34,46 @@
             </Setter>
         </ControlTheme>
 
+        <ControlTheme x:Key="{x:Type HeaderedContainer}" TargetType="HeaderedContainer">
+            <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="HeaderPadding" Value="0 0 0 4"></Setter>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Panel ClipToBounds="False">
+                        <OverlayBorder BorderThickness="{TemplateBinding BorderThickness}"
+                                       ClipToBounds="False"
+                                       BorderBrush="{TemplateBinding BorderBrush}"
+                                       CornerRadius="{TemplateBinding CornerRadius}"
+                                       BoxShadow="{TemplateBinding BoxShadow}"
+                                       Background="{TemplateBinding Background}">
+                            <DockPanel>
+                                <ContentPresenter x:Name="Header" Background="{TemplateBinding HeaderBackground}"
+                                                  DockPanel.Dock="Top"
+                                                  Padding="{TemplateBinding HeaderPadding}"
+                                                  FontWeight="Bold"
+                                                  Opacity="0.7"
+                                                  VerticalAlignment="Center"
+                                                  IsVisible="{Binding $parent[HeaderedContainer].Header, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                  Content="{TemplateBinding Header}" ContentTemplate="{TemplateBinding HeaderTemplate}" />
+                                <ContentPresenter x:Name="Content"
+                                                  VerticalAlignment="Center"
+                                                  IsVisible="{Binding $parent[HeaderedContainer].Content, Converter={x:Static ObjectConverters.IsNotNull}}" Padding="{TemplateBinding Padding}" Content="{TemplateBinding Content}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            </DockPanel>
+                        </OverlayBorder>
+                    </Panel>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+
+
     </Styles.Resources>
     <Design.PreviewWith>
         <Border Padding="20">
-            <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}" Header="HEADER" Content="CONTENT" />
+            <StackPanel>
+                <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}" Header="HEADER" Content="CONTENT" />
+                <HeaderedContainer Header="HEADER" Content="CONTENT" />
+            </StackPanel>
         </Border>
     </Design.PreviewWith>
 </Styles>

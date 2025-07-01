@@ -56,7 +56,7 @@
                                       ItemsSource="{TemplateBinding ItemsSource}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <c:MinMaxUniformGrid MinColumnWidth="{Binding $parent[a:CardGrid].MinColumnWidth}" 
+                                    <c:MinMaxUniformGrid MinColumnWidth="{Binding $parent[a:CardGrid].MinColumnWidth}"
                                                          MaxColumnWidth="{Binding $parent[a:CardGrid].MaxColumnWidth}" />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
