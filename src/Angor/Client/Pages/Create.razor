@@ -1224,18 +1224,6 @@
             var words = await passwordComponent.GetWalletAsync();
             var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
 
-            // try
-            // {
-            //     await _RelayService.CreateNostrRelayNip65Async(NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()));
-            // }
-            // catch (Exception e)
-            // {
-            //     Console.WriteLine(e);
-            //     throw;
-            // }
-
-            // throw new Exception();
-
             var resultId = await _RelayService.CreateNostrProfileAsync(
             project.Metadata.ToNostrMetadata(),
             NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()),
