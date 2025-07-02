@@ -54,6 +54,9 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.GetTaprootFullPubKey().ToBytes())}");
         _logger?.LogInformation($"investor 4: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.GetTaprootFullPubKey().OutputKey.ToBytes())}");
         _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.AsTaprootPubKey().ToBytes())}");
+        
+        _logger?.LogInformation($"Environment: {Environment.MachineName}, {Environment.Version}");
+        
         _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToBytes())}");
         _logger?.LogInformation($"investor 3: {taprootFullPubKey.ScriptPubKey.ToHex()}");
         _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToCompressedBytes())}");

@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <TrimmerRootAssembly Include="NBitcoin" />
+    <AdditionalFiles Include="DynamicLinker.xml" />
+  </ItemGroup>
+
+
+  <ItemGroup>
     <PackageReference Include="Blockcore.Core" Version="1.2.45" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.6" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.6" />
