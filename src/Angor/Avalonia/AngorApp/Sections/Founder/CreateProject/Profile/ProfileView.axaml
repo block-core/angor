@@ -5,11 +5,16 @@
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
-             xmlns:createProject="clr-namespace:AngorApp.Sections.Founder.CreateProject"
+             xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
              mc:Ignorable="d" d:DesignWidth="700"
-             x:Class="AngorApp.Sections.Founder.CreateProject.ProfileView"
-             x:DataType="createProject:ICreateProjectViewModel">
+             x:Class="AngorApp.Sections.Founder.CreateProject.Profile.ProfileView"
+             x:DataType="profile:IProfileViewModel">
     <Card Header="Project Profile">
+        <Card.HeaderEndContent>
+            <ContentControl IsVisible="{Binding IsValid^}" Foreground="LawnGreen">
+                <ui:Icon Source="fa-check" />
+            </ContentControl>
+        </Card.HeaderEndContent>
         <Card.HeaderStartContent>
             <ui:Icon Source="fa-briefcase" />
         </Card.HeaderStartContent>

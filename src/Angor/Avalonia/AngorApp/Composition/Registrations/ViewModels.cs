@@ -25,7 +25,7 @@ public static class ViewModels
             .AddScoped<IPenaltiesViewModel, PenaltiesViewModel>()
             .AddScoped<IRecoverViewModel, RecoverViewModel>()
             .AddScoped<IFounderSectionViewModel, FounderSectionViewModel>()
-            .AddScoped<ICreateProjectViewModel, CreateProjectViewModel>()
+            .AddTransient<ICreateProjectViewModel, CreateProjectViewModel>()
             .AddScoped<Func<ProjectDto, IFounderProjectViewModel>>(provider => dto => ActivatorUtilities.CreateInstance<FounderProjectViewModel>(provider, dto))
             .AddScoped<Func<ProjectDto, IFounderProjectDetailsViewModel>>(provider => dto => ActivatorUtilities.CreateInstance<FounderProjectDetailsViewModel>(provider, dto))
             .AddScoped<IMainViewModel, MainViewModel>();

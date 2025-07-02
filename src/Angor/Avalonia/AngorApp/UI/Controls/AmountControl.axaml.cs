@@ -79,10 +79,7 @@ public class AmountControl : TemplatedControl, IModifiable
     {
         if (property == BitcoinProperty || property == ValueProperty || property == SatoshisProperty)
         {
-            if (numericUpDown != null)
-            {
-                DataValidationErrors.SetError(numericUpDown, error);
-            }
+                DataValidationErrors.SetError(this, error);
         }
 
         base.UpdateDataValidation(property, state, error);

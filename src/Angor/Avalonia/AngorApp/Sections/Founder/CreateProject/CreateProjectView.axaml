@@ -4,9 +4,15 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:cp="clr-namespace:AngorApp.Sections.Founder.CreateProject"
              xmlns:c="clr-namespace:AngorApp.UI.Controls"
+             xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
+             xmlns:fundingStructure="clr-namespace:AngorApp.Sections.Founder.CreateProject.FundingStructure"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.CreateProject.CreateProjectView"
              x:DataType="cp:ICreateProjectViewModel">
+    
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="SystemControlErrorTextForegroundBrush" Color="{DynamicResource SystemBaseHighColor}" />
+    </UserControl.Resources>
     
     <Design.DataContext>
         <cp:CreateProjectViewModelDesign StartDate="1/2/2026" ExpiryDate="12/12/2025" EndDate="12/12/2025">
@@ -33,9 +39,9 @@
     <ScrollViewer>
         <c:PageContainer>
             <StackPanel Spacing="10">
-                <cp:ProfileView />
-                <cp:FundingStructure />
-                <cp:StagesView />
+                <profile:ProfileView DataContext="{Binding ProfileViewModel}" />
+                <fundingStructure:FundingStructure DataContext="{Binding FundingStructureViewModel}" />
+                <cp:StagesView DataContext="{Binding StagesViewModel}" />
                 <Button HorizontalAlignment="Center" Content="Create" Command="{Binding Create}" />
             </StackPanel>
         </c:PageContainer>

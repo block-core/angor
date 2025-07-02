@@ -30,8 +30,8 @@
         </PackageReference>
         <PackageReference Include="Serilog.Extensions.Logging" />
         <PackageReference Include="Serilog.Sinks.Console" />
-        <PackageReference Include="Zafiro.Avalonia" />
-        <PackageReference Include="Zafiro.Avalonia.Dialogs" />
+<!--        <PackageReference Include="Zafiro.Avalonia" />-->
+<!--        <PackageReference Include="Zafiro.Avalonia.Dialogs" />-->
     </ItemGroup>
 
     <ItemGroup>
@@ -40,6 +40,21 @@
         <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj" />
         <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj" />
         <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Sections\Founder\CreateProject\FundingStructure\FundingStructure.axaml.cs">
+        <DependentUpon>FundingStructure.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Sections\Founder\CreateProject\Profile\ProfileView.axaml.cs">
+        <DependentUpon>ProfileView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Sections\Founder\CreateProject\Stages\StagesView.axaml.cs">
+        <DependentUpon>StagesView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
     
 </Project>

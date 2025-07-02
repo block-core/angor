@@ -4,9 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:createProject="clr-namespace:AngorApp.Sections.Founder.CreateProject"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
              mc:Ignorable="d" d:DesignWidth="600"
              x:Class="AngorApp.Sections.Founder.CreateProject.StagesView"
-             x:DataType="createProject:ICreateProjectViewModel">
+             x:DataType="stages:IStagesViewModel">
 
     <UserControl.Styles>
         <Style Selector="TextBlock">
@@ -32,6 +33,11 @@
     </Design.DataContext>
 
     <Card Header="Stages">
+        <Card.HeaderEndContent>
+            <ContentControl IsVisible="{Binding IsValid^}" Foreground="LawnGreen">
+                <ui:Icon Source="fa-check" />
+            </ContentControl>
+        </Card.HeaderEndContent>
         <Card.HeaderStartContent>
             <ui:Icon Source="svg:/Assets/stages.svg" />
         </Card.HeaderStartContent>

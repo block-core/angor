@@ -8,14 +8,6 @@
         </Border>
     </Design.PreviewWith>
 
-    <Style Selector="controls|AmountControl.Untouched /template/ DataValidationErrors">
-        <Setter Property="ErrorTemplate">
-            <Setter.Value>
-                <DataTemplate />
-            </Setter.Value>
-        </Setter>
-    </Style>
-
     <Styles.Resources>
         <ControlTheme TargetType="controls:AmountControl" x:Key="{x:Type controls:AmountControl}">
             <Setter Property="Template">
@@ -39,9 +31,6 @@
                                         <Setter Property="Maximum" Value="21000000" />
                                     </Style>
                                 </NumericUpDown.Styles>
-                                <NumericUpDown.InnerRightContent>
-                                    <TextBlock Classes="Dimmed" Text="{Binding $parent[controls:AmountControl].Unit}" VerticalAlignment="Center" Margin="0 0 10 0" />
-                                </NumericUpDown.InnerRightContent>
                             </NumericUpDown>
                             <Panel Margin="0 2" Opacity="{Binding !!$parent[controls:AmountControl].Value, Converter={x:Static converters:OpacityConverters.BoolToOpacity}}">
                                 <TextBlock Classes="Dimmed SizeSmall" IsVisible="{Binding !$parent[controls:AmountControl].IsBitcoin}" Text="{Binding $parent[controls:AmountControl].Bitcoin, StringFormat='{}&#61; {0} BTC'}" />
@@ -62,6 +51,27 @@
                     </Border>
                 </ControlTemplate>
             </Setter>
+            <Style Selector="^ /template/ NumericUpDown#PART_NumericUpDown">
+                <Setter Property="InnerRightContent">
+                    <Template>
+                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                            <TextBlock Classes="Dimmed" Text="{Binding $parent[controls:AmountControl].Unit}" VerticalAlignment="Center" Margin="0 0 10 0" />
+                        </StackPanel>
+                    </Template>
+                </Setter>
+            </Style>
+            <Style Selector="^:error /template/ NumericUpDown#PART_NumericUpDown">
+                <Setter Property="BorderBrush" Value="{DynamicResource SystemControlErrorTextForegroundBrush}" />
+                <Setter Property="InnerRightContent">
+                    <Template>
+                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                            <TextBlock Classes="Dimmed" Text="{Binding $parent[controls:AmountControl].Unit}" VerticalAlignment="Center" Margin="0 0 10 0" />
+                            <Button Theme="{StaticResource ErrorButton}"
+                                    Margin="0 0 8 0" Background="{DynamicResource SystemControlErrorTextForegroundBrush}" />
+                        </StackPanel>
+                    </Template>
+                </Setter>
+            </Style>
         </ControlTheme>
     </Styles.Resources>
 </Styles>
