@@ -40,7 +40,16 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
         uint256? hashOfSecret)
     {
-        _logger?.LogInformation($"FounderKey: {projectInfo.FounderKey} FounderRecoveryKey: {projectInfo.FounderRecoveryKey} investorKey: {investorKey}");
+        _logger?.LogInformation($"founderFullPubKey {new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).ToHex()}");
+        _logger?.LogInformation($"investorFullPubKey {new NBitcoin.PubKey(investorKey).ToHex()}");
+        var taprootFullPubKey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey();
+        _logger?.LogInformation($"founderFullPubKey taproot {taprootFullPubKey}");
+        var investorFullPubKey = new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey();
+        _logger?.LogInformation($"investorFullPubKey taproot {investorFullPubKey}");
+        
+        
+        _logger?.LogInformation($"taproot full pub key: {Encoders.Hex.EncodeData(taprootFullPubKey.ToBytes())}");
+        _logger?.LogInformation($"investor full pub key: {Encoders.Hex.EncodeData(investorFullPubKey.ToBytes())}");
         
         // regular investor pre-co-sign with founder to gets funds with penalty
         var recoveryOps = new List<Op>
