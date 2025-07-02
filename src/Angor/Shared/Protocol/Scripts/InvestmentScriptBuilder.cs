@@ -41,15 +41,13 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         uint256? hashOfSecret)
     {
         _logger?.LogInformation($"founderFullPubKey {new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).ToHex()}");
-        _logger?.LogInformation($"investorFullPubKey {new NBitcoin.PubKey(investorKey).ToHex()}");
         var taprootFullPubKey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey();
         _logger?.LogInformation($"founderFullPubKey taproot {taprootFullPubKey}");
-        var investorFullPubKey = new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey();
-        _logger?.LogInformation($"investorFullPubKey taproot {investorFullPubKey}");
         
-        
-        _logger?.LogInformation($"taproot full pub key: {Encoders.Hex.EncodeData(taprootFullPubKey.ToBytes())}");
-        _logger?.LogInformation($"investor full pub key: {Encoders.Hex.EncodeData(investorFullPubKey.ToBytes())}");
+        _logger?.LogInformation($"taproot 1: {Encoders.Hex.EncodeData(taprootFullPubKey.OutputKey.ToBytes())}");
+        _logger?.LogInformation($"investor 2: {Encoders.Hex.EncodeData(taprootFullPubKey.ToBytes())}");
+        _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.ToBytes())}");
+        _logger?.LogInformation($"investor 4: {Encoders.Hex.EncodeData(taprootFullPubKey.MerkleRoot?.ToBytes() ?? [])}");
         
         // regular investor pre-co-sign with founder to gets funds with penalty
         var recoveryOps = new List<Op>
