@@ -8,5 +8,4 @@ public interface IProfileViewModel
     string? Description { get; set; }
     string? AvatarUri { get; set; }
     string? BannerUri { get; set; }
-    
 }

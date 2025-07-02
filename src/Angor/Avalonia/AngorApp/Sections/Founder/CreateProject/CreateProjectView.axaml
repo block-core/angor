@@ -42,7 +42,7 @@
                 <profile:ProfileView DataContext="{Binding ProfileViewModel}" />
                 <fundingStructure:FundingStructure DataContext="{Binding FundingStructureViewModel}" />
                 <cp:StagesView DataContext="{Binding StagesViewModel}" />
-                <Button HorizontalAlignment="Center" Content="Create" Command="{Binding Create}" />
+                <Button HorizontalAlignment="Center" Content="Create Project" Command="{Binding Create}" />
             </StackPanel>
         </c:PageContainer>
     </ScrollViewer>
