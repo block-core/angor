@@ -1,8 +1,13 @@
 using Angor.Shared.Models;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
+using Op = Blockcore.Consensus.ScriptInfo.Op;
+using OpcodeType = Blockcore.Consensus.ScriptInfo.OpcodeType;
+using Script = Blockcore.Consensus.ScriptInfo.Script;
+using Sequence = Blockcore.NBitcoin.Sequence;
+using uint256 = Blockcore.NBitcoin.uint256;
+using Utils = Blockcore.NBitcoin.Utils;
 
 namespace Angor.Shared.Protocol.Scripts;
 
@@ -49,6 +54,10 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.GetTaprootFullPubKey().ToBytes())}");
         _logger?.LogInformation($"investor 4: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.GetTaprootFullPubKey().OutputKey.ToBytes())}");
         _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.AsTaprootPubKey().ToBytes())}");
+        _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToBytes())}");
+        _logger?.LogInformation($"investor 3: {taprootFullPubKey.ScriptPubKey.ToHex()}");
+        _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToCompressedBytes())}");
+        _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToTapScript(TapLeafVersion.C0).Script.ToBytes())}");
         
         
         // regular investor pre-co-sign with founder to gets funds with penalty
