@@ -40,6 +40,8 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
         uint256? hashOfSecret)
     {
+        _logger?.LogInformation($"FounderKey: {projectInfo.FounderKey} FounderRecoveryKey: {projectInfo.FounderRecoveryKey} investorKey: {investorKey}");
+        
         // regular investor pre-co-sign with founder to gets funds with penalty
         var recoveryOps = new List<Op>
         {
