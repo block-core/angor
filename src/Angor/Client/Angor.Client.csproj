@@ -6,6 +6,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <TrimmerRootAssembly Include="NBitcoin" />
+    <AdditionalFiles Include="DynamicLinker.xml" />
+  </ItemGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);SECP256K1_VERIFY</DefineConstants>
+  </PropertyGroup>
+  
+  <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
     <PackageReference Include="Blockcore.Core" Version="1.2.45" />
