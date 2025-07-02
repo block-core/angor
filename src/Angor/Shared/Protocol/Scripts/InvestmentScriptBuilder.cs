@@ -46,8 +46,10 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         
         _logger?.LogInformation($"taproot 1: {Encoders.Hex.EncodeData(taprootFullPubKey.OutputKey.ToBytes())}");
         _logger?.LogInformation($"investor 2: {Encoders.Hex.EncodeData(taprootFullPubKey.ToBytes())}");
-        _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.ToBytes())}");
-        _logger?.LogInformation($"investor 4: {Encoders.Hex.EncodeData(taprootFullPubKey.MerkleRoot?.ToBytes() ?? [])}");
+        _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.GetTaprootFullPubKey().ToBytes())}");
+        _logger?.LogInformation($"investor 4: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.GetTaprootFullPubKey().OutputKey.ToBytes())}");
+        _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.AsTaprootPubKey().ToBytes())}");
+        
         
         // regular investor pre-co-sign with founder to gets funds with penalty
         var recoveryOps = new List<Op>
