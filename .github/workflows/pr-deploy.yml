@@ -71,7 +71,7 @@ jobs:
       
     # Build the .NET application (web version only, no desktop apps)
     - name: Publish Web App
-      run: dotnet publish -c Release -r linux-x64 /p:Version=${{ env.VERSION }} -v m -o publish ${{env.PROJECT_PATH}}
+      run: dotnet publish -c Release -r linux-x64 /p:Version=${{ env.VERSION }}.${{ github.run_number }} -v m -o publish ${{env.PROJECT_PATH}}
         
     # Run tests to make sure PR doesn't break anything
     - name: Run Tests
