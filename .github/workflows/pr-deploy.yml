@@ -42,6 +42,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         ref: ${{ steps.pr.outputs.ref }}
+<<<<<<< HEAD
         fetch-depth: 0
         
     - name: Show working directory and files
@@ -50,6 +51,15 @@ jobs:
         echo "Files in root:"
         ls -la
         
+=======
+        
+    - name: Show working directory
+      run: pwd
+  
+    - name: List files in working directory
+      run: ls -la
+    
+>>>>>>> 3a730a78370647eed948d976c8bed504b21c8718
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -93,7 +103,11 @@ jobs:
           "pr_title": "${{ steps.pr.outputs.title }}",
           "pr_author": "${{ steps.pr.outputs.author }}",
           "deployed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+<<<<<<< HEAD
           "commit_sha": "${{ steps.pr.outputs.ref }}"
+=======
+          "commit_sha": "${{ steps.pr.outputs.ref }}",
+>>>>>>> 3a730a78370647eed948d976c8bed504b21c8718
         }
         EOF
       
