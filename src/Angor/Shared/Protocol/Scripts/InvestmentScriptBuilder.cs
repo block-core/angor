@@ -170,11 +170,11 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         
         _logger?.LogInformation($"founderFullPubKey taproot {taprootFullPubKey}");
         
-        _logger?.LogInformation($"taproot 1: {Encoders.Hex.EncodeData(taprootFullPubKey.OutputKey.ToBytes())}");
-        _logger?.LogInformation($"investor 2: {taprootFullPubKey.OutputKeyParity}");
-        _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.GetTaprootFullPubKey().ToBytes())}");
-        _logger?.LogInformation($"investor 4: {Encoders.Hex.EncodeData(taprootFullPubKey.Tweak.ToArray())}");
-        _logger?.LogInformation($"investor 5: {taprootFullPubKey.MerkleRoot}");
+        _logger?.LogInformation($"OutputKey: {Encoders.Hex.EncodeData(taprootFullPubKey.OutputKey.ToBytes())}");
+        _logger?.LogInformation($"OutputKeyParity: {taprootFullPubKey.OutputKeyParity}");
+        _logger?.LogInformation($"InternalKey: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.ToBytes())}");
+        _logger?.LogInformation($"Tweak: {Encoders.Hex.EncodeData(taprootFullPubKey.Tweak.ToArray())}");
+        _logger?.LogInformation($"MerkleRoot: {taprootFullPubKey.MerkleRoot}");
         
         _logger?.LogInformation($"Environment: {Environment.MachineName}, {Environment.Version}");
         
