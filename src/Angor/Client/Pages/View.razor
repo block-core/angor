@@ -494,54 +494,71 @@
         <div class="card card-body mt-4">
             @if (founder)
             {
-                <div class="text-center animate-fade-in">
-                    <i class="me-2">
-                        <Icon IconName="verified-check" Height="100" Width="100" Class="action-icon" />
-                    </i>
-                    <h3 class="mt-4 text-success">Project Owner Dashboard</h3>
-                    <p class="action-text">Manage your project funds and approve transactions</p>
-                    <div class="action-buttons d-flex justify-content-center item-center mt-4">
-
-                        <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success text-white animate-scale">
-                            <i class="me-2">
-                                <Icon IconName="wallet" />
-                            </i>
-                            Manage funds
-                        </a>
-                        <div class="position-relative d-inline-block mx-2">
-                            <a href="@($"/signatures/{project.ProjectInfo.ProjectIdentifier}")" class="btn btn-border-warning animate-scale">
-                                <i class="me-2">
-                                    <Icon IconName="signature" />
-                                </i>
-                                Approve investments
-                            </a>
-                            @if (hasPendingMessages)
-                            {
-                                <span class="position-absolute top-0 start-100 translate-middle rounded-circle btn-border-warning" style="width: 16px; height: 16px; z-index: 1; background-color: #7e7537;">
-                                    <span class="visually-hidden">New activity</span>
-                                </span>
-                            }
+                <div class="animate-fade-in">
+                    <div class="d-flex align-items-center mb-4">
+                        <span class="user-select-none animate-rotate">
+                            <Icon IconName="verified-check" Height="42" Width="42" />
+                        </span>
+                        <div class="h-100 ms-3">
+                            <h5 class="mb-0 font-weight-bolder">Project Owner Dashboard</h5>
                         </div>
-
-                        <a href=@($"/unfunded/{project.ProjectInfo.ProjectIdentifier}")
-                           class="btn btn-border-danger animate-scale @(CanReleaseUnfundedProject() ? "" : "disabled")">
-                            <i class="me-2">
-                                @if (CanReleaseUnfundedProject())
-                                {
-                                    <Icon IconName="unlock" />
-                                }
-                                else
-                                {
-                                    <Icon IconName="lock" />
-                                }
-                            </i>
-                            Release funds back to investors
-                        </a>
                     </div>
 
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="stat-card p-3 rounded-3 border hover-effect h-100 d-flex flex-column">
+                                <div class="d-flex align-items-center mb-2">
+                                    <Icon IconName="wallet" Height="24" Width="24" Class="me-3" />
+                                    <h6 class="mb-0">Manage Funds</h6>
+                                </div>
+                                <p class="text-sm mb-auto">Access and manage the project's financial resources.</p>
+                                <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success text-white animate-scale mt-3">
+                                    Go to Funds
+                                </a>
+                            </div>
+                        </div>
 
+                        <div class="col-md-4">
+                            <div class="stat-card p-3 rounded-3 border hover-effect h-100 d-flex flex-column">
+                                <div class="d-flex align-items-center mb-2">
+                                    <Icon IconName="signature" Height="24" Width="24" Class="me-3" />
+                                    <h6 class="mb-0">Approve Investments</h6>
+                                    @if (hasPendingMessages)
+                                    {
+                                        <span class="ms-auto p-1 bg-warning border border-light rounded-circle">
+                                            <span class="visually-hidden">New activity</span>
+                                        </span>
+                                    }
+                                </div>
+                                <p class="text-sm mb-auto">Review and approve pending investment requests.</p>
+                                <a href="@($"/signatures/{project.ProjectInfo.ProjectIdentifier}")" class="btn btn-border-warning animate-scale mt-3">
+                                    Review Signatures
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="stat-card p-3 rounded-3 border hover-effect h-100 d-flex flex-column">
+                                <div class="d-flex align-items-center mb-2">
+                                    @if (CanReleaseUnfundedProject())
+                                    {
+                                        <Icon IconName="unlock" Height="24" Width="24" Class="me-3" />
+                                    }
+                                    else
+                                    {
+                                        <Icon IconName="lock" Height="24" Width="24" Class="me-3" />
+                                    }
+                                    <h6 class="mb-0">Release Funds</h6>
+                                </div>
+                                <p class="text-sm mb-auto">Return funds to investors if project goals are not met.</p>
+                                <a href=@($"/unfunded/{project.ProjectInfo.ProjectIdentifier}")
+                                   class="btn btn-border-danger animate-scale mt-3 @(CanReleaseUnfundedProject() ? "" : "disabled")">
+                                    Release Funds
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
             }
             else if (invested)
             {
