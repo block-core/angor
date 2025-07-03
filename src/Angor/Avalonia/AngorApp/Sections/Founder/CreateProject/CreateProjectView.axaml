@@ -33,7 +33,7 @@
     <c:PageContainer>
         <Grid ColumnDefinitions="{OnFormFactor Desktop='5* 3*', Mobile='*'}">
             <ScrollViewer Grid.Column="1">
-                <p:PreviewView DockPanel.Dock="Right" IsVisible="{Binding !#PreviewButton.IsVisible}" />
+                <p:PreviewView DockPanel.Dock="Right" IsVisible="{OnFormFactor Desktop=True}" />
             </ScrollViewer>
             <ScrollViewer>
                 <ScrollViewer.Styles>
@@ -49,19 +49,6 @@
                     <Button HorizontalAlignment="Center" Content="Create Project" Command="{Binding Create}" />
                 </StackPanel>
             </ScrollViewer>
-            <Button x:Name="PreviewButton" IsVisible="{OnFormFactor Mobile=True, Default=False}" Content="Preview" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="20">
-                <Button.Flyout>
-                    <Flyout>
-                        <Flyout.FlyoutPresenterTheme>
-                            <ControlTheme TargetType="FlyoutPresenter" 
-                                          BasedOn="{StaticResource {x:Type FlyoutPresenter}}">
-                                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
-                            </ControlTheme>
-                        </Flyout.FlyoutPresenterTheme>
-                        <p:PreviewView />
-                    </Flyout>
-                </Button.Flyout>
-            </Button>
         </Grid>
     </c:PageContainer>
 

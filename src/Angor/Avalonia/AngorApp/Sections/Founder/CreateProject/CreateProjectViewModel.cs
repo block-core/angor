@@ -2,18 +2,19 @@ using System.Linq;
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.Dtos;
-using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using AngorApp.Sections.Founder.CreateProject.FundingStructure;
+using AngorApp.Sections.Founder.CreateProject.Preview;
 using AngorApp.Sections.Founder.CreateProject.Profile;
 using AngorApp.Sections.Founder.CreateProject.Stages;
+using AngorApp.Sections.Shell;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder.CreateProject;
 
-public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectViewModel
+public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectViewModel, IHaveHeader
 {
     private readonly CompositeDisposable disposable = new();
 
@@ -51,4 +52,6 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         disposable.Dispose();
         base.Dispose(disposing);
     }
+
+    public object? Header => new PreviewHeaderViewModel(this);
 }
