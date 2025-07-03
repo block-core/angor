@@ -46,6 +46,9 @@ jobs:
       with:
         ref: ${{ steps.pr.outputs.ref }}
     
+    - name: Show working directory
+      run: pwd
+  
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
