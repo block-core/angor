@@ -64,14 +64,13 @@ jobs:
         
     - name: Variables
       run: |
-        BASE_VERSION=$(npm run version --silent)
-        echo VERSION=${BASE_VERSION}-pr${{ inputs.pr_number }} >> $GITHUB_ENV
+        echo VERSION=$(npm run version --silent) >> $GITHUB_ENV
         echo PR_NUMBER=${{ inputs.pr_number }} >> $GITHUB_ENV
       shell: bash
       
     # Build the .NET application (web version only, no desktop apps)
     - name: Publish Web App
-      run: dotnet publish -c Release -r linux-x64 /p:Version=${{ env.VERSION }}.${{ github.run_number }} -v m -o publish ${{env.PROJECT_PATH}}
+      run: dotnet publish -c Release -r linux-x64 /p:Version=${{ env.VERSION }}.${{ github.pr_number }} -v m -o publish ${{env.PROJECT_PATH}}
         
     # Run tests to make sure PR doesn't break anything
     - name: Run Tests
