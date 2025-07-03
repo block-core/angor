@@ -101,5 +101,5 @@ jobs:
         branch: main
         folder: publish/wwwroot
         repository-name: ${{ github.repository_owner }}/angor-debug
-        token: ${{ secrets.ANGOR_DEPLOY_TOKEN }} #change this secret, same as angor-test
+        token: ${{ secrets.ANGOR_DEPLOY_DEBUG_TOKEN }} #change this secret, same as angor-test
         commit-message: "Deploy PR #${{ inputs.pr_number }} - ${{ steps.pr.outputs.title }}"
