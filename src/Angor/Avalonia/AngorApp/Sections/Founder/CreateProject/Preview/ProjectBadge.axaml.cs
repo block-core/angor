@@ -1,8 +1,8 @@
 namespace AngorApp.Sections.Founder.CreateProject.Preview;
 
-public partial class ProjectItemView : UserControl
+public partial class ProjectBadge : UserControl
 {
-    public ProjectItemView()
+    public ProjectBadge()
     {
         InitializeComponent();
     }

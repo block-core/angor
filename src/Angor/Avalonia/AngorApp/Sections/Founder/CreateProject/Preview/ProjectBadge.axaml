@@ -6,7 +6,7 @@
              xmlns:cp="clr-namespace:AngorApp.Sections.Founder.CreateProject"
              xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
              mc:Ignorable="d" d:DesignWidth="400"
-             x:Class="AngorApp.Sections.Founder.CreateProject.Preview.ProjectItemView"
+             x:Class="AngorApp.Sections.Founder.CreateProject.Preview.ProjectBadge"
              x:DataType="cp:ICreateProjectViewModel">
 
     <Design.DataContext>

@@ -47,7 +47,7 @@
     </Design.DataContext>
 
     <StackPanel>
-        <preview:ProjectItemView />
+        <preview:ProjectBadge />
         <Card Header="Project Snapshot">
             <c:CardGrid MinColumnWidth="150" MaxColumnWidth="250" RowSpacing="5" ColumnSpacing="5">
                 <c:CardGrid.ItemsSource>
