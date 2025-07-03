@@ -6,17 +6,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DefineConstants>HAS_SPAN</DefineConstants>
+    <DefineConstants>HAS_SPAN;SECP256K1_VERIFY</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <TrimmerRootAssembly Include="NBitcoin" />
-    <AdditionalFiles Include="DynamicLinker.xml" />
   </ItemGroup>
-  <PropertyGroup>
-    <DefineConstants>$(DefineConstants);SECP256K1_VERIFY</DefineConstants>
-  </PropertyGroup>
-
 
   <ItemGroup>
     <PackageReference Include="Blockcore.Core" Version="1.2.45" />

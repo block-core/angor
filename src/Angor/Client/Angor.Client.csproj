@@ -7,10 +7,9 @@
 
   <ItemGroup>
     <TrimmerRootAssembly Include="NBitcoin" />
-    <AdditionalFiles Include="DynamicLinker.xml" />
   </ItemGroup>
   <PropertyGroup>
-    <DefineConstants>$(DefineConstants);SECP256K1_VERIFY</DefineConstants>
+    <DefineConstants>HAS_SPAN;SECP256K1_VERIFY</DefineConstants>
   </PropertyGroup>
   
   <ItemGroup>
