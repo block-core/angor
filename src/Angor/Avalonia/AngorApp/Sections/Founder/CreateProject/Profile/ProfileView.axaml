@@ -9,6 +9,11 @@
              mc:Ignorable="d" d:DesignWidth="700"
              x:Class="AngorApp.Sections.Founder.CreateProject.Profile.ProfileView"
              x:DataType="profile:IProfileViewModel">
+    
+    <UserControl.Styles>
+        <StyleInclude Source="../Common.axaml" />
+    </UserControl.Styles>
+    
     <Card Header="Project Profile">
         <Card.HeaderEndContent>
             <ContentControl IsVisible="{Binding IsValid^}" Foreground="LawnGreen">

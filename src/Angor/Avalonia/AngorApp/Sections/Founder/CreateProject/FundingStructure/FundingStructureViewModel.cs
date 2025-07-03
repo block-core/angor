@@ -11,6 +11,7 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
     [Reactive] private int? penaltyDays = 60;
     [Reactive] private DateTime? endDate;
     [Reactive] private DateTime? expiryDate;
+    [ObservableAsProperty] private IAmountUI targetAmount;
     
     private readonly CompositeDisposable disposable = new();
 
@@ -21,6 +22,12 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
         this.ValidationRule(x => x.EndDate, x => x != null, "Enter a date").DisposeWith(disposable);
         this.ValidationRule(x => x.ExpiryDate, x => x != null, "Enter a date").DisposeWith(disposable);
         this.ValidationRule(x => x.PenaltyDays, x => x >=0, "Should be greater than 0").DisposeWith(disposable);
+        
+        targetAmountHelper = this.WhenAnyValue(x => x.Sats)
+            .WhereNotNull()
+            .Select(l => new AmountUI(l.Value))
+            .ToProperty(this, model => model.TargetAmount)
+            .DisposeWith(disposable);
     }
 
     protected override void Dispose(bool disposing)

@@ -6,45 +6,50 @@
              xmlns:c="clr-namespace:AngorApp.UI.Controls"
              xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
              xmlns:fundingStructure="clr-namespace:AngorApp.Sections.Founder.CreateProject.FundingStructure"
-             mc:Ignorable="d" d:DesignWidth="800"
+             xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
+             xmlns:preview="clr-namespace:AngorApp.Sections.Founder.CreateProject.Preview"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="AngorApp.Sections.Founder.CreateProject.CreateProjectView"
              x:DataType="cp:ICreateProjectViewModel">
-    
-    <UserControl.Resources>
-        <SolidColorBrush x:Key="SystemControlErrorTextForegroundBrush" Color="{DynamicResource SystemBaseHighColor}" />
-    </UserControl.Resources>
-    
+
     <Design.DataContext>
-        <cp:CreateProjectViewModelDesign StartDate="1/2/2026" ExpiryDate="12/12/2025" EndDate="12/12/2025">
-            <cp:CreateProjectViewModelDesign.Stages>
-                <cp:CreateProjectStageDesign Percent="10" StartDate="10/5/2025" />
-                <cp:CreateProjectStageDesign Percent="30" StartDate="10/9/2025" />
-                <cp:CreateProjectStageDesign Percent="70" StartDate="12/12/2025" />
-            </cp:CreateProjectViewModelDesign.Stages>
+        <cp:CreateProjectViewModelDesign>
+            <cp:CreateProjectViewModelDesign.StagesViewModel>
+                <stages:StagesViewModelDesign>
+                    <stages:StagesViewModelDesign.Stages>
+                        <stages:CreateProjectStageDesign Percent="10" StartDate="10/5/2025" />
+                        <stages:CreateProjectStageDesign Percent="30" StartDate="10/9/2025" />
+                        <stages:CreateProjectStageDesign Percent="70" StartDate="12/12/2025" />
+                    </stages:StagesViewModelDesign.Stages>
+                </stages:StagesViewModelDesign>
+            </cp:CreateProjectViewModelDesign.StagesViewModel>
         </cp:CreateProjectViewModelDesign>
     </Design.DataContext>
 
     <UserControl.Styles>
-        <Style Selector="Card Card">
-            <Setter Property="Theme" Value="{StaticResource TransparentCard}" />
-            <Setter Property="HeaderStartContentTemplate" Value="{StaticResource SmallIcon}" />
-            <Setter Property="Margin" Value="0" />
-            <Setter Property="HeaderPadding" Value="8" />
-        </Style>
-        <Style Selector="CalendarDatePicker">
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-        </Style>
+        <StyleInclude Source="Common.axaml" />
     </UserControl.Styles>
-
-    <ScrollViewer>
-        <c:PageContainer>
-            <StackPanel Spacing="10">
-                <profile:ProfileView DataContext="{Binding ProfileViewModel}" />
-                <fundingStructure:FundingStructure DataContext="{Binding FundingStructureViewModel}" />
-                <cp:StagesView DataContext="{Binding StagesViewModel}" />
-                <Button HorizontalAlignment="Center" Content="Create Project" Command="{Binding Create}" />
-            </StackPanel>
-        </c:PageContainer>
-    </ScrollViewer>
+    
+    <c:PageContainer>
+        <Grid ColumnDefinitions="5* 2*">
+            <ScrollViewer>
+                <ScrollViewer.Styles>
+                    <Style Selector="c|CardGrid">
+                        <Setter Property="RowSpacing" Value="20" />
+                        <Setter Property="ColumnSpacing" Value="20" />
+                    </Style>
+                </ScrollViewer.Styles>
+                <StackPanel Spacing="10">
+                    <profile:ProfileView DataContext="{Binding ProfileViewModel}" />
+                    <fundingStructure:FundingStructure DataContext="{Binding FundingStructureViewModel}" />
+                    <cp:StagesView DataContext="{Binding StagesViewModel}" />
+                    <Button HorizontalAlignment="Center" Content="Create Project" Command="{Binding Create}" />
+                </StackPanel>
+            </ScrollViewer>
+            <ScrollViewer Grid.Column="1">
+                <preview:PreviewView DockPanel.Dock="Right" />
+            </ScrollViewer>
+        </Grid>
+    </c:PageContainer>
 
 </UserControl>

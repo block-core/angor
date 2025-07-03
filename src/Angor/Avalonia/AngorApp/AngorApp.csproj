@@ -55,6 +55,10 @@
         <DependentUpon>StagesView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Sections\Founder\CreateProject\Preview\ProjectItemView.axaml.cs">
+        <DependentUpon>ProjectItemView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
     
 </Project>

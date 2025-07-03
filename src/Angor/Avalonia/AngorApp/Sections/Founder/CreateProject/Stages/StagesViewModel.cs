@@ -48,7 +48,7 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
         this.ValidationRule(totalPercent, percent => Math.Abs(percent - 100) < 1, _ => "Stages percentajes should sum to 100%").DisposeWith(disposable);
     }
 
-    public IEnumerable<ICreateProjectStage> Stages { get; }
+    public ICollection<ICreateProjectStage> Stages { get; }
 
     private CreateProjectStage CreateStage()
     {

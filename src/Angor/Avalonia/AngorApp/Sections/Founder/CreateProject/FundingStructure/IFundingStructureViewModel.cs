@@ -11,4 +11,6 @@ public interface IFundingStructureViewModel
     DateTime? EndDate { get; set; }
 
     DateTime? ExpiryDate { get; set; }
+    
+    IAmountUI TargetAmount { get; }
 }

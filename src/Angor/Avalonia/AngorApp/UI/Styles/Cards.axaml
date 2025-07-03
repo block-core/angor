@@ -13,6 +13,9 @@
             <Setter Property="HeaderStartContentTemplate" Value="{StaticResource RegularIcon}" />
             <Setter Property="Padding" Value="20 0 20 20" />
             <Setter Property="HeaderPadding" Value="10" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}"></Setter>
+            <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}"></Setter>
+            <Setter Property="HeaderBackground" Value="{DynamicResource SystemChromeLowColor}"></Setter>
             <Setter Property="HeaderSpacing" Value="16" />
         </ControlTheme>
         

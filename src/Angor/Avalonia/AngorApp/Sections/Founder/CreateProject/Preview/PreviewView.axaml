@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:cp="clr-namespace:AngorApp.Sections.Founder.CreateProject"
+             xmlns:p="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
+             xmlns:preview="clr-namespace:AngorApp.Sections.Founder.CreateProject.Preview"
+             xmlns:c="clr-namespace:AngorApp.UI.Controls"
+             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
+             xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
+             xmlns:fundingStructure="clr-namespace:AngorApp.Sections.Founder.CreateProject.FundingStructure"
+             mc:Ignorable="d" d:DesignWidth="400"
+             x:Class="AngorApp.Sections.Founder.CreateProject.Preview.PreviewView"
+             x:DataType="cp:ICreateProjectViewModel">
+    
+    <UserControl.Styles>
+        <StyleInclude Source="../Common.axaml" />
+        <Style Selector="Card">
+            <Setter Property="Padding" Value="15 5 10 10" />
+            <Setter Property="HeaderPadding" Value="7 5 0 0" />
+        </Style>
+    </UserControl.Styles>
+
+    <Design.DataContext>
+        <cp:CreateProjectViewModelDesign>
+            <cp:CreateProjectViewModelDesign.FundingStructureViewModel>
+                <fundingStructure:FundingStructureViewModelDesign
+                    PenaltyDays="30" StartDate="10/1/2025" Sats="10000000">
+                </fundingStructure:FundingStructureViewModelDesign>
+            </cp:CreateProjectViewModelDesign.FundingStructureViewModel>
+            <cp:CreateProjectViewModelDesign.StagesViewModel>
+                <stages:StagesViewModelDesign>
+                    <stages:StagesViewModelDesign.Stages>
+                        <stages:CreateProjectStageDesign Percent="10" StartDate="10/5/2025" />
+                        <stages:CreateProjectStageDesign Percent="30" StartDate="10/9/2025" />
+                        <stages:CreateProjectStageDesign Percent="70" StartDate="12/12/2025" />
+                    </stages:StagesViewModelDesign.Stages>
+                </stages:StagesViewModelDesign>
+            </cp:CreateProjectViewModelDesign.StagesViewModel>
+            <cp:CreateProjectViewModelDesign.ProfileViewModel>
+                <p:ProfileViewModelDesign BannerUri="https://pbs.twimg.com/profile_images/1835739941596430336/0zk73Tpj_400x400.png"
+                                          AvatarUri="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSskvatKL_o8y2E2Zvaj8KEEYyyEzcJS6frydUCPizL_Txe1j3CqgjVq_WIfhEcM64IL0I&amp;usqp=CAU"
+                                          ProjectName="Wasabi Wallet"
+                                          Description="Wasabi Wallet is a non-custodial, privacy-focused Bitcoin wallet that uses CoinJoin to enhance user privacy by mixing coins with others, making it difficult to trace transactions. It is designed to help users maintain their financial privacy while managing their Bitcoin holdings." />
+            </cp:CreateProjectViewModelDesign.ProfileViewModel>
+        </cp:CreateProjectViewModelDesign>
+    </Design.DataContext>
+
+    <StackPanel>
+        <preview:ProjectItemView />
+        <Card Header="Project Snapshot">
+            <c:CardGrid MinColumnWidth="150" MaxColumnWidth="250" RowSpacing="5" ColumnSpacing="5">
+                <c:CardGrid.ItemsSource>
+                    <collections:ArrayList>
+                        <Card Theme="{StaticResource RemarkableSubheaderCard}"
+                              Header="Target Amount"
+                              Content="{Binding FundingStructureViewModel.TargetAmount.DecimalString, FallbackValue=?}" />
+                        <Card Theme="{StaticResource RemarkableSubheaderCard}"
+                              Header="Stages"
+                              Content="{Binding StagesViewModel.Stages.Count}" />
+                        <Card Theme="{StaticResource RemarkableSubheaderCard}"
+                              Header="Penalty Days"
+                              Content="{Binding FundingStructureViewModel.PenaltyDays, FallbackValue=?}" />
+                        <Card Theme="{StaticResource RemarkableSubheaderCard}"
+                              Header="Starts"
+                              Content="{Binding FundingStructureViewModel.StartDate, StringFormat=d, FallbackValue=?}" />
+                    </collections:ArrayList>
+                </c:CardGrid.ItemsSource>
+            </c:CardGrid>
+        </Card>
+        <Card Header="Funding Milestones">
+            <c:CardGrid ItemsSource="{Binding StagesViewModel.Stages}" RowSpacing="5">
+                <c:CardGrid.ItemTemplate>
+                    <DataTemplate DataType="cp:ICreateProjectStage">
+                        <OverlayBorder Margin="0" Theme="{StaticResource CardOverlayBorder}">
+                            <OverlayBorder.Styles>
+                                <Style Selector="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                </Style>
+                            </OverlayBorder.Styles>
+                            <EdgePanel>
+                                <EdgePanel.Content>
+                                    <TextBlock Text="{Binding Percent, StringFormat='{}{0}% Release'}" />
+                                </EdgePanel.Content>
+                                <EdgePanel.EndContent>
+                                    <TextBlock Classes="SizeSmall" Opacity="0.5" Text="{Binding StartDate, StringFormat='Target: {0:d}'}" />
+                                </EdgePanel.EndContent>
+                                <EdgePanel.StartContent>
+                                    <Border Padding="10 5" CornerRadius="10" BorderBrush="{DynamicResource SystemChromeHighColor}" BorderThickness="1">
+                                        <TextBlock Foreground="{DynamicResource SystemChromeHighColor}" Classes="SizeSmall" Text="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}" />
+                                    </Border>
+                                </EdgePanel.StartContent>
+                            </EdgePanel>
+                        </OverlayBorder>
+                    </DataTemplate>
+                </c:CardGrid.ItemTemplate>
+            </c:CardGrid>
+        </Card>
+    </StackPanel>
+</UserControl>

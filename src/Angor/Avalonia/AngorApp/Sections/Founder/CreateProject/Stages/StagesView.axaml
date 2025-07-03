@@ -10,11 +10,16 @@
              x:DataType="stages:IStagesViewModel">
 
     <UserControl.Styles>
+        <StyleInclude Source="../Common.axaml" />
+    </UserControl.Styles>
+
+    <UserControl.Styles>
         <Style Selector="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="TextBox">
-            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="TextAlignment" Value="Center" />
         </Style>
         <Style Selector="DatePicker">
             <Setter Property="VerticalAlignment" Value="Stretch" />
@@ -23,13 +28,13 @@
     </UserControl.Styles>
 
     <Design.DataContext>
-        <createProject:CreateProjectViewModelDesign StartDate="1/2/2026" ExpiryDate="12/12/2025" EndDate="12/12/2025">
-            <createProject:CreateProjectViewModelDesign.Stages>
-                <createProject:CreateProjectStageDesign Index="1" Percent="10" StartDate="10/5/2025" />
-                <createProject:CreateProjectStageDesign Index="2" Percent="30" StartDate="10/9/2025" />
-                <createProject:CreateProjectStageDesign Index="3" Percent="70" StartDate="12/12/2025" />
-            </createProject:CreateProjectViewModelDesign.Stages>
-        </createProject:CreateProjectViewModelDesign>
+        <stages:StagesViewModelDesign>
+            <stages:StagesViewModelDesign.Stages>
+                <stages:CreateProjectStageDesign Percent="10" StartDate="10/5/2025" />
+                <stages:CreateProjectStageDesign Percent="30" StartDate="10/9/2025" />
+                <stages:CreateProjectStageDesign Percent="70" StartDate="12/12/2025" />
+            </stages:StagesViewModelDesign.Stages>
+        </stages:StagesViewModelDesign>
     </Design.DataContext>
 
     <Card Header="Stages">
@@ -50,16 +55,29 @@
             <ItemsControl ItemsSource="{Binding Stages}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="createProject:ICreateProjectStage">
-                        <Grid ColumnDefinitions="Auto Auto 100* Auto" Margin="0 5" ColumnSpacing="20">
-                            <TextBlock Text="..." />
-                            <TextBox Grid.Column="1" TextAlignment="Center" Text="{Binding Percent, Mode=TwoWay}">
-                                <TextBox.InnerRightContent>
-                                    <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock>
-                                </TextBox.InnerRightContent>
-                            </TextBox>
-                            <DatePicker Grid.Column="2" HorizontalAlignment="Left" SelectedDate="{Binding StartDate}" />
-                            <Button Command="{Binding Remove}" Grid.Column="3">
-                                <ui:Icon Source="fa-trash" />
+                        <Grid ColumnDefinitions="Auto * * Auto" Margin="0 5" ColumnSpacing="20">
+                            <Grid.Styles>
+                                <Style Selector="Button">
+                                    <Setter Property="Height" Value="33" />
+                                    <Setter Property="Width" Value="33" />
+                                    <Setter Property="VerticalAlignment" Value="Bottom" />
+                                </Style>
+                            </Grid.Styles>
+                            <Button>
+                                <TextBlock Text="{ItemIndex StartFromOne=True}" />
+                            </Button>
+                            <HeaderedContainer Grid.Column="1" Header="Percentage">
+                                <TextBox TextAlignment="Center" x:Name="TextBox" Text="{Binding Percent, Mode=TwoWay}">
+                                    <TextBox.InnerRightContent>
+                                        <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock>
+                                    </TextBox.InnerRightContent>
+                                </TextBox>
+                            </HeaderedContainer>
+                            <HeaderedContainer Header="Release Date" Grid.Column="2">
+                                <TextBox Text="{Binding StartDate, StringFormat=d}" />
+                            </HeaderedContainer>
+                            <Button Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="3">
+                                <ui:Icon Source="mdi-window-close" />
                             </Button>
                         </Grid>
                     </DataTemplate>

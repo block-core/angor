@@ -44,15 +44,32 @@
 
                 <ColorPaletteResources x:Key="Dark"
                                        Accent="#ffcbdde1"
-                                       AltHigh="Black" AltLow="Black" AltMedium="Black" AltMediumHigh="Black" AltMediumLow="Black" BaseHigh="White" BaseLow="#ff046479" BaseMedium="#ff75b5c2"
-                                       BaseMediumHigh="#ff91c9d4" BaseMediumLow="#ff3c8c9d" ChromeAltLow="#ff91c9d4" ChromeBlackHigh="Black"
+                                       AltHigh="#ff0a0e0f"
+                                       AltLow="#ff151d20"
+                                       AltMedium="#ff1f2a2e"
+                                       AltMediumHigh="#ff293539"
+                                       AltMediumLow="#ff334044"
+                                       BaseHigh="#ffecf4f6"
+                                       BaseLow="#007179"
+                                       BaseMedium="#ff75b5c2"
+                                       BaseMediumHigh="#ff91c9d4"
+                                       BaseMediumLow="#ff3c8c9d"
+                                       ChromeAltLow="#ff91c9d4"
+                                       ChromeBlackHigh="#ff0a0e0f"
                                        ChromeBlackLow="#ff91c9d4"
-                                       ChromeBlackMedium="Black" ChromeBlackMediumLow="Black"
-                                       ChromeDisabledHigh="#ff046479" ChromeDisabledLow="#ff75b5c2" ChromeGray="#ff59a1b0"
-                                       ChromeHigh="#ff59a1b0" ChromeLow="#ff013147" ChromeMedium="#ff023e54"
-                                       ChromeMediumLow="#083B46"
-                                       ChromeWhite="White"
-                                       ListLow="#083B46" ListMedium="#ff046479" RegionColor="#ff022229" />
+                                       ChromeBlackMedium="#ff1f2a2e"
+                                       ChromeBlackMediumLow="#ff293539"
+                                       ChromeDisabledHigh="#ff046479"
+                                       ChromeDisabledLow="#ff75b5c2"
+                                       ChromeGray="#ff59a1b0"
+                                       ChromeHigh="#08c7e0"
+                                       ChromeLow="#002F37"
+                                       ChromeMedium="#ff023e54"
+                                       ChromeMediumLow="#ff083B46"
+                                       ChromeWhite="#ffe8f2f4"
+                                       ListLow="#ff083B46"
+                                       ListMedium="#ff046479"
+                                       RegionColor="#ff022229" />
             </FluentTheme.Palettes>
 
         </FluentTheme>
@@ -76,6 +93,7 @@
         <StyleInclude Source="UI/Styles/Cards.axaml" />
         <StyleInclude Source="UI/Styles/HeaderedContainer.axaml" />
         <StyleInclude Source="UI/Styles/TextBox.axaml" />
+        <StyleInclude Source="UI/Styles/OverlayBorder.axaml" />
     </Application.Styles>
 
     <Application.Resources>

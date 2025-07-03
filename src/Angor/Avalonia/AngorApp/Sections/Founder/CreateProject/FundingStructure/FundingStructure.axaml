@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:c="clr-namespace:AngorApp.UI.Controls"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:createProject="clr-namespace:AngorApp.Sections.Founder.CreateProject"
              xmlns:col="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:fundingStructure="clr-namespace:AngorApp.Sections.Founder.CreateProject.FundingStructure"
              mc:Ignorable="d" d:DesignWidth="800"
@@ -12,14 +11,14 @@
              x:DataType="fundingStructure:IFundingStructureViewModel">
 
     <Design.DataContext>
-        <createProject:CreateProjectViewModelDesign StartDate="1/2/2026" ExpiryDate="12/12/2025" EndDate="12/12/2025">
-            <createProject:CreateProjectViewModelDesign.Stages>
-                <createProject:CreateProjectStageDesign Percent="10" StartDate="10/5/2025" />
-                <createProject:CreateProjectStageDesign Percent="30" StartDate="10/9/2025" />
-                <createProject:CreateProjectStageDesign Percent="70" StartDate="12/12/2025" />
-            </createProject:CreateProjectViewModelDesign.Stages>
-        </createProject:CreateProjectViewModelDesign>
+        <fundingStructure:FundingStructureViewModelDesign
+            PenaltyDays="30" StartDate="10/1/2025" Sats="10000000">
+        </fundingStructure:FundingStructureViewModelDesign>
     </Design.DataContext>
+    
+    <UserControl.Styles>
+        <StyleInclude Source="../Common.axaml" />
+    </UserControl.Styles>
 
     <Card Header="Funding Structure">
         <Card.HeaderEndContent>
@@ -40,7 +39,7 @@
                         <Card Header="Funding Start" Subheader="When the investment period begins (automatically set today)">
                             <TextBox VerticalAlignment="Bottom" IsReadOnly="True" Text="{Binding StartDate, StringFormat='d'}" />
                         </Card>
-                        <Card Header="End Date" Subheader="When the investment period ends">
+                        <Card Header="Funding End" Subheader="When the investment period ends">
                             <CalendarDatePicker VerticalAlignment="Bottom" SelectedDate="{Binding EndDate}" />
                         </Card>
                     </col:ArrayList>

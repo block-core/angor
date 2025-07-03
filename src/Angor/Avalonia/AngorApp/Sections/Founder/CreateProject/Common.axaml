@@ -1,0 +1,23 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <!-- Add Controls for Previewer Here -->
+        </Border>
+    </Design.PreviewWith>
+    
+    <Style Selector="Card Card">
+        <Setter Property="Theme" Value="{StaticResource TransparentCard}" />
+        <Setter Property="HeaderStartContentTemplate" Value="{StaticResource SmallIcon}" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="HeaderPadding" Value="8" />
+    </Style>
+    <Style Selector="CalendarDatePicker">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+    
+    <Styles.Resources>
+        <SolidColorBrush x:Key="SystemControlErrorTextForegroundBrush" Color="{DynamicResource SystemBaseHighColor}" />
+    </Styles.Resources>
+    
+</Styles>
