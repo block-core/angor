@@ -49,6 +49,9 @@ jobs:
     - name: Show working directory
       run: pwd
   
+    - name: List files in working directory
+      run: ls -la
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
