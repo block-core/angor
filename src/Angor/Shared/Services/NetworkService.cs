@@ -242,6 +242,11 @@ namespace Angor.Shared.Services
             return settings.Relays;
         }
 
+        public List<SettingsUrl> GetDiscoveryRelays()
+        {
+            return _networkConfiguration.GetDiscoveryRelays();
+        }
+
         public SettingsUrl GetPrimaryExplorer()
         {
             var settings = _networkStorage.GetSettings();

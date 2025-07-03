@@ -11,6 +11,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     private readonly ILogger<NostrCommunicationFactory> _logger;
 
     private NostrMultiWebsocketClient? _nostrMultiWebsocketClient;
+    private NostrMultiWebsocketClient? _nostrMultiWebsocketClientDiscovery;
     private readonly List<IDisposable> _serviceSubscriptions;
 
     private Dictionary<string, List<string>> _eoseCalledOnSubscriptionClients;
@@ -23,6 +24,48 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         _serviceSubscriptions = new();
         _eoseCalledOnSubscriptionClients = new();
         _okCalledOnSubscriptionClients = new();
+    }
+
+    public INostrClient GetOrCreateDiscoveryClients(INetworkService networkService)
+    {
+        if (_nostrMultiWebsocketClientDiscovery == null)
+        {
+            _nostrMultiWebsocketClientDiscovery = new NostrMultiWebsocketClient(_clientLogger);
+        }
+
+        foreach (var url in networkService.GetDiscoveryRelays()
+                     .Where(url => _nostrMultiWebsocketClientDiscovery.FindClient(url.Name) == null))
+        {
+            var communicator = CreateCommunicator(url.Url, url.Name);
+            var client = new NostrWebsocketClient(communicator, _clientLogger);
+
+            _serviceSubscriptions.Add(client.Streams.EoseStream.Subscribe(x =>
+            {
+                _logger.LogDebug($"{x.CommunicatorName} EOSE {x.Subscription}");
+                if (_eoseCalledOnSubscriptionClients.TryGetValue(x.Subscription ?? string.Empty,
+                        out var clientsReceivedList))
+                {
+                    _logger.LogDebug($"EOSE {x.Subscription} adding {x.CommunicatorName}");
+                    clientsReceivedList.Add(x.CommunicatorName);
+                }
+            }));
+
+            _serviceSubscriptions.Add(client.Streams.OkStream.Subscribe(x =>
+            {
+                _logger.LogDebug($"{x.CommunicatorName} OK {x.EventId} {x.Accepted}");
+                if (_okCalledOnSubscriptionClients.TryGetValue(x.EventId ?? string.Empty, out var clientsReceivedList))
+                {
+                    _logger.LogDebug($"OK {x.EventId} adding {x.CommunicatorName}");
+                    clientsReceivedList.Add(x.CommunicatorName);
+                }
+            }));
+
+            _nostrMultiWebsocketClientDiscovery!.RegisterClient(client);
+
+            communicator.StartOrFail();
+        }
+
+        return _nostrMultiWebsocketClientDiscovery;
     }
 
     public INostrClient GetOrCreateClient(INetworkService networkService)

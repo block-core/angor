@@ -5,6 +5,7 @@ namespace Angor.Shared.Services;
 public interface INostrCommunicationFactory
 {
     INostrClient GetOrCreateClient(INetworkService networkService);
+    INostrClient GetOrCreateDiscoveryClients(INetworkService networkService);
     void CloseClientConnection();
     int GetNumberOfRelaysConnected();
     bool EoseEventReceivedOnAllRelays(string subscription);

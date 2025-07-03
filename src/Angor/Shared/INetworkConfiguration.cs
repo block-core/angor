@@ -14,7 +14,7 @@ public interface INetworkConfiguration
     List<SettingsUrl> GetDefaultRelayUrls();
     List<SettingsUrl> GetDefaultExplorerUrls();
     List<SettingsUrl> GetDefaultChatAppUrls();
-
+    List<SettingsUrl> GetDiscoveryRelays();
     int GetAngorInvestFeePercentage { get; }
     string GetAngorKey();
     Dictionary<string, bool> GetDefaultFeatureFlags(string network);
