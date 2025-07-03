@@ -144,11 +144,15 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         var SHA256 = new SHA256();
         SHA256.InitializeTagged("TapTweak");
         
-        _logger?.LogInformation($"sha256 {Encoders.Hex.EncodeData(SHA256.GetHash())}");
-        
         var span = new Span<byte>(new byte[32]);
         taprootFullPubKey.InternalKey.ComputeTapTweak(null, span);
         
+        _logger?.LogInformation($"sha256 {Encoders.Hex.EncodeData(SHA256.GetHash())}");
+        SHA256.Write(span);
+        _logger?.LogInformation($"sha256 {Encoders.Hex.EncodeData(SHA256.GetHash())}");
+        _logger?.LogInformation($"span {Encoders.Hex.EncodeData(span.ToArray())}");
+
+        SHA256.GetHash(span);
         _logger?.LogInformation($"span {Encoders.Hex.EncodeData(span.ToArray())}");
         
         _logger?.LogInformation($"founderFullPubKey {new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).ToHex()}");
