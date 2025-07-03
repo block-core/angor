@@ -885,6 +885,7 @@
                 }
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
+                RefreshProjectProfile();
                 return;
             }
 
@@ -898,6 +899,7 @@
                 myProjectExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/tx/{investorProject.TransactionId}";
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
+                RefreshProjectProfile();
                 return;
             }
 
@@ -906,6 +908,7 @@
             {
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
+                RefreshProjectProfile();
                 StateHasChanged();
                 return;
             }
@@ -1048,6 +1051,37 @@
         {
             projectStats.Loading = false;
             StateHasChanged();
+        }
+    }
+
+    private void RefreshProjectProfile()
+    {
+        if (project != null)
+        {
+            bool saved = false;
+            _RelayService.LookupNostrProfileForNPub(
+                (projectNpub, metadata) =>
+                {
+                    if (!saved)
+                    {
+                        saved = true;
+                        project.Metadata = metadata;
+
+                        if (project is FounderProject founderProject)
+                        {
+                            storage.UpdateFounderProject(founderProject);
+                        }
+
+                        if (project is InvestorProject investorProject)
+                        {
+                            storage.UpdateInvestmentProject(investorProject);
+                        }
+
+                        SessionStorage.StoreProject(project);
+                    }
+                },
+                StateHasChanged,
+                project.ProjectInfo.NostrPubKey);
         }
     }
 

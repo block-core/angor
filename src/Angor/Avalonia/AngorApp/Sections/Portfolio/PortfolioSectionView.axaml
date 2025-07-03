@@ -76,7 +76,7 @@
                                 <ui:Icon Source="fa-arrows-rotate" />
                             </IconButton.Icon>
                         </IconButton>
-                        <IconButton HorizontalAlignment="Stretch">
+                        <IconButton HorizontalAlignment="Stretch" Command="{Binding GoToPenalties}">
                             Penalties
                             <IconButton.Icon>
                                 <ui:Icon Source="fa-unlock" />
