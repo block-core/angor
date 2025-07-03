@@ -644,10 +644,10 @@
                     <div class="input-group">
                         <InputText id="NostrNpubPublicKey" @bind-Value="@Npub" class="form-control" placeholder="@Npub" readonly />
                         <button @onclick="() => CopyToClipboard(Npub)" class="btn btn-border">
-                            <Icon IconName="copy" />
+                            <Icon IconName="copy" Height="24" Width="24"/>
                         </button>
                         <button @onclick="OpenInHUBAsync" class="btn btn-border">
-                            <Icon IconName="link" />
+                            <Icon IconName="link" Height="24" Width="24"/>
                         </button>
                     </div>
                     <br />
@@ -655,7 +655,7 @@
                     <div class="input-group">
                         <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
                         <button @onclick="() => CopyToClipboard(project.ProjectInfo.NostrPubKey)" class="btn btn-border">
-                            <Icon IconName="copy" />
+                            <Icon IconName="copy" Height="24" Width="24"/>
                         </button>
                     </div>
 
@@ -669,7 +669,7 @@
                         <div class="input-group">
                             <InputText id="InvestorNostrNpubPublicKey" @bind-Value="@invNpub" class="form-control" placeholder="@invNpub" readonly />
                             <button @onclick="() => CopyToClipboard(invNpub)" class="btn btn-border">
-                                <Icon IconName="copy" />
+                                <Icon IconName="copy" Height="24" Width="24"/>
                             </button>
                         </div>
                         <br />
@@ -677,21 +677,21 @@
                         <div class="input-group">
                             <InputText id="InvestorNostrHexPublicKey" @bind-Value="@invPubKey" class="form-control" placeholder="@invPubKey" readonly />
                             <button @onclick="() => CopyToClipboard(invPubKey)" class="btn btn-border">
-                                <Icon IconName="copy" />
+                                <Icon IconName="copy" Height="24" Width="24"/>
                             </button>
                         </div>
                     }
 
                     <div class="action-buttons d-flex flex-wrap justify-content-center mt-4">
                         <button @onclick="OpenInHUBAsync" class="btn btn-border-success animate-scale">
-                            <Icon IconName="link" Class="me-2" />
+                            <Icon IconName="link" Class="me-2" Height="24" Width="24"/>
                             Open in Angor Hub
                         </button>
 
                         @if (invested)
                         {
                             <button @onclick="OpenMessagingWithFounder" class="btn btn-border-success animate-scale">
-                                <Icon IconName="chat" Class="me-2" />
+                                <Icon IconName="chat" Class="me-2" Height="24" Width="24"/>
                                 Message Project Founder
                             </button>
                         }
@@ -699,7 +699,7 @@
                         @if (founder)
                         {
                             <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning animate-scale">
-                                <Icon IconName="edit" Class="me-2" />
+                                <Icon IconName="edit" Class="me-2" Height="24" Width="24"/>
                                 Edit project profile
                             </button>
                         }
@@ -707,7 +707,7 @@
                         @if (invested || founder)
                         {
                             <button @onclick="ShowNsecAsync" class="btn btn-border-danger animate-scale">
-                                <Icon IconName="shield" Class="me-2" />
+                                <Icon IconName="shield" Class="me-2" Height="24" Width="24"/>
                                 View Private Keys (nsec)
                             </button>
                         }
@@ -730,16 +730,17 @@
                     @if (!string.IsNullOrEmpty(NostrHexSecKey) || !string.IsNullOrEmpty(NostrNsecSecKey))
                     {
                         <div class="card mt-4 p-3 border border-danger">
-                            <h6 class="mb-3 text-danger"><Icon IconName="shield" Class="me-2" />@(invested ? "Investor" : "Project") NOSTR Private Keys</h6>
+                            <h6 class="mb-3 text-danger">
+                                <Icon IconName="shield" Class="me-2" />@(invested ? "Investor" : "Project") NOSTR Private Keys</h6>
                             <label for="NostrNsecSecKey" class="form-label">NOSTR private key (nsec)</label>
                             <div class="input-group mb-3">
                                 <input type="@(showPrivateKeys ? "text" : "password")" id="NostrNsecSecKey" value="@NostrNsecSecKey"
                                        class="form-control nsec-box" readonly />
                                 <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
-                                    <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" />
+                                    <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" Height="24" Width="24"/>
                                 </button>
                                 <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border">
-                                    <Icon IconName="copy" />
+                                    <Icon IconName="copy" Height="24" Width="24"/>
                                 </button>
                             </div>
 
@@ -748,15 +749,15 @@
                                 <input type="@(showPrivateKeys ? "text" : "password")" id="NostrHexSecKey" value="@NostrHexSecKey"
                                        class="form-control nsec-box" readonly />
                                 <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
-                                    <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" />
+                                    <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" Height="24" Width="24"/>
                                 </button>
                                 <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border">
-                                    <Icon IconName="copy" />
+                                    <Icon IconName="copy" Height="24" Width="24" />
                                 </button>
                             </div>
                             <div class="text-center mt-3">
                                 <small class="text-danger">
-                                    <Icon IconName="warning" Class="me-1" /> Never share your private keys with anyone.
+                                    <Icon IconName="warning" Class="me-1" Height="24" Width="24"/> Never share your private keys with anyone.
                                 </small>
                             </div>
                         </div>
@@ -771,7 +772,7 @@
                     <a href="@relay" target="_blank" rel="noopener noreferrer">
                         <div class="form-control mt-2 d-flex align-items-center">
                             <i class="me-2">
-                                <Icon IconName="menu_open" />
+                                <Icon IconName="menu_open" Height="24" Width="24"/>
                             </i>
                             <p class="card-text ms-2">@relay</p>
                         </div>
