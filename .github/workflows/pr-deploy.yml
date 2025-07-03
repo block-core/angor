@@ -105,5 +105,5 @@ jobs:
         branch: main
         folder: publish/wwwroot
         repository-name: ${{ github.repository_owner }}/angor-debug
-        token: ${{ secrets.ANGOR_DEBUG_DEPLOY_TOKEN }}
+        token: ${{ secrets.ANGOR_DEPLOY_DEBUG_TOKEN }}
         commit-message: "Deploy PR #${{ inputs.pr_number }} - ${{ steps.pr.outputs.title }}"
