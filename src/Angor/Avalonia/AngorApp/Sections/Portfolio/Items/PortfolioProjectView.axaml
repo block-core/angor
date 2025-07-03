@@ -9,7 +9,7 @@
              xmlns:c="clr-namespace:AngorApp.UI.Controls"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              mc:Ignorable="d"
-             MinWidth="400"
+             MinWidth="300"
              d:DesignWidth="500"
              x:Class="AngorApp.Sections.Portfolio.Items.PortfolioProjectView" x:DataType="p:IPortfolioProject">
 
