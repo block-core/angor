@@ -138,7 +138,12 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
         uint256? hashOfSecret)
     {
-	    var taprootFullPubKey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey();
+	    var pubKey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey);
+	    
+	    _logger?.LogInformation($"pubKey {pubKey.ToBytes()}");
+	    _logger?.LogInformation($"pubKey {pubKey.ToHex()}");
+		
+	    var taprootFullPubKey = pubKey.GetTaprootFullPubKey();
 	    
         
         var SHA256 = new SHA256();
@@ -166,17 +171,17 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         _logger?.LogInformation($"founderFullPubKey taproot {taprootFullPubKey}");
         
         _logger?.LogInformation($"taproot 1: {Encoders.Hex.EncodeData(taprootFullPubKey.OutputKey.ToBytes())}");
-        _logger?.LogInformation($"investor 2: {Encoders.Hex.EncodeData(taprootFullPubKey.ToBytes())}");
+        _logger?.LogInformation($"investor 2: {taprootFullPubKey.OutputKeyParity}");
         _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.GetTaprootFullPubKey().ToBytes())}");
-        _logger?.LogInformation($"investor 4: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.GetTaprootFullPubKey().OutputKey.ToBytes())}");
-        _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.AsTaprootPubKey().ToBytes())}");
+        _logger?.LogInformation($"investor 4: {Encoders.Hex.EncodeData(taprootFullPubKey.Tweak.ToArray())}");
+        _logger?.LogInformation($"investor 5: {taprootFullPubKey.MerkleRoot}");
         
         _logger?.LogInformation($"Environment: {Environment.MachineName}, {Environment.Version}");
         
-        _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToBytes())}");
-        _logger?.LogInformation($"investor 3: {taprootFullPubKey.ScriptPubKey.ToHex()}");
-        _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToCompressedBytes())}");
-        _logger?.LogInformation($"investor 3: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToTapScript(TapLeafVersion.C0).Script.ToBytes())}");
+        _logger?.LogInformation($"ScriptPubKey : {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToBytes())}");
+        _logger?.LogInformation($"ScriptPubKey: {taprootFullPubKey.ScriptPubKey.ToHex()}");
+        _logger?.LogInformation($"ScriptPubKey: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToCompressedBytes())}");
+        _logger?.LogInformation($"ScriptPubKey: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToTapScript(TapLeafVersion.C0).Script.ToBytes())}");
         
         
         // regular investor pre-co-sign with founder to gets funds with penalty
