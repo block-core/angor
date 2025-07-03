@@ -35,21 +35,45 @@ jobs:
             pull_number: ${{ inputs.pr_number }}
           });
           
+          console.log('PR Details:');
+          console.log('- Title:', pr.title);
+          console.log('- Author:', pr.user.login);
+          console.log('- Head repo:', pr.head.repo.full_name);
+          console.log('- Head ref:', pr.head.ref);
+          console.log('- Head SHA:', pr.head.sha);
+          console.log('- Base repo:', pr.base.repo.full_name);
+          console.log('- Base ref:', pr.base.ref);
+     
           core.setOutput('ref', pr.head.sha);
           core.setOutput('head_ref', pr.head.ref);
           core.setOutput('title', pr.title);
           core.setOutput('author', pr.user.login);
-          
+          core.setOutput('head_repo', pr.head.repo.full_name);
+   
           return pr;
     
     - uses: actions/checkout@v3
       with:
+        repository: ${{ steps.pr.outputs.head_repo }}
         ref: ${{ steps.pr.outputs.ref }}
     
+    - name: Debug checkout
+      run: |
+        echo "=== Repository Information ==="
+        git remote -v
+        echo "=== Current branch/commit ==="
+        git branch -a
+        git log --oneline -n 5
+        echo "=== Working directory ==="
+        pwd
+        ls -la
+        echo "=== Looking for global.json ==="
+        find . -name "global.json" -type f
+        
     - name: Show working directory
       run: pwd
   
-    - name: List files in working directory
+    - name: Lst files in working directoiry
       run: ls -la
 
     - name: Setup .NET
