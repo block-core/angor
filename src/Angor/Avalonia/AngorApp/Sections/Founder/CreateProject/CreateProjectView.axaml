@@ -7,7 +7,7 @@
              xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
              xmlns:fundingStructure="clr-namespace:AngorApp.Sections.Founder.CreateProject.FundingStructure"
              xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
-             xmlns:preview="clr-namespace:AngorApp.Sections.Founder.CreateProject.Preview"
+             xmlns:p="clr-namespace:AngorApp.Sections.Founder.CreateProject.Preview"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="AngorApp.Sections.Founder.CreateProject.CreateProjectView"
              x:DataType="cp:ICreateProjectViewModel">
@@ -29,9 +29,12 @@
     <UserControl.Styles>
         <StyleInclude Source="Common.axaml" />
     </UserControl.Styles>
-    
+
     <c:PageContainer>
-        <Grid ColumnDefinitions="5* 2*">
+        <Grid ColumnDefinitions="{OnFormFactor Desktop='5* 3*', Mobile='*'}">
+            <ScrollViewer Grid.Column="1">
+                <p:PreviewView DockPanel.Dock="Right" IsVisible="{Binding !#PreviewButton.IsVisible}" />
+            </ScrollViewer>
             <ScrollViewer>
                 <ScrollViewer.Styles>
                     <Style Selector="c|CardGrid">
@@ -46,9 +49,19 @@
                     <Button HorizontalAlignment="Center" Content="Create Project" Command="{Binding Create}" />
                 </StackPanel>
             </ScrollViewer>
-            <ScrollViewer Grid.Column="1">
-                <preview:PreviewView DockPanel.Dock="Right" />
-            </ScrollViewer>
+            <Button x:Name="PreviewButton" IsVisible="{OnFormFactor Mobile=True, Default=False}" Content="Preview" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="20">
+                <Button.Flyout>
+                    <Flyout>
+                        <Flyout.FlyoutPresenterTheme>
+                            <ControlTheme TargetType="FlyoutPresenter" 
+                                          BasedOn="{StaticResource {x:Type FlyoutPresenter}}">
+                                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+                            </ControlTheme>
+                        </Flyout.FlyoutPresenterTheme>
+                        <p:PreviewView />
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
         </Grid>
     </c:PageContainer>
 

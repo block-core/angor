@@ -27,12 +27,12 @@
             <controls:CardGrid>
                 <controls:CardGrid.ItemsSource>
                     <collections:ArrayList>
-                        <HeaderedContainer Header="Project Name">
+                        <Card Header="Project Name">
                             <TextBox Watermark="Enter the name of your project" Text="{Binding ProjectName}" />
-                        </HeaderedContainer>
-                        <HeaderedContainer Header="Project Website">
+                        </Card>
+                        <Card Header="Project Website">
                             <TextBox Watermark="Enter the URL of project website" Text="{Binding WebsiteUri}" />
-                        </HeaderedContainer>
+                        </Card>
                     </collections:ArrayList>
                 </controls:CardGrid.ItemsSource>
             </controls:CardGrid>
@@ -43,18 +43,18 @@
                 <controls:CardGrid>
                     <controls:CardGrid.ItemsSource>
                         <collections:ArrayList>
-                            <HeaderedContainer Header="Banner Image URL">
+                            <Card Header="Banner Image URL">
                                 <StackPanel Spacing="5">
                                     <TextBox Watermark="Enter the URL for the project banner image" Text="{Binding BannerUri}" />
                                     <TextBlock Classes="Dimmed">Recommended size: 820×312px</TextBlock>
                                 </StackPanel>
-                            </HeaderedContainer>
-                            <HeaderedContainer Header="Avatar Image URL">
+                            </Card>
+                            <Card Header="Avatar Image URL">
                                 <StackPanel Spacing="5">
                                     <TextBox Watermark="Enter the URL for the project logo or profile picture" Text="{Binding AvatarUri}" />
                                     <TextBlock Classes="Dimmed">Recommended size: 170×170px</TextBlock>
                                 </StackPanel>
-                            </HeaderedContainer>
+                            </Card>
                         </collections:ArrayList>
                     </controls:CardGrid.ItemsSource>
                 </controls:CardGrid>
