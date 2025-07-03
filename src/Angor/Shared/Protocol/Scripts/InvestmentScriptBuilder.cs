@@ -47,6 +47,12 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
     {
         _logger?.LogInformation($"founderFullPubKey {new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).ToHex()}");
         var taprootFullPubKey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey();
+
+        if (taprootFullPubKey.OutputKey.ToBytes().Equals(new byte[32]))
+        {
+            throw new Exception("Invalid founder recovery key, it must be a valid taproot key");
+        }
+        
         _logger?.LogInformation($"founderFullPubKey taproot {taprootFullPubKey}");
         
         _logger?.LogInformation($"taproot 1: {Encoders.Hex.EncodeData(taprootFullPubKey.OutputKey.ToBytes())}");
