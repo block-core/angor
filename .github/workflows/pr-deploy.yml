@@ -35,47 +35,23 @@ jobs:
             pull_number: ${{ inputs.pr_number }}
           });
           
-          console.log('PR Details:');
-          console.log('- Title:', pr.title);
-          console.log('- Author:', pr.user.login);
-          console.log('- Head repo:', pr.head.repo.full_name);
-          console.log('- Head ref:', pr.head.ref);
-          console.log('- Head SHA:', pr.head.sha);
-          console.log('- Base repo:', pr.base.repo.full_name);
-          console.log('- Base ref:', pr.base.ref);
-     
           core.setOutput('ref', pr.head.sha);
           core.setOutput('head_ref', pr.head.ref);
           core.setOutput('title', pr.title);
           core.setOutput('author', pr.user.login);
-          core.setOutput('head_repo', pr.head.repo.full_name);
-   
+          
           return pr;
     
     - uses: actions/checkout@v3
       with:
-        repository: ${{ steps.pr.outputs.head_repo }}
         ref: ${{ steps.pr.outputs.ref }}
-    
-    - name: Debug checkout
-      run: |
-        echo "=== Repository Information ==="
-        git remote -v
-        echo "=== Current branch/commit ==="
-        git branch -a
-        git log --oneline -n 5
-        echo "=== Working directory ==="
-        pwd
-        ls -la
-        echo "=== Looking for global.json ==="
-        find . -name "global.json" -type f
         
     - name: Show working directory
       run: pwd
   
-    - name: Lst files in working directoiry
+    - name: List files in working directory
       run: ls -la
-
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -92,7 +68,7 @@ jobs:
         echo PR_NUMBER=${{ inputs.pr_number }} >> $GITHUB_ENV
       shell: bash
       
-    # Build the .NET application (web version only)
+    # Build the .NET application (web version only, no desktop apps)
     - name: Publish Web App
       run: dotnet publish -c Release -r linux-x64 /p:Version="${{env.VERSION}}" -v m -o publish ${{env.PROJECT_PATH}}
       env:
@@ -120,16 +96,15 @@ jobs:
           "pr_author": "${{ steps.pr.outputs.author }}",
           "deployed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
           "commit_sha": "${{ steps.pr.outputs.ref }}",
-          "environment": "${{ inputs.environment }}"
         }
         EOF
       
-    # Deploy to angor-debug repo (set domain => debug.angor.io)
+    # Deploy to angor-debug repo gh-pages (domain => debug.angor.io)
     - name: Deploy to debug.angor.io
       uses: JamesIves/github-pages-deploy-action@v4
       with:
         branch: main
         folder: publish/wwwroot
         repository-name: ${{ github.repository_owner }}/angor-debug
-        token: ${{ secrets.ANGOR_DEPLOY_DEBUG_TOKEN }} #change this secret, same as angor-test
+        token: ${{ secrets.ANGOR_DEBUG_DEPLOY_TOKEN }}
         commit-message: "Deploy PR #${{ inputs.pr_number }} - ${{ steps.pr.outputs.title }}"
