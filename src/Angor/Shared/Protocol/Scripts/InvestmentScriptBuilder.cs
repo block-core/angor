@@ -165,9 +165,14 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 		    _logger?.LogInformation($"taprootInternalPubKey {Encoders.Hex.EncodeData(taprootInternalPubKey.ToBytes())}");
 		    
 		    var tweak = taprootInternalPubKey.ComputeTapTweak(null);
-		    
-		    if(ECXOnlyPubKey.TryCreate(x, out var ecxOnlyPubKey))
-				_logger?.LogInformation($"ECXOnlyPubKey {Encoders.Hex.EncodeData(ecxOnlyPubKey.ToBytes())}");
+
+		    if (ECXOnlyPubKey.TryCreate(x, out var ecxOnlyPubKey))
+		    {
+			    _logger?.LogInformation($"ECXOnlyPubKey x {Encoders.Hex.EncodeData(ecxOnlyPubKey.Q.x.ToBytes())}");
+			    _logger?.LogInformation($"ECXOnlyPubKey y {Encoders.Hex.EncodeData(ecxOnlyPubKey.Q.y.ToBytes())}");
+			    _logger?.LogInformation($"ECXOnlyPubKey ascii {Encoding.ASCII.GetString(ecxOnlyPubKey.ToBytes())}");
+			    _logger?.LogInformation($"ECXOnlyPubKey hex {Encoders.Hex.EncodeData(ecxOnlyPubKey.ToBytes())}");
+		    }
 		    
 		    var key = ecxOnlyPubKey?.AddTweak(tweak).ToXOnlyPubKey(out var taprootPubKeyTweak);
 		    
