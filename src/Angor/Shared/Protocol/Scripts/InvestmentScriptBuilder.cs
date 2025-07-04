@@ -144,7 +144,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 		    var pubKey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey);
 
 		    _logger?.LogInformation($"pubKey {pubKey.ToHex()}");
-		    _logger?.LogInformation($"pubKey {Encoders.Hex.EncodeData(pubKey.ToBytes())}");
+		    _logger?.LogInformation($"pubKey to bytes test {Encoders.Hex.EncodeData(pubKey.ToBytes())}");
 		    _logger?.LogInformation($"pubKey TaprootInternalKey{pubKey.TaprootInternalKey.ToString()}");
 
 
@@ -160,10 +160,18 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 			    _logger?.LogInformation($"GE {ge.ToString()}");
 		    }
 
-		    _logger?.LogInformation(TaprootFullPubKey.TryCreate(pubKey.ToBytes()[1..], out var taprootFullPubKeyTest)
+		    TaprootInternalPubKey.TryCreate(pubKey.ToBytes()[1..], out var taprootInternalPubKey);
+		    
+		    _logger?.LogInformation($"taprootInternalPubKey {Encoders.Hex.EncodeData(taprootInternalPubKey.ToBytes())}");
+		    
+		    var taprootFullPubKeyTest = TaprootFullPubKey.Create(taprootInternalPubKey,null);
+		    
+		    _logger?.LogInformation( taprootFullPubKeyTest == null
 			    ? $"taprootFullPubKeyTest is not null {taprootFullPubKeyTest.ToString()} {Encoders.Hex.EncodeData(taprootFullPubKeyTest.ToBytes())}"
 			    : $"taprootFullPubKeyTest is null");
 
+		    
+		    
 		    TaprootPubKey.TryCreate(pubKey.ToBytes(), out var taprootPubKey);
 
 		    _logger?.LogInformation($"taprootPubKey is null {taprootPubKey == null}");
