@@ -140,13 +140,21 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
     {
 	    var pubKey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey);
 	    
-	    _logger?.LogInformation($"pubKey {pubKey.ToBytes()}");
-	    _logger?.LogInformation($"pubKey TaprootInternalKey{pubKey.TaprootInternalKey.ToBytes()}");
-	    
 	    _logger?.LogInformation($"pubKey {pubKey.ToHex()}");
-
+	    _logger?.LogInformation($"pubKey TaprootInternalKey{pubKey.TaprootInternalKey.ToString()}");
+	    
+	    TaprootPubKey.TryCreate(pubKey.ToBytes(), out var taprootPubKey);
+	    
+	    _logger?.LogInformation($"pubKey {taprootPubKey.ScriptPubKey.ToHex()}");
+	    _logger?.LogInformation($"pubKey {taprootPubKey.ToBytes()}");
+	    _logger?.LogInformation($"pubKey {taprootPubKey.ToString()}");
+	    
+	    var toSpan = new Span<byte>(new byte[32]);
+	    
+	    
 	    _logger?.LogInformation($"pubKey TaprootInternalKey.GetTaprootFullPubKey{pubKey.TaprootInternalKey.GetTaprootFullPubKey(null)}");
 	    _logger?.LogInformation($"pubKey TaprootInternalKey.AsTaprootPubKey{pubKey.TaprootInternalKey.AsTaprootPubKey().ToBytes()}");
+	    _logger?.LogInformation($"pubKey TaprootInternalKey.AsTaprootPubKey{pubKey.TaprootInternalKey.AsTaprootPubKey().ToString()}");
 	    
 	    var taprootFullPubKey = pubKey.GetTaprootFullPubKey();
 	    
