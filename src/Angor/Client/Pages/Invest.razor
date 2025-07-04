@@ -505,11 +505,11 @@ else
                         <span class="header-icon-wrapper">
                             <Icon IconName="pending" Width="32" Height="32" />
                         </span>
-                        <h5 class="header-text">Waiting for the founder to approve</h5>
+                        <h5 class="header-text">Waiting for approval</h5>
                     </div>
                     <div class="header-actions">
                         <button type="button" class="btn btn-border-danger" @onclick="CancelInvestment">
-                            <Icon IconName="close-circle" Width="20" Height="20" />
+                            <Icon IconName="close-circle" Width="16" Height="16" />
                             <span class="button-text ms-2">Cancel</span>
                         </button>
                         <button class="btn btn-border ms-2" @onclick="RefreshSignatures" disabled="@refreshSpinner">
@@ -520,7 +520,7 @@ else
                             }
                             else
                             {
-                                <Icon IconName="refresh" Width="20" Height="20" />
+                                <Icon IconName="refresh" Width="16" Height="16" />
                                 <span class="button-text ms-2">Refresh</span>
                             }
                         </button>
