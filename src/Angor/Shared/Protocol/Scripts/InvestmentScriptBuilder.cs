@@ -151,14 +151,18 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 		    
 		    _logger?.LogInformation($"FE create { feCreate } FE {x.ToString()} FE bytes {Encoders.Hex.EncodeData(x.ToBytes())}");
 
-		    var xquad = GE.TryCreateXQuad(x, out var geQuad);
-		    
-		    _logger?.LogInformation($"TryCreateXQuad {xquad} GE {geQuad.ToString()}");
-		    
-		    var GECreate = GE.TryCreateXOVariable(x, false, out var ge);
+		    if (GE.TryCreateXQuad(x, out var geQuad))
+			    _logger?.LogInformation($"TryCreateXQuad {geQuad.ToString()}");
 
-		    _logger?.LogInformation($"GE create {GECreate} GE {ge.ToString()}");
-		    
+		    if (GE.TryCreateXOVariable(x, false, out var ge))
+		    {
+			    _logger?.LogInformation($"GE {ge.ToString()}");
+		    }
+
+		    _logger?.LogInformation(TaprootFullPubKey.TryCreate(pubKey.ToBytes(), out var taprootFullPubKeyTest)
+			    ? $"taprootFullPubKeyTest is not null {taprootFullPubKeyTest.ToString()} {Encoders.Hex.EncodeData(taprootFullPubKeyTest.ToBytes())}"
+			    : $"taprootFullPubKeyTest is null");
+
 		    TaprootPubKey.TryCreate(pubKey.ToBytes(), out var taprootPubKey);
 
 		    _logger?.LogInformation($"taprootPubKey is null {taprootPubKey == null}");
