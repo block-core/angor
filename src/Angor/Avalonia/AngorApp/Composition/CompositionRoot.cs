@@ -9,12 +9,15 @@ using AngorApp.Composition.Registrations;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder;
 using AngorApp.Sections.Home;
+using AngorApp.Sections.Portfolio.Penalties;
 using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Core;
+using Zafiro.Avalonia.Services;
+using Zafiro.UI;
 using Zafiro.UI.Navigation;
 
 namespace AngorApp.Composition;
@@ -52,13 +55,13 @@ public static class CompositionRoot
     private static void RegisterSections(ServiceCollection services)
     {
         services.RegisterSections(builder => builder
-            .Add<IHomeSectionViewModel>("Home", "svg:/Assets/angor-icon.svg")
+            .Add<IHomeSectionViewModel>("Home", new Icon { Source = "svg:/Assets/angor-icon.svg" })
             .Separator()
-            .Add<IWalletSectionViewModel>("Wallet", "fa-wallet")
-            .Add<IBrowseSectionViewModel>("Browse", "fa-magnifying-glass")
-            .Add<IPortfolioSectionViewModel>("Portfolio", "fa-hand-holding-dollar")
-            .Add<IFounderSectionViewModel>("Founder", "fa-money-bills")
-            .Command("Angor Hub", ReactiveCommand.Create(() => { }), "fa-gear", false)
+            .Add<IWalletSectionViewModel>("Wallet", new Icon { Source = "svg:/Assets/wallet.svg" })
+            .Add<IBrowseSectionViewModel>("Browse", new Icon { Source = "svg:/Assets/browse.svg" })
+            .Add<IPortfolioSectionViewModel>("Portfolio",  new Icon { Source = "svg:/Assets/portfolio.svg" })
+            .Add<IFounderSectionViewModel>("Founder", new Icon { Source = "svg:/Assets/user.svg" }) 
+            .Command("Angor Hub", provider => ReactiveCommand.CreateFromTask(() => provider.GetRequiredService<ILauncherService>().LaunchUri(new Uri("https://hub.angor.io"))), new Icon { Source = "fa-gear" } , false)
         );
     }
 

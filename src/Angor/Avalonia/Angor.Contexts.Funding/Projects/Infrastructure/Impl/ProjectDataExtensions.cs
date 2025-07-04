@@ -58,13 +58,13 @@ public static class ProjectDataExtensions
         project.Stages = data.ProjectInfo.Stages
             .Select((stage, index) =>
             {
-                var stageAmountToRelease = (long)stage.AmountToRelease * 1_0000_0000;
+                var stageRatio = (double)stage.AmountToRelease / 100;
                 return new Stage
                 {
                     ReleaseDate = stage.ReleaseDate,
-                    Amount = stageAmountToRelease,
+                    Amount = (long)stage.AmountToRelease * 1_0000_0000,
                     Index = index + 1,
-                    RatioOfTotal = (double)stageAmountToRelease / data.ProjectInfo.TargetAmount,
+                    RatioOfTotal = stageRatio,
                 };
             })
             .ToList();

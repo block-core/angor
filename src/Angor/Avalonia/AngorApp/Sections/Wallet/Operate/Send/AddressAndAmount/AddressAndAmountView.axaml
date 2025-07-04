@@ -16,8 +16,8 @@
         <addressAndAmount:AddressAndAmountViewModelDesign />
     </Design.DataContext>
 
-    <StackPanel Spacing="20">
-        <c:Card Header="Enter recipient address:">
+    <StackPanel Spacing="0">
+        <Card Header="Enter recipient address:">
             <TextBox Text="{Binding Address}" Classes="clearButton" Watermark="Enter address" AcceptsReturn="False">
                 <Interaction.Behaviors>
                     <b:UntouchedClassBehavior />
@@ -26,15 +26,15 @@
                     <i:Icon Value="fa-solid fa-pen-to-square" Margin="10 0 0 0" />
                 </TextBox.InnerLeftContent>
             </TextBox>
-        </c:Card>
-        <c:Card Header="Enter amount to send:">
+        </Card>
+        <Card Header="Enter amount to send:" Subheader="{Binding WalletBalance.BtcString, StringFormat='Available balance: {0}'}">
+            
             <controls:AmountControl Padding="0" Satoshis="{Binding Amount}">
                 <Interaction.Behaviors>
                     <b:UntouchedClassBehavior />
                 </Interaction.Behaviors>
             </controls:AmountControl>
-        </c:Card>
-        <TextBlock Text="{Binding WalletBalance.BtcString, StringFormat='Available balance: {0}'}" />
+        </Card>
     </StackPanel>
 
 </UserControl>

@@ -1,9 +1,8 @@
-using Avalonia;
-using Avalonia.Markup.Xaml;
+using AngorApp.UI.Controls;
 
 namespace AngorApp.Sections.Home;
 
-public partial class HomeSectionView : UserControl
+public partial class HomeSectionView : PageContainer
 {
     public HomeSectionView()
     {

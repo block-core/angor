@@ -21,13 +21,15 @@
     </Interaction.Behaviors>
 
     <c:Loading IsLoading="{Binding GetReceiveAddress.IsExecuting^}">
-        <StackPanel Spacing="10">
-            <c:Card>
-                <c:Card.Header>
-                    <TextBlock Margin="10">Use this address the receive bitcoin in this wallet:</TextBlock>
-                </c:Card.Header>
-                <c:Card.Subheader>
+
+        <StackPanel>
+            <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
+                <StackPanel Spacing="10">
+                    <TextBlock>Use this address the receive bitcoin in this wallet:</TextBlock>
                     <c:EdgePanel>
+                        <c:EdgePanel.Content>
+                            <TextBox VerticalAlignment="Center" IsReadOnly="True" Text="{Binding ReceiveAddressResult.Value}" TextAlignment="Center" />
+                        </c:EdgePanel.Content>
                         <c:EdgePanel.StartContent>
                             <Svg Path="/Assets/bitcoin.svg" Margin="10 0" Height="30" Width="30" />
                         </c:EdgePanel.StartContent>
@@ -39,13 +41,12 @@
                                 </Button.Content>
                             </Button>
                         </c:EdgePanel.EndContent>
-                        <TextBox VerticalAlignment="Center" IsReadOnly="True" Text="{Binding ReceiveAddressResult.Value}" TextAlignment="Center" />
                     </c:EdgePanel>
-                </c:Card.Subheader>
-            </c:Card>
+                </StackPanel>
+            </OverlayBorder>
 
             <Image Width="300" Height="300"
-                   Source="{Binding Path=ReceiveAddressResult.Value, Converter={x:Static controls:MiscConverters.StringToQRCode}}" />
+                   Source="{Binding Path=ReceiveAddressResult.Value, Converter={x:Static controls:AngorConverters.StringToQRCode}}" />
         </StackPanel>
     </c:Loading>
 </UserControl>

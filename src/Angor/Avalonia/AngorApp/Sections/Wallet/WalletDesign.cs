@@ -17,13 +17,12 @@ public class WalletDesign : IWallet
         new BroadcastedTransactionDesign { Balance = new AmountUI(30000), RawJson = "json" }
     ]);
 
-    public long Balance { get; } = 5_0000_0000;
+    public IAmountUI Balance { get; } = new AmountUI(5_0000_0000);
 
     public async Task<Result<ITransactionDraft>> CreateDraft(long amount, string address, long feerate)
     {
         await Task.Delay(1000);
 
-        //return Result.Failure<ITransaction>("Transaction creation failed");
         return new TransactionDraftDesign
         {
             Address = address,

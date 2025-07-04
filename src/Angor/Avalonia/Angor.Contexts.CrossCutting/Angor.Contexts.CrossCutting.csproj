@@ -12,6 +12,7 @@
         <PackageReference Include="AspectInjector" />
         <PackageReference Include="CSharpFunctionalExtensions" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+        <PackageReference Include="Microsoft.Extensions.Http" />
     </ItemGroup>
     
     <ItemGroup>

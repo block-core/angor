@@ -1,4 +1,3 @@
-using Angor.Client.Services;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
@@ -13,7 +12,7 @@ using MediatR;
 
 namespace Angor.Contexts.Funding.Investor.Operations;
 
-public static class RequestInvestment
+public static class RequestInvestmentSignatures
 {
     public class RequestFounderSignaturesHandler(
         IProjectRepository projectRepository,
@@ -23,13 +22,15 @@ public static class RequestInvestment
         INetworkConfiguration networkConfiguration,
         ISerializer serializer,
         IWalletOperations walletOperations,
-        ISignService signService) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
+        ISignService signService,
+        IInvestmentRepository investmentRepository) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
     {
         public async Task<Result<Guid>> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
         {
             var txnHex = request.Draft.SignedTxHex;
             var network = networkConfiguration.GetNetwork();
             var strippedInvestmentTransaction = network.CreateTransaction(txnHex);
+            var transactionId = strippedInvestmentTransaction.GetHash().ToString();
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = WitScript.Empty);
 
             var projectResult = await projectRepository.Get(request.ProjectId);
@@ -57,9 +58,11 @@ public static class RequestInvestment
             }
 
             var requestId = sendSignatureResult.Value;
-            // TODO: Don't forget to uncomment. We really need to save info
-            //var saveResult = await Save(requestId, txnHex, requestFounderSignaturesRequest.InvestmentTransaction.InvestorKey, requestFounderSignaturesRequest.ProjectId);
-            //return saveResult.Sats;
+
+            var amount = strippedInvestmentTransaction.Outputs.Sum(x => x.Value);
+            
+            await investmentRepository.Add(request.WalletId, Investment.Create(request.ProjectId,request.Draft.InvestorKey,new Amount(amount),transactionId));
+            
             return Result.Success(Guid.Empty);
         }
 

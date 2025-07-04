@@ -313,7 +313,7 @@
                                       title="Amount left to spend: @Money.Satoshis(unspentInvestedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker">
                                     @Money.Satoshis(unspentInvestedAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker
                                 </span>
-                                <span class="badge bg-secondary ms-2">@investedCount transactions</span>
+                                <span class="badge bg-secondary ms-2">@investedCount @(investedCount <= 1 ? "utxo" : "utxos")</span>
                             </h5>
 
                             <button @onclick="() => Expand(stage.StageIndex)"
@@ -332,7 +332,7 @@
                         </div>
 
                         <p class="card-subtitle text-muted mb-2 mt-4">
-                            Estimated completion: @stage.Stage.ReleaseDate.ToString("dd/MM/yyyy")
+                            Estimated completion: @stage.Stage.ReleaseDate.FormatDate()
                         </p>
 
                         @if (stage.StageIndex == expandedStageId)

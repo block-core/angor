@@ -1,3 +1,5 @@
+using Angor.Contexts.Funding.Founder;
+
 namespace Angor.Contexts.Funding.Projects.Domain;
 
 public class Investment
@@ -19,14 +21,8 @@ public class Investment
             InvestorPubKey = investorId,
             Amount = amount,
             InvestmentDate = DateTime.UtcNow,
-            Status = InvestmentStatus.Pending,
+            Status = InvestmentStatus.PendingFounderSignatures,
             TransactionId = transactionId,
         };
-    }
-    
-    public void ConfirmTransaction(string transactionId)
-    {
-        TransactionId = transactionId;
-        Status = InvestmentStatus.Confirmed;
     }
 }

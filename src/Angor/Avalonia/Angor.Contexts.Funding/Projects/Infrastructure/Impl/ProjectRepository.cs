@@ -5,7 +5,8 @@ using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
-using Zafiro.Reactive;
+using Zafiro.CSharpFunctionalExtensions;
+using Stage = Angor.Contexts.Funding.Projects.Domain.Stage;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
@@ -18,67 +19,108 @@ public class ProjectRepository(
         return TryGet(id).Bind(maybe => maybe.ToResult("Project not found"));
     }
 
+    public async Task<Result<IEnumerable<Project>>> GetAll(params ProjectId[] ids)
+    {
+        if (ids == null || ids.Length == 0)
+            return Result.Success(Enumerable.Empty<Project>());
+        
+        
+        return await GetAllProjectData(ids.ToObservable()
+                .Select(id => indexerService.GetProjectByIdAsync(id.Value))
+                .Where(x => x.Result != null)
+                .Select(x => x.Result!))
+            .ToList()
+            .Select(x => x.AsEnumerable())
+            .ToResult();
+
+    }
+
     public Task<Result<IList<Project>>> Latest()
     {
-        return Result.Try(() => ProjectsFrom(indexerService.GetLatest()).ToList().ToTask());
+        return Result.Try(() => GetAllProjectData(indexerService.GetLatest()).ToList().ToTask());
     }
 
     public Task<Result<Maybe<Project>>> TryGet(ProjectId projectId)
     {
         return Result.Try(() => indexerService.GetProjectByIdAsync(projectId.Value))
             .Map(data => data.AsMaybe())
-            .Map(maybe => maybe.Map(async data => await ProjectsFrom(new[]{ data}.ToObservable())));
+            .Map(maybe => maybe.Map(async data => await GetAllProjectData(new[] { data }.ToObservable())));
     }
 
-    private IObservable<Project> ProjectsFrom(IObservable<ProjectIndexerData> projectIndexerDatas)
+    private IObservable<Project> GetAllProjectData(IObservable<ProjectIndexerData> projectIndexerDataList)
     {
-        var tuples = projectIndexerDatas.ToList().SelectMany(lists => ProjectInfos(lists)
+        return projectIndexerDataList
             .ToList()
-            .SelectMany(projectInfos => ProjectMetadatas(projectInfos).ToList().Select(metadatas => new
+            .SelectMany(indexerList =>
             {
-                metadatas, projectInfos, projectIndexerDatas = lists
-            })));
-
-        var observable = tuples.Select(x =>
-        {
-            var infoAndMetadata = x.projectInfos.Join(x.metadatas, projectInfo => projectInfo.NostrPubKey, tuple => tuple.Item1, (info, tuple) => (info, Metadata: tuple.Item2));
-            return x.projectIndexerDatas
-                .Join(
-                    infoAndMetadata,
-                    projectIndexerData => projectIndexerData.ProjectIdentifier,
-                    tuple => tuple.info.ProjectIdentifier,
-                    (projectIndexerData, tuple) => new ProjectData
+                return ProjectInfos(indexerList.Select(info => info.NostrEventId))
+                    .Select(x => new Project
                     {
-                        ProjectInfo = tuple.info,
-                        NostrMetadata = tuple.Metadata,
-                        IndexerData = projectIndexerData
-                    }).Select(data => data.ToProject());
-        });
-
-        return observable.Flatten();
+                        Id = new ProjectId(x.ProjectIdentifier),
+                        FounderKey = x.FounderKey,
+                        ExpiryDate = x.ExpiryDate,
+                        FounderRecoveryKey = x.FounderRecoveryKey,
+                        NostrPubKey = x.NostrPubKey,
+                        PenaltyDuration = TimeSpan.FromDays(x.PenaltyDays),
+                        TargetAmount = x.TargetAmount,
+                        Stages = x.Stages.Select((stage, i) => new Stage
+                        {
+                            Amount = Convert.ToInt64(stage.AmountToRelease), Index = i, ReleaseDate = stage.ReleaseDate
+                        }),
+                        StartingDate = x.StartDate
+                    });
+            })
+            .ToList()
+            .SelectMany(projects =>
+            {
+                return ProjectMetadatas(projects.Select(project => project.NostrPubKey))
+                    .Select(projectInfo =>
+                    {
+                        var project = projects.FirstOrDefault(p => p.NostrPubKey == projectInfo.Item1);
+                        if (project == null) return null;
+                        project.Banner = Uri.TryCreate(projectInfo.Item2.Banner, UriKind.Absolute, out var bannerUri)
+                            ? bannerUri
+                            : null;
+                        project.InformationUri = Uri.TryCreate(projectInfo.Item2.Website, UriKind.Absolute, out var uri)
+                            ? uri
+                            : null;
+                        project.Picture = Uri.TryCreate(projectInfo.Item2.Picture, UriKind.Absolute, out var pictureUri)
+                            ? pictureUri
+                            : null;
+                        project.Name = projectInfo.Item2.Name;
+                        project.ShortDescription = projectInfo.Item2.About;
+                        return project;
+                    });
+            });
     }
 
-    private IObservable<ProjectInfo> ProjectInfos(IEnumerable<ProjectIndexerData> projectIndexerDatas)
+    private IObservable<ProjectInfo> ProjectInfos(IEnumerable<string> eventIds)
     {
         return Observable.Create<ProjectInfo>(observer =>
         {
             relayService.LookupProjectsInfoByEventIds<ProjectInfo>(
                 observer.OnNext,
                 observer.OnCompleted,
-                projectIndexerDatas.Select(x => x.NostrEventId).ToArray()
+                eventIds.ToArray()
             );
 
             return Disposable.Empty;
-        });
+        }).Timeout(TimeSpan.FromSeconds(30))
+          .Catch<ProjectInfo, Exception>(ex => Observable.Empty<ProjectInfo>());
+        
     }
 
-    private IObservable<(string, ProjectMetadata)> ProjectMetadatas(IEnumerable<ProjectInfo> projectInfos)
+    private IObservable<(string, ProjectMetadata)> ProjectMetadatas(IEnumerable<string> projectInfos)
     {
         return Observable.Create<(string, ProjectMetadata)>(observer =>
         {
-            relayService.LookupNostrProfileForNPub((npub, nostrMetadata) => observer.OnNext((npub, nostrMetadata)), observer.OnCompleted, projectInfos.Select(x => x.NostrPubKey).ToArray());
+            relayService.LookupNostrProfileForNPub(
+                (npub, nostrMetadata) => observer.OnNext((npub, nostrMetadata)),
+                observer.OnCompleted,
+                projectInfos.ToArray());
 
             return Disposable.Empty;
-        });
+        }).Timeout(TimeSpan.FromSeconds(30))
+          .Catch<(string, ProjectMetadata), Exception>(ex => Observable.Empty<(string, ProjectMetadata)>());
     }
 }

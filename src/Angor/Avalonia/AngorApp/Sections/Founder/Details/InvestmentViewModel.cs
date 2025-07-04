@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Founder.Operations;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
@@ -8,20 +9,23 @@ namespace AngorApp.Sections.Founder.Details;
 
 public partial class InvestmentViewModel : ReactiveObject, IInvestmentViewModel
 {
-    [Reactive] private bool isApproved;
-    private readonly GetInvestments.Investment investment;
+    private readonly Investment investment;
 
-    public InvestmentViewModel(GetInvestments.Investment investment, Func<Task<Maybe<Result<bool>>>> onApprove)
+    [Reactive]
+    private InvestmentStatus status;
+
+    public InvestmentViewModel(Investment investment, Func<Task<Maybe<Result<bool>>>> onApprove)
     {
         this.investment = investment;
-        IsApproved = investment.IsApproved;
-        Approve = ReactiveCommand.CreateFromTask(onApprove).Enhance();
-        Approve.Values().Successes().Do(approved => IsApproved = approved).Subscribe();
+        var canApprove = this.WhenAnyValue(model => model.Status, investmentStatus => investmentStatus == InvestmentStatus.PendingFounderSignatures);
+        Approve = ReactiveCommand.CreateFromTask(onApprove, canApprove).Enhance();
+        Approve.Values().Successes().Do(_ => Status = InvestmentStatus.FounderSignaturesReceived).Subscribe();
+
+        Status = investment.Status;
     }
 
     public IAmountUI Amount => new AmountUI(investment.Amount);
     public string InvestorNostrPubKey => investment.InvestorNostrPubKey;
-    public DateTimeOffset Created => investment.Created;
-    
+    public DateTimeOffset CreatedOn => investment.CreatedOn;
     public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; }
 }

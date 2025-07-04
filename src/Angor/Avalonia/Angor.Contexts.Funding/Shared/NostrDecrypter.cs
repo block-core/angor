@@ -1,8 +1,7 @@
-using Angor.Client.Services;
 using Angor.Contests.CrossCutting;
-using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Shared;
+using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
