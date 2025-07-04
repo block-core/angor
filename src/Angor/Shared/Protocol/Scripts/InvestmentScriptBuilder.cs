@@ -176,7 +176,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 		    
 		    var key = ecxOnlyPubKey?.AddTweak(tweak).ToXOnlyPubKey(out var taprootPubKeyTweak);
 		    
-		    _logger?.LogInformation($"ECXOnlyPubKey key only {key?.ToBytes()}");
+		    _logger?.LogInformation($"ECXOnlyPubKey key only ---- {Encoders.Hex.EncodeData(key?.ToBytes())}");
 		    
 		    _logger?.LogInformation($"tweak {Encoders.Hex.EncodeData(tweak)}");
 		    
