@@ -179,11 +179,11 @@
     if (ip.ReceivedFounderSignatures())
     {
         <div class="status-banner mt-2">
-            <div class="status-banner-icon-container-success">
-                <Icon IconName="circle-check" Width="28" Height="28" Color="#4CAF50" />
+            <div class="stats-icon">
+                <Icon IconName="circle-check" Width="28" Height="28" />
             </div>
             <div class="status-banner-text-content">
-                <h4 class="status-banner-title">Founder has signed</h4>
+                <h5 class="status-banner-title">Founder has signed</h5>
                 <p class="status-banner-description">
                     The founder has signed a transaction agreement ensuring that
                     you can recover your funds if the project does not succeed.
@@ -194,11 +194,11 @@
     else
     {
         <div class="status-banner mt-2">
-            <div class="status-banner-icon-container-warning">
-                <Icon IconName="clock-circle" Width="28" Height="28" Color="#fb8c00" />
+            <div class="stats-icon">
+                <Icon IconName="clock-circle" Width="28" Height="28" />
             </div>
             <div class="status-banner-text-content">
-                <h4 class="status-banner-title">Waiting for founder signature</h4>
+                <h5 class="status-banner-title">Waiting for founder signature</h5>
                 <p class="status-banner-description">
                     The founder needs to sign a recovery agreement before you can invest. This ensures
                     your funds can be recovered if the project doesn't succeed.
@@ -216,7 +216,7 @@
             <Icon IconName="circle-check" Width="28" Height="28" Color="#4CAF50" />
         </div>
         <div class="status-banner-text-content">
-            <h4 class="status-banner-title">Investment Confirmed</h4>
+            <h5 class="status-banner-title">Investment Confirmed</h5>
             <p class="status-banner-description">
                 You have already successfully invested in this project.
             </p>
@@ -508,11 +508,11 @@ else
                         <h5 class="header-text">Waiting for approval</h5>
                     </div>
                     <div class="header-actions">
-                        <button type="button" class="btn btn-border-danger" @onclick="CancelInvestment">
+                        <button type="button" class="btn btn-border-danger btn-sm" @onclick="CancelInvestment">
                             <Icon IconName="close-circle" Width="16" Height="16" />
                             <span class="button-text ms-2">Cancel</span>
                         </button>
-                        <button class="btn btn-border ms-2" @onclick="RefreshSignatures" disabled="@refreshSpinner">
+                        <button class="btn btn-border btn-sm ms-2" @onclick="RefreshSignatures" disabled="@refreshSpinner">
                             @if (refreshSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status"></span>
@@ -524,7 +524,7 @@ else
                                 <span class="button-text ms-2">Refresh</span>
                             }
                         </button>
-                        <button class="btn btn-border-success ms-2" @onclick="ShowMessageWithPassword">
+                        <button class="btn btn-border-success btn-sm ms-2" @onclick="ShowMessageWithPassword">
                             <Icon IconName="chat" Width="16" Height="16" class="me-1" />
                             @if (hasMessges)
                             {

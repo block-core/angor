@@ -2760,8 +2760,8 @@ input[type=number] {
 
 .header-text {
     margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 1.25rem;
+    font-weight: 500;
     color: var(--form-text);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2812,7 +2812,7 @@ input[type=number] {
     }
 
     .header-text {
-        font-size: 1.1rem
+        font-size: 1rem
     }
 
     .action-button {
@@ -2826,7 +2826,7 @@ input[type=number] {
 
 @media (max-width:576px) {
     .header-text {
-        font-size: 1.1rem
+        font-size: 0.9rem
     }
 }
 
