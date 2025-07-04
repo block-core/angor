@@ -12,10 +12,10 @@
 
     <Design.DataContext>
         <fundingStructure:FundingStructureViewModelDesign
-            PenaltyDays="30" StartDate="10/1/2025" Sats="10000000">
+            PenaltyDays="30" StartDate="10/1/2025" Sats="10000001">
         </fundingStructure:FundingStructureViewModelDesign>
     </Design.DataContext>
-    
+
     <UserControl.Styles>
         <StyleInclude Source="../Common.axaml" />
     </UserControl.Styles>

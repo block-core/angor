@@ -1,0 +1,39 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI">
+    <Design.PreviewWith>
+        <Border Width="400" Height="400" Padding="20">
+            <CalendarDatePicker VerticalAlignment="Top" SelectedDate="2/2/2024" />
+        </Border>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <ControlTheme x:Key="{x:Type CalendarDatePicker}" TargetType="CalendarDatePicker">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox VerticalContentAlignment="Center" x:Name="PART_TextBox" Watermark="{TemplateBinding Watermark}" />
+                        <Button Margin="5 0 0 0" Name="PART_Button"
+                                Grid.Column="1"
+                                Focusable="False">
+                            <Button.Content>
+                                <ui:Icon Source="fa-calendar-days" />
+                            </Button.Content>
+                        </Button>
+                        <Popup Name="PART_Popup"
+                               PlacementTarget="{TemplateBinding}"
+                               IsLightDismissEnabled="True">
+                            <Calendar Name="PART_Calendar"
+                                      FirstDayOfWeek="{TemplateBinding FirstDayOfWeek}"
+                                      IsTodayHighlighted="{TemplateBinding IsTodayHighlighted}"
+                                      SelectedDate="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=SelectedDate, Mode=TwoWay}"
+                                      DisplayDate="{TemplateBinding DisplayDate}"
+                                      DisplayDateStart="{TemplateBinding DisplayDateStart}"
+                                      DisplayDateEnd="{TemplateBinding DisplayDateEnd}" />
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </Styles.Resources>
+</Styles>
