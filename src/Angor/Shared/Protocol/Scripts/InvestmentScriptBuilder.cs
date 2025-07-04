@@ -144,6 +144,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 		    var pubKey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey);
 
 		    _logger?.LogInformation($"pubKey {pubKey.ToHex()}");
+		    _logger?.LogInformation($"pubKey {Encoders.Hex.EncodeData(pubKey.ToBytes())}");
 		    _logger?.LogInformation($"pubKey TaprootInternalKey{pubKey.TaprootInternalKey.ToString()}");
 
 
