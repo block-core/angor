@@ -30,8 +30,8 @@
         </PackageReference>
         <PackageReference Include="Serilog.Extensions.Logging" />
         <PackageReference Include="Serilog.Sinks.Console" />
-<!--        <PackageReference Include="Zafiro.Avalonia" />-->
-<!--        <PackageReference Include="Zafiro.Avalonia.Dialogs" />-->
+        <PackageReference Include="Zafiro.Avalonia" />
+        <PackageReference Include="Zafiro.Avalonia.Dialogs" />
     </ItemGroup>
 
     <ItemGroup>

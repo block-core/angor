@@ -163,7 +163,7 @@
     </Application.Resources>
 
     <Application.DataTemplates>
-        <!-- TEMPLATES PRIORITY IS IMPORTANT! -->
+        <!-- TEMPLATE PRIORITY IS IMPORTANT! -->
         <!-- The first template that matches the type will be used, so first templates in this list are checked for a match before the others -->
         <DataTemplate DataType="navigation:ISectionScope">
             <SectionScopeView x:Name="ScopeView" IsBackButtonVisible="False" SectionScope="{Binding}" />
