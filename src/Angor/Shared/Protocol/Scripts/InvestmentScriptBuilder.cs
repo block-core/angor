@@ -151,6 +151,10 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 		    
 		    _logger?.LogInformation($"FE create { feCreate } FE {x.ToString()} FE bytes {Encoders.Hex.EncodeData(x.ToBytes())}");
 
+		    var xquad = GE.TryCreateXQuad(x, out var geQuad);
+		    
+		    _logger?.LogInformation($"TryCreateXQuad {xquad} GE {geQuad.ToString()}");
+		    
 		    var GECreate = GE.TryCreateXOVariable(x, false, out var ge);
 
 		    _logger?.LogInformation($"GE create {GECreate} GE {ge.ToString()}");
