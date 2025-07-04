@@ -138,66 +138,83 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
         uint256? hashOfSecret)
     {
-	    var pubKey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey);
-	    
-	    _logger?.LogInformation($"pubKey {pubKey.ToHex()}");
-	    _logger?.LogInformation($"pubKey TaprootInternalKey{pubKey.TaprootInternalKey.ToString()}");
-	    
-	    TaprootPubKey.TryCreate(pubKey.ToBytes(), out var taprootPubKey);
-	    
-	    _logger?.LogInformation($"pubKey {taprootPubKey.ScriptPubKey.ToHex()}");
-	    _logger?.LogInformation($"pubKey {taprootPubKey.ToBytes()}");
-	    _logger?.LogInformation($"pubKey {taprootPubKey.ToString()}");
-	    
-	    var toSpan = new Span<byte>(new byte[32]);
-	    
-	    
-	    _logger?.LogInformation($"pubKey TaprootInternalKey.GetTaprootFullPubKey{pubKey.TaprootInternalKey.GetTaprootFullPubKey(null)}");
-	    _logger?.LogInformation($"pubKey TaprootInternalKey.AsTaprootPubKey{pubKey.TaprootInternalKey.AsTaprootPubKey().ToBytes()}");
-	    _logger?.LogInformation($"pubKey TaprootInternalKey.AsTaprootPubKey{pubKey.TaprootInternalKey.AsTaprootPubKey().ToString()}");
-	    
-	    var taprootFullPubKey = pubKey.GetTaprootFullPubKey();
-	    
-        
-        var SHA256 = new SHA256();
-        SHA256.InitializeTagged("TapTweak");
-        
-        var span = new Span<byte>(new byte[32]);
-        taprootFullPubKey.InternalKey.ComputeTapTweak(null, span);
-        
-        _logger?.LogInformation($"sha256 {Encoders.Hex.EncodeData(SHA256.GetHash())}");
-        SHA256.Write(span);
-        _logger?.LogInformation($"sha256 {Encoders.Hex.EncodeData(SHA256.GetHash())}");
-        _logger?.LogInformation($"span {Encoders.Hex.EncodeData(span.ToArray())}");
+	    try
+	    {
+		    var pubKey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey);
 
-        SHA256.GetHash(span);
-        _logger?.LogInformation($"span {Encoders.Hex.EncodeData(span.ToArray())}");
-        
-        _logger?.LogInformation($"founderFullPubKey {new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).ToHex()}");
-        
+		    _logger?.LogInformation($"pubKey {pubKey.ToHex()}");
+		    _logger?.LogInformation($"pubKey TaprootInternalKey{pubKey.TaprootInternalKey.ToString()}");
 
-        if (taprootFullPubKey.OutputKey.ToBytes().Equals(new byte[32]))
-        {
-            throw new Exception("Invalid founder recovery key, it must be a valid taproot key");
-        }
-        
-        _logger?.LogInformation($"founderFullPubKey taproot {taprootFullPubKey}");
-        
-        _logger?.LogInformation($"OutputKey: {Encoders.Hex.EncodeData(taprootFullPubKey.OutputKey.ToBytes())}");
-        _logger?.LogInformation($"OutputKeyParity: {taprootFullPubKey.OutputKeyParity}");
-        _logger?.LogInformation($"InternalKey: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.ToBytes())}");
-        _logger?.LogInformation($"Tweak: {Encoders.Hex.EncodeData(taprootFullPubKey.Tweak.ToArray())}");
-        _logger?.LogInformation($"MerkleRoot: {taprootFullPubKey.MerkleRoot}");
-        
-        _logger?.LogInformation($"Environment: {Environment.MachineName}, {Environment.Version}");
-        
-        _logger?.LogInformation($"ScriptPubKey : {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToBytes())}");
-        _logger?.LogInformation($"ScriptPubKey: {taprootFullPubKey.ScriptPubKey.ToHex()}");
-        _logger?.LogInformation($"ScriptPubKey: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToCompressedBytes())}");
-        _logger?.LogInformation($"ScriptPubKey: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToTapScript(TapLeafVersion.C0).Script.ToBytes())}");
-        
-        
-        // regular investor pre-co-sign with founder to gets funds with penalty
+		    TaprootPubKey.TryCreate(pubKey.ToBytes(), out var taprootPubKey);
+
+		    _logger?.LogInformation($"taprootPubKey is null {taprootPubKey == null}");
+		    
+		    _logger?.LogInformation($"taprootPubKey {taprootPubKey.ToString()}");
+		    _logger?.LogInformation($"taprootPubKey {taprootPubKey.ToBytes()}");
+		    _logger?.LogInformation($"taprootPubKey {taprootPubKey.ScriptPubKey.ToHex()}");
+		    
+		    
+
+		    var toSpan = new Span<byte>(new byte[32]);
+
+
+		    _logger?.LogInformation(
+			    $"pubKey TaprootInternalKey.GetTaprootFullPubKey{pubKey.TaprootInternalKey.GetTaprootFullPubKey(null)}");
+		    _logger?.LogInformation(
+			    $"pubKey TaprootInternalKey.AsTaprootPubKey{pubKey.TaprootInternalKey.AsTaprootPubKey().ToBytes()}");
+		    _logger?.LogInformation(
+			    $"pubKey TaprootInternalKey.AsTaprootPubKey{pubKey.TaprootInternalKey.AsTaprootPubKey().ToString()}");
+
+		    var taprootFullPubKey = pubKey.GetTaprootFullPubKey();
+
+
+		    var SHA256 = new SHA256();
+		    SHA256.InitializeTagged("TapTweak");
+
+		    var span = new Span<byte>(new byte[32]);
+		    taprootFullPubKey.InternalKey.ComputeTapTweak(null, span);
+
+		    _logger?.LogInformation($"sha256 {Encoders.Hex.EncodeData(SHA256.GetHash())}");
+		    SHA256.Write(span);
+		    _logger?.LogInformation($"sha256 {Encoders.Hex.EncodeData(SHA256.GetHash())}");
+		    _logger?.LogInformation($"span {Encoders.Hex.EncodeData(span.ToArray())}");
+
+		    SHA256.GetHash(span);
+		    _logger?.LogInformation($"span {Encoders.Hex.EncodeData(span.ToArray())}");
+
+		    _logger?.LogInformation($"founderFullPubKey {new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).ToHex()}");
+
+
+		    if (taprootFullPubKey.OutputKey.ToBytes().Equals(new byte[32]))
+		    {
+			    throw new Exception("Invalid founder recovery key, it must be a valid taproot key");
+		    }
+
+		    _logger?.LogInformation($"founderFullPubKey taproot {taprootFullPubKey}");
+
+		    _logger?.LogInformation($"OutputKey: {Encoders.Hex.EncodeData(taprootFullPubKey.OutputKey.ToBytes())}");
+		    _logger?.LogInformation($"OutputKeyParity: {taprootFullPubKey.OutputKeyParity}");
+		    _logger?.LogInformation($"InternalKey: {Encoders.Hex.EncodeData(taprootFullPubKey.InternalKey.ToBytes())}");
+		    _logger?.LogInformation($"Tweak: {Encoders.Hex.EncodeData(taprootFullPubKey.Tweak.ToArray())}");
+		    _logger?.LogInformation($"MerkleRoot: {taprootFullPubKey.MerkleRoot}");
+
+		    _logger?.LogInformation($"Environment: {Environment.MachineName}, {Environment.Version}");
+
+		    _logger?.LogInformation(
+			    $"ScriptPubKey : {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToBytes())}");
+		    _logger?.LogInformation($"ScriptPubKey: {taprootFullPubKey.ScriptPubKey.ToHex()}");
+		    _logger?.LogInformation(
+			    $"ScriptPubKey: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToCompressedBytes())}");
+		    _logger?.LogInformation(
+			    $"ScriptPubKey: {Encoders.Hex.EncodeData(taprootFullPubKey.ScriptPubKey.ToTapScript(TapLeafVersion.C0).Script.ToBytes())}");
+	    }
+	    catch (Exception e)
+	    {
+		    _logger?.LogError(e, "Error building project scripts for stage");
+		    throw;
+	    }
+
+	    // regular investor pre-co-sign with founder to gets funds with penalty
         var recoveryOps = new List<Op>
         {
             Op.GetPushOp(new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey().ToBytes()),
