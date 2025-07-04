@@ -166,11 +166,16 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 		    
 		    var taprootFullPubKeyTest = TaprootFullPubKey.Create(taprootInternalPubKey,null);
 		    
-		    _logger?.LogInformation( taprootFullPubKeyTest == null
-			    ? $"taprootFullPubKeyTest is not null {taprootFullPubKeyTest.ToString()} {Encoders.Hex.EncodeData(taprootFullPubKeyTest.ToBytes())}"
-			    : $"taprootFullPubKeyTest is null");
+		    _logger?.LogInformation( $"taprootFullPubKeyTest is not null {taprootFullPubKeyTest.ToString()} {Encoders.Hex.EncodeData(taprootFullPubKeyTest.ToBytes())}");
+		    _logger?.LogInformation( $"taprootFullPubKeyTest InternalKey {taprootFullPubKeyTest.InternalKey} ");
+		    _logger?.LogInformation( $"taprootFullPubKeyTest OutputKey {taprootFullPubKeyTest.OutputKey} ");
+		    _logger?.LogInformation( $"taprootFullPubKeyTest Tweak {taprootFullPubKeyTest.Tweak} ");
+		    _logger?.LogInformation( $"taprootFullPubKeyTest MerkleRoot {taprootFullPubKeyTest.MerkleRoot} ");
 
+
+		    _logger?.LogInformation( $"taprootInternalPubKey.GetTaprootFullPubKey {Encoders.Hex.EncodeData(taprootInternalPubKey.GetTaprootFullPubKey().ToBytes())} ");
 		    
+		    ;
 		    
 		    TaprootPubKey.TryCreate(pubKey.ToBytes(), out var taprootPubKey);
 
