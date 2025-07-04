@@ -3,6 +3,7 @@ using Angor.Shared.Models;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.Secp256k1;
 using Op = Blockcore.Consensus.ScriptInfo.Op;
 using OpcodeType = Blockcore.Consensus.ScriptInfo.OpcodeType;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
@@ -145,6 +146,15 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 		    _logger?.LogInformation($"pubKey {pubKey.ToHex()}");
 		    _logger?.LogInformation($"pubKey TaprootInternalKey{pubKey.TaprootInternalKey.ToString()}");
 
+
+		    var feCreate = NBitcoin.Secp256k1.FE.TryCreate(new Span<byte>(pubKey.ToBytes()), out var x);
+		    
+		    _logger?.LogInformation($"FE create { feCreate } FE {x.ToString()} FE bytes {Encoders.Hex.EncodeData(x.ToBytes())}");
+
+		    var GECreate = GE.TryCreateXOVariable(x, false, out var ge);
+
+		    _logger?.LogInformation($"GE create {GECreate} GE {ge.ToString()}");
+		    
 		    TaprootPubKey.TryCreate(pubKey.ToBytes(), out var taprootPubKey);
 
 		    _logger?.LogInformation($"taprootPubKey is null {taprootPubKey == null}");
