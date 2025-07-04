@@ -160,7 +160,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 			    _logger?.LogInformation($"GE {ge.ToString()}");
 		    }
 
-		    _logger?.LogInformation(TaprootFullPubKey.TryCreate(pubKey.ToBytes(), out var taprootFullPubKeyTest)
+		    _logger?.LogInformation(TaprootFullPubKey.TryCreate(pubKey.ToBytes()[1..], out var taprootFullPubKeyTest)
 			    ? $"taprootFullPubKeyTest is not null {taprootFullPubKeyTest.ToString()} {Encoders.Hex.EncodeData(taprootFullPubKeyTest.ToBytes())}"
 			    : $"taprootFullPubKeyTest is null");
 
