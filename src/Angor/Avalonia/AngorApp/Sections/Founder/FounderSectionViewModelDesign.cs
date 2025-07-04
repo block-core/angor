@@ -35,4 +35,6 @@ public class FounderSectionViewModelDesign : IFounderSectionViewModel
             TargetAmount = 1234,
         }
     };
+
+    public IEnhancedCommand Create { get; }
 }

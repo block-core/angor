@@ -13,7 +13,7 @@
         <shell:MainViewModelDesign />
     </Design.DataContext>
     
-    <zs:ShellView OpenPaneLength="200" MobileColumns="5" Shell="{Binding Shell}">
+    <zs:ShellView OpenPaneLength="160" MobileColumns="5" Shell="{Binding Shell}">
         <zs:ShellView.IconTemplate>
             <DataTemplate DataType="ui:IIcon">
                 <ContentControl Height="32" Width="32" ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />

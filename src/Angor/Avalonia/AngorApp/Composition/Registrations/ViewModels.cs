@@ -1,6 +1,8 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder;
+using AngorApp.Sections.Founder.CreateProject;
+using AngorApp.Sections.Founder.CreateProject.Preview;
 using AngorApp.Sections.Founder.Details;
 using AngorApp.Sections.Home;
 using AngorApp.Sections.Portfolio.Penalties;
@@ -24,6 +26,7 @@ public static class ViewModels
             .AddScoped<IPenaltiesViewModel, PenaltiesViewModel>()
             .AddScoped<IRecoverViewModel, RecoverViewModel>()
             .AddScoped<IFounderSectionViewModel, FounderSectionViewModel>()
+            .AddTransient<ICreateProjectViewModel, CreateProjectViewModel>()
             .AddScoped<Func<ProjectDto, IFounderProjectViewModel>>(provider => dto => ActivatorUtilities.CreateInstance<FounderProjectViewModel>(provider, dto))
             .AddScoped<Func<ProjectDto, IFounderProjectDetailsViewModel>>(provider => dto => ActivatorUtilities.CreateInstance<FounderProjectDetailsViewModel>(provider, dto))
             .AddScoped<IMainViewModel, MainViewModel>();

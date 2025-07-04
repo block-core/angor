@@ -2,13 +2,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
              xmlns:designTime="clr-namespace:Zafiro.Avalonia.DesignTime;assembly=Zafiro.Avalonia"
              xmlns:lk="clr-namespace:AngorApp.Sections.Browse.ProjectLookup"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
              x:Class="AngorApp.Sections.Browse.BrowseSectionView"
              x:DataType="browse:IBrowseSectionViewModel">
@@ -18,42 +16,41 @@
     </Design.DataContext>
 
     <UserControl.Styles>
-
         <Style Selector="TextBox">
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
-            <!-- <Setter Property="BorderBrush" Value="{StaticResource Level3}" /> -->
         </Style>
-
     </UserControl.Styles>
 
     <a:PageContainer>
-        <DockPanel>
+        <ScrollViewer>
+            <DockPanel>
 
-            <Card Header="Browse" Subheader="Browse Projects" DockPanel.Dock="Top">
-                <Card.HeaderStartContent>
-                    <ui:Icon Source="svg:/Assets/browse.svg" />
-                </Card.HeaderStartContent>
-            </Card>
+                <Card Header="Browse" Subheader="Browse Projects" DockPanel.Dock="Top">
+                    <Card.HeaderStartContent>
+                        <ui:Icon Source="svg:/Assets/browse.svg" />
+                    </Card.HeaderStartContent>
+                </Card>
 
-            <Card Header="Project lookup" Padding="20 0 20 20" DockPanel.Dock="Top">
-                <Card.Subheader>
-                    <TextBlock TextWrapping="Wrap">You can look for a project directly by entering its <Bold>Project Id</Bold> here</TextBlock>
-                </Card.Subheader>
-                <lk:ProjectLookupView DataContext="{Binding ProjectLookupViewModel}" />
-            </Card>
+                <Card Header="Project lookup" Padding="20 0 20 20" DockPanel.Dock="Top">
+                    <Card.Subheader>
+                        <TextBlock TextWrapping="Wrap">You can look for a project directly by entering its <Bold>Project Id</Bold> here</TextBlock>
+                    </Card.Subheader>
+                    <lk:ProjectLookupView DataContext="{Binding ProjectLookupViewModel}" />
+                </Card>
 
-            <Loading IsLoading="{Binding IsLoading^}">
-                <a:CardGrid ItemsSource="{Binding Projects}">
-                    <a:CardGrid.ItemTemplate>
-                        <DataTemplate DataType="browse:IProjectViewModel">
-                            <browse:ProjectItemView />
-                        </DataTemplate>
-                    </a:CardGrid.ItemTemplate>
-                </a:CardGrid>
-            </Loading>
+                <Loading IsLoading="{Binding IsLoading^}">
+                    <a:CardGrid ItemsSource="{Binding Projects}">
+                        <a:CardGrid.ItemTemplate>
+                            <DataTemplate DataType="browse:IProjectViewModel">
+                                <browse:ProjectItemView />
+                            </DataTemplate>
+                        </a:CardGrid.ItemTemplate>
+                    </a:CardGrid>
+                </Loading>
 
-        </DockPanel>
+            </DockPanel>
+        </ScrollViewer>
 
     </a:PageContainer>
 

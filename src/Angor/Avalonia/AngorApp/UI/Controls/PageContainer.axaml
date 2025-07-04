@@ -10,11 +10,9 @@
         <ControlTheme TargetType="a:PageContainer" x:Key="{x:Type a:PageContainer}">
             <Setter Property="Template">
                 <ControlTemplate>
-                    <ScrollViewer>
-                        <Border Container.Name="Root" Container.Sizing="Width">
-                            <ContentPresenter x:Name="ContentPresenter" Content="{TemplateBinding Content}" />
-                        </Border>
-                    </ScrollViewer>
+                    <Border Container.Name="Root" Container.Sizing="Width">
+                        <ContentPresenter x:Name="ContentPresenter" Content="{TemplateBinding Content}" />
+                    </Border>
                 </ControlTemplate>
             </Setter>
 

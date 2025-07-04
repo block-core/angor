@@ -1,19 +1,21 @@
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using AngorApp.Sections.Founder.CreateProject;
 using AngorApp.UI.Services;
 using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
+using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Founder;
 
 public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel, IDisposable
 {
-    private CompositeDisposable disposable = new();
+    private readonly CompositeDisposable disposable = new();
 
-    public FounderSectionViewModel(UIServices uiServices, IProjectAppService projectAppService, Func<ProjectDto, IFounderProjectViewModel> projectViewModelFactory)
+    public FounderSectionViewModel(UIServices uiServices, IProjectAppService projectAppService, Func<ProjectDto, IFounderProjectViewModel> projectViewModelFactory, INavigator navigator)
     {
         LoadProjects = ReactiveCommand.CreateFromObservable(() => Projects(uiServices, projectAppService)).Enhance().DisposeWith(disposable);
         LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Failed to get investments").DisposeWith(disposable);
@@ -23,6 +25,8 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
             .Bind(out var projectList)
             .Subscribe()
             .DisposeWith(disposable);
+
+        Create = ReactiveCommand.CreateFromTask(navigator.Go<ICreateProjectViewModel>).Enhance();
 
         ProjectsList = projectList;
     }
@@ -39,6 +43,7 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
     }
 
     public IEnumerable<IFounderProjectViewModel> ProjectsList { get; }
+    public IEnhancedCommand Create { get; }
 
     public IEnhancedCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; }
 
