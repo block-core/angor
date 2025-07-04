@@ -164,7 +164,15 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 		    
 		    _logger?.LogInformation($"taprootInternalPubKey {Encoders.Hex.EncodeData(taprootInternalPubKey.ToBytes())}");
 		    
+		    var tweak = taprootInternalPubKey.ComputeTapTweak(null);
+		    
+		    _logger?.LogInformation($"tweak {Encoders.Hex.EncodeData(tweak)}");
+		    
 		    var taprootFullPubKeyTest = TaprootFullPubKey.Create(taprootInternalPubKey,null);
+		    
+		    
+		    _logger?.LogInformation($"CheckTapTweak {taprootFullPubKeyTest.CheckTapTweak(taprootInternalPubKey)}");
+		    ;
 		    
 		    _logger?.LogInformation( $"taprootFullPubKeyTest is not null {taprootFullPubKeyTest.ToString()} {Encoders.Hex.EncodeData(taprootFullPubKeyTest.ToBytes())}");
 		    _logger?.LogInformation( $"taprootFullPubKeyTest InternalKey {taprootFullPubKeyTest.InternalKey} ");
@@ -174,9 +182,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 
 
 		    _logger?.LogInformation( $"taprootInternalPubKey.GetTaprootFullPubKey {Encoders.Hex.EncodeData(taprootInternalPubKey.GetTaprootFullPubKey().ToBytes())} ");
-		    
-		    ;
-		    
+		
 		    TaprootPubKey.TryCreate(pubKey.ToBytes(), out var taprootPubKey);
 
 		    _logger?.LogInformation($"taprootPubKey is null {taprootPubKey == null}");
