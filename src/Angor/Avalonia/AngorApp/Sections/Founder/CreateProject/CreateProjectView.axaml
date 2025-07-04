@@ -17,9 +17,9 @@
             <cp:CreateProjectViewModelDesign.StagesViewModel>
                 <stages:StagesViewModelDesign>
                     <stages:StagesViewModelDesign.Stages>
-                        <stages:CreateProjectStageDesign Percent="10" StartDate="10/5/2025" />
-                        <stages:CreateProjectStageDesign Percent="30" StartDate="10/9/2025" />
-                        <stages:CreateProjectStageDesign Percent="70" StartDate="12/12/2025" />
+                        <stages:CreateProjectStageDesign Percent="10" ReleaseDate="10/5/2025" />
+                        <stages:CreateProjectStageDesign Percent="30" ReleaseDate="10/9/2025" />
+                        <stages:CreateProjectStageDesign Percent="70" ReleaseDate="12/12/2025" />
                     </stages:StagesViewModelDesign.Stages>
                 </stages:StagesViewModelDesign>
             </cp:CreateProjectViewModelDesign.StagesViewModel>
@@ -45,7 +45,7 @@
                 <StackPanel Spacing="10">
                     <profile:ProfileView DataContext="{Binding ProfileViewModel}" />
                     <fundingStructure:FundingStructure DataContext="{Binding FundingStructureViewModel}" />
-                    <cp:StagesView DataContext="{Binding StagesViewModel}" />
+                    <stages:StagesView DataContext="{Binding StagesViewModel}" />
                     <Button HorizontalAlignment="Center" Content="Create Project" Command="{Binding Create}" />
                 </StackPanel>
             </ScrollViewer>

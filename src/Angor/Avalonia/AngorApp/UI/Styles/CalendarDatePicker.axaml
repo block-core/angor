@@ -3,7 +3,10 @@
         xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI">
     <Design.PreviewWith>
         <Border Width="400" Height="400" Padding="20">
-            <CalendarDatePicker VerticalAlignment="Top" SelectedDate="2/2/2024" />
+            <StackPanel>
+                <CalendarDatePicker x:Name="CalendarDatePicker" VerticalAlignment="Top" SelectedDate="2/2/2024" />
+                <TextBlock Text="{Binding #CalendarDatePicker.SelectedDate}" />
+            </StackPanel>
         </Border>
     </Design.PreviewWith>
 
@@ -12,7 +15,7 @@
             <Setter Property="Template">
                 <ControlTemplate>
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBox VerticalContentAlignment="Center" x:Name="PART_TextBox" Watermark="{TemplateBinding Watermark}" />
+                        <TextBox DataValidationErrors.Errors="{Binding $parent[CalendarDatePicker].(DataValidationErrors.Errors)}" VerticalContentAlignment="Center" x:Name="PART_TextBox" Watermark="{TemplateBinding Watermark}" />
                         <Button Margin="5 0 0 0" Name="PART_Button"
                                 Grid.Column="1"
                                 Focusable="False">

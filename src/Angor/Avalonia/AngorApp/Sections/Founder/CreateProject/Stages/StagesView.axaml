@@ -6,7 +6,7 @@
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
              mc:Ignorable="d" d:DesignWidth="600"
-             x:Class="AngorApp.Sections.Founder.CreateProject.StagesView"
+             x:Class="AngorApp.Sections.Founder.CreateProject.Stages.StagesView"
              x:DataType="stages:IStagesViewModel">
 
     <UserControl.Styles>
@@ -30,9 +30,9 @@
     <Design.DataContext>
         <stages:StagesViewModelDesign>
             <stages:StagesViewModelDesign.Stages>
-                <stages:CreateProjectStageDesign Percent="10" StartDate="10/5/2025" />
-                <stages:CreateProjectStageDesign Percent="30" StartDate="10/9/2025" />
-                <stages:CreateProjectStageDesign Percent="70" StartDate="12/12/2025" />
+                <stages:CreateProjectStageDesign Percent="10" ReleaseDate="10/5/2025" />
+                <stages:CreateProjectStageDesign Percent="30" ReleaseDate="10/9/2025" />
+                <stages:CreateProjectStageDesign Percent="70" ReleaseDate="12/12/2025" />
             </stages:StagesViewModelDesign.Stages>
         </stages:StagesViewModelDesign>
     </Design.DataContext>
@@ -54,16 +54,17 @@
             </IconButton>
             <ItemsControl ItemsSource="{Binding Stages}">
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="createProject:ICreateProjectStage">
+                    <DataTemplate DataType="stages:ICreateProjectStage">
                         <Grid ColumnDefinitions="Auto * * Auto" Margin="0 5" ColumnSpacing="20">
                             <Grid.Styles>
-                                <Style Selector="Button">
+                                <Style Selector="Button.Aligned">
                                     <Setter Property="Height" Value="33" />
                                     <Setter Property="Width" Value="33" />
+                                    <Setter Property="Margin" Value="1" />
                                     <Setter Property="VerticalAlignment" Value="Bottom" />
                                 </Style>
                             </Grid.Styles>
-                            <Button>
+                            <Button Classes="Aligned">
                                 <TextBlock Text="{ItemIndex StartFromOne=True}" />
                             </Button>
                             <HeaderedContainer Grid.Column="1" Header="Percentage">
@@ -74,9 +75,9 @@
                                 </TextBox>
                             </HeaderedContainer>
                             <HeaderedContainer Header="Release Date" Grid.Column="2">
-                                <TextBox Text="{Binding StartDate, StringFormat=d}" />
+                                <CalendarDatePicker SelectedDate="{Binding ReleaseDate}" />
                             </HeaderedContainer>
-                            <Button Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="3">
+                            <Button Classes="Aligned" Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="3">
                                 <ui:Icon Source="mdi-window-close" />
                             </Button>
                         </Grid>

@@ -34,7 +34,7 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
     {
         return new CreateProjectDto
         {
-            Stages = StagesViewModel.Stages.Select(stage => new CreateProjectStageDto(DateOnly.FromDateTime(stage.StartDate!.Value.Date), stage.Percent!.Value / 100)),
+            Stages = StagesViewModel.Stages.Select(stage => new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent!.Value / 100)),
             TargetAmount = new Amount(FundingStructureViewModel.Sats!.Value),
             PenaltyDays = FundingStructureViewModel.PenaltyDays!.Value,
             //TODO: Map result...

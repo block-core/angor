@@ -31,9 +31,9 @@
             <cp:CreateProjectViewModelDesign.StagesViewModel>
                 <stages:StagesViewModelDesign>
                     <stages:StagesViewModelDesign.Stages>
-                        <stages:CreateProjectStageDesign Percent="10" StartDate="10/5/2025" />
-                        <stages:CreateProjectStageDesign Percent="30" StartDate="10/9/2025" />
-                        <stages:CreateProjectStageDesign Percent="70" StartDate="12/12/2025" />
+                        <stages:CreateProjectStageDesign Percent="10" ReleaseDate="10/5/2025" />
+                        <stages:CreateProjectStageDesign Percent="30" ReleaseDate="10/9/2025" />
+                        <stages:CreateProjectStageDesign Percent="70" ReleaseDate="12/12/2025" />
                     </stages:StagesViewModelDesign.Stages>
                 </stages:StagesViewModelDesign>
             </cp:CreateProjectViewModelDesign.StagesViewModel>
@@ -71,7 +71,7 @@
         <Card Header="Funding Milestones">
             <c:CardGrid ItemsSource="{Binding StagesViewModel.Stages}" RowSpacing="5">
                 <c:CardGrid.ItemTemplate>
-                    <DataTemplate DataType="cp:ICreateProjectStage">
+                    <DataTemplate DataType="stages:ICreateProjectStage">
                         <OverlayBorder Margin="0" Theme="{StaticResource CardOverlayBorder}">
                             <OverlayBorder.Styles>
                                 <Style Selector="TextBlock">
@@ -83,7 +83,7 @@
                                     <TextBlock Text="{Binding Percent, StringFormat='{}{0}% Release'}" />
                                 </EdgePanel.Content>
                                 <EdgePanel.EndContent>
-                                    <TextBlock Classes="SizeSmall" Opacity="0.5" Text="{Binding StartDate, StringFormat='Target: {0:d}'}" />
+                                    <TextBlock Classes="SizeSmall" Opacity="0.5" Text="{Binding ReleaseDate, StringFormat='Target: {0:d}'}" />
                                 </EdgePanel.EndContent>
                                 <EdgePanel.StartContent>
                                     <Border Padding="10 5" CornerRadius="10" BorderBrush="{DynamicResource SystemChromeHighColor}" BorderThickness="1">

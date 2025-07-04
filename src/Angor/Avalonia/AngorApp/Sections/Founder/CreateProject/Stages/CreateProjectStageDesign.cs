@@ -6,6 +6,6 @@ namespace AngorApp.Sections.Founder.CreateProject.Stages;
 public class CreateProjectStageDesign : ReactiveValidationObject, ICreateProjectStage
 {
     public double? Percent { get; set; }
-    public DateTimeOffset? StartDate { get; set; }
+    public DateTime? ReleaseDate { get; set; }
     public IEnhancedCommand Remove { get; }
 }

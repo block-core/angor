@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using DynamicData;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
@@ -20,39 +21,50 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
     {
         stagesSource = new SourceCache<ICreateProjectStage, long>(stage => stage.GetHashCode())
             .DisposeWith(disposable);
+
+        var changes = stagesSource.Connect();
         
-        stagesSource.Connect()
+        changes
             .Bind(out var stages)
             .Subscribe()
             .DisposeWith(disposable);
         
-        stagesSource.AddOrUpdate(CreateStage());
         Stages = stages;
         
         AddStage = ReactiveCommand.Create(() => stagesSource.AddOrUpdate(CreateStage())).Enhance()
             .DisposeWith(disposable);
         
-        var isAllStagesValid = stagesSource.Connect()
-            .AutoRefreshOnObservable(c => c.IsValid())   
+        // Combinar directamente los observables IsValid() de cada stage
+        var allStagesValid = changes
             .ToCollection()
-            .Select(x => x.All(c => c.ValidationContext.IsValid)) 
-            .StartWith(false);
+            .Select(stages => stages.Count > 0 ? 
+                stages.Select(stage => stage.IsValid()).CombineLatest(validities => validities.All(v => v)) :
+                Observable.Return(false))
+            .Switch()
+            .StartWith(false)
+            .DistinctUntilChanged();
         
-        this.ValidationRule(isAllStagesValid, b => b, _ => "Stages are not valid").DisposeWith(disposable);
+        this.ValidationRule(allStagesValid, b => b, _ => "Stages are not valid").DisposeWith(disposable);
         
-        var totalPercent = stagesSource.Connect()
+        var totalPercent = changes
             .AutoRefresh(stage => stage.Percent)
             .ToCollection()
             .Select(list => list.Sum(stage => stage.Percent ?? 0));
         
         this.ValidationRule(totalPercent, percent => Math.Abs(percent - 100) < 1, _ => "Stages percentajes should sum to 100%").DisposeWith(disposable);
+        
+        stagesSource.AddOrUpdate(CreateStage());
     }
 
     public ICollection<ICreateProjectStage> Stages { get; }
 
     private CreateProjectStage CreateStage()
     {
-        return new CreateProjectStage(stage => stagesSource.Remove(stage));
+        return new CreateProjectStage(stage => stagesSource.Remove(stage))
+        {
+            Percent = 100,
+            ReleaseDate = DateTime.Now
+        };
     }
 
     protected override void Dispose(bool disposing)
