@@ -173,6 +173,10 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 			    _logger?.LogInformation($"ECXOnlyPubKey ascii {Encoding.ASCII.GetString(ecxOnlyPubKey.ToBytes())}");
 			    _logger?.LogInformation($"ECXOnlyPubKey hex {Encoders.Hex.EncodeData(ecxOnlyPubKey.ToBytes())}");
 		    }
+
+		    var ec = ecxOnlyPubKey?.AddTweak(tweak);
+		    
+		    _logger?.LogInformation($"ec {Encoders.Hex.EncodeData(ec.ToBytes())}");
 		    
 		    var key = ecxOnlyPubKey?.AddTweak(tweak).ToXOnlyPubKey(out var taprootPubKeyTweak);
 		    
