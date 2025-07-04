@@ -166,6 +166,13 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 		    
 		    var tweak = taprootInternalPubKey.ComputeTapTweak(null);
 		    
+		    if(ECXOnlyPubKey.TryCreate(x, out var ecxOnlyPubKey))
+				_logger?.LogInformation($"ECXOnlyPubKey {ecxOnlyPubKey.ToString()}");
+		    
+		    var key = ecxOnlyPubKey?.AddTweak(tweak).ToXOnlyPubKey(out var taprootPubKeyTweak);
+		    
+		    _logger?.LogInformation($"ECXOnlyPubKey {key?.ToBytes()}");
+		    
 		    _logger?.LogInformation($"tweak {Encoders.Hex.EncodeData(tweak)}");
 		    
 		    var taprootFullPubKeyTest = TaprootFullPubKey.Create(taprootInternalPubKey,null);
