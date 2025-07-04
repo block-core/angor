@@ -67,12 +67,14 @@
                     var metadata = project.Metadata;
                 }
 
-                <div class="card-header p-0 overflow-hidden position-relative banner-container">
-                    <img @onclick="() => profileBannerModal = true" class="card-img-top card-img-top-view animate-slide-down" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                    <img @onclick="() => profileImageModal = true" class="profile-image-view rounded-circle animate-scale-in" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                <div class="card-header p-0 position-relative">
+                    <div class="banner-container-view">
+                        <img class="card-img-top-view animate-fade" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="Banner Image" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                    </div>
+                    <img class="profile-image-view rounded-circle animate-fade-in" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                 </div>
 
-                <div class="p-4 content-container animate-fade-up">
+                <div class="p-4 content-container animate-fade-up" style="margin-top: 60px;">
                     <div class="d-flex align-items-center justify-content-between mb-4">
                         <div class="d-flex align-items-center hover-effect">
                             <span class="user-select-none animate-rotate">
@@ -89,58 +91,10 @@
                     </div>
 
 
-                    <p class="card-subtitle animate-fade-in-delayed">@((MarkupString)metadata?.About)</p>
+                    <p class="card-subtitle animate-fade-in-delayed">@((MarkupString)(metadata?.About ?? ""))</p>
                 </div>
 
             </div>
-
-            @if (profileImageModal)
-            {
-                <div class="modal-wrapper">
-                    <div class="modal fade show d-block" tabindex="-1">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content modern-modal">
-                                <div class="modal-header border-0 pb-0">
-                                    <div class="d-flex align-items-center">
-                                        <Icon IconName="view" Height="32" Width="32" class="me-2" />
-                                        <h5 class="modal-title">@metadata?.Name</h5>
-                                    </div>
-                                    <button class="btn-close-custom" @onclick="() => profileImageModal = false">
-                                        <Icon IconName="close-circle" Height="24" Width="24" />
-                                    </button>
-                                </div>
-                                <div class="modal-body modal-body-scroll">
-                                    <img class="animate-scale-in w-100 rounded-3" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-
-            @if (profileBannerModal)
-            {
-                <div class="modal-wrapper">
-                    <div class="modal fade show d-block" tabindex="-1">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content modern-modal">
-                                <div class="modal-header border-0 pb-0">
-                                    <div class="d-flex align-items-center">
-                                        <Icon IconName="view" Height="32" Width="32" class="me-2" />
-                                        <h5 class="modal-title">@metadata?.Name</h5>
-                                    </div>
-                                    <button class="btn-close-custom" @onclick="() => profileBannerModal = false">
-                                        <Icon IconName="close-circle" Height="24" Width="24" />
-                                    </button>
-                                </div>
-                                <div class="modal-body modal-body-scroll">
-                                    <img class="animate-slide-down w-100 rounded-3" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
 
 
             <div class="card card-body mt-4 animate-fade-in">
@@ -887,8 +841,6 @@
     private string NostrNsecSecKey { get; set; } = string.Empty;
     private string NostrHexSecKey { get; set; } = string.Empty;
 
-    private bool profileImageModal = false;
-    private bool profileBannerModal = false;
     private bool isGeneratingNsec;
     private string errorMessage = string.Empty;
     private bool isRepublishing = false;
