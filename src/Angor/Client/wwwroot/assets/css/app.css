@@ -5289,3 +5289,29 @@ body.dark .message-item.outgoing .message-bubble {
 
 input.no-native-picker[type="date"]::-webkit-calendar-picker-indicator { opacity: 0; display: none; }
 input.no-native-picker[type="date"]::-moz-calendar-picker-indicator { opacity: 0; display: none; }
+
+.angor-progress {
+    height: 6px;
+    background-color: #000;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.angor-progress-bar {
+    height: 100%;
+    background-color: #28a745;
+    transition: width 0.4s cubic-bezier(.4,0,.2,1);
+}
+
+.angor-progress-bar.is-full {
+    background-color: #ffc107;
+    box-shadow: 0 0 8px #ffc10780;
+}
+
+.angor-progress-label {
+    min-width: 35px;
+    text-align: right;
+    font-weight: 600;
+    color: #28a745;
+}

@@ -129,14 +129,19 @@
             <div class="stats-icon">
                 <Icon IconName="balance" Height="32" Width="32" />
             </div>
+            @{
+                var cappedPercent = Math.Min(projectStats.FundingProgressPercent, 100);
+            }
             <div class="stats-info">
                 <h3 class="stats-title text-muted">Target Amount</h3>
                 <p class="stats-value">@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</p>
                 <div class="stats-about d-flex align-items-center">
-                    <div class="progress rounded-pill flex-grow-1" style="height: 6px; background-color: #000000">
-                        <div class="progress-bar progress-bar-xs rounded-pill" role="progressbar" style="width: @projectStats.FundingProgressPercent%; background-color: #28a745;" />
+                    <div class="angor-progress rounded-pill flex-grow-1">
+                        <div class="angor-progress-bar rounded-pill @(cappedPercent == 100 ? "is-full" : "")"
+                             role="progressbar"
+                             style="width: @cappedPercent%;" />
                     </div>
-                    <div class="ms-1" style="min-width: 35px; text-align: right;">@projectStats.FundingProgressPercent%</div>
+                    <div class="ms-1 angor-progress-label">@cappedPercent%</div>
                 </div>
             </div>
         </div>
@@ -619,13 +624,12 @@ else
 
 @if (showMessageModal)
 {
-    <MessageComponent
-        OtherUserPubkeyHex="@project.ProjectInfo.NostrPubKey"
-        CurrentUserPrvKeyHex="@currentUserPrivateKeyHex"
-        MessageTitle="Founder"
-        OnClose="@OnMessageModalClose"
-        OnNsecRequest="@ShowNsecAndCheckPassword"
-        OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
+    <MessageComponent OtherUserPubkeyHex="@project.ProjectInfo.NostrPubKey"
+                      CurrentUserPrvKeyHex="@currentUserPrivateKeyHex"
+                      MessageTitle="Founder"
+                      OnClose="@OnMessageModalClose"
+                      OnNsecRequest="@ShowNsecAndCheckPassword"
+                      OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
 }
 
 @code {
@@ -921,12 +925,12 @@ else
             foreach (var stage in project!.ProjectInfo.Stages)
             {
                 var insert = new StageBreakdown
-                    {
-                        StageNumber = index++,
-                        AmountBtc = Investment.InvestmentAmountBtc * (stage.AmountToRelease / 100),
-                        StageDateTime = stage.ReleaseDate,
-                        DaysFromStartDate = (stage.ReleaseDate - project.ProjectInfo.StartDate).Days
-                    };
+                {
+                    StageNumber = index++,
+                    AmountBtc = Investment.InvestmentAmountBtc * (stage.AmountToRelease / 100),
+                    StageDateTime = stage.ReleaseDate,
+                    DaysFromStartDate = (stage.ReleaseDate - project.ProjectInfo.StartDate).Days
+                };
 
                 StagesBreakdown.Add(insert);
             }
@@ -1033,11 +1037,11 @@ else
             {
                 var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
-                signedTransaction = _WalletOperations.SignPsbt(psbt, words);    
+                signedTransaction = _WalletOperations.SignPsbt(psbt, words);
             }
             else
             {
-                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(), 
+                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(),
                     unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
             }
 
@@ -1121,22 +1125,22 @@ else
             Debug.Assert(project != null, nameof(project) + " != null");
 
             project = new InvestorProject
-                {
-                    ProjectInfo = project.ProjectInfo,
-                    Metadata = project.Metadata,
-                    SignedTransactionHex = signedTransaction!.Transaction!.ToHex(),
-                    CreationTransactionId = project.CreationTransactionId,
-                    AmountInvested = Investment.InvestmentAmountBtc.ToUnitSatoshi(),
-                    InvestorPublicKey = InvestorPubKey ?? throw new ArgumentNullException("The investor pub key is not populated")
-                };
+            {
+                ProjectInfo = project.ProjectInfo,
+                Metadata = project.Metadata,
+                SignedTransactionHex = signedTransaction!.Transaction!.ToHex(),
+                CreationTransactionId = project.CreationTransactionId,
+                AmountInvested = Investment.InvestmentAmountBtc.ToUnitSatoshi(),
+                InvestorPublicKey = InvestorPubKey ?? throw new ArgumentNullException("The investor pub key is not populated")
+            };
 
             var investorProject = (InvestorProject)project;
 
             // remove signatures when requesting founder to sign
             investorProject.SignaturesInfo = new()
-                {
-                    ProjectIdentifier = investorProject!.ProjectInfo.ProjectIdentifier,
-                };
+            {
+                ProjectIdentifier = investorProject!.ProjectInfo.ProjectIdentifier,
+            };
 
             var strippedInvestmentTransaction = network.CreateTransaction(investorProject.SignedTransactionHex);
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
@@ -1151,12 +1155,12 @@ else
             var releaseAddress = accountInfo.GetNextReceiveAddress();
 
             SignRecoveryRequest signRecoveryRequest = new()
-                {
-                    ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
-                    InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
-                    UnfundedReleaseAddress = releaseAddress,
-                    AdditionalNpub = Investment.AdditionalNpub
-                };
+            {
+                ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
+                InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
+                UnfundedReleaseAddress = releaseAddress,
+                AdditionalNpub = Investment.AdditionalNpub
+            };
 
             var sigJson = serializer.Serialize(signRecoveryRequest);
 
@@ -1170,7 +1174,7 @@ else
                     if (response.Accepted)
                     {
                         _Logger.LogInformation("Signature request sent to the founder on relay {CommunicatorName} successfully", response.CommunicatorName);
-                        notificationComponent.ShowNotificationMessage("Signature request sent to the founder",5);
+                        notificationComponent.ShowNotificationMessage("Signature request sent to the founder", 5);
                     }
                     else
                     {
@@ -1341,8 +1345,8 @@ else
         var password = _derivationOperations.DeriveNostrStoragePassword(words);
 
         Investments investments = new()
-            {
-                ProjectIdentifiers = storage.GetInvestmentProjects()
+        {
+            ProjectIdentifiers = storage.GetInvestmentProjects()
                                                     .Where(x => x.InvestedInProject())
                                                     .Select(x => new InvestmentState
                                                     {
@@ -1352,7 +1356,7 @@ else
                                                         UnfundedReleaseAddress = x.UnfundedReleaseAddress,
                                                     })
                                                     .ToList()
-            };
+        };
 
 
         var encrypted = await encryption.EncryptData(serializer.Serialize(investments), password);
@@ -1416,9 +1420,9 @@ else
         };
 
         transactionJson = JsonSerializer.Serialize(transactionDetails, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+        {
+            WriteIndented = true
+        });
 
         showTransactionJsonModal = true;
         StateHasChanged();
@@ -1455,14 +1459,14 @@ else
 
     private void ShowMessageWithPassword()
     {
-     
+
         var investorProject = project as InvestorProject;
         npubValue = NostrHelper.ConvertHexToNpub(investorProject?.InvestorNPub ?? "") ?? investorProject?.InvestorNPub ?? "";
 
         // Get founder's npub
         founderNpub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey) ??
                       project.ProjectInfo.NostrPubKey;
-        
+
         // If password is available, get the private key
         if (passwordComponent.HasPassword())
         {
@@ -1470,7 +1474,8 @@ else
         }
         else
         {
-            passwordComponent.ShowPassword(async () => {
+            passwordComponent.ShowPassword(async () =>
+            {
                 await ShowMessage();
             });
         }
@@ -1505,7 +1510,7 @@ else
             notificationComponent.ShowErrorMessage("Failed to initialize messaging", ex);
         }
     }
-    
+
     private void ShowNsecAndCheckPassword()
     {
         if (!passwordComponent.HasPassword())
@@ -1545,7 +1550,7 @@ else
     }
 
     bool hasMessges = false;
-   
+
     protected void ScanForDmMessages()
     {
         if (project is InvestorProject)
