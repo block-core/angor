@@ -171,14 +171,20 @@
                             <!-- Project Statistics -->
                             <div class="mb-4">
                                 <!-- Funding Progress -->
+                                @{
+                                    var percent = project.ProjectInfo.TargetAmount > 0
+                                    ? Math.Min((int)((stats?.AmountInvested ?? 0) * 100 / project.ProjectInfo.TargetAmount), 100)
+                                    : 0;
+                                }
                                 <div class="mb-4">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <span class="small text-muted fw-semibold">Funding Progress</span>
-                                        <span class="small fw-bold text-primary">@((stats?.AmountInvested ?? 0) * 100 / project.ProjectInfo.TargetAmount)%</span>
+                                        <span class="small fw-bold text-primary">@percent%</span>
                                     </div>
                                     <div class="progress rounded-pill mb-2" style="height: 16px; background-color: var(--btn-border);">
-                                        <div class="progress-bar progress-bar-striped bg-success rounded-pill text-center" role="progressbar" 
-                                             style="width: @((stats?.AmountInvested ?? 0) * 100 / project.ProjectInfo.TargetAmount)%;"></div>
+                                        <div class="progress-bar progress-bar-striped bg-success rounded-pill text-center"
+                                             role="progressbar"
+                                             style="width: @percent%;"></div>
                                     </div>
                                     <div class="d-flex justify-content-between small text-muted">
                                         <span class="fw-semibold">@Money.Satoshis(stats?.AmountInvested ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
@@ -292,7 +298,7 @@
                                             <span class="ms-2">Release Funds</span>
                                         </a>
                                     }
-                                    
+
                                     <div class="row g-4">
                                         <div class="col-6">
                                             <a href=@($"/view/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border w-100">
@@ -551,7 +557,7 @@
     {
         _RelayService.LookupProjectsInfoByEventIds<ProjectInfo?>(projectInfo =>
             {
-                if(projectInfo == null) 
+                if (projectInfo == null)
                     throw new Exception("The project info must be in the application specific data event");
 
                 if (projects.Any(x => x.ProjectInfo.ProjectIdentifier == projectInfo.ProjectIdentifier))
@@ -596,11 +602,11 @@
         var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrPrivateKey(words, projectIndexerData.FounderKey);
 
         var investorProject = new InvestorProject
-            {
-                TransactionId = investment.TransactionId,
-                AmountInvested = investment.TotalAmount,
-                InvestorNPub = investorNostrPrivateKey.PubKey.ToHex()[2..],
-            };
+        {
+            TransactionId = investment.TransactionId,
+            AmountInvested = investment.TotalAmount,
+            InvestorNPub = investorNostrPrivateKey.PubKey.ToHex()[2..],
+        };
 
         DateTime? createdAt = null;
         string? eventId = null;
@@ -662,7 +668,7 @@
                                         }
                                     });
 
-                             
+
 
                             }).GetAwaiter().GetResult();
                     },
@@ -701,44 +707,44 @@
                     switch (scriptType.ScriptType)
                     {
                         case ProjectScriptTypeEnum.Founder:
-                        {
-                            // check the next stage
-                            continue;
-                        }
-
-                        case ProjectScriptTypeEnum.EndOfProject:
-                        {
-                            investorProject.EndOfProjectTransactionId = output.SpentInTransaction;
-                            storage.UpdateInvestmentProject(investorProject);
-                            return;
-                        }
-
-                        case ProjectScriptTypeEnum.InvestorWithPenalty:
-                        {
-                            investorProject.RecoveryTransactionId = output.SpentInTransaction;
-                            var totalsats = trxInfo.Outputs.SkipLast(1).Sum(s => s.Balance);
-                            investorProject.AmountInRecovery = totalsats;
-
-                            var spentRecoveryInfo = await _IndexerService.GetTransactionInfoByIdAsync(investorProject.RecoveryTransactionId);
-
-                            if (spentRecoveryInfo != null)
                             {
-                                if (spentRecoveryInfo.Outputs.SkipLast(1).Any(_ => !string.IsNullOrEmpty(_.SpentInTransaction)))
-                                {
-                                    investorProject.RecoveryReleaseTransactionId = spentRecoveryInfo.Outputs.First(_ => !string.IsNullOrEmpty(_.SpentInTransaction)).SpentInTransaction;
-                                }
+                                // check the next stage
+                                continue;
                             }
 
-                            storage.UpdateInvestmentProject(investorProject);
-                            return;
-                        }
+                        case ProjectScriptTypeEnum.EndOfProject:
+                            {
+                                investorProject.EndOfProjectTransactionId = output.SpentInTransaction;
+                                storage.UpdateInvestmentProject(investorProject);
+                                return;
+                            }
+
+                        case ProjectScriptTypeEnum.InvestorWithPenalty:
+                            {
+                                investorProject.RecoveryTransactionId = output.SpentInTransaction;
+                                var totalsats = trxInfo.Outputs.SkipLast(1).Sum(s => s.Balance);
+                                investorProject.AmountInRecovery = totalsats;
+
+                                var spentRecoveryInfo = await _IndexerService.GetTransactionInfoByIdAsync(investorProject.RecoveryTransactionId);
+
+                                if (spentRecoveryInfo != null)
+                                {
+                                    if (spentRecoveryInfo.Outputs.SkipLast(1).Any(_ => !string.IsNullOrEmpty(_.SpentInTransaction)))
+                                    {
+                                        investorProject.RecoveryReleaseTransactionId = spentRecoveryInfo.Outputs.First(_ => !string.IsNullOrEmpty(_.SpentInTransaction)).SpentInTransaction;
+                                    }
+                                }
+
+                                storage.UpdateInvestmentProject(investorProject);
+                                return;
+                            }
 
                         case ProjectScriptTypeEnum.InvestorNoPenalty:
-                        {
-                            investorProject.UnfundedReleaseTransactionId = output.SpentInTransaction;
-                            storage.UpdateInvestmentProject(investorProject);
-                            return;
-                        }
+                            {
+                                investorProject.UnfundedReleaseTransactionId = output.SpentInTransaction;
+                                storage.UpdateInvestmentProject(investorProject);
+                                return;
+                            }
                     }
                 }
             }

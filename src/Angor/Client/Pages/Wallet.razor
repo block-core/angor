@@ -176,11 +176,11 @@
                                                                     <div class="text-danger small mt-1">Not a valid BIP-39 word</div>
                                                                 }
                                                                 @if (showSuggestions.TryGetValue(wordIndex, out bool showForWord) &&
-                                                               showForWord &&
-                                                               !string.IsNullOrWhiteSpace(userVerificationInputs[wordIndex]))
+                                                                                                        showForWord &&
+                                                                                                        !string.IsNullOrWhiteSpace(userVerificationInputs[wordIndex]))
                                                                 {
                                                                     var suggestions = GetFilteredWordSuggestions(userVerificationInputs[wordIndex]);
-                                                                    if(suggestions.Any() && suggestions.First() != userVerificationInputs[wordIndex]) 
+                                                                    if (suggestions.Any() && suggestions.First() != userVerificationInputs[wordIndex])
                                                                     {
                                                                         <div class="word-suggestions-dropdown">
                                                                             <div class="suggestions-container">
@@ -262,7 +262,7 @@
 
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 <textarea class="form-control" rows="3" placeholder="Enter your wallet words"
-                                                    @bind="newWalletWords" @oninput="OnImportWordsInput"></textarea>
+                                                          @bind="newWalletWords" @oninput="OnImportWordsInput"></textarea>
                                                 @if (!string.IsNullOrWhiteSpace(newWalletWords))
                                                 {
                                                     var words = newWalletWords.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -561,7 +561,7 @@ else
                                                    class="form-control"
                                                    @bind="showWalletPassword"
                                                    @bind:event="oninput"
-                                                   @onkeypress="@(async e => { if(e.Key is "Enter" or "NumpadEnter") await ShowWords(); })" />
+                                                   @onkeypress="@(async e => { if (e.Key is "Enter" or "NumpadEnter") await ShowWords(); })" />
                                             <button class="btn btn-border btn-sm" type="button" @onclick="TogglePasswordVisibility">
                                                 @if (passwordToggleText == "Show")
                                                 {
@@ -690,7 +690,7 @@ else
 
                             <div class="d-flex align-items-center">
                                 <!-- Select UTXOs Button -->
-                                <button type="button" class="btn btn-border-success me-3"
+                                <button type="button" class="btn btn-border-success btn-sm me-3"
                                         @onclick="() => coinControlModal = true">
                                     Select UTXOs
 
@@ -1193,8 +1193,8 @@ else
         }
     }
 
-    private bool AnyWordInvalid() => invalidWordIndices.Values.Any(v => v);    
-    
+    private bool AnyWordInvalid() => invalidWordIndices.Values.Any(v => v);
+
     private bool CanProceedToNextStep()
     {
         bool baseCondition = currentStep switch
@@ -1204,7 +1204,7 @@ else
             3 => true,
             _ => false
         };
-        
+
         return baseCondition;
     }
 
@@ -2020,9 +2020,9 @@ else
     {
         userVerificationInputs[wordIndex] = suggestion;
         showSuggestions[wordIndex] = false;
-        
+
         invalidWordIndices[wordIndex] = false;
-        
+
         ValidateWordInput();
         StateHasChanged();
     }
@@ -2033,7 +2033,7 @@ else
         showSuggestions[wordIndex] = false;
         StateHasChanged();
     }
-    
+
     private IEnumerable<string> GetFilteredWordSuggestions(string input)
     {
         var wordlist = NBitcoin.Wordlist.English;
