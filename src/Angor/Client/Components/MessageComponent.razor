@@ -120,7 +120,7 @@
                                            @bind="newMessage"
                                            @onkeypress="@(async e => { if(e.Key is "Enter" or "NumpadEnter") await SendMessageAsync(); })"
                                            disabled="@MessageService.IsSendingMessage" />
-                                    <button class="btn btn-border-success"
+                                    <button class="btn btn-border-success btn-sm"
                                             @onclick="SendMessageAsync"
                                             disabled="@MessageService.IsSendingMessage">
                                         @if (MessageService.IsSendingMessage)

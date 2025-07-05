@@ -5223,7 +5223,6 @@ body.dark .message-item.outgoing .message-bubble {
     gap: 8px;
 }
 .header-actions .btn {
-    min-width: 140px;
     display: flex;
     align-items: center;
     justify-content: center;

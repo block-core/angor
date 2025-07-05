@@ -487,7 +487,7 @@
                                     }
                                 </div>
                                 <p class="text-sm mb-auto">Review and approve pending investment requests from potential backers.</p>
-                                <a href="@($"/signatures/{project.ProjectInfo.ProjectIdentifier}")" class="btn btn-border-warning animate-scale mt-3">
+                                <a href="@($"/signatures/{project.ProjectInfo.ProjectIdentifier}")" class="btn btn-border-success animate-scale mt-3">
                                     Review Signatures
                                 </a>
                             </div>
@@ -508,7 +508,7 @@
                                 </div>
                                 <p class="text-sm mb-auto">Return funds to investors if project goals are not met or in emergency situations.</p>
                                 <a href=@($"/unfunded/{project.ProjectInfo.ProjectIdentifier}")
-                                   class="btn btn-border-danger animate-scale mt-3 @(CanReleaseUnfundedProject() ? "" : "disabled")">
+                                   class="btn btn-border-success animate-scale mt-3 @(CanReleaseUnfundedProject() ? "" : "disabled")">
                                     Release Funds
                                 </a>
                             </div>
@@ -536,7 +536,7 @@
                                     <h6 class="mb-0">Investment Status</h6>
                                 </div>
                                 <p class="text-sm mb-auto">You are part of this project's success story! Track your investment performance.</p>
-                                <a href="@myProjectExplorerLink" target="_blank" class="btn btn-border-warning animate-scale mt-3">
+                                <a href="@myProjectExplorerLink" target="_blank" class="btn btn-border animate-scale mt-3">
                                     View Transaction
                                 </a>
                             </div>
@@ -562,7 +562,7 @@
                                     <h6 class="mb-0">Communication</h6>
                                 </div>
                                 <p class="text-sm mb-auto">Connect with the project team and stay updated on progress and milestones.</p>
-                                <button class="btn btn-border-success animate-scale mt-3" @onclick="OpenMessagingWithFounder">
+                                <button class="btn btn-border animate-scale mt-3" @onclick="OpenMessagingWithFounder">
                                     Message Founder
                                 </button>
                             </div>
@@ -660,10 +660,10 @@
 
                     <div class="input-group">
                         <InputText id="NostrNpubPublicKey" @bind-Value="@Npub" class="form-control" placeholder="@Npub" readonly />
-                        <button @onclick="() => CopyToClipboard(Npub)" class="btn btn-border">
+                        <button @onclick="() => CopyToClipboard(Npub)" class="btn btn-border btn-sm">
                             <Icon IconName="copy" Height="24" Width="24" />
                         </button>
-                        <button @onclick="OpenInHUBAsync" class="btn btn-border">
+                        <button @onclick="OpenInHUBAsync" class="btn btn-border btn-sm">
                             <Icon IconName="link" Height="24" Width="24" />
                         </button>
                     </div>
@@ -671,7 +671,7 @@
                     <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                     <div class="input-group">
                         <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
-                        <button @onclick="() => CopyToClipboard(project.ProjectInfo.NostrPubKey)" class="btn btn-border">
+                        <button @onclick="() => CopyToClipboard(project.ProjectInfo.NostrPubKey)" class="btn btn-border btn-sm">
                             <Icon IconName="copy" Height="24" Width="24" />
                         </button>
                     </div>
@@ -685,7 +685,7 @@
 
                         <div class="input-group">
                             <InputText id="InvestorNostrNpubPublicKey" @bind-Value="@invNpub" class="form-control" placeholder="@invNpub" readonly />
-                            <button @onclick="() => CopyToClipboard(invNpub)" class="btn btn-border">
+                            <button @onclick="() => CopyToClipboard(invNpub)" class="btn btn-border btn-sm">
                                 <Icon IconName="copy" Height="24" Width="24" />
                             </button>
                         </div>
@@ -693,7 +693,7 @@
                         <label for="InvestorNostrHexPublicKey" class="form-label">Investor NOSTR public key (hex)</label>
                         <div class="input-group">
                             <InputText id="InvestorNostrHexPublicKey" @bind-Value="@invPubKey" class="form-control" placeholder="@invPubKey" readonly />
-                            <button @onclick="() => CopyToClipboard(invPubKey)" class="btn btn-border">
+                            <button @onclick="() => CopyToClipboard(invPubKey)" class="btn btn-border btn-sm">
                                 <Icon IconName="copy" Height="24" Width="24" />
                             </button>
                         </div>
@@ -754,10 +754,10 @@
                             <div class="input-group mb-3">
                                 <input type="@(showPrivateKeys ? "text" : "password")" id="NostrNsecSecKey" value="@NostrNsecSecKey"
                                        class="form-control nsec-box" readonly />
-                                <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
+                                <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border btn-sm">
                                     <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" Height="24" Width="24" />
                                 </button>
-                                <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border">
+                                <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border btn-sm">
                                     <Icon IconName="copy" Height="24" Width="24" />
                                 </button>
                             </div>
@@ -766,10 +766,10 @@
                             <div class="input-group">
                                 <input type="@(showPrivateKeys ? "text" : "password")" id="NostrHexSecKey" value="@NostrHexSecKey"
                                        class="form-control nsec-box" readonly />
-                                <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
+                                <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border btn-sm">
                                     <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" Height="24" Width="24" />
                                 </button>
-                                <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border">
+                                <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border btn-sm">
                                     <Icon IconName="copy" Height="24" Width="24" />
                                 </button>
                             </div>
@@ -800,7 +800,7 @@
                 @if (founder)
                 {
                     <div class="action-buttons d-flex justify-content-center item-center mt-4">
-                        <button type="button" @onclick="RepublishToNostr" class="btn btn-border animate-scale mt-4" disabled="@isRepublishing">
+                        <button type="button" @onclick="RepublishToNostr" class="btn btn-border btn-sm animate-scale mt-4" disabled="@isRepublishing">
                             @if (isRepublishing)
                             {
                                 <span class="spinner-border spinner-border-sm me-2"></span>
