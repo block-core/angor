@@ -7919,37 +7919,37 @@ fieldset:disabled .btn {
 
 .text-bg-info {
     color: #fff !important;
-    background-color: RGBA(26, 115, 232, var(--angor-bg-opacity, 1)) !important;
+    background-color: rgb(26 115 232 / 70%) !important;
 }
 
 .text-bg-warning {
     color: #000 !important;
-    background-color: RGBA(251, 140, 0, var(--angor-bg-opacity, 1)) !important;
+    background-color: rgb(251 140 0 / 70%) !important;
 }
 
 .text-bg-danger {
     color: #000 !important;
-    background-color: RGBA(244, 67, 53, var(--angor-bg-opacity, 1)) !important;
+    background-color: rgb(244 67 53 / 70%) !important;
 }
 
 .text-bg-light {
     color: #000 !important;
-    background-color: RGBA(240, 242, 245, var(--angor-bg-opacity, 1)) !important;
+    background-color: rgb(240 242 245 / 70%) !important;
 }
 
 .text-bg-dark {
     color: #fff !important;
-    background-color: RGBA(52, 71, 103, var(--angor-bg-opacity, 1)) !important;
+    background-color: rgb(52 71 103 / 70%) !important;
 }
 
 .text-bg-white {
     color: #000 !important;
-    background-color: RGBA(255, 255, 255, var(--angor-bg-opacity, 1)) !important;
+    background-color: rgb(255 255 255 / 70%) !important;
 }
 
 .text-bg-dark-blue {
     color: #fff !important;
-    background-color: RGBA(26, 35, 126, var(--angor-bg-opacity, 1)) !important;
+    background-color: rgb(26 35 126 / 70%) !important;
 }
 
 .link-primary {
