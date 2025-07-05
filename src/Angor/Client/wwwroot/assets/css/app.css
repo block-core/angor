@@ -5274,3 +5274,18 @@ body.dark .message-item.outgoing .message-bubble {
         max-height: 100px;
     }
 }
+.truncate-flex-1 {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.badge-container {
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+input.no-native-picker[type="date"]::-webkit-calendar-picker-indicator { opacity: 0; display: none; }
+input.no-native-picker[type="date"]::-moz-calendar-picker-indicator { opacity: 0; display: none; }

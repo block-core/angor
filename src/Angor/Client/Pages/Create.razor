@@ -275,7 +275,7 @@
                         </div>
                         <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period ends (must be before first stage date).</p>
                         <div class="input-group">
-                            <InputDate id="endDate" @bind-Value="project.ProjectInfo.EndDate" class="form-control" placeholder="Select end date" title="Investment end date" disabled="@nostrApplicationSpecificDataCreated" @onchange="ValidateEndDate" />
+                            <InputDate id="endDate" @bind-Value="project.ProjectInfo.EndDate" class="form-control no-native-picker" placeholder="Select end date" title="Investment end date" disabled="@nostrApplicationSpecificDataCreated" @onchange="ValidateEndDate" />
                             <button type="button" class="btn btn-border-success btn-sm" onclick="document.querySelector('input[type=date]:not(:disabled)').showPicker()">
                                 <Icon IconName="calendar" Height="16" Width="16" />
                             </button>
@@ -378,7 +378,7 @@
                             <label class="form-label">The amount in % to allocate for stage @(stageIndex + 1)</label>
                             <div class="input-group">
                                 <InputNumber @bind-Value="stage.AmountToRelease" class="form-control" placeholder="Enter amount to release as a percentage" min="1" max="100" step="1" disabled="@nostrApplicationSpecificDataCreated" />
-                                <InputDate id="@dateInputId" @bind-Value="stage.ReleaseDate" class="form-control" placeholder="Select release date" title="Stage release date" disabled="@nostrApplicationSpecificDataCreated" />
+                                <InputDate id="@dateInputId" @bind-Value="stage.ReleaseDate" class="form-control no-native-picker" placeholder="Select release date" title="Stage release date" disabled="@nostrApplicationSpecificDataCreated" />
                                 <button type="button" class="btn btn-border-success btn-sm" @onclick="@(() => OpenDatePicker(dateInputId))">
                                     <Icon IconName="calendar" Height="16" Width="16" />
                                 </button>

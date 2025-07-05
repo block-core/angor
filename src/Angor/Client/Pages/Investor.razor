@@ -145,20 +145,22 @@
                         <div class="card card-body h-100 animate-fade-in">
                             <!-- Project Header -->
                             <div class="d-flex align-items-center">
-                                <div class="stats-icon me-3" style="width: 48px; height: 48px;">
+                                <div class="stats-icon me-3">
                                     <Icon IconName="project_explorer" Height="24" Width="24" />
                                 </div>
-                                <div class="flex-grow-1 min-w-0">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <h6 class="mb-0 text-truncate fw-bold">@(project.Metadata?.Name ?? "Unnamed Project")</h6>
-                                        @if (project.ProjectInfo.StartDate > DateTime.UtcNow)
-                                        {
-                                            <span class="badge bg-warning text-dark ms-2">Funding</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-success ms-2">Active</span>
-                                        }
+                                <div class="flex-grow-1 min-w-0" style="overflow: hidden;">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <h6 class="mb-0 text-truncate fw-bold truncate-flex-1">@(project.Metadata?.Name ?? "Unnamed Project")</h6>
+                                        <div class="badge-container">
+                                            @if (project.ProjectInfo.StartDate > DateTime.UtcNow)
+                                            {
+                                                <span class="badge bg-warning text-dark">Funding</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                        </div>
                                     </div>
                                     <small class="text-muted">
                                         Target: @Money.Satoshis(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker
