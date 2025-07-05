@@ -72,7 +72,7 @@
 
             </div>
         </div>
-        <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="FetchInvestorCheckPassword" disabled="@refreshSpinner">
+        <button class="btn btn-border-success btn-sm h-100 w-auto" @onclick="FetchInvestorCheckPassword" disabled="@refreshSpinner">
             @if (refreshSpinner)
             {
                 <span class="spinner-border spinner-border-sm opacity-10 btn-angor btn-content"
@@ -195,8 +195,8 @@
                                      OnFeeChanged="@HandleFeeChanged" />
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-border-warning" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner">Cancel</button>
-                        <button type="button" class="btn btn-border-success" @onclick="ReleaseInvestorCoins" disabled="@prepareToReleaseCoinsConfirmSpinner">
+                        <button type="button" class="btn btn-border-warning btn-sm" @onclick="() => showReleaseModal = false" disabled="@prepareToReleaseCoinsConfirmSpinner">Cancel</button>
+                        <button type="button" class="btn btn-border-success btn-sm" @onclick="ReleaseInvestorCoins" disabled="@prepareToReleaseCoinsConfirmSpinner">
                             @if (prepareToReleaseCoinsConfirmSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
