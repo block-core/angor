@@ -10562,11 +10562,17 @@ fieldset:disabled .btn {
 }
 
 .bg-secondary {
-    background-color: #ff9900 !important;
+    background: linear-gradient(135deg, rgba(255,193,7,0.5), rgba(224,168,0,0.5)) !important;
+    box-shadow: 0 2px 4px rgba(255,193,7,0.1);
+    border: 2px solid rgba(255,193,7,0.3);
+    color: var(--angor-primary) !important;
 }
 
 .bg-success {
-    background-color: #4CAF50 !important;
+    background: linear-gradient(135deg, rgba(40, 167, 69, .5), rgba(34, 139, 58, .5)) !important;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, .1);
+    border: 2px solid rgba(40, 167, 69, .3);
+    color: var(--angor-primary) !important;
 }
 
 .bg-info {
@@ -10574,7 +10580,10 @@ fieldset:disabled .btn {
 }
 
 .bg-warning {
-    background-color: #fb8c00 !important;
+    background: linear-gradient(135deg, rgba(255,193,7,0.5), rgba(224,168,0,0.5)) !important;
+    box-shadow: 0 2px 4px rgba(255,193,7,0.1);
+    border: 2px solid rgba(255,193,7,0.3);
+    color: var(--angor-primary) !important;
 }
 
 .bg-danger {

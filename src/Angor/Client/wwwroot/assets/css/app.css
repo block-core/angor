@@ -3874,7 +3874,12 @@ input[type=number] {
     gap: 1rem;
     padding: 1.25rem;
     border-radius: 16px;
-    color: var(--form-text)
+    color: var(--form-text);
+    background: #f1fafc !important;
+}
+
+.dark .info-alert {
+    background: #083b46 !important;
 }
 
 .alert-icon {
