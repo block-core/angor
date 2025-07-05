@@ -448,186 +448,106 @@
         <div class="card card-body mt-4">
             @if (founder)
             {
-                <div class="animate-fade-in">
-                    <div class="d-flex align-items-center mb-4">
-                        <span class="user-select-none animate-rotate">
-                            <Icon IconName="verified-check" Height="42" Width="42" />
-                        </span>
-                        <div class="h-100 ms-3">
-                            <h5 class="mb-0 font-weight-bolder">Project Owner Dashboard</h5>
+                <div class="text-center animate-fade-in">
+                    <i class="me-2">
+                        <Icon IconName="verified-check" Height="100" Width="100" Class="action-icon" />
+                    </i>
+                    <h3 class="mt-4 text-success">Project Owner Dashboard</h3>
+                    <p class="action-text">Manage your project funds and approve transactions</p>
+                    <div class="action-buttons d-flex justify-content-center item-center mt-4">
+
+                        <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success text-white animate-scale">
+                            <i class="me-2">
+                                <Icon IconName="wallet" />
+                            </i>
+                            Manage funds
+                        </a>
+                        <div class="position-relative d-inline-block mx-2">
+                            <a href="@($"/signatures/{project.ProjectInfo.ProjectIdentifier}")" class="btn btn-border-warning animate-scale">
+                                <i class="me-2">
+                                    <Icon IconName="signature" />
+                                </i>
+                                Approve investments
+                            </a>
+                            @if (hasPendingMessages)
+                            {
+                                <span class="position-absolute top-0 start-100 translate-middle rounded-circle btn-border-warning" style="width: 16px; height: 16px; z-index: 1; background-color: #7e7537;">
+                                    <span class="visually-hidden">New activity</span>
+                                </span>
+                            }
                         </div>
+
+                        <a href=@($"/unfunded/{project.ProjectInfo.ProjectIdentifier}")
+                           class="btn btn-border-danger animate-scale @(CanReleaseUnfundedProject() ? "" : "disabled")">
+                            <i class="me-2">
+                                @if (CanReleaseUnfundedProject())
+                                {
+                                    <Icon IconName="unlock" />
+                                }
+                                else
+                                {
+                                    <Icon IconName="lock" />
+                                }
+                            </i>
+                            Release funds back to investors
+                        </a>
                     </div>
 
-                    <div class="row g-4">
-                        <div class="col-12 col-sm-6 col-lg-4">
-                            <div class="info-card p-3 rounded-3 border hover-effect h-100 d-flex flex-column">
-                                <div class="d-flex align-items-center mb-2">
-                                    <Icon IconName="wallet" Height="24" Width="24" Class="me-3" />
-                                    <h6 class="mb-0">Manage Funds</h6>
-                                </div>
-                                <p class="text-sm mb-auto">Access and manage the project's financial resources with complete transparency and control.</p>
-                                <a href=@($"/spend/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-success text-white animate-scale mt-3">
-                                    Go to Funds
-                                </a>
-                            </div>
-                        </div>
 
-                        <div class="col-12 col-sm-6 col-lg-4">
-                            <div class="info-card p-3 rounded-3 border hover-effect h-100 d-flex flex-column">
-                                <div class="d-flex align-items-center mb-2 justify-content-between">
-                                    <div class="d-flex align-items-center">
-                                        <Icon IconName="signature" Height="24" Width="24" Class="me-3" />
-                                        <h6 class="mb-0">Approve Investments</h6>
-                                    </div>
-                                    @if (hasPendingMessages)
-                                    {
-                                        <span class="user-select-none">
-                                            <Icon IconName="pendingmessage" Height="24" Width="24"></Icon>
-                                        </span>
-                                    }
-                                </div>
-                                <p class="text-sm mb-auto">Review and approve pending investment requests from potential backers.</p>
-                                <a href="@($"/signatures/{project.ProjectInfo.ProjectIdentifier}")" class="btn btn-border-success animate-scale mt-3">
-                                    Review Signatures
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-lg-4">
-                            <div class="info-card p-3 rounded-3 border hover-effect h-100 d-flex flex-column">
-                                <div class="d-flex align-items-center mb-2">
-                                    @if (CanReleaseUnfundedProject())
-                                    {
-                                        <Icon IconName="unlock" Height="24" Width="24" Class="me-3" />
-                                    }
-                                    else
-                                    {
-                                        <Icon IconName="lock" Height="24" Width="24" Class="me-3" />
-                                    }
-                                    <h6 class="mb-0">Release Funds</h6>
-                                </div>
-                                <p class="text-sm mb-auto">Return funds to investors if project goals are not met or in emergency situations.</p>
-                                <a href=@($"/unfunded/{project.ProjectInfo.ProjectIdentifier}")
-                                   class="btn btn-border-success animate-scale mt-3 @(CanReleaseUnfundedProject() ? "" : "disabled")">
-                                    Release Funds
-                                </a>
-                            </div>
-                        </div>
-                    </div>
                 </div>
+
             }
             else if (invested)
             {
-                <div class="animate-fade-in">
-                    <div class="d-flex align-items-center mb-4">
-                        <span class="user-select-none animate-rotate">
-                            <Icon IconName="cup" Height="42" Width="42" />
-                        </span>
-                        <div class="h-100 ms-3">
-                            <h5 class="mb-0 font-weight-bolder">Investor Dashboard</h5>
-                        </div>
-                    </div>
+                <div class="action-card investor-card animate-fade-in">
+                    <i class="me-2">
+                        <Icon IconName="cup" Height="100" Width="100" Class="action-icon" />
+                    </i>
+                    <h3 class="mt-4">Investment Active</h3>
+                    <p class="action-text">
+                        You are part of this project's success!
+                        <a href="@myProjectExplorerLink" target="_blank" class="d-block mt-2">View Transaction Details</a>
+                    </p>
+                    <div class="d-flex justify-content-center item-center mt-4">
 
-                    <div class="row g-4">
-                        <div class="col-12 col-sm-6 col-lg-4">
-                            <div class="info-card p-3 rounded-3 border hover-effect h-100 d-flex flex-column">
-                                <div class="d-flex align-items-center mb-2">
-                                    <Icon IconName="statistics" Height="24" Width="24" Class="me-3" />
-                                    <h6 class="mb-0">Investment Status</h6>
-                                </div>
-                                <p class="text-sm mb-auto">You are part of this project's success story! Track your investment performance.</p>
-                                <a href="@myProjectExplorerLink" target="_blank" class="btn btn-border animate-scale mt-3">
-                                    View Transaction
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-lg-4">
-                            <div class="info-card p-3 rounded-3 border hover-effect h-100 d-flex flex-column">
-                                <div class="d-flex align-items-center mb-2">
-                                    <Icon IconName="recover" Height="24" Width="24" Class="me-3" />
-                                    <h6 class="mb-0">Manage Investment</h6>
-                                </div>
-                                <p class="text-sm mb-auto">Access recovery options and manage your investment settings when needed.</p>
-                                <button class="btn btn-border-success animate-scale mt-3" @onclick="RecoverFunds">
-                                    Manage Investment
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-lg-4">
-                            <div class="info-card p-3 rounded-3 border hover-effect h-100 d-flex flex-column">
-                                <div class="d-flex align-items-center mb-2">
-                                    <Icon IconName="chat" Height="24" Width="24" Class="me-3" />
-                                    <h6 class="mb-0">Communication</h6>
-                                </div>
-                                <p class="text-sm mb-auto">Connect with the project team and stay updated on progress and milestones.</p>
-                                <button class="btn btn-border animate-scale mt-3" @onclick="OpenMessagingWithFounder">
-                                    Message Founder
-                                </button>
-                            </div>
-                        </div>
+                        <button class="btn btn-border animate-scale" @onclick="RecoverFunds">
+                            <Icon IconName="recover" Class="me-2" />
+                            Manage Investment
+                        </button>
                     </div>
                 </div>
             }
             else
             {
-                <div class="animate-fade-in">
-                    <div class="d-flex align-items-center mb-4">
-                        <span class="user-select-none animate-rotate">
-                            <Icon IconName="shield-star" Height="42" Width="42" />
-                        </span>
-                        <div class="h-100 ms-3">
-                            <h5 class="mb-0 font-weight-bolder">Investment Opportunity</h5>
-                        </div>
-                    </div>
+                <div class="action-card prospect-card animate-fade-in">
+
+                    <Icon IconName="shield-star" Height="100" Width="100" Class="action-icon me-2" />
+
+                    <h3 class="mt-4">Investment Opportunity</h3>
+                    <p class="action-text">
+                        Join this project and be part of its journey to success
+                    </p>
 
                     @{
                         var canInvest = applicationLogicService.IsInvestmentWindowOpen(project?.ProjectInfo);
                     }
+                    <div class="d-flex justify-content-center item-center mt-4">
+                        <button class="btn btn-border-success animate-scale"
+                                data-cy="INVEST_BUTTON"
+                                @onclick="InvestInProject"
+                                disabled="@(!canInvest)">
 
-                    <div class="row g-4">
-                        <div class="col-12 col-sm-6 col-lg-4">
-                            <div class="info-card p-3 rounded-3 border hover-effect h-100 d-flex flex-column">
-                                <div class="d-flex align-items-center mb-2">
-                                    <Icon IconName="shield-star" Height="24" Width="24" Class="me-3" />
-                                    <h6 class="mb-0">Start Investing</h6>
-                                </div>
-                                <p class="text-sm mb-auto">@(canInvest ? "Take part in this innovative project and help bring their vision to life." : "Investment period has ended. Check back for future opportunities.")</p>
-                                <button class="btn btn-border-success animate-scale mt-3"
-                                        data-cy="INVEST_BUTTON"
-                                        @onclick="InvestInProject"
-                                        disabled="@(!canInvest)">
-                                    @(canInvest ? "Invest Now" : "Investment Closed")
-                                </button>
-                            </div>
-                        </div>
+                            <Icon IconName="shield-star" Class="me-2" />
 
-                        <div class="col-12 col-sm-6 col-lg-4">
-                            <div class="info-card p-3 rounded-3 border hover-effect h-100 d-flex flex-column">
-                                <div class="d-flex align-items-center mb-2">
-                                    <Icon IconName="view" Height="24" Width="24" Class="me-3" />
-                                    <h6 class="mb-0">Project Analysis</h6>
-                                </div>
-                                <p class="text-sm mb-auto">Review project details, funding progress, and team information before making your decision.</p>
-                                <button class="btn btn-border animate-scale mt-3" onclick="document.querySelector('.card:has(.project-title)').scrollIntoView({behavior: 'smooth'})">
-                                    View Details
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-lg-4">
-                            <div class="info-card p-3 rounded-3 border hover-effect h-100 d-flex flex-column">
-                                <div class="d-flex align-items-center mb-2">
-                                    <Icon IconName="explorer" Height="24" Width="24" Class="me-3" />
-                                    <h6 class="mb-0">Blockchain Explorer</h6>
-                                </div>
-                                <p class="text-sm mb-auto">Verify all transactions and project activities on the blockchain for complete transparency.</p>
-                                <a href="@projectExplorerLink" target="_blank" class="btn btn-border animate-scale mt-3">
-                                    View Explorer
-                                </a>
-                            </div>
-                        </div>
+                            @if (!canInvest)
+                            {
+                                <span>Investment Period Closed</span>
+                            }
+                            else
+                            {
+                                <span>Invest Now</span>
+                            }
+                        </button>
                     </div>
                 </div>
             }
@@ -660,19 +580,19 @@
 
                     <div class="input-group">
                         <InputText id="NostrNpubPublicKey" @bind-Value="@Npub" class="form-control" placeholder="@Npub" readonly />
-                        <button @onclick="() => CopyToClipboard(Npub)" class="btn btn-border btn-sm">
-                            <Icon IconName="copy" Height="24" Width="24" />
+                        <button @onclick="() => CopyToClipboard(Npub)" class="btn btn-border">
+                            <Icon IconName="copy" />
                         </button>
-                        <button @onclick="OpenInHUBAsync" class="btn btn-border btn-sm">
-                            <Icon IconName="link" Height="24" Width="24" />
+                        <button @onclick="OpenInHUBAsync" class="btn btn-border">
+                            <Icon IconName="link" />
                         </button>
                     </div>
                     <br />
                     <label for="NostrHexPublicKey" class="form-label">Project NOSTR public key (hex)</label>
                     <div class="input-group">
                         <InputText id="NostrHexPublicKey" @bind-Value="project.ProjectInfo.NostrPubKey" class="form-control" placeholder="@project.ProjectInfo.NostrPubKey" readonly />
-                        <button @onclick="() => CopyToClipboard(project.ProjectInfo.NostrPubKey)" class="btn btn-border btn-sm">
-                            <Icon IconName="copy" Height="24" Width="24" />
+                        <button @onclick="() => CopyToClipboard(project.ProjectInfo.NostrPubKey)" class="btn btn-border">
+                            <Icon IconName="copy" />
                         </button>
                     </div>
 
@@ -685,30 +605,30 @@
 
                         <div class="input-group">
                             <InputText id="InvestorNostrNpubPublicKey" @bind-Value="@invNpub" class="form-control" placeholder="@invNpub" readonly />
-                            <button @onclick="() => CopyToClipboard(invNpub)" class="btn btn-border btn-sm">
-                                <Icon IconName="copy" Height="24" Width="24" />
+                            <button @onclick="() => CopyToClipboard(invNpub)" class="btn btn-border">
+                                <Icon IconName="copy" />
                             </button>
                         </div>
                         <br />
                         <label for="InvestorNostrHexPublicKey" class="form-label">Investor NOSTR public key (hex)</label>
                         <div class="input-group">
                             <InputText id="InvestorNostrHexPublicKey" @bind-Value="@invPubKey" class="form-control" placeholder="@invPubKey" readonly />
-                            <button @onclick="() => CopyToClipboard(invPubKey)" class="btn btn-border btn-sm">
-                                <Icon IconName="copy" Height="24" Width="24" />
+                            <button @onclick="() => CopyToClipboard(invPubKey)" class="btn btn-border">
+                                <Icon IconName="copy" />
                             </button>
                         </div>
                     }
 
                     <div class="action-buttons d-flex flex-wrap justify-content-center mt-4">
                         <button @onclick="OpenInHUBAsync" class="btn btn-border-success animate-scale">
-                            <Icon IconName="link" Class="me-2" Height="24" Width="24" />
+                            <Icon IconName="link" Class="me-2" />
                             Open in Angor Hub
                         </button>
 
                         @if (invested)
                         {
                             <button @onclick="OpenMessagingWithFounder" class="btn btn-border-success animate-scale">
-                                <Icon IconName="chat" Class="me-2" Height="24" Width="24" />
+                                <Icon IconName="chat" Class="me-2" />
                                 Message Project Founder
                             </button>
                         }
@@ -716,7 +636,7 @@
                         @if (founder)
                         {
                             <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning animate-scale">
-                                <Icon IconName="edit" Class="me-2" Height="24" Width="24" />
+                                <Icon IconName="edit" Class="me-2" />
                                 Edit project profile
                             </button>
                         }
@@ -724,7 +644,7 @@
                         @if (invested || founder)
                         {
                             <button @onclick="ShowNsecAsync" class="btn btn-border-danger animate-scale">
-                                <Icon IconName="shield" Class="me-2" Height="24" Width="24" />
+                                <Icon IconName="shield" Class="me-2" />
                                 View Private Keys (nsec)
                             </button>
                         }
@@ -747,18 +667,16 @@
                     @if (!string.IsNullOrEmpty(NostrHexSecKey) || !string.IsNullOrEmpty(NostrNsecSecKey))
                     {
                         <div class="card mt-4 p-3 border border-danger">
-                            <h6 class="mb-3 text-danger">
-                                <Icon IconName="shield" Class="me-2" />@(invested ? "Investor" : "Project") NOSTR Private Keys
-                            </h6>
+                            <h6 class="mb-3 text-danger"><Icon IconName="shield" Class="me-2" />@(invested ? "Investor" : "Project") NOSTR Private Keys</h6>
                             <label for="NostrNsecSecKey" class="form-label">NOSTR private key (nsec)</label>
                             <div class="input-group mb-3">
                                 <input type="@(showPrivateKeys ? "text" : "password")" id="NostrNsecSecKey" value="@NostrNsecSecKey"
                                        class="form-control nsec-box" readonly />
-                                <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border btn-sm">
-                                    <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" Height="24" Width="24" />
+                                <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
+                                    <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" />
                                 </button>
-                                <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border btn-sm">
-                                    <Icon IconName="copy" Height="24" Width="24" />
+                                <button @onclick="CopyNsecSecKeyToClipboardAsync" class="btn btn-border">
+                                    <Icon IconName="copy" />
                                 </button>
                             </div>
 
@@ -766,16 +684,16 @@
                             <div class="input-group">
                                 <input type="@(showPrivateKeys ? "text" : "password")" id="NostrHexSecKey" value="@NostrHexSecKey"
                                        class="form-control nsec-box" readonly />
-                                <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border btn-sm">
-                                    <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" Height="24" Width="24" />
+                                <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
+                                    <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" />
                                 </button>
-                                <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border btn-sm">
-                                    <Icon IconName="copy" Height="24" Width="24" />
+                                <button @onclick="CopyHexSecKeyToClipboardAsync" class="btn btn-border">
+                                    <Icon IconName="copy" />
                                 </button>
                             </div>
                             <div class="text-center mt-3">
                                 <small class="text-danger">
-                                    <Icon IconName="warning" Class="me-1" Height="24" Width="24" /> Never share your private keys with anyone.
+                                    <Icon IconName="warning" Class="me-1" /> Never share your private keys with anyone.
                                 </small>
                             </div>
                         </div>
@@ -867,14 +785,14 @@
     }
 
     readonly ProjectStats projectStats = new()
-    {
-        Loading = true,
-        TimeLeft = 0,
-        TotalInvestors = 0,
-        TotalRaised = 0,
-        TotalSeeders = 0,
-        FundingProgressPercent = 0
-    };
+        {
+            Loading = true,
+            TimeLeft = 0,
+            TotalInvestors = 0,
+            TotalRaised = 0,
+            TotalSeeders = 0,
+            FundingProgressPercent = 0
+        };
 
     bool founder;
     bool invested;
