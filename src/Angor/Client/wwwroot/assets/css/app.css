@@ -3561,7 +3561,7 @@ input[type=number] {
 }
 
 .project-icon {
-    justify-content: center;
+        justify-content: center;
     background: rgba(var(--angor-secondary-rgb),.1);
     padding: .5rem;
     border-radius: 8px
@@ -3876,7 +3876,7 @@ input[type=number] {
     border-radius: 16px;
     color: var(--form-text);
     background: #f1fafc !important;
-}
+    }
 
 .dark .info-alert {
     background: #083b46 !important;
@@ -5170,7 +5170,6 @@ body.dark .message-item.outgoing .message-bubble {
     bottom: -60px;
     left: 30px;
     z-index: 2;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .dark .profile-image-view {
@@ -5211,5 +5210,30 @@ body.dark .message-item.outgoing .message-bubble {
     
     .content-container {
         margin-top: 40px !important;
+    }
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+.header-actions .btn {
+    min-width: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: min-width 0.2s;
+}
+
+@media (max-width: 960px) {
+    .header-actions .btn {
+        min-width: 0 !important;
+        width: 40px !important;
+        height: 40px !important;
+        padding: 0;
+        justify-content: center;
+    }
+    .header-actions .button-text {
+        display: none !important;
     }
 }
