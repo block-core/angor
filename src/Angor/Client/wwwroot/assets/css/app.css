@@ -14,12 +14,14 @@
     --angor-shadow-secondary: rgba(var(--angor-secondary-rgb), 0.4);
     --angor-shadow-accent: rgba(var(--angor-accent-rgb), 0.4);
     --angor-scrollbar-thumb-hover-bg: rgba(8, 108, 129, 0.75);
+
     --angor-font-sans-serif: "Roboto", Helvetica, Arial, sans-serif;
     --angor-font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --angor-gradient: linear-gradient(180deg, rgba(255,255,255,0.15), rgba(255,255,255,0));
     --angor-body-font-size: 1rem;
     --angor-body-font-weight: 400;
     --angor-body-line-height: 1.5;
+
     --angor-border-width: 1px;
     --angor-border-style: solid;
     --angor-border-radius-sm: 0.125rem;
@@ -28,6 +30,7 @@
     --angor-border-radius-xl: 0.75rem;
     --angor-border-radius-2xl: 1rem;
     --angor-border-radius-pill: 50rem;
+
     --angor-modal-zindex: 1050;
     --angor-modal-width: 500px;
     --angor-modal-padding: 1rem;
@@ -37,18 +40,20 @@
     --angor-modal-header-padding: 1rem;
     --angor-modal-title-line-height: 1.5;
     --angor-modal-footer-gap: 0.5rem;
-    --btn-border: #cccccc;
-    --form-bg: #ffffff;
-    --form-border: #cccccc;
-    --form-text: #333333;
-    --form-label: #555555;
+
+    --btn-border: var(--angor-accent);
+    --form-bg: #f8fcfd;
+    --form-border: var(--angor-accent);
+    --form-text: var(--angor-primary);
+    --form-label: var(--angor-secondary);
     --form-disabled-bg: #e9ecef;
     --form-disabled-text: #6c757d;
     --form-focus-border: var(--angor-secondary);
     --form-focus-shadow: rgba(var(--angor-secondary-rgb), 0.25);
-    --angor-chat-incoming-bg: #e0e0e0;
-    --angor-chat-outgoing-bg: #bad8ff;
-    --angor-chat-bubble-radius: 18px
+
+    --angor-chat-incoming-bg: rgba(var(--angor-accent-rgb), 0.7);
+    --angor-chat-outgoing-bg: rgba(var(--angor-secondary-rgb), 0.15);
+    --angor-chat-bubble-radius: 18px;
 }
 
 .dark {
@@ -64,7 +69,7 @@
     --form-focus-border: #0a8ca7;
     --form-focus-shadow: rgba(10, 140, 167, 0.25);
     --angor-chat-incoming-bg: #4a565e;
-    --angor-chat-outgoing-bg: #25557a
+    --angor-chat-outgoing-bg: #25557a;
 }
 
 * {
@@ -5235,5 +5240,38 @@ body.dark .message-item.outgoing .message-bubble {
     }
     .header-actions .button-text {
         display: none !important;
+    }
+}
+
+.qrcode-modal-dialog {
+    max-width: 420px;
+    margin: 1.75rem auto;
+}
+
+.qrcode-modal-content {
+    border-radius: 16px;
+    padding: 0.5rem 0.5rem 1rem 0.5rem;
+}
+
+.qrcode-img-responsive {
+    max-width: 100%;
+    height: auto;
+    width: 160px;
+    min-width: 140px;
+    max-height: 140px;
+}
+
+@media (max-width: 576px) {
+    .modal-dialog {
+        max-width: 95vw !important;
+        margin: 0.5rem auto;
+    }
+    .modal-content {
+        padding: 0.5rem 0.2rem 1rem 0.2rem;
+        border-radius: 10px;
+    }
+    .qrcode-img-responsive {
+        width: 90px;
+        max-height: 100px;
     }
 }
