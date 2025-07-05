@@ -65,7 +65,7 @@ jobs:
     - name: Variables
       run: |
         BASE_VERSION=$(npm run version --silent)
-        echo VERSION=${BASE_VERSION}-pr${{ inputs.pr_number }} >> $GITHUB_ENV
+        echo VERSION=${BASE_VERSION}.${{ inputs.pr_number }} >> $GITHUB_ENV
         echo PR_NUMBER=${{ inputs.pr_number }} >> $GITHUB_ENV
       shell: bash
       
