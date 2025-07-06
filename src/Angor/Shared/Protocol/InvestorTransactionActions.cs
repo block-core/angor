@@ -35,7 +35,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     }
 
     public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey,
-        long totalInvestmentAmount)
+        long totalInvestmentAmount, bool takeFeeFromAmount = false)
     {
         // create the output and script of the investor pubkey script opreturn
         var opreturnScript = _projectScriptsBuilder.BuildInvestorInfoScript(investorKey);
@@ -45,7 +45,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, index));
 
         return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript,
-            totalInvestmentAmount);
+            totalInvestmentAmount, takeFeeFromAmount);
     }
 
     public ProjectScriptType DiscoverUsedScript(ProjectInfo projectInfo, Transaction investmentTransaction, int stageIndex, string witScript)

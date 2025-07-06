@@ -24,7 +24,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
     }
 
     public Transaction BuildInvestmentTransaction(ProjectInfo projectInfo, Script opReturnScript, 
-        IEnumerable<ProjectScripts> projectScripts, long totalInvestmentAmount)
+        IEnumerable<ProjectScripts> projectScripts, long totalInvestmentAmount, bool takeFeeFromAmount = false)
     {
         var network = _networkConfiguration.GetNetwork();
 
@@ -36,7 +36,10 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
         long angorFee = (totalInvestmentAmount * angorFeePercentage) / 100; 
         var angorOutput = new TxOut(new Money(angorFee), angorFeeOutputScript);
         investmentTransaction.AddOutput(angorOutput);
-        
+
+        if (takeFeeFromAmount)
+            totalInvestmentAmount -= angorFee;
+
         var investorInfoOutput = new TxOut(new Money(0), opReturnScript);
         investmentTransaction.AddOutput(investorInfoOutput);
 

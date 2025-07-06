@@ -455,7 +455,7 @@
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <div>
                                                         <div class="info-label">Stage @(++index):</div>
-                                                        <div class="info-value">@StagesBreakdown[index - 1].AmountBtc @network.CoinTicker</div>
+                                                        <div class="info-value">@signedTransaction.Transaction.Outputs[index + 2 - 1].Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
                                                     </div>
                                                     <div>
                                                         <div class="info-label">Release:</div>
@@ -689,7 +689,6 @@ else
     string InvestorPubKey;
 
     private AccountBalanceInfo WalletBalance = new AccountBalanceInfo();
-    private bool spendAll = false;
 
     private FeeData feeData = new();
 
@@ -1051,19 +1050,9 @@ else
             }
 
             long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
-            if (spendAll)
-            {
-                if (investmentAmount != WalletBalance.TotalBalance)
-                {
-                    throw new InvalidOperationException("Investment amount does not match the total wallet balance.");
-                }
+            var spendAll = investmentAmount == WalletBalance.TotalBalance;
 
-                int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
-                long angorFee = (WalletBalance.TotalBalance * angorFeePercentage) / 100;
-                investmentAmount -= angorFee;
-            }
-
-            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, investmentAmount);
+            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, investmentAmount, spendAll);
 
             if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
@@ -1112,10 +1101,13 @@ else
             }
 
             var accountInfo = storage.GetAccountInfo(network.Name);
+          
+            long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+            var spendAll = investmentAmount == WalletBalance.TotalBalance;
 
             if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
-                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate, spendAll: spendAll);
 
                 signedTransaction = _WalletOperations.SignPsbt(psbt, await passwordComponent.GetWalletAsync());
             }
@@ -1126,7 +1118,8 @@ else
                     unSignedTransaction,
                     await passwordComponent.GetWalletAsync(),
                     accountInfo,
-                    feeData.SelectedFeeEstimation.FeeRate);
+                    feeData.SelectedFeeEstimation.FeeRate,
+                    spendAll);
             }
 
             StateHasChanged();
@@ -1140,7 +1133,6 @@ else
 
     private void SetMaxInvestment()
     {
-        spendAll = true;
         UpdateStagesBreakdown(new ChangeEventArgs { Value = WalletBalance.TotalBalance.ToUnitBtc() });
         StateHasChanged();
     }
