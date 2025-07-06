@@ -55,7 +55,7 @@
             </div>
             <div>
 
-                <button class="btn btn-border-danger" @onclick="() => showChangeNetworkModal = true">
+                <button class="btn btn-border-danger btn-sm" @onclick="() => showChangeNetworkModal = true">
                     <Icon IconName="change" Height="24" Width="24" />
                     <span class="ms-2 d-none d-md-inline">Change Network</span>
                 </button>
@@ -169,7 +169,7 @@
                     </h5>
                 </div>
             </div>
-            @* <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="Refresh" *@
+            @* <button class="btn btn-border-success btn-sm h-100 w-auto" @onclick="Refresh" *@
             @*         disabled="@refreshSpinner"> *@
             @*     @if (refreshSpinner) *@
             @*     { *@
@@ -188,7 +188,7 @@
                 <input type="text" @bind-value="newExplorerLink" class="form-control"
                        placeholder="Enter new explorer link" aria-label="Enter new explorer link"
                        aria-describedby="button-addon3">
-                <button class="btn btn-border" type="submit" id="button-addon3">
+                <button class="btn btn-border btn-sm" type="submit" id="button-addon3">
                     <Icon IconName="plus" Height="24" Width="24"></Icon>
                 </button>
             </div>
@@ -253,7 +253,7 @@
 
                 </div>
             </div>
-            <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="Refresh"
+            <button type="button" class="btn btn-border-success btn-sm h-100 w-auto" @onclick="Refresh"
                     disabled="@refreshSpinner">
                 @if (refreshSpinner)
                 {
@@ -272,7 +272,7 @@
                 <input type="text" @bind-value="newIndexerLink" class="form-control"
                        placeholder="Enter new indexer link" aria-label="Enter new indexer link"
                        aria-describedby="button-addon">
-                <button class="btn btn-border" type="submit" id="button-addon">
+                <button class="btn btn-border btn-sm" type="submit" id="button-addon">
                     <Icon IconName="plus" Height="24" Width="24"></Icon>
                 </button>
             </div>
@@ -337,7 +337,7 @@
                     </h5>
                 </div>
             </div>
-            <button class="btn btn-border-success refresh-btn h-100 w-auto" @onclick="Refresh"
+            <button type="button" class="btn btn-border-success btn-sm h-100 w-auto" @onclick="Refresh"
                     disabled="@refreshSpinner">
                 @if (refreshSpinner)
                 {
@@ -355,7 +355,7 @@
             <div class="input-group mb-3">
                 <input type="text" @bind-value="newRelayLink" class="form-control" placeholder="Enter new relay link"
                        aria-label="Enter new relay link" aria-describedby="button-addon2">
-                <button class="btn btn-border" type="submit" id="button-addon2">
+                <button class="btn btn-border btn-sm" type="submit" id="button-addon2">
                     <Icon IconName="plus" Height="24" Width="24"></Icon>
                 </button>
             </div>
@@ -444,7 +444,7 @@
                     <p class="text-muted mb-0">Irreversible actions</p>
                 </div>
             </div>
-            <button class="btn btn-border-danger" @onclick="() => showWipeallModal = true">
+            <button class="btn btn-border-danger btn-sm" @onclick="() => showWipeallModal = true">
                 <Icon IconName="delete" Height="24" Width="24" />
                 <span class="ms-2 d-none d-md-inline">Wipe Data</span>
             </button>
