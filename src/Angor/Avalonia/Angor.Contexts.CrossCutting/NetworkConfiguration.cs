@@ -57,6 +57,11 @@ public class NetworkConfiguration : INetworkConfiguration
         throw new NotImplementedException();
     }
 
+    public List<SettingsUrl> GetDiscoveryRelays()
+    {
+        throw new NotImplementedException();
+    }
+
     public string GetAngorKey()
     {
         return AngorTestKey;
