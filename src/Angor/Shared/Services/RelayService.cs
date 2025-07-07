@@ -1,11 +1,13 @@
-﻿using System.Reactive.Linq;
-using Angor.Shared.Models;
-using Nostr.Client.Requests;
+﻿using Angor.Shared.Models;
 using Microsoft.Extensions.Logging;
+using Nostr.Client.Json;
 using Nostr.Client.Keys;
 using Nostr.Client.Messages;
+using Nostr.Client.Messages.Contacts;
 using Nostr.Client.Messages.Metadata;
+using Nostr.Client.Requests;
 using Nostr.Client.Responses;
+using System.Reactive.Linq;
 
 namespace Angor.Shared.Services
 {
@@ -279,8 +281,27 @@ namespace Angor.Shared.Services
             
             return Task.FromResult(deleteEvent.Id);
         }
-        
-        private static NostrEvent GetNip3030NostrEvent( string content)
+
+        public string PublishNip65ListAsync(string hexPrivateKey)
+        {
+            var key = NostrPrivateKey.FromHex(hexPrivateKey);
+
+            var signed = new NostrEvent()
+            {
+                Kind = NostrKind.RelayListMetadata,
+                CreatedAt = DateTime.UtcNow,
+                Tags = new NostrEventTags(_networkService.GetRelays().Select(a=> new NostrEventTag("r", a.Url))),
+                Content = string.Empty
+            }.Sign(key);
+
+            var nostrClient = _communicationFactory.GetOrCreateDiscoveryClients(_networkService);
+
+            nostrClient.Send(new NostrEventRequest(signed));
+
+            return signed.Id;
+        }
+
+        private static NostrEvent GetNip3030NostrEvent(string content)
         {
             // https://github.com/block-core/nips/blob/peer-to-peer-decentralized-funding/3030.md
 

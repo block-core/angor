@@ -1217,6 +1217,8 @@
         StateHasChanged();
         await Task.Delay(10);
 
+
+
         try
         {
             var words = await passwordComponent.GetWalletAsync();
@@ -1244,6 +1246,7 @@
                     storage.UpdateFounderProject(project);
 
                     InvokeAsync(async () => await CheckAndAdvanceStep());
+                    InvokeAsync(() => _RelayService.PublishNip65ListAsync(NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes())));
                 }
 
                 StateHasChanged();
