@@ -42,7 +42,7 @@
             <div class="header-actions">
                 @if (hasWallet)
                 {
-                    <button class="btn btn-border-warning" @onclick="() => walletWordsModal = true" data-cy="wallet-words" title="Wallet Seed">
+                    <button class="btn btn-border-warning btn-sm" @onclick="() => walletWordsModal = true" data-cy="wallet-words" title="Wallet Seed">
                         <Icon IconName="wallet" Height="24" Width="24" />
                         <span class="button-text ms-2">View Seed</span>
                     </button>
@@ -238,7 +238,7 @@
                                                 <div class="input-group">
                                                     <input type="@passwordInputType" class="form-control"
                                                            @bind="newWalletPassword" placeholder="Enter password">
-                                                    <button class="btn btn-border" @onclick="TogglePasswordVisibility">
+                                                    <button class="btn btn-border btn-sm" @onclick="TogglePasswordVisibility">
                                                         @if (passwordToggleText == "Show")
                                                         {
                                                             <Icon IconName="visibility-off" Height="24" Width="24"></Icon>
@@ -312,7 +312,7 @@
                                                 <div class="input-group">
                                                     <input type="@passwordInputType" class="form-control"
                                                            @bind="newWalletPassword" placeholder="Enter password">
-                                                    <button class="btn btn-border" @onclick="TogglePasswordVisibility">
+                                                    <button class="btn btn-border btn-sm" @onclick="TogglePasswordVisibility">
 
                                                         @if (passwordToggleText == "Show")
                                                         {
@@ -473,7 +473,7 @@ else
                     <div class="header-actions">
                         @if (CanGetTestCoins())
                         {
-                            <button class="btn btn-border-warning"
+                            <button class="btn btn-border-warning btn-sm"
                                     data-cy="get-test-coins"
                                     @onclick="GetTestCoins"
                                     disabled="@testCoinsSpinner">
@@ -488,7 +488,7 @@ else
                                 }
                             </button>
                         }
-                        <button class="btn btn-border-success"
+                        <button class="btn btn-border-success btn-sm"
                                 @onclick="RefreshBalance"
                                 disabled="@balanceSpinner">
                             @if (balanceSpinner)
@@ -562,7 +562,7 @@ else
                                                    @bind="showWalletPassword"
                                                    @bind:event="oninput"
                                                    @onkeypress="@(async e => { if(e.Key is "Enter" or "NumpadEnter") await ShowWords(); })" />
-                                            <button class="btn btn-border" type="button" @onclick="TogglePasswordVisibility">
+                                            <button class="btn btn-border btn-sm" type="button" @onclick="TogglePasswordVisibility">
                                                 @if (passwordToggleText == "Show")
                                                 {
                                                     <Icon IconName="visibility-off" Height="24" Width="24"></Icon>
@@ -599,7 +599,7 @@ else
                             </div>
 
                             <div class="modal-footer border-0 pt-0">
-                                <button class="btn btn-border-danger" @onclick="ShowWords" data-cy="wallet-words-in-popup">View Seed</button>
+                                <button class="btn btn-border-danger btn-sm" @onclick="ShowWords" data-cy="wallet-words-in-popup">View Seed</button>
                             </div>
                         </div>
                     </div>
@@ -668,14 +668,14 @@ else
                             <div class="mb-3">
                                 <label for="sendToAddress" class="form-label">Send to Address</label>
                                 <div class="input-group">
-                                    <span role="button" class="btn btn-border-success" @onclick="PasteFromClipboard">
+                                    <span role="button" class="btn btn-border-success btn-sm" @onclick="PasteFromClipboard">
                                         <Icon IconName="paste" />
                                     </span>
 
                                     <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
 
 
-                                    <span role="button" class="btn btn-border-danger" @onclick="ClearAddress">
+                                    <span role="button" class="btn btn-border-danger btn-sm" @onclick="ClearAddress">
                                         <Icon IconName="remove" />
                                     </span>
                                 </div>
@@ -703,7 +703,7 @@ else
                                 </button>
 
                                 <!-- Send Button with Confirmation Dialog -->
-                                <button type="button" class="btn btn-border-success"
+                                <button type="button" class="btn btn-border-success btn-sm"
                                         data-cy="send-button" @onclick="AskPassword"
                                         disabled="@sendLoadSpinner">
                                     @if (sendLoadSpinner)
@@ -971,7 +971,7 @@ else
                                                 <td>@addressInfo.HdPath</td>
                                                 <td>@count</td>
                                                 <td>
-                                                    <button class="btn btn-border-success" @onclick="() => ShowRawTransactionJson(addressInfo)">Show</button>
+                                                    <button class="btn btn-border-success btn-sm" @onclick="() => ShowRawTransactionJson(addressInfo)">Show</button>
                                                 </td>
                                             </tr>
                                             @if (IsExpanded(addressInfo.Address))

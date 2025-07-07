@@ -20,12 +20,12 @@
 {
     <div class="modal-wrapper">
         <div class="modal fade show d-block" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered modal-sm">
-                <div class="modal-content modern-modal">
+            <div class="modal-dialog modal-dialog-centered modal-sm qrcode-modal-dialog">
+                <div class="modal-content modern-modal qrcode-modal-content">
                     <div class="modal-header border-0 pb-0">
                         <div class="d-flex align-items-center">
-                            <Icon IconName="receive" Height="24" Width="24" class="me-2" />
-                            <h5 class="modal-title fs-5">Receive Address</h5>
+                            <Icon IconName="receive" Height="20" Width="20" class="me-2" />
+                            <h6 class="modal-title fs-6">Receive Address</h6>
                         </div>
                         <button class="btn-close-custom" @onclick="HideModal">
                             <Icon IconName="close-circle" Height="20" Width="20" />
@@ -34,8 +34,8 @@
                     <div class="modal-body p-3">
                         <div class="text-center mb-3">
                             <img src="data:image/png;base64,@base64qrcode" 
-                                 class="qrcode-image img-fluid rounded" 
-                                 width="200" height="200"
+                                 class="qrcode-image img-fluid rounded qrcode-img-responsive" 
+                                 width="140" height="140"
                                  alt="QR Code" />
                         </div>
 

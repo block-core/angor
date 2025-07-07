@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using Angor.Contexts.Funding.Investor;
 using AngorApp.Sections.Portfolio.Items;
 using Zafiro.UI.Commands;
@@ -12,4 +13,5 @@ public interface IPortfolioSectionViewModel
     public IAmountUI TotalInvested { get; }
     int ProjectsInRecovery { get; }
     IAmountUI RecoveredToPenalty { get; }
+    public ICommand GoToPenalties { get; }
 }
