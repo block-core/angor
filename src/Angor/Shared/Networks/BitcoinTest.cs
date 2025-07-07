@@ -1,13 +1,9 @@
-﻿using Blockcore.Base.Deployments;
+﻿using System.Net;
 using Blockcore.Consensus;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
 using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BitcoinCore;
 using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.NBitcoin.Protocol;
-using Blockcore.Consensus.Checkpoints;
 
 namespace Angor.Shared.Networks
 {
@@ -15,8 +11,9 @@ namespace Angor.Shared.Networks
     {
         public BitcoinTest()
         {
-            this.Name = "TestNet";
-            this.AdditionalNames = new List<string> { "test" };
+            this.Name = "TestNet3";
+            this.AdditionalNames = new List<string> { "testnet", "testnet3", "test3" };
+
             this.NetworkType = NetworkType.Testnet;
             this.Magic = 0x0709110B;
             this.DefaultPort = 18333;
@@ -31,7 +28,7 @@ namespace Angor.Shared.Networks
 
             // Create the genesis block.
             this.GenesisTime = 1296688602;
-            this.GenesisNonce = 414098458;
+            this.GenesisNonce = 2083236893;
             this.GenesisBits = 0x1d00ffff;
             this.GenesisVersion = 1;
             this.GenesisReward = Money.Coins(50m);
@@ -68,7 +65,7 @@ namespace Angor.Shared.Networks
                 posNoRetargeting: false,
                 powNoRetargeting: false,
                 powLimit: new Target(new uint256("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
-                minimumChainWork: new uint256("0x0000000000000000000000000000000000000000000000198b4def2baa9338d6"),
+                minimumChainWork: new uint256("0x0000000000000000000000000000000000000000000005b04844942a2000906a"),
                 isProofOfStake: false,
                 lastPowBlock: default(int),
                 proofOfStakeLimit: null,
