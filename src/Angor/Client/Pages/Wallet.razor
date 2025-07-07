@@ -771,7 +771,7 @@ else
                                     </div>
 
                                     <div class="modal-footer border-0">
-                                        <button class="btn btn-border-success btn-sm" @onclick="() => coinControlModal = false">Submit</button>
+                                        <button class="btn btn-border-success" @onclick="() => coinControlModal = false">Select</button>
                                     </div>
                                 </div>
                             </div>
@@ -1105,10 +1105,18 @@ else
 
     private Dictionary<int, bool> invalidWordIndices = new();
 
+    private decimal sendAmountInternal;
     private decimal sendAmount
     {
-        get => Money.Satoshis(_sendInfo.SendAmount).ToUnit(MoneyUnit.BTC);
-        set => _sendInfo.SendAmount = Money.Coins(value).Satoshi;
+        get
+        {
+            return sendAmountInternal;
+        }
+        set
+        { 
+            sendAmountInternal = value;
+            _sendInfo.SendAmount = Money.Coins(value).Satoshi;
+        }
     }
 
     private string GetStepTitle()
@@ -1194,7 +1202,7 @@ else
     }
 
     private bool AnyWordInvalid() => invalidWordIndices.Values.Any(v => v);    
-    
+
     private bool CanProceedToNextStep()
     {
         bool baseCondition = currentStep switch
@@ -1204,7 +1212,7 @@ else
             3 => true,
             _ => false
         };
-        
+
         return baseCondition;
     }
 
@@ -1611,6 +1619,7 @@ else
             }
 
             _sendInfo = new SendInfo();
+            sendAmountInternal = 0;
         }
         catch (Exception e)
         {
