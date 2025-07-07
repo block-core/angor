@@ -1,0 +1,15 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <ControlTheme x:Key="CardOverlayBorder" TargetType="OverlayBorder" BasedOn="{StaticResource CardOverlayBorder}">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}"></Setter>
+            <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}"></Setter>
+        </ControlTheme>
+    </Styles.Resources>
+    
+    <Design.PreviewWith>
+        <OverlayBorder Theme="{StaticResource CardOverlayBorder}" Padding="20">
+        </OverlayBorder>
+    </Design.PreviewWith>
+</Styles>

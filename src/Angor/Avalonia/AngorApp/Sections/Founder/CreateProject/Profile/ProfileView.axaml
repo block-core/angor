@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
+             xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
+             mc:Ignorable="d" d:DesignWidth="700"
+             x:Class="AngorApp.Sections.Founder.CreateProject.Profile.ProfileView"
+             x:DataType="profile:IProfileViewModel">
+    
+    <UserControl.Styles>
+        <StyleInclude Source="../Common.axaml" />
+    </UserControl.Styles>
+    
+    <Card Header="Project Profile">
+        <Card.HeaderEndContent>
+            <ContentControl IsVisible="{Binding IsValid^}" Foreground="LawnGreen">
+                <ui:Icon Source="fa-check" />
+            </ContentControl>
+        </Card.HeaderEndContent>
+        <Card.HeaderStartContent>
+            <ui:Icon Source="fa-briefcase" />
+        </Card.HeaderStartContent>
+        <StackPanel Spacing="20">
+            <controls:CardGrid>
+                <controls:CardGrid.ItemsSource>
+                    <collections:ArrayList>
+                        <Card Header="Project Name">
+                            <TextBox Watermark="Enter the name of your project" Text="{Binding ProjectName}" />
+                        </Card>
+                        <Card Header="Project Website">
+                            <TextBox Watermark="Enter the URL of project website" Text="{Binding WebsiteUri}" />
+                        </Card>
+                    </collections:ArrayList>
+                </controls:CardGrid.ItemsSource>
+            </controls:CardGrid>
+            <HeaderedContainer Header="About Your Project">
+                <TextBox MinLines="6" Watermark="Provide a brief description of the project" Text="{Binding Description}" />
+            </HeaderedContainer>
+            <Card Margin="0" Padding="0 5 0 0" HeaderPadding=" 0 0 0 5" Header="Visual Identity" Theme="{StaticResource TransparentCard}">
+                <controls:CardGrid>
+                    <controls:CardGrid.ItemsSource>
+                        <collections:ArrayList>
+                            <Card Header="Banner Image URL">
+                                <StackPanel Spacing="5">
+                                    <TextBox Watermark="Enter the URL for the project banner image" Text="{Binding BannerUri}" />
+                                    <TextBlock Classes="Dimmed">Recommended size: 820×312px</TextBlock>
+                                </StackPanel>
+                            </Card>
+                            <Card Header="Avatar Image URL">
+                                <StackPanel Spacing="5">
+                                    <TextBox Watermark="Enter the URL for the project logo or profile picture" Text="{Binding AvatarUri}" />
+                                    <TextBlock Classes="Dimmed">Recommended size: 170×170px</TextBlock>
+                                </StackPanel>
+                            </Card>
+                        </collections:ArrayList>
+                    </controls:CardGrid.ItemsSource>
+                </controls:CardGrid>
+            </Card>
+        </StackPanel>
+    </Card>
+</UserControl>
