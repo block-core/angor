@@ -279,7 +279,7 @@ namespace Angor.Shared.Services
             return Task.FromResult(deleteEvent.Id);
         }
 
-        public string CreateNostrRelayNip65Async(string hexPrivateKey)
+        public string PublishNip65ListAsync(string hexPrivateKey)
         {
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 

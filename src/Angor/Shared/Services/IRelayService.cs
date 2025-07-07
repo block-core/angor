@@ -23,5 +23,5 @@ public interface IRelayService
     
     void DisconnectSubscription(string subscription);
 
-    string CreateNostrRelayNip65Async(string hexPrivateKey);
+    string PublishNip65ListAsync(string hexPrivateKey);
 }

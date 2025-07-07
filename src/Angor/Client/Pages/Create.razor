@@ -1246,7 +1246,7 @@
                     storage.UpdateFounderProject(project);
 
                     InvokeAsync(async () => await CheckAndAdvanceStep());
-                    InvokeAsync(() => _RelayService.CreateNostrRelayNip65Async(NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes())));
+                    InvokeAsync(() => _RelayService.PublishNip65ListAsync(NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes())));
                 }
 
                 StateHasChanged();
