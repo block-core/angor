@@ -13,5 +13,7 @@ public class SendInfo
 
     public string ChangeAddress { get; set; }
 
+    public bool SendAll { get; set; }
+
     public Dictionary<string, UtxoDataWithPath> SendUtxos { get; set; } = new();
 }
