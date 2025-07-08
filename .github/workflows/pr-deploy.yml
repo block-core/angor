@@ -1,0 +1,109 @@
+name: PR Testing Deploy
+on:
+  # Manual PR 
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR Number to deploy'
+        required: true
+        type: string
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  pr-test-deploy:
+    name: Build and Deploy PR for Testing
+    runs-on: ubuntu-latest
+    
+    env:
+      PROJECT_NAME: "Angor"
+      SOLUTION_PATH: "src/Angor.sln"
+      PROJECT_PATH: "src/Angor/Client/Angor.Client.csproj"
+      
+    steps:
+    - name: Get PR details
+      id: pr
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: pr } = await github.rest.pulls.get({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: ${{ inputs.pr_number }}
+          });
+          
+          core.setOutput('ref', pr.head.sha);
+          core.setOutput('head_ref', pr.head.ref);
+          core.setOutput('title', pr.title);
+          core.setOutput('author', pr.user.login);
+          
+          return pr;
+    
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ steps.pr.outputs.ref }}
+        fetch-depth: 0
+        
+    - name: Show working directory and files
+      run: |
+        echo "Current directory: $(pwd)"
+        echo "Files in root:"
+        ls -la
+        echo "Looking for global.json:"
+        find . -name "global.json" -type f
+        
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        global-json-file: global.json
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Variables
+      run: |
+        BASE_VERSION=$(npm run version --silent)
+        echo VERSION=${BASE_VERSION}.${{ inputs.pr_number }} >> $GITHUB_ENV
+        echo PR_NUMBER=${{ inputs.pr_number }} >> $GITHUB_ENV
+      shell: bash
+      
+    # Build the .NET application (web version only, no desktop apps)
+    - name: Publish Web App
+      run: dotnet publish -c Release -r linux-x64 /p:Version=${{ env.VERSION }} -v m -o publish ${{env.PROJECT_PATH}}
+        
+    # Run tests to make sure PR doesn't break anything
+    - name: Run Tests
+      continue-on-error: true
+      run: dotnet test -c Release --verbosity normal ${{env.SOLUTION_PATH}} --filter "Category!=E2E"
+      
+    # Prepare for deployment
+    - name: Copy index.html to 404.html (for SPA routing)
+      run: cp publish/wwwroot/index.html publish/wwwroot/404.html
+      
+    - name: Add .nojekyll file (prevent Jekyll processing)
+      run: touch publish/wwwroot/.nojekyll
+      
+    # Add PR info to the deployed site
+    - name: Add PR info to deployment
+      run: |
+        cat > publish/wwwroot/pr-info.json << EOF
+        {
+          "pr_number": "${{ inputs.pr_number }}",
+          "pr_title": "${{ steps.pr.outputs.title }}",
+          "pr_author": "${{ steps.pr.outputs.author }}",
+          "deployed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "commit_sha": "${{ steps.pr.outputs.ref }}"
+        }
+        EOF
+      
+    # Deploy to angor-debug repo gh-pages (domain => debug.angor.io)
+    - name: Deploy to debug.angor.io
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: main
+        folder: publish/wwwroot
+        repository-name: ${{ github.repository_owner }}/angor-debug
+        token: ${{ secrets.ANGOR_DEPLOY_DEBUG_TOKEN }}
+        commit-message: "Deploy PR #${{ inputs.pr_number }} - ${{ steps.pr.outputs.title }}"

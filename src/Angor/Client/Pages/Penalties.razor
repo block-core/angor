@@ -31,7 +31,7 @@
                 <h5 class="header-text">View Penalties</h5>
             </div>
             <div class="header-actions">
-                <button class="btn btn-border-success"
+                <button class="btn btn-border-success btn-sm"
                         @onclick="RefreshPenalties"
                         disabled="@refreshSpinner"
                         title="Refresh">
@@ -100,7 +100,7 @@ else
                                     {
                                         if (penalty.IsReleased)
                                         {
-                                            <button disabled class="btn btn-border-warning">Penalty Released</button>
+                                            <button disabled class="btn btn-border-warning btn-sm">Penalty Released</button>
                                         }
                                         else
                                         {
@@ -109,7 +109,7 @@ else
                                     }
                                     else
                                     {
-                                        <button disabled class="btn btn-border-warning">Penalty Release in @penalty.DaysLeftForPenalty days</button>
+                                        <button disabled class="btn btn-border-warning btn-sm">Penalty Release in @penalty.DaysLeftForPenalty days</button>
                                     }
                                 </td>
                             </tr>

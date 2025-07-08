@@ -76,7 +76,7 @@
 <div class="create-main-structure mt-4">
     <div class="create-room-card animate-fade-in">
         <div class="create-room-header">
-            <div class="d-flex align-items-center" style="gap: 0.9rem;">
+            <div class="d-flex align-items-center header-icon-gap">
                 <div>
                     <Icon IconName="view-project" Width="30" Height="30" Class="create-room-icon" />
                 </div>
@@ -130,7 +130,7 @@
                 <EditForm Model="project">
                     <div class="create-room-card animate-fade-in">
                         <div class="create-room-header">
-                            <div class="d-flex align-items-center" style="gap: 0.9rem;">
+                            <div class="d-flex align-items-center header-icon-gap">
                                 <div>
                                     <Icon IconName="clock-square" Width="30" Height="30" Class="create-room-icon" />
                                 </div>
@@ -167,7 +167,7 @@
                                         Funding End
                                     </label>
                                     <div class="input-group d-flex align-items-center">
-                                        <InputDate id="endDate" class="create-field-input" @bind-Value="project.ProjectInfo.EndDate" placeholder="Select end date" disabled="@nostrApplicationSpecificDataCreated" @onchange="ValidateEndDate" />
+                                        <InputDate id="endDate" class="create-field-input no-native-picker" @bind-Value="project.ProjectInfo.EndDate" placeholder="Select end date" disabled="@nostrApplicationSpecificDataCreated" @onchange="ValidateEndDate" />
                                         <button type="button" class="btn btn-border-success" onclick="document.querySelector('input[type=date]:not(:disabled)').showPicker()">
                                             <Icon IconName="calendar" Height="16" Width="16" />
                                         </button>
@@ -204,7 +204,7 @@
                     <div class=" create-room-card animate-fade-in mt-4">
 
                         <div class="create-room-header">
-                            <div class="d-flex align-items-center" style="gap: 0.9rem;">
+                            <div class="d-flex align-items-center header-icon-gap">
                                 <div>
                                     <Icon IconName="stages" Width="30" Height="30" Class="create-room-icon" />
                                 </div>
@@ -271,9 +271,9 @@
                                     </div>
                                     <div class="create-stage-field">
                                         <label class="create-field-label">Release Date</label>
-                                        <div class="d-flex align-items-stretch" style="gap: 0.5rem;">
-                                            <InputDate id="@dateInputId" class="create-field-input" style="height: 42px; min-height: 42px;" @bind-Value="stage.ReleaseDate" placeholder="Select date" disabled="@nostrApplicationSpecificDataCreated" />
-                                            <button type="button" class="create-action-btn create-action-success" style="height: 42px; min-width: 42px; padding: 0;" @onclick="@(() => OpenDatePicker(dateInputId))" disabled="@nostrApplicationSpecificDataCreated">
+                                        <div class="d-flex align-items-stretch create-stage-date-container">
+                                            <InputDate id="@dateInputId" class="create-field-input no-native-picker create-stage-date-input" @bind-Value="stage.ReleaseDate" placeholder="Select date" title="Stage release date" disabled="@nostrApplicationSpecificDataCreated" />
+                                            <button type="button" class="create-action-btn create-action-success create-stage-action-btn" @onclick="@(() => OpenDatePicker(dateInputId))" disabled="@nostrApplicationSpecificDataCreated">
                                                 <Icon IconName="calendar" Color="#28a745" />
                                             </button>
                                         </div>
@@ -308,7 +308,7 @@
 
     <div class="create-room-card animate-fade-in mt-4">
         <div class="create-room-header">
-            <div class="d-flex align-items-center" style="gap: 0.9rem;">
+            <div class="d-flex align-items-center header-icon-gap">
                 <div>
                     <Icon IconName="rocket" Width="30" Height="30" Class="create-room-icon" />
                 </div>
@@ -735,7 +735,7 @@
                             </div>
 
                             <div class="modal-footer border-0 pt-0">
-                                <button class="btn btn-border-success" @onclick="Send" disabled="@publishProjectSpinner">
+                                <button class="btn btn-border-success btn-sm" @onclick="Send" disabled="@publishProjectSpinner">
                                     @if (publishProjectSpinner)
                                     {
                                         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -770,7 +770,7 @@
 
                             <div class="modal-body modal-body-scroll">
                                 <div class="d-flex align-items-stretch">
-                                    <div class="card w-100 me-0 ms-0" style="background-color: var(--form-bg);">
+                                    <div class="card w-100 me-0 ms-0 preview-card-container">
                                         <a class="d-block">
                                             <div class="banner-container">
                                                 @if (string.IsNullOrEmpty(project.Metadata?.Banner))
@@ -889,8 +889,8 @@
                             </div>
 
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-border-warning" @onclick="CloseConfirmationModal">Cancel</button>
-                                <button type="button" class="btn btn-border-success" @onclick="PerformFinalizeAction">Confirm</button>
+                                <button type="button" class="btn btn-border-warning btn-sm" @onclick="CloseConfirmationModal">Cancel</button>
+                                <button type="button" class="btn btn-border-success btn-sm" @onclick="PerformFinalizeAction">Confirm</button>
                             </div>
                         </div>
                     </div>

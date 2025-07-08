@@ -35,7 +35,7 @@
             </div>
             <div class="header-actions">
                 <div class="tooltip-container" data-bs-toggle="tooltip" title="@GetCreateButtonTooltip()">
-                    <button class="btn btn-border-success"
+                    <button class="btn btn-border-success btn-sm"
                             @onclick="NavigateToCreateProject"
                             disabled="@(scanningForProjects || (founderProjects.Count >= 14) ? true : null)">
                         @if (scanningForProjects)
@@ -226,7 +226,7 @@
 
         return new FounderProject
             {
-                ProjectInfo = projectInfo ?? new ProjectInfo { NostrPubKey = e.Pubkey },
+                ProjectInfo = projectInfo ?? new ProjectInfo { ProjectIdentifier = founderProjectsToLookup[e.Pubkey].ProjectIdentifier,  NostrPubKey = e.Pubkey },
                 ProjectIndex = projectIndex,
                 CreationTransactionId = trxId,
                 NostrProfileCreated = true,

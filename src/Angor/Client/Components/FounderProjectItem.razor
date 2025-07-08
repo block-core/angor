@@ -49,7 +49,7 @@
                          href=@($"/signatures/{FounderProject.ProjectInfo.ProjectIdentifier}") 
                          title="Approve investments">
                         <span class="user-select-none">
-                            <Icon IconName="signature" Height="24" Width="24"></Icon>
+                            <Icon IconName="pendingmessage" Height="24" Width="24"></Icon>
                         </span>
                     </a>
                 }
@@ -85,10 +85,10 @@
                 </div>
                 <div class="w-full mt-3">
                     <div class="progress rounded-pill mb-3" style="height: 16px; background-color: var(--btn-border);">
-                        <div class="progress rounded-pill mb-3" style="height: 16px; background-color: var(--btn-border);">  
-                            <div class="progress-bar-striped bg-success rounded-pill text-center" role="progressbar"  
-                                style="width: @(projectStats.FundingProgressPercent + "%");">  
-                            </div>  
+                        <div class="progress-bar bg-success rounded-pill text-center" role="progressbar"
+                             style="width: @(projectStats.FundingProgressPercent)%;"
+                             aria-valuenow="@projectStats.FundingProgressPercent" aria-valuemin="0" aria-valuemax="100">
+                            @projectStats.FundingProgressPercent%
                         </div>
                     </div>
                 </div>
@@ -151,10 +151,10 @@
             {
                 var data = await _IndexerService.GetProjectStatsAsync(FounderProject.ProjectInfo.ProjectIdentifier);
 
-                if (data != null)
+                if (data.stats != null)
                 {
-                    projectStats.TotalInvestors = (int)data.InvestorCount;
-                    projectStats.TotalRaised = data.AmountInvested;
+                    projectStats.TotalInvestors = (int)data.stats.InvestorCount;
+                    projectStats.TotalRaised = data.stats.AmountInvested;
 
                     if (FounderProject.ProjectInfo.TargetAmount > 0)
                     {
