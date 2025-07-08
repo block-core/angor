@@ -9,6 +9,10 @@ public class NetworkConfiguration : INetworkConfiguration
 {
     public static string AngorTestKey = "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
     
+    public static long AngorCreateFeeSats = 10001; // versioning :)
+    public static int AngorInvestFeePercentage = 1;
+    public static short NostrEventIdKeyType = 1; //TODO David use an enum for this?
+    
     private Angornet network;
 
     public Network GetNetwork()

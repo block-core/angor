@@ -11,7 +11,7 @@ public partial class CreateProjectStage : ReactiveValidationObject, ICreateProje
     private DateTime? releaseDate;
 
     [Reactive]
-    private double? percent;
+    private decimal? percent;
 
     public CreateProjectStage(Action<ICreateProjectStage> remove)
     {

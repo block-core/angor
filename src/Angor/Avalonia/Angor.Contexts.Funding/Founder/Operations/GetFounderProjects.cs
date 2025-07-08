@@ -31,7 +31,7 @@ public static class GetFounderProjects
         {
             return seedwordsProvider.GetSensitiveData(request.WalletId)
                 .Map(p => p.ToWalletWords())
-                .Map(words => derivationOperations.DeriveProjectKeys(words, networkConfiguration.GetAngorKey()))
+                .Map(words => derivationOperations.DeriveProjectKeys(words, networkConfiguration.GetAngorKey()))//TODO we need to change this, the derivation code requires very heavy computations
                 .Map(collection => collection.Keys.AsEnumerable())
                 .MapEach(keys => keys.ProjectIdentifier)
                 .MapEach(fk => new ProjectId(fk));
