@@ -1,0 +1,122 @@
+version: "3.7"
+
+services:
+  # MariaDB for mempool backend
+  db:
+    container_name: liquid-mempool-db
+    image: mariadb:10.5.21
+    restart: on-failure
+    stop_grace_period: 1m
+    environment:
+      MYSQL_DATABASE: "mempool"
+      MYSQL_USER: "mempool"
+      MYSQL_PASSWORD: "mempool"
+      MYSQL_ROOT_PASSWORD: "admin"
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+    network_mode: host
+
+  # Mempool backend API
+  api:
+    container_name: liquid-mempool-api
+    image: blockcore/mempool-backend:latest
+    user: "1000:1000"
+    restart: on-failure
+    stop_grace_period: 1m
+    depends_on:
+      - db
+    environment:
+      # Network configuration
+      MEMPOOL_NETWORK: "liquidtestnet"
+      MEMPOOL_BACKEND: "esplora"
+      MEMPOOL_ENABLED: "true"
+      
+      # Angor configuration
+      ANGOR_ENABLED: "true"
+      
+      # Esplora configuration 
+      ESPLORA_REST_API_URL: "http://127.0.0.1:3001"
+      ESPLORA_REQUEST_TIMEOUT: "10000"
+      ESPLORA_FALLBACK_TIMEOUT: "10000"
+      
+      # Elements Core RPC configuration (at present is connecting to the Local Elements Core node)
+      CORE_RPC_HOST: "127.0.0.1"
+      CORE_RPC_PORT: "18891"
+      CORE_RPC_USERNAME: "user"
+      CORE_RPC_PASSWORD: "password"
+      CORE_RPC_TIMEOUT: "60000"
+      
+      # Database configuration
+      DATABASE_ENABLED: "true"
+      DATABASE_HOST: "127.0.0.1"
+      DATABASE_PORT: "3306"
+      DATABASE_DATABASE: "mempool"
+      DATABASE_USERNAME: "mempool"
+      DATABASE_PASSWORD: "mempool"
+      
+      # Statistics and logging
+      STATISTICS_ENABLED: "true"
+      MEMPOOL_STDOUT_LOG_MIN_PRIORITY: "debug"
+      MEMPOOL_INDEXING_BLOCKS_AMOUNT: "8640"
+      MEMPOOL_BLOCKS_SUMMARIES_INDEXING: "true"
+      
+      # Mempool specific settings
+      MEMPOOL_CACHE_ENABLED: "true"
+      MEMPOOL_CACHE_DIR: "/backend/cache"
+      MEMPOOL_CLEAR_PROTECTION_MINUTES: "20"
+      MEMPOOL_RECOMMENDED_FEE_PERCENTILE: "50"
+      MEMPOOL_BLOCK_WEIGHT_UNITS: "4000000"
+      MEMPOOL_INITIAL_BLOCKS_AMOUNT: "8"
+      MEMPOOL_MEMPOOL_BLOCKS_AMOUNT: "8"
+    volumes:
+      - ./data:/backend/cache
+    network_mode: host
+    command: "./wait-for-it.sh 127.0.0.1:3306 --timeout=720 --strict -- ./start.sh"
+
+  # Mempool frontend 
+  web:
+    container_name: liquid-mempool-web
+    image: mempool-frontend     # using local image now as frontend changes were there in mempool (will replace it after deploying proper image)
+    user: "1000:1000"
+    restart: on-failure
+    stop_grace_period: 1m
+    depends_on:
+      - api
+      - db
+    environment:
+      # Frontend configuration
+      FRONTEND_HTTP_PORT: "8080"
+      BACKEND_MAINNET_HTTP_HOST: "127.0.0.1"
+      BACKEND_MAINNET_HTTP_PORT: "8999"
+      
+      # Network configuration
+      MAINNET_ENABLED: "false"
+      LIQUID_ENABLED: "true"
+      LIQUID_TESTNET_ENABLED: "true"
+      ROOT_NETWORK: "liquidtestnet"
+      BASE_MODULE: "liquid"
+      
+      # URLs
+      LIQUID_WEBSITE_URL: "http://localhost:8080"
+      MEMPOOL_WEBSITE_URL: "https://mempool.space"
+      
+      # CRITICAL: Angor configuration
+      ANGOR_ENABLED: "true"
+      
+      # Features
+      LIGHTNING: "false"
+      MINING_DASHBOARD: "false"
+      AUDIT: "false"
+      ACCELERATOR: "false"
+      ACCELERATOR_BUTTON: "false"
+      PUBLIC_ACCELERATIONS: "false"
+      HISTORICAL_PRICE: "true"
+      ADDITIONAL_CURRENCIES: "false"
+      
+      # Display settings
+      ITEMS_PER_PAGE: "10"
+      KEEP_BLOCKS_AMOUNT: "8"
+      MEMPOOL_BLOCKS_AMOUNT: "8"
+      BLOCK_WEIGHT_UNITS: "4000000"
+    network_mode: host
+    command: "./wait-for 127.0.0.1:3306 --timeout=720 -- nginx -g 'daemon off;'"
