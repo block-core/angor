@@ -52,6 +52,10 @@ namespace Angor.Shared.Services
                 {
                     network = AngorNetworksSelector.NetworkByName(setNetwork);
                 } 
+                else if (url.Contains("liquid"))
+                {
+                    network = new LiquidTestnet();
+                }
                 else if (url.Contains("test"))
                 {
                     network = new Angornet();
@@ -111,7 +115,20 @@ namespace Angor.Shared.Services
                     {
                         var uri = new Uri(indexerUrl.Url);
                         
-                        var blockUrl = Path.Combine(uri.AbsoluteUri, "api", "v1", "block-height", "0");
+                        // Check if this is a liquid network
+                        var network = _networkConfiguration.GetNetwork();
+                        string blockUrl;
+                        
+                        if (network.Name == "LiquidTestnet")
+                        {
+                            // For Liquid Testnet, using mempool.space API format
+                            blockUrl = Path.Combine(uri.AbsoluteUri, "api", "v1", "block-height", "0");
+                        }
+                        else
+                        {
+                            // For other networks, using the original format
+                            blockUrl = Path.Combine(uri.AbsoluteUri, "api", "v1", "block-height", "0");
+                        }
 
                         var response = await _clientFactory.CreateClient()
                             .GetAsync(blockUrl);
@@ -123,6 +140,7 @@ namespace Angor.Shared.Services
                         else
                         {
                             _logger.LogError($"Failed to check indexer status url = {indexerUrl.Url}, StatusCode = {response.StatusCode}");
+                            indexerUrl.Status = UrlStatus.Offline;
                         }
                         OnStatusChanged?.Invoke();
                     }

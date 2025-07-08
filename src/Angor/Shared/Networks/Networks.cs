@@ -16,7 +16,7 @@ namespace Angor.Shared.Networks
                     () => new BitcoinSignet(),
                     () => new Angornet(),
                     () => null,
-                    () => null);
+                    () => new LiquidTestnet());
             }
         }
     }
@@ -70,6 +70,11 @@ namespace Angor.Shared.Networks
             if (networkName == "Main")
             {
                 return new BitcoinMain();
+            }
+
+            if (networkName == "LiquidTestnet")
+            {
+                return new LiquidTestnet();
             }
 
             throw new ApplicationException($"The network '{networkName}' is not recognized");

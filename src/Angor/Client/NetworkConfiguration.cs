@@ -68,6 +68,15 @@ public class NetworkConfiguration : INetworkConfiguration
                 };
             }
 
+            if (currentNetwork.Name == "LiquidTestnet")
+            {
+                return new List<SettingsUrl>
+                {
+                    new SettingsUrl { Name = "Local Mempool API", Url = "http://127.0.0.1:8999", IsPrimary = true }, // Local Mempool API
+                    new SettingsUrl { Name = "Local Electrs", Url = "http://127.0.0.1:3001", IsPrimary = false }, // Local Electrs
+                };
+            }
+
             if (currentNetwork.Name == "Testnet")
             {
                 // todo find indexer url
@@ -135,6 +144,14 @@ public class NetworkConfiguration : INetworkConfiguration
                 };
             }
 
+            if (currentNetwork.Name == "LiquidTestnet")
+            {
+                return new List<SettingsUrl>
+                {
+                    new SettingsUrl { Name = "Local Mempool Explorer", Url = "http://localhost:8080", IsPrimary = true }, // Local Mempool Explorer
+                };
+            }
+
             if (currentNetwork.Name == "Testnet")
             {
                 // todo find explorer url
@@ -173,6 +190,7 @@ public class NetworkConfiguration : INetworkConfiguration
             "Signet" => "00000000020f01e33f91b6c7c5d3a3f8",
             "Regtest" => "0f9195cbdb894feda6ee07798e0d597d",
             "Angornet" => "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+            "LiquidTestnet" => "a771da8e52ee6ad581ed1e9a99825e5b3b7992225534eaa2ae23244fe26ab1c1",
             _ => throw new NotSupportedException($"Network type {currentNetwork.NetworkType.ToString()} is not supported")
         };
     }
@@ -186,6 +204,7 @@ public class NetworkConfiguration : INetworkConfiguration
             "00000000020f01e33f91b6c7c5d3a3f8" => "Signet",
             "0f9195cbdb894feda6ee07798e0d597d" => "Regtest",
             "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6" => "Angornet",
+            "a771da8e52ee6ad581ed1e9a99825e5b3b7992225534eaa2ae23244fe26ab1c1" => "LiquidTestnet",
             _ => "Unknown"
         };
     }
@@ -209,6 +228,10 @@ public class NetworkConfiguration : INetworkConfiguration
             "Angornet" => new()
             {
                 {"HW_Support", false}
+            },
+            "LiquidTestnet" => new()
+            {
+                {"HW_Support", false},
             },
             _ => throw new NotSupportedException($"Network type {currentNetwork.NetworkType.ToString()} is not supported")
         };
