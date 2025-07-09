@@ -44,8 +44,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var stagesScript = Enumerable.Range(0,projectInfo.Stages.Count)
             .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, index));
 
-        return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript,
-            totalInvestmentAmount);
+        return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript, totalInvestmentAmount);
     }
 
     public ProjectScriptType DiscoverUsedScript(ProjectInfo projectInfo, Transaction investmentTransaction, int stageIndex, string witScript)

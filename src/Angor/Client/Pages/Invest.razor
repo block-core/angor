@@ -12,6 +12,7 @@
 @using Blockcore.Networks
 @using System.Text.Json
 @using Angor.Shared.Utilities
+@using Angor.Client.Shared
 @using Angor.Shared.Protocol
 
 @inherits BaseComponent
@@ -303,7 +304,13 @@
                                          class="angor-input input-with-ticker" />
                             <span class="currency-ticker-inside">@network.CoinTicker</span>
                         </div>
-                        <small class="text-muted mt-1">Enter your investment amount</small>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <small class="text-muted">Enter your investment amount</small>
+                            <small class="text-muted" role="button">
+                                Max Balance:
+                                <span @onclick="SetMaxInvestment" class="fw-bold text-warning">@WalletBalance.TotalBalance.ToUnitBtc() @network.CoinTicker</span>
+                            </small>
+                        </div>
                     </div>
 
                     <div class="field-container mb-4">
@@ -320,6 +327,7 @@
                         </div>
                         <small class="text-muted mt-1">Optional: Enter additional Nostr public key</small>
                     </div>
+
                 </div>
 
                 <button type="submit" class="btn btn-border-success w-100 d-flex align-items-center justify-content-center" disabled="@buildSpinner">
@@ -452,7 +460,7 @@
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <div>
                                                         <div class="info-label">Stage @(++index):</div>
-                                                        <div class="info-value">@StagesBreakdown[index - 1].AmountBtc @network.CoinTicker</div>
+                                                        <div class="info-value">@signedTransaction.Transaction.Outputs[index + 1].Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
                                                     </div>
                                                     <div>
                                                         <div class="info-label">Release:</div>
@@ -684,6 +692,7 @@ else
     Transaction unSignedTransaction;
     string InvestorPubKey;
 
+    private AccountBalanceInfo WalletBalance = new AccountBalanceInfo();
 
     private FeeData feeData = new();
 
@@ -739,6 +748,8 @@ else
         UpdateStagesBreakdown(new ChangeEventArgs { Value = Investment.InvestmentAmountBtc });
         RefreshProgressState();
         ScanforProjectStats();
+
+        await LoadWalletBalance();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -796,6 +807,17 @@ else
         }
     }
 
+    private async Task LoadWalletBalance()
+    {
+        try
+        {
+            WalletBalance = await _walletUIService.RefreshWalletBalance();
+        }
+        catch (Exception e)
+        {
+            notificationComponent.ShowErrorMessage(e.Message, e);
+        }
+    }
 
     private async Task RefreshSignatures()
     {
@@ -952,7 +974,7 @@ else
     private async Task InvestFunds()
     {
         bool isTestnet = network.NetworkType == NetworkType.Testnet;
-        decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.2m; // 0.1 BTC for mainnet, unlimited for testnet
+        decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.2m; // 0.2 BTC for mainnet, unlimited for testnet
         decimal minInvestmentBtc = 0.001m; // Minimum investment for all networks
 
         if (Investment.IsSeeder)
@@ -1031,7 +1053,9 @@ else
                 var seederHash = _derivationOperations.DeriveLeadInvestorSecretHash(words, project.ProjectInfo.FounderKey);
             }
 
-            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, Money.Coins(Investment.InvestmentAmountBtc).Satoshi);
+            long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+
+            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, investmentAmount);
 
             if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
@@ -1041,7 +1065,7 @@ else
             }
             else
             {
-                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(),
+                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(), 
                     unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
             }
 
@@ -1104,6 +1128,12 @@ else
             _Logger.LogError(ex, "Error calculating fee");
             notificationComponent.ShowErrorMessage("Error calculating fee: " + ex.Message);
         }
+    }
+
+    private void SetMaxInvestment()
+    {
+        UpdateStagesBreakdown(new ChangeEventArgs { Value = WalletBalance.TotalBalance.ToUnitBtc() });
+        StateHasChanged();
     }
 
     private async Task Send()
@@ -1202,6 +1232,8 @@ else
                 investorProject.SignaturesInfo.TimeOfSignatureRequest.Value,
                 investorProject.SignaturesInfo.SignatureRequestEventId,
                 signatures => HandleSignatureReceivedAsync(nostrPrivateKeyHex, signatures));
+
+            notificationComponent.ShowNotificationMessage("Signature request sent", 5);
         }
         catch (Exception e)
         {

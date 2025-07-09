@@ -42,9 +42,9 @@ public class AngorTestData
         projectInvestmentInfo.PenaltyDays = 10;
         projectInvestmentInfo.Stages = new List<Stage>
         {
-            new() { AmountToRelease = (decimal)0.1, ReleaseDate = startDate.Value.AddDays(1) },
-            new() { AmountToRelease = (decimal)0.5, ReleaseDate = startDate.Value.AddDays(2) },
-            new() { AmountToRelease = (decimal)0.4, ReleaseDate = startDate.Value.AddDays(3) }
+            new() { AmountToRelease = 10, ReleaseDate = startDate.Value.AddDays(1) },
+            new() { AmountToRelease = 50, ReleaseDate = startDate.Value.AddDays(2) },
+            new() { AmountToRelease = 40, ReleaseDate = startDate.Value.AddDays(3) }
         };
         projectInvestmentInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
         projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
