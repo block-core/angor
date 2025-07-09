@@ -11,7 +11,7 @@ namespace Angor.Contexts.Wallet.Infrastructure.Impl
         {
             var initial = Observable.Defer(() => GetTransactions(id));
             
-            var polling = Observable.Timer(TimeSpan.FromSeconds(10))
+            var polling = Observable.Timer(TimeSpan.FromMinutes(10)) // TODO we really should check if the block height and block hash changed
                 .SelectMany(_ => GetTransactions(id))
                 .Repeat();
             
