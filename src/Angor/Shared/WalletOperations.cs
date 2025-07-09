@@ -1,11 +1,13 @@
 using Angor.Shared.Models;
 using Angor.Shared.Services;
+using Angor.Shared.Utilities;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.BIP39;
 using Blockcore.Networks;
+using DBreeze.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared;
@@ -36,7 +38,7 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
 
-    public PsbtData CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null, bool spendAll = false)
+    public PsbtData CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null)
     {
         if (string.IsNullOrEmpty(accountInfo.RootExtPubKey))
         {
@@ -48,29 +50,35 @@ public class WalletOperations : IWalletOperations
 
         changeAddress = changeAddress ?? accountInfo.GetNextChangeReceiveAddress();
 
-        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo, spendAll);
+        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
         var coins = utxoDataWithPaths.Select(u => new Coin(uint256.Parse(u.UtxoData.outpoint.transactionId), (uint)u.UtxoData.outpoint.outputIndex, Money.Satoshis(u.UtxoData.value), Script.FromHex(u.UtxoData.scriptHex))).ToList();
 
         if (!coins.Any())
             throw new ApplicationException("No coins found to fund the transaction.");
 
-        var clonedTransaction = network.CreateTransaction(transaction.ToHex());
+        var unsignedTx = NBitcoin.Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
 
         foreach (var coin in coins)
         {
-            if (clonedTransaction.Inputs.Any(x => x.PrevOut == coin.Outpoint))
+            NBitcoin.OutPoint outputint = new NBitcoin.OutPoint(new NBitcoin.uint256(coin.Outpoint.Hash.ToBytes()), coin.Outpoint.N);
+            if (unsignedTx.Inputs.Any(x => x.PrevOut == outputint))
                 continue;
-            var txin = new TxIn(coin.Outpoint, null);
-            txin.WitScript = new WitScript(Op.GetPushOp(new byte[72]), Op.GetPushOp(new byte[33])); // for total size calculation
-            clonedTransaction.AddInput(txin);
+            var txin = new NBitcoin.TxIn(outputint, null);
+            txin.WitScript = new NBitcoin.WitScript(NBitcoin.Op.GetPushOp(new byte[72]), NBitcoin.Op.GetPushOp(new byte[33])); // for total size calculation
+            unsignedTx.Inputs.Add(txin);
         }
 
-        var totalSize = clonedTransaction.GetVirtualSize(4);
+        var totalSize = unsignedTx.GetVirtualSize();
         var totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize);
 
+        var totalSatsIn = coins.Sum(s => s.Amount);
+        var totalSatsOut = unsignedTx.Outputs.Sum(o => o.Value);
+        var totalToChange = totalSatsIn - totalSatsOut - totalFee;
+
+        var spendAll = totalSatsIn == totalSatsOut;
         if (spendAll)
         {
-            var lastOutput = clonedTransaction.Outputs.Last();
+            var lastOutput = unsignedTx.Outputs.Last();
 
             if (totalFee >= lastOutput.Value)
                 throw new ApplicationException($"The fee {totalFee} is greater then the last output {lastOutput.Value}");
@@ -79,13 +87,9 @@ public class WalletOperations : IWalletOperations
         }
         else
         {
-            var totalSatsIn = coins.Sum(s => s.Amount);
-            var totalSatsOut = clonedTransaction.Outputs.Sum(o => o.Value);
-            var totalToChange = totalSatsIn - totalSatsOut - totalFee;
-            var changeOutput = clonedTransaction.AddOutput(totalToChange, BitcoinAddress.Create(changeAddress, network).ScriptPubKey);
+            var changeOutput = unsignedTx.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(totalToChange.Satoshi), NBitcoin.BitcoinAddress.Create(changeAddress, nbitcoinNetwork).ScriptPubKey));
         }
-        
-        var unsignedTx = NBitcoin.Transaction.Parse(clonedTransaction.ToHex(), nbitcoinNetwork);
+
         var psbt = NBitcoin.PSBT.FromTransaction(unsignedTx, nbitcoinNetwork);
 
         NBitcoin.ExtPubKey accountExtPubKey = NBitcoin.ExtPubKey.Parse(accountInfo.RootExtPubKey, nbitcoinNetwork);
@@ -141,16 +145,19 @@ public class WalletOperations : IWalletOperations
     }
 
     public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo, long feeRate, bool spendAll = false)
+        WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
-        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo, spendAll);
+        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
         if (coins.coins == null)
             throw new ApplicationException("No coins found");
        
+        // did we spend all the coins?
+        var spendAll = coins.coins.Sum(s => s.Amount.Satoshi) == transaction.Outputs.Sum(o => o.Value.Satoshi);
+
         if (spendAll)
         {
             // Step 1: Clone transaction for modification
@@ -381,7 +388,7 @@ public class WalletOperations : IWalletOperations
         return new OperationResult<Transaction> { Success = false, Message = res };
     }
 
-    public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo, bool spendAll = false)
+    public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
     {
         var utxosToSpend = new List<UtxoDataWithPath>();
 
@@ -399,15 +406,15 @@ public class WalletOperations : IWalletOperations
 
             total += utxoData.utxo.value;
 
-            if (!spendAll && total > sendAmountat)
+            if (total >= sendAmountat)
             {
                 break;
             }
         }
 
-        if (!spendAll && total < sendAmountat)
+        if (total < sendAmountat)
         {
-            throw new ApplicationException($"Not enough funds, expected {Money.Satoshis(sendAmountat)} BTC, found {Money.Satoshis(total)} BTC");
+            throw new ApplicationException($"Not enough funds, expected {sendAmountat.ToUnitBtc()} BTC, found {total.ToUnitBtc()} BTC");
         }
 
         return utxosToSpend;

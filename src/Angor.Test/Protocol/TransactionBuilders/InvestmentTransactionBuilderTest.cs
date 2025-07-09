@@ -107,43 +107,9 @@ public class InvestmentTransactionBuilderTest : AngorTestData
             Assert.NotNull(expectedOutput.ScriptPubKey); //TODO add the correct assertion for the scripts after changing AngorScripts.CreateStage
         }
 
-        Assert.Equal(seederInvestmentTransaction.Outputs[2].Value.Satoshi, 300000);
-        Assert.Equal(seederInvestmentTransaction.Outputs[3].Value.Satoshi, 1500000);
-        Assert.Equal(seederInvestmentTransaction.Outputs[4].Value.Satoshi, 1200000);
-    }
-
-    [Fact]
-    public void SeederInvestmentTransactionCreation_addsScriptForEachStage_FeeFromAmount()
-    {
-        var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
-
-        var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
-
-        GivenTheAngorFeeScript(projectInvestmentInfo);
-
-        var opReturnScript = new Key().ScriptPubKey;
-
-        var stageScripts = new List<ProjectScripts>()
-        {
-            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() },
-            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() },
-            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() }
-        };
-
-        var seederInvestmentTransaction = _sut.BuildInvestmentTransaction(projectInvestmentInfo, opReturnScript,
-            stageScripts, projectInvestmentInfo.TargetAmount, true);
-
-        for (int i = 0; i < seederInvestmentTransaction.Outputs.Count(); i++)
-        {
-            var expectedOutput = seederInvestmentTransaction.Outputs[i];
-
-            Assert.NotNull(expectedOutput.ScriptPubKey); //TODO add the correct assertion for the scripts after changing AngorScripts.CreateStage
-        }
-
         Assert.Equal(seederInvestmentTransaction.Outputs[2].Value.Satoshi, 297000);
         Assert.Equal(seederInvestmentTransaction.Outputs[3].Value.Satoshi, 1485000);
         Assert.Equal(seederInvestmentTransaction.Outputs[4].Value.Satoshi, 1188000);
-
     }
 
     [Fact]

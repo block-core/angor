@@ -1054,20 +1054,19 @@ else
             }
 
             long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
-            var spendAll = investmentAmount == WalletBalance.TotalBalance;
 
-            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, investmentAmount, spendAll);
+            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, investmentAmount);
 
             if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
-                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate, spendAll: spendAll);
+                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
                 signedTransaction = _WalletOperations.SignPsbt(psbt, words);
             }
             else
             {
                 signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(), 
-                    unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate, spendAll);
+                    unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
             }
 
             showCreateModal = true;
@@ -1105,13 +1104,10 @@ else
             }
 
             var accountInfo = storage.GetAccountInfo(network.Name);
-          
-            long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
-            var spendAll = investmentAmount == WalletBalance.TotalBalance;
 
             if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
-                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate, spendAll: spendAll);
+                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
                 signedTransaction = _WalletOperations.SignPsbt(psbt, await passwordComponent.GetWalletAsync());
             }
@@ -1122,8 +1118,7 @@ else
                     unSignedTransaction,
                     await passwordComponent.GetWalletAsync(),
                     accountInfo,
-                    feeData.SelectedFeeEstimation.FeeRate,
-                    spendAll);
+                    feeData.SelectedFeeEstimation.FeeRate);
             }
 
             StateHasChanged();

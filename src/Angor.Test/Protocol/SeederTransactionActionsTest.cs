@@ -58,7 +58,7 @@ public class SeederTransactionActionsTest : AngorTestData
             var expectedTransaction = new Transaction { Inputs = { new TxIn(new Key().ScriptPubKey) } };
             
             _investmentTransactionBuilder.Setup(_ => _.BuildInvestmentTransaction(It.IsAny<ProjectInfo>(), expectedOpReturnScript,
-                    It.IsAny<IEnumerable<ProjectScripts>>(), It.IsAny<long>(), It.IsAny<bool>()))
+                    It.IsAny<IEnumerable<ProjectScripts>>(), It.IsAny<long>()))
                 .Returns(expectedTransaction);
 
             var seederInvestmentTransaction = _sut.CreateInvestmentTransaction(projectInvestmentInfo, investorKey, investorSecret,
@@ -89,7 +89,7 @@ public class SeederTransactionActionsTest : AngorTestData
         var expectedTransaction = new Transaction { Inputs = { new TxIn(new Key().ScriptPubKey) } };
         
         _investmentTransactionBuilder.Setup(_ => _.BuildInvestmentTransaction(It.IsAny<ProjectInfo>(), It.IsAny<Script>(),
-                projectScriptList, It.IsAny<long>(), It.IsAny<bool>()))
+                projectScriptList, It.IsAny<long>()))
             .Returns(expectedTransaction);
 
         var seederInvestmentTransaction = _sut.CreateInvestmentTransaction(projectInvestmentInfo, investorKey, investorSecret,
