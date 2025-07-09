@@ -10,6 +10,7 @@
              xmlns:items="clr-namespace:AngorApp.Sections.Portfolio.Items"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
+             xmlns:design="clr-namespace:AngorApp.Design"
              x:DataType="p:IPortfolioSectionViewModel">
 
     <UserControl.Resources>
@@ -31,34 +32,34 @@
     <Design.DataContext>
         <p:PortfolioSectionViewModelDesign FundedProjects="1" ProjectsInRecovery="4">
             <p:PortfolioSectionViewModelDesign.RecoveredToPenalty>
-                <angorApp:DesignTimeAmount Sats="4321" />
+                <design:DesignTimeAmount Sats="4321" />
             </p:PortfolioSectionViewModelDesign.RecoveredToPenalty>
             <p:PortfolioSectionViewModelDesign.TotalInvested>
-                <angorApp:DesignTimeAmount Sats="1234" />
+                <design:DesignTimeAmount Sats="1234" />
             </p:PortfolioSectionViewModelDesign.TotalInvested>
             <p:PortfolioSectionViewModelDesign.InvestedProjects>
                 <p:PortfolioProjectDesign InvestmentStatus="FounderSignaturesReceived" FounderStatus="Approved" IsInvestmentCompleted="False" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
                     <p:PortfolioProjectDesign.Target>
-                        <angorApp:DesignTimeAmount Sats="12000000" />
+                        <design:DesignTimeAmount Sats="12000000" />
                     </p:PortfolioProjectDesign.Target>
                     <p:PortfolioProjectDesign.Raised>
-                        <angorApp:DesignTimeAmount Sats="4400000" />
+                        <design:DesignTimeAmount Sats="4400000" />
                     </p:PortfolioProjectDesign.Raised>
                 </p:PortfolioProjectDesign>
                 <p:PortfolioProjectDesign FounderStatus="Approved" InvestmentStatus="PendingFounderSignatures" Name="Project 2" IsInvestmentCompleted="True" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
                     <p:PortfolioProjectDesign.Target>
-                        <angorApp:DesignTimeAmount Sats="12000000" />
+                        <design:DesignTimeAmount Sats="12000000" />
                     </p:PortfolioProjectDesign.Target>
                     <p:PortfolioProjectDesign.Raised>
-                        <angorApp:DesignTimeAmount Sats="5404000" />
+                        <design:DesignTimeAmount Sats="5404000" />
                     </p:PortfolioProjectDesign.Raised>
                 </p:PortfolioProjectDesign>
                 <p:PortfolioProjectDesign FounderStatus="Approved" InvestmentStatus="Invested" Name="Project 2" IsInvestmentCompleted="True" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
                     <p:PortfolioProjectDesign.Target>
-                        <angorApp:DesignTimeAmount Sats="12000000" />
+                        <design:DesignTimeAmount Sats="12000000" />
                     </p:PortfolioProjectDesign.Target>
                     <p:PortfolioProjectDesign.Raised>
-                        <angorApp:DesignTimeAmount Sats="5404000" />
+                        <design:DesignTimeAmount Sats="5404000" />
                     </p:PortfolioProjectDesign.Raised>
                 </p:PortfolioProjectDesign>
             </p:PortfolioSectionViewModelDesign.InvestedProjects>

@@ -1,9 +1,17 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:AngorApp.UI.Controls">
+        xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+        xmlns:system="clr-namespace:System;assembly=System.Runtime">
     <Design.PreviewWith>
         <Border Padding="20">
-            <controls:Badge Color="LimeGreen">Hola</controls:Badge>
+            <StackPanel Spacing="10">
+                <controls:Badge Color="LimeGreen">Hola</controls:Badge>
+                <controls:Badge Color="Red">
+                    <system:Int32>12</system:Int32>
+                </controls:Badge>
+                <controls:Badge Color="Orange">This is a longer badge</controls:Badge>
+            </StackPanel>
+
         </Border>
     </Design.PreviewWith>
 
@@ -12,6 +20,8 @@
             <Setter Property="Padding" Value="12 5" />
             <Setter Property="Color" Value="{DynamicResource SystemBaseHighColor}" />
             <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            
             <!-- <Setter Property="TextElement.FontWeight" Value="Light"/> -->
             <Setter Property="Template">
                 <ControlTemplate>
@@ -25,7 +35,7 @@
                             <Border.Background>
                                 <SolidColorBrush Color="{Binding $parent[controls:Badge].Color}" Opacity="0.3" />
                             </Border.Background>
-                            <ContentPresenter Content="{TemplateBinding Content}">
+                            <ContentPresenter HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" Content="{TemplateBinding Content}">
                                 <ContentPresenter.Foreground>
                                     <SolidColorBrush Color="{Binding $parent[controls:Badge].Color}" />
                                 </ContentPresenter.Foreground>

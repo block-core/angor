@@ -46,7 +46,6 @@
                         <InvokeCommandAction Command="{Binding GoToDetails}" />
                     </TappedTrigger>
                 </Interaction.Behaviors>
-
             </OverlayBorder>
         </DataTemplate>
     </UserControl.DataTemplates>

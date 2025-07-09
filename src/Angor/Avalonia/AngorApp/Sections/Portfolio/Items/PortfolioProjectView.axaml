@@ -8,6 +8,7 @@
              xmlns:a="clr-namespace:AngorApp"
              xmlns:c="clr-namespace:AngorApp.UI.Controls"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
+             xmlns:design="clr-namespace:AngorApp.Design"
              mc:Ignorable="d"
              MinWidth="300"
              d:DesignWidth="500"
@@ -19,10 +20,10 @@
                                   Name="Project 1"
                                   LogoUri="https://test.angor.io/assets/img/no-image.jpg">
             <p:PortfolioProjectDesign.Target>
-                <a:DesignTimeAmount Sats="12000000" />
+                <design:DesignTimeAmount Sats="12000000" />
             </p:PortfolioProjectDesign.Target>
             <p:PortfolioProjectDesign.Raised>
-                <a:DesignTimeAmount Sats="4400000" />
+                <design:DesignTimeAmount Sats="4400000" />
             </p:PortfolioProjectDesign.Raised>
         </p:PortfolioProjectDesign>
     </Design.DataContext>

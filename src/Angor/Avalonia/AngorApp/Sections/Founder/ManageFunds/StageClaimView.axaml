@@ -1,0 +1,114 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:manageFunds="clr-namespace:AngorApp.Sections.Founder.ManageFunds"
+             xmlns:design="clr-namespace:AngorApp.Design"
+             xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.Sections.Founder.ManageFunds.StageClaimView" x:DataType="manageFunds:IStageClaimViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="ToggleButton[IsChecked=True]">
+            <Setter Property="Content">
+                <Setter.Value>
+                    <Template>
+                        <StackPanel Spacing="10" Orientation="Horizontal">
+                            <ContentControl>
+                                <ui:Icon Source="fa-angle-up" />
+                            </ContentControl>
+                            <TextBlock>Collapse</TextBlock>
+                        </StackPanel>
+                    </Template>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style Selector="ToggleButton[IsChecked=False]">
+            <Setter Property="Content">
+                <Setter.Value>
+                    <Template>
+                        <StackPanel Spacing="10" Orientation="Horizontal">
+                            <ContentControl>
+                                <ui:Icon Source="fa-angle-down" />
+                            </ContentControl>
+                            <TextBlock>Expand</TextBlock>
+                        </StackPanel>
+                    </Template>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <Design.DataContext>
+        <manageFunds:StageClaimViewModelDesign>
+            <manageFunds:StageClaimViewModelDesign.ClaimableStages>
+                <generic:List x:TypeArguments="manageFunds:IClaimableStage">
+                    <manageFunds:ClaimableStageDesign>
+                        <manageFunds:ClaimableStageDesign.Transactions>
+                            <generic:List x:TypeArguments="manageFunds:IClaimableTransaction">
+                                <manageFunds:ClaimableTransactionDesign Address="bc1qexampleaddress1">
+                                    <manageFunds:ClaimableTransactionDesign.Amount>
+                                        <design:DesignTimeAmount Sats="1000000" />
+                                    </manageFunds:ClaimableTransactionDesign.Amount>
+                                </manageFunds:ClaimableTransactionDesign>
+                            </generic:List>
+                        </manageFunds:ClaimableStageDesign.Transactions>
+                        <manageFunds:ClaimableStageDesign.ClaimableAmount>
+                            <design:DesignTimeAmount Sats="1000000" />
+                        </manageFunds:ClaimableStageDesign.ClaimableAmount>
+                    </manageFunds:ClaimableStageDesign>
+                    <manageFunds:ClaimableStageDesign>
+                        <manageFunds:ClaimableStageDesign.ClaimableAmount>
+                            <design:DesignTimeAmount Sats="1000000" />
+                        </manageFunds:ClaimableStageDesign.ClaimableAmount>
+                    </manageFunds:ClaimableStageDesign>
+                    <manageFunds:ClaimableStageDesign>
+                        <manageFunds:ClaimableStageDesign.ClaimableAmount>
+                            <design:DesignTimeAmount Sats="1000000" />
+                        </manageFunds:ClaimableStageDesign.ClaimableAmount>
+                    </manageFunds:ClaimableStageDesign>
+                </generic:List>
+            </manageFunds:StageClaimViewModelDesign.ClaimableStages>
+        </manageFunds:StageClaimViewModelDesign>
+    </Design.DataContext>
+
+    <ItemsControl ItemsSource="{Binding ClaimableStages}">
+        <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="manageFunds:IClaimableStage">
+                <Card HeaderStartContent="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}">
+                    <Card.HeaderEndContent>
+                        <ToggleButton Padding="10" x:Name="ToggleButton" />
+                    </Card.HeaderEndContent>
+                    <Card.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <controls:Badge Content="{Binding ClaimableAmount.DecimalString}" />
+                            <!-- <controls:Badge Content="{Binding ClaimableTransactions}" /> -->
+                        </StackPanel>
+                    </Card.Header>
+                    <DockPanel IsVisible="{Binding #ToggleButton.IsChecked}">
+                        <IconButton Padding="15 10" Margin="0 20 0 0" HorizontalAlignment="Right" Content="Claim Selected Coins" DockPanel.Dock="Bottom">
+                            <IconButton.Icon>
+                                <ContentControl Height="20">
+                                    <ui:Icon Source="svg:/Assets/claim.svg" />
+                                </ContentControl>
+                            </IconButton.Icon>
+                        </IconButton>
+                        <ListBox Selection="{Binding Selection}" ItemsSource="{Binding Transactions}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel>
+                                        <CheckBox IsChecked="{Binding $parent[ListBoxItem].IsSelected}" />
+                                        <TextBlock Text="{Binding Address}" />
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding ClaimStatus}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Card>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</UserControl>

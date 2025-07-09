@@ -3,7 +3,8 @@
         xmlns:controls="clr-namespace:AngorApp.UI.Controls"
         xmlns:angorApp="clr-namespace:AngorApp"
         xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
-        xmlns:ui="clr-namespace:AngorApp.UI">
+        xmlns:ui="clr-namespace:AngorApp.UI"
+        xmlns:design="clr-namespace:AngorApp.Design">
     
     <Design.PreviewWith>
         <controls:FeerateSelector Width="400" Height="500" Amount="1000">
@@ -11,17 +12,17 @@
                 <generic:List x:TypeArguments="controls:IFeeratePreset">
                     <angorApp:DesignTimePreset Name="Economy">
                         <angorApp:DesignTimePreset.Feerate>
-                            <angorApp:DesignTimeAmount Sats="1234" />
+                            <design:DesignTimeAmount Sats="1234" />
                         </angorApp:DesignTimePreset.Feerate>
                     </angorApp:DesignTimePreset>
                     <angorApp:DesignTimePreset Name="Standard">
                         <angorApp:DesignTimePreset.Feerate>
-                            <angorApp:DesignTimeAmount Sats="1234" />
+                            <design:DesignTimeAmount Sats="1234" />
                         </angorApp:DesignTimePreset.Feerate>
                     </angorApp:DesignTimePreset>
                     <angorApp:DesignTimePreset Name="Priority">
                         <angorApp:DesignTimePreset.Feerate>
-                            <angorApp:DesignTimeAmount Sats="1234" />
+                            <design:DesignTimeAmount Sats="1234" />
                         </angorApp:DesignTimePreset.Feerate>
                     </angorApp:DesignTimePreset>
                 </generic:List>

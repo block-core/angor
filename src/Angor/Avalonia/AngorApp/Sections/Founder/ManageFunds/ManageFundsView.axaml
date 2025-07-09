@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:mf="clr-namespace:AngorApp.Sections.Founder.ManageFunds"
+             xmlns:a="clr-namespace:AngorApp"
+             xmlns:design="clr-namespace:AngorApp.Design"
+             xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+             mc:Ignorable="d" d:DesignWidth="1200" 
+             x:Class="AngorApp.Sections.Founder.ManageFunds.ManageFundsView" x:DataType="mf:IManageFundsViewModel">
+
+    <Design.DataContext>
+        <mf:ManageFundsViewModelDesign>
+            <mf:ManageFundsViewModelDesign.StageClaimViewModel>
+                        <mf:StageClaimViewModelDesign>
+            <mf:StageClaimViewModelDesign.ClaimableStages>
+                <generic:List x:TypeArguments="mf:IClaimableStage">
+                    <mf:ClaimableStageDesign>
+                        <mf:ClaimableStageDesign.Transactions>
+                            <generic:List x:TypeArguments="mf:IClaimableTransaction">
+                                <mf:ClaimableTransactionDesign Address="bc1qexampleaddress1">
+                                    <mf:ClaimableTransactionDesign.Amount>
+                                        <design:DesignTimeAmount Sats="1000000" />
+                                    </mf:ClaimableTransactionDesign.Amount>
+                                </mf:ClaimableTransactionDesign>
+                                <mf:ClaimableTransactionDesign Address="bc1qexampleaddress1">
+                                    <mf:ClaimableTransactionDesign.Amount>
+                                        <design:DesignTimeAmount Sats="1000000" />
+                                    </mf:ClaimableTransactionDesign.Amount>
+                                </mf:ClaimableTransactionDesign>
+                                <mf:ClaimableTransactionDesign Address="bc1qexampleaddress1">
+                                    <mf:ClaimableTransactionDesign.Amount>
+                                        <design:DesignTimeAmount Sats="1000000" />
+                                    </mf:ClaimableTransactionDesign.Amount>
+                                </mf:ClaimableTransactionDesign>
+                            </generic:List>
+                        </mf:ClaimableStageDesign.Transactions>
+                        <mf:ClaimableStageDesign.ClaimableAmount>
+                            <design:DesignTimeAmount Sats="1000000" />
+                        </mf:ClaimableStageDesign.ClaimableAmount>
+                    </mf:ClaimableStageDesign>
+                    <mf:ClaimableStageDesign>
+                        <mf:ClaimableStageDesign.ClaimableAmount>
+                            <design:DesignTimeAmount Sats="1000000" />
+                        </mf:ClaimableStageDesign.ClaimableAmount>
+                    </mf:ClaimableStageDesign>
+                    <mf:ClaimableStageDesign>
+                        <mf:ClaimableStageDesign.ClaimableAmount>
+                            <design:DesignTimeAmount Sats="1000000" />
+                        </mf:ClaimableStageDesign.ClaimableAmount>
+                    </mf:ClaimableStageDesign>
+                </generic:List>
+            </mf:StageClaimViewModelDesign.ClaimableStages>
+        </mf:StageClaimViewModelDesign>
+
+            </mf:ManageFundsViewModelDesign.StageClaimViewModel>
+            <mf:ManageFundsViewModelDesign.ProjectStatisticsViewModel>
+                <mf:ProjectStatisticsViewModelDesign TotalStages="4" AvailableTransactions="3" TotalTransactions="6" SpentTransactions="3">
+                    <mf:ProjectStatisticsViewModelDesign.Withdrawable>
+                        <design:DesignTimeAmount Sats="200000000" />
+                    </mf:ProjectStatisticsViewModelDesign.Withdrawable>
+                    <mf:ProjectStatisticsViewModelDesign.TotalInvested>
+                        <design:DesignTimeAmount Sats="400000000" />
+                    </mf:ProjectStatisticsViewModelDesign.TotalInvested>
+                    <mf:ProjectStatisticsViewModelDesign.AvailableBalance>
+                        <design:DesignTimeAmount Sats="200000000" />
+                    </mf:ProjectStatisticsViewModelDesign.AvailableBalance>
+                </mf:ProjectStatisticsViewModelDesign>            </mf:ManageFundsViewModelDesign.ProjectStatisticsViewModel>
+            <mf:ManageFundsViewModelDesign.ProjectViewModel>
+                <mf:ProjectViewModelDesign Name="Sample Project"
+                                          ShortDescription="Sample project with long description bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah"
+                                          Banner="https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"
+                                          Avatar="https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg" />
+            </mf:ManageFundsViewModelDesign.ProjectViewModel>
+
+        </mf:ManageFundsViewModelDesign>
+    </Design.DataContext>
+
+    <controls:PageContainer>
+        <StackPanel Spacing="10">
+            <Card DockPanel.Dock="Top" Header="Manage Project Funds" IsAdaptiveFlowEnabled="True" Subheader="Check your project investments">
+                <Card.HeaderEndContent>
+                    <UniformGrid ColumnSpacing="20" Rows="1">
+                        <IconButton HorizontalAlignment="Stretch" Command="{Binding Load}">
+                            Refresh
+                            <IconButton.Icon>
+                                <ui:Icon Source="fa-arrows-rotate" />
+                            </IconButton.Icon>
+                        </IconButton>
+                    </UniformGrid>
+                </Card.HeaderEndContent>
+                <HeaderedContainer Header="Project" Content="{Binding ProjectViewModel.Name}" />
+            </Card>
+            <mf:ProjectStatisticsView DataContext="{Binding ProjectStatisticsViewModel}" />
+            <mf:StageClaimView DataContext="{Binding StageClaimViewModel}" />
+        </StackPanel>
+    </controls:PageContainer>
+</UserControl>
