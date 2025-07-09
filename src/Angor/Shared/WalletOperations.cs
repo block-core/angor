@@ -652,20 +652,6 @@ public class WalletOperations : IWalletOperations
 
         transaction.Outputs.Add(new TxOut(Money.Satoshis(sendInfo.SendAmount), BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network).ScriptPubKey));
 
-
         sendInfo.UnSignedTransaction = transaction;
-
-
-        //var coins = sendInfo.SendUtxos
-        //    .Select(_ => _.Value.UtxoData)
-        //    .Select(_ => new Coin(uint256.Parse(_.outpoint.transactionId), (uint)_.outpoint.outputIndex,
-        //        Money.Satoshis(_.value), Script.FromHex(_.scriptHex)));
-
-        //var builder = new TransactionBuilder(network)
-        //    .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), sendInfo.SendAmount)
-        //    .AddCoins(coins)
-        //    .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network));
-
-        //return builder.EstimateFees(new FeeRate(Money.Satoshis(feeRate))).ToUnit(MoneyUnit.BTC);
     }
 }
