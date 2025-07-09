@@ -22,7 +22,6 @@
         <ControlTheme x:Key="RemarkableSubheaderCard"
                       TargetType="Card"
                       BasedOn="{StaticResource {x:Type Card}}">
-    
             <Setter Property="SubheaderTemplate">
                 <Setter.Value>
                     <DataTemplate DataType="x:Object">
@@ -42,7 +41,6 @@
                 </Setter.Value>
             </Setter>
         </ControlTheme>
-        
         <ControlTheme x:Key="InfoCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -61,21 +59,21 @@
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                             Margin="{TemplateBinding Padding}">
-                            <ContentPresenter x:Name="StartContent"
+                            <ContentControl x:Name="StartContent"
                                               Content="{TemplateBinding HeaderStartContent}"
                                               ContentTemplate="{TemplateBinding HeaderStartContentTemplate}" />
-                            <ContentPresenter x:Name="Header" Content="{TemplateBinding Header}"
-                                              ContentTemplate="{TemplateBinding HeaderTemplate}"
-                                              TextElement.Foreground="{StaticResource HeaderBrush}"
-                                              />
-                            <ContentPresenter x:Name="Subheader" Content="{TemplateBinding Subheader}"
-                                              ContentTemplate="{TemplateBinding SubheaderTemplate}" />
-                            <ContentPresenter x:Name="Content" Content="{TemplateBinding Content}"
-                                              IsVisible="{Binding $parent[Card].Content, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                              ContentTemplate="{TemplateBinding ContentTemplate}" />
-                            <ContentPresenter x:Name="EndContent" Content="{TemplateBinding HeaderEndContent}"
-                                              IsVisible="{Binding $parent[Card].HeaderEndContent, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                              ContentTemplate="{TemplateBinding HeaderEndContentTemplate}" />
+                            <ContentControl x:Name="Header" Content="{TemplateBinding Header}"
+                                            ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                            TextElement.Foreground="{StaticResource HeaderBrush}"
+                            />
+                            <ContentControl x:Name="Subheader" Content="{TemplateBinding Subheader}"
+                                            ContentTemplate="{TemplateBinding SubheaderTemplate}" />
+                            <ContentControl x:Name="Content" Content="{TemplateBinding Content}"
+                                            IsVisible="{Binding $parent[Card].Content, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                            ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            <ContentControl x:Name="EndContent" Content="{TemplateBinding HeaderEndContent}"
+                                            IsVisible="{Binding $parent[Card].HeaderEndContent, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                            ContentTemplate="{TemplateBinding HeaderEndContentTemplate}" />
                         </StackPanel>
                     </Border>
                 </ControlTemplate>

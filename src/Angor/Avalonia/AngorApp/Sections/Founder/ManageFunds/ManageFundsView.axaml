@@ -104,7 +104,7 @@
                                      Foreground="{DynamicResource SystemControlBackgroundBaseMediumBrush}" Height="100" Value="{Binding RaisedAmount.Sats}" Maximum="{Binding TargetAmount.Sats}" />
                         <Panel Margin="20">
                             <HeaderedContainer VerticalAlignment="Center" Header="Raised Amount" Content="{Binding RaisedAmount.DecimalString}" />
-                            <HeaderedContainer VerticalAlignment="Center" HorizontalAlignment="Right" Header="Target Amount" Content="{Binding TargetAmount.DecimalString}" /></Panel>
+                            <HeaderedContainer HorizontalContentAlignment="Right" VerticalAlignment="Center" HorizontalAlignment="Right" Header="Target Amount" Content="{Binding TargetAmount.DecimalString}" /></Panel>
                     </Panel>
                 </StackPanel>
             </Card>

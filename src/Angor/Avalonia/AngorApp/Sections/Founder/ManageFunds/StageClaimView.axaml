@@ -78,6 +78,11 @@
         <ItemsControl.ItemTemplate>
             <DataTemplate DataType="manageFunds:IClaimableStage">
                 <Card HeaderStartContent="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}">
+                    <Card.HeaderTemplate>
+                        <DataTemplate>
+                            <ContentPresenter Content="{ReflectionBinding}" />
+                        </DataTemplate>
+                    </Card.HeaderTemplate>
                     <Card.HeaderEndContent>
                         <ToggleButton Padding="10" x:Name="ToggleButton" />
                     </Card.HeaderEndContent>
