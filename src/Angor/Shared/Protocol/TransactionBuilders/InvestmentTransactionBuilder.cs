@@ -67,10 +67,6 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
         var stagesOutputs = stagesScripts.Select((script, i) =>
             new TxOut(new Money(stageAmounts[i]), new Script(script.ToBytes())));
 
-        //var stagesOutputs = stagesScripts.Select((_, i) =>
-        //    new TxOut(new Money(Convert.ToInt64(totalInvestmentAmount * (projectInfo.Stages[i].AmountToRelease / 100))),
-        //        new Script(_.ToBytes())));
-
         investmentTransaction.Outputs.AddRange(stagesOutputs);
 
         if(investmentTransaction.TotalOut.Satoshi != totalInvestmentAmount)
