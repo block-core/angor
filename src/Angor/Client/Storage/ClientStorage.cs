@@ -8,6 +8,7 @@ namespace Angor.Client.Storage;
 public class ClientStorage : IClientStorage, INetworkStorage
 {
     private const string CurrencyDisplaySettingKey = "currencyDisplaySetting";
+    private const string ReplicateMainnetKey = "replicateMainnet";
 
     private const string utxoKey = "utxo:{0}";
     private readonly ISyncLocalStorageService _storage;
@@ -110,7 +111,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
         }
 
         projects.Add(project);
-        
+
         _storage.SetItem("founder-projects", projects.OrderBy(p => p.ProjectIndex).ToList());
     }
 
@@ -150,10 +151,20 @@ public class ClientStorage : IClientStorage, INetworkStorage
     {
         return _storage.GetItem<string>(CurrencyDisplaySettingKey) ?? "BTC";
     }
-
+    
     public void SetCurrencyDisplaySetting(string setting)
     {
         _storage.SetItem(CurrencyDisplaySettingKey, setting);
+    }
+
+    public bool GetReplicateMainnetMode()
+    {
+        return _storage.GetItem<bool>(ReplicateMainnetKey);
+    }
+    
+    public void SetReplicateMainnetMode(bool replicateMainnet)
+    {
+        _storage.SetItem(key:ReplicateMainnetKey, data:replicateMainnet);
     }
 
     public SettingsInfo GetSettings()
@@ -224,7 +235,7 @@ public class ClientStorage : IClientStorage, INetworkStorage
 
     public void SetFeatureFlags(Dictionary<string, bool> featureFlags)
     {
-        _storage.SetItem("FeatureFlags", featureFlags); 
+        _storage.SetItem("FeatureFlags", featureFlags);
     }
 
     public Dictionary<string, bool>? GetFeatureFlags()
