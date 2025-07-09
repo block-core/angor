@@ -7,7 +7,6 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.BIP39;
 using Blockcore.Networks;
-using DBreeze.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared;
