@@ -21,6 +21,7 @@ namespace Angor.Test;
 public class WalletOperationsTest : AngorTestData
 {
     private WalletOperations _sut;
+    private PsbtOperations _sut1;
 
     private readonly Mock<IIndexerService> _indexerService;
     private readonly InvestorTransactionActions _investorTransactionActions;
@@ -32,6 +33,7 @@ public class WalletOperationsTest : AngorTestData
         _indexerService = new Mock<IIndexerService>();
 
         _sut = new WalletOperations(_indexerService.Object, new HdOperations(), new NullLogger<WalletOperations>(), _networkConfiguration.Object);
+        _sut1 = new PsbtOperations(_indexerService.Object, new HdOperations(), new NullLogger<PsbtOperations>(), _networkConfiguration.Object, _sut);
 
         _investorTransactionActions = new InvestorTransactionActions(new NullLogger<InvestorTransactionActions>(),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()),
@@ -182,8 +184,8 @@ public class WalletOperationsTest : AngorTestData
 
         var signedInvestmentTransaction1 = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, 3000);
 
-        var psbt = _sut.CreatePsbtForTransaction(investmentTransaction, accountInfo, 3000);
-        var signedInvestmentTransaction = _sut.SignPsbt(psbt, words);
+        var psbt = _sut1.CreatePsbtForTransaction(investmentTransaction, accountInfo, 3000);
+        var signedInvestmentTransaction = _sut1.SignPsbt(psbt, words);
 
         var strippedInvestmentTransaction = network.CreateTransaction(signedInvestmentTransaction.Transaction.ToHex());
         strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
@@ -425,7 +427,7 @@ public class WalletOperationsTest : AngorTestData
         };
 
         // Act & Assert for sufficient funds
-        var calculatedFeeSufficient = walletOperations.CalculateTransactionFee(sendInfoSufficientFunds, accountInfo, feeRate);
+        var calculatedFeeSufficient = walletOperations.CreateSendTransaction(sendInfoSufficientFunds, accountInfo, feeRate);
         Assert.True(calculatedFeeSufficient > 0);
         Assert.Equal(0.00000001m, calculatedFeeSufficient);  // Assuming an expected fee for validation
 
@@ -456,7 +458,7 @@ public class WalletOperationsTest : AngorTestData
         };
 
         // Act & Assert for insufficient funds
-        var exception = Assert.Throws<Blockcore.Consensus.TransactionInfo.NotEnoughFundsException>(() => walletOperations.CalculateTransactionFee(sendInfoInsufficientFunds, accountInfo, feeRate));
+        var exception = Assert.Throws<Blockcore.Consensus.TransactionInfo.NotEnoughFundsException>(() => walletOperations.CreateSendTransaction(sendInfoInsufficientFunds, accountInfo, feeRate));
         Assert.Equal("Not enough funds to cover the target with missing amount 9999.99999500", exception.Message);
     }
 

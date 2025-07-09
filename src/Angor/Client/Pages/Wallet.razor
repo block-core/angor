@@ -16,6 +16,7 @@
 @inject IWalletStorage _walletStorage;
 @inject ILogger<Wallet> Logger;
 @inject IWalletOperations _walletOperations
+@inject IPsbtOperations _PsbtOperations
 @inject IClipboardService _clipboardService
 @inject ICurrencyService _currencyService
 @inject IDerivationOperations _derivationOperations
@@ -808,7 +809,7 @@ else
                                                     <div class="info-row d-flex flex-column">
                                                         <span class="text-muted small mb-1">Amount</span>
                                                         <span class="amount fw-bold text-break">
-                                                            @_sendInfo.SendAmount.ToUnitBtc() @network.CoinTicker
+                                                            @_sendInfo.SignedTransaction.Transaction.TotalOut.Satoshi.ToUnitBtc() @network.CoinTicker
                                                         </span>
                                                     </div>
 
@@ -1123,7 +1124,7 @@ else
             _sendInfo.SendAmount = Money.Coins(value).Satoshi;
         }
     }
-    
+
     private void SetMaxInvestment()
     {
         sendAmount = accountBalanceInfo.TotalBalance.ToUnitBtc();
@@ -1545,11 +1546,9 @@ else
 
         try
         {
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var words = await passwordComponent.GetWalletAsync();
 
-            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
-
-            storage.SetAccountInfo(network.Name, accountInfo);
+            await _walletUIService.RefreshWalletBalance(accountBalanceInfo);
 
             await RefreshFee();
 
@@ -1567,12 +1566,17 @@ else
             _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
             _sendInfo.FeeRate = estimationsFee.FeeRate;
 
-            if (string.IsNullOrEmpty(_sendInfo.ChangeAddress))
-            {
-                _sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.HasHistory == false).Address;
-            }
+            _walletOperations.CreateSendTransaction(_sendInfo, accountBalanceInfo.AccountInfo);
 
-            _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);
+            var psbt = _PsbtOperations.CreatePsbtForTransaction(_sendInfo.UnSignedTransaction, accountBalanceInfo.AccountInfo, estimationsFee.FeeRate, utxoDataWithPaths:_sendInfo.SendUtxos.Values.ToList());
+
+            _sendInfo.SignedTransaction = _PsbtOperations.SignPsbt(psbt, words);
+
+            _sendInfo.SendFee = _sendInfo.SignedTransaction.TransactionFee.ToUnitBtc();
+            if(_sendInfo.SignedTransaction.Transaction.Outputs.Count == 2)
+            {
+                _sendInfo.ChangeAddress = _sendInfo.SignedTransaction.Transaction.Outputs[1].ScriptPubKey.GetDestinationAddress(network)?.ToString() ?? string.Empty;
+            }
 
             sendConfirmModal = true;
         }
@@ -1590,7 +1594,7 @@ else
         StateHasChanged();
     }
 
-    private async Task SendCoins()
+    private async Task HandleFeeChanged(FeeCalculation feeCalc)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -1600,18 +1604,54 @@ else
             return;
         }
 
+        try
+        {
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
+            {
+                _sendInfo.FeeRate = feeCalc.CustomFee.Value;
+                _sendInfo.FeeBlockCount = 0; // Custom fee doesn't have block count
+            }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= FeeEstimations.Fees.Count)
+            {
+                FeePosition = feeCalc.Position.Value;
+                var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[FeePosition - 1];
+                _sendInfo.FeeRate = estimationsFee.FeeRate;
+                _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
+            }
+
+            var words = await passwordComponent.GetWalletAsync();
+
+            var psbt = _PsbtOperations.CreatePsbtForTransaction(_sendInfo.UnSignedTransaction, accountBalanceInfo.AccountInfo, _sendInfo.FeeRate, utxoDataWithPaths: _sendInfo.SendUtxos.Values.ToList());
+
+            _sendInfo.SignedTransaction = _PsbtOperations.SignPsbt(psbt, words);
+
+            _sendInfo.SendFee = _sendInfo.SignedTransaction.TransactionFee.ToUnitBtc();
+            if(_sendInfo.SignedTransaction.Transaction.Outputs.Count == 2)
+            {
+                _sendInfo.ChangeAddress = _sendInfo.SignedTransaction.Transaction.Outputs[1].ScriptPubKey.GetDestinationAddress(network)?.ToString() ?? string.Empty;
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error calculating fee");
+            notificationComponent.ShowErrorMessage("Error calculating fee");
+        }
+    }
+
+    private async Task SendCoins()
+    {
         sendConfirmSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
 
         try
         {
-            var words = await passwordComponent.GetWalletAsync();
-
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
-            var res = await _walletOperations.SendAmountToAddress(words, _sendInfo);
+            var res = await _walletOperations.PublishTransactionAsync(network, _sendInfo.SignedTransaction.Transaction);
 
             if (res.Success)
             {
@@ -1664,35 +1704,6 @@ else
         return FeeEstimations.Fees.Any()
             ? Math.Max(1, FeeEstimations.Fees.Min(f => f.FeeRate))
             : 5;
-    }
-
-    private async Task HandleFeeChanged(FeeCalculation feeCalc)
-    {
-        try
-        {
-            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
-            {
-                _sendInfo.FeeRate = feeCalc.CustomFee.Value;
-                _sendInfo.FeeBlockCount = 0; // Custom fee doesn't have block count
-            }
-            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= FeeEstimations.Fees.Count)
-            {
-                FeePosition = feeCalc.Position.Value;
-                var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[FeePosition - 1];
-                _sendInfo.FeeRate = estimationsFee.FeeRate;
-                _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
-            }
-
-            var accountInfo = storage.GetAccountInfo(network.Name);
-            _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, _sendInfo.FeeRate);
-
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error calculating fee");
-            notificationComponent.ShowErrorMessage("Error calculating fee");
-        }
     }
 
     private void showCoinControlModal()

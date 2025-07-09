@@ -13,7 +13,7 @@ namespace Angor.Shared;
 public class PsbtOperations : IPsbtOperations
 {
     private readonly IHdOperations _hdOperations;
-    private readonly ILogger<WalletOperations> _logger;
+    private readonly ILogger<PsbtOperations> _logger;
     private readonly INetworkConfiguration _networkConfiguration;
     private readonly IWalletOperations _walletOperations;
     private readonly IIndexerService _indexerService;
@@ -21,7 +21,7 @@ public class PsbtOperations : IPsbtOperations
     private const int AccountIndex = 0; // for now only account 0
     private const int Purpose = 84; // for now only legacy
 
-    public PsbtOperations(IIndexerService indexerService, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration, IWalletOperations walletOperations)
+    public PsbtOperations(IIndexerService indexerService, IHdOperations hdOperations, ILogger<PsbtOperations> logger, INetworkConfiguration networkConfiguration, IWalletOperations walletOperations)
     {
         _hdOperations = hdOperations;
         _logger = logger;
@@ -30,7 +30,7 @@ public class PsbtOperations : IPsbtOperations
         _indexerService = indexerService;
     }
 
-    public PsbtData CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null)
+    public PsbtData CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null, List<UtxoDataWithPath>? utxoDataWithPaths = null)
     {
         if (string.IsNullOrEmpty(accountInfo.RootExtPubKey))
         {
@@ -40,24 +40,53 @@ public class PsbtOperations : IPsbtOperations
         Network network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
 
-        changeAddress = changeAddress ?? accountInfo.GetNextChangeReceiveAddress();
+        changeAddress ??= accountInfo.GetNextChangeReceiveAddress();
 
-        var utxoDataWithPaths = _walletOperations.FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
+        if (utxoDataWithPaths == null || utxoDataWithPaths.Count == 0)
+        {
+            utxoDataWithPaths = _walletOperations.FindOutputsForTransaction(transaction.Outputs.Sum(txOut => txOut.Value.Satoshi), accountInfo);
+        }
+        
         var coins = utxoDataWithPaths.Select(u => new Coin(uint256.Parse(u.UtxoData.outpoint.transactionId), (uint)u.UtxoData.outpoint.outputIndex, Money.Satoshis(u.UtxoData.value), Script.FromHex(u.UtxoData.scriptHex))).ToList();
 
         if (!coins.Any())
             throw new ApplicationException("No coins found to fund the transaction.");
 
-        var builder = new TransactionBuilder(network)
-            .AddCoins(coins)
-            .SetChange(BitcoinAddress.Create(changeAddress, network))
-            .ContinueToBuild(transaction) // Add the predefined outputs
-            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
-            .CoverTheRest(); // Ensure enough input value covers outputs + fee, adjusting change if needed
+        var unsignedTx = NBitcoin.Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
 
-        var unsignedTx = builder.BuildTransaction(false);
+        foreach (var coin in coins)
+        {
+            NBitcoin.OutPoint outputint = new NBitcoin.OutPoint(new NBitcoin.uint256(coin.Outpoint.Hash.ToBytes()), coin.Outpoint.N);
+            if (unsignedTx.Inputs.Any(x => x.PrevOut == outputint))
+                continue;
+            var txin = new NBitcoin.TxIn(outputint, null);
+            txin.WitScript = new NBitcoin.WitScript(NBitcoin.Op.GetPushOp(new byte[72]), NBitcoin.Op.GetPushOp(new byte[33])); // for total size calculation
+            unsignedTx.Inputs.Add(txin);
+        }
 
-        var psbt = NBitcoin.PSBT.FromTransaction(NBitcoin.Transaction.Parse(unsignedTx.ToHex(), nbitcoinNetwork), nbitcoinNetwork);
+        var totalSize = unsignedTx.GetVirtualSize();
+        var totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize);
+
+        var totalSatsIn = coins.Sum(s => s.Amount);
+        var totalSatsOut = unsignedTx.Outputs.Sum(o => o.Value);
+        var totalToChange = totalSatsIn - totalSatsOut - totalFee;
+
+        var spendAll = totalSatsIn == totalSatsOut;
+        if (spendAll)
+        {
+            var lastOutput = unsignedTx.Outputs.Last();
+
+            if (totalFee >= lastOutput.Value)
+                throw new ApplicationException($"The fee {totalFee} is greater then the last output {lastOutput.Value}");
+
+            lastOutput.Value -= totalFee;
+        }
+        else
+        {
+            var changeOutput = unsignedTx.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(totalToChange.Satoshi), NBitcoin.BitcoinAddress.Create(changeAddress, nbitcoinNetwork).ScriptPubKey));
+        }
+
+        var psbt = NBitcoin.PSBT.FromTransaction(unsignedTx, nbitcoinNetwork);
 
         NBitcoin.ExtPubKey accountExtPubKey = NBitcoin.ExtPubKey.Parse(accountInfo.RootExtPubKey, nbitcoinNetwork);
 
