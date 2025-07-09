@@ -48,7 +48,7 @@ public class AngorTestData
         };
         projectInvestmentInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
         projectInvestmentInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
-        projectInvestmentInfo.ProjectIdentifier = _derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+        projectInvestmentInfo.ProjectIdentifier = _derivationOperations.DeriveAngorKey(angorRootKey, projectInvestmentInfo.FounderKey);
         
         projectInvestmentInfo.ProjectSeeders = new ProjectSeeders { Threshold = 2 };
         return projectInvestmentInfo;
