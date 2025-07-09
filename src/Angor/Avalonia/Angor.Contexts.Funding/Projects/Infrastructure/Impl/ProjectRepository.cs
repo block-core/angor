@@ -73,7 +73,9 @@ public class ProjectRepository(
             .ToList()
             .SelectMany(projects =>
             {
-                return ProjectMetadatas(projects.Select(project => project.NostrPubKey))
+                return ProjectMetadatas(projects
+                        .Where(x => string.IsNullOrEmpty(x.NostrPubKey) == false)
+                        .Select(project => project.NostrPubKey))
                     .Select(projectInfo =>
                     {
                         var project = projects.FirstOrDefault(p => p.NostrPubKey == projectInfo.Item1);
@@ -117,7 +119,7 @@ public class ProjectRepository(
             relayService.LookupNostrProfileForNPub(
                 (npub, nostrMetadata) => observer.OnNext((npub, nostrMetadata)),
                 observer.OnCompleted,
-                projectInfos.ToArray());
+                projectInfos.Where(x => x != null).ToArray());
 
             return Disposable.Empty;
         }).Timeout(TimeSpan.FromSeconds(30))

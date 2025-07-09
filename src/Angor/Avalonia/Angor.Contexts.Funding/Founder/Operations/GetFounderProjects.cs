@@ -21,8 +21,7 @@ public static class GetFounderProjects
         public Task<Result<IEnumerable<ProjectDto>>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
         {
             return GetProjectIds(request)
-                .TraverseSequentially(projectRepository.TryGet)
-                .Map(projectMaybes => projectMaybes.Values())
+                .Bind(ids => projectRepository.GetAll(ids.ToArray()))
                 .MapEach(project => project.ToDto())
                 .WithTimeout(TimeSpan.FromSeconds(10));
         }

@@ -36,8 +36,7 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
         return Observable.FromAsync(() =>
         {
             return uiServices.WalletRoot.GetDefaultWalletAndActivate()
-                .Bind(maybeWallet => maybeWallet
-                    .ToResult("Please, create a wallet first")
+                .Bind(maybeWallet => maybeWallet.ToResult("Please, create a wallet first")
                     .Bind(wallet => projectAppService.GetFounderProjects(wallet.Id.Value)));
         });
     }
@@ -45,6 +44,7 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
     public IEnumerable<IFounderProjectViewModel> ProjectsList { get; }
     public IEnhancedCommand Create { get; }
 
+    public IWalletProvider walletProvider { get; }
     public IEnhancedCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; }
 
     public void Dispose()

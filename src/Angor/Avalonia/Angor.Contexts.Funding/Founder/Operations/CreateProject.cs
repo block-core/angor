@@ -5,6 +5,8 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Nostr.Client.Messages.Metadata;
@@ -23,7 +25,7 @@ internal static class CreateProjectConstants
             ISeedwordsProvider seedwordsProvider,
             IDerivationOperations derivationOperations,
             IRelayService relayService,
-            FounderTransactionActions founderTransactionActions,
+            IFounderTransactionActions founderTransactionActions,
             IWalletOperations walletOperations,
             IIndexerService indexerService,
             INetworkConfiguration networkConfiguration) : IRequestHandler<CreateProjectRequest, Result<string>>
@@ -53,7 +55,12 @@ internal static class CreateProjectConstants
                     return Result.Failure<string>("Failed to derive project keys");
                 }
 
-                var profileCreateEvent = await CreatNostrProfileAsync(newProjectKeys.NostrPubKey, request.Project);
+                var nostrPrivateKey =
+                    await derivationOperations.DeriveProjectNostrPrivateKeyAsync(wallet.Value.ToWalletWords(),
+                        newProjectKeys.FounderKey);
+                var nostrKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+
+                var profileCreateEvent = await CreatNostrProfileAsync(nostrKeyHex, request.Project);
 
 
                 if (profileCreateEvent.IsFailure)
@@ -62,16 +69,19 @@ internal static class CreateProjectConstants
                 }
 
                 var projectInfo =
-                    await CreatProjectInfoOnNostr(newProjectKeys.NostrPubKey, request.Project, newProjectKeys);
+                    await CreatProjectInfoOnNostr(nostrKeyHex, request.Project, newProjectKeys);
 
                 if (projectInfo.IsFailure)
                 {
+                    // await relayService.DeleteProjectAsync(resultId,
+                    //     nostrKeyHex); //TODO need to check if relays support the delete operation
+                    
                     return Result.Failure<string>(projectInfo.Error);
                 }
 
                 var transactionInfo = await CreatProjectTransaction(wallet.Value.ToWalletWords(),
                     request.SelectedFeeRate,
-                    newProjectKeys.FounderKey, newProjectKeys.ProjectIdentifier, profileCreateEvent.Value);
+                    newProjectKeys.FounderKey, newProjectKeys.ProjectIdentifier, projectInfo.Value);
 
                 if (transactionInfo.IsFailure)
                 {
@@ -122,11 +132,13 @@ internal static class CreateProjectConstants
 
                         relayService.PublishNip65List(nostrKey, nip65OkResponse =>
                         {
+                            if(tcs.Task.IsCompleted)
+                                return;
+                            
                             tcs.SetResult(!nip65OkResponse.Accepted
                                 ? Result.Failure<string>("Failed to publish NIP-65 list")
                                 : Result.Success(okResponse.EventId!));
                         });
-                        ;
                     });
 
                 return await tcs.Task;
@@ -164,7 +176,7 @@ internal static class CreateProjectConstants
                         {
                             tsc.SetResult(Result.Failure<string>(
                                 "Failed to store the project information on the relay!!! {_.CommunicatorName} - {_.Message}"));
-                            return;
+                            return ;
                         }
 
                         // TODO _Logger.LogInformation($"Communicator {_.CommunicatorName} accepted event {_.EventId}");
@@ -173,13 +185,7 @@ internal static class CreateProjectConstants
                         tsc.SetResult(Result.Success(okResponse.EventId!));
                     });
 
-                if (!string.IsNullOrEmpty(resultId))
-                    return await tsc.Task;
-
-                await relayService.DeleteProjectAsync(resultId,
-                    nostrKeyHex); //TODO need to check if relays support the delete operation
-
-                return Result.Failure<string>("Failed to create application data");
+                return await tsc.Task;
             }
 
 

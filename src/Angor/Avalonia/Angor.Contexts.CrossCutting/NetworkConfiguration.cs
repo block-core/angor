@@ -63,7 +63,11 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public List<SettingsUrl> GetDiscoveryRelays()
     {
-        throw new NotImplementedException();
+        return new List<SettingsUrl>
+        {
+            new SettingsUrl { Name = "wss://purplerelay.com", Url = "wss://purplerelay.com" },
+            new SettingsUrl { Name = "wss://discovery.eu.nostria.app", Url = "wss://discovery.eu.nostria.app" },
+        };
     }
 
     public string GetAngorKey()
