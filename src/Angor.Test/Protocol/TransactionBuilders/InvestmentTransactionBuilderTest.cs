@@ -48,9 +48,15 @@ public class InvestmentTransactionBuilderTest : AngorTestData
 
         var opReturnScript = new Key().ScriptPubKey;
 
+        var stageScripts = new List<ProjectScripts>()
+        {
+            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() },
+            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() },
+            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() }
+        };
+
         var seederInvestmentTransaction = _sut.BuildInvestmentTransaction(projectInvestmentInfo, opReturnScript,
-            new List<ProjectScripts>() { },
-            projectInvestmentInfo.TargetAmount);
+            stageScripts, projectInvestmentInfo.TargetAmount);
 
         var expectedoutput = seederInvestmentTransaction.Outputs.First();
 
@@ -68,10 +74,16 @@ public class InvestmentTransactionBuilderTest : AngorTestData
         var opReturnScript = new Key().ScriptPubKey;
 
         GivenTheAngorFeeScript(projectInvestmentInfo);
-            
-        var seederInvestmentTransaction = _sut.BuildInvestmentTransaction(projectInvestmentInfo, opReturnScript,
-            new List<ProjectScripts>(){},
-            projectInvestmentInfo.TargetAmount);
+
+        var stageScripts = new List<ProjectScripts>()
+        {
+            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() },
+            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() },
+            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() }
+        };
+
+        var seederInvestmentTransaction = _sut.BuildInvestmentTransaction(projectInvestmentInfo, opReturnScript, 
+            stageScripts, projectInvestmentInfo.TargetAmount);
 
         var expectedoutput = seederInvestmentTransaction.Outputs[1];
             
@@ -109,7 +121,7 @@ public class InvestmentTransactionBuilderTest : AngorTestData
 
         Assert.Equal(seederInvestmentTransaction.Outputs[2].Value.Satoshi, 297000);
         Assert.Equal(seederInvestmentTransaction.Outputs[3].Value.Satoshi, 1485000);
-        Assert.Equal(seederInvestmentTransaction.Outputs[4].Value.Satoshi, 1188000);
+        Assert.Equal(seederInvestmentTransaction.Outputs[4].Value.Satoshi, 295218000);
     }
 
     [Fact]

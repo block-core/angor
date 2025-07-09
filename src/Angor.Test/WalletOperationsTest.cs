@@ -148,7 +148,7 @@ public class WalletOperationsTest : AngorTestData
 
         AccountInfo accountInfo = _sut.BuildAccountInfoForWalletWords(words);
 
-        AddCoins(accountInfo, 6, 50000000);
+        AddCoins(accountInfo, 6, 500000000);
 
         var network = _networkConfiguration.Object.GetNetwork();
 
@@ -159,9 +159,9 @@ public class WalletOperationsTest : AngorTestData
         projectInfo.PenaltyDays = 10;
         projectInfo.Stages = new List<Stage>
         {
-            new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
-            new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
-            new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+            new Stage { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+            new Stage { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+            new Stage { AmountToRelease = 50, ReleaseDate = DateTime.UtcNow.AddDays(3) }
         };
         projectInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
         projectInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, projectInfo.FounderKey);
@@ -174,6 +174,11 @@ public class WalletOperationsTest : AngorTestData
         var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, projectInfo.FounderKey);
 
         var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investorKey, Money.Coins(investmentAmount).Satoshi);
+
+        Assert.Equal(5, investmentTransaction.Outputs.Count); // 1 for angor fee, 1 for op return, 3 for stages
+        Assert.Equal(247500000, investmentTransaction.Outputs[2].Value);
+        Assert.Equal(247500000, investmentTransaction.Outputs[3].Value);
+        Assert.Equal(495000000, investmentTransaction.Outputs[4].Value);
 
         var signedInvestmentTransaction1 = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, 3000);
 
