@@ -77,19 +77,17 @@
     <ItemsControl ItemsSource="{Binding ClaimableStages}">
         <ItemsControl.ItemTemplate>
             <DataTemplate DataType="manageFunds:IClaimableStage">
-                <Card HeaderStartContent="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}">
-                    <Card.HeaderTemplate>
-                        <DataTemplate>
-                            <ContentPresenter Content="{ReflectionBinding}" />
-                        </DataTemplate>
-                    </Card.HeaderTemplate>
+                <Card>
+                    <Card.HeaderStartContent>
+                        <TextBlock Text="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}" VerticalAlignment="Center" />
+                    </Card.HeaderStartContent>
                     <Card.HeaderEndContent>
                         <ToggleButton Padding="10" x:Name="ToggleButton" />
                     </Card.HeaderEndContent>
                     <Card.Header>
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <controls:Badge Color="DeepSkyBlue" Content="{Binding ClaimableAmount.DecimalString}" />
-                            <controls:Badge Color="Goldenrod" Content="{Binding ClaimableTransactions}" />
+                            <controls:Badge TextElement.FontWeight="Regular" FontSize="12" Color="DeepSkyBlue" Content="{Binding ClaimableAmount.DecimalString}" />
+                            <controls:Badge TextElement.FontWeight="Regular" FontSize="12" Color="Goldenrod" Content="{Binding ClaimableTransactions, StringFormat='{}{0} UTXO'}" />
                         </StackPanel>
                     </Card.Header>
                     <DockPanel IsVisible="{Binding #ToggleButton.IsChecked}">
@@ -104,9 +102,9 @@
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <DockPanel>
-                                        <CheckBox IsChecked="{Binding $parent[ListBoxItem].IsSelected}" />
-                                        <TextBlock Text="{Binding Address}" />
-                                        <TextBlock DockPanel.Dock="Right" Text="{Binding ClaimStatus}" />
+                                        <CheckBox VerticalAlignment="Center" IsChecked="{Binding $parent[ListBoxItem].IsSelected}" />
+                                        <TextBlock VerticalAlignment="Center" Text="{Binding Address}" />
+                                        <TextBlock VerticalAlignment="Center" DockPanel.Dock="Right" Text="{Binding ClaimStatus}" />
                                     </DockPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

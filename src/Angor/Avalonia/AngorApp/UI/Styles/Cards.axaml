@@ -22,23 +22,17 @@
         <ControlTheme x:Key="RemarkableSubheaderCard"
                       TargetType="Card"
                       BasedOn="{StaticResource {x:Type Card}}">
-            <Setter Property="SubheaderTemplate">
-                <Setter.Value>
-                    <DataTemplate DataType="x:Object">
-                        <ContentControl TextElement.FontSize="18"
-                                        TextElement.Foreground="{StaticResource HeaderBrush}"
-                                        Content="{Binding}" />
-                    </DataTemplate>
-                </Setter.Value>
+            <Setter Property="HeaderTheme">
+                <ControlTheme TargetType="ContentControl">
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="Foreground" Value="{StaticResource SubheaderBrush}" />
+                </ControlTheme>
             </Setter>
-            <Setter Property="HeaderTemplate">
-                <Setter.Value>
-                    <DataTemplate DataType="x:Object">
-                        <ContentControl TextElement.FontSize="12"
-                                        TextElement.Foreground="{StaticResource SubheaderBrush}"
-                                        Content="{Binding}" />
-                    </DataTemplate>
-                </Setter.Value>
+            <Setter Property="SubheaderTheme">
+                <ControlTheme TargetType="ContentControl">
+                    <Setter Property="FontSize" Value="18" />
+                    <Setter Property="Foreground" Value="{StaticResource HeaderBrush}" />
+                </ControlTheme>
             </Setter>
         </ControlTheme>
         <ControlTheme x:Key="InfoCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
@@ -144,6 +138,12 @@
     <Design.PreviewWith>
         <StackPanel Width="500">
             <Card Header="Card" Subheader="Subheader">
+                <Card.DataContext>
+                    <MyViewModel Left="LEFT" />
+                </Card.DataContext>
+                <Card.HeaderEndContent>
+                    <TextBlock Text="{Binding Left, DataType=MyViewModel}" />
+                </Card.HeaderEndContent>
                 <Card.Content>
                     <TextBlock>This is the content</TextBlock>
                 </Card.Content>
