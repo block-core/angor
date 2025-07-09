@@ -9,6 +9,8 @@ public interface IManageFundsViewModel
     IProjectViewModel ProjectViewModel { get; }
     IProjectStatisticsViewModel ProjectStatisticsViewModel { get; }
     IStageClaimViewModel StageClaimViewModel { get; }
+    public IAmountUI RaisedAmount { get; }
+    public IAmountUI TargetAmount { get; }
 }
 
 public interface IProjectStatisticsViewModel
@@ -55,4 +57,6 @@ public class ManageFundsViewModel : ReactiveObject, IManageFundsViewModel
     public IProjectViewModel ProjectViewModel { get; }
     public IProjectStatisticsViewModel ProjectStatisticsViewModel { get; }
     public IStageClaimViewModel StageClaimViewModel { get; }
+    public IAmountUI RaisedAmount { get; }
+    public IAmountUI TargetAmount { get; }
 }

@@ -83,8 +83,8 @@
                     </Card.HeaderEndContent>
                     <Card.Header>
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <controls:Badge Content="{Binding ClaimableAmount.DecimalString}" />
-                            <!-- <controls:Badge Content="{Binding ClaimableTransactions}" /> -->
+                            <controls:Badge Color="DeepSkyBlue" Content="{Binding ClaimableAmount.DecimalString}" />
+                            <controls:Badge Color="Goldenrod" Content="{Binding ClaimableTransactions}" />
                         </StackPanel>
                     </Card.Header>
                     <DockPanel IsVisible="{Binding #ToggleButton.IsChecked}">

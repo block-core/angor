@@ -8,4 +8,6 @@ public class ManageFundsViewModelDesign : IManageFundsViewModel
     public IProjectViewModel ProjectViewModel { get; set; }
     public IProjectStatisticsViewModel ProjectStatisticsViewModel { get; set; }
     public IStageClaimViewModel StageClaimViewModel { get; set; }
+    public IAmountUI RaisedAmount { get; set; }
+    public IAmountUI TargetAmount { get; set; }
 }
