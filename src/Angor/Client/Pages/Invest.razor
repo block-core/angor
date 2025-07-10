@@ -24,6 +24,7 @@
 @inject IClientStorage storage;
 @inject ICacheStorage SessionStorage;
 @inject IWalletOperations _WalletOperations;
+@inject IPsbtOperations _PsbtOperations
 @inject IApplicationLogicService applicationLogicService;
 @inject ISignService _SignService;
 @inject IRelayService _RelayService;
@@ -1059,9 +1060,9 @@ else
 
             if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
-                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
+                var psbt = _PsbtOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
-                signedTransaction = _WalletOperations.SignPsbt(psbt, words);
+                signedTransaction = _PsbtOperations.SignPsbt(psbt, words);
             }
             else
             {
@@ -1107,9 +1108,9 @@ else
 
             if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
-                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+                var psbt = _PsbtOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
-                signedTransaction = _WalletOperations.SignPsbt(psbt, await passwordComponent.GetWalletAsync());
+                signedTransaction = _PsbtOperations.SignPsbt(psbt, await passwordComponent.GetWalletAsync());
             }
             else
             {

@@ -32,6 +32,7 @@ builder.Services.AddTransient<INetworkStorage, ClientStorage>();
 builder.Services.AddTransient<IWalletStorage, WalletStorage>();
 builder.Services.AddScoped<ICacheStorage, LocalSessionStorage>();
 builder.Services.AddTransient<IWalletOperations, WalletOperations>();
+builder.Services.AddTransient<IPsbtOperations, PsbtOperations>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
 builder.Services.AddScoped<IDerivationOperations, DerivationOperations>();

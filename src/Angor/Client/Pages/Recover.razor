@@ -915,6 +915,7 @@
 
             // add fee to the recovery trx
             recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            // todo: instead call the method psbt.CreatePsbtForTransactionFee 
 
             Logger.LogInformation($"recoveryTransaction={recoveryTransaction.Transaction.GetHash().ToString()}");
 
@@ -955,6 +956,7 @@
             var words = await passwordComponent.GetWalletAsync();
             var accountInfo = storage.GetAccountInfo(network.Name);
 
+            // todo: instead call the method psbt.CreatePsbtForTransactionFee
             recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(
                 accountInfo.GetNextChangeReceiveAddress(),
                 unsignedRecoveryTransaction,

@@ -119,9 +119,9 @@ public class InvestmentTransactionBuilderTest : AngorTestData
             Assert.NotNull(expectedOutput.ScriptPubKey); //TODO add the correct assertion for the scripts after changing AngorScripts.CreateStage
         }
 
-        Assert.Equal(seederInvestmentTransaction.Outputs[2].Value.Satoshi, 297000);
-        Assert.Equal(seederInvestmentTransaction.Outputs[3].Value.Satoshi, 1485000);
-        Assert.Equal(seederInvestmentTransaction.Outputs[4].Value.Satoshi, 295218000);
+        Assert.Equal(seederInvestmentTransaction.Outputs[2].Value.Satoshi, 29700000);
+        Assert.Equal(seederInvestmentTransaction.Outputs[3].Value.Satoshi, 148500000);
+        Assert.Equal(seederInvestmentTransaction.Outputs[4].Value.Satoshi, 118800000);
     }
 
     [Fact]

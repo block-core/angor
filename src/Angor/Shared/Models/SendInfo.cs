@@ -1,4 +1,5 @@
 using Blockcore.NBitcoin;
+using Blockcore.Consensus.TransactionInfo;
 
 namespace Angor.Shared.Models;
 
@@ -12,6 +13,10 @@ public class SendInfo
     public long FeeRate { get; set; } = 0;
 
     public string ChangeAddress { get; set; }
+
+    public TransactionInfo? SignedTransaction { get; set; }
+
+    public Transaction UnSignedTransaction { get; set; }
 
     public Dictionary<string, UtxoDataWithPath> SendUtxos { get; set; } = new();
 }

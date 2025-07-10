@@ -415,6 +415,7 @@
 
             // add fee to the recovery trx
             releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedReleaseTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            // todo: instead call the method psbt.CreatePsbtForTransactionFee
 
             explorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/tx/{InvestorProject.UnfundedReleaseTransactionId}";
 
@@ -455,6 +456,7 @@
             var words = await passwordComponent.GetWalletAsync();
             var accountInfo = Storage.GetAccountInfo(network.Name);
 
+            // todo: instead call the method psbt.CreatePsbtForTransactionFee
             releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(
                 accountInfo.GetNextChangeReceiveAddress(),
                 unsignedReleaseTransaction,
