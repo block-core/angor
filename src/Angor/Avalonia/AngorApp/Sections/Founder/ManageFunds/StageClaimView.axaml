@@ -11,34 +11,6 @@
              x:Class="AngorApp.Sections.Founder.ManageFunds.StageClaimView" x:DataType="mf:IStageClaimViewModel">
 
     <UserControl.Styles>
-        <Style Selector="ToggleButton[IsChecked=True]">
-            <Setter Property="Content">
-                <Setter.Value>
-                    <Template>
-                        <StackPanel Spacing="10" Orientation="Horizontal">
-                            <ContentControl>
-                                <ui:Icon Source="fa-angle-up" />
-                            </ContentControl>
-                            <TextBlock>Collapse</TextBlock>
-                        </StackPanel>
-                    </Template>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style Selector="ToggleButton[IsChecked=False]">
-            <Setter Property="Content">
-                <Setter.Value>
-                    <Template>
-                        <StackPanel Spacing="10" Orientation="Horizontal">
-                            <ContentControl>
-                                <ui:Icon Source="fa-angle-down" />
-                            </ContentControl>
-                            <TextBlock>Expand</TextBlock>
-                        </StackPanel>
-                    </Template>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </UserControl.Styles>
 
     <Design.DataContext>
@@ -103,9 +75,8 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="mf:IClaimableStage">
                     <Card HeaderStartContent="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}">
-                      
                         <Card.HeaderEndContent>
-                            <ToggleButton Padding="10" x:Name="ToggleButton" />
+                            <ToggleButton Theme="{StaticResource ExpandsCollapseToggleButton}" Padding="10" x:Name="ToggleButton" />
                         </Card.HeaderEndContent>
                         <Card.Header>
                             <StackPanel Orientation="Horizontal" Spacing="10">

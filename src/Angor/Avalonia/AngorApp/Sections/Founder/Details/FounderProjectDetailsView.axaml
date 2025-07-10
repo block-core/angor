@@ -47,6 +47,7 @@
 
     <ScrollViewer>
         <StackPanel Spacing="10">
+            <Button HorizontalAlignment="Right" Content="Manage Funds" Margin="10" Command="{Binding GoManageFunds}" />
             <asyncImageLoader:AdvancedImage Height="200" Stretch="UniformToFill" Source="{Binding BannerUrl}" />
             <StackPanel Margin="20" Spacing="10">
                 <TextBlock Classes="SizeBig" Text="{Binding Name}" />

@@ -10,10 +10,10 @@ public interface IProjectViewModel
 
 public class ProjectViewModelDesign : IProjectViewModel
 {
-    public string Banner { get; set; }
-    public string Avatar { get; set; }
-    public string Name { get; set; }
-    public string ShortDescription { get; set; }
+    public string Banner { get; set; } = "avares://AngorApp/Assets/background.jpg";
+    public string Avatar { get; set; } = "avares://AngorApp/Assets/star.jpg";
+    public string Name { get; set; } = "Sample Project";
+    public string ShortDescription { get; set; } = "This is a sample project description for design purposes.";
 }
 
 public class ProjectViewModel : IProjectViewModel
