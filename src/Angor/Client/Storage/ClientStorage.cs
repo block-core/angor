@@ -8,7 +8,7 @@ namespace Angor.Client.Storage;
 public class ClientStorage : IClientStorage, INetworkStorage
 {
     private const string CurrencyDisplaySettingKey = "currencyDisplaySetting";
-    private const string ReplicateMainnetKey = "replicateMainnet";
+    private const string MainnetRulesModeKey = "MainnetRulesMode";
 
     private const string utxoKey = "utxo:{0}";
     private readonly ISyncLocalStorageService _storage;
@@ -157,14 +157,14 @@ public class ClientStorage : IClientStorage, INetworkStorage
         _storage.SetItem(CurrencyDisplaySettingKey, setting);
     }
 
-    public bool GetReplicateMainnetMode()
+    public bool GetMainnetRulesMode()
     {
-        return _storage.GetItem<bool>(ReplicateMainnetKey);
+        return _storage.GetItem<bool>(MainnetRulesModeKey);
     }
     
-    public void SetReplicateMainnetMode(bool replicateMainnet)
+    public void SetMainnetRulesMode(bool? mainnetRulesMode = false)
     {
-        _storage.SetItem(key:ReplicateMainnetKey, data:replicateMainnet);
+        _storage.SetItem(key:MainnetRulesModeKey, data:mainnetRulesMode);
     }
 
     public SettingsInfo GetSettings()

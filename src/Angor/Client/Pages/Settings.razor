@@ -393,9 +393,12 @@
 
 </div>
 
-@* Replicate_Mainnet_Mode Toggle 
+@* Mainnet_Rules_Mode Toggle 
 -  True: mainnet cases are applied 
 -  False: mainnet cases are skipped (normal testnet)
+* When enabled, the testnet environment simulates mainnet behavior by enforcing strict validation rules. 
+* This includes mandatory wallet verification and other production-level constraints. 
+* Disable this to use relaxed testnet behavior for faster testing and development.
 *@
 <div class="row mt-4 slide-in">
     <div class="card card-body">
@@ -407,18 +410,18 @@
                 </span>
                 <div class="ms-3">
                     <h5 class="mb-0 font-weight-bolder">
-                        Replicate Mainnet Mode
+                        Mainnet Rules Mode
                     </h5>
                     <p class="mb-0 mt-2 font-weight-normal text-sm">
-                        Replicate Mainnet Mode: <strong>@replicateMainnet.ToString()</strong>
+                        Mainnet Rules Mode: <strong>@mainnetRulesMode.ToString()</strong>
                     </p>
                 </div>
             </div>
             <div class="currency-select-container w-100 w-md-auto">
                 <div class="d-flex flex-column">
-                    <label for="currencySelection" class="mb-2">Replicate mainnet Mode:</label>
-                    <select id="replicateMainnet" class="form-control" value="@replicateMainnet.ToString()"
-                        @onchange="OnReplicateMainnetModeChanged">
+                    <label for="currencySelection" class="mb-2">Mainnet Rules Mode:</label>
+                    <select id="mainnetRulesMode" class="form-control" value="@mainnetRulesMode.ToString()"
+                            @onchange="OnMainnetRulesModeChanged">
                         <option value="true">True</option>
                         <option value="false">False</option>
                     </select>
@@ -564,7 +567,7 @@
 
     private string selectedCurrency = "BTC"; // Default to BTC
 
-    private bool replicateMainnet = false; // Default to false 
+    private bool? mainnetRulesMode = false; // Default to false 
     
     private SettingsInfo settingsInfo;
     private Dictionary<string, bool> _featureFlags;
@@ -582,7 +585,7 @@
         _networkService.OnStatusChanged += UpdateUI;
 
         selectedCurrency = _clientStorage.GetCurrencyDisplaySetting();
-        replicateMainnet = _clientStorage.GetReplicateMainnetMode();
+        mainnetRulesMode = _clientStorage.GetMainnetRulesMode();
 
         selectedNetwork = networkType;
 
@@ -1003,12 +1006,11 @@
         StateHasChanged();
     }
 
-    private void OnReplicateMainnetModeChanged(ChangeEventArgs e)
+    private void OnMainnetRulesModeChanged(ChangeEventArgs e)
     {
-        var selectedMode = e.Value.ToString();
-        replicateMainnet = bool.Parse(selectedMode);
-        Console.WriteLine($"Replicate_Mainnet_Mode: {replicateMainnet}");
-        _clientStorage.SetReplicateMainnetMode(replicateMainnet);
+        mainnetRulesMode = bool.Parse(e.Value.ToString());
+        Console.WriteLine($"Mainnet_Rules_Mode: {mainnetRulesMode}");
+        _clientStorage.SetMainnetRulesMode(mainnetRulesMode);
         StateHasChanged();
     }
 }

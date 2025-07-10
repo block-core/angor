@@ -30,8 +30,8 @@ namespace Angor.Client.Storage
         string GetCurrencyDisplaySetting();
         void SetCurrencyDisplaySetting(string setting);
 
-        bool GetReplicateMainnetMode();
-        void SetReplicateMainnetMode(bool replicateMainnet);
+        bool GetMainnetRulesMode();
+        void SetMainnetRulesMode(bool? mainnetRulesMode);
 
         void SetFeatureFlags(Dictionary<string, bool> featureFlags);
         Dictionary<string, bool>? GetFeatureFlags();
