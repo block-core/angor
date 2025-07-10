@@ -18,20 +18,22 @@ using Blockcore.NBitcoin.BIP32;
 
 namespace Angor.Test;
 
-public class WalletOperationsTest : AngorTestData
+public class PsbtOperationsTests : AngorTestData
 {
-    private WalletOperations _sut;
+    private WalletOperations _walletOperations;
+    private PsbtOperations _sut;
 
     private readonly Mock<IIndexerService> _indexerService;
     private readonly InvestorTransactionActions _investorTransactionActions;
     private readonly FounderTransactionActions _founderTransactionActions;
     private readonly IHdOperations _hdOperations;
 
-    public WalletOperationsTest()
+    public PsbtOperationsTests()
     {
         _indexerService = new Mock<IIndexerService>();
 
-        _sut = new WalletOperations(_indexerService.Object, new HdOperations(), new NullLogger<WalletOperations>(), _networkConfiguration.Object);
+        _walletOperations = new WalletOperations(_indexerService.Object, new HdOperations(), new NullLogger<WalletOperations>(), _networkConfiguration.Object);
+        _sut = new PsbtOperations(_indexerService.Object, new HdOperations(), new NullLogger<PsbtOperations>(), _networkConfiguration.Object, _walletOperations);
 
         _investorTransactionActions = new InvestorTransactionActions(new NullLogger<InvestorTransactionActions>(),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()),
@@ -79,23 +81,9 @@ public class WalletOperationsTest : AngorTestData
             return Task.FromResult(res);
         });
 
-        _sut.UpdateDataForExistingAddressesAsync(accountInfo).Wait();
+        _walletOperations.UpdateDataForExistingAddressesAsync(accountInfo).Wait();
 
-        _sut.UpdateAccountInfoWithNewAddressesAsync(accountInfo).Wait();
-    }
-
-    private string GenerateScriptHex(string address, Network network)
-    {
-        try
-        {
-            var segwitAddress = new Blockcore.NBitcoin.BitcoinWitPubKeyAddress(address, network);
-            return segwitAddress.ScriptPubKey.ToHex();
-        }
-        catch (FormatException ex)
-        {
-            Console.WriteLine($"Error: Invalid address format. Details: {ex.Message}");
-            throw; 
-        }
+        _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo).Wait();
     }
 
     [Fact]
@@ -103,9 +91,9 @@ public class WalletOperationsTest : AngorTestData
     {
         var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
 
-        AccountInfo accountInfo = _sut.BuildAccountInfoForWalletWords(words);
+        AccountInfo accountInfo = _walletOperations.BuildAccountInfoForWalletWords(words);
 
-        AddCoins(accountInfo, 2, 1000);
+        AddCoins(accountInfo, 2, 100000);
 
         var network = _networkConfiguration.Object.GetNetwork();
 
@@ -122,7 +110,8 @@ public class WalletOperationsTest : AngorTestData
         recoveryTransaction.Outputs.RemoveAt(0);
         recoveryTransaction.Inputs.RemoveAt(0);
 
-        var recoveryTransactions = _sut.AddFeeAndSignTransaction(changeAddress, recoveryTransaction, words, accountInfo, 3000);
+        var psbt = _sut.CreatePsbtForTransactionFee(recoveryTransaction, investmentTransaction, accountInfo, 3000);
+        var recoveryTransactions = _sut.SignPsbt(psbt, words);
 
         // add the inputs of the investment trx
         List<Blockcore.NBitcoin.Coin> coins = new();
@@ -146,7 +135,7 @@ public class WalletOperationsTest : AngorTestData
     {
         var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
 
-        AccountInfo accountInfo = _sut.BuildAccountInfoForWalletWords(words);
+        AccountInfo accountInfo = _walletOperations.BuildAccountInfoForWalletWords(words);
 
         AddCoins(accountInfo, 6, 500000000);
 
@@ -180,7 +169,8 @@ public class WalletOperationsTest : AngorTestData
         Assert.Equal(247500000, investmentTransaction.Outputs[3].Value);
         Assert.Equal(495000000, investmentTransaction.Outputs[4].Value);
 
-        var signedInvestmentTransaction = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, 3000);
+        var psbt = _sut.CreatePsbtForTransaction(investmentTransaction, accountInfo, 3000);
+        var signedInvestmentTransaction = _sut.SignPsbt(psbt, words);
 
         var strippedInvestmentTransaction = network.CreateTransaction(signedInvestmentTransaction.Transaction.ToHex());
         strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
@@ -189,7 +179,7 @@ public class WalletOperationsTest : AngorTestData
         var unsignedRecoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInfo, strippedInvestmentTransaction);
         var recoverySigs = _founderTransactionActions.SignInvestorRecoveryTransactions(projectInfo, strippedInvestmentTransaction.ToHex(), unsignedRecoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
 
-        var sigCheckResult  = _investorTransactionActions.CheckInvestorRecoverySignatures(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs);
+        var sigCheckResult = _investorTransactionActions.CheckInvestorRecoverySignatures(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs);
         Assert.True(sigCheckResult, "failed to validate the founders signatures");
 
         var recoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
@@ -198,7 +188,8 @@ public class WalletOperationsTest : AngorTestData
         recoveryTransaction.Outputs.RemoveAt(0);
         recoveryTransaction.Inputs.RemoveAt(0);
 
-        var signedRecoveryTransaction = _sut.AddFeeAndSignTransaction(accountInfo.GetNextReceiveAddress(), recoveryTransaction, words, accountInfo, 3000);
+        var psbt1 = _sut.CreatePsbtForTransactionFee(recoveryTransaction, signedInvestmentTransaction.Transaction, accountInfo, 3000);
+        var signedRecoveryTransaction = _sut.SignPsbt(psbt1, words);
 
         // add the inputs of the investment trx
         List<Blockcore.NBitcoin.Coin> coins = new();
@@ -215,163 +206,5 @@ public class WalletOperationsTest : AngorTestData
         }
 
         TransactionValidation.ThanTheTransactionHasNoErrors(signedRecoveryTransaction.Transaction, coins);
-    }
-
-    [Fact]
-    public void GenerateWalletWords_ReturnsCorrectFormat()
-    {
-        // Arrange
-        var walletOps = new WalletOperations(_indexerService.Object, _hdOperations, NullLogger<WalletOperations>.Instance, _networkConfiguration.Object);
-
-        // Act
-        var result = walletOps.GenerateWalletWords();
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(12, result.Split(' ').Length); // Assuming a 12-word mnemonic
-    }
-
-    [Fact]
-    public async Task transaction_fails_due_to_insufficient_funds() // funds are null
-    {
-        // Arrange
-        var mockNetworkConfiguration = new Mock<INetworkConfiguration>();
-        var mockIndexerService = new Mock<IIndexerService>();
-        var mockHdOperations = new Mock<IHdOperations>();
-        var mockLogger = new Mock<ILogger<WalletOperations>>();
-        var network = _networkConfiguration.Object.GetNetwork();
-        mockNetworkConfiguration.Setup(x => x.GetNetwork()).Returns(network);
-        mockIndexerService.Setup(x => x.PublishTransactionAsync(It.IsAny<string>())).ReturnsAsync(string.Empty);
-
-        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object);
-
-        var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
-        string address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
-        AccountInfo accountInfo = _sut.BuildAccountInfoForWalletWords(words);
-        string scriptHex = GenerateScriptHex(address, network);
-        var sendInfo = new SendInfo
-        {
-            SendAmount = Money.Coins(0.01m).Satoshi,
-            SendUtxos = new Dictionary<string, UtxoDataWithPath>
-        {
-            {
-                "key", new UtxoDataWithPath
-                {
-                    UtxoData = new UtxoData
-                    {
-                        value = 500,  //  insufficient to cover the send amount and fees
-                        address = address,
-                        scriptHex = scriptHex,
-                        outpoint = new Outpoint(), // Ensure Outpoint is also correctly initialized
-                        blockIndex = 1,
-                        PendingSpent = false
-                    },
-                    HdPath = "your_hd_path_here"
-                }
-            }
-        },
-            FeeRate = Money.Coins(3000).Satoshi,
-        };
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<ApplicationException>(() => walletOperations.SendAmountToAddress(words, sendInfo));
-        Assert.Contains("not enough funds", exception.Message);
-    }
-
-
-
-
-    [Fact]
-    public async Task TransactionSucceeds_WithSufficientFundsWallet()
-    {
-        // Arrange
-        var mockNetworkConfiguration = new Mock<INetworkConfiguration>();
-        var mockIndexerService = new Mock<IIndexerService>();
-        var mockHdOperations = new Mock<IHdOperations>();
-        var mockLogger = new Mock<ILogger<WalletOperations>>();
-        var network = _networkConfiguration.Object.GetNetwork();
-        mockNetworkConfiguration.Setup(x => x.GetNetwork()).Returns(network);
-        mockHdOperations.Setup(x => x.GetAccountHdPath(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>()))
-                        .Returns("m/0/0");
-        var expectedExtendedKey = new ExtKey();
-        mockHdOperations.Setup(x => x.GetExtendedKey(It.IsAny<string>(), It.IsAny<string>())).Returns(expectedExtendedKey);
-
-        var walletOperations = new WalletOperations(mockIndexerService.Object, mockHdOperations.Object, mockLogger.Object, mockNetworkConfiguration.Object);
-
-        var words = new WalletWords { Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel", Passphrase = "" };
-        string address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679";
-        string scriptHex = GenerateScriptHex(address, network);
-        var sendInfo = new SendInfo
-        {
-            SendToAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
-            ChangeAddress = "tb1qw4vvm955kq5vrnx48m3x6kq8rlpgcauzzx63sr",
-            SendAmount = Money.Coins(0.01m).Satoshi,
-            FeeRate = Money.Satoshis(3000).Satoshi,
-            SendUtxos = new Dictionary<string, UtxoDataWithPath>
-            {
-                {
-                    "key", new UtxoDataWithPath
-                    {
-                        UtxoData = new UtxoData
-                        {
-                            value = 1500000, // Sufficient to cover the send amount and estimated fees
-                            address = address,
-                            scriptHex = scriptHex,
-                            outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
-                            blockIndex = 1,
-                            PendingSpent = false
-                        },
-                        HdPath = "m/0/0"
-                    }
-                }
-            },
-        };
-
-        // Act
-        var operationResult = await walletOperations.SendAmountToAddress(words, sendInfo);
-
-        // Assert
-        Assert.True(operationResult.Success);
-        Assert.NotNull(operationResult.Data); // ensure data is saved
-    }
-
-
-    [Fact]
-    public void GetUnspentOutputsForTransaction_ReturnsCorrectOutputs()
-    {
-        // Arrange
-        var mockHdOperations = new Mock<IHdOperations>();
-        var walletWords = new WalletWords { Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel", Passphrase = "" };
-        var utxos = new List<UtxoDataWithPath>
-    {
-        new UtxoDataWithPath
-        {
-            UtxoData = new UtxoData
-            {
-                value = 1500000,
-                address = "tb1qeu7wvxjg7ft4fzngsdxmv0pphdux2uthq4z679",
-                scriptHex = "0014b7d165bb8b25f567f05c57d3b484159582ac2827",
-                outpoint = new Outpoint("0000000000000000000000000000000000000000000000000000000000000000", 0),
-                blockIndex = 1,
-                PendingSpent = false
-            },
-            HdPath = "m/0/0"
-        }
-    };
-
-        var expectedExtKey = new ExtKey();
-        mockHdOperations.Setup(x => x.GetExtendedKey(walletWords.Words, walletWords.Passphrase)).Returns(expectedExtKey);
-
-        var walletOperations = new WalletOperations(null, mockHdOperations.Object, null, null);
-
-        // Act
-        var (coins, keys) = walletOperations.GetUnspentOutputsForTransaction(walletWords, utxos);
-
-        // Assert
-        Assert.Single(coins);
-        Assert.Single(keys);
-        Assert.Equal((uint)0, coins[0].Outpoint.N);
-        Assert.Equal(1500000, coins[0].Amount.Satoshi);
-        Assert.Equal(expectedExtKey.Derive(new KeyPath("m/0/0")).PrivateKey, keys[0]);
     }
 }
