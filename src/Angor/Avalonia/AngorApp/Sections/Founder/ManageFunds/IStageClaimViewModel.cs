@@ -1,6 +1,7 @@
 using System.Linq;
 using Avalonia.Controls.Selection;
 using ReactiveUI.SourceGenerators;
+using Zafiro.Avalonia.Misc;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder.ManageFunds;
@@ -17,6 +18,8 @@ public interface IClaimableStage
     public IAmountUI ClaimableAmount { get; }
     public SelectionModel<IClaimableTransaction> Selection { get; }
     IEnhancedCommand Claim { get; }
+    IEnhancedCommand SelectSpendable { get; }
+    ReactiveSelection<IClaimableTransaction, string> ReactiveSelection { get; }
 }
 
 public interface IClaimableTransaction
@@ -37,11 +40,11 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
 {
     public ClaimableStageDesign()
     {
-        var selectedCountChanged = Observable.FromEventPattern<SelectionModelSelectionChangedEventArgs<IClaimableTransaction>>(h => Selection.SelectionChanged += h, h => Selection.SelectionChanged -= h)
-            .Select(_ => Selection.Count);
+        ReactiveSelection = new ReactiveSelection<IClaimableTransaction, string>(x => x.Address);
+        
+        var selectedCountChanged = this.WhenAnyValue(design => design.ReactiveSelection.SelectedItems.Count);
         
         Claim = ReactiveCommand.Create(() => { }, selectedCountChanged.Select(i => i > 0)).Enhance();
-        
 
         claimableAmountHelper = this.WhenAnyValue(design => design.Transactions)
             .WhereNotNull()
@@ -65,6 +68,9 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
         Transactions = new List<IClaimableTransaction>();
     }
 
+    public ReactiveSelection<IClaimableTransaction, string> ReactiveSelection { get; }
+
+
     [ObservableAsProperty]
     private int claimableTransactions;
 
@@ -75,6 +81,7 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
 
     public SelectionModel<IClaimableTransaction> Selection { get; } = new() { SingleSelect = false };
     public IEnhancedCommand Claim { get; }
+    public IEnhancedCommand SelectSpendable { get; }
 }
 
 public enum ClaimStatus

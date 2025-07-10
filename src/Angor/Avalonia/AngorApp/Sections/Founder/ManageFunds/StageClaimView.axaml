@@ -92,7 +92,21 @@
                                     </ContentControl>
                                 </IconButton.Icon>
                             </IconButton>
-                            <ListBox Selection="{Binding Selection}" ItemsSource="{Binding Transactions}"
+                            <Button Content="Select All" DockPanel.Dock="Top">
+                                <Interaction.Behaviors>
+                                    <EventTriggerBehavior EventName="Click">
+                                        <SelectAllAction ListBox="ListBox" />
+                                    </EventTriggerBehavior>
+                                </Interaction.Behaviors>
+                            </Button>
+                            <Button Content="Select None" DockPanel.Dock="Top">
+                                <Interaction.Behaviors>
+                                    <EventTriggerBehavior EventName="Click">
+                                        <UnselectAction ListBox="ListBox" />
+                                    </EventTriggerBehavior>
+                                </Interaction.Behaviors>
+                            </Button>
+                            <ListBox x:Name="ListBox" Selection="{Binding ReactiveSelection.SelectionModel}" ItemsSource="{Binding Transactions}"
                                      Grid.IsSharedSizeScope="True" ItemContainerTheme="{StaticResource TransactionItemTheme}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
