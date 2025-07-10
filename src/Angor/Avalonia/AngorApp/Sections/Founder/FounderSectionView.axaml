@@ -56,10 +56,10 @@
             <DockPanel>
                 <z:Card Header="Founder" DockPanel.Dock="Top">
                     <z:Card.HeaderEndContent>
-                        <IconButton DockPanel.Dock="Right" VerticalAlignment="Top">
+                        <IconButton Command="{Binding Create}" DockPanel.Dock="Right" VerticalAlignment="Top">
                             CREATE PROJECT
                             <IconButton.Icon>
-                                <ui:Icon Source="mdi-plus-box-outline" />
+                                <ui:Icon Source="fa-plus" />
                             </IconButton.Icon>
                         </IconButton>
                     </z:Card.HeaderEndContent>

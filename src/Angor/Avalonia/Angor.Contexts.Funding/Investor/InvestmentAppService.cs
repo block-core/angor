@@ -41,4 +41,9 @@ public class InvestmentAppService(IInvestmentRepository investmentRepository, IM
         await Task.Delay(2000);
         return Result.Success();
     }
+
+    public Task<Result> CreateProject(CreateProjectDto project)
+    {
+        return Task.FromResult(Result.Success());
+    }
 }

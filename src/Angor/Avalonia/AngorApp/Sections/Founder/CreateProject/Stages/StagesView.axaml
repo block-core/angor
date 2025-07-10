@@ -1,0 +1,90 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:createProject="clr-namespace:AngorApp.Sections.Founder.CreateProject"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
+             mc:Ignorable="d" d:DesignWidth="600"
+             x:Class="AngorApp.Sections.Founder.CreateProject.Stages.StagesView"
+             x:DataType="stages:IStagesViewModel">
+
+    <UserControl.Styles>
+        <StyleInclude Source="../Common.axaml" />
+    </UserControl.Styles>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+        <Style Selector="DatePicker">
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+    </UserControl.Styles>
+
+    <Design.DataContext>
+        <stages:StagesViewModelDesign>
+            <stages:StagesViewModelDesign.Stages>
+                <stages:CreateProjectStageDesign Percent="10" ReleaseDate="10/5/2025" />
+                <stages:CreateProjectStageDesign Percent="30" ReleaseDate="10/9/2025" />
+                <stages:CreateProjectStageDesign Percent="70" ReleaseDate="12/12/2025" />
+            </stages:StagesViewModelDesign.Stages>
+        </stages:StagesViewModelDesign>
+    </Design.DataContext>
+
+    <Card Header="Stages">
+        <Card.HeaderEndContent>
+            <ContentControl IsVisible="{Binding IsValid^}" Foreground="LawnGreen">
+                <ui:Icon Source="fa-check" />
+            </ContentControl>
+        </Card.HeaderEndContent>
+        <Card.HeaderStartContent>
+            <ui:Icon Source="svg:/Assets/stages.svg" />
+        </Card.HeaderStartContent>
+        <DockPanel>
+            <IconButton Command="{Binding AddStage}" Margin="0 10 0 0" DockPanel.Dock="Bottom" Content="Add Stage">
+                <IconButton.Icon>
+                    <ui:Icon Source="fa-plus" />
+                </IconButton.Icon>
+            </IconButton>
+            <ItemsControl ItemsSource="{Binding Stages}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="stages:ICreateProjectStage">
+                        <Grid ColumnDefinitions="Auto * * Auto" Margin="0 5" ColumnSpacing="20">
+                            <Grid.Styles>
+                                <Style Selector="Button.Aligned">
+                                    <Setter Property="Height" Value="33" />
+                                    <Setter Property="Width" Value="33" />
+                                    <Setter Property="Margin" Value="1" />
+                                    <Setter Property="VerticalAlignment" Value="Bottom" />
+                                </Style>
+                            </Grid.Styles>
+                            <Button Classes="Aligned">
+                                <TextBlock Text="{ItemIndex StartFromOne=True}" />
+                            </Button>
+                            <HeaderedContainer Grid.Column="1" Header="Percentage">
+                                <TextBox TextAlignment="Center" x:Name="TextBox" Text="{Binding Percent, Mode=TwoWay}">
+                                    <TextBox.InnerRightContent>
+                                        <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock>
+                                    </TextBox.InnerRightContent>
+                                </TextBox>
+                            </HeaderedContainer>
+                            <HeaderedContainer Header="Release Date" Grid.Column="2">
+                                <CalendarDatePicker SelectedDate="{Binding ReleaseDate}" />
+                            </HeaderedContainer>
+                            <Button Classes="Aligned" Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="3">
+                                <ui:Icon Source="mdi-window-close" />
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+    </Card>
+
+</UserControl>

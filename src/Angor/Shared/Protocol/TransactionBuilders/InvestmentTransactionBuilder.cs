@@ -36,17 +36,41 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
         long angorFee = (totalInvestmentAmount * angorFeePercentage) / 100; 
         var angorOutput = new TxOut(new Money(angorFee), angorFeeOutputScript);
         investmentTransaction.AddOutput(angorOutput);
-        
+
+        // reduce the fee from the total investment amount
+        var totalInvestmentAmountAfterFee = totalInvestmentAmount - angorFee;
+
         var investorInfoOutput = new TxOut(new Money(0), opReturnScript);
         investmentTransaction.AddOutput(investorInfoOutput);
 
         var stagesScripts = projectScripts.Select(_ => _taprootScriptBuilder.CreateStage(network, _));
 
-        var stagesOutputs = stagesScripts.Select((_, i) =>
-            new TxOut(new Money(Convert.ToInt64(totalInvestmentAmount * (projectInfo.Stages[i].AmountToRelease / 100))),
-                new Script(_.ToBytes())));
+        // Calculate amounts for each stage
+        var stageAmounts = new List<long>();
+        long totalAllocated = 0;
+
+        for (int i = 0; i < projectInfo.Stages.Count; i++)
+        {
+            long stageAmount;
+            if (i == projectInfo.Stages.Count - 1) // Last stage gets remainder
+            {
+                stageAmount = totalInvestmentAmountAfterFee - totalAllocated;
+            }
+            else
+            {
+                stageAmount = Convert.ToInt64(totalInvestmentAmountAfterFee * (projectInfo.Stages[i].AmountToRelease / 100));
+                totalAllocated += stageAmount;
+            }
+            stageAmounts.Add(stageAmount);
+        }
+
+        var stagesOutputs = stagesScripts.Select((script, i) =>
+            new TxOut(new Money(stageAmounts[i]), new Script(script.ToBytes())));
 
         investmentTransaction.Outputs.AddRange(stagesOutputs);
+
+        if(investmentTransaction.TotalOut.Satoshi != totalInvestmentAmount)
+            throw new InvalidOperationException($"Total output amount {investmentTransaction.TotalOut.Satoshi} does not match expected total investment amount {totalInvestmentAmount}.");
 
         return investmentTransaction;
     }

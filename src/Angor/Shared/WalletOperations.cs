@@ -1,5 +1,6 @@
 using Angor.Shared.Models;
 using Angor.Shared.Services;
+using Angor.Shared.Utilities;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
@@ -54,16 +55,41 @@ public class WalletOperations : IWalletOperations
         if (!coins.Any())
             throw new ApplicationException("No coins found to fund the transaction.");
 
-        var builder = new TransactionBuilder(network)
-            .AddCoins(coins)
-            .SetChange(BitcoinAddress.Create(changeAddress, network))
-            .ContinueToBuild(transaction) // Add the predefined outputs
-            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
-            .CoverTheRest(); // Ensure enough input value covers outputs + fee, adjusting change if needed
+        var unsignedTx = NBitcoin.Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
 
-        var unsignedTx = builder.BuildTransaction(false);
+        foreach (var coin in coins)
+        {
+            NBitcoin.OutPoint outputint = new NBitcoin.OutPoint(new NBitcoin.uint256(coin.Outpoint.Hash.ToBytes()), coin.Outpoint.N);
+            if (unsignedTx.Inputs.Any(x => x.PrevOut == outputint))
+                continue;
+            var txin = new NBitcoin.TxIn(outputint, null);
+            txin.WitScript = new NBitcoin.WitScript(NBitcoin.Op.GetPushOp(new byte[72]), NBitcoin.Op.GetPushOp(new byte[33])); // for total size calculation
+            unsignedTx.Inputs.Add(txin);
+        }
 
-        var psbt = NBitcoin.PSBT.FromTransaction(NBitcoin.Transaction.Parse(unsignedTx.ToHex(), nbitcoinNetwork), nbitcoinNetwork);
+        var totalSize = unsignedTx.GetVirtualSize();
+        var totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize);
+
+        var totalSatsIn = coins.Sum(s => s.Amount);
+        var totalSatsOut = unsignedTx.Outputs.Sum(o => o.Value);
+        var totalToChange = totalSatsIn - totalSatsOut - totalFee;
+
+        var spendAll = totalSatsIn == totalSatsOut;
+        if (spendAll)
+        {
+            var lastOutput = unsignedTx.Outputs.Last();
+
+            if (totalFee >= lastOutput.Value)
+                throw new ApplicationException($"The fee {totalFee} is greater then the last output {lastOutput.Value}");
+
+            lastOutput.Value -= totalFee;
+        }
+        else
+        {
+            var changeOutput = unsignedTx.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(totalToChange.Satoshi), NBitcoin.BitcoinAddress.Create(changeAddress, nbitcoinNetwork).ScriptPubKey));
+        }
+
+        var psbt = NBitcoin.PSBT.FromTransaction(unsignedTx, nbitcoinNetwork);
 
         NBitcoin.ExtPubKey accountExtPubKey = NBitcoin.ExtPubKey.Parse(accountInfo.RootExtPubKey, nbitcoinNetwork);
 
@@ -127,40 +153,91 @@ public class WalletOperations : IWalletOperations
 
         if (coins.coins == null)
             throw new ApplicationException("No coins found");
+       
+        // did we spend all the coins?
+        var spendAll = coins.coins.Sum(s => s.Amount.Satoshi) == transaction.Outputs.Sum(o => o.Value.Satoshi);
 
-        var builder = new TransactionBuilder(network)
-            .AddCoins(coins.coins)
-            .AddKeys(coins.keys.ToArray())
-            .SetChange(BitcoinAddress.Create(changeAddress, network))
-            .ContinueToBuild(transaction)
-            .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
-            .CoverTheRest();
-
-        var signTransaction = builder.BuildTransaction(true);
-
-        // find the coins used
-        long totaInInputs = 0;
-        long totaInOutputs = signTransaction.Outputs.Select(s => s.Value.Satoshi).Sum();
-
-        foreach (var input in signTransaction.Inputs)
+        if (spendAll)
         {
-            var foundInput = coins.coins.First(c => c.Outpoint.ToString() == input.PrevOut.ToString());
+            // Step 1: Clone transaction for modification
+            var clonedTransaction = network.CreateTransaction(transaction.ToHex());
 
-            totaInInputs += foundInput.Amount.Satoshi;
+            // Step 2: Add inputs and recalculate the transaction size
+            foreach (var coin in coins.coins)
+            {
+                if (clonedTransaction.Inputs.Any(x => x.PrevOut == coin.Outpoint))
+                    continue;
+                var txin = new TxIn(coin.Outpoint, null);
+                txin.WitScript = new WitScript(Op.GetPushOp(new byte[72]), Op.GetPushOp(new byte[33])); // for total size calculation
+                clonedTransaction.AddInput(txin);
+            }
+
+            // Step 3: Calculate fee, based on the size with inputs
+            var totalSize = clonedTransaction.GetVirtualSize(4);
+            var totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize);
+
+            // Step 4: Select the last output to remove the fee from
+            var lastOutput = clonedTransaction.Outputs.Last();
+
+            if (totalFee >= lastOutput.Value)
+                throw new ApplicationException($"The fee {totalFee} is greater then the last output {lastOutput.Value}");
+
+            // Step 5: remove the fee from the last output
+            lastOutput.Value -= totalFee;
+
+            // Step 6: Sign inputs
+            var index = 0;
+            foreach (var coin in coins.coins)
+            {
+                var key = coins.keys[index];
+
+                var input = clonedTransaction.Inputs.Single(p => p.PrevOut == coin.Outpoint);
+                var signature = clonedTransaction.SignInput(network, key, coin, SigHash.All);
+                input.WitScript = new WitScript(Op.GetPushOp(signature.ToBytes()), Op.GetPushOp(key.PubKey.ToBytes()));
+
+                index++;
+            }
+
+            return new TransactionInfo { Transaction = clonedTransaction, TransactionFee = totalFee };
         }
-
-        var minerFee = totaInInputs - totaInOutputs;
-
-        var txSize = signTransaction.GetVirtualSize(4);
-        var minimumFee = new FeeRate(Money.Satoshis(1000)).GetFee(txSize); //1000 sats per kilobyte
-        
-        if (minerFee < minimumFee) //Fixed a bug in the builder that creates a fee that is too small
+        else
         {
-            builder.SendFees(minimumFee);
-            signTransaction = builder.BuildTransaction(true);
-        }
+            TransactionBuilder builder;
+            builder = new TransactionBuilder(network)
+                .AddCoins(coins.coins)
+                .AddKeys(coins.keys.ToArray())
+                .SetChange(BitcoinAddress.Create(changeAddress, network))
+                .ContinueToBuild(transaction)
+                .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
+                .CoverTheRest();
 
-        return new TransactionInfo { Transaction = signTransaction, TransactionFee = minerFee };
+
+            var signTransaction = builder.BuildTransaction(true);
+
+            // find the coins used
+            long totaInInputs = 0;
+            long totaInOutputs = signTransaction.Outputs.Select(s => s.Value.Satoshi).Sum();
+
+            foreach (var input in signTransaction.Inputs)
+            {
+                var foundInput = coins.coins.First(c => c.Outpoint.ToString() == input.PrevOut.ToString());
+
+                totaInInputs += foundInput.Amount.Satoshi;
+            }
+
+            var minerFee = totaInInputs - totaInOutputs;
+
+            var txSize = signTransaction.GetVirtualSize(4);
+            var minimumFee = new FeeRate(Money.Satoshis(1000)).GetFee(txSize); //1000 sats per kilobyte
+
+            if (minerFee < minimumFee) //Fixed a bug in the builder that creates a fee that is too small
+            {
+                builder.SendFees(minimumFee);
+                signTransaction = builder.BuildTransaction(true);
+            }
+
+            return new TransactionInfo { Transaction = signTransaction, TransactionFee = minerFee };
+        }
     }
 
     public TransactionInfo AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
@@ -328,7 +405,7 @@ public class WalletOperations : IWalletOperations
 
             total += utxoData.utxo.value;
 
-            if (total > sendAmountat)
+            if (total >= sendAmountat)
             {
                 break;
             }
@@ -336,7 +413,7 @@ public class WalletOperations : IWalletOperations
 
         if (total < sendAmountat)
         {
-            throw new ApplicationException($"Not enough funds, expected {Money.Satoshis(sendAmountat)} BTC, found {Money.Satoshis(total)} BTC");
+            throw new ApplicationException($"Not enough funds, expected {sendAmountat.ToUnitBtc()} BTC, found {total.ToUnitBtc()} BTC");
         }
 
         return utxosToSpend;

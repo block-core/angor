@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:cp="clr-namespace:AngorApp.Sections.Founder.CreateProject"
+             xmlns:c="clr-namespace:AngorApp.UI.Controls"
+             xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
+             xmlns:fundingStructure="clr-namespace:AngorApp.Sections.Founder.CreateProject.FundingStructure"
+             xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
+             xmlns:p="clr-namespace:AngorApp.Sections.Founder.CreateProject.Preview"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="AngorApp.Sections.Founder.CreateProject.CreateProjectView"
+             x:DataType="cp:ICreateProjectViewModel">
+
+    <Design.DataContext>
+        <cp:CreateProjectViewModelDesign>
+            <cp:CreateProjectViewModelDesign.StagesViewModel>
+                <stages:StagesViewModelDesign>
+                    <stages:StagesViewModelDesign.Stages>
+                        <stages:CreateProjectStageDesign Percent="10" ReleaseDate="10/5/2025" />
+                        <stages:CreateProjectStageDesign Percent="30" ReleaseDate="10/9/2025" />
+                        <stages:CreateProjectStageDesign Percent="70" ReleaseDate="12/12/2025" />
+                    </stages:StagesViewModelDesign.Stages>
+                </stages:StagesViewModelDesign>
+            </cp:CreateProjectViewModelDesign.StagesViewModel>
+        </cp:CreateProjectViewModelDesign>
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <StyleInclude Source="Common.axaml" />
+    </UserControl.Styles>
+
+    <c:PageContainer>
+        <Grid ColumnDefinitions="{OnFormFactor Desktop='5* 3*', Mobile='*'}">
+            <ScrollViewer Grid.Column="1">
+                <p:PreviewView DockPanel.Dock="Right" IsVisible="{OnFormFactor Desktop=True}" />
+            </ScrollViewer>
+            <ScrollViewer>
+                <ScrollViewer.Styles>
+                    <Style Selector="c|CardGrid">
+                        <Setter Property="RowSpacing" Value="20" />
+                        <Setter Property="ColumnSpacing" Value="20" />
+                    </Style>
+                </ScrollViewer.Styles>
+                <StackPanel Spacing="10">
+                    <profile:ProfileView DataContext="{Binding ProfileViewModel}" />
+                    <fundingStructure:FundingStructure DataContext="{Binding FundingStructureViewModel}" />
+                    <stages:StagesView DataContext="{Binding StagesViewModel}" />
+                    <Button HorizontalAlignment="Center" Content="Create Project" Command="{Binding Create}" />
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </c:PageContainer>
+
+</UserControl>

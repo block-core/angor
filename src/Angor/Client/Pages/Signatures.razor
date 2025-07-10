@@ -55,7 +55,7 @@
                 <h5 class="header-text">Pending Signatures</h5>
             </div>
             <div class="header-actions">
-                <button class="btn btn-border-success"
+                <button class="btn btn-border-success btn-sm"
                         @onclick="RefreshSignaturesInternal"
                         disabled="@refreshButtonSpinner"
                         title="Refresh">
@@ -465,7 +465,7 @@
                     var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(pendingSignature.SignRecoveryRequest.InvestmentTransactionHex);
 
                     // Todo get the actual outputs with taproot type
-                    pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(investorTrx.Outputs.Count - 3)
+                    pendingSignature.AmountToInvest = investorTrx.Outputs.AsIndexedOutputs().Skip(2).Take(FounderProject.ProjectInfo.Stages.Count)
                         .Sum(_ => _.TxOut.Value.Satoshi);
 
                     pendingSignature.Invested = investments.FirstOrDefault(_ => _.TransactionId == investorTrx.GetHash().ToString());

@@ -20,42 +20,43 @@
     </UserControl.Styles>
 
     <a:PageContainer>
-        <StackPanel MaxWidth="1200" VerticalAlignment="Center">
-            <Card Height="400"
-                  Theme="{StaticResource BigCard}"
-                  Header="Welcome to Angor"
-                  Subheader="A P2P funding protocol built on Bitcoin and Nostr">
-                <Card.HeaderStartContent>
-                    <ui:Icon Source="svg:/Assets/angor-icon.svg" />
-                </Card.HeaderStartContent>
-            </Card>
-            <a:CardGrid>
-                <a:CardGrid.ItemsSource>
-                    <collections:ArrayList>
-                        <Card Theme="{StaticResource SmallCard}" Header="Create your wallet" Subheader="Create a new wallet or recover your existing one to get started with Angor">
-                            <Card.HeaderStartContent>
-                                <ui:Icon Source="svg:/Assets/wallet.svg" />
-                            </Card.HeaderStartContent>
-                        </Card>
-                        <Card Theme="{StaticResource SmallCard}" Header="Explore Opportunities" Subheader="Browse through innovative projects and find your next investment">
-                            <Card.HeaderStartContent>
-                                <ui:Icon Source="svg:/Assets/browse.svg" />
-                            </Card.HeaderStartContent>
-                        </Card>
-                        <Card Theme="{StaticResource SmallCard}" Header="Launch Your Project" Subheader="Start your fundraising journey and launch your project on Angor">
-                            <Card.HeaderStartContent>
-                                <ui:Icon Source="svg:/Assets/user.svg" />
-                            </Card.HeaderStartContent>
-                        </Card>
-                        <Card Theme="{StaticResource SmallCard}" Header="Invest Grow" Subheader="Invest in promising projects and be part of their success story">
-                            <Card.HeaderStartContent>
-                                <ui:Icon Source="svg:/Assets/portfolio.svg" />
-                            </Card.HeaderStartContent>
-                        </Card>
-                    </collections:ArrayList>
-                </a:CardGrid.ItemsSource>
-            </a:CardGrid>
-        </StackPanel>
+        <ScrollViewer>
+            <StackPanel MaxWidth="1200" VerticalAlignment="Center">
+                <Card Height="400"
+                      Theme="{StaticResource BigCard}"
+                      Header="Welcome to Angor"
+                      Subheader="A P2P funding protocol built on Bitcoin and Nostr">
+                    <Card.HeaderStartContent>
+                        <ui:Icon Source="svg:/Assets/angor-icon.svg" />
+                    </Card.HeaderStartContent>
+                </Card>
+                <a:CardGrid>
+                    <a:CardGrid.ItemsSource>
+                        <collections:ArrayList>
+                            <Card Theme="{StaticResource SmallCard}" Header="Create your wallet" Subheader="Create a new wallet or recover your existing one to get started with Angor">
+                                <Card.HeaderStartContent>
+                                    <ui:Icon Source="svg:/Assets/wallet.svg" />
+                                </Card.HeaderStartContent>
+                            </Card>
+                            <Card Theme="{StaticResource SmallCard}" Header="Explore Opportunities" Subheader="Browse through innovative projects and find your next investment">
+                                <Card.HeaderStartContent>
+                                    <ui:Icon Source="svg:/Assets/browse.svg" />
+                                </Card.HeaderStartContent>
+                            </Card>
+                            <Card Theme="{StaticResource SmallCard}" Header="Launch Your Project" Subheader="Start your fundraising journey and launch your project on Angor">
+                                <Card.HeaderStartContent>
+                                    <ui:Icon Source="svg:/Assets/user.svg" />
+                                </Card.HeaderStartContent>
+                            </Card>
+                            <Card Theme="{StaticResource SmallCard}" Header="Invest Grow" Subheader="Invest in promising projects and be part of their success story">
+                                <Card.HeaderStartContent>
+                                    <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                                </Card.HeaderStartContent>
+                            </Card>
+                        </collections:ArrayList>
+                    </a:CardGrid.ItemsSource>
+                </a:CardGrid>
+            </StackPanel></ScrollViewer>
     </a:PageContainer>
 
 </UserControl>
