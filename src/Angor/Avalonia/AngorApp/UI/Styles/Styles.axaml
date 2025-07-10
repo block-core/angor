@@ -1,0 +1,17 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <!-- Add Controls for Previewer Here -->
+        </Border>
+    </Design.PreviewWith>
+    
+    <Style Selector="ListBox">
+        <Setter Property="CornerRadius" Value="10" />
+    </Style>
+
+    <Style Selector=":is(TemplatedControl).Small">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+        <Setter Property="FontWeight" Value="Regular" />
+    </Style>
+</Styles>

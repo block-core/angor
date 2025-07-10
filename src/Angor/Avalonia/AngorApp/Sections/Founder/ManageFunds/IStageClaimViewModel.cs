@@ -16,9 +16,7 @@ public interface IClaimableStage
     public int ClaimableTransactions { get; }
     public IEnumerable<IClaimableTransaction> Transactions { get; }
     public IAmountUI ClaimableAmount { get; }
-    public SelectionModel<IClaimableTransaction> Selection { get; }
     IEnhancedCommand Claim { get; }
-    IEnhancedCommand SelectSpendable { get; }
     ReactiveSelection<IClaimableTransaction, string> ReactiveSelection { get; }
 }
 
@@ -27,6 +25,7 @@ public interface IClaimableTransaction
     public IAmountUI Amount { get; }
     public string Address { get; }
     public ClaimStatus ClaimStatus { get; }
+    public bool IsClaimable => ClaimStatus == ClaimStatus.Unspent;
 }
 
 public class ClaimableTransactionDesign : IClaimableTransaction
@@ -40,7 +39,10 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
 {
     public ClaimableStageDesign()
     {
-        ReactiveSelection = new ReactiveSelection<IClaimableTransaction, string>(x => x.Address);
+        ReactiveSelection = new ReactiveSelection<IClaimableTransaction, string>(new SelectionModel<IClaimableTransaction>()
+        {
+            SingleSelect = false
+        }, x => x.Address, transaction => transaction.IsClaimable);
         
         var selectedCountChanged = this.WhenAnyValue(design => design.ReactiveSelection.SelectedItems.Count);
         
@@ -74,14 +76,12 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
     [ObservableAsProperty]
     private int claimableTransactions;
 
-    [ReactiveUI.SourceGenerators.Reactive]
+    [Reactive]
     private IEnumerable<IClaimableTransaction> transactions;
     [ObservableAsProperty]
     private IAmountUI claimableAmount;
 
-    public SelectionModel<IClaimableTransaction> Selection { get; } = new() { SingleSelect = false };
     public IEnhancedCommand Claim { get; }
-    public IEnhancedCommand SelectSpendable { get; }
 }
 
 public enum ClaimStatus

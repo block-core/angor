@@ -10,9 +10,6 @@
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.ManageFunds.StageClaimView" x:DataType="mf:IStageClaimViewModel">
 
-    <UserControl.Styles>
-    </UserControl.Styles>
-
     <Design.DataContext>
         <mf:StageClaimViewModelDesign>
             <mf:StageClaimViewModelDesign.ClaimableStages>
@@ -92,20 +89,10 @@
                                     </ContentControl>
                                 </IconButton.Icon>
                             </IconButton>
-                            <Button Content="Select All" DockPanel.Dock="Top">
-                                <Interaction.Behaviors>
-                                    <EventTriggerBehavior EventName="Click">
-                                        <SelectAllAction ListBox="ListBox" />
-                                    </EventTriggerBehavior>
-                                </Interaction.Behaviors>
-                            </Button>
-                            <Button Content="Select None" DockPanel.Dock="Top">
-                                <Interaction.Behaviors>
-                                    <EventTriggerBehavior EventName="Click">
-                                        <UnselectAction ListBox="ListBox" />
-                                    </EventTriggerBehavior>
-                                </Interaction.Behaviors>
-                            </Button>
+                            <StackPanel DockPanel.Dock="Top" Margin="0 10">
+                                <Button IsVisible="{Binding $self.IsEffectivelyEnabled}" Command="{Binding ReactiveSelection.SelectAll}" Classes="Small" Content="Select Claimable" DockPanel.Dock="Top" />
+                                <Button IsVisible="{Binding $self.IsEffectivelyEnabled}" Command="{Binding ReactiveSelection.Clear}" Classes="Small" Content="Clear Selection" />
+                            </StackPanel>
                             <ListBox x:Name="ListBox" Selection="{Binding ReactiveSelection.SelectionModel}" ItemsSource="{Binding Transactions}"
                                      Grid.IsSharedSizeScope="True" ItemContainerTheme="{StaticResource TransactionItemTheme}">
                                 <ListBox.ItemTemplate>
