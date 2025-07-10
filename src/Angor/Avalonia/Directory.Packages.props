@@ -46,7 +46,7 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageVersion Include="Serilog.Sinks.XUnit" Version="3.0.19" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
-    <PackageVersion Include="Zafiro" Version="26.0.1" />
+    <PackageVersion Include="Zafiro" Version="26.0.2" />
     <PackageVersion Include="Zafiro.Avalonia" Version="29.0.14" />
     <PackageVersion Include="Zafiro.UI" Version="22.0.0" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />

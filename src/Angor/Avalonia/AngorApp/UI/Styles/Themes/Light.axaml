@@ -14,13 +14,7 @@
         
         <x:Double x:Key="FlyoutThemeMaxWidth">700</x:Double>
 
-        <ControlTheme x:Key="PaneTitle" TargetType="TextBlock" BasedOn="{StaticResource Regular}">
-            <Setter Property="FontWeight" Value="Bold" />
-        </ControlTheme>
-
-        <ControlTheme x:Key="Highlighted" TargetType="TextBlock" BasedOn="{StaticResource Regular}">
-            <Setter Property="Foreground" Value="Orange" />
-        </ControlTheme>
+   
 
         <ControlTheme x:Key="{x:Type z:SlimDataGrid}" TargetType="z:SlimDataGrid" BasedOn="{StaticResource {x:Type z:SlimDataGrid}}">
             <!-- <Setter Property="Background" Value="{StaticResource Level1}" /> -->
@@ -57,25 +51,7 @@
 
     </Styles.Resources>
 
-    <Style Selector="TextBlock.SizeSmall">
-        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
-    </Style>
-
-    <Style Selector="TextBlock.Wrap">
-        <Setter Property="TextWrapping" Value="Wrap" />
-    </Style>
-    
-    <Style Selector="TextBlock.NoWrap">
-        <Setter Property="TextWrapping" Value="NoWrap" />
-    </Style>
-    
-    <Style Selector="TextBlock.SizeNormal">
-        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
-    </Style>
-
-    <Style Selector="TextBlock.SizeBig">
-        <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
-    </Style>
+   
     
     <Style Selector="views|DialogControl" >
         <Setter Property="MinWidth" Value="{OnFormFactor Desktop=400, Default=300, x:TypeArguments=x:Double}" />
@@ -121,15 +97,5 @@
             </Setter.Value>
         </Setter>
     </Style>
-
-    <Design.PreviewWith>
-        <Border Padding="20">
-            <StackPanel>
-                <TextBlock Theme="{StaticResource PaneTitle}">Pane Title</TextBlock>
-                <TextBlock Theme="{StaticResource Regular}">Regular</TextBlock>
-                <TextBlock Theme="{StaticResource Highlighted}">Highlighted</TextBlock>
-            </StackPanel>
-        </Border>
-    </Design.PreviewWith>
 
 </Styles>

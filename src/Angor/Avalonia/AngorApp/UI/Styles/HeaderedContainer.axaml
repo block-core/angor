@@ -1,6 +1,10 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <Style Selector="HeaderedContainer.Title /template/ ContentPresenter#Header">
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+
     <Styles.Resources>
         <ControlTheme x:Key="InlineHeaderedContainer" TargetType="HeaderedContainer">
             <Setter Property="ClipToBounds" Value="False" />

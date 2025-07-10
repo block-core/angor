@@ -22,6 +22,9 @@
             <Setter Property="Color" Value="{DynamicResource SystemBaseHighColor}" />
             <Setter Property="CornerRadius" Value="5" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
             <!-- <Setter Property="TextElement.FontWeight" Value="Light"/> -->
             <Setter Property="Template">
                 <ControlTemplate>

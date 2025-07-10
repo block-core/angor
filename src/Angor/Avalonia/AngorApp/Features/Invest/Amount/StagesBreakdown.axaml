@@ -50,7 +50,7 @@
                             </DataTemplate>
                         </Card.HeaderEndContentTemplate>
                         <StackPanel Spacing="4">
-                            <EdgePanel StartContent="{Binding ReleaseDate, StringFormat='Release: {0:d}'}" EndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.HumanizeDate}}" />
+                            <EdgePanel StartContent="{Binding ReleaseDate, StringFormat='Release: {0:d}'}" EndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.HumanizeDateTimeOffset}}" />
                         </StackPanel>
                     </Card>
                 </StackPanel>

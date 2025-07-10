@@ -7,11 +7,15 @@
              xmlns:mf="clr-namespace:AngorApp.Sections.Founder.ManageFunds"
              xmlns:design="clr-namespace:AngorApp.Design"
              xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+             xmlns:angorApp="clr-namespace:AngorApp"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.Sections.Founder.ManageFunds.ManageFundsView" x:DataType="mf:IManageFundsViewModel">
 
     <Design.DataContext>
-        <mf:ManageFundsViewModelDesign>
+        <mf:ManageFundsViewModelDesign IsUnfunded="False">
+            <mf:ManageFundsViewModelDesign.UnfundedProjectViewModel>
+                <angorApp:UnfundedProjectViewModelDesign />
+            </mf:ManageFundsViewModelDesign.UnfundedProjectViewModel>
             <mf:ManageFundsViewModelDesign.TargetAmount>
                 <design:DesignTimeAmount Sats="4000000" />
             </mf:ManageFundsViewModelDesign.TargetAmount>
@@ -25,41 +29,41 @@
                             <mf:ClaimableStageDesign>
                                 <mf:ClaimableStageDesign.Transactions>
                                     <generic:List x:TypeArguments="mf:IClaimableTransaction">
-                                        <mf:ClaimableTransactionDesign Address="bc1qexampleaddress1">
+                                        <mf:ClaimableTransactionDesign ClaimStatus="Pending" Address="bc1qexampleaddress1">
                                             <mf:ClaimableTransactionDesign.Amount>
                                                 <design:DesignTimeAmount Sats="1000000" />
                                             </mf:ClaimableTransactionDesign.Amount>
                                         </mf:ClaimableTransactionDesign>
-                                        <mf:ClaimableTransactionDesign Address="bc1qexampleaddress1">
+                                        <mf:ClaimableTransactionDesign ClaimStatus="WithdrawByInvestor" Address="bc1qexampleaddress1">
                                             <mf:ClaimableTransactionDesign.Amount>
-                                                <design:DesignTimeAmount Sats="1000000" />
+                                                <design:DesignTimeAmount Sats="2000000" />
                                             </mf:ClaimableTransactionDesign.Amount>
                                         </mf:ClaimableTransactionDesign>
-                                        <mf:ClaimableTransactionDesign Address="bc1qexampleaddress1">
+                                        <mf:ClaimableTransactionDesign ClaimStatus="SpentByFounder" Address="bc1qexampleaddress1">
                                             <mf:ClaimableTransactionDesign.Amount>
-                                                <design:DesignTimeAmount Sats="1000000" />
+                                                <design:DesignTimeAmount Sats="300000" />
+                                            </mf:ClaimableTransactionDesign.Amount>
+                                        </mf:ClaimableTransactionDesign>
+                                        <mf:ClaimableTransactionDesign ClaimStatus="Unspent" Address="bc1qexampleaddress1">
+                                            <mf:ClaimableTransactionDesign.Amount>
+                                                <design:DesignTimeAmount Sats="300000" />
+                                            </mf:ClaimableTransactionDesign.Amount>
+                                        </mf:ClaimableTransactionDesign>
+                                        <mf:ClaimableTransactionDesign ClaimStatus="Unspent" Address="bc1qexampleaddress1">
+                                            <mf:ClaimableTransactionDesign.Amount>
+                                                <design:DesignTimeAmount Sats="3440000" />
                                             </mf:ClaimableTransactionDesign.Amount>
                                         </mf:ClaimableTransactionDesign>
                                     </generic:List>
                                 </mf:ClaimableStageDesign.Transactions>
-                                <mf:ClaimableStageDesign.ClaimableAmount>
-                                    <design:DesignTimeAmount Sats="1000000" />
-                                </mf:ClaimableStageDesign.ClaimableAmount>
                             </mf:ClaimableStageDesign>
                             <mf:ClaimableStageDesign>
-                                <mf:ClaimableStageDesign.ClaimableAmount>
-                                    <design:DesignTimeAmount Sats="1000000" />
-                                </mf:ClaimableStageDesign.ClaimableAmount>
                             </mf:ClaimableStageDesign>
                             <mf:ClaimableStageDesign>
-                                <mf:ClaimableStageDesign.ClaimableAmount>
-                                    <design:DesignTimeAmount Sats="1000000" />
-                                </mf:ClaimableStageDesign.ClaimableAmount>
                             </mf:ClaimableStageDesign>
                         </generic:List>
                     </mf:StageClaimViewModelDesign.ClaimableStages>
                 </mf:StageClaimViewModelDesign>
-
             </mf:ManageFundsViewModelDesign.StageClaimViewModel>
             <mf:ManageFundsViewModelDesign.ProjectStatisticsViewModel>
                 <mf:ProjectStatisticsViewModelDesign TotalStages="4" AvailableTransactions="3" TotalTransactions="6" SpentTransactions="3">
@@ -85,31 +89,40 @@
     </Design.DataContext>
 
     <controls:PageContainer>
-        <StackPanel Spacing="10">
-            <Card DockPanel.Dock="Top" Header="Manage Project Funds" IsAdaptiveFlowEnabled="True" Subheader="Check your project investments">
-                <Card.HeaderEndContent>
-                    <UniformGrid ColumnSpacing="20" Rows="1">
-                        <IconButton HorizontalAlignment="Stretch" Command="{Binding Load}">
-                            Refresh
-                            <IconButton.Icon>
-                                <ui:Icon Source="fa-arrows-rotate" />
-                            </IconButton.Icon>
-                        </IconButton>
-                    </UniformGrid>
-                </Card.HeaderEndContent>
-                <StackPanel Spacing="10">
-                    <HeaderedContainer Header="Project" Content="{Binding ProjectViewModel.Name}" />
-                    <Panel>
-                        <ProgressBar Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" 
-                                     Foreground="{DynamicResource SystemControlBackgroundBaseMediumBrush}" Height="100" Value="{Binding RaisedAmount.Sats}" Maximum="{Binding TargetAmount.Sats}" />
-                        <Panel Margin="20">
-                            <HeaderedContainer VerticalAlignment="Center" Header="Raised Amount" Content="{Binding RaisedAmount.DecimalString}" />
-                            <HeaderedContainer HorizontalContentAlignment="Right" VerticalAlignment="Center" HorizontalAlignment="Right" Header="Target Amount" Content="{Binding TargetAmount.DecimalString}" /></Panel>
-                    </Panel>
+        <ScrollViewer>
+            <StackPanel Spacing="10">
+                <Card DockPanel.Dock="Top" Header="Manage Project Funds">
+                    <Card.HeaderEndContent>
+                        <UniformGrid ColumnSpacing="20" Rows="1">
+                            <IconButton HorizontalAlignment="Stretch" Command="{Binding Load}">
+                                Refresh
+                                <IconButton.Icon>
+                                    <ui:Icon Source="fa-arrows-rotate" />
+                                </IconButton.Icon>
+                            </IconButton>
+                        </UniformGrid>
+                    </Card.HeaderEndContent>
+                    <StackPanel Spacing="10">
+                        <HeaderedContainer Header="Project" Content="{Binding ProjectViewModel.Name}" />
+                        <Panel>
+                            <ProgressBar Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                         Foreground="{DynamicResource SystemControlBackgroundBaseMediumBrush}" Height="100" Value="{Binding RaisedAmount.Sats}" Maximum="{Binding TargetAmount.Sats}" />
+                            <Panel Margin="20">
+                                <HeaderedContainer VerticalAlignment="Center" Header="Raised Amount" Content="{Binding RaisedAmount.DecimalString}" />
+                                <HeaderedContainer HorizontalContentAlignment="Right" VerticalAlignment="Center" HorizontalAlignment="Right" Header="Target Amount" Content="{Binding TargetAmount.DecimalString}" />
+                            </Panel>
+                        </Panel>
+                    </StackPanel>
+                </Card>
+                <StackPanel Spacing="10" IsVisible="{Binding !IsUnfunded}">
+                    <mf:ProjectStatisticsView DataContext="{Binding ProjectStatisticsViewModel}" />
+                    <mf:StageClaimView DataContext="{Binding StageClaimViewModel}" />
                 </StackPanel>
-            </Card>
-            <mf:ProjectStatisticsView DataContext="{Binding ProjectStatisticsViewModel}" />
-            <mf:StageClaimView DataContext="{Binding StageClaimViewModel}" />
-        </StackPanel>
+                <StackPanel Spacing="10" IsVisible="{Binding IsUnfunded}">
+                    <mf:UnfundedProjectView DataContext="{Binding UnfundedProjectViewModel}" />
+                    <mf:ProjectStatisticsView DataContext="{Binding ProjectStatisticsViewModel}" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
     </controls:PageContainer>
 </UserControl>

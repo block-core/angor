@@ -97,6 +97,7 @@
         <StyleInclude Source="UI/Styles/TextBox.axaml" />
         <StyleInclude Source="UI/Styles/OverlayBorder.axaml" />
         <StyleInclude Source="UI/Styles/CalendarDatePicker.axaml" />
+        <StyleInclude Source="UI/Styles/TextBlock.axaml" />
     </Application.Styles>
 
     <Application.Resources>
