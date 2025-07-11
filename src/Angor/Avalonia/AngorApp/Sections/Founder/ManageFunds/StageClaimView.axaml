@@ -2,49 +2,50 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:mf="clr-namespace:AngorApp.Sections.Founder.ManageFunds"
              xmlns:design="clr-namespace:AngorApp.Design"
              xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:models="clr-namespace:AngorApp.Sections.Founder.ManageFunds.Models"
+             xmlns:de="clr-namespace:AngorApp.Sections.Founder.ManageFunds.Models.Design"
              mc:Ignorable="d" d:DesignWidth="800"
-             x:Class="AngorApp.Sections.Founder.ManageFunds.StageClaimView" x:DataType="mf:IStageClaimViewModel">
+             x:Class="AngorApp.Sections.Founder.ManageFunds.StageClaimView" x:DataType="models:IStageClaimViewModel">
 
     <Design.DataContext>
-        <mf:StageClaimViewModelDesign>
-            <mf:StageClaimViewModelDesign.ClaimableStages>
-                <generic:List x:TypeArguments="mf:IClaimableStage">
-                    <mf:ClaimableStageDesign>
-                        <mf:ClaimableStageDesign.Transactions>
-                            <generic:List x:TypeArguments="mf:IClaimableTransaction">
-                                <mf:ClaimableTransactionDesign ClaimStatus="Pending" Address="bc1qexampleaddress1">
-                                    <mf:ClaimableTransactionDesign.Amount>
+        <de:StageClaimViewModelDesign>
+            <de:StageClaimViewModelDesign.ClaimableStages>
+                <generic:List x:TypeArguments="models:IClaimableStage">
+                    <de:ClaimableStageDesign>
+                        <de:ClaimableStageDesign.Transactions>
+                            <generic:List x:TypeArguments="models:IClaimableTransaction">
+                                <de:ClaimableTransactionDesign ClaimStatus="Pending" Address="bc1qexampleaddress1">
+                                    <de:ClaimableTransactionDesign.Amount>
                                         <design:DesignTimeAmount Sats="1000000" />
-                                    </mf:ClaimableTransactionDesign.Amount>
-                                </mf:ClaimableTransactionDesign>
-                                <mf:ClaimableTransactionDesign ClaimStatus="WithdrawByInvestor" Address="bc1qexampleaddress1">
-                                    <mf:ClaimableTransactionDesign.Amount>
+                                    </de:ClaimableTransactionDesign.Amount>
+                                </de:ClaimableTransactionDesign>
+                                <de:ClaimableTransactionDesign ClaimStatus="WithdrawByInvestor" Address="bc1qexampleaddress1">
+                                    <de:ClaimableTransactionDesign.Amount>
                                         <design:DesignTimeAmount Sats="2000000" />
-                                    </mf:ClaimableTransactionDesign.Amount>
-                                </mf:ClaimableTransactionDesign>
-                                <mf:ClaimableTransactionDesign ClaimStatus="SpentByFounder" Address="bc1qexampleaddress1">
-                                    <mf:ClaimableTransactionDesign.Amount>
+                                    </de:ClaimableTransactionDesign.Amount>
+                                </de:ClaimableTransactionDesign>
+                                <de:ClaimableTransactionDesign ClaimStatus="SpentByFounder" Address="bc1qexampleaddress1">
+                                    <de:ClaimableTransactionDesign.Amount>
                                         <design:DesignTimeAmount Sats="300000" />
-                                    </mf:ClaimableTransactionDesign.Amount>
-                                </mf:ClaimableTransactionDesign>
-                                <mf:ClaimableTransactionDesign ClaimStatus="Unspent" Address="bc1qexampleaddress1">
-                                    <mf:ClaimableTransactionDesign.Amount>
+                                    </de:ClaimableTransactionDesign.Amount>
+                                </de:ClaimableTransactionDesign>
+                                <de:ClaimableTransactionDesign ClaimStatus="Unspent" Address="bc1qexampleaddress1">
+                                    <de:ClaimableTransactionDesign.Amount>
                                         <design:DesignTimeAmount Sats="300000" />
-                                    </mf:ClaimableTransactionDesign.Amount>
-                                </mf:ClaimableTransactionDesign>
+                                    </de:ClaimableTransactionDesign.Amount>
+                                </de:ClaimableTransactionDesign>
                             </generic:List>
-                        </mf:ClaimableStageDesign.Transactions>
-                    </mf:ClaimableStageDesign>
-                    <mf:ClaimableStageDesign />
-                    <mf:ClaimableStageDesign />
+                        </de:ClaimableStageDesign.Transactions>
+                    </de:ClaimableStageDesign>
+                    <de:ClaimableStageDesign />
+                    <de:ClaimableStageDesign />
                 </generic:List>
-            </mf:StageClaimViewModelDesign.ClaimableStages>
-        </mf:StageClaimViewModelDesign>
+            </de:StageClaimViewModelDesign.ClaimableStages>
+        </de:StageClaimViewModelDesign>
     </Design.DataContext>
 
     <UserControl.Resources>
@@ -52,7 +53,7 @@
             <Setter Property="Interaction.Behaviors">
                 <BehaviorCollectionTemplate>
                     <BehaviorCollection>
-                        <DataTriggerBehavior Binding="{Binding ClaimStatus, DataType=mf:IClaimableTransaction}" Value="Unspent" ComparisonCondition="NotEqual">
+                        <DataTriggerBehavior Binding="{Binding ClaimStatus, DataType=models:IClaimableTransaction}" Value="Unspent" ComparisonCondition="NotEqual">
                             <ChangeAvaloniaPropertyAction TargetObject="{Binding $parent[ListBoxItem]}" TargetProperty="{x:Static InputElement.IsEnabledProperty}"
                                                           Value="False" />
                         </DataTriggerBehavior>
@@ -75,7 +76,7 @@
                 </Style>
             </ItemsControl.Styles>
             <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="mf:IClaimableStage">
+                <DataTemplate DataType="models:IClaimableStage">
                     <Card HeaderStartContent="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}">
                         <Card.HeaderEndContent>
                             <ToggleButton Theme="{StaticResource ExpandsCollapseToggleButton}" Padding="10" x:Name="ToggleButton" />

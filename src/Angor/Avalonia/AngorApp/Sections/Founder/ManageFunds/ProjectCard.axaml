@@ -3,13 +3,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-             xmlns:manageFunds="clr-namespace:AngorApp.Sections.Founder.ManageFunds"
+             xmlns:models="clr-namespace:AngorApp.Sections.Founder.ManageFunds.Models"
+             xmlns:design1="clr-namespace:AngorApp.Sections.Founder.ManageFunds.Models.Design"
              mc:Ignorable="d" 
              d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Founder.ManageFunds.ProjectCard" 
-             x:DataType="manageFunds:IProjectViewModel">
+             x:DataType="models:IProjectViewModel">
     <Design.DataContext>
-        <manageFunds:ProjectViewModelDesign Name="Sample Project" 
+        <design1:ProjectViewModelDesign Name="Sample Project" 
                                          ShortDescription="Sample project with long description bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah" 
                                          Banner="https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"
                                          Avatar="https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg"/>

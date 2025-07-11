@@ -4,36 +4,7 @@ using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Misc;
 using Zafiro.UI.Commands;
 
-namespace AngorApp.Sections.Founder.ManageFunds;
-
-public interface IStageClaimViewModel
-{
-    public IEnumerable<IClaimableStage> ClaimableStages { get; }
-}
-
-public interface IClaimableStage
-{
-    public int ClaimableTransactions { get; }
-    public IEnumerable<IClaimableTransaction> Transactions { get; }
-    public IAmountUI ClaimableAmount { get; }
-    IEnhancedCommand Claim { get; }
-    ReactiveSelection<IClaimableTransaction, string> ReactiveSelection { get; }
-}
-
-public interface IClaimableTransaction
-{
-    public IAmountUI Amount { get; }
-    public string Address { get; }
-    public ClaimStatus ClaimStatus { get; }
-    public bool IsClaimable => ClaimStatus == ClaimStatus.Unspent;
-}
-
-public class ClaimableTransactionDesign : IClaimableTransaction
-{
-    public IAmountUI Amount { get; set; } = new AmountUI(100000); 
-    public string Address { get; set; }  = "bc1qexampleaddress"; 
-    public ClaimStatus ClaimStatus { get; set; } = ClaimStatus.Unspent;
-}
+namespace AngorApp.Sections.Founder.ManageFunds.Models.Design;
 
 public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
 {
@@ -48,7 +19,7 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
         
         Claim = ReactiveCommand.Create(() => { }, selectedCountChanged.Select(i => i > 0)).Enhance();
 
-        claimableAmountHelper = this.WhenAnyValue(design => design.Transactions)
+        claimableAmountHelper = this.WhenAnyValue<ClaimableStageDesign, IEnumerable<IClaimableTransaction>>(design => design.Transactions)
             .WhereNotNull()
             .Select(txn =>
             {
@@ -57,9 +28,9 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
                     .Select(transaction => transaction.Amount.Sats)
                     .DefaultIfEmpty()
                     .Sum());
-            }).ToProperty(this, design => design.ClaimableAmount);
+            }).ToProperty<ClaimableStageDesign, IAmountUI>(this, design => design.ClaimableAmount);
         
-        claimableTransactionsHelper = this.WhenAnyValue(design => design.Transactions)
+        claimableTransactionsHelper = this.WhenAnyValue<ClaimableStageDesign, IEnumerable<IClaimableTransaction>>(design => design.Transactions)
             .WhereNotNull()
             .Select(txn =>
             {
@@ -82,13 +53,4 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
     private IAmountUI claimableAmount;
 
     public IEnhancedCommand Claim { get; }
-}
-
-public enum ClaimStatus
-{
-    Invalid = 0,
-    Unspent,
-    Pending,
-    SpentByFounder,
-    WithdrawByInvestor
 }

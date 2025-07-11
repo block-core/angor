@@ -3,13 +3,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:manageFunds="clr-namespace:AngorApp.Sections.Founder.ManageFunds"
+             xmlns:models="clr-namespace:AngorApp.Sections.Founder.ManageFunds.Models"
+             xmlns:design1="clr-namespace:AngorApp.Sections.Founder.ManageFunds.Models.Design"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.ManageFunds.HeaderView"
-             x:DataType="manageFunds:IManageFundsViewModel">
+             x:DataType="models:IManageFundsViewModel">
 
     <Design.DataContext>
-        <manageFunds:ManageFundsViewModelDesign />
+        <design1:ManageFundsViewModelDesign />
     </Design.DataContext>
 
     <Card DockPanel.Dock="Top" Header="Manage Project Funds">

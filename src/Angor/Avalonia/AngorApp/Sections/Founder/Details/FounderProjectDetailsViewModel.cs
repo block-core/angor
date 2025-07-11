@@ -3,6 +3,7 @@ using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using AngorApp.Sections.Founder.ManageFunds;
+using AngorApp.Sections.Founder.ManageFunds.Models;
 using AngorApp.UI.Services;
 using DynamicData;
 using Zafiro;
