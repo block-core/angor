@@ -15,19 +15,19 @@
     </Design.DataContext>
 
     <Card>
-        <Card.HeaderStartContent>
-            <ContentControl Foreground="Orange">
-                <ui:Icon Source="mdi-alert-circle-outline" />
-            </ContentControl>
-        </Card.HeaderStartContent>
         <Card.Header>
-            <TextBlock Classes="Warning SizeBig Wrap">The target investment amount has not been reached</TextBlock>
+            <StackPanel HorizontalAlignment="Center" Spacing="10">
+                <Viewbox Height="40">
+                    <ContentControl Foreground="Orange" >
+                        <ui:Icon Source="mdi-alert-circle-outline" />
+                    </ContentControl>
+                </Viewbox>
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Classes="Warning SizeBig Wrap">The project did not to raise enough funds</TextBlock>
+                <TextBlock FontWeight="Regular" TextAlignment="Center" DockPanel.Dock="Top">As founder, you can only release the funds back to the investors</TextBlock>
+            </StackPanel>
         </Card.Header>
         <DockPanel VerticalAlignment="Stretch">
-            <StackPanel DockPanel.Dock="Top">
-                <TextBlock Classes="SizeNormal">As founder, you can only release the funds back to the investors.</TextBlock>
-            </StackPanel>
-            <IconButton Content="Release All" DockPanel.Dock="Top" HorizontalAlignment="Right">
+            <IconButton Margin="0 0 10 0" Content="Release All" DockPanel.Dock="Top" HorizontalAlignment="Right">
                 <IconButton.Icon>
                     <ui:Icon Source="mdi-check-all" />
                 </IconButton.Icon>
@@ -54,7 +54,7 @@
                     <z:Column>
                         <z:Column.CellTemplate>
                             <DataTemplate>
-                                <IconButton  HorizontalAlignment="Right" Content="Release">
+                                <IconButton HorizontalAlignment="Right" Content="Release">
                                     <IconButton.Icon>
                                         <ui:Icon Source="mdi-check" />
                                     </IconButton.Icon>

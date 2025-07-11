@@ -77,7 +77,7 @@
                 </DockPanel>
             </DataTemplate>
         </Card.HeaderTemplate>
-        <StackPanel Spacing="10">
+        <StackPanel Classes="SmallGap">
             <items:OfferAcceptedView>
                 <items:OfferAcceptedView.IsVisible>
                     <MultiBinding Converter="{x:Static BoolConverters.Or}">
@@ -86,8 +86,8 @@
                     </MultiBinding>
                 </items:OfferAcceptedView.IsVisible>
             </items:OfferAcceptedView>
-            <c:CardGrid DockPanel.Dock="Top">
-                <c:CardGrid.ItemsSource>
+            <CardGrid DockPanel.Dock="Top">
+                <CardGrid.ItemsSource>
                     <collections:ArrayList>
                         <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
                             <UniformGrid Columns="1" VerticalAlignment="Top">
@@ -129,8 +129,8 @@
                             </UniformGrid>
                         </OverlayBorder>
                     </collections:ArrayList>
-                </c:CardGrid.ItemsSource>
-            </c:CardGrid>
+                </CardGrid.ItemsSource>
+            </CardGrid>
 
         </StackPanel>
     </Card>

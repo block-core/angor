@@ -62,8 +62,13 @@
         </ControlTheme>
     </UserControl.Resources>
 
-    <HeaderedContainer Header="Claim your funds" Classes="Title" HeaderPadding="10 0">
+    <HeaderedContainer Header="Claim your funds" Classes="Title">
         <ItemsControl VerticalAlignment="Top" ItemsSource="{Binding ClaimableStages}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Classes="BigGap" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
             <ItemsControl.Styles>
                 <Style Selector="TextBlock">
                     <Setter Property="VerticalAlignment" Value="Center" />

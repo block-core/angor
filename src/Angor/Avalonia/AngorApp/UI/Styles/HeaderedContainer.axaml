@@ -24,11 +24,11 @@
                                                   DockPanel.Dock="Left"
                                                   Padding="{TemplateBinding HeaderPadding}"
                                                   VerticalAlignment="Center"
-                                                  Opacity=""
                                                   IsVisible="{Binding $parent[HeaderedContainer].Header, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                   Content="{TemplateBinding Header}" ContentTemplate="{TemplateBinding HeaderTemplate}" />
                                 <ContentPresenter x:Name="Content"
                                                   VerticalAlignment="Center"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                   IsVisible="{Binding $parent[HeaderedContainer].Content, Converter={x:Static ObjectConverters.IsNotNull}}" Padding="{TemplateBinding Padding}" Content="{TemplateBinding Content}"
                                                   ContentTemplate="{TemplateBinding ContentTemplate}" />
                             </DockPanel>
@@ -38,7 +38,6 @@
             </Setter>
             <Style Selector="^ /template/ ContentPresenter#Header">
                 <Setter Property="FontWeight" Value="Bold" />
-                <Setter Property="Opacity" Value="0.7" />
             </Style>
         </ControlTheme>
 
@@ -52,19 +51,19 @@
                                        ClipToBounds="False"
                                        BorderBrush="{TemplateBinding BorderBrush}"
                                        CornerRadius="{TemplateBinding CornerRadius}"
-                                       BoxShadow="{TemplateBinding BoxShadow}"
-                                       Background="{TemplateBinding Background}">
+                                       BoxShadow="{TemplateBinding BoxShadow}">
                             <DockPanel>
                                 <ContentPresenter x:Name="Header" Background="{TemplateBinding HeaderBackground}"
                                                   DockPanel.Dock="Top"
                                                   Padding="{TemplateBinding HeaderPadding}"
                                                   FontWeight="Bold"
-                                                  Opacity="0.7"
                                                   VerticalAlignment="Center"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                   IsVisible="{Binding $parent[HeaderedContainer].Header, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                   Content="{TemplateBinding Header}" ContentTemplate="{TemplateBinding HeaderTemplate}" />
                                 <ContentPresenter x:Name="Content"
-                                                  VerticalAlignment="Center"
+                                                  Background="{TemplateBinding Background}"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                   IsVisible="{Binding $parent[HeaderedContainer].Content, Converter={x:Static ObjectConverters.IsNotNull}}" Padding="{TemplateBinding Padding}" Content="{TemplateBinding Content}"
                                                   ContentTemplate="{TemplateBinding ContentTemplate}" />
                             </DockPanel>
@@ -79,8 +78,21 @@
     <Design.PreviewWith>
         <Border Padding="20">
             <StackPanel>
-                <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}" Header="HEADER" Content="CONTENT" />
-                <HeaderedContainer Header="HEADER" Content="CONTENT" />
+                <StackPanel>
+                    <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}" Header="HEADER" Content="CONTENT" />
+                    <HeaderedContainer Header="HEADER" Content="CONTENT" />
+                    <HeaderedContainer HorizontalAlignment="Right" HorizontalContentAlignment="Right" Header="HEADER" Content="CONTENT" />
+                </StackPanel>
+                <Panel Margin="20" Width="400">
+                    <StackPanel>
+                        <HeaderedContainer VerticalAlignment="Center" Header="Raised Amount" Content="100" />
+                        <HeaderedContainer VerticalAlignment="Center" Header="Start Date" Content="100" />
+                    </StackPanel>
+                    <StackPanel HorizontalAlignment="Right">
+                        <HeaderedContainer HorizontalContentAlignment="Right" Header="Target Amount" Content="200" />
+                        <HeaderedContainer HorizontalContentAlignment="Right" Header="End Date" Content="200" />
+                    </StackPanel>
+                </Panel>
             </StackPanel>
         </Border>
     </Design.PreviewWith>

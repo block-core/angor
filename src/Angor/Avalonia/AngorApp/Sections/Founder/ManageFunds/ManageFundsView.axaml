@@ -90,35 +90,12 @@
 
     <controls:PageContainer>
         <ScrollViewer>
-            <StackPanel Spacing="10">
-                <Card DockPanel.Dock="Top" Header="Manage Project Funds">
-                    <Card.HeaderEndContent>
-                        <UniformGrid ColumnSpacing="20" Rows="1">
-                            <IconButton HorizontalAlignment="Stretch" Command="{Binding Load}">
-                                Refresh
-                                <IconButton.Icon>
-                                    <ui:Icon Source="fa-arrows-rotate" />
-                                </IconButton.Icon>
-                            </IconButton>
-                        </UniformGrid>
-                    </Card.HeaderEndContent>
-                    <StackPanel Spacing="10">
-                        <HeaderedContainer Header="Project" Content="{Binding ProjectViewModel.Name}" />
-                        <Panel>
-                            <ProgressBar Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
-                                         Foreground="{DynamicResource SystemControlBackgroundBaseMediumBrush}" Height="100" Value="{Binding RaisedAmount.Sats}" Maximum="{Binding TargetAmount.Sats}" />
-                            <Panel Margin="20">
-                                <HeaderedContainer VerticalAlignment="Center" Header="Raised Amount" Content="{Binding RaisedAmount.DecimalString}" />
-                                <HeaderedContainer HorizontalContentAlignment="Right" VerticalAlignment="Center" HorizontalAlignment="Right" Header="Target Amount" Content="{Binding TargetAmount.DecimalString}" />
-                            </Panel>
-                        </Panel>
-                    </StackPanel>
-                </Card>
-                <StackPanel Spacing="10" IsVisible="{Binding !IsUnfunded}">
+            <StackPanel>
+                <StackPanel Classes="BigGap" IsVisible="{Binding !IsUnfunded}">
                     <mf:ProjectStatisticsView DataContext="{Binding ProjectStatisticsViewModel}" />
                     <mf:StageClaimView DataContext="{Binding StageClaimViewModel}" />
                 </StackPanel>
-                <StackPanel Spacing="10" IsVisible="{Binding IsUnfunded}">
+                <StackPanel Classes="BigGap" IsVisible="{Binding IsUnfunded}">
                     <mf:UnfundedProjectView DataContext="{Binding UnfundedProjectViewModel}" />
                     <mf:ProjectStatisticsView DataContext="{Binding ProjectStatisticsViewModel}" />
                 </StackPanel>

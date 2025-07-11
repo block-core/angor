@@ -24,7 +24,7 @@
 
     <a:PageContainer>
         <ScrollViewer>
-            <DockPanel>
+            <DockPanel VerticalSpacing="20">
 
                 <Card Header="Browse" Subheader="Browse Projects" DockPanel.Dock="Top">
                     <Card.HeaderStartContent>
@@ -40,13 +40,13 @@
                 </Card>
 
                 <Loading IsLoading="{Binding IsLoading^}">
-                    <a:CardGrid ItemsSource="{Binding Projects}">
-                        <a:CardGrid.ItemTemplate>
+                    <CardGrid ItemsSource="{Binding Projects}">
+                        <CardGrid.ItemTemplate>
                             <DataTemplate DataType="browse:IProjectViewModel">
                                 <browse:ProjectItemView />
                             </DataTemplate>
-                        </a:CardGrid.ItemTemplate>
-                    </a:CardGrid>
+                        </CardGrid.ItemTemplate>
+                    </CardGrid>
                 </Loading>
 
             </DockPanel>
