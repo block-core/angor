@@ -6,7 +6,7 @@ namespace Angor.Contexts.Funding.Projects.Domain;
 
 public interface IInvestmentRepository
 {
-    Task<Result<IEnumerable<InvestmentDto>>> GetByProject(ProjectId projectId);
-    Task<Result<InvestmentRecords>> GetByWallet(Guid walletId);
+    Task<Result<IEnumerable<InvestmentDto>>> GetByProjectId(ProjectId projectId);
+    Task<Result<InvestmentRecords>> GetByWalletId(Guid walletId);
     Task<Result> Add(Guid walletId, Investment investment);
 }

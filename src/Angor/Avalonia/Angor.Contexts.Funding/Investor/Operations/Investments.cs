@@ -34,7 +34,7 @@ public static class Investments
 
         public async Task<Result<IEnumerable<InvestedProjectDto>>> Handle(InvestmentsPortfolioRequest request, CancellationToken cancellationToken)
         {
-            var investmentRecordsLookup = await investmentRepository.GetByWallet(request.WalletId);
+            var investmentRecordsLookup = await investmentRepository.GetByWalletId(request.WalletId);
 
             if (investmentRecordsLookup.IsFailure)
                 return Result.Failure<IEnumerable<InvestedProjectDto>>("Failed to retrieve investment records: " + investmentRecordsLookup.Error);

@@ -19,7 +19,7 @@ public class InvestmentRepository(
     ISeedwordsProvider seedwordsProvider,
     IRelayService relayService) : IInvestmentRepository
 {
-    public async Task<Result<InvestmentRecords>> GetByWallet(Guid walletId)
+    public async Task<Result<InvestmentRecords>> GetByWalletId(Guid walletId)
     {
         // Encrypt and send the investments
         var sensiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
@@ -69,7 +69,7 @@ public class InvestmentRepository(
         return success ? Result.Success() : Result.Failure("Error adding investment");
     }
 
-    public Task<Result<IEnumerable<InvestmentDto>>> GetByProject(ProjectId projectId)
+    public Task<Result<IEnumerable<InvestmentDto>>> GetByProjectId(ProjectId projectId)
     {
         return GetProjectInvestments(projectId).Map(enumerable => enumerable.Select(inv => new InvestmentDto
         {
