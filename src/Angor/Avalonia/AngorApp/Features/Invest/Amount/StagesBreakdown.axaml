@@ -21,7 +21,7 @@
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
             <DataTemplate>
-                <Card Padding="10 5 10 10" HeaderPadding="5 5 5 0" HeaderStartContent="{Binding Index, StringFormat='Stage {0}'}" HeaderEndContent="{Binding Amount.DecimalString}">
+                <Card Padding="10" HeaderStartContent="{Binding Index, StringFormat='Stage {0}'}" HeaderEndContent="{Binding Amount.DecimalString}">
                     <Card.HeaderEndContentTemplate>
                         <DataTemplate DataType="x:Object">
                             <Border Padding="5" CornerRadius="10" Background="{DynamicResource SystemChromeHighColor}">

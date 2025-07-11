@@ -1,6 +1,6 @@
 using Zafiro.UI.Commands;
 
-namespace AngorApp.Sections.Founder.ManageFunds.Models.Design;
+namespace AngorApp.Sections.Founder.ManageFunds;
 
 public class ManageFundsViewModelDesign : ReactiveObject, IManageFundsViewModel
 {

@@ -23,7 +23,7 @@
         </Border>
     </Design.PreviewWith>
     
-    <Style Selector="ListBox">
+    <Style Selector="ListBox.Rounded">
         <Setter Property="CornerRadius" Value="10" />
     </Style>
 

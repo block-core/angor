@@ -32,7 +32,7 @@
                     </Card.HeaderStartContent>
                 </Card>
 
-                <Card Header="Project lookup" Padding="20 0 20 20" DockPanel.Dock="Top">
+                <Card Header="Project lookup" DockPanel.Dock="Top">
                     <Card.Subheader>
                         <TextBlock TextWrapping="Wrap">You can look for a project directly by entering its <Bold>Project Id</Bold> here</TextBlock>
                     </Card.Subheader>

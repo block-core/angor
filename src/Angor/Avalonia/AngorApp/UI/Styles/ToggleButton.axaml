@@ -1,14 +1,11 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI">
-    <Design.PreviewWith>
-        <Border Padding="20">
-            <!-- Add Controls for Previewer Here -->
-        </Border>
-    </Design.PreviewWith>
 
     <Styles.Resources>
-        <ControlTheme x:Key="ExpandsCollapseToggleButton" TargetType="ToggleButton" BasedOn="{StaticResource {x:Type ToggleButton}}">
+        <ControlTheme x:Key="ExpandingToggleButton" TargetType="ToggleButton" 
+                      BasedOn="{StaticResource {x:Type ToggleButton}}">
+            <!-- <Setter Property="Background" Value="Red"></Setter> -->
             <Style Selector="^[IsChecked=True]">
                 <Setter Property="Content">
                     <Setter.Value>
@@ -40,4 +37,9 @@
 
         </ControlTheme>
     </Styles.Resources>
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <ToggleButton Theme="{StaticResource ExpandingToggleButton}" />
+        </Border>
+    </Design.PreviewWith>
 </Styles>

@@ -1,4 +1,4 @@
-namespace AngorApp.Sections.Founder.ManageFunds.Models.Design;
+namespace AngorApp.Sections.Founder.ManageFunds;
 
 public class StageClaimViewModelDesign : ReactiveObject, IStageClaimViewModel
 {

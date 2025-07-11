@@ -1,8 +1,7 @@
 using Angor.Contexts.Funding.Investor;
-using AngorApp.Sections.Founder.ManageFunds.Models.Design;
 using Zafiro.UI.Commands;
 
-namespace AngorApp.Sections.Founder.ManageFunds.Models;
+namespace AngorApp.Sections.Founder.ManageFunds;
 
 public class ManageFundsViewModel : ReactiveObject, IManageFundsViewModel
 {

@@ -11,12 +11,11 @@
                       TargetType="Card"
                       BasedOn="{StaticResource {x:Type Card}}">
             <Setter Property="HeaderStartContentTemplate" Value="{StaticResource RegularIcon}" />
-            <Setter Property="Padding" Value="20 0 20 20" />
-            <Setter Property="HeaderPadding" Value="10" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}"></Setter>
-            <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}"></Setter>
-            <Setter Property="HeaderBackground" Value="{DynamicResource SystemChromeLowColor}"></Setter>
-            <Setter Property="HeaderSpacing" Value="16" />
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
+            <!-- <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}" /> -->
+            <!-- <Setter Property="HeaderBackground" Value="{DynamicResource SystemChromeLowColor}" /> -->
+            <!-- <Setter Property="HeaderSpacing" Value="16" /> -->
         </ControlTheme>
         
         <ControlTheme x:Key="RemarkableSubheaderCard"
@@ -72,22 +71,6 @@
                     </Border>
                 </ControlTemplate>
             </Setter>
-
-            <!-- Default shadow -->
-            <Style Selector="^ /template/ Border#Root">
-                <Setter Property="BoxShadow" Value="0 2 8 0 #19000000" />
-            </Style>
-
-            <!-- Hover effects -->
-            <Style Selector="^:pointerover /template/ Border#Root">
-                <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightBaseMediumLowBrush}" />
-                <Setter Property="BoxShadow" Value="0 4 12 0 #26000000" />
-            </Style>
-
-            <!-- Pressed effect -->
-            <Style Selector="^:pressed /template/ Border#Root">
-                <Setter Property="BoxShadow" Value="0 1 4 0 #0D000000" />
-            </Style>
             
         </ControlTheme>
 
@@ -136,8 +119,8 @@
     </Styles.Resources>
 
     <Design.PreviewWith>
-        <StackPanel Width="500">
-            <Card Header="Card" Subheader="Subheader">
+        <StackPanel Width="500" Spacing="20" Margin="20">
+            <Card Header="Card" Height="200" Subheader="Subheader">
                 <Card.DataContext>
                     <MyViewModel Left="LEFT" />
                 </Card.DataContext>
@@ -185,7 +168,7 @@
                     <ui:Icon Source="fa-wallet" />
                 </Card.HeaderStartContent>
             </Card>
-            <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="RemarkableSubheaderCard" Subheader="Subheader" />
+            <Card Height="200" Theme="{StaticResource RemarkableSubheaderCard}" Header="RemarkableSubheaderCard" Subheader="Subheader" />
             <Card Theme="{StaticResource TransparentCard}" Header="TransparentCard" Subheader="Transparent" />
         </StackPanel>
     </Design.PreviewWith>

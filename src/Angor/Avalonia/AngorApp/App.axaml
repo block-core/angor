@@ -105,7 +105,7 @@
                                        RegionColor="#FFF9FCFD" />
 
                 <ColorPaletteResources x:Key="Dark"
-                                       Accent="#ffcbdde1"
+                                       Accent="#85B9C4"
                                        AltHigh="#ff0a0e0f"
                                        AltLow="#ff151d20"
                                        AltMedium="#ff1f2a2e"
@@ -152,7 +152,6 @@
         <StyleInclude Source="UI/Controls/PageContainer.axaml" />
         <StyleInclude Source="UI/Controls/Badge.axaml" />
         <StyleInclude Source="UI/Styles/Cards.axaml" />
-        <StyleInclude Source="UI/Styles/HeaderedContainer.axaml" />
         <StyleInclude Source="UI/Styles/TextBox.axaml" />
         <StyleInclude Source="UI/Styles/OverlayBorder.axaml" />
         <StyleInclude Source="UI/Styles/CalendarDatePicker.axaml" />

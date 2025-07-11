@@ -7,86 +7,84 @@
              xmlns:design="clr-namespace:AngorApp.Design"
              xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
              xmlns:angorApp="clr-namespace:AngorApp"
-             xmlns:models="clr-namespace:AngorApp.Sections.Founder.ManageFunds.Models"
-             xmlns:de="clr-namespace:AngorApp.Sections.Founder.ManageFunds.Models.Design"
              mc:Ignorable="d" d:DesignWidth="1200"
-             x:Class="AngorApp.Sections.Founder.ManageFunds.ManageFundsView" x:DataType="models:IManageFundsViewModel">
+             x:Class="AngorApp.Sections.Founder.ManageFunds.ManageFundsView" x:DataType="mf:IManageFundsViewModel">
 
     <Design.DataContext>
-        <de:ManageFundsViewModelDesign IsUnfunded="False">
-            <de:ManageFundsViewModelDesign.UnfundedProjectViewModel>
+        <mf:ManageFundsViewModelDesign IsUnfunded="False">
+            <mf:ManageFundsViewModelDesign.UnfundedProjectViewModel>
                 <angorApp:UnfundedProjectViewModelDesign />
-            </de:ManageFundsViewModelDesign.UnfundedProjectViewModel>
-            <de:ManageFundsViewModelDesign.TargetAmount>
+            </mf:ManageFundsViewModelDesign.UnfundedProjectViewModel>
+            <mf:ManageFundsViewModelDesign.TargetAmount>
                 <design:DesignTimeAmount Sats="4000000" />
-            </de:ManageFundsViewModelDesign.TargetAmount>
-            <de:ManageFundsViewModelDesign.RaisedAmount>
+            </mf:ManageFundsViewModelDesign.TargetAmount>
+            <mf:ManageFundsViewModelDesign.RaisedAmount>
                 <design:DesignTimeAmount Sats="1000000" />
-            </de:ManageFundsViewModelDesign.RaisedAmount>
-            <de:ManageFundsViewModelDesign.StageClaimViewModel>
-                <de:StageClaimViewModelDesign>
-                    <de:StageClaimViewModelDesign.ClaimableStages>
-                        <generic:List x:TypeArguments="models:IClaimableStage">
-                            <de:ClaimableStageDesign>
-                                <de:ClaimableStageDesign.Transactions>
-                                    <generic:List x:TypeArguments="models:IClaimableTransaction">
-                                        <de:ClaimableTransactionDesign ClaimStatus="Pending" Address="bc1qexampleaddress1">
-                                            <de:ClaimableTransactionDesign.Amount>
+            </mf:ManageFundsViewModelDesign.RaisedAmount>
+            <mf:ManageFundsViewModelDesign.StageClaimViewModel>
+                <mf:StageClaimViewModelDesign>
+                    <mf:StageClaimViewModelDesign.ClaimableStages>
+                        <generic:List x:TypeArguments="mf:IClaimableStage">
+                            <mf:ClaimableStageDesign>
+                                <mf:ClaimableStageDesign.Transactions>
+                                    <generic:List x:TypeArguments="mf:IClaimableTransaction">
+                                        <mf:ClaimableTransactionDesign ClaimStatus="Pending" Address="bc1qexampleaddress1">
+                                            <mf:ClaimableTransactionDesign.Amount>
                                                 <design:DesignTimeAmount Sats="1000000" />
-                                            </de:ClaimableTransactionDesign.Amount>
-                                        </de:ClaimableTransactionDesign>
-                                        <de:ClaimableTransactionDesign ClaimStatus="WithdrawByInvestor" Address="bc1qexampleaddress1">
-                                            <de:ClaimableTransactionDesign.Amount>
+                                            </mf:ClaimableTransactionDesign.Amount>
+                                        </mf:ClaimableTransactionDesign>
+                                        <mf:ClaimableTransactionDesign ClaimStatus="WithdrawByInvestor" Address="bc1qexampleaddress1">
+                                            <mf:ClaimableTransactionDesign.Amount>
                                                 <design:DesignTimeAmount Sats="2000000" />
-                                            </de:ClaimableTransactionDesign.Amount>
-                                        </de:ClaimableTransactionDesign>
-                                        <de:ClaimableTransactionDesign ClaimStatus="SpentByFounder" Address="bc1qexampleaddress1">
-                                            <de:ClaimableTransactionDesign.Amount>
+                                            </mf:ClaimableTransactionDesign.Amount>
+                                        </mf:ClaimableTransactionDesign>
+                                        <mf:ClaimableTransactionDesign ClaimStatus="SpentByFounder" Address="bc1qexampleaddress1">
+                                            <mf:ClaimableTransactionDesign.Amount>
                                                 <design:DesignTimeAmount Sats="300000" />
-                                            </de:ClaimableTransactionDesign.Amount>
-                                        </de:ClaimableTransactionDesign>
-                                        <de:ClaimableTransactionDesign ClaimStatus="Unspent" Address="bc1qexampleaddress1">
-                                            <de:ClaimableTransactionDesign.Amount>
+                                            </mf:ClaimableTransactionDesign.Amount>
+                                        </mf:ClaimableTransactionDesign>
+                                        <mf:ClaimableTransactionDesign ClaimStatus="Unspent" Address="bc1qexampleaddress1">
+                                            <mf:ClaimableTransactionDesign.Amount>
                                                 <design:DesignTimeAmount Sats="300000" />
-                                            </de:ClaimableTransactionDesign.Amount>
-                                        </de:ClaimableTransactionDesign>
-                                        <de:ClaimableTransactionDesign ClaimStatus="Unspent" Address="bc1qexampleaddress1">
-                                            <de:ClaimableTransactionDesign.Amount>
+                                            </mf:ClaimableTransactionDesign.Amount>
+                                        </mf:ClaimableTransactionDesign>
+                                        <mf:ClaimableTransactionDesign ClaimStatus="Unspent" Address="bc1qexampleaddress1">
+                                            <mf:ClaimableTransactionDesign.Amount>
                                                 <design:DesignTimeAmount Sats="3440000" />
-                                            </de:ClaimableTransactionDesign.Amount>
-                                        </de:ClaimableTransactionDesign>
+                                            </mf:ClaimableTransactionDesign.Amount>
+                                        </mf:ClaimableTransactionDesign>
                                     </generic:List>
-                                </de:ClaimableStageDesign.Transactions>
-                            </de:ClaimableStageDesign>
-                            <de:ClaimableStageDesign>
-                            </de:ClaimableStageDesign>
-                            <de:ClaimableStageDesign>
-                            </de:ClaimableStageDesign>
+                                </mf:ClaimableStageDesign.Transactions>
+                            </mf:ClaimableStageDesign>
+                            <mf:ClaimableStageDesign>
+                            </mf:ClaimableStageDesign>
+                            <mf:ClaimableStageDesign>
+                            </mf:ClaimableStageDesign>
                         </generic:List>
-                    </de:StageClaimViewModelDesign.ClaimableStages>
-                </de:StageClaimViewModelDesign>
-            </de:ManageFundsViewModelDesign.StageClaimViewModel>
-            <de:ManageFundsViewModelDesign.ProjectStatisticsViewModel>
-                <de:ProjectStatisticsViewModelDesign TotalStages="4" AvailableTransactions="3" TotalTransactions="6" SpentTransactions="3">
-                    <de:ProjectStatisticsViewModelDesign.Withdrawable>
+                    </mf:StageClaimViewModelDesign.ClaimableStages>
+                </mf:StageClaimViewModelDesign>
+            </mf:ManageFundsViewModelDesign.StageClaimViewModel>
+            <mf:ManageFundsViewModelDesign.ProjectStatisticsViewModel>
+                <mf:ProjectStatisticsViewModelDesign TotalStages="4" AvailableTransactions="3" TotalTransactions="6" SpentTransactions="3">
+                    <mf:ProjectStatisticsViewModelDesign.Withdrawable>
                         <design:DesignTimeAmount Sats="200000000" />
-                    </de:ProjectStatisticsViewModelDesign.Withdrawable>
-                    <de:ProjectStatisticsViewModelDesign.TotalInvested>
+                    </mf:ProjectStatisticsViewModelDesign.Withdrawable>
+                    <mf:ProjectStatisticsViewModelDesign.TotalInvested>
                         <design:DesignTimeAmount Sats="400000000" />
-                    </de:ProjectStatisticsViewModelDesign.TotalInvested>
-                    <de:ProjectStatisticsViewModelDesign.AvailableBalance>
+                    </mf:ProjectStatisticsViewModelDesign.TotalInvested>
+                    <mf:ProjectStatisticsViewModelDesign.AvailableBalance>
                         <design:DesignTimeAmount Sats="200000000" />
-                    </de:ProjectStatisticsViewModelDesign.AvailableBalance>
-                </de:ProjectStatisticsViewModelDesign>
-            </de:ManageFundsViewModelDesign.ProjectStatisticsViewModel>
-            <de:ManageFundsViewModelDesign.ProjectViewModel>
-                <de:ProjectViewModelDesign Name="Sample Project"
+                    </mf:ProjectStatisticsViewModelDesign.AvailableBalance>
+                </mf:ProjectStatisticsViewModelDesign>
+            </mf:ManageFundsViewModelDesign.ProjectStatisticsViewModel>
+            <mf:ManageFundsViewModelDesign.ProjectViewModel>
+                <mf:ProjectViewModelDesign Name="Sample Project"
                                            ShortDescription="Sample project with long description bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah"
                                            Banner="https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"
                                            Avatar="https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg" />
-            </de:ManageFundsViewModelDesign.ProjectViewModel>
+            </mf:ManageFundsViewModelDesign.ProjectViewModel>
 
-        </de:ManageFundsViewModelDesign>
+        </mf:ManageFundsViewModelDesign>
     </Design.DataContext>
 
     <controls:PageContainer>

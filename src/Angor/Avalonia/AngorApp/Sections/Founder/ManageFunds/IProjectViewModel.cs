@@ -1,4 +1,4 @@
-namespace AngorApp.Sections.Founder.ManageFunds.Models;
+namespace AngorApp.Sections.Founder.ManageFunds;
 
 public interface IProjectViewModel
 {

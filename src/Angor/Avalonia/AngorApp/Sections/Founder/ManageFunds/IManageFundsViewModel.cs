@@ -1,6 +1,6 @@
 using Zafiro.UI.Commands;
 
-namespace AngorApp.Sections.Founder.ManageFunds.Models;
+namespace AngorApp.Sections.Founder.ManageFunds;
 
 public interface IManageFundsViewModel
 {

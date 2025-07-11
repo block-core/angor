@@ -4,7 +4,7 @@ using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Misc;
 using Zafiro.UI.Commands;
 
-namespace AngorApp.Sections.Founder.ManageFunds.Models.Design;
+namespace AngorApp.Sections.Founder.ManageFunds;
 
 public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
 {
@@ -23,7 +23,7 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
             .WhereNotNull()
             .Select(txn =>
             {
-                var claimable = txn.Where(transaction => transaction.ClaimStatus == ClaimStatus.Unspent).ToList();
+                var claimable = txn.Where(transaction => transaction.IsClaimable).ToList();
                 return new AmountUI(claimable
                     .Select(transaction => transaction.Amount.Sats)
                     .DefaultIfEmpty()
@@ -34,7 +34,7 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
             .WhereNotNull()
             .Select(txn =>
             {
-                var claimable = txn.Where(transaction => transaction.ClaimStatus == ClaimStatus.Unspent).ToList();
+                var claimable = txn.Where(transaction => transaction.IsClaimable).ToList();
                 return claimable.Count;
             }).ToProperty(this, design => design.ClaimableTransactions);
         
