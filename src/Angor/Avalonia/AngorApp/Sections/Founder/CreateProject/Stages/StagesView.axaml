@@ -55,30 +55,33 @@
             <ItemsControl ItemsSource="{Binding Stages}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="stages:ICreateProjectStage">
-                        <Border Background="#21FFFFFF" BorderThickness="1" Padding="10" CornerRadius="10" Margin="0 0 0 10">
+                        <Border Background="#13FFFFFF" BorderThickness="1" Padding="10" CornerRadius="10" Margin="0 0 0 10">
                             <Grid ColumnDefinitions="Auto * Auto" Margin="10 5" ColumnSpacing="20">
                                 <Grid.Styles>
                                     <Style Selector="Button.Aligned">
                                         <Setter Property="Height" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
                                         <Setter Property="Width" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
                                         <Setter Property="Margin" Value="1" />
-                                        <!-- <Setter Property="VerticalAlignment" Value="Bottom" /> -->
+                                    </Style>
+                                    <Style Selector="HeaderedContainer /template/ ContentPresenter#Header">
+                                        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+                                        <Setter Property="FontWeight" Value="Normal" />
                                     </Style>
                                 </Grid.Styles>
-                                <Button Classes="Aligned" Width="33" Height="33" >
+                                <Button Classes="Aligned" Width="33" Height="33">
                                     <TextBlock VerticalAlignment="Center" Text="{ItemIndex StartFromOne=True}" />
                                 </Button>
                                 <CardGrid Grid.Column="1" MinColumnWidth="140" ColumnSpacing="20" RowSpacing="10">
                                     <CardGrid.ItemsSource>
                                         <collections:ArrayList>
-                                            <HeaderedContainer Header="Percentage">
+                                            <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}" Header="Percentage">
                                                 <TextBox TextAlignment="Center" x:Name="TextBox" Text="{Binding Percent, Mode=TwoWay}">
                                                     <TextBox.InnerRightContent>
                                                         <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock>
                                                     </TextBox.InnerRightContent>
                                                 </TextBox>
                                             </HeaderedContainer>
-                                            <HeaderedContainer Header="Release Date" Grid.Column="2">
+                                            <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}" Header="Release Date">
                                                 <CalendarDatePicker SelectedDate="{Binding ReleaseDate}" />
                                             </HeaderedContainer>
                                         </collections:ArrayList>
@@ -87,7 +90,8 @@
                                 <Button Classes="Aligned" Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="3">
                                     <ui:Icon Source="mdi-window-close" />
                                 </Button>
-                            </Grid></Border>
+                            </Grid>
+                        </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

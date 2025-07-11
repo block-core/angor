@@ -6,9 +6,10 @@
     </Style>
 
     <Styles.Resources>
+
         <ControlTheme x:Key="InlineHeaderedContainer" TargetType="HeaderedContainer">
             <Setter Property="ClipToBounds" Value="False" />
-            <Setter Property="HeaderPadding" Value="0 0 10 0"></Setter>
+            <Setter Property="HeaderPadding" Value="0 0 10 0" />
             <Setter Property="Template">
                 <ControlTemplate>
                     <Panel ClipToBounds="False">
@@ -22,9 +23,8 @@
                                 <ContentPresenter x:Name="Header" Background="{TemplateBinding HeaderBackground}"
                                                   DockPanel.Dock="Left"
                                                   Padding="{TemplateBinding HeaderPadding}"
-                                                  Opacity="0.7"
-                                                  FontWeight="Bold"
                                                   VerticalAlignment="Center"
+                                                  Opacity=""
                                                   IsVisible="{Binding $parent[HeaderedContainer].Header, Converter={x:Static ObjectConverters.IsNotNull}}"
                                                   Content="{TemplateBinding Header}" ContentTemplate="{TemplateBinding HeaderTemplate}" />
                                 <ContentPresenter x:Name="Content"
@@ -36,11 +36,15 @@
                     </Panel>
                 </ControlTemplate>
             </Setter>
+            <Style Selector="^ /template/ ContentPresenter#Header">
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="Opacity" Value="0.7" />
+            </Style>
         </ControlTheme>
 
         <ControlTheme x:Key="{x:Type HeaderedContainer}" TargetType="HeaderedContainer">
             <Setter Property="ClipToBounds" Value="False" />
-            <Setter Property="HeaderPadding" Value="0 0 0 4"></Setter>
+            <Setter Property="HeaderPadding" Value="0 0 0 4" />
             <Setter Property="Template">
                 <ControlTemplate>
                     <Panel ClipToBounds="False">
