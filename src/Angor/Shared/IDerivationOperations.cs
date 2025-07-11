@@ -11,7 +11,7 @@ public interface IDerivationOperations
     string DeriveFounderKey(WalletWords walletWords, int index);
     string DeriveFounderRecoveryKey(WalletWords walletWords, string founderKey);
     uint DeriveUniqueProjectIdentifier(string founderKey);
-    string DeriveAngorKey(string founderKey, string angorRootKey);
+    string DeriveAngorKey(string angorRootKey, string founderKey);
     Script AngorKeyToScript(string angorKey);
     string DeriveInvestorKey(WalletWords walletWords, string founderKey);
     Key DeriveInvestorPrivateKey(WalletWords walletWords, string founderKey);

@@ -1,13 +1,14 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Investor.Dtos;
+using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using AngorApp.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.Sections.Founder.CreateProject.Preview;
 using AngorApp.Sections.Founder.CreateProject.Profile;
 using AngorApp.Sections.Founder.CreateProject.Stages;
 using AngorApp.Sections.Shell;
+using AngorApp.UI.Services;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.UI.Commands;
@@ -18,9 +19,9 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
 {
     private readonly CompositeDisposable disposable = new();
 
-    public CreateProjectViewModel(IInvestmentAppService investmentAppService)
+    public CreateProjectViewModel(IInvestmentAppService investmentAppService, IActiveWallet wallet)
     {
-        Create = ReactiveCommand.Create(() => investmentAppService.CreateProject(ToProject()), this.IsValid()).Enhance().DisposeWith(disposable);
+        Create = ReactiveCommand.Create(() => investmentAppService.CreateProject(wallet.Current.Value.Id.Value, 1000, ToProject()), this.IsValid()).Enhance().DisposeWith(disposable);
         StagesViewModel = new StagesViewModel().DisposeWith(disposable);
         FundingStructureViewModel = new FundingStructureViewModel().DisposeWith(disposable);
         ProfileViewModel = new ProfileViewModel().DisposeWith(disposable);
@@ -34,10 +35,24 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
     {
         return new CreateProjectDto
         {
-            Stages = StagesViewModel.Stages.Select(stage => new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent!.Value / 100)),
-            TargetAmount = new Amount(FundingStructureViewModel.Sats!.Value),
+            //Nostr profile
+            ProjectName = ProfileViewModel.ProjectName,
+            Description = ProfileViewModel.Description,
+            AvatarUri = ProfileViewModel.AvatarUri,
+            BannerUri = ProfileViewModel.BannerUri,
+            WebsiteUri = ProfileViewModel.WebsiteUri,
+            Nip57 = null,//TODO: Map result...
+            Nip05 = null,//TODO: Map result...
+            Lud16 = null,//TODO: Map result...
+            
+            //Project information
+            Sats = FundingStructureViewModel.Sats!.Value,
+            StartDate = FundingStructureViewModel.StartDate,
+            ExpiryDate = FundingStructureViewModel.ExpiryDate,
+            EndDate = FundingStructureViewModel.EndDate,
             PenaltyDays = FundingStructureViewModel.PenaltyDays!.Value,
-            //TODO: Map result...
+            TargetAmount = new Amount(FundingStructureViewModel.Sats!.Value),
+            Stages = StagesViewModel.Stages.Select(stage => new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent!.Value)),
         };
     }
 

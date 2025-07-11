@@ -87,7 +87,7 @@ namespace Angor.Test
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
             projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
             projectInvestmentInfo.ProjectIdentifier =
-                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+                derivationOperations.DeriveAngorKey(angorRootKey, projectInvestmentInfo.FounderKey);
 
             // Create the seeder 1 params
             var seeder1Key = new Key();
@@ -243,7 +243,7 @@ namespace Angor.Test
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
             projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
             projectInvestmentInfo.ProjectIdentifier =
-                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+                derivationOperations.DeriveAngorKey(angorRootKey, projectInvestmentInfo.FounderKey);
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
@@ -296,7 +296,7 @@ namespace Angor.Test
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
             projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
             projectInvestmentInfo.ProjectIdentifier =
-                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+                derivationOperations.DeriveAngorKey(angorRootKey, projectInvestmentInfo.FounderKey);
             projectInvestmentInfo.ProjectSeeders = new ProjectSeeders();
 
             // Create the seeder 1 params
@@ -349,7 +349,7 @@ namespace Angor.Test
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
             projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
             projectInvestmentInfo.ProjectIdentifier =
-                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+                derivationOperations.DeriveAngorKey(angorRootKey, projectInvestmentInfo.FounderKey);
             projectInvestmentInfo.ProjectSeeders = new ProjectSeeders();
 
             // Create the seeder 1 params
@@ -400,7 +400,7 @@ namespace Angor.Test
 
             var funderKey = derivationOperations.DeriveFounderKey(words, 1);
             var funderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, funderKey);
-            var angorKey = derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
+            var angorKey = derivationOperations.DeriveAngorKey(angorRootKey, funderKey);
             var funderPrivateKey = derivationOperations.DeriveFounderPrivateKey(words, 1);
             var funderRecoveryPrivateKey = derivationOperations.DeriveFounderRecoveryPrivateKey(words, funderKey);
 
@@ -492,7 +492,7 @@ namespace Angor.Test
 
                 var funderKey = derivationOperations.DeriveFounderKey(words, 1);
                 var funderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, funderKey);
-                var angorKey = derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
+                var angorKey = derivationOperations.DeriveAngorKey(angorRootKey, funderKey);
                 var funderPrivateKey = derivationOperations.DeriveFounderPrivateKey(words, 1);
                 var funderRecoveryPrivateKey = derivationOperations.DeriveFounderRecoveryPrivateKey(words, funderKey);
 
@@ -608,7 +608,7 @@ namespace Angor.Test
 
                 var funderKey = derivationOperations.DeriveFounderKey(words, 1);
                 var funderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, funderKey);
-                var angorKey = derivationOperations.DeriveAngorKey(funderKey, angorRootKey);
+                var angorKey = derivationOperations.DeriveAngorKey(angorRootKey, funderKey);
                 var funderPrivateKey = derivationOperations.DeriveFounderPrivateKey(words, 1);
                 var funderRecoveryPrivateKey = derivationOperations.DeriveFounderRecoveryPrivateKey(words, funderKey);
 
@@ -723,7 +723,7 @@ namespace Angor.Test
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
             projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
             projectInvestmentInfo.ProjectIdentifier =
-                derivationOperations.DeriveAngorKey(projectInvestmentInfo.FounderKey, angorRootKey);
+                derivationOperations.DeriveAngorKey(angorRootKey, projectInvestmentInfo.FounderKey);
 
             // Create the seeder 1 params
             var seeder11Key = new Key();
