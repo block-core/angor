@@ -46,7 +46,7 @@
                     <profile:ProfileView DataContext="{Binding ProfileViewModel}" />
                     <fundingStructure:FundingStructure DataContext="{Binding FundingStructureViewModel}" />
                     <stages:StagesView DataContext="{Binding StagesViewModel}" />
-                    <Button HorizontalAlignment="Center" Content="Create Project" Command="{Binding Create}" />
+                    <ReactiveButton  HorizontalAlignment="Center" Content="Create Project" Command="{Binding Create}" />
                 </StackPanel>
             </ScrollViewer>
         </Grid>

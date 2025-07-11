@@ -15,7 +15,7 @@ public class NetworkStorage : INetworkStorage
                 {
                     Name = "test",
                     IsPrimary = true,
-                    Url = "https://test.indexer.angor.io",
+                    Url = "https://signet.angor.online",
                 }
             },
             Relays = new List<SettingsUrl>()

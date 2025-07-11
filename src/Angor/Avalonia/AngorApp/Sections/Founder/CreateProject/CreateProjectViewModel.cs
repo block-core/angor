@@ -8,6 +8,7 @@ using AngorApp.Sections.Founder.CreateProject.Preview;
 using AngorApp.Sections.Founder.CreateProject.Profile;
 using AngorApp.Sections.Founder.CreateProject.Stages;
 using AngorApp.Sections.Shell;
+using AngorApp.UI.Services;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.UI.Commands;
@@ -18,9 +19,9 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
 {
     private readonly CompositeDisposable disposable = new();
 
-    public CreateProjectViewModel(IInvestmentAppService investmentAppService, IWallet wallet)
+    public CreateProjectViewModel(IInvestmentAppService investmentAppService, IActiveWallet wallet)
     {
-        Create = ReactiveCommand.Create(() => investmentAppService.CreateProject(wallet.Id.Value, 1000, ToProject()), this.IsValid()).Enhance().DisposeWith(disposable);
+        Create = ReactiveCommand.Create(() => investmentAppService.CreateProject(wallet.Current.Value.Id.Value, 1000, ToProject()), this.IsValid()).Enhance().DisposeWith(disposable);
         StagesViewModel = new StagesViewModel().DisposeWith(disposable);
         FundingStructureViewModel = new FundingStructureViewModel().DisposeWith(disposable);
         ProfileViewModel = new ProfileViewModel().DisposeWith(disposable);
@@ -51,7 +52,7 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
             EndDate = FundingStructureViewModel.EndDate,
             PenaltyDays = FundingStructureViewModel.PenaltyDays!.Value,
             TargetAmount = new Amount(FundingStructureViewModel.Sats!.Value),
-            Stages = StagesViewModel.Stages.Select(stage => new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent!.Value / 100)),
+            Stages = StagesViewModel.Stages.Select(stage => new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent!.Value)),
         };
     }
 
