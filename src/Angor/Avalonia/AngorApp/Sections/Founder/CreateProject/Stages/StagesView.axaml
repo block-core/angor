@@ -2,10 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:createProject="clr-namespace:AngorApp.Sections.Founder.CreateProject"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
-             mc:Ignorable="d" d:DesignWidth="600"
+             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
+             mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.CreateProject.Stages.StagesView"
              x:DataType="stages:IStagesViewModel">
 
@@ -55,32 +55,39 @@
             <ItemsControl ItemsSource="{Binding Stages}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="stages:ICreateProjectStage">
-                        <Grid ColumnDefinitions="Auto * * Auto" Margin="0 5" ColumnSpacing="20">
-                            <Grid.Styles>
-                                <Style Selector="Button.Aligned">
-                                    <Setter Property="Height" Value="33" />
-                                    <Setter Property="Width" Value="33" />
-                                    <Setter Property="Margin" Value="1" />
-                                    <Setter Property="VerticalAlignment" Value="Bottom" />
-                                </Style>
-                            </Grid.Styles>
-                            <Button Classes="Aligned">
-                                <TextBlock Text="{ItemIndex StartFromOne=True}" />
-                            </Button>
-                            <HeaderedContainer Grid.Column="1" Header="Percentage">
-                                <TextBox TextAlignment="Center" x:Name="TextBox" Text="{Binding Percent, Mode=TwoWay}">
-                                    <TextBox.InnerRightContent>
-                                        <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock>
-                                    </TextBox.InnerRightContent>
-                                </TextBox>
-                            </HeaderedContainer>
-                            <HeaderedContainer Header="Release Date" Grid.Column="2">
-                                <CalendarDatePicker SelectedDate="{Binding ReleaseDate}" />
-                            </HeaderedContainer>
-                            <Button Classes="Aligned" Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="3">
-                                <ui:Icon Source="mdi-window-close" />
-                            </Button>
-                        </Grid>
+                        <Border Background="#21FFFFFF" BorderThickness="1" Padding="10" CornerRadius="10" Margin="0 0 0 10">
+                            <Grid ColumnDefinitions="Auto * Auto" Margin="10 5" ColumnSpacing="20">
+                                <Grid.Styles>
+                                    <Style Selector="Button.Aligned">
+                                        <Setter Property="Height" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
+                                        <Setter Property="Width" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
+                                        <Setter Property="Margin" Value="1" />
+                                        <!-- <Setter Property="VerticalAlignment" Value="Bottom" /> -->
+                                    </Style>
+                                </Grid.Styles>
+                                <Button Classes="Aligned" Width="33" Height="33" >
+                                    <TextBlock VerticalAlignment="Center" Text="{ItemIndex StartFromOne=True}" />
+                                </Button>
+                                <CardGrid Grid.Column="1" MinColumnWidth="140" ColumnSpacing="20" RowSpacing="10">
+                                    <CardGrid.ItemsSource>
+                                        <collections:ArrayList>
+                                            <HeaderedContainer Header="Percentage">
+                                                <TextBox TextAlignment="Center" x:Name="TextBox" Text="{Binding Percent, Mode=TwoWay}">
+                                                    <TextBox.InnerRightContent>
+                                                        <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock>
+                                                    </TextBox.InnerRightContent>
+                                                </TextBox>
+                                            </HeaderedContainer>
+                                            <HeaderedContainer Header="Release Date" Grid.Column="2">
+                                                <CalendarDatePicker SelectedDate="{Binding ReleaseDate}" />
+                                            </HeaderedContainer>
+                                        </collections:ArrayList>
+                                    </CardGrid.ItemsSource>
+                                </CardGrid>
+                                <Button Classes="Aligned" Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="3">
+                                    <ui:Icon Source="mdi-window-close" />
+                                </Button>
+                            </Grid></Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
