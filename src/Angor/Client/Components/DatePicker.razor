@@ -1,0 +1,427 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@using System.Globalization
+@inject IJSRuntime JSRuntime
+
+<div class="angor-date-picker-container">
+    <div class="angor-date-picker-input-group">
+        <input type="text" 
+               class="angor-date-picker-input @Class"
+               @bind="displayValue"
+               @bind:event="oninput"
+               @onfocus="OnInputFocus"
+               @onblur="OnInputBlur"
+               @onkeydown="OnKeyDown"
+               placeholder="@Placeholder"
+               disabled="@Disabled"
+               readonly="@ReadOnly"
+               autocomplete="off" />
+        <button type="button" 
+                class="angor-date-picker-button"
+                @onclick="ToggleCalendar"
+                disabled="@Disabled"
+                tabindex="-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+        </button>
+    </div>
+    
+    @if (isCalendarOpen)
+    {
+        <div class="angor-date-picker-calendar-container">
+            <div class="angor-date-picker-calendar">
+                <div class="angor-date-picker-header">
+                    <button type="button" class="angor-date-picker-nav-button" @onclick="PreviousMonth" tabindex="-1">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15,18 9,12 15,6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="angor-date-picker-month-year">
+                        <select class="angor-date-picker-month-select" @bind="currentMonth" @bind:event="onchange">
+                            @for (int i = 1; i <= 12; i++)
+                            {
+                                <option value="@i">@GetEnglishMonthName(i)</option>
+                            }
+                        </select>
+                        <select class="angor-date-picker-year-select" @bind="currentYear" @bind:event="onchange">
+                            @for (int year = DateTime.Now.Year - 50; year <= DateTime.Now.Year + 50; year++)
+                            {
+                                <option value="@year">@year</option>
+                            }
+                        </select>
+                    </div>
+                    <button type="button" class="angor-date-picker-nav-button" @onclick="NextMonth" tabindex="-1">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9,18 15,12 9,6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="angor-date-picker-weekdays">
+                    @foreach (var day in GetWeekdayNames())
+                    {
+                        <div class="angor-date-picker-weekday">@day</div>
+                    }
+                </div>
+                
+                <div class="angor-date-picker-days">
+                    @foreach (var day in GetCalendarDays())
+                    {
+                        <button type="button" 
+                                class="angor-date-picker-day @GetDayClasses(day)"
+                                @onclick="() => SelectDate(day.Date)"
+                                disabled="@(!day.IsCurrentMonth || IsDateDisabled(day.Date))"
+                                tabindex="-1">
+                            @day.Day
+                        </button>
+                    }
+                </div>
+                
+                <div class="angor-date-picker-footer">
+                    <button type="button" class="btn btn-border-success angor-date-picker-today-button" @onclick="SelectToday" tabindex="-1">
+                        Today
+                    </button>
+                    <button type="button" class="btn btn-border-danger angor-date-picker-clear-button" @onclick="ClearDate" tabindex="-1">
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+
+
+@code {
+    [Parameter] public DateTime? Value { get; set; }
+    [Parameter] public EventCallback<DateTime?> ValueChanged { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Select date";
+    [Parameter] public string Class { get; set; } = "create-field-input";
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public bool ReadOnly { get; set; } = false;
+    [Parameter] public string Format { get; set; } = "dd/MM/yyyy";
+    [Parameter] public DateTime? MinDate { get; set; }
+    [Parameter] public DateTime? MaxDate { get; set; }
+    [Parameter] public Func<DateTime, bool> IsDateDisabled { get; set; } = _ => false;
+    
+    // Optional event callbacks
+    [Parameter] public EventCallback OnCalendarOpened { get; set; }
+    [Parameter] public EventCallback OnCalendarClosed { get; set; }
+
+    private bool isCalendarOpen = false;
+    private bool isFocused = false;
+    private int currentMonth;
+    private int currentYear;
+    private string displayValue = "";
+    private DateTime displayDate = DateTime.Today;
+
+    protected override void OnInitialized()
+    {
+        if (Value.HasValue)
+        {
+            displayDate = Value.Value;
+            displayValue = Value.Value.ToString(Format);
+        }
+        
+        currentMonth = displayDate.Month;
+        currentYear = displayDate.Year;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Value.HasValue)
+        {
+            displayDate = Value.Value;
+            displayValue = Value.Value.ToString(Format);
+            currentMonth = displayDate.Month;
+            currentYear = displayDate.Year;
+        }
+        else if (string.IsNullOrEmpty(displayValue))
+        {
+            displayValue = "";
+        }
+    }
+
+    private async Task OnInputFocus()
+    {
+        isFocused = true;
+        await OnCalendarOpened.InvokeAsync();
+    }
+
+    private async Task OnInputBlur()
+    {
+        isFocused = false;
+        await Task.Delay(150); // Small delay to allow clicking on calendar
+        
+        if (!isCalendarOpen)
+        {
+            await ParseInputValue();
+        }
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" || e.Key == "Tab")
+        {
+            await ParseInputValue();
+            await CloseCalendar();
+        }
+        else if (e.Key == "Escape")
+        {
+            await CloseCalendar();
+        }
+        else if (e.Key == "ArrowDown" && !isCalendarOpen)
+        {
+            await OpenCalendar();
+        }
+    }
+
+    private async Task ParseInputValue()
+    {
+        if (string.IsNullOrWhiteSpace(displayValue))
+        {
+            await SetValue(null);
+            return;
+        }
+
+        // Try different date formats
+        var formats = new[]
+        {
+            Format,
+            "yyyy/MM/dd",
+            "yyyy-MM-dd",
+            "dd/MM/yyyy",
+            "dd-MM-yyyy",
+            "MM/dd/yyyy",
+            "MM-dd-yyyy",
+            "yyyy/M/d",
+            "yyyy-M-d",
+            "d/M/yyyy",
+            "d-M-yyyy"
+        };
+
+        foreach (var format in formats)
+        {
+            if (DateTime.TryParseExact(displayValue, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+            {
+                if (IsValidDate(parsedDate))
+                {
+                    await SetValue(parsedDate);
+                    displayValue = parsedDate.ToString(Format);
+                    return;
+                }
+            }
+        }
+
+        // If parsing fails, try general parsing
+        if (DateTime.TryParse(displayValue, out var generalParsedDate))
+        {
+            if (IsValidDate(generalParsedDate))
+            {
+                await SetValue(generalParsedDate);
+                displayValue = generalParsedDate.ToString(Format);
+                return;
+            }
+        }
+
+        // If all parsing attempts fail, revert to previous value
+        if (Value.HasValue)
+        {
+            displayValue = Value.Value.ToString(Format);
+        }
+        else
+        {
+            displayValue = "";
+        }
+    }
+
+    private bool IsValidDate(DateTime date)
+    {
+        if (MinDate.HasValue && date < MinDate.Value)
+            return false;
+        
+        if (MaxDate.HasValue && date > MaxDate.Value)
+            return false;
+        
+        return !IsDateDisabled(date);
+    }
+
+    private async Task ToggleCalendar()
+    {
+        if (isCalendarOpen)
+        {
+            await CloseCalendar();
+        }
+        else
+        {
+            await OpenCalendar();
+        }
+    }
+
+    private async Task OpenCalendar()
+    {
+        if (Disabled || ReadOnly)
+            return;
+            
+        isCalendarOpen = true;
+        
+        if (Value.HasValue)
+        {
+            displayDate = Value.Value;
+            currentMonth = displayDate.Month;
+            currentYear = displayDate.Year;
+        }
+        
+        await OnCalendarOpened.InvokeAsync();
+        StateHasChanged();
+    }
+
+    private async Task CloseCalendar()
+    {
+        isCalendarOpen = false;
+        await OnCalendarClosed.InvokeAsync();
+        StateHasChanged();
+    }
+
+    private async Task SelectDate(DateTime date)
+    {
+        await SetValue(date);
+        displayValue = date.ToString(Format);
+        await CloseCalendar();
+    }
+
+    private async Task SelectToday()
+    {
+        await SelectDate(DateTime.Today);
+    }
+
+    private async Task ClearDate()
+    {
+        await SetValue(null);
+        displayValue = "";
+        await CloseCalendar();
+    }
+
+    private async Task SetValue(DateTime? newValue)
+    {
+        if (Value != newValue)
+        {
+            Value = newValue;
+            await ValueChanged.InvokeAsync(newValue);
+        }
+    }
+
+    private void PreviousMonth()
+    {
+        if (currentMonth == 1)
+        {
+            currentMonth = 12;
+            currentYear--;
+        }
+        else
+        {
+            currentMonth--;
+        }
+        StateHasChanged();
+    }
+
+    private void NextMonth()
+    {
+        if (currentMonth == 12)
+        {
+            currentMonth = 1;
+            currentYear++;
+        }
+        else
+        {
+            currentMonth++;
+        }
+        StateHasChanged();
+    }
+
+    private string[] GetWeekdayNames()
+    {
+        return new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    }
+
+    private string GetEnglishMonthName(int month)
+    {
+        var monthNames = new[]
+        {
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        };
+        return monthNames[month - 1];
+    }
+
+    private IEnumerable<CalendarDay> GetCalendarDays()
+    {
+        var firstDayOfMonth = new DateTime(currentYear, currentMonth, 1);
+        var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+        
+        // Always use Sunday as the first day of the week (English standard)
+        var startDate = firstDayOfMonth;
+        while (startDate.DayOfWeek != DayOfWeek.Sunday)
+        {
+            startDate = startDate.AddDays(-1);
+        }
+        
+        var endDate = lastDayOfMonth;
+        while (endDate.DayOfWeek != DayOfWeek.Saturday)
+        {
+            endDate = endDate.AddDays(1);
+        }
+        
+        var days = new List<CalendarDay>();
+        var currentDate = startDate;
+        
+        while (currentDate <= endDate)
+        {
+            days.Add(new CalendarDay
+            {
+                Date = currentDate,
+                Day = currentDate.Day,
+                IsCurrentMonth = currentDate.Month == currentMonth,
+                IsToday = currentDate.Date == DateTime.Today,
+                IsSelected = Value.HasValue && currentDate.Date == Value.Value.Date
+            });
+            
+            currentDate = currentDate.AddDays(1);
+        }
+        
+        return days;
+    }
+
+    private string GetDayClasses(CalendarDay day)
+    {
+        var classes = new List<string>();
+        
+        if (!day.IsCurrentMonth)
+            classes.Add("angor-date-picker-day-other-month");
+        
+        if (day.IsToday)
+            classes.Add("angor-date-picker-day-today");
+        
+        if (day.IsSelected)
+            classes.Add("angor-date-picker-day-selected");
+        
+        if (IsDateDisabled(day.Date))
+            classes.Add("angor-date-picker-day-disabled");
+        
+        return string.Join(" ", classes);
+    }
+
+    private class CalendarDay
+    {
+        public DateTime Date { get; set; }
+        public int Day { get; set; }
+        public bool IsCurrentMonth { get; set; }
+        public bool IsToday { get; set; }
+        public bool IsSelected { get; set; }
+    }
+}
+
