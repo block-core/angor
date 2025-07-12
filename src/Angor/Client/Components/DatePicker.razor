@@ -94,8 +94,6 @@
     }
 </div>
 
-
-
 @code {
     [Parameter] public DateTime? Value { get; set; }
     [Parameter] public EventCallback<DateTime?> ValueChanged { get; set; }
@@ -119,6 +117,9 @@
     private string displayValue = "";
     private DateTime displayDate = DateTime.Today;
 
+    private static readonly List<DatePicker> _openPickers = new();
+    private bool _isRegistered = false;
+
     protected override void OnInitialized()
     {
         if (Value.HasValue)
@@ -129,6 +130,32 @@
         
         currentMonth = displayDate.Month;
         currentYear = displayDate.Year;
+        
+        if (!_isRegistered)
+        {
+            _openPickers.Add(this);
+            _isRegistered = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        _openPickers.Remove(this);
+    }
+
+    private static void CloseOtherPickers(DatePicker currentPicker)
+    {
+        var pickersToClose = _openPickers.Where(p => p != currentPicker && p.isCalendarOpen).ToList();
+        foreach (var picker in pickersToClose)
+        {
+            picker.CloseCalendarInternal();
+        }
+    }
+
+    private void CloseCalendarInternal()
+    {
+        isCalendarOpen = false;
+        InvokeAsync(StateHasChanged);
     }
 
     protected override void OnParametersSet()
@@ -265,8 +292,9 @@
     private async Task OpenCalendar()
     {
         if (Disabled || ReadOnly)
-            return;
-            
+            return;          
+        CloseOtherPickers(this);
+        
         isCalendarOpen = true;
         
         if (Value.HasValue)
