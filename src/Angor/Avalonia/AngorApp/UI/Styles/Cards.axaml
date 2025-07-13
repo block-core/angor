@@ -1,0 +1,194 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI">
+    
+    <Styles.Resources>
+        
+        <SolidColorBrush x:Key="HeaderBrush" Color="{DynamicResource SystemBaseHighColor}" />
+        <SolidColorBrush x:Key="SubheaderBrush" Color="{DynamicResource SystemBaseMediumHighColor}" />
+
+        <ControlTheme x:Key="{x:Type Card}"
+                      TargetType="Card"
+                      BasedOn="{StaticResource {x:Type Card}}">
+            <Setter Property="HeaderStartContentTemplate" Value="{StaticResource RegularIcon}" />
+            <Setter Property="Padding" Value="20 0 20 20" />
+            <Setter Property="HeaderPadding" Value="10" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}"></Setter>
+            <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}"></Setter>
+            <Setter Property="HeaderBackground" Value="{DynamicResource SystemChromeLowColor}"></Setter>
+            <Setter Property="HeaderSpacing" Value="16" />
+        </ControlTheme>
+        
+        <ControlTheme x:Key="RemarkableSubheaderCard"
+                      TargetType="Card"
+                      BasedOn="{StaticResource {x:Type Card}}">
+    
+            <Setter Property="SubheaderTemplate">
+                <Setter.Value>
+                    <DataTemplate DataType="x:Object">
+                        <ContentControl TextElement.FontSize="18"
+                                        TextElement.Foreground="{StaticResource HeaderBrush}"
+                                        Content="{Binding}" />
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="HeaderTemplate">
+                <Setter.Value>
+                    <DataTemplate DataType="x:Object">
+                        <ContentControl TextElement.FontSize="12"
+                                        TextElement.Foreground="{StaticResource SubheaderBrush}"
+                                        Content="{Binding}" />
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </ControlTheme>
+        
+        <ControlTheme x:Key="InfoCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="HeaderStartContentTemplate" Value="{StaticResource BigIcon}" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BoxShadow="{TemplateBinding BoxShadow}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                        <StackPanel
+                            Spacing="10"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Margin="{TemplateBinding Padding}">
+                            <ContentPresenter x:Name="StartContent"
+                                              Content="{TemplateBinding HeaderStartContent}"
+                                              ContentTemplate="{TemplateBinding HeaderStartContentTemplate}" />
+                            <ContentPresenter x:Name="Header" Content="{TemplateBinding Header}"
+                                              ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                              TextElement.Foreground="{StaticResource HeaderBrush}"
+                                              />
+                            <ContentPresenter x:Name="Subheader" Content="{TemplateBinding Subheader}"
+                                              ContentTemplate="{TemplateBinding SubheaderTemplate}" />
+                            <ContentPresenter x:Name="Content" Content="{TemplateBinding Content}"
+                                              IsVisible="{Binding $parent[Card].Content, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            <ContentPresenter x:Name="EndContent" Content="{TemplateBinding HeaderEndContent}"
+                                              IsVisible="{Binding $parent[Card].HeaderEndContent, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                              ContentTemplate="{TemplateBinding HeaderEndContentTemplate}" />
+                        </StackPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+
+            <!-- Default shadow -->
+            <Style Selector="^ /template/ Border#Root">
+                <Setter Property="BoxShadow" Value="0 2 8 0 #19000000" />
+            </Style>
+
+            <!-- Hover effects -->
+            <Style Selector="^:pointerover /template/ Border#Root">
+                <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightBaseMediumLowBrush}" />
+                <Setter Property="BoxShadow" Value="0 4 12 0 #26000000" />
+            </Style>
+
+            <!-- Pressed effect -->
+            <Style Selector="^:pressed /template/ Border#Root">
+                <Setter Property="BoxShadow" Value="0 1 4 0 #0D000000" />
+            </Style>
+            
+        </ControlTheme>
+
+        <ControlTheme x:Key="BigCard" TargetType="Card" BasedOn="{StaticResource InfoCard}">
+            <Setter Property="HeaderStartContentTemplate" Value="{StaticResource HugeIcon}" />
+            <Setter Property="HeaderTemplate">
+                <Setter.Value>
+                    <DataTemplate DataType="x:Object">
+                        <ContentControl TextElement.FontSize="30"
+                                        TextElement.Foreground="{StaticResource HeaderBrush}"
+                                        TextBlock.TextAlignment="Center" Content="{Binding}" />
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="SubheaderTemplate">
+                <Setter.Value>
+                    <DataTemplate DataType="x:Object">
+                        <ContentControl TextElement.FontSize="20"
+                                        TextElement.Foreground="{StaticResource SubheaderBrush}"
+                                        TextBlock.TextAlignment="Center" Content="{Binding}" />
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </ControlTheme>
+
+        <ControlTheme x:Key="SmallCard" TargetType="Card" BasedOn="{StaticResource InfoCard}">
+            <Setter Property="HeaderTemplate">
+                <Setter.Value>
+                    <DataTemplate DataType="x:Object">
+                        <ContentControl TextElement.FontSize="20"
+                                        TextElement.Foreground="{StaticResource HeaderBrush}"
+                                        TextBlock.TextAlignment="Center" Content="{Binding}" />
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="SubheaderTemplate">
+                <Setter.Value>
+                    <DataTemplate DataType="x:Object">
+                        <ContentControl TextElement.FontSize="14"
+                                        TextElement.Foreground="{StaticResource SubheaderBrush}"
+                                        TextBlock.TextAlignment="Center" Content="{Binding}" />
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </ControlTheme>
+    </Styles.Resources>
+
+    <Design.PreviewWith>
+        <StackPanel Width="500">
+            <Card Header="Card" Subheader="Subheader">
+                <Card.Content>
+                    <TextBlock>This is the content</TextBlock>
+                </Card.Content>
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="fa-wallet" />
+                </Card.HeaderStartContent>
+            </Card>
+            <Card Header="Card no content" Subheader="Subheader">
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="fa-wallet" />
+                </Card.HeaderStartContent>
+            </Card>
+            <Card Theme="{StaticResource InfoCard}" Header="InfoCard" Subheader="Subheader">
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="fa-wallet" />
+                </Card.HeaderStartContent>
+            </Card>
+            <Card Header="Big card" Theme="{StaticResource BigCard}" Subheader="Subheader">
+                <Card.Content>
+                    <TextBlock>This is the content</TextBlock>
+                </Card.Content>
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="fa-wallet" />
+                </Card.HeaderStartContent>
+            </Card>
+            <Card Header="Small card" Theme="{StaticResource SmallCard}" Subheader="Subheader">
+                <Card.Content>
+                    <TextBlock>This is the content</TextBlock>
+                </Card.Content>
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="fa-wallet" />
+                </Card.HeaderStartContent>
+            </Card>
+            <Card Header="Small card" Theme="{StaticResource SmallCard}" Subheader="Subheader">
+                <Card.Content>
+                    <TextBlock TextWrapping="Wrap">Lorem Ipsum es simplemente el texto de relleno de las imprentas y archivos de texto. Lorem Ipsum ha sido el texto de relleno estándar de las industrias desde el año 1500, cuando un impresor (N. del T. persona que se dedica a la imprenta) desconocido usó una galería de textos y los mezcló de tal manera que logró hacer un libro de textos especimen. No sólo sobrevivió 500 años, sino que tambien ingresó como texto de relleno en documentos electrónicos, quedando esencialmente igual al original. Fue popularizado en los 60s con la creación de las hojas "Letraset", las cuales contenian pasajes de Lorem Ipsum, y más recientemente con software de autoedición, como por ejemplo Aldus PageMaker, el cual incluye versiones de Lorem Ipsum.</TextBlock>
+                </Card.Content>
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="fa-wallet" />
+                </Card.HeaderStartContent>
+            </Card>
+            <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="RemarkableSubheaderCard" Subheader="Subheader" />
+            <Card Theme="{StaticResource TransparentCard}" Header="TransparentCard" Subheader="Transparent" />
+        </StackPanel>
+    </Design.PreviewWith>
+</Styles>

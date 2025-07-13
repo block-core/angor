@@ -11,4 +11,5 @@ public interface IWalletViewModel
     public ReactiveCommand<Unit, ResultViewModel<string>> GetReceiveAddress { get; }
     public ResultViewModel<string> ReceiveAddressResult { get; }
     public IEnumerable<IdentityContainer<ITransactionViewModel>> History { get; }
+    public string Title { get; set; }
 }

@@ -35,7 +35,7 @@
             </div>
             <div class="header-actions">
                 <div class="tooltip-container" data-bs-toggle="tooltip" title="@GetCreateButtonTooltip()">
-                    <button class="btn btn-border-success"
+                    <button class="btn btn-border-success btn-sm"
                             @onclick="NavigateToCreateProject"
                             disabled="@(scanningForProjects || (founderProjects.Count >= 14) ? true : null)">
                         @if (scanningForProjects)
@@ -82,7 +82,7 @@
     <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 project-wrapper g-4" data-cy="project-grid">
         @foreach (var project in founderProjects)
         {
-            <FounderProjectItem FounderProject="@project"></FounderProjectItem>
+            <FounderProjectItem FounderProject="@project" CoinTicker="@network.CoinTicker"></FounderProjectItem>
         }
     </div>
 }
@@ -226,7 +226,7 @@
 
         return new FounderProject
             {
-                ProjectInfo = projectInfo ?? new ProjectInfo { NostrPubKey = e.Pubkey },
+                ProjectInfo = projectInfo ?? new ProjectInfo { ProjectIdentifier = founderProjectsToLookup[e.Pubkey].ProjectIdentifier,  NostrPubKey = e.Pubkey },
                 ProjectIndex = projectIndex,
                 CreationTransactionId = trxId,
                 NostrProfileCreated = true,

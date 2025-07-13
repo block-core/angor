@@ -9,8 +9,8 @@ volumes:
     name: btc-db
   mempool_blockchain:
     name: mempool-blockchain
-  electrs_data:
-    name: electrs-data
+  fulcrum_data:
+    name: fulcrum-data
 
 
 services:
@@ -56,7 +56,7 @@ services:
       MEMPOOL_BACKEND: "electrum"
       ESPLORA_REST_API_URL: "http://mempool-electrs:3003"
       ESPLORA_REQUEST_TIMEOUT: "50000"
-      ELECTRUM_HOST: "mempool-electrs"
+      ELECTRUM_HOST: "mempool-fulcrum"
       ELECTRUM_PORT: "5001"
       ELECTRUM_TLS_ENABLED: "false"
       CORE_RPC_HOST: "node"
@@ -132,26 +132,28 @@ services:
       - btcnetwork
       - proxy
 
-  mempool_electrs:
-    container_name: mempool-electrs
-    image: getumbrel/electrs:v0.10.9
+  mempool_fulcrum:
+    container_name: mempool-fulcrum
+    image: cculianu/fulcrum:latest
     user: root
     ports:
-      - 5001:5001
-      - 3003:3003
+      - 5001:5001  # Electrum protocol port
+      - 3003:3003    # HTTP REST API port (if enabled)
     depends_on:
       node:
         condition: service_healthy
-    command: |
-      --network signet
-      --daemon-rpc-addr btc-node:38332
-      --daemon-p2p-addr btc-node:38333
-      --db-dir /electrs
-      --electrum-rpc-addr 0.0.0.0:5001
-      --log-filters INFO  
+    environment:
+      - NETWORK=signet
     volumes:
-      - electrs_data:/electrs
-      - ./electrs.conf:/etc/electrs/config.toml:ro
+      - fulcrum_data:/fulcrum_db
+    command: ["Fulcrum",
+      "--bitcoind", "btc-node:38332",
+      "--rpcuser", "rpcuser",
+      "--rpcpassword", "rpcpassword",
+      "--tcp", "0.0.0.0:5001",
+      "--stats", "0.0.0.0:3003"
+    ]
+    restart: unless-stopped
     networks:
       - btcnetwork
 

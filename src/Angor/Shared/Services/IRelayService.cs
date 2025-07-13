@@ -16,10 +16,14 @@ public interface IRelayService
 
     Task LookupSignaturesDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Action<NostrEvent> onResponseAction);
     
-    Task LookupDirectMessagesForPubKeyAsync(string nostrPubKey, DateTime? since, int? limit, Func<NostrEvent,Task> onResponseAction, string[]? sendersPubkey = null, bool keepActive = false);
+    void LookupDirectMessagesForPubKey(string nostrPubKey, DateTime? since, int? limit,
+        Func<NostrEvent, Task> onResponseAction, string[]? sendersPubkey = null, bool keepActive = false,
+        Action? onEndOfStreamAction = null);
     
     string SendDirectMessagesForPubKeyAsync(string senderNosterPrivateKey, string nostrPubKey, string encryptedMessage,
         Action<NostrOkResponse> onResponseAction);
     
     void DisconnectSubscription(string subscription);
+
+    string PublishNip65ListAsync(string hexPrivateKey);
 }

@@ -18,7 +18,7 @@
                     <ItemsControl ItemsSource="{TemplateBinding SeedWords}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="model:SeedWord">
-                                <Border Margin="8" Background="#f8f9fa" BorderBrush="#dee2e6"
+                                <Border Margin="8" Background="{DynamicResource SystemListLowColor}" BorderBrush="{DynamicResource SystemListMediumColor}"
                                         BorderThickness="1" CornerRadius="10" Padding="10">
                                     <StackPanel Spacing="5">
                                         <TextBlock Classes="SizeSmall Dimmed" Text="{Binding Index}" />

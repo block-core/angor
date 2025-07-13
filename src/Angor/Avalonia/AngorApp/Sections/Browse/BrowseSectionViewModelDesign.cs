@@ -13,7 +13,7 @@ public class BrowseSectionViewModelDesign : IBrowseSectionViewModel
         Projects = SampleData.GetProjects().Select(IProjectViewModel (project) => new ProjectViewModelDesign(project)).ToList();
     }
 
-    public IList<IProjectViewModel> Projects { get; }
+    public IEnumerable<IProjectViewModel> Projects { get; }
     public ReactiveCommand<Unit, Unit> OpenHub { get; set; }
     public string? ProjectId { get; set; }
     public IObservable<bool> IsBusy { get; set; }

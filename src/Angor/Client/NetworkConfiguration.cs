@@ -63,8 +63,8 @@ public class NetworkConfiguration : INetworkConfiguration
             {
                 return new List<SettingsUrl>
                 {
-                    new SettingsUrl { Name = "", Url = "https://test.indexer.angor.io", IsPrimary = true },
-                    new SettingsUrl { Name = "", Url = "https://mempool.thedude.pro", IsPrimary = false },
+                    new SettingsUrl { Name = "", Url = "https://test.indexer.angor.io", IsPrimary = false },
+                    new SettingsUrl { Name = "", Url = "https://signet.angor.online", IsPrimary = true},
                 };
             }
 
@@ -98,6 +98,8 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "", Url = "wss://relay2.angor.io", IsPrimary = true },
                 new SettingsUrl { Name = "", Url = "wss://relay.damus.io", IsPrimary = true },
                 new SettingsUrl { Name = "", Url = "wss://nos.lol", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "wss://nostr-01.yakihonne.com", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "wss://nostr-02.yakihonne.com", IsPrimary = true },
             };
         }
 
@@ -128,8 +130,8 @@ public class NetworkConfiguration : INetworkConfiguration
             {
                 return new List<SettingsUrl>
                 {
-                    new SettingsUrl { Name = "", Url = "https://test.explorer.angor.io", IsPrimary = true },
-                    new SettingsUrl { Name = "", Url = "https://explorer.thedude.pro", IsPrimary = false },
+                    new SettingsUrl { Name = "", Url = "https://test.explorer.angor.io", IsPrimary = false },
+                    new SettingsUrl { Name = "", Url = "https://signet.angor.online", IsPrimary = true },
                 };
             }
 
@@ -150,6 +152,15 @@ public class NetworkConfiguration : INetworkConfiguration
         }
 
         throw new ApplicationException("Network not set");
+    }
+
+    public List<SettingsUrl> GetDiscoveryRelays()
+    {
+        return new List<SettingsUrl>
+        {
+            new SettingsUrl { Name = "wss://purplerelay.com", Url = "wss://purplerelay.com" },
+            new SettingsUrl { Name = "wss://discovery.eu.nostria.app", Url = "wss://discovery.eu.nostria.app" },
+        };
     }
 
     public string GetGenesisBlockHash()

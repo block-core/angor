@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:cp="clr-namespace:AngorApp.Sections.Founder.CreateProject"
+             xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
+             mc:Ignorable="d" d:DesignWidth="400"
+             x:Class="AngorApp.Sections.Founder.CreateProject.Preview.ProjectBadge"
+             x:DataType="cp:ICreateProjectViewModel">
+
+    <Design.DataContext>
+        <cp:CreateProjectViewModelDesign>
+            <cp:CreateProjectViewModelDesign.ProfileViewModel>
+                <profile:ProfileViewModelDesign
+                    AvatarUri="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSskvatKL_o8y2E2Zvaj8KEEYyyEzcJS6frydUCPizL_Txe1j3CqgjVq_WIfhEcM64IL0I&amp;usqp=CAU"
+                    ProjectName="Wasabi Wallet"
+                    Description="Wasabi Wallet is a non-custodial, privacy-focused Bitcoin wallet that uses CoinJoin to enhance user privacy by mixing coins with others, making it difficult to trace transactions. It is designed to help users maintain their financial privacy while managing their Bitcoin holdings." />
+            </cp:CreateProjectViewModelDesign.ProfileViewModel>
+        </cp:CreateProjectViewModelDesign>
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+    </UserControl.Styles>
+
+    <OverlayBorder Padding="0 0 0 20" Theme="{StaticResource CardOverlayBorder}">
+        <Grid RowDefinitions="180 *" RowSpacing="15">
+            <Panel>
+                <av:AdvancedImage
+                    Stretch="UniformToFill"
+                    Source="{Binding ProfileViewModel.BannerUri}" />
+                <Border IsVisible="{Binding ProfileViewModel.BannerUri, Converter={x:Static ObjectConverters.IsNull}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock VerticalAlignment="Center">- Banner -</TextBlock>
+                        <TextBlock FontWeight="Thin" VerticalAlignment="Center">Please, set a banner URL</TextBlock>
+                    </StackPanel>
+                </Border>
+            </Panel>
+            <StackPanel Grid.Row="1" Spacing="15">
+                <StackPanel Spacing="10" Margin="15 0">
+                    <TextBlock Classes="SizeBig" Text="{Binding ProfileViewModel.ProjectName, TargetNullValue=?}" />
+                    <Separator>
+                        <Separator.Background>
+                            <LinearGradientBrush StartPoint="0%,100%" EndPoint="100%,100%">
+                                <GradientStop Color="Transparent" Offset="0" />
+                                <GradientStop Color="{DynamicResource SystemChromeHighColor}" Offset="0.3" />
+                                <GradientStop Color="{DynamicResource SystemChromeHighColor}" Offset="0.8" />
+                                <GradientStop Color="Transparent" Offset="1" />
+                            </LinearGradientBrush>
+                        </Separator.Background>
+                    </Separator>
+                    <TextBlock ToolTip.Tip="{Binding $self.Text}"
+                               MaxLines="6" Text="{Binding ProfileViewModel.Description, TargetNullValue=?}" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+    </OverlayBorder>
+
+</UserControl>

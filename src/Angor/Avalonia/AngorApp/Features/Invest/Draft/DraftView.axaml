@@ -4,13 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:df="clr-namespace:AngorApp.Features.Invest.Draft"
-             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" x:Class="AngorApp.Features.Invest.Draft.DraftView"
-             Height="390"
+             d:DesignWidth="500"
              x:DataType="df:IDraftViewModel">
 
     <Design.DataContext>
-        <df:DraftViewModelDesign />
+        <df:DraftViewModelDesign IsSending="{Return True}" />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -19,15 +18,45 @@
         </Style>
     </UserControl.Styles>
 
-
-    <StackPanel Spacing="8" IsEnabled="{Binding !IsSending^}">
-        <z:Card Header="Select transaction speed:">
-            <controls:FeerateSelector Feerate="{Binding Feerate}"
-                                      Presets="{Binding Presets}" />
-        </z:Card>
-        <z:Loading IsLoading="{Binding IsCalculating^}" LoadingText="Calculating fee. Please wait.">
-            <TextBlock Text="{Binding Fee.SatsString, StringFormat='Total fee: {0}'}" />
-        </z:Loading>
-        <z:Loading LoadingText="Sending transaction..." IsLoading="{Binding IsSending^}" />
+    <StackPanel IsEnabled="{Binding !IsSending^}">
+        <Card Header="Project" Theme="{StaticResource RemarkableSubheaderCard}"
+              Subheader="{Binding Project.Name}" />
+        <Card Header="Amount to offer" Theme="{StaticResource RemarkableSubheaderCard}"
+              Subheader="{Binding  AmountToOffer.DecimalString}" />
+        <UniformGrid Rows="1">
+            <Card Header="Transaction speed">
+                <controls:FeerateSelector Feerate="{Binding Feerate}"
+                                          Presets="{Binding Presets}">
+                </controls:FeerateSelector>
+            </Card>
+            <Card Header="Fees">
+                <Loading Theme="{StaticResource LoadingCover}" IsLoading="{Binding IsCalculatingDraft^}">
+                    <Panel>
+                        <ItemsControl IsVisible="{Binding Feerate, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <ItemsControl.Styles>
+                                <Style Selector="HeaderedContainer /template/ ContentPresenter#Content">
+                                    <Setter Property="TextElement.FontSize" Value="23" />
+                                </Style>
+                                <Style Selector="HeaderedContainer /template/ ContentPresenter#Header">
+                                    <Setter Property="TextElement.FontSize" Value="13" />
+                                    <Setter Property="TextElement.FontWeight" Value="Light" />
+                                </Style>
+                            </ItemsControl.Styles>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel ItemSpacing="10" LineSpacing="10" ItemWidth="200" Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <HeaderedContainer Header="Miner Fee" Content="{Binding Draft.MinerFee.SatsString, FallbackValue= ...}" />
+                            <HeaderedContainer Header="Angor Fee" Content="{Binding Draft.AngorFee.SatsString, FallbackValue=...}" />
+                            <HeaderedContainer Header="Transaction Fee" Content="{Binding Draft.TransactionFee.SatsString, FallbackValue=...}" />
+                        </ItemsControl>
+                        <TextBlock IsVisible="{Binding Feerate, Converter={x:Static ObjectConverters.IsNull}}" 
+                                   TextAlignment="Center" 
+                                   VerticalAlignment="Center">Please, select a transaction speed</TextBlock>
+                    </Panel>
+                </Loading>
+            </Card>
+        </UniformGrid>
     </StackPanel>
 </UserControl>

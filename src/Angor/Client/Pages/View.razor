@@ -67,12 +67,14 @@
                     var metadata = project.Metadata;
                 }
 
-                <div class="card-header p-0 overflow-hidden position-relative banner-container">
-                    <img @onclick="() => profileBannerModal = true" class="card-img-top card-img-top-view animate-slide-down" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                    <img @onclick="() => profileImageModal = true" class="profile-image-view rounded-circle animate-scale-in" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                <div class="card-header p-0 position-relative">
+                    <div class="banner-container-view">
+                        <img class="card-img-top-view animate-fade" loading="lazy" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="Banner Image" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                    </div>
+                    <img class="profile-image-view rounded-circle animate-fade-in" loading="lazy" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                 </div>
 
-                <div class="p-4 content-container animate-fade-up">
+                <div class="p-4 content-container animate-fade-up" style="margin-top: 60px;">
                     <div class="d-flex align-items-center justify-content-between mb-4">
                         <div class="d-flex align-items-center hover-effect">
                             <span class="user-select-none animate-rotate">
@@ -89,58 +91,10 @@
                     </div>
 
 
-                    <p class="card-subtitle animate-fade-in-delayed">@((MarkupString)metadata?.About)</p>
+                    <p class="card-subtitle animate-fade-in-delayed">@((MarkupString)(metadata?.About ?? ""))</p>
                 </div>
 
             </div>
-
-            @if (profileImageModal)
-            {
-                <div class="modal-wrapper">
-                    <div class="modal fade show d-block" tabindex="-1">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content modern-modal">
-                                <div class="modal-header border-0 pb-0">
-                                    <div class="d-flex align-items-center">
-                                        <Icon IconName="view" Height="32" Width="32" class="me-2" />
-                                        <h5 class="modal-title">@metadata?.Name</h5>
-                                    </div>
-                                    <button class="btn-close-custom" @onclick="() => profileImageModal = false">
-                                        <Icon IconName="close-circle" Height="24" Width="24" />
-                                    </button>
-                                </div>
-                                <div class="modal-body modal-body-scroll">
-                                    <img class="animate-scale-in w-100 rounded-3" src="@(metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="Profile Picture" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-
-            @if (profileBannerModal)
-            {
-                <div class="modal-wrapper">
-                    <div class="modal fade show d-block" tabindex="-1">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content modern-modal">
-                                <div class="modal-header border-0 pb-0">
-                                    <div class="d-flex align-items-center">
-                                        <Icon IconName="view" Height="32" Width="32" class="me-2" />
-                                        <h5 class="modal-title">@metadata?.Name</h5>
-                                    </div>
-                                    <button class="btn-close-custom" @onclick="() => profileBannerModal = false">
-                                        <Icon IconName="close-circle" Height="24" Width="24" />
-                                    </button>
-                                </div>
-                                <div class="modal-body modal-body-scroll">
-                                    <img class="animate-slide-down w-100 rounded-3" src="@(metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
 
 
             <div class="card card-body mt-4 animate-fade-in">
@@ -156,7 +110,7 @@
                 </div>
 
                 <div class="row g-4">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="stat-card p-3 rounded-3 border hover-effect h-100">
                             <div class="d-flex align-items-center mb-2">
                                 <Icon IconName="explorer" Height="24" Width="24" Class="me-3" />
@@ -178,6 +132,10 @@
                             <div class="d-flex align-items-center mb-2">
                                 <Icon IconName="view" Height="24" Width="24" Class="me-3" />
                                 <h6 class="mb-0">Project Identifier</h6>
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="Unique identifier for this project">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
                             </div>
                             <div class="d-flex align-items-center mt-2">
                                 <p class="text-break mb-0 text-truncate flex-grow-1" title="@project.ProjectInfo.ProjectIdentifier">
@@ -195,6 +153,10 @@
                             <div class="d-flex align-items-center mb-2">
                                 <Icon IconName="key" Height="24" Width="24" Class="me-3" />
                                 <h6 class="mb-0">Founder Key</h6>
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="Public key of the project founder">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
                             </div>
                             <div class="d-flex align-items-center mt-2">
                                 <p class="text-break mb-0 text-truncate flex-grow-1" title="@project.ProjectInfo.FounderKey">
@@ -207,11 +169,15 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="stat-card p-3 rounded-3 border hover-effect h-100">
                             <div class="d-flex align-items-center mb-2">
                                 <Icon IconName="balance" Height="24" Width="24" Class="me-3" />
                                 <h6 class="mb-0">Target Amount</h6>
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="The minimum amount of @network.CoinTicker this project is trying to raise.">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
                             </div>
                             <div class="d-flex flex-column justify-content-center">
                                 <p class="text-break mb-0 mt-2">
@@ -224,8 +190,50 @@
                     <div class="col-md-6">
                         <div class="stat-card p-3 rounded-3 border hover-effect h-100">
                             <div class="d-flex align-items-center mb-2">
+                                <Icon IconName="date" Height="24" Width="24" Class="me-3" />
+                                <h6 class="mb-0">Investment Start Date</h6>
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="This is when the investment period begins">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-column justify-content-center">
+                                <p class="text-break mb-0 mt-2">
+                                    <b>@project.ProjectInfo.StartDate.FormatDate()</b>
+                                </p>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="stat-card p-3 rounded-3 border hover-effect h-100">
+                            <div class="d-flex align-items-center mb-2">
+                                <Icon IconName="date" Height="24" Width="24" Class="me-3" />
+                                <h6 class="mb-0">Investment End Date</h6>
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="This is when the investment period ends">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
+                            </div>
+                            <div class="d-flex flex-column justify-content-center">
+                                <p class="text-break mb-0 mt-2">
+                                    <b>@project.ProjectInfo.EndDate.FormatDate()</b>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="stat-card p-3 rounded-3 border hover-effect h-100">
+                            <div class="d-flex align-items-center mb-2">
                                 <Icon IconName="calendar" Height="24" Width="24" Class="me-3" />
                                 <h6 class="mb-0">Penalty Duration</h6>
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="Number of days to lock funds for departing investors who wish to withdraw early.">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
                             </div>
                             <div class="d-flex flex-column justify-content-center">
                                 <p class="text-break mb-0 mt-2">
@@ -239,11 +247,15 @@
                         <div class="stat-card p-3 rounded-3 border hover-effect h-100">
                             <div class="d-flex align-items-center mb-2">
                                 <Icon IconName="date" Height="24" Width="24" Class="me-3" />
-                                <h6 class="mb-0">Project Dates</h6>
+                                <h6 class="mb-0">Project Expiry Date</h6>
+                                <div class="info-icon-container ms-auto"
+                                     data-tooltip="Emergency date when all remaining funds can be released in case of project abandonment.">
+                                    <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
+                                </div>
                             </div>
                             <div class="d-flex flex-column justify-content-center">
                                 <p class="text-break mb-0 mt-2">
-                                    <b>@project.ProjectInfo.StartDate.ToString("dd/MM/yyyy") - @project.ProjectInfo.ExpiryDate.ToString("dd/MM/yyyy")</b>
+                                    <b>@project.ProjectInfo.ExpiryDate.FormatDate()</b>
                                 </p>
                             </div>
                         </div>
@@ -269,7 +281,7 @@
                     else
                     {
                         <div class="row g-4">
-                            <div class="col-md-4">
+                            <div class="col-12 col-sm-6 col-lg-4">
                                 <div class="stat-card p-3 rounded-3 border hover-effect h-100 position-relative overflow-hidden">
                                     @if (projectStats.TotalRaised > 0 && project.ProjectInfo.TargetAmount > 0)
                                     {
@@ -297,40 +309,45 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
-                                <a href="@investorExplorerLink" target="_blank" rel="noopener noreferrer">
-                                    <div class="stat-card p-3 rounded-3 border hover-effect h-100">
-                                        <div class="d-flex justify-content-between h-100">
-                                            <div>
-                                                <h6 class="text-muted">Total Investors</h6>
-                                                <h4 class="mb-0">@projectStats.TotalInvestors</h4>
-                                                <button class="btn btn-border-success btn-sm mt-2">
-                                                    Investors <Icon IconName="arrow-right" Height="16" Width="16" />
-                                                </button>
-                                            </div>
-                                            <div class="stat-icon">
-                                                <Icon IconName="users" Height="32" Width="32" />
-                                            </div>
+                            <div class="col-12 col-sm-6 col-lg-4">
+
+                                <div class="stat-card p-3 rounded-3 border hover-effect h-100">
+                                    <div class="d-flex justify-content-between h-100">
+                                        <a href="@investorExplorerLink" target="_blank" rel="noopener noreferrer">
+                                            <h6 class="text-muted">Total Investors</h6>
+                                            <h4 class="mb-0">@projectStats.TotalInvestors</h4>
+                                        </a>
+                                        <div class="stat-icon">
+                                            <Icon IconName="users" Height="32" Width="32" />
                                         </div>
                                     </div>
-                                </a>
+                                </div>
+
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-12 col-sm-6 col-lg-4">
                                 <div class="stat-card p-3 rounded-3 border hover-effect h-100">
                                     <div class="d-flex justify-content-between h-100">
                                         <div>
                                             <h6 class="text-muted">Investment Status</h6>
                                             @{
-                                                var daysLeft = (project.ProjectInfo.StartDate - DateTime.UtcNow).Days;
+                                                var currentDate = DateTime.UtcNow;
+                                                var startDate = project.ProjectInfo.StartDate;
+                                                var investmentEndDate = project.ProjectInfo.EndDate;
                                             }
-                                            @if (daysLeft >= 0)
+                                            @if (currentDate < startDate)
                                             {
+                                                var daysUntilStart = (startDate - currentDate).Days;
+                                                <h4 class="mb-0">@daysUntilStart days until start</h4>
+                                            }
+                                            else if (currentDate >= startDate && currentDate <= investmentEndDate)
+                                            {
+                                                var daysLeft = (investmentEndDate - currentDate).Days;
                                                 <h4 class="mb-0">@daysLeft days left</h4>
                                             }
                                             else
                                             {
-                                                <h4 class="mb-0">Closed</h4>
+                                                <h4 class="mb-0">Funding Closed</h4>
                                             }
                                         </div>
                                         <div class="stat-icon">
@@ -384,7 +401,7 @@
                             <tr>
                                 <td>@(index + 1)</td>
                                 <td>@stage.AmountToRelease %</td>
-                                <td>@stage.ReleaseDate.ToString("dd/MM/yyyy")</td>
+                                <td>@stage.ReleaseDate.FormatDate()</td>
                                 <td>
                                     @if (daysUntilStage == 0)
                                     {
@@ -445,12 +462,20 @@
                             </i>
                             Manage funds
                         </a>
-                        <a href=@($"/signatures/{project.ProjectInfo.ProjectIdentifier}") class="btn btn-border-warning animate-scale">
-                            <i class="me-2">
-                                <Icon IconName="signature" />
-                            </i>
-                            Approve investments
-                        </a>
+                        <div class="position-relative d-inline-block mx-2">
+                            <a href="@($"/signatures/{project.ProjectInfo.ProjectIdentifier}")" class="btn btn-border-warning animate-scale">
+                                <i class="me-2">
+                                    <Icon IconName="signature" />
+                                </i>
+                                Approve investments
+                            </a>
+                            @if (hasPendingMessages)
+                            {
+                                <span class="position-absolute top-0 start-100 translate-middle rounded-circle btn-border-warning" style="width: 16px; height: 16px; z-index: 1; background-color: #7e7537;">
+                                    <span class="visually-hidden">New activity</span>
+                                </span>
+                            }
+                        </div>
 
                         <a href=@($"/unfunded/{project.ProjectInfo.ProjectIdentifier}")
                            class="btn btn-border-danger animate-scale @(CanReleaseUnfundedProject() ? "" : "disabled")">
@@ -595,14 +620,14 @@
                     }
 
                     <div class="action-buttons d-flex flex-wrap justify-content-center mt-4">
-                        <button @onclick="OpenInHUBAsync" class="btn btn-border-success m-2">
+                        <button @onclick="OpenInHUBAsync" class="btn btn-border-success animate-scale">
                             <Icon IconName="link" Class="me-2" />
                             Open in Angor Hub
                         </button>
 
                         @if (invested)
                         {
-                            <button @onclick="OpenMessagingWithFounder" class="btn btn-border-success m-2">
+                            <button @onclick="OpenMessagingWithFounder" class="btn btn-border-success animate-scale">
                                 <Icon IconName="chat" Class="me-2" />
                                 Message Project Founder
                             </button>
@@ -610,7 +635,7 @@
 
                         @if (founder)
                         {
-                            <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning m-2">
+                            <button @onclick="OpenInBrowseProfileAsync" class="btn btn-border-warning animate-scale">
                                 <Icon IconName="edit" Class="me-2" />
                                 Edit project profile
                             </button>
@@ -618,7 +643,7 @@
 
                         @if (invested || founder)
                         {
-                            <button @onclick="ShowNsecAsync" class="btn btn-border-danger m-2">
+                            <button @onclick="ShowNsecAsync" class="btn btn-border-danger animate-scale">
                                 <Icon IconName="shield" Class="me-2" />
                                 View Private Keys (nsec)
                             </button>
@@ -645,8 +670,8 @@
                             <h6 class="mb-3 text-danger"><Icon IconName="shield" Class="me-2" />@(invested ? "Investor" : "Project") NOSTR Private Keys</h6>
                             <label for="NostrNsecSecKey" class="form-label">NOSTR private key (nsec)</label>
                             <div class="input-group mb-3">
-                                <input type="@(showPrivateKeys ? "text" : "password")" id="NostrNsecSecKey" value="@NostrNsecSecKey" 
-                                    class="form-control nsec-box" readonly />
+                                <input type="@(showPrivateKeys ? "text" : "password")" id="NostrNsecSecKey" value="@NostrNsecSecKey"
+                                       class="form-control nsec-box" readonly />
                                 <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
                                     <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" />
                                 </button>
@@ -658,7 +683,7 @@
                             <label for="NostrHexSecKey" class="form-label">NOSTR private key (hex)</label>
                             <div class="input-group">
                                 <input type="@(showPrivateKeys ? "text" : "password")" id="NostrHexSecKey" value="@NostrHexSecKey"
-                                    class="form-control nsec-box" readonly />
+                                       class="form-control nsec-box" readonly />
                                 <button @onclick="() => showPrivateKeys = !showPrivateKeys" class="btn btn-border">
                                     <Icon IconName="@(showPrivateKeys ? "visibility-off" : "visibility")" />
                                 </button>
@@ -683,7 +708,7 @@
                     <a href="@relay" target="_blank" rel="noopener noreferrer">
                         <div class="form-control mt-2 d-flex align-items-center">
                             <i class="me-2">
-                                <Icon IconName="menu_open" />
+                                <Icon IconName="menu_open" Height="24" Width="24" />
                             </i>
                             <p class="card-text ms-2">@relay</p>
                         </div>
@@ -693,7 +718,7 @@
                 @if (founder)
                 {
                     <div class="action-buttons d-flex justify-content-center item-center mt-4">
-                        <button @onclick="RepublishToNostr" class="btn btn-border mt-4" disabled="@isRepublishing">
+                        <button type="button" @onclick="RepublishToNostr" class="btn btn-border btn-sm animate-scale mt-4" disabled="@isRepublishing">
                             @if (isRepublishing)
                             {
                                 <span class="spinner-border spinner-border-sm me-2"></span>
@@ -707,20 +732,19 @@
                         </button>
                     </div>
                 }
-            </div>       
+            </div>
         </div>
     }
 </div>
 
 @if (showMessageModal && invested)
 {
-    <MessageComponent 
-        OtherUserPubkeyHex="@project.ProjectInfo.NostrPubKey"
-        CurrentUserPrvKeyHex="@NostrHexSecKey"
-        MessageTitle="Founder"
-        OnClose="@OnMessageModalClose"
-        OnNsecRequest="@ShowNsecAsync"
-        OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
+    <MessageComponent OtherUserPubkeyHex="@project.ProjectInfo.NostrPubKey"
+                      CurrentUserPrvKeyHex="@NostrHexSecKey"
+                      MessageTitle="Founder"
+                      OnClose="@OnMessageModalClose"
+                      OnNsecRequest="@ShowNsecAsync"
+                      OnNotification="@((message) => notificationComponent.ShowNotificationMessage(message, 2))" />
 }
 
 @code {
@@ -737,11 +761,10 @@
     private string NostrNsecSecKey { get; set; } = string.Empty;
     private string NostrHexSecKey { get; set; } = string.Empty;
 
-    private bool profileImageModal = false;
-    private bool profileBannerModal = false;
     private bool isGeneratingNsec;
     private string errorMessage = string.Empty;
     private bool isRepublishing = false;
+    private bool hasPendingMessages = false;
 
     private string error;
 
@@ -793,15 +816,28 @@
 
         try
         {
-            NostrClients = _NetworkConfiguration.GetDefaultRelayUrls().Select(_ => _.Url.ToString()).ToList();
+            NostrClients = storage.GetSettingsInfo().Relays.Select(_ => _.Url.ToString()).ToList();
 
             project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
             if (project != null)
             {
                 founder = true;
                 NavMenuState.SetActivePage("founder");
+                if (project is FounderProject founderProject)
+                {
+                    await _RelayService.LookupSignaturesDirectMessagesForPubKeyAsync(founderProject.ProjectInfo.NostrPubKey, founderProject.LastRequestForSignaturesTime?.AddSeconds(1), 1,
+                        _ =>
+                        {
+                            if (hasPendingMessages)
+                                return;
+
+                            hasPendingMessages = true;
+                            InvokeAsync(StateHasChanged);
+                        });
+                }
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
+                RefreshProjectProfile();
                 return;
             }
 
@@ -815,6 +851,7 @@
                 myProjectExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/tx/{investorProject.TransactionId}";
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
+                RefreshProjectProfile();
                 return;
             }
 
@@ -823,6 +860,7 @@
             {
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
+                RefreshProjectProfile();
                 StateHasChanged();
                 return;
             }
@@ -896,7 +934,7 @@
         base.OnParametersSet();
 
         // Update navigation state when parameters change
-        if(founder)
+        if (founder)
         {
             NavMenuState.SetActivePage("founder");
         }
@@ -932,10 +970,10 @@
             {
                 var data = await _IndexerService.GetProjectStatsAsync(project.ProjectInfo.ProjectIdentifier);
 
-                if (data != null)
+                if (data.stats != null)
                 {
-                    projectStats.TotalInvestors = (int)data.InvestorCount;
-                    projectStats.TotalRaised = data.AmountInvested;
+                    projectStats.TotalInvestors = (int)data.stats.InvestorCount;
+                    projectStats.TotalRaised = data.stats.AmountInvested;
 
                     // Calculate time left based on the project start and expiry dates
                     if (DateTime.UtcNow < project.ProjectInfo.StartDate)
@@ -965,6 +1003,37 @@
         {
             projectStats.Loading = false;
             StateHasChanged();
+        }
+    }
+
+    private void RefreshProjectProfile()
+    {
+        if (project != null)
+        {
+            bool saved = false;
+            _RelayService.LookupNostrProfileForNPub(
+                (projectNpub, metadata) =>
+                {
+                    if (!saved)
+                    {
+                        saved = true;
+                        project.Metadata = metadata;
+
+                        if (project is FounderProject founderProject)
+                        {
+                            storage.UpdateFounderProject(founderProject);
+                        }
+
+                        if (project is InvestorProject investorProject)
+                        {
+                            storage.UpdateInvestmentProject(investorProject);
+                        }
+
+                        SessionStorage.StoreProject(project);
+                    }
+                },
+                StateHasChanged,
+                project.ProjectInfo.NostrPubKey);
         }
     }
 
@@ -1008,10 +1077,10 @@
                 var nostrKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
                 NostrHexSecKey = Encoders.Hex.EncodeData(nostrKey.ToBytes());
                 NostrNsecSecKey = NostrHelper.ConvertHexToNsec(NostrHexSecKey)!;
-                
+
                 // Execute the callback if provided and keys were generated successfully
                 onSuccessCallback?.Invoke();
-                
+
                 StateHasChanged();
             }
         }
@@ -1092,17 +1161,18 @@
 
         await Js.InvokeVoidAsync("window.open", url, "_blank");
     }
-    
+
     private void OpenMessagingWithFounder()
     {
         if (project?.ProjectInfo != null && project is InvestorProject invProject)
         {
-            Action showMessageAction = () => {
+            Action showMessageAction = () =>
+            {
                 // Set message parameters
-                founderNpub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey) ?? 
+                founderNpub = NostrHelper.ConvertHexToNpub(project.ProjectInfo.NostrPubKey) ??
                               project.ProjectInfo.NostrPubKey;
                 npubValue = NostrHelper.ConvertHexToNpub(invProject.InvestorNPub) ?? invProject.InvestorNPub;
-                
+
                 // Show message component
                 showMessageModal = true;
                 InvokeAsync(StateHasChanged); // Use InvokeAsync for UI updates from callbacks
@@ -1222,4 +1292,4 @@
         }
     }
 }
- 
+

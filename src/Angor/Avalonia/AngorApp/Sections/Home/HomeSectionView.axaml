@@ -3,71 +3,60 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:home="clr-namespace:AngorApp.Sections.Home"
-             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="450"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:a="clr-namespace:AngorApp.UI.Controls"
+             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
+             mc:Ignorable="d" d:DesignWidth="1600" d:DesignHeight="600"
              x:Class="AngorApp.Sections.Home.HomeSectionView" x:DataType="home:IHomeSectionViewModel">
 
     <Design.DataContext>
         <home:HomeSectionViewModelDesign IsWalletSetup="False" />
     </Design.DataContext>
-
+    
     <UserControl.Styles>
-
-        <Style Selector="Svg">
-            <Setter Property="Height" Value="100" />
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
-
-        <Style Selector="Button">
-            <Setter Property="VerticalAlignment" Value="Stretch" />
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-            <Setter Property="TextBlock.FontWeight" Value="Normal" />
-        </Style>
-
     </UserControl.Styles>
 
-    <ScrollViewer>
-        <StackPanel Margin="50" Spacing="40">
-            <controls:Pane>
-                <StackPanel Spacing="10" VerticalAlignment="Center">
-                    <Svg Path="/Assets/angor-icon.svg" />
-                    <TextBlock Foreground="{StaticResource Level4}" TextAlignment="Center" FontSize="{StaticResource FontSizeLarge}" FontWeight="Bold">Welcome to Angor</TextBlock>
-                    <TextBlock Foreground="{StaticResource Level4}" TextAlignment="Center">A P2P funding protocol built on Bitcoin and Nostr</TextBlock>
-                </StackPanel>
-            </controls:Pane>
-            <UniformGrid Margin="-20">
-                <Button Theme="{StaticResource TransparentButton}" Command="{Binding GoToWalletSection}" Margin="20">
-                    <controls:Pane IsVisible="{Binding !IsWalletSetup}" Theme="{StaticResource Card}" Title="Setup Wallet" IsTitleVisible="True">
-                        <TextBlock TextWrapping="Wrap">
-                            <Bold>Create</Bold> or <Bold>recover</Bold> your wallet to get started with Angor
-                        </TextBlock>
-                    </controls:Pane>
-                </Button>
-                <Button Theme="{StaticResource TransparentButton}" Margin="20" Command="{Binding OpenHub}">
-                    <controls:Pane Theme="{StaticResource Card}" Title="Discover Projects" IsTitleVisible="True">
-                        <TextBlock TextWrapping="Wrap">Browse through innovative projects on <Bold>Angor Hub</Bold> and find your next investment</TextBlock>
-                    </controls:Pane>
-                </Button>
-                <Button Theme="{StaticResource TransparentButton}" Margin="20" IsHitTestVisible="False">
-                    <controls:Pane Theme="{StaticResource Card}" Title="Launch or Invest" IsTitleVisible="True">
-                        <TextBlock TextWrapping="Wrap">Start your fundraising journey or invest in promising projects</TextBlock>
-                    </controls:Pane>
-                </Button>
-                <Interaction.Behaviors>
-                    <AdaptiveBehavior>
-                        <AdaptiveClassSetter MinWidth="0" MaxWidth="600" ClassName="Vertical" />
-                        <AdaptiveClassSetter MinWidth="600" MaxWidth="Infinity" ClassName="Horizontal" />
-                    </AdaptiveBehavior>
-                </Interaction.Behaviors>
-                <UniformGrid.Styles>
-                    <Style Selector="UniformGrid.Horizontal">
-                        <Setter Property="Rows" Value="1" />
-                    </Style>
-                    <Style Selector="UniformGrid.Vertical">
-                        <Setter Property="Columns" Value="1" />
-                    </Style>
-                </UniformGrid.Styles>
-            </UniformGrid>
-        </StackPanel>
-    </ScrollViewer>
+    <a:PageContainer>
+        <ScrollViewer>
+            <StackPanel MaxWidth="1200" VerticalAlignment="Center">
+                <Card Height="400"
+                      Theme="{StaticResource BigCard}"
+                      Header="Welcome to Angor"
+                      Subheader="A P2P funding protocol built on Bitcoin and Nostr">
+                    <Card.HeaderStartContent>
+                        <ui:Icon Source="svg:/Assets/angor-icon.svg" />
+                    </Card.HeaderStartContent>
+                </Card>
+                <a:CardGrid>
+                    <a:CardGrid.ItemsSource>
+                        <collections:ArrayList>
+                            <Card Theme="{StaticResource SmallCard}" Header="Create your wallet" Subheader="Create a new wallet or recover your existing one to get started with Angor">
+                                <Card.HeaderStartContent>
+                                    <ui:Icon Source="svg:/Assets/wallet.svg" />
+                                </Card.HeaderStartContent>
+                            </Card>
+                            <Card Theme="{StaticResource SmallCard}" Header="Explore Opportunities" Subheader="Browse through innovative projects and find your next investment">
+                                <Card.HeaderStartContent>
+                                    <ui:Icon Source="svg:/Assets/browse.svg" />
+                                </Card.HeaderStartContent>
+                            </Card>
+                            <Card Theme="{StaticResource SmallCard}" Header="Launch Your Project" Subheader="Start your fundraising journey and launch your project on Angor">
+                                <Card.HeaderStartContent>
+                                    <ui:Icon Source="svg:/Assets/user.svg" />
+                                </Card.HeaderStartContent>
+                            </Card>
+                            <Card Theme="{StaticResource SmallCard}" Header="Invest Grow" Subheader="Invest in promising projects and be part of their success story">
+                                <Card.HeaderStartContent>
+                                    <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                                </Card.HeaderStartContent>
+                            </Card>
+                        </collections:ArrayList>
+                    </a:CardGrid.ItemsSource>
+                </a:CardGrid>
+            </StackPanel></ScrollViewer>
+    </a:PageContainer>
 
 </UserControl>

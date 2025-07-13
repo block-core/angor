@@ -22,7 +22,7 @@ namespace Angor.Shared.Services
 
             var now = DateTime.UtcNow;
 
-            if (now <= project.StartDate) return true;
+            if (now <= project.EndDate) return true;
 
             return false;
         }

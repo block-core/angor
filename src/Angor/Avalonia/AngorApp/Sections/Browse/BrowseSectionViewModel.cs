@@ -1,19 +1,23 @@
+using System.Linq;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Wallet.Application;
 using AngorApp.Features.Invest;
 using AngorApp.Sections.Browse.ProjectLookup;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
+using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.Mixins;
 using Zafiro.Reactive;
+using Zafiro.UI;
 using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Browse;
 
-public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionViewModel
+public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionViewModel, IDisposable
 {
     [Reactive] private string? projectId;
 
-    [ObservableAsProperty] private IList<IProjectViewModel>? projects;
+    [ObservableAsProperty] private IEnumerable<IProjectViewModel>? projects;
 
     public BrowseSectionViewModel(IWalletAppService walletAppService, 
         IProjectAppService projectService, INavigator navigator,
@@ -23,14 +27,14 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
         ProjectLookupViewModel = new ProjectLookupViewModel(projectService, walletAppService, navigator, investWizard, uiServices);
 
         LoadLatestProjects = ReactiveCommand.CreateFromObservable(() => Observable.FromAsync(projectService.Latest)
-            .Flatten()
-            .Select(dto => dto.ToProject())
-            .Select(IProjectViewModel (project) => new ProjectViewModel(walletAppService, project, navigator, uiServices, investWizard))
-            .ToList());
+            .Map(list => list.Select(dto => dto.ToProject()))
+            .Map(list => list.Select(project => new ProjectViewModel(walletAppService, project, navigator, uiServices, investWizard))));
+
+        LoadLatestProjects.HandleErrorsWith(uiServices.NotificationService, "Could not load projects");
 
         OpenHub = ReactiveCommand.CreateFromTask(() =>
             uiServices.LauncherService.LaunchUri(new Uri("https://www.angor.io")));
-        projectsHelper = LoadLatestProjects.ToProperty(this, x => x.Projects);
+        projectsHelper = LoadLatestProjects.Successes().ToProperty(this, x => x.Projects);
         IsLoading = LoadLatestProjects.IsExecuting;
         LoadLatestProjects.Execute().Subscribe();
     }
@@ -39,7 +43,14 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
 
     public IProjectLookupViewModel ProjectLookupViewModel { get; }
 
-    public ReactiveCommand<Unit, IList<IProjectViewModel>> LoadLatestProjects { get; }
+    public ReactiveCommand<Unit, Result<IEnumerable<ProjectViewModel>>> LoadLatestProjects { get; }
 
     public ReactiveCommand<Unit, Unit> OpenHub { get; set; }
+
+    public void Dispose()
+    {
+        projectsHelper.Dispose();
+        LoadLatestProjects.Dispose();
+        OpenHub.Dispose();
+    }
 }

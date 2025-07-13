@@ -8,7 +8,7 @@ public class FounderSectionViewModelDesign : IFounderSectionViewModel
 {
     public IEnhancedCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; } = ReactiveCommand.Create(() => Result.Success(Enumerable.Empty<ProjectDto>())).Enhance();
 
-    public IEnumerable<IFounderProjectViewModel> Projects { get; } = new List<IFounderProjectViewModel>()
+    public IEnumerable<IFounderProjectViewModel> ProjectsList { get; } = new List<IFounderProjectViewModel>()
     {
         new FounderProjectViewModelDesign()
         {
@@ -22,7 +22,7 @@ public class FounderSectionViewModelDesign : IFounderSectionViewModel
         {
             Name = "Second project",
             Picture = new Uri("https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"),
-            Banner = new Uri("https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg"),
+            Banner = new Uri("https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg"),
             ShortDescription = "Sample project",
             TargetAmount = 1234,
         },
@@ -35,4 +35,6 @@ public class FounderSectionViewModelDesign : IFounderSectionViewModel
             TargetAmount = 1234,
         }
     };
+
+    public IEnhancedCommand Create { get; }
 }

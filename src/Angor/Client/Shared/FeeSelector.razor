@@ -3,77 +3,109 @@
 @using Microsoft.Extensions.Logging
 @inject ILogger<FeeSelector> Logger
 
-<div class="info-card fee-details p-3 rounded">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="text-muted">Transaction Fee:</span>
-        <span class="fee-amount fw-bold">
-            @SendFee @CoinTicker
-        </span>
-    </div>
-
-    <div class="fee-adjustment">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <label class="form-label mb-0">Processing Speed</label>
-            <div class="d-flex align-items-center gap-2">
-                @if (!UseCustomFee)
-                {
-                    <small class="text-muted">~@FeeBlockCount blocks</small>
-                }
-                <span class="badge bg-primary">
-                    @FeeRate sats
-                </span>
+<div class="info-card fee-selector-container">
+    <!-- Header Section -->
+    <div class="fee-header">
+        <div class="fee-display">
+            <div class="fee-label">
+                Transaction Fee
+            </div>
+            <div class="fee-amount">
+                <span class="amount">@SendFee.ToString("F8")</span>
+                <span class="currency">@CoinTicker</span>
             </div>
         </div>
 
-        <div class="btn-group w-100 mb-3" role="group">
-            <input type="radio" class="btn-check" name="feeBtn" id="feeHigh" autocomplete="off" checked="@(FeePosition == 1)" @onchange="() => SetFeePosition(1)">
-            <label class="btn @(FeePosition == 1 ? "btn-border-success" : "btn-border") py-2 px-3 m-0" for="feeHigh">
-                <small>Priority</small>
-            </label>
+        <div class="confirmation-info">
+            @if (!UseCustomFee)
+            {
+                <div class="confirmation-badge">
+                    ~@FeeBlockCount blocks
+                </div>
+            }
+            <div class="fee-rate-badge @(UseCustomFee ? "custom" : "")">
+                @{
+                    var rate = UseCustomFee ? ((decimal)CustomFeeRate) / 1000 : ((decimal)FeeRate) / 1000;
+                }
+                @(rate.ToString("0.##")) sat/vB
+            </div>
+        </div>
+    </div>
 
-            <input type="radio" class="btn-check" name="feeBtn" id="feeMed" autocomplete="off" checked="@(FeePosition == 2)" @onchange="() => SetFeePosition(2)">
-            <label class="btn @(FeePosition == 2 ? "btn-border-success" : "btn-border") py-2 px-3 m-0" for="feeMed">
-                <small>Standard</small>
-            </label>
+    <!-- Fee Selection -->
+    <div class="fee-selection">
+        <div class="fee-options @(UseCustomFee ? "disabled" : "")">
+            <div class="fee-option @(FeePosition == 1 && !UseCustomFee ? "selected" : "")"
+                @onclick="() => SetFeePosition(1)">
+                <div class="option-content">
+                    <div class="option-info">
+                        <div class="option-name">Priority</div>
+                        <div class="option-time">~1-3 blocks</div>
+                    </div>
+                </div>
+            </div>
 
-            <input type="radio" class="btn-check" name="feeBtn" id="feeLow" autocomplete="off" checked="@(FeePosition == 3)" @onchange="() => SetFeePosition(3)">
-            <label class="btn @(FeePosition == 3 ? "btn-border-success" : "btn-border") py-2 px-3 m-0" for="feeLow">
-                <small>Economy</small>
-            </label>
+            <div class="fee-option @(FeePosition == 2 && !UseCustomFee ? "selected" : "")"
+                @onclick="() => SetFeePosition(2)">
+                <div class="option-content">
+                    <div class="option-info">
+                        <div class="option-name">Standard</div>
+                        <div class="option-time">~3-6 blocks</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fee-option @(FeePosition == 3 && !UseCustomFee ? "selected" : "")"
+                @onclick="() => SetFeePosition(3)">
+                <div class="option-content">
+                    <div class="option-info">
+                        <div class="option-name">Economy</div>
+                        <div class="option-time">~6+ blocks</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="custom-fee-input">
-            <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" id="useCustomFee" 
-                       checked="@UseCustomFee" 
-                       @onchange="HandleCustomFeeToggle" />
-                <label class="form-check-label" for="useCustomFee">
-                    Use custom fee rate
+        <!-- Custom Fee Toggle -->
+        <div class="custom-fee-toggle">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="customFeeToggle" checked="@UseCustomFee"
+                    @onchange="HandleCustomFeeToggle" />
+                <label class="form-check-label" for="customFeeToggle">
+                    Custom Fee Rate
                 </label>
             </div>
-            
-            @if (UseCustomFee)
-            {
-                <div class="d-flex align-items-center">
-                    <input type="number" 
-                           class="form-control" 
-                           placeholder="Enter fee rate in sats/byte" 
-                           @bind="CustomFeeRate"
-                           @bind:event="oninput" 
-                           @onblur="CustomFeeRateChanged"
-                           min="1" />
-                    <span class="px-1">sats</span>
+        </div>
+
+        <!-- Custom Fee Input -->
+        @if (UseCustomFee)
+        {
+            <div class="custom-fee-input">
+                <div class="input-wrapper">
+                    <input type="number" class="form-control @(CustomFeeRate < RecommendedMinFee ? "warning" : "")"
+                        placeholder="Enter custom fee rate" @bind="CustomFeeRate" @bind:event="oninput"
+                        @onblur="CustomFeeRateChanged" min="1" step="1" />
+                    <span class="input-suffix">sats/byte</span>
                 </div>
+
                 @if (CustomFeeRate < RecommendedMinFee)
                 {
-                    <small class="text-warning mt-1">
-                        <i>Warning: Low fees may cause delayed confirmation</i>
-                    </small>
+                    <div class="validation-warning">
+                         Low fees may cause delayed confirmation
+                    </div>
                 }
-            }
-        </div>
+                else if (CustomFeeRate > 100)
+                {
+                    <div class="validation-info">
+                         High fee rate - transaction will confirm quickly
+                    </div>
+                }
+            </div>
+        }
     </div>
 </div>
+
+
 
 @code {
     [Parameter]
@@ -109,7 +141,7 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        
+
         if (FeePosition < FeeMin || FeePosition > FeeMax)
         {
             FeePosition = 2;
@@ -132,6 +164,7 @@
             }
 
             await OnFeeChanged.InvokeAsync(calc);
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -139,21 +172,25 @@
         }
     }
 
-    private Task SetFeePosition(int position) => 
-        RecalculateFee(new FeeCalculation { Position = position });
+    private Task SetFeePosition(int position)
+    {
+        if (UseCustomFee) return Task.CompletedTask;
+        return RecalculateFee(new FeeCalculation { Position = position });
+    }
 
-    private Task CustomFeeRateChanged() => 
-        RecalculateFee(new FeeCalculation { CustomFee = CustomFeeRate, UseCustomFee = true });
+    private Task CustomFeeRateChanged() =>
+    RecalculateFee(new FeeCalculation { CustomFee = CustomFeeRate, UseCustomFee = true });
 
     private async Task HandleCustomFeeToggle(ChangeEventArgs e)
     {
         if (e.Value is bool isChecked)
         {
             UseCustomFee = isChecked;
-            await RecalculateFee(new FeeCalculation 
-            { 
+
+            await RecalculateFee(new FeeCalculation
+            {
                 UseCustomFee = isChecked,
-                CustomFee = isChecked ? FeeRate : null,
+                CustomFee = isChecked ? CustomFeeRate : null,
                 Position = isChecked ? null : FeePosition
             });
         }

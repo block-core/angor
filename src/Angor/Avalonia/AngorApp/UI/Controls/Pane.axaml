@@ -5,13 +5,13 @@
 
     <Styles.Resources>
         
-        <SolidColorBrush x:Key="PaneBackground" Color="{StaticResource Level2}" />
-        <SolidColorBrush x:Key="ItemPaneBackground" Color="{StaticResource Level2}" />
+        <!-- <SolidColorBrush x:Key="PaneBackground" Color="{StaticResource Level2}" /> -->
+        <!-- <SolidColorBrush x:Key="ItemPaneBackground" Color="{StaticResource Level2}" /> -->
 
         <ControlTheme x:Key="{x:Type c:Pane}" TargetType="c:Pane">
             <Setter Property="HeaderHeight" Value="200" />
             <Setter Property="Padding" Value="25" />
-            <Setter Property="Background" Value="{StaticResource ItemPaneBackground}" />
+            <!-- <Setter Property="Background" Value="{StaticResource ItemPaneBackground}" /> -->
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="TitlePadding" Value="0 0 0 10" />
             <Setter Property="Margin" Value="5, 5, 15, 15" />

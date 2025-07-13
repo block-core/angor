@@ -79,7 +79,7 @@ public class AmountControl : TemplatedControl, IModifiable
     {
         if (property == BitcoinProperty || property == ValueProperty || property == SatoshisProperty)
         {
-            DataValidationErrors.SetError(this, error);
+                DataValidationErrors.SetError(this, error);
         }
 
         base.UpdateDataValidation(property, state, error);
@@ -88,12 +88,10 @@ public class AmountControl : TemplatedControl, IModifiable
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
-        var upDown = e.NameScope.Find<NumericUpDown>("PART_NumericUpDown");
+        numericUpDown = e.NameScope.Find<NumericUpDown>("PART_NumericUpDown");
 
-        Debug.Assert(upDown != null);
-
-        numericUpDown = upDown;
-
+        Debug.Assert(numericUpDown != null);
+        
         Observable.FromEventPattern<NumericUpDownValueChangedEventArgs>(handler => numericUpDown.ValueChanged += handler, handler => numericUpDown.ValueChanged -= handler)
             .ToSignal()
             .Subscribe(modifySubject)

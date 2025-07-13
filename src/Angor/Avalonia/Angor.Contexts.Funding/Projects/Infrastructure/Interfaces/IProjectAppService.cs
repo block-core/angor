@@ -6,7 +6,7 @@ namespace Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 
 public interface IProjectAppService
 {
-    Task<IList<ProjectDto>> Latest();
+    Task<Result<IEnumerable<ProjectDto>>> Latest();
     Task<Maybe<ProjectDto>> FindById(ProjectId projectId);
     Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(Guid walletId);
 }

@@ -3,31 +3,85 @@
              xmlns:misc="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia"
              xmlns:password="clr-namespace:Angor.UI.Model.Implementation.Wallet.Password;assembly=Angor.UI.Model.Implementation"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:f="clr-namespace:AngorApp.UI"
+             xmlns:navigation="clr-namespace:Zafiro.UI.Navigation;assembly=Zafiro.UI"
+             xmlns:n="clr-namespace:Zafiro.Avalonia.Controls.Navigation;assembly=Zafiro.Avalonia"
              x:Class="AngorApp.App"
-             RequestedThemeVariant="Light">
+             RequestedThemeVariant="Dark">
     <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
-    <Application.DataTemplates>
-        <misc:NamingConventionViewLocator />
-        <misc:DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
-        <misc:DataTemplateInclude Source="avares://Zafiro.Avalonia/Controls/Wizards/WizardTemplate.axaml" />
-        <DataTemplate DataType="password:IIcon">
-            <avalonia:Icon FontSize="40" VerticalAlignment="Center" Value="{Binding Key}" />
-        </DataTemplate>
-
-    </Application.DataTemplates>
-
     <Application.Styles>
-        <FluentTheme />
-        
+
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Light"
+                                       Accent="#086c81"
+                                       AltHigh="White"
+                                       AltLow="White"
+                                       AltMedium="White"
+                                       AltMediumHigh="White"
+                                       AltMediumLow="White"
+                                       BaseHigh="#FF022229"
+                                       BaseLow="#FFE6F1F2"
+                                       BaseMedium="#FF93BCC1"
+                                       BaseMediumHigh="#3E686D"
+                                       BaseMediumLow="#FFBAD5D9"
+                                       ChromeAltLow="#FF669CA1"
+                                       ChromeBlackHigh="Black"
+                                       ChromeBlackLow="#FFE6F1F2"
+                                       ChromeBlackMedium="#FF669CA1"
+                                       ChromeBlackMediumLow="#FF93BCC1"
+                                       ChromeDisabledHigh="#FFE6F1F2"
+                                       ChromeDisabledLow="#FF93BCC1"
+                                       ChromeGray="#FFBAD5D9"
+                                       ChromeHigh="#FFE6F1F2"
+                                       ChromeLow="#FFF2F8F9"
+                                       ChromeMedium="#FFEAF2F3"
+                                       ChromeMediumLow="#FFF2F8F9"
+                                       ChromeWhite="White"
+                                       ListLow="#FFEAF2F3"
+                                       ListMedium="#FFE6F1F2"
+                                       RegionColor="#FFF9FCFD" />
+
+                <ColorPaletteResources x:Key="Dark"
+                                       Accent="#ffcbdde1"
+                                       AltHigh="#ff0a0e0f"
+                                       AltLow="#ff151d20"
+                                       AltMedium="#ff1f2a2e"
+                                       AltMediumHigh="#ff293539"
+                                       AltMediumLow="#ff334044"
+                                       BaseHigh="#ffecf4f6"
+                                       BaseLow="#007179"
+                                       BaseMedium="#ff75b5c2"
+                                       BaseMediumHigh="#ff91c9d4"
+                                       BaseMediumLow="#ff3c8c9d"
+                                       ChromeAltLow="#ff91c9d4"
+                                       ChromeBlackHigh="#ff0a0e0f"
+                                       ChromeBlackLow="#ff91c9d4"
+                                       ChromeBlackMedium="#ff1f2a2e"
+                                       ChromeBlackMediumLow="#ff293539"
+                                       ChromeDisabledHigh="#ff046479"
+                                       ChromeDisabledLow="#ff75b5c2"
+                                       ChromeGray="#ff59a1b0"
+                                       ChromeHigh="#08c7e0"
+                                       ChromeLow="#002F37"
+                                       ChromeMedium="#ff023e54"
+                                       ChromeMediumLow="#ff083B46"
+                                       ChromeWhite="#ffe8f2f4"
+                                       ListLow="#ff083B46"
+                                       ListMedium="#ff046479"
+                                       RegionColor="#ff022229" />
+            </FluentTheme.Palettes>
+
+        </FluentTheme>
+
         <StyleInclude Source="UI/Styles/Themes/Light.axaml" />
-        
+
         <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
         <StyleInclude Source="avares://Zafiro.Avalonia.Dialogs/Styles.axaml" />
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
         <StyleInclude Source="UI/Controls/Pane.axaml" />
-        <StyleInclude Source="UI/Controls/Dialog.axaml" />
-        <StyleInclude Source="UI/Controls/TextBox.axaml" />
         <StyleInclude Source="UI/Controls/AmountControl.axaml" />
         <StyleInclude Source="UI/Controls/List.axaml" />
         <StyleInclude Source="UI/Controls/IconLabel.axaml" />
@@ -35,17 +89,93 @@
         <StyleInclude Source="Sections/Wallet/CreateAndRecover/Steps/SeedWordsGeneration/SeedWordList.axaml" />
         <StyleInclude Source="UI/Controls/IconButton.axaml" />
         <StyleInclude Source="UI/Controls/FeerateSelector.axaml" />
+        <StyleInclude Source="UI/Controls/CardGrid.axaml" />
+        <StyleInclude Source="UI/Controls/PageContainer.axaml" />
+        <StyleInclude Source="UI/Controls/Badge.axaml" />
+        <StyleInclude Source="UI/Styles/Cards.axaml" />
+        <StyleInclude Source="UI/Styles/HeaderedContainer.axaml" />
+        <StyleInclude Source="UI/Styles/TextBox.axaml" />
+        <StyleInclude Source="UI/Styles/OverlayBorder.axaml" />
+        <StyleInclude Source="UI/Styles/CalendarDatePicker.axaml" />
     </Application.Styles>
 
     <Application.Resources>
         <ResourceDictionary>
+
+            <IconDataTemplate x:Key="IconDataTemplate" Converter="{x:Static f:AngorIconConverter.Instance}" />
             <ResourceDictionary.MergedDictionaries>
-                <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/ProgressRingStyles.axaml"/>
-                <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/NumberBoxStyles.axaml"/>
+                <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/ProgressRingStyles.axaml" />
+                <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/NumberBoxStyles.axaml" />
                 <MergeResourceInclude Source="UI/Controls/Header.axaml" />
                 <MergeResourceInclude Source="UI/Controls/SectionItem.axaml" />
                 <MergeResourceInclude Source="UI/Resources/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <DataTemplate x:Key="SmallIcon" DataType="x:Object">
+                <ContentPresenter Content="{Binding}">
+                    <ContentPresenter.DataTemplates>
+                        <DataTemplate DataType="ui:Icon">
+                            <Viewbox Height="20" Width="20">
+                                <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
+                            </Viewbox>
+                        </DataTemplate>
+                    </ContentPresenter.DataTemplates>
+                </ContentPresenter>
+            </DataTemplate>
+
+            <DataTemplate x:Key="RegularIcon" DataType="x:Object">
+                <ContentPresenter Content="{Binding}">
+                    <ContentPresenter.DataTemplates>
+                        <DataTemplate DataType="ui:Icon">
+                            <Viewbox Height="30" Width="30">
+                                <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
+                            </Viewbox>
+                        </DataTemplate>
+                    </ContentPresenter.DataTemplates>
+                </ContentPresenter>
+            </DataTemplate>
+
+            <DataTemplate x:Key="BigIcon" DataType="x:Object">
+                <ContentPresenter Content="{Binding}">
+                    <ContentPresenter.DataTemplates>
+                        <DataTemplate DataType="ui:Icon">
+                            <Viewbox Height="40" Width="40">
+                                <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
+                            </Viewbox>
+                        </DataTemplate>
+                    </ContentPresenter.DataTemplates>
+                </ContentPresenter>
+            </DataTemplate>
+
+            <DataTemplate x:Key="HugeIcon" DataType="x:Object">
+                <ContentPresenter Content="{Binding}">
+                    <ContentPresenter.DataTemplates>
+                        <DataTemplate DataType="ui:Icon">
+                            <Viewbox Height="80" Width="80">
+                                <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
+                            </Viewbox>
+                        </DataTemplate>
+                    </ContentPresenter.DataTemplates>
+                </ContentPresenter>
+            </DataTemplate>
+
         </ResourceDictionary>
     </Application.Resources>
+
+    <Application.DataTemplates>
+        <!-- TEMPLATE PRIORITY IS IMPORTANT! -->
+        <!-- The first template that matches the type will be used, so first templates in this list are checked for a match before the others -->
+        <DataTemplate DataType="navigation:ISectionScope">
+            <SectionScopeView x:Name="ScopeView" IsBackButtonVisible="False" SectionScope="{Binding}" />
+        </DataTemplate>
+        <DataTemplate DataType="ui:IIcon">
+            <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
+        </DataTemplate>
+        <NamingConventionViewLocator />
+        <DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
+        <DataTemplate DataType="password:IIcon">
+            <avalonia:Icon FontSize="40" VerticalAlignment="Center" Value="{Binding Key}" />
+        </DataTemplate>
+    </Application.DataTemplates>
+
 </Application>

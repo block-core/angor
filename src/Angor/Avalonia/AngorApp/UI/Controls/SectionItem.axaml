@@ -9,7 +9,7 @@
 
     <ControlTheme TargetType="controls:SectionItem" x:Key="{x:Type controls:SectionItem}">
         <Setter Property="Padding" Value="8" />
-        <Setter Property="Background" Value="{StaticResource Level2}" />
+        <!-- <Setter Property="Background" Value="{StaticResource Level2}" /> -->
         <Setter Property="BorderBrush" Value="DarkGray" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="5" />

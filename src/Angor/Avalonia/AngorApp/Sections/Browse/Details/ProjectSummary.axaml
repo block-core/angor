@@ -8,7 +8,7 @@
              xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:c="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-             mc:Ignorable="d" d:DesignWidth="800"
+             mc:Ignorable="d" d:DesignWidth="1000"
              x:Class="AngorApp.Sections.Browse.Details.ProjectSummary" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
@@ -22,102 +22,89 @@
         </Style>
     </UserControl.Styles>
 
-    <controls:Pane IsHeaderVisible="True" IsTitleVisible="True"
-                   HeaderHeight="300"
-                   Subtitle="{Binding Project.ShortDescription}"
-                   HeaderIcon="{Binding Icon}"
-                   HeaderBackground="{Binding Picture}"
-                   Title="{Binding Project.Name}">
-        <controls:Pane.TitleIcon>
-            <p:Icon Value="fa-solid fa-tarp" />
-        </controls:Pane.TitleIcon>
-        <DockPanel>
-            <DockPanel.Styles>
-                <Style Selector="zc|CircularProgressBar">
-                    <Setter Property="StrokeThickness" Value="16" />
-                    <Setter Property="Foreground" Value="Orange" />
-                    <Setter Property="Margin" Value="30" />
-                    <Setter Property="Background" Value="{StaticResource Level4}" />
-                </Style>
-            </DockPanel.Styles>
-            <UniformGrid Columns="1" Width="300">
-                <Panel>
-                    <zc:CircularProgressBar x:Name="Days" Maximum="{Binding TotalDays}" Value="{Binding CurrentDays}" />
-                    <TextBlock VerticalAlignment="Center" Classes="SizeBig" HorizontalAlignment="Center">
-                        <TextBlock.Text>
-                            <MultiBinding StringFormat="{}{0}/{1} days">
-                                <Binding Path="CurrentDays" />
-                                <Binding Path="TotalDays" />
-                            </MultiBinding>
-                        </TextBlock.Text>
-                    </TextBlock>
-                </Panel>
-                <Panel>
-                    <zc:CircularProgressBar x:Name="Funding" Maximum="{Binding TotalInvestment}" Value="{Binding CurrentInvestment}" />
-                    <TextBlock Text="{Binding #Funding.Proportion, StringFormat={}{0:P0}}" VerticalAlignment="Center" Classes="SizeBig" HorizontalAlignment="Center" />
-                </Panel>
-            </UniformGrid>
-            <StackPanel Spacing="20">
-                <StackPanel Margin="30" Spacing="5">
-                    <HyperlinkButton HorizontalAlignment="Stretch" Padding="0">
-                        <controls:SectionItem Content="View the transaction on the explorer">
-                            <controls:SectionItem.LeftContent>
-                                <PathIcon Data="{StaticResource Explorer}" />
-                            </controls:SectionItem.LeftContent>
-                        </controls:SectionItem>
-                    </HyperlinkButton>
-                    <controls:SectionItem>
-                        <controls:SectionItem.LeftContent>
-                            <p:Icon Value="fa-database" />
-                        </controls:SectionItem.LeftContent>
-                        <controls:SectionItem.Content>
-                            <MultiBinding Converter="{x:Static converters:StringConverters.JoinWithSpaces}">
-                                <Binding>
-                                    <Binding.Source>Target amount:</Binding.Source>
-                                </Binding>
-                                <Binding Path="Project.TargetAmount" StringFormat="{x:Static controls:MiscConverters.BigBtcFormat}" />
-                            </MultiBinding>
-                        </controls:SectionItem.Content>
-                    </controls:SectionItem>
-                    <controls:SectionItem>
-                        <controls:SectionItem.LeftContent>
-                            <p:Icon Value="fa-regular fa-calendar-days" />
-                        </controls:SectionItem.LeftContent>
-                        <controls:SectionItem.Content>
-                            <MultiBinding Converter="{x:Static converters:StringConverters.JoinWithSpaces}">
-                                <Binding>
-                                    <Binding.Source>Penalty duration:</Binding.Source>
-                                </Binding>
-                                <Binding Path="Project.PenaltyDuration" Converter="{x:Static controls:MiscConverters.HumanizeTimeSpan}" />
-                            </MultiBinding>
+    <ItemsControl>
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <WrapPanel ItemWidth="400" />
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <Interaction.Behaviors>
+            <OverflowBehavior />
+        </Interaction.Behaviors>
 
-                        </controls:SectionItem.Content>
-                    </controls:SectionItem>
-                    <controls:SectionItem Content="Project dates: 07/12/2024 - 05/04/2025">
-                        <controls:SectionItem.LeftContent>
-                            <PathIcon Data="{StaticResource DateRange}" />
-                        </controls:SectionItem.LeftContent>
-                    </controls:SectionItem>
-                </StackPanel>
-                <StackPanel Margin="30" Spacing="5">
-                    <controls:SectionItem Content="Total Raised: 0 TBTC">
-                        <controls:SectionItem.LeftContent>
-                            <p:Icon Value="fa-calculator" />
-                        </controls:SectionItem.LeftContent>
-                    </controls:SectionItem>
-                    <controls:SectionItem Content="Total Investors: 0">
-                        <controls:SectionItem.LeftContent>
-                            <p:Icon Value="fa-user" />
-                        </controls:SectionItem.LeftContent>
-                    </controls:SectionItem>
-                    <controls:SectionItem Content="The investing period is over">
-                        <controls:SectionItem.LeftContent>
-                            <p:Icon Value="fa-regular fa-calendar-days" />
-                        </controls:SectionItem.LeftContent>
-                    </controls:SectionItem>
-                </StackPanel>
-            </StackPanel>
-        </DockPanel>
-    </controls:Pane>
+        <Panel Height="200">
+            <zc:CircularProgressBar MaxWidth="200" x:Name="Days" Maximum="{Binding TotalDays}" Value="{Binding CurrentDays}" />
+            <TextBlock VerticalAlignment="Center" Classes="SizeBig" HorizontalAlignment="Center">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0}/{1} days">
+                        <Binding Path="CurrentDays" />
+                        <Binding Path="TotalDays" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+        </Panel>
+        <StackPanel Margin="30" Spacing="5">
+            <HyperlinkButton HorizontalAlignment="Stretch" Padding="0">
+                <controls:SectionItem Content="View the transaction on the explorer">
+                    <controls:SectionItem.LeftContent>
+                        <PathIcon Data="{StaticResource Explorer}" />
+                    </controls:SectionItem.LeftContent>
+                </controls:SectionItem>
+            </HyperlinkButton>
+            <controls:SectionItem>
+                <controls:SectionItem.LeftContent>
+                    <p:Icon Value="fa-database" />
+                </controls:SectionItem.LeftContent>
+                <controls:SectionItem.Content>
+                    <MultiBinding Converter="{x:Static converters:ZafiroStringConverters.JoinWithSpaces}">
+                        <Binding>
+                            <Binding.Source>Target amount:</Binding.Source>
+                        </Binding>
+                        <Binding Path="Project.TargetAmount" StringFormat="{x:Static controls:AngorConverters.BigBtcFormat}" />
+                    </MultiBinding>
+                </controls:SectionItem.Content>
+            </controls:SectionItem>
+            <controls:SectionItem>
+                <controls:SectionItem.LeftContent>
+                    <p:Icon Value="fa-regular fa-calendar-days" />
+                </controls:SectionItem.LeftContent>
+                <controls:SectionItem.Content>
+                    <MultiBinding Converter="{x:Static converters:ZafiroStringConverters.JoinWithSpaces}">
+                        <Binding>
+                            <Binding.Source>Penalty duration:</Binding.Source>
+                        </Binding>
+                        <Binding Path="Project.PenaltyDuration" Converter="{x:Static controls:AngorConverters.HumanizeTimeSpan}" />
+                    </MultiBinding>
+
+                </controls:SectionItem.Content>
+            </controls:SectionItem>
+            <controls:SectionItem Content="Project dates: 07/12/2024 - 05/04/2025">
+                <controls:SectionItem.LeftContent>
+                    <PathIcon Data="{StaticResource DateRange}" />
+                </controls:SectionItem.LeftContent>
+            </controls:SectionItem>
+        </StackPanel>
+        <Panel Height="200">
+            <zc:CircularProgressBar MaxWidth="200" x:Name="Funding" Maximum="{Binding TotalInvestment}" Value="{Binding CurrentInvestment}" />
+            <TextBlock Text="{Binding #Funding.Proportion, StringFormat={}{0:P0}}" VerticalAlignment="Center" Classes="SizeBig" HorizontalAlignment="Center" />
+        </Panel>
+        <StackPanel Margin="30" Spacing="5">
+            <controls:SectionItem Content="Total Raised: 0 TBTC">
+                <controls:SectionItem.LeftContent>
+                    <p:Icon Value="fa-calculator" />
+                </controls:SectionItem.LeftContent>
+            </controls:SectionItem>
+            <controls:SectionItem Content="Total Investors: 0">
+                <controls:SectionItem.LeftContent>
+                    <p:Icon Value="fa-user" />
+                </controls:SectionItem.LeftContent>
+            </controls:SectionItem>
+            <controls:SectionItem Content="The investing period is over">
+                <controls:SectionItem.LeftContent>
+                    <p:Icon Value="fa-regular fa-calendar-days" />
+                </controls:SectionItem.LeftContent>
+            </controls:SectionItem>
+        </StackPanel>
+    </ItemsControl>
 
 </UserControl>

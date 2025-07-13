@@ -7,7 +7,7 @@ namespace AngorApp.Sections.Browse;
 
 public interface IBrowseSectionViewModel
 {
-    public IList<IProjectViewModel> Projects { get; }
+    public IEnumerable<IProjectViewModel> Projects { get; }
     ReactiveCommand<Unit, Unit> OpenHub { get; set; }
     public IProjectLookupViewModel ProjectLookupViewModel { get; }
     IObservable<bool> IsLoading { get; }

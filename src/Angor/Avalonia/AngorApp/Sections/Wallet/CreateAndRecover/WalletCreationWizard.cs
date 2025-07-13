@@ -19,7 +19,7 @@ public class WalletCreationWizard(UI.Services.UIServices uiServices, IWalletBuil
         string encryptionKey = null!;
 
         var wizard = WizardBuilder
-            .StartWith(() => new Steps.CreateWelcome.WelcomeViewModel(), model => ReactiveCommand.Create(() => Result.Success(Unit.Default)).Enhance("Next"), "Create New Wallet")
+            .StartWith(() => new Steps.CreateWelcome.WelcomeViewModel(), model => ReactiveCommand.Create(() => Result.Success(Unit.Default), model.IsValid).Enhance("Next"), "Create New Wallet")
             .Then(_ => new Steps.SeedWordsGeneration.SeedWordsViewModel(walletAppService, uiServices), model => ReactiveCommand.Create(() => Result.Success(model.Words.Value!).Tap(x => seedWords = x), model.IsValid).Enhance("Next"), "Seed Words")
             .Then(seedwords => new Steps.SeedWordsConfirmation.SeedWordsConfirmationViewModel(seedwords), model => ReactiveCommand.Create(() => Result.Success(Unit.Default), model.IsValid).Enhance("Next"), "Confirm Seed Words")
             .Then(_ => new Steps.Passphrase.Create.PassphraseCreateViewModel(), model => ReactiveCommand.Create(() => Result.Success(model.Passphrase).Tap(x => passphrase = x), model.IsValid()).Enhance("Next"), "Passphrase")

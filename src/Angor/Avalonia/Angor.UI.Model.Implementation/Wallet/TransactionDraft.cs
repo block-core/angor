@@ -12,7 +12,7 @@ public class TransactionDraft(WalletId walletId, long amount, string address, Do
     public IWalletAppService WalletAppService { get; } = walletAppService;
     public IAmountUI TotalFee { get; set; } = new AmountUI(fee.Value);
 
-    public Task<Result<TxId>> Submit()
+    public Task<Result<TxId>> Confirm()
     {
         return WalletAppService.SendAmount(WalletId, new Amount(Amount), new Address(Address), feeRate).Map(id => id);
     }
