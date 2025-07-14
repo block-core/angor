@@ -650,6 +650,18 @@ tr[style*="cursor: pointer;"]:hover {
     color: #000!important
 }
 
+.text-success {
+    color: #4CAF50 !important;
+}
+
+.text-warning {
+    color: #fb8c00 !important;
+}
+
+.text-danger {
+    color: rgba(255, 71, 87, 0.8) !important;
+}
+
 .dark g[fill] {
     fill: var(--angor-primary)!important
 }
@@ -5263,7 +5275,7 @@ body.dark .message-item.outgoing .message-bubble {
 }
 
 .create-space-vertical-large > * + * {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 .create-divider {
@@ -5861,4 +5873,71 @@ input.no-native-picker[type="date"]::-moz-calendar-picker-indicator { opacity: 0
     text-align: right;
     font-weight: 600;
     color: #28a745;
+}
+
+@media (max-width: 1000px) {
+  .preset-card-responsive {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    padding: 1rem 0.5rem;
+  }
+  .preset-card-responsive > .d-flex {
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .preset-card-responsive button {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
+
+.progress.rounded-pill {
+    height: 7px;
+    background-color: var(--form-bg, #f8f9fa);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.stage-wizard-icon {
+    width: 46px; height: 46px; 
+    background-color: var(--angor-border-color); 
+    border: 2px solid var(--angor-secondary);
+    transition: all 0.3s ease;
+}
+
+.stage-wizard-icon-success {
+    width: 40px;
+    height: 40px;
+    transition: all 0.3s ease;
+    background-color: var(--angor-secondary);
+}
+
+.stage-wizard-progress-line-bg {
+    top: 20px;
+    left: 40px;
+    right: 40px;
+    height: 2px;
+    background-color: var(--angor-secondary);
+    z-index: 0;
+}
+
+.stage-wizard-progress-line {
+    height: 100%;
+    background-color: #4CAF50 ;
+    transition: width 0.5s ease-in-out;
+    left: 0;
+    top: 0;
+    z-index: 1;
+}
+
+.stage-wizard-num-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 5px;
+}
+.stage-wizard-num-lg {
+    width: 32px;
+    height: 42px;
+    border-radius: 5px;
 }
