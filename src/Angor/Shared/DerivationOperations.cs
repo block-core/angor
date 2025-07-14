@@ -51,7 +51,7 @@ public class DerivationOperations : IDerivationOperations
         {
             var founderKey = DeriveFounderKey(walletWords, i);
             var founderRecoveryKey = DeriveFounderRecoveryKey(walletWords, founderKey);
-            var projectIdentifier = DeriveAngorKey(founderKey, angorTestKey);
+            var projectIdentifier = DeriveAngorKey(angorTestKey, founderKey);
             var nostrPubKey = DeriveNostrPubKey(walletWords, founderKey);
             
             founderKeyCollection.Keys.Add(new FounderKeys
@@ -222,12 +222,8 @@ public class DerivationOperations : IDerivationOperations
 
         var path = $"m/44'/1237'/{upi}'/0/0";
 
-        var task = Task.Run(() => extendedKey.Derive(new KeyPath(path)));
-
-        await Task.WhenAll(task);
-
-        ExtKey extKey =  task.Result;
-
+        var extKey = await Task.Run(() => extendedKey.Derive(new KeyPath(path)));
+        
         return extKey.PrivateKey;
     }
 
@@ -282,7 +278,7 @@ public class DerivationOperations : IDerivationOperations
         return hex;
     }
 
-    public string DeriveAngorKey(string founderKey, string angorRootKey)
+    public string DeriveAngorKey(string angorRootKey, string founderKey)
     {
         Network network = _networkConfiguration.GetNetwork();
 

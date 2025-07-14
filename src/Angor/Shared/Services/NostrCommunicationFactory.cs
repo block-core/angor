@@ -152,6 +152,10 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             .All(x =>
                 _eoseCalledOnSubscriptionClients[subscription].Contains(x.Communicator.Name)) ?? false; 
         
+        response = response | _nostrMultiWebsocketClientDiscovery?.Clients
+            .All(x =>
+                _eoseCalledOnSubscriptionClients[subscription].Contains(x.Communicator.Name)) ?? false; 
+        
         _logger.LogDebug($"Eose on monitored subscription {subscription} received from all clients - {response}");
 
         return response;
@@ -177,6 +181,10 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         _logger.LogDebug($"Checking for all Ok on monitored subscription {eventId}");
         
         bool response = _nostrMultiWebsocketClient?.Clients
+            .All(x =>
+                _okCalledOnSubscriptionClients[eventId].Contains(x.Communicator.Name)) ?? false;
+
+        response = response | _nostrMultiWebsocketClientDiscovery?.Clients
             .All(x =>
                 _okCalledOnSubscriptionClients[eventId].Contains(x.Communicator.Name)) ?? false; 
         

@@ -45,24 +45,24 @@ public static class CompositionRoot
         // Integration services
         services.AddSingleton<ISeedwordsProvider, SeedwordsProvider>();
         
-        RegisterSections(services);
+        RegisterSections(services, logger);
 
         var serviceProvider = services.BuildServiceProvider();
 
         return serviceProvider.GetRequiredService<IMainViewModel>();
     }
 
-    private static void RegisterSections(ServiceCollection services)
+    private static void RegisterSections(ServiceCollection services, Logger logger)
     {
         services.RegisterSections(builder => builder
-            .Add<IHomeSectionViewModel>("Home", new Icon { Source = "svg:/Assets/angor-icon.svg" })
-            .Separator()
-            .Add<IWalletSectionViewModel>("Wallet", new Icon { Source = "svg:/Assets/wallet.svg" })
-            .Add<IBrowseSectionViewModel>("Browse", new Icon { Source = "svg:/Assets/browse.svg" })
-            .Add<IPortfolioSectionViewModel>("Portfolio",  new Icon { Source = "svg:/Assets/portfolio.svg" })
-            .Add<IFounderSectionViewModel>("Founder", new Icon { Source = "svg:/Assets/user.svg" }) 
-            .Command("Angor Hub", provider => ReactiveCommand.CreateFromTask(() => provider.GetRequiredService<ILauncherService>().LaunchUri(new Uri("https://hub.angor.io"))), new Icon { Source = "fa-gear" } , false)
-        );
+                .Add<IHomeSectionViewModel>("Home", new Icon { Source = "svg:/Assets/angor-icon.svg" })
+                .Separator()
+                .Add<IWalletSectionViewModel>("Wallet", new Icon { Source = "svg:/Assets/wallet.svg" })
+                .Add<IBrowseSectionViewModel>("Browse", new Icon { Source = "svg:/Assets/browse.svg" })
+                .Add<IPortfolioSectionViewModel>("Portfolio",  new Icon { Source = "svg:/Assets/portfolio.svg" })
+                .Add<IFounderSectionViewModel>("Founder", new Icon { Source = "svg:/Assets/user.svg" }) 
+                .Command("Angor Hub", provider => ReactiveCommand.CreateFromTask(() => provider.GetRequiredService<ILauncherService>().LaunchUri(new Uri("https://hub.angor.io"))), new Icon { Source = "fa-gear" } , false)
+            , logger);
     }
 
     private static void RegisterWalletServices(ServiceCollection services, Logger logger)

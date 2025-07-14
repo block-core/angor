@@ -62,7 +62,7 @@ namespace Angor.Test
 
                 var founderKey = derivationOperations.DeriveFounderKey(new WalletWords { Words = mnemonic.ToString() }, 1);
                 var projectId = derivationOperations.DeriveUniqueProjectIdentifier(founderKey);
-                var angorKey = derivationOperations.DeriveAngorKey(founderKey, rootKey);
+                var angorKey = derivationOperations.DeriveAngorKey(rootKey, founderKey);
                 var script = derivationOperations.AngorKeyToScript(angorKey);
             }
 
@@ -78,7 +78,7 @@ namespace Angor.Test
                 var founderKey = derivationOperations.DeriveFounderKey(new WalletWords { Words = words }, 1);
                 var founderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(new WalletWords { Words = words }, founderKey);
                 var projectId = derivationOperations.DeriveUniqueProjectIdentifier(founderKey);
-                var angorKey = derivationOperations.DeriveAngorKey(founderKey, rootKey);
+                var angorKey = derivationOperations.DeriveAngorKey(rootKey, founderKey);
                 var script = derivationOperations.AngorKeyToScript(angorKey);
 
             }
@@ -237,7 +237,7 @@ namespace Angor.Test
                 var angorRootKey = CreateAngorRootKey("area frost rapid guitar salon tower bless fly where inmate trouble daughter");
 
                 // Act
-                var result = derivationOperations.DeriveAngorKey(founderKey, angorRootKey);
+                var result = derivationOperations.DeriveAngorKey(angorRootKey, founderKey);
 
                 // Assert
                 result.Should().NotBeNull();
