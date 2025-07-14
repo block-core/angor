@@ -55,14 +55,14 @@ public class WalletAppService(
         return GetTransactions(walletId).Map(txns => txns.Sum(x => x.GetBalance().Sats)).Map(l => new Balance(l));
     }
 
-    public async Task<Result<Fee>> EstimateFee(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate)
+    public async Task<Result<FeeAndSize>> EstimateFeeAndSize(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate)
     {
         try
         {
             var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
             if (sensitiveDataResult.IsFailure)
             {
-                return Result.Failure<Fee>(sensitiveDataResult.Error);
+                return Result.Failure<FeeAndSize>(sensitiveDataResult.Error);
             }
 
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
@@ -73,7 +73,7 @@ public class WalletAppService(
         
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();
             if (string.IsNullOrEmpty(changeAddress))
-                return Result.Failure<Fee>("No change address available");
+                return Result.Failure<FeeAndSize>("No change address available");
 
             var satsPerVirtualKb = feeRate.SatsPerVByte * 1000;
             var sendInfo = new SendInfo
@@ -89,14 +89,14 @@ public class WalletAppService(
             var feeCalculationResult = await CalculateTransactionFee(sendInfo, accountInfo, walletWords, feeRate);
             if (!feeCalculationResult.IsSuccess)
             {
-                return Result.Failure<Fee>("Could not calculate transaction fee: " + feeCalculationResult.Error);
+                return Result.Failure<FeeAndSize>("Could not calculate transaction fee: " + feeCalculationResult.Error);
             }
 
-            return Result.Success(new Fee(feeCalculationResult.Value));
+            return Result.Success(new FeeAndSize(feeCalculationResult.Value.Fee, feeCalculationResult.Value.VirtualSize));
         }
         catch (Exception ex)
         {
-            return Result.Failure<Fee>($"Error estimating fee: {ex.Message}");
+            return Result.Failure<FeeAndSize>($"Error estimating fee: {ex.Message}");
         }
     }
     
@@ -168,7 +168,7 @@ public class WalletAppService(
             var feeCalculationResult = await CalculateTransactionFee(sendInfo, accountInfo, walletWords, feeRate);
             if (feeCalculationResult.IsSuccess)
             {
-                sendInfo.SendFee = feeCalculationResult.Value;
+                sendInfo.SendFee = (decimal)feeCalculationResult.Value.Fee;
             }
             else
             {
@@ -199,7 +199,7 @@ public class WalletAppService(
         return mnemonic.ToString();
     }
 
-    private async Task<Result<long>> CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, WalletWords walletWords, DomainFeeRate feeRate)
+    private Task<Result<(long Fee, long VirtualSize)>> CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, WalletWords walletWords, DomainFeeRate feeRate)
     {
         try
         {
@@ -213,14 +213,14 @@ public class WalletAppService(
             );
             
             var signedTransaction = psbtOperations.SignPsbt(psbt, walletWords);
-            
             var realFeeInSatoshis = signedTransaction.TransactionFee;
+            var virtualSize = (long)signedTransaction.Transaction.GetVirtualSize(0);
 
-            return Result.Success(realFeeInSatoshis);
+            return Task.FromResult(Result.Success((realFeeInSatoshis, virtualSize)));
         }
         catch (Exception ex)
         {
-            return Result.Failure<long>($"Error calculating transaction fee: {ex.Message}");
+            return Task.FromResult(Result.Failure<(long Fee, long VirtualSize)>($"Error calculating transaction fee: {ex.Message}"));
         }
     }
 }

@@ -36,9 +36,9 @@ public class WalletAppServiceDesign : IWalletAppService
         return Result.Failure<Balance>("Not implemented yet");
     }
 
-    public async Task<Result<Fee>> EstimateFee(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate)
+    public async Task<Result<FeeAndSize>> EstimateFeeAndSize(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate)
     {
-        return new Fee(12);
+        return new FeeAndSize(12, 0);
     }
 
     public async Task<Result<Address>> GetNextReceiveAddress(WalletId id)

@@ -68,13 +68,13 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
 
     private Task<Result<ITransactionDraft>> CreateDraftTo(long destinationAmount, string destinationBitcoinAddress, long feeRate)
     {
-        var feeResult = walletAppService.EstimateFee(walletId, new Amount(destinationAmount), new Address(destinationBitcoinAddress), new DomainFeeRate(feeRate));
+        var feeResult = walletAppService.EstimateFeeAndSize(walletId, new Amount(destinationAmount), new Address(destinationBitcoinAddress), new DomainFeeRate(feeRate));
 
         return feeResult.Map(fee => (ITransactionDraft)new Angor.UI.Model.Implementation.Wallet.TransactionDraft(
             walletId: walletId,
             amount: destinationAmount,
             address: destinationBitcoinAddress,
-            fee: fee,
+            feeAndSize: fee,
             feeRate: new DomainFeeRate(feeRate),
             walletAppService: walletAppService));
     }
