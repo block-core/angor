@@ -85,8 +85,10 @@ public class WalletAppService(
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
 
-            var estimatedFee = walletOperations.CalculateTransactionFee(sendInfo, accountInfo, feeRate.SatsPerVByte);
-            return Result.Success(new Fee((long)(estimatedFee * 100_000_000))); // Conversion to sats
+            // TODO: Fix the fee estimation logic
+            //var estimatedFee = walletOperations.CalculateTransactionFee(sendInfo, accountInfo, feeRate.SatsPerVByte);
+            //return Result.Success(new Fee((long)(estimatedFee * 100_000_000))); // Conversion to sats
+            return Result.Failure<Fee>("fix logic for fee estimation");
         }
         catch (Exception ex)
         {
@@ -155,8 +157,9 @@ public class WalletAppService(
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
             
-            var fee = walletOperations.CalculateTransactionFee(sendInfo, accountInfo, satsPerVirtualKB);
-            
+            // TODO: Fix the fee estimation logic
+            //var fee = walletOperations.CalculateTransactionFee(sendInfo, accountInfo, satsPerVirtualKB);
+            var fee = 1234; // Placeholder for the fee calculation logic
             sendInfo.SendFee = fee;
             
             var result = await walletOperations.SendAmountToAddress(walletWords, sendInfo);
