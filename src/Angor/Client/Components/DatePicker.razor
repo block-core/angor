@@ -101,7 +101,7 @@
     [Parameter] public string Class { get; set; } = "create-field-input";
     [Parameter] public bool Disabled { get; set; } = false;
     [Parameter] public bool ReadOnly { get; set; } = false;
-    [Parameter] public string Format { get; set; } = "dd/MM/yyyy";
+    [Parameter] public string Format { get; set; } = "dd MMMM yyyy";
     [Parameter] public DateTime? MinDate { get; set; }
     [Parameter] public DateTime? MaxDate { get; set; }
     [Parameter] public Func<DateTime, bool> IsDateDisabled { get; set; } = _ => false;
@@ -228,7 +228,8 @@
             "yyyy/M/d",
             "yyyy-M-d",
             "d/M/yyyy",
-            "d-M-yyyy"
+            "d-M-yyyy",
+            "dd MMMM yyyy",
         };
 
         foreach (var format in formats)

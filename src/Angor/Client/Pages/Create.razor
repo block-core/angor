@@ -50,176 +50,160 @@
 <div class="header-container slide-in">
     <div class="card card-body">
         <div class="header-content">
-            <div class="position-relative header-title animate-fade-in">
+            <div class="header-title animate-fade-in">
                 <span class="header-icon-wrapper">
                     <Icon IconName="add" Width="32" Height="32" />
                 </span>
                 <h5 class="header-text">Create New Project</h5>
-                <div class="info-icon-container position-absolute top-0 ms-1 ms-md-3 start-100 translate-middle"
-                    data-tooltip="Learn more about project creation">
-                    <a href="https://docs.angor.io/founder/project-creation/" target="_blank" 
-                       class="text-decoration-none">
-                        <Icon IconName="info" Height="16" Width="16" Class="text-muted info-icon" />
-                    </a>
-                </div>
             </div>
             <div class="header-actions">
-                <button class="btn btn-border-success" @onclick="TogglePreview">
-                    <Icon IconName="eye" Width="16" Height="16" Class="me-2" />
-                    <span>@(showPreview ? "Hide Preview" : "Show Preview")</span>
-                </button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="create-main-structure mt-4">
-    <div class="create-room-card animate-fade-in">
-        <div class="create-room-header">
-            <div class="d-flex align-items-center header-icon-gap">
-                <div>
-                    <Icon IconName="view-project" Width="30" Height="30" Class="create-room-icon" />
-                </div>
-                <div>
-                        <h2 class="create-room-title">Project Profile</h2>
-                </div>
-            </div>
-        </div>
-        
-        <div class="create-room-content create-space-vertical-large">
-            <EditForm Model="project.Metadata">
-                <div class="create-layout-grid create-layout-two-columns">
-                    <div>
-                        <label class="create-field-label" for="NostrMetadataName">Project Name</label>
-                        <InputText id="NostrMetadataName" class="create-field-input" autocomplete="off" @bind-Value="project.Metadata.Name" placeholder="Enter name of your project" disabled="@nostrMetadataCreated" />
-                    </div>
-                    <div>
-                        <label class="create-field-label create-field-label-with-icon" for="NostrMetadataWebsite">Project Website</label>
-                        <InputText id="NostrMetadataWebsite" class="create-field-input" autocomplete="off" @bind-Value="project.Metadata.Website" placeholder="Enter URL of project website" disabled="@nostrMetadataCreated" />
-                    </div>
-                </div>
-                
-                <div class="mt-4">
-                    <label class="create-field-label" for="NostrMetadataAbout">About Your Project</label>
-                    <InputTextArea id="NostrMetadataAbout" class="create-field-textarea" autocomplete="off" @bind-Value="project.Metadata.About" placeholder="Provide a brief description of project" disabled="@nostrMetadataCreated" />
-                </div>
-                
-                <div class="create-divider"></div>
-                
-                <h3 class="create-section-title">
-                    <Icon IconName="visual-identity" class="create-section-icon" /> Visual Identity
-                </h3>
-                
-                <div class="create-layout-grid create-layout-two-columns">
-                    <div>
-                        <label class="create-field-label" for="NostrMetadataBanner">Banner Image URL</label>
-                        <InputText id="NostrMetadataBanner" class="create-field-input" autocomplete="off" @bind-Value="project.Metadata.Banner" placeholder="Enter URL for project Banner Image" disabled="@nostrMetadataCreated" />
-                        <p class="create-field-help">Recommended size: 820×312px</p>
-                    </div>
-                    <div>
-                        <label class="create-field-label" for="NostrMetadataPicture">Avatar Image URL</label>
-                        <InputText id="NostrMetadataPicture" class="create-field-input" autocomplete="off" @bind-Value="project.Metadata.Picture" placeholder="Enter URL for the Project Logo or Profile Picture" disabled="@nostrMetadataCreated" />
-                        <p class="create-field-help">Recommended size: 170×170px</p>
-                    </div>
-                </div>
-            </EditForm>
-        </div>
-    </div>
+<div class="card card-body mt-4 slide-in">
 
-    <div class="animate-fade-in mt-4">
-                <EditForm Model="project">
-                    <div class="create-room-card animate-fade-in">
-                        <div class="create-room-header">
-                            <div class="d-flex align-items-center header-icon-gap">
-                                <div>
-                                    <Icon IconName="clock-square" Width="30" Height="30" Class="create-room-icon" />
-                                </div>
-                                <div>
-                                    <div class="create-room-title-container">
-                                        <h2 class="create-room-title">Funding Structure</h2>
-                                    </div>
-                                </div>
-                            </div>
+
+    <div class="animate-fade-in">
+        <h5 class="mb-4 d-flex align-items-center">
+            <Icon IconName="view-project" Width="24" Height="24" Class="me-2" />
+            Project Profile
+        </h5>
+        <div class="row g-4">
+
+            <div class="col-lg-7 col-12">
+                <EditForm Model="project.Metadata">
+
+                    <div class="info-card">
+                        <div class="mb-3">
+                            <label for="NostrMetadataName" class="form-label">Project name</label>
+                            <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated" />
                         </div>
-                        
-                        <div class="create-room-content create-space-vertical-large">
-                            <div class="create-layout-grid">
-                                <div>
-                                    <label class="create-field-label create-field-label-with-icon" for="targetAmount">
-                                        Target Amount
-                                    </label>
-                                    <InputNumber id="targetAmount" class="create-field-input" @bind-Value="targetAmountInBTC" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated" />
-                                    <p class="create-field-help">Minimum amount this project is trying to raise</p>
-                                </div>
-                            </div>
-                            
-                            <div class="create-layout-grid create-layout-two-columns">
-                                <div>
-                                    <label class="create-field-label create-field-label-with-icon" for="startDate">
-                                        Funding Start
-                                    </label>
-                                    <div class="create-field-input disabled">@DateTime.Today.FormatDate()</div>
-                                    <input type="hidden" @bind="project.ProjectInfo.StartDate" />
-                                    <p class="create-field-help">When the investment period begins</p>
-                                </div>
-                                <div>
-                                    <label class="create-field-label create-field-label-with-icon" for="endDate">
-                                        Funding End
-                                    </label>
-                                    <div class="input-group d-flex align-items-center">
-                                        <DatePicker Value="@GetEndDate()" ValueChanged="@SetEndDate" 
-                                                   Placeholder="Select end date" 
-                                                   Class="create-field-input" 
-                                                   Disabled="@nostrApplicationSpecificDataCreated" />
-                                    </div>
-                                    <p class="create-field-help">When the investment period ends</p>
-                                    @if (endDateError)
-                                    {
-                                        <div class="text-danger mt-1">End date must be before the first stage date</div>
-                                    }
-                                </div>
-                            </div>
-                            
-                            <div class="create-layout-grid create-layout-two-columns">
-                                <div>
-                                    <label class="create-field-label create-field-label-with-icon" for="penaltyDays">
-                                        Penalty Days
-                                    </label>
-                                    <InputNumber id="penaltyDays" class="create-field-input" @bind-Value="project.ProjectInfo.PenaltyDays" disabled="@nostrApplicationSpecificDataCreated" />
-                                    <p class="create-field-help">Days to lock funds for departing investors</p>
-                                </div>
-                                <div>
-                                    <label class="create-field-label create-field-label-with-icon" for="expiryDate">
-                                        Emergency Expiry
-                                    </label>
-                                    <div class="create-field-input disabled">@CalculateExpiryDate().FormatDate()</div>
-                                    <input type="hidden" @bind="project.ProjectInfo.ExpiryDate" />
-                                    <p class="create-field-help">Emergency date for fund release</p>
-                                </div>
-                            </div>
+
+                        <div class="mb-3">
+                            <label for="NostrMetadataAbout" class="form-label">About</label>
+                            <InputTextArea id="NostrMetadataAbout" autocomplete="off" @bind-Value="project.Metadata.About" class="form-control" placeholder="Provide a brief description of the project" disabled="@nostrMetadataCreated" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="NostrMetadataWebsite" class="form-label">Project website</label>
+                            <InputText id="NostrMetadataWebsite" autocomplete="off" @bind-Value="project.Metadata.Website" class="form-control" placeholder="Enter the URL of the project website" disabled="@nostrMetadataCreated" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="NostrMetadataBanner" class="form-label d-flex align-items-center">
+                                Banner Image Url
+                                <span class="ms-2">(Recommended size: 820×312px)</span>
+                            </label>
+                            <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="NostrMetadataPicture" class="form-label d-flex align-items-center">
+                                Avatar Image Url
+                                <span class="ms-2">(Recommended size: 170×170px)</span>
+                            </label>
+                            <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated" />
                         </div>
                     </div>
 
+                </EditForm>
 
-                    <div class=" create-room-card animate-fade-in mt-4">
 
-                        <div class="create-room-header">
-                            <div class="d-flex align-items-center header-icon-gap">
-                                <div>
-                                    <Icon IconName="stages" Width="30" Height="30" Class="create-room-icon" />
+
+                <div class="animate-fade-in mt-4">
+                    <EditForm Model="project">
+                        <h5 class="mb-4 d-flex align-items-center">
+                            <Icon IconName="view-project" Width="24" Height="24" Class="me-2" />
+                            Target Fundraising Goal
+                        </h5>
+
+                        <!-- Target Amount -->
+                        <div class="info-card mb-4 slide-in">
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <Icon IconName="balance" Width="20" Height="20" Class="me-2 text-primary" />
+                                    <label for="targetAmount" class="form-label mb-0 fw-semibold">Target Amount</label>
                                 </div>
-                                <div>
-                                    <div class="create-room-title-container">
-                                        <h2 class="create-room-title">Funding Stages</h2>
-                                    </div>
+                                <p class="form-text text-muted mt-0 mb-2 small">The minimum amount of @network.CoinTicker this project is trying to raise.</p>
+                                <InputNumber id="targetAmount" @bind-Value="targetAmountInBTC" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated" />
+                            </div>
+                        </div>
+
+                        <h5 class="mb-4 d-flex align-items-center">
+                            <Icon IconName="view-project" Width="24" Height="24" Class="me-2" />
+                            Fund Raising Window
+                        </h5>
+                        <div class="info-card mb-4 slide-in">
+                            <!-- Start Date -->
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <Icon IconName="calendar" Width="20" Height="20" Class="me-2 text-primary" />
+                                    <label for="startDate" class="form-label mb-0 fw-semibold">Start Date</label>
                                 </div>
+                                <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period begins (automatically set to today).</p>
+                                <div class="form-control disabled">@DateTime.Today.FormatDate()</div>
+                                <input type="hidden" @bind="project.ProjectInfo.StartDate" />
+                            </div>
+
+                            <!-- End Date -->
+                            <div class="mb-0">
+                                <div class="d-flex align-items-center mb-2">
+                                    <Icon IconName="calendar" Width="20" Height="20" Class="me-2 text-primary" />
+                                    <label for="endDate" class="form-label mb-0 fw-semibold">End Date</label>
+                                </div>
+                                <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period ends (must be before first stage date).</p>
+                                <div class="d-flex align-items-center">
+                                    <DatePicker Value="@GetEndDate()" ValueChanged="@SetEndDate"
+                                                Placeholder="Select end date"
+                                                Class="form-control form-control-modern date-picker-input"
+                                                Disabled="@nostrApplicationSpecificDataCreated" />
+                                </div>
+                                @if (endDateError)
+                                {
+                                    <div class="text-danger mt-1">End date must be before the first stage date</div>
+                                }
+                            </div>
+                        </div>
+                        <h5 class="mb-4 d-flex align-items-center">
+                            <Icon IconName="view-project" Width="24" Height="24" Class="me-2" />
+                            Advanced Parameters
+                        </h5>
+                        <div class="info-card mb-4 slide-in">
+
+                            <!-- Penalty Days -->
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <Icon IconName="unlock" Width="20" Height="20" Class="me-2 text-danger" />
+                                    <label for="penaltyDays" class="form-label mb-0 fw-semibold">Penalty Days</label>
+                                </div>
+                                <p class="form-text text-muted mt-0 mb-2 small">Number of days to lock funds for departing investors who wish to withdraw early.</p>
+                                <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
+                            </div>
+
+                            <!-- Expiry Date -->
+                            <div class="mb-0">
+                                <div class="d-flex align-items-center mb-2">
+                                    <Icon IconName="calendar" Width="20" Height="20" Class="me-2 text-warning" />
+                                    <label for="expiryDate" class="form-label mb-0 fw-semibold">Expiry Date</label>
+                                </div>
+                                <p class="form-text text-muted mt-0 mb-2 small">Emergency date when all remaining funds can be released in case of project abandonment. Automatically set to 60 days after the last stage.</p>
+                                <div class="form-control disabled">@CalculateExpiryDate().FormatDate()</div>
+                                <input type="hidden" @bind="project.ProjectInfo.ExpiryDate" />
                             </div>
                         </div>
 
 
-                        <div class="create-room-content create-space-vertical-large">
+                        <h5 class="mb-4 d-flex align-items-center">
+                            <Icon IconName="view-project" Width="24" Height="24" Class="me-2" />
+                            Stages
+                        </h5>
+                        <div class="info-card mb-4 slide-in">
+                            <!-- Presets for Stages -->
+                            <!-- Toggle Button -->
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <button class="btn btn-border-success" @onclick="ToggleStageMode" disabled="@nostrApplicationSpecificDataCreated">
+                                <button class="btn btn-border-success btn-sm" @onclick="ToggleStageMode" disabled="@nostrApplicationSpecificDataCreated">
                                     @if (isPresetMode)
                                     {
                                         <span>Switch to Manual Helper</span>
@@ -231,8 +215,10 @@
                                 </button>
                             </div>
 
+                            <!-- Conditionally Render Presets or Automatic Inputs -->
                             @if (isPresetMode)
                             {
+                                <!-- Preset Selection -->
                                 <div class="mb-3">
                                     <label for="stagePreset" class="form-label">Select Stage Preset</label>
                                     <select id="stagePreset" class="form-control" @onchange="OnStagePresetChange" disabled="@nostrApplicationSpecificDataCreated">
@@ -245,6 +231,7 @@
                             }
                             else
                             {
+                                <!-- Automatic Generation Inputs -->
                                 <div class="mb-3">
                                     <label for="totalDuration" class="form-label">Total Project Duration (in days)</label>
                                     <InputNumber id="totalDuration" @bind-Value="totalDuration" class="form-control" placeholder="Enter total duration in days" disabled="@nostrApplicationSpecificDataCreated" />
@@ -259,195 +246,419 @@
                                 </button>
                             }
 
-                            @foreach (var stage in project.ProjectInfo.Stages)
+                            <!-- Stages -->
+                            @if (project.ProjectInfo.Stages.Any())
                             {
-                                var stageIndex = project.ProjectInfo.Stages.IndexOf(stage);
-                                var dateInputId = $"stageDate_{stageIndex}";
-                                
-                                <div class="create-stage-item">
-                                    <div class="create-stage-field">
-                                        <label class="create-field-label">Stage @(stageIndex + 1) Percentage</label>
-                                        <InputNumber class="create-field-input" @bind-Value="stage.AmountToRelease" placeholder="Enter percentage" min="1" max="100" step="1" disabled="@nostrApplicationSpecificDataCreated" />
-                                    </div>
-                                    <div class="create-stage-field">
-                                        <label class="create-field-label">Release Date</label>
-                                        <div class="d-flex align-items-stretch create-stage-date-container">
-                                            <DatePicker Value="@GetStageReleaseDate(stage)" ValueChanged="@(value => SetStageReleaseDate(stage, value))" 
-                                                       Placeholder="Select date" 
-                                                       Class="create-field-input create-stage-date-input" 
-                                                       Disabled="@nostrApplicationSpecificDataCreated" />
+                                <div class="stages-container">
+                                    @foreach (var stage in project.ProjectInfo.Stages)
+                                    {
+                                        var stageIndex = project.ProjectInfo.Stages.IndexOf(stage);
+
+                                        <div class="stage-item animate-fade-in">
+                                            <div class="stage-header">
+                                                <div class="stage-number">
+                                                    <Icon IconName="stages" Width="16" Height="16" Class="me-2" />
+                                                    <span class="fw-bold">Stage @(stageIndex + 1)</span>
+                                                </div>
+                                                @if (project.ProjectInfo.Stages.IndexOf(stage) > 0)
+                                                {
+                                                    var previousStage = project.ProjectInfo.Stages[project.ProjectInfo.Stages.IndexOf(stage) - 1];
+                                                    var daysBetween = (stage.ReleaseDate - previousStage.ReleaseDate).Days;
+                                                    <div class="stage-duration">
+                                                        <Icon IconName="clock" Width="14" Height="14" Class="me-1 text-muted" />
+                                                        <small class="text-muted">@daysBetween days since previous</small>
+                                                    </div>
+                                                }
+                                            </div>
+
+                                            <div class="info-card mb-4">
+                                                <div class="position-relative">
+                                                    <!-- Delete Button: absolutely positioned top-right -->
+                                                    <span class="btn-close-custom position-absolute top-0 end-0 m-3"
+                                                          @onclick="() => RemoveStage(stage)"
+                                                          disabled="@nostrApplicationSpecificDataCreated"
+                                                          title="Remove this stage">
+                                                        <Icon IconName="close-circle" Height="24" Width="24" />
+                                                    </span>
+
+                                                    <!-- Input Fields -->
+                                                    <div class="row g-2 align-items-end">
+                                                        <!-- Percentage Field -->
+                                                        <div class="col-12 col-md-4 col-lg-3">
+                                                            <div class="form-group mb-0">
+                                                                <label class="form-label small fw-semibold text-muted">
+                                                                    <Icon IconName="percent" Width="14" Height="14" Class="me-1" />
+                                                                    Percentage
+                                                                </label>
+                                                                <div class="position-relative">
+                                                                    <InputNumber @bind-Value="stage.AmountToRelease"
+                                                                                 class="form-control form-control-modern pe-5"
+                                                                                 placeholder="Enter %"
+                                                                                 min="1"
+                                                                                 max="100"
+                                                                                 step="1"
+                                                                                 disabled="@nostrApplicationSpecificDataCreated" />
+                                                                    <div class="position-absolute top-50 end-0 translate-middle-y me-3 text-muted">%</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Date Field -->
+                                                        <div class="col-12 col-md-8 col-lg-9">
+                                                            <div class="form-group mb-0">
+                                                                <label class="form-label small fw-semibold text-muted">
+                                                                    <Icon IconName="calendar" Width="14" Height="14" Class="me-1" />
+                                                                    Release Date
+                                                                </label>
+                                                                <DatePicker Value="@GetStageReleaseDate(stage)"
+                                                                            ValueChanged="@(value => SetStageReleaseDate(stage, value))"
+                                                                            Placeholder="Select date"
+                                                                            Class="form-control form-control-modern date-picker-input"
+                                                                            Disabled="@nostrApplicationSpecificDataCreated" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+
+
+                                            </div>
                                         </div>
-                                    </div>
-                                    <button class="create-action-btn create-action-danger" @onclick="() => RemoveStage(stage)" disabled="@nostrApplicationSpecificDataCreated">
-                                        <Icon IconName="delete" Height="16" Width="16" Color="#dc2626"/>
-                                    </button>
-                                @if (stageIndex > 0)
-                                {
-                                    var previousStage = project.ProjectInfo.Stages[stageIndex - 1];
-                                    var daysBetween = (stage.ReleaseDate - previousStage.ReleaseDate).Days;
-                                    <div class="create-stage-info mt-2">
-                                        <small>Days since previous stage: @daysBetween days</small>
-                                    </div>
-                                }
+                                    }
                                 </div>
-                                
                             }
-
-
+                            else
+                            {
+                                <div class="info-card mt-4 mb-4">
+                                    <div class="text-center p-4">
+                                        <Icon IconName="stages" Width="48" Height="48" Class="text-muted mb-3" />
+                                        <h6 class="text-muted mb-4 mt-4">No stages created yet</h6>
+                                        <p class="text-muted small mb-0">Add stages to define your project's release schedule</p>
+                                    </div>
+                                </div>
+                            }
 
                             <button type="button" class="btn btn-border-warning mb-3" @onclick="AddStage" disabled="@nostrApplicationSpecificDataCreated">
                                 <Icon IconName="add" Height="20" Width="20" Color="var(--angor-primary)" Class="me-2"></Icon>
                                 Add Stage
                             </button>
+
+
                         </div>
-                    </div>
 
-                </EditForm>
-    </div>
-
-
-    <div class="create-room-card animate-fade-in mt-4">
-        <div class="create-room-header">
-            <div class="d-flex align-items-center header-icon-gap">
-                <div>
-                    <Icon IconName="rocket" Width="30" Height="30" Class="create-room-icon" />
+                    </EditForm>
                 </div>
-                <div>
-                    <div class="create-room-title-container">
-                        <h2 class="create-room-title">Finalize Project Setup</h2>
+            </div>
+
+            <div class="col-lg-5 col-12 mb-4">
+                <div class="d-flex align-items-stretch">
+                    <div class="info-card card w-100 project-card">
+                        <!-- Project Banner & Profile Section -->
+                        <div class="d-block">
+                            <div class="banner-container m-n20">
+                                @if (string.IsNullOrEmpty(project.Metadata?.Banner))
+                                {
+                                    <img class="banner-image"
+                                         src="/assets/img/no-image.jpg"
+                                         alt="Project Banner"
+                                         onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                }
+                                else
+                                {
+                                    <img class="banner-image"
+                                         src="@project.Metadata.Banner"
+                                         alt="Project Banner"
+                                         onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                }
+
+                                <div class="profile-container">
+                                    @if (string.IsNullOrEmpty(project.Metadata?.Picture))
+                                    {
+                                        <img class="profile-image"
+                                             src="/assets/img/no-image.jpg"
+                                             alt="Project Profile"
+                                             onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    }
+                                    else
+                                    {
+                                        <img class="profile-image"
+                                             src="@project.Metadata.Picture"
+                                             alt="Project Profile"
+                                             onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Project Title & Description -->
+                        <div class="mt-5">
+                            <div class="d-flex align-items-center mb-4">
+                                <span class="user-select-none animate-rotate">
+                                    <Icon IconName="view" Height="20" Width="20" />
+                                </span>
+                                <div class="h-100 ms-3">
+                                    <h6 class="mb-0 font-weight-bolder">
+                                        @if (string.IsNullOrEmpty(project.Metadata?.Name))
+                                        {
+                                            <span>Name</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@project.Metadata.Name</span>
+                                        }
+                                    </h6>
+                                </div>
+                            </div>
+
+                            @if (string.IsNullOrEmpty(project.Metadata?.About))
+                            {
+                                <p class="mb-0 line-clamp-3 small text-muted">About</p>
+                            }
+                            else
+                            {
+                                <p class="mb-0 line-clamp-3 small text-muted">@ConvertToMarkupString(project.Metadata.About)</p>
+                            }
+                        </div>
+
+                        <!-- Project Information Section -->
+                        <div class="animate-fade-in mt-3">
+                            <!-- Primary Project Info -->
+                            <div class="row g-2">
+                                @foreach (var info in GetProjectInfo())
+                                {
+                                    <div class="col-12">
+                                        <div class="stat-card p-3 rounded-2 border hover-effect h-100">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="flex-grow-1 min-width-zero">
+                                                    <div class="text-muted mb-1 small">@info.Label</div>
+                                                    <div class="text-nowrap overflow-auto font-custom">
+                                                        @info.Value
+                                                    </div>
+                                                </div>
+                                                <div class="ms-2" style="flex-shrink: 0;">
+                                                    <Icon IconName="@info.IconName" Height="20" Width="20" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Additional Project Info -->
+                            <div class="row g-2 mt-1">
+                                @foreach (var info in GetAdditionalProjectInfo())
+                                {
+                                    <div class="@(info.fullWidth ? "col-12" : "col-md-6 col-12")">
+                                        <div class="stat-card p-3 rounded-2 border hover-effect h-100">
+                                            <div class="d-flex justify-content-between align-items-center h-100">
+                                                <div class="flex-grow-1 min-width-zero">
+                                                    <div class="text-muted mb-2 small">@info.Label</div>
+                                                    <div class="text-nowrap overflow-auto @info.color font-custom">
+                                                        @info.Value
+                                                    </div>
+                                                </div>
+                                                <div class="ms-2 flex-shrink-0">
+                                                    <Icon IconName="@info.IconName" Height="20" Width="20" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                }
+                            </div>
+
+                            <!-- Stages Section -->
+                            <div class="mt-2">
+                                @if (project.ProjectInfo.Stages == null || !project.ProjectInfo.Stages.Any())
+                                {
+                                    <div class="info-card mt-4 mb-4">
+                                        <div class="text-center p-4">
+                                            <Icon IconName="stages" Width="48" Height="48" Class="text-muted" />
+                                            <h6 class="text-muted mb-2">No stages created yet</h6>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="d-flex align-items-center mb-2">
+                                        <Icon IconName="stages" Height="20" Width="20" Class="me-2" />
+                                        <h6 class="mb-0">Stages</h6>
+                                    </div>
+
+                                    <div class="row g-2">
+                                        @foreach (var stage in project.ProjectInfo.Stages)
+                                        {
+                                            <div class="col-12">
+                                                <div class="stat-card p-3 rounded-2 border hover-effect h-100">
+                                                    <!-- Stage Percentage -->
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <div class="flex-grow-1 min-width-zero">
+                                                            <div class="text-muted mb-1 small">Stage Percent</div>
+                                                            <div class="text-nowrap overflow-auto font-custom">
+                                                                @stage.AmountToRelease %
+                                                            </div>
+                                                        </div>
+                                                        <div class="ms-2 flex-shrink-0">
+                                                            <Icon IconName="percent" Height="20" Width="20" />
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Stage Date -->
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div class="flex-grow-1 min-width-zero">
+                                                            <div class="text-muted mb-1 small">Stage Date</div>
+                                                            <div class="text-nowrap overflow-auto font-custom">
+                                                                @stage.ReleaseDate.FormatDate() - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after start
+                                                            </div>
+                                                        </div>
+                                                        <div class="ms-2 flex-shrink-0">
+                                                            <Icon IconName="calendar" Height="20" Width="20" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                            </div>
+                        </div>
+
+
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="create-room-content create-space-vertical-large">
-            <div class="deploy-header-container mb-4">
-                <h4 class="deploy-header-title mb-2">Deploy Your Project</h4>
-                <p class="deploy-header-subtitle mb-0">Complete the deployment process to make your project live</p>
+    <div class="info-card mt-4">
+        <div class="text-center mb-4">
+            <h4 class="mb-2">Deploy Your Project</h4>
+            <p class="text-muted mb-0">Complete the deployment process to make your project live</p>
+        </div>
+
+        @if (hasErrors)
+        {
+            <div class="text-center mb-4">
+                <div class="alert alert-danger d-flex align-items-center justify-content-center">
+                    <Icon IconName="warning" Width="20" Height="20" Class="me-2 text-warning" />
+                    <span class="fw-semibold">Deployment Failed - you can try again</span>
+                </div>
+                <div class="alert alert-info mt-2">
+                    <small class="text-muted">
+                        <Icon IconName="info" Width="16" Height="16" Class="me-2" />
+                        Completed steps have been saved. To Continue try again from where the process stopped
+                    </small>
+                </div>
             </div>
+        }
 
-            @if (hasErrors)
-            {
-                <div class="text-center mb-4">
-                    <div class="alert alert-danger d-flex align-items-center justify-content-center">
-                        <Icon IconName="warning" Width="20" Height="20" Class="me-2 text-warning" />
-                        <span class="fw-semibold">Deployment Failed - you can try again</span>
+        <!-- Progress Steps -->
+        <div class="row mb-4">
+            <div class="col-4">
+                <div class="d-flex flex-column align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrMetadataCreated ? "bg-success text-white" : currentStep == 1 ? "border border-2 border-primary" : "border") mb-2 width-40 height-40">
+                        @if (nostrMetadataCreated)
+                        {
+                            <Icon IconName="check" Width="20" Height="20" />
+                        }
+                        else if (currentStep == 1 && isDeploying)
+                        {
+                            <div class="spinner-border spinner-border-sm text-primary"></div>
+                        }
+                        else
+                        {
+                            <span class="fw-bold">1</span>
+                        }
                     </div>
-                    <div class="alert alert-info mt-2">
-                        <small class="text-muted">
-                            <Icon IconName="info" Width="16" Height="16" Class="me-2" />
-                            Completed steps have been saved. To Continue try again from where the process stopped
-                        </small>
-                    </div>
+                    <span class="small fw-semibold @(nostrMetadataCreated ? "text-success" : currentStep == 1 ? "text-primary" : "text-muted")">Profile</span>
                 </div>
-            }
-    
-            <div class="row mb-4">
-                <div class="col-4">
-                    <div class="d-flex flex-column align-items-center">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrMetadataCreated ? "bg-success text-white" : currentStep == 1 ? "border border-2 border-primary" : "border") mb-2 width-40 height-40">
-                            @if (nostrMetadataCreated)
-                            {
-                                <Icon IconName="check" Width="20" Height="20" />
-                            }
-                            else if (currentStep == 1 && isDeploying)
-                            {
-                                <div class="spinner-border spinner-border-sm text-primary"></div>
-                            }
-                            else
-                            {
-                                <span class="fw-bold">1</span>
-                            }
-                        </div>
-                        <span class="small fw-semibold @(nostrMetadataCreated ? "text-success" : currentStep == 1 ? "text-primary" : "text-muted")">Profile</span>
+            </div>
+            <div class="col-4">
+                <div class="d-flex flex-column align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrApplicationSpecificDataCreated ? "bg-success text-white" : currentStep == 2 ? "border border-2 border-primary" : "border") mb-2 width-40 height-40">
+                        @if (nostrApplicationSpecificDataCreated)
+                        {
+                            <Icon IconName="check" Width="20" Height="20" />
+                        }
+                        else if (currentStep == 2 && isDeploying)
+                        {
+                            <div class="spinner-border spinner-border-sm text-primary"></div>
+                        }
+                        else
+                        {
+                            <span class="fw-bold">2</span>
+                        }
                     </div>
+                    <span class="small fw-semibold @(nostrApplicationSpecificDataCreated ? "text-success" : currentStep == 2 ? "text-primary" : "text-muted")">Project Info</span>
                 </div>
-                <div class="col-4">
-                    <div class="d-flex flex-column align-items-center">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrApplicationSpecificDataCreated ? "bg-success text-white" : currentStep == 2 ? "border border-2 border-primary" : "border") mb-2 width-40 height-40">
-                            @if (nostrApplicationSpecificDataCreated)
-                            {
-                                <Icon IconName="check" Width="20" Height="20" />
-                            }
-                            else if (currentStep == 2 && isDeploying)
-                            {
-                                <div class="spinner-border spinner-border-sm text-primary"></div>
-                            }
-                            else
-                            {
-                                <span class="fw-bold">2</span>
-                            }
-                        </div>
-                        <span class="small fw-semibold @(nostrApplicationSpecificDataCreated ? "text-success" : currentStep == 2 ? "text-primary" : "text-muted")">Project Info</span>
+            </div>
+            <div class="col-4">
+                <div class="d-flex flex-column align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center @(!string.IsNullOrEmpty(project.CreationTransactionId) ? "bg-success text-white" : currentStep == 3 ? "border border-2 border-primary" : "border") mb-2 width-40 height-40">
+                        @if (!string.IsNullOrEmpty(project.CreationTransactionId))
+                        {
+                            <Icon IconName="check" Width="20" Height="20" />
+                        }
+                        else if (currentStep == 3 && isDeploying)
+                        {
+                            <div class="spinner-border spinner-border-sm text-primary"></div>
+                        }
+                        else
+                        {
+                            <span class="fw-bold">3</span>
+                        }
                     </div>
+                    <span class="small fw-semibold @(!string.IsNullOrEmpty(project.CreationTransactionId) ? "text-success" : currentStep == 3 ? "text-primary" : "text-muted")">Deploy</span>
                 </div>
-                <div class="col-4">
-                    <div class="d-flex flex-column align-items-center">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center @(!string.IsNullOrEmpty(project.CreationTransactionId) ? "bg-success text-white" : currentStep == 3 ? "border border-2 border-primary" : "border") mb-2 width-40 height-40">
-                            @if (!string.IsNullOrEmpty(project.CreationTransactionId))
-                            {
-                                <Icon IconName="check" Width="20" Height="20" />
-                            }
-                            else if (currentStep == 3 && isDeploying)
-                            {
-                                <div class="spinner-border spinner-border-sm text-primary"></div>
-                            }
-                            else
-                            {
-                                <span class="fw-bold">3</span>
-                            }
-                        </div>
-                        <span class="small fw-semibold @(!string.IsNullOrEmpty(project.CreationTransactionId) ? "text-success" : currentStep == 3 ? "text-primary" : "text-muted")">Deploy</span>
-                    </div>
-                </div>
-            </div>            
-                        
-            @if (!hasErrors)
-            {
-                <div class="info-card text-center p-4">
-                    <div class="mb-3">
-                        <Icon IconName="rocket" Width="48" Height="48" Class="text-success" />
-                    </div>
-                    <h5 class="mb-3">Ready to Deploy</h5>
-                    <p class="text-muted mb-4">All deployment steps will be completed automatically</p>
+            </div>
+        </div>
+        @if (!hasErrors)
+        {
+            <div class="info-card text-center p-4">
 
-                    @if (isDeploying)
-                    {
-                        <div class="deployment-progress mb-4">
-                            <div class="d-flex align-items-center justify-content-center mb-3">
-                                <div class="spinner-border text-primary me-3"></div>
-                                <div class="text-start">
-                                    <h6 class="mb-1">
-                                        @if (currentStep == 1)
-                                        {
-                                            <span>Creating Nostr Profile...</span>
-                                        }
-                                        else if (currentStep == 2)
-                                        {
-                                            <span>Publishing Project Information...</span>
-                                        }
-                                        else if (currentStep == 3)
-                                        {
-                                            <span>Deploying to Blockchain...</span>
-                                        }
-                                    </h6>
-                                    <small class="text-muted">Please wait while we complete this step...</small>
-                                </div>
+                <h5 class="mb-3">Ready to Deploy</h5>
+                <p class="text-muted mb-4">All deployment steps will be completed automatically</p>
+
+                @if (isDeploying)
+                {
+                    <!-- Show current step progress during deployment -->
+                    <div class="deployment-progress mb-4">
+                        <div class="d-flex align-items-center justify-content-center mb-3">
+                            <div class="spinner-border text-primary me-3"></div>
+                            <div class="text-start">
+                                <h6 class="mb-1">
+                                    @if (currentStep == 1)
+                                    {
+                                        <span>Creating Nostr Profile...</span>
+                                    }
+                                    else if (currentStep == 2)
+                                    {
+                                        <span>Publishing Project Information...</span>
+                                    }
+                                    else if (currentStep == 3)
+                                    {
+                                        <span>Deploying to Blockchain...</span>
+                                    }
+                                </h6>
+                                <small class="text-muted">Please wait while we complete this step...</small>
                             </div>
-                            <div class="progress rounded-pill">
-                                <div class="progress-bar bg-success progress-bar-animated rounded-pill" 
-                                    role="progressbar" 
-                                    style="width: @((currentStep * 33))%" 
-                                    aria-valuenow="@(currentStep * 33)" 
-                                    aria-valuemin="0" 
-                                    aria-valuemax="100">
-                                </div>
-                            </div>
-                            <small class="text-muted mt-2 d-block">Step @currentStep of 3</small>
                         </div>
-                    }
+                        <div class="progress">
+                            <div class="progress-bar bg-success progress-bar-animated"
+                                 role="progressbar"
+                                 style="width: @((currentStep * 33))%"
+                                 aria-valuenow="@(currentStep * 33)"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Step @currentStep of 3</small>
+                    </div>
+                }
 
-                    <button class="btn btn-border-success w-100" @onclick="AutoDeployProject" disabled="@isDeploying">
+                <div class="d-flex justify-content-center mb-4">
+                    <button class="btn btn-border-success" @onclick="AutoDeployProject" disabled="@isDeploying">
                         @if (isDeploying)
                         {
                             <span class="spinner-border spinner-border-sm me-2"></span>
@@ -459,50 +670,99 @@
                             <span>Deploy Project</span>
                         }
                     </button>
-                </div>
-            }            
 
+                </div>
+
+
+            </div>
+        }
+
+        @if (hasErrors)
+        {
             @if (hasErrors)
             {
-                @if (hasErrors)
+                <div class="alert alert-warning d-flex align-items-center mb-3">
+                    <Icon IconName="warning" Width="20" Height="20" Class="me-2" />
+                    <span>Automatic deployment encountered issues. Manual completion required.</span>
+                </div>
+            }
+
+            <!-- Step 1: Profile -->
+            <div class="info-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrMetadataCreated ? "bg-success text-white" : "bg-light border") me-3 width-40 height-40">
+                        @if (nostrMetadataCreated)
+                        {
+                            <Icon IconName="check" Width="16" Height="16" />
+                        }
+                        else
+                        {
+                            <Icon IconName="user" Width="16" Height="16" />
+                        }
+                    </div>
+                    <div>
+                        <h6 class="mb-1">Create Nostr Profile</h6>
+                        <p class="text-muted small mb-0">Establish your project's identity on the Nostr network</p>
+                    </div>
+                </div>
+
+                @if (!nostrMetadataCreated)
                 {
-                    <div class="alert alert-warning d-flex align-items-center mb-3">
-                        <Icon IconName="warning" Width="20" Height="20" Class="me-2" />
-                        <span>Automatic deployment encountered issues. Manual completion required.</span>
+                    <button class="btn btn-border-success w-100" @onclick="ConfirmFinalizeNostrProfileCreation" disabled="@createProfileSpinner">
+                        @if (createProfileSpinner)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Creating...</span>
+                        }
+                        else
+                        {
+                            <Icon IconName="user" Width="16" Height="16" Class="me-2" />
+                            <span>Create Profile</span>
+                        }
+                    </button>
+                }
+                else
+                {
+                    <div class="d-flex align-items-center text-success">
+                        <Icon IconName="check-circle" Width="16" Height="16" Class="me-2" />
+                        <span>Profile Created Successfully</span>
                     </div>
                 }
-                
-                <!-- Step 1: Profile -->
-                <div class="info-card">
+            </div>
+
+            <!-- Step 2: Project Info -->
+            @if (nostrMetadataCreated)
+            {
+                <div class="info-card mt-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrMetadataCreated ? "bg-success text-white" : "bg-light border") me-3 width-40 height-40" >
-                            @if (nostrMetadataCreated)
+                        <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrApplicationSpecificDataCreated ? "bg-success text-white" : "bg-light border") me-3 width-40 height-40">
+                            @if (nostrApplicationSpecificDataCreated)
                             {
                                 <Icon IconName="check" Width="16" Height="16" />
                             }
                             else
                             {
-                                <Icon IconName="user" Width="16" Height="16" />
+                                <Icon IconName="project" Width="16" Height="16" />
                             }
                         </div>
                         <div>
-                            <h6 class="mb-1">Create Nostr Profile</h6>
-                            <p class="text-muted small mb-0">Establish your project's identity on the Nostr network</p>
+                            <h6 class="mb-1">Publish Project Information</h6>
+                            <p class="text-muted small mb-0">Define technical details and funding structure</p>
                         </div>
                     </div>
 
-                    @if (!nostrMetadataCreated)
+                    @if (!nostrApplicationSpecificDataCreated)
                     {
-                        <button class="btn btn-border-success w-100" @onclick="ConfirmFinalizeNostrProfileCreation" disabled="@createProfileSpinner">
-                            @if (createProfileSpinner)
+                        <button class="btn btn-border-success w-100" @onclick="ConfirmFinalizeProjectInfoCreation" disabled="@createApplicationDataSpinner">
+                            @if (createApplicationDataSpinner)
                             {
                                 <span class="spinner-border spinner-border-sm me-2"></span>
-                                <span>Creating...</span>
+                                <span>Publishing...</span>
                             }
                             else
                             {
-                                <Icon IconName="user" Width="16" Height="16" Class="me-2" />
-                                <span>Create Profile</span>
+                                <Icon IconName="project" Width="16" Height="16" Class="me-2" />
+                                <span>Publish Project Info</span>
                             }
                         </button>
                     }
@@ -510,394 +770,233 @@
                     {
                         <div class="d-flex align-items-center text-success">
                             <Icon IconName="check-circle" Width="16" Height="16" Class="me-2" />
-                            <span>Profile Created Successfully</span>
+                            <span>Project Info Published Successfully</span>
                         </div>
                     }
                 </div>
+            }
 
-                <!-- Step 2: Project Info -->
-                @if (nostrMetadataCreated)
-                {
-                    <div class="info-card mt-4">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="rounded-circle d-flex align-items-center justify-content-center @(nostrApplicationSpecificDataCreated ? "bg-success text-white" : "bg-light border") me-3 width-40 height-40">
-                                @if (nostrApplicationSpecificDataCreated)
-                                {
-                                    <Icon IconName="check" Width="16" Height="16" />
-                                }
-                                else
-                                {
-                                    <Icon IconName="project" Width="16" Height="16" />
-                                }
-                            </div>
-                            <div>
-                                <h6 class="mb-1">Publish Project Information</h6>
-                                <p class="text-muted small mb-0">Define technical details and funding structure</p>
-                            </div>
+            <!-- Step 3: Deploy -->
+            @if (nostrMetadataCreated && nostrApplicationSpecificDataCreated)
+            {
+                <div class="info-card mt-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center @(!string.IsNullOrEmpty(project.CreationTransactionId) ? "bg-success text-white" : "bg-light border") me-3 width-40 height-40">
+                            @if (!string.IsNullOrEmpty(project.CreationTransactionId))
+                            {
+                                <Icon IconName="check" Width="16" Height="16" />
+                            }
+                            else
+                            {
+                                <Icon IconName="deploy" Width="16" Height="16" />
+                            }
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Deploy to Blockchain</h6>
+                            <p class="text-muted small mb-0">Create the on-chain contract for your project</p>
+                        </div>
+                    </div>
+
+                    @if (string.IsNullOrEmpty(project.CreationTransactionId))
+                    {
+                        <div class="alert alert-info d-flex align-items-center mb-3">
+                            <Icon IconName="info" Width="16" Height="16" Class="me-2" />
+                            <span class="small">This action cannot be undone. Your project will be live after deployment.</span>
                         </div>
 
-                        @if (!nostrApplicationSpecificDataCreated)
-                        {
-                            <button class="btn btn-border-success w-100" @onclick="ConfirmFinalizeProjectInfoCreation" disabled="@createApplicationDataSpinner">
-                                @if (createApplicationDataSpinner)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
-                                    <span>Publishing...</span>
-                                }
-                                else
-                                {
-                                    <Icon IconName="project" Width="16" Height="16" Class="me-2" />
-                                    <span>Publish Project Info</span>
-                                }
-                            </button>
-                        }
-                        else
-                        {
-                            <div class="d-flex align-items-center text-success">
-                                <Icon IconName="check-circle" Width="16" Height="16" Class="me-2" />
-                                <span>Project Info Published Successfully</span>
-                            </div>
-                        }
-                    </div>
-                }
-
-                <!-- Step 3: Deploy -->
-                @if (nostrMetadataCreated && nostrApplicationSpecificDataCreated)
-                {
-                    <div class="info-card mt-4">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="rounded-circle d-flex align-items-center justify-content-center @(!string.IsNullOrEmpty(project.CreationTransactionId) ? "bg-success text-white" : "bg-light border") me-3 width-40 height-40">
-                                @if (!string.IsNullOrEmpty(project.CreationTransactionId))
-                                {
-                                    <Icon IconName="check" Width="16" Height="16" />
-                                }
-                                else
-                                {
-                                    <Icon IconName="deploy" Width="16" Height="16" />
-                                }
-                            </div>
-                            <div>
-                                <h6 class="mb-1">Deploy to Blockchain</h6>
-                                <p class="text-muted small mb-0">Create the on-chain contract for your project</p>
-                            </div>
+                        <button class="btn btn-border-success w-100" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@creatProjectSpinner">
+                            @if (creatProjectSpinner)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span>Deploying...</span>
+                            }
+                            else
+                            {
+                                <Icon IconName="deploy" Width="16" Height="16" Class="me-2" />
+                                <span>Deploy Project</span>
+                            }
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center text-success">
+                            <Icon IconName="check-circle" Width="16" Height="16" Class="me-2" />
+                            <span>Project Deployed Successfully</span>
                         </div>
-
-                        @if (string.IsNullOrEmpty(project.CreationTransactionId))
-                        {
-                            <div class="alert alert-info d-flex align-items-center mb-3">
-                                <Icon IconName="info" Width="16" Height="16" Class="me-2" />
-                                <span class="small">This action cannot be undone. Your project will be live after deployment.</span>
-                            </div>
-
-                            <button class="btn btn-border-success w-100" @onclick="CreatProjectTransactionAnCheckPassword" disabled="@creatProjectSpinner">
-                                @if (creatProjectSpinner)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2"></span>
-                                    <span>Deploying...</span>
-                                }
-                                else
-                                {
-                                    <Icon IconName="deploy" Width="16" Height="16" Class="me-2" />
-                                    <span>Deploy Project</span>
-                                }
-                            </button>
-                        }
-                        else
-                        {
-                            <div class="d-flex align-items-center text-success">
-                                <Icon IconName="check-circle" Width="16" Height="16" Class="me-2" />
-                                <span>Project Deployed Successfully</span>
-                            </div>
-                        }
-                    </div>
-                }
-
-                <div class="text-center mt-4">
-                    <small class="text-muted">
-                        <Icon IconName="info" Width="16" Height="16" Class="me-2" />
-                        Steps will advance automatically when completed
-                    </small>
+                    }
                 </div>
             }
-        </div>
 
-
-
-        @if (showCreateModal)
-        {
-            <div class="modal-wrapper">
-                <div class="modal fade show d-block" tabindex="-1">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content modern-modal">
-                            <div class="modal-header border-0 pb-0">
-                                <div class="d-flex align-items-center">
-                                    <Icon IconName="check-circle" Height="32" Width="32" class="me-2" />
-                                    <h5 class="modal-title">Confirmation</h5>
-                                </div>
-                                <button class="btn-close-custom" @onclick="() => showCreateModal = false">
-                                    <Icon IconName="close-circle" Height="24" Width="24" />
-                                </button>
-                            </div>
-
-                            <div class="modal-body modal-body-scroll py-4">
-
-                                <div class="row g-4 mb-4">
-                                    <div class="col-md-12">
-                                        <div class="info-card h-100">
-                                            <div class="info-label">Project Identifier</div>
-                                            <div class="info-value">@project.ProjectInfo.ProjectIdentifier</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="info-card h-100">
-                                            <div class="info-label">Founder Key</div>
-                                            <div class="info-value">@project.ProjectInfo.FounderKey</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="info-card h-100">
-                                            <div class="info-label">Target Amount</div>
-                                            <div class="info-value text-success">@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="info-card h-100">
-                                            <div class="info-label">Start Date</div>
-                                            <div class="info-value">@project.ProjectInfo.StartDate.FormatDate() (in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days)</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="info-card h-100">
-                                            <div class="info-label">Expiry Date</div>
-                                            <div class="info-value text-warning">@project.ProjectInfo.ExpiryDate.FormatDate() (in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days)</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="info-card h-100">
-                                            <div class="info-label">Penalty Days</div>
-                                            <div class="info-value text-danger">@project.ProjectInfo.PenaltyDays days</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="info-card h-100">
-                                            <div class="info-label">Miner Fee</div>
-                                            <div class="info-value text-warning">@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="info-card h-100">
-                                            <div class="info-label">Angor Fee</div>
-                                            <div class="info-value text-success">@signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <FeeSelector SendFee="@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
-                                             CoinTicker="@network.CoinTicker"
-                                             FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
-                                             FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
-                                             FeePosition="@feeData.FeePosition"
-                                             FeeMin="@feeData.FeeMin"
-                                             FeeMax="@feeData.FeeMax"
-                                             OnFeeChanged="@HandleFeeChanged" />
-
-                                <h6 class="mt-3 mb-2">Stages</h6>
-                                @foreach (var stage in project.ProjectInfo.Stages)
-                                {
-                                    <div class="stage-card mt-4 p-3">
-                                        <div class="stage-content">
-                                            <div class="stage-icon">
-                                                <Icon IconName="percent" Height="32" Width="32" />
-                                            </div>
-                                            <div class="stage-info">
-                                                <p class="stage-text"><strong>Stage Percent:</strong> @stage.AmountToRelease %</p>
-                                            </div>
-                                        </div>
-                                        <div class="stage-content">
-                                            <div class="stage-icon">
-                                                <Icon IconName="calendar" Height="32" Width="32" />
-                                            </div>
-                                            <div class="stage-info">
-                                                <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate.FormatDate() - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-
-                                <hr>
-
-                                <div class="confirmation-section mt-4 text-center">
-                                    <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
-                                    <p class="confirmation-text">
-                                        Please review the transaction details carefully before confirming.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer border-0 pt-0">
-                                <button class="btn btn-border-success btn-sm" @onclick="Send" disabled="@publishProjectSpinner">
-                                    @if (publishProjectSpinner)
-                                    {
-                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                        <span>Confirming...</span>
-                                    }
-                                    else
-                                    {
-                                        <span>Confirm</span>
-                                    }
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    <Icon IconName="info" Width="16" Height="16" Class="me-2" />
+                    Steps will advance automatically when completed
+                </small>
             </div>
         }
 
-        @if(showPreview){
-            <div class="modal-wrapper">
-                <div class="modal fade show d-block" tabindex="-1">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content modern-modal">
-                            <div class="modal-header border-0 pb-0">
-                                <div class="d-flex align-items-center">
-                                    <Icon IconName="eye" Height="32" Width="32" class="me-2" />
-                                    <h5 class="modal-title">Project Preview</h5>
-                                </div>
-                                <button class="btn-close-custom" @onclick="TogglePreview">
-                                    <Icon IconName="close-circle" Height="24" Width="24" />
-                                </button>
-                            </div>
-
-                            <div class="modal-body modal-body-scroll">
-                                <div class="d-flex align-items-stretch">
-                                    <div class="card w-100 me-0 ms-0 preview-card-container">
-                                        <a class="d-block">
-                                            <div class="banner-container">
-                                                @if (string.IsNullOrEmpty(project.Metadata?.Banner))
-                                                {
-                                                    <img class="banner-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                                }
-                                                else
-                                                {
-                                                    <img class="banner-image" src="@project.Metadata.Banner" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                                }
-                                                <div class="profile-container">
-                                                    @if (string.IsNullOrEmpty(project.Metadata?.Picture))
-                                                    {
-                                                        <img class="profile-image" src="/assets/img/no-image.jpg" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                                    }
-                                                    else
-                                                    {
-                                                        <img class="profile-image" src="@project.Metadata.Picture" alt="" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                                                    }
-                                                </div>
-                                            </div>
-                                        </a>
-
-                                        <div class="card-body pb-0">
-                                            <div class="d-flex align-items-center mb-4">
-                                                <span class="user-select-none animate-rotate">
-                                                    <Icon IconName="view" Height="24" Width="24"></Icon>
-                                                </span>
-                                                <div class="h-100 ms-3">
-                                                    <h5 class="mb-0 font-weight-bolder">
-                                                        @if (string.IsNullOrEmpty(project.Metadata?.Name))
-                                                        {
-                                                            <span>Name</span>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span>@project.Metadata.Name</span>
-                                                        }
-                                                    </h5>
-                                                </div>
-                                            </div>
-
-                                            @if (string.IsNullOrEmpty(project.Metadata?.About))
-                                            {
-                                                <p class="mb-0 line-clamp-3">About</p>
-                                            }
-                                            else
-                                            {
-                                                <p class="mb-0 line-clamp-3">@ConvertToMarkupString(project.Metadata.About)</p>
-                                            }
-                                        </div>
-                                        <div class="card-footer pt-0">
-                                            <hr class="horizontal light mt-3">
-                                            <span role="button" class="d-flex align-items-center btn btn-border w-100-m">
-                                                <span class="user-select-none animate-rotate">
-                                                    <Icon IconName="view-project" Height="24" Width="24"></Icon>
-                                                </span>
-                                                <div class="h-100 ms-3">
-                                                    <span class="mb-0 font-weight-bolder text-primary">
-                                                        View Project
-                                                    </span>
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="create-snapshot-card mt-4">
-                                    <div class="create-snapshot-header">
-                                        <Icon IconName="camera" class="create-snapshot-icon" />
-                                        <h4 class="create-snapshot-title">Project Snapshot</h4>
-                                    </div>
-                                    <div class="create-snapshot-content">
-                                        <div class="create-snapshot-row">
-                                            <span class="create-snapshot-label">Target Amount</span>
-                                            <span class="create-snapshot-value">@targetAmountInBTC @network.CoinTicker</span>
-                                        </div>
-                                        <div class="create-snapshot-row">
-                                            <span class="create-snapshot-label">Stages</span>
-                                            <span class="create-snapshot-value">@project.ProjectInfo.Stages.Count</span>
-                                        </div>
-                                        <div class="create-snapshot-row">
-                                            <span class="create-snapshot-label">Penalty Days</span>
-                                            <span class="create-snapshot-value">@project.ProjectInfo.PenaltyDays days</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-
-
-
-
-        @if (showConfirmationModal)
-        {
-            <div class="modal-wrapper">
-                <div class="modal fade show d-block" tabindex="-1">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content modern-modal">
-                            <div class="modal-header border-0 pb-0">
-                                <div class="d-flex align-items-center">
-                                    <Icon IconName="alert-circle" Height="32" Width="32" class="me-2" />
-                                    <h5 class="modal-title">Confirmation</h5>
-                                </div>
-                                <button class="btn-close-custom" @onclick="CloseConfirmationModal">
-                                    <Icon IconName="close-circle" Height="24" Width="24" />
-                                </button>
-                            </div>
-
-                            <div class="modal-body modal-body-scroll">
-                                <p class="mb-1">@confirmationMessage</p>
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-border-warning btn-sm" @onclick="CloseConfirmationModal">Cancel</button>
-                                <button type="button" class="btn btn-border-success btn-sm" @onclick="PerformFinalizeAction">Confirm</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
     </div>
+
+    @if (showCreateModal)
+    {
+        <div class="modal-wrapper">
+            <div class="modal fade show d-block" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content modern-modal">
+                        <div class="modal-header border-0 pb-0">
+                            <div class="d-flex align-items-center">
+                                <Icon IconName="check-circle" Height="32" Width="32" class="me-2" />
+                                <h5 class="modal-title">Confirmation</h5>
+                            </div>
+                            <button class="btn-close-custom" @onclick="() => showCreateModal = false">
+                                <Icon IconName="close-circle" Height="24" Width="24" />
+                            </button>
+                        </div>
+
+                        <div class="modal-body modal-body-scroll py-4">
+
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-12">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Project Identifier</div>
+                                        <div class="info-value">@project.ProjectInfo.ProjectIdentifier</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Founder Key</div>
+                                        <div class="info-value">@project.ProjectInfo.FounderKey</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Target Amount</div>
+                                        <div class="info-value text-success">@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Start Date</div>
+                                        <div class="info-value">@project.ProjectInfo.StartDate.FormatDate() (in @((project.ProjectInfo.StartDate - DateTime.Now).Days) days)</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Expiry Date</div>
+                                        <div class="info-value text-warning">@project.ProjectInfo.ExpiryDate.FormatDate() (in @((project.ProjectInfo.ExpiryDate - DateTime.Now).Days) days)</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Penalty Days</div>
+                                        <div class="info-value text-danger">@project.ProjectInfo.PenaltyDays days</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Miner Fee</div>
+                                        <div class="info-value text-warning">@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card h-100">
+                                        <div class="info-label">Angor Fee</div>
+                                        <div class="info-value text-success">@signedTransaction?.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <FeeSelector SendFee="@Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC)"
+                                         CoinTicker="@network.CoinTicker"
+                                         FeeRate="@feeData.SelectedFeeEstimation.FeeRate"
+                                         FeeBlockCount="@feeData.SelectedFeeEstimation.Confirmations"
+                                         FeePosition="@feeData.FeePosition"
+                                         FeeMin="@feeData.FeeMin"
+                                         FeeMax="@feeData.FeeMax"
+                                         OnFeeChanged="@HandleFeeChanged" />
+
+                            <h6 class="mt-3 mb-2">Stages</h6>
+                            @foreach (var stage in project.ProjectInfo.Stages)
+                            {
+                                <div class="stage-card mt-4 p-3">
+                                    <div class="stage-content">
+                                        <div class="stage-icon">
+                                            <Icon IconName="percent" Height="32" Width="32" />
+                                        </div>
+                                        <div class="stage-info">
+                                            <p class="stage-text"><strong>Stage Percent:</strong> @stage.AmountToRelease %</p>
+                                        </div>
+                                    </div>
+                                    <div class="stage-content">
+                                        <div class="stage-icon">
+                                            <Icon IconName="calendar" Height="32" Width="32" />
+                                        </div>
+                                        <div class="stage-info">
+                                            <p class="stage-text"><strong>Stage Date:</strong> @stage.ReleaseDate.FormatDate() - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after project starts</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            <hr>
+
+                            <div class="confirmation-section mt-4 text-center">
+                                <Icon IconName="alert" Height="24" Width="24" class="mb-2" />
+                                <p class="confirmation-text">
+                                    Please review the transaction details carefully before confirming.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer border-0 pt-0">
+                            <button class="btn btn-border-success btn-sm" @onclick="Send" disabled="@publishProjectSpinner">
+                                @if (publishProjectSpinner)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Confirming...</span>
+                                }
+                                else
+                                {
+                                    <span>Confirm</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showConfirmationModal)
+    {
+        <div class="modal-wrapper">
+            <div class="modal fade show d-block" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content modern-modal">
+                        <div class="modal-header border-0 pb-0">
+                            <div class="d-flex align-items-center">
+                                <Icon IconName="alert-circle" Height="32" Width="32" class="me-2" />
+                                <h5 class="modal-title">Confirmation</h5>
+                            </div>
+                            <button class="btn-close-custom" @onclick="CloseConfirmationModal">
+                                <Icon IconName="close-circle" Height="24" Width="24" />
+                            </button>
+                        </div>
+
+                        <div class="modal-body modal-body-scroll">
+                            <p class="mb-1">@confirmationMessage</p>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-border-warning btn-sm" @onclick="CloseConfirmationModal">Cancel</button>
+                            <button type="button" class="btn btn-border-success btn-sm" @onclick="PerformFinalizeAction">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
 </div>
 
 @code {
@@ -934,7 +1033,6 @@
     }
 
     private int activeTab = 1;
-    private bool showPreview { get; set; } = false;
 
     private int totalDuration;
     private int numberOfStages;
@@ -954,7 +1052,7 @@
     private int currentStep = 1;
 
     private int GetProgressPercentage() => (currentStep - 1) * 50;
-    private void TogglePreview() => showPreview = !showPreview;
+
     private void NextStep()
     {
         if (currentStep < 3)
@@ -1535,7 +1633,7 @@
                 return false;
             }
         }
-        
+
         if (project.Metadata is null)
         {
             notificationComponent.ShowErrorMessage("Nostr profile must be filled");
@@ -1606,10 +1704,10 @@
         for (int i = 0; i < percentages.Length; i++)
         {
             stages.Add(new Stage
-                {
-                    AmountToRelease = percentages[i],
-                    ReleaseDate = currentDate
-                });
+            {
+                AmountToRelease = percentages[i],
+                ReleaseDate = currentDate
+            });
 
             if (i > 0)
             {
@@ -1639,10 +1737,10 @@
         for (int i = 0; i < numberOfStages; i++)
         {
             project.ProjectInfo.Stages.Add(new Stage
-                {
-                    AmountToRelease = stagePercentage,
-                    ReleaseDate = project.ProjectInfo.StartDate.AddDays(i * stageDuration)
-                });
+            {
+                AmountToRelease = stagePercentage,
+                ReleaseDate = project.ProjectInfo.StartDate.AddDays(i * stageDuration)
+            });
         }
 
         StateHasChanged();
@@ -1678,21 +1776,21 @@
     private FounderProject CreateDefaultProject(FounderKeys projectsKeys)
     {
         return new FounderProject
+        {
+            ProjectIndex = projectsKeys.Index,
+            Metadata = new ProjectMetadata(),
+            ProjectInfo = new ProjectInfo
             {
-                ProjectIndex = projectsKeys.Index,
-                Metadata = new ProjectMetadata(),
-                ProjectInfo = new ProjectInfo
-                {
-                    FounderKey = projectsKeys.FounderKey,
-                    FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
-                    ProjectIdentifier = projectsKeys.ProjectIdentifier,
-                    NostrPubKey = projectsKeys.NostrPubKey,
-                    StartDate = DateTime.UtcNow.AddMinutes(2), // to allow testing and spending immediately
-                    PenaltyDays = 90,
-                    ExpiryDate = DateTime.UtcNow.AddDays(120),
-                    TargetAmount = Money.Coins(50).Satoshi
-                }
-            };
+                FounderKey = projectsKeys.FounderKey,
+                FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
+                ProjectIdentifier = projectsKeys.ProjectIdentifier,
+                NostrPubKey = projectsKeys.NostrPubKey,
+                StartDate = DateTime.UtcNow.AddMinutes(2), // to allow testing and spending immediately
+                PenaltyDays = 90,
+                ExpiryDate = DateTime.UtcNow.AddDays(120),
+                TargetAmount = Money.Coins(50).Satoshi
+            }
+        };
     }
     private void PopulateTestnetData(FounderProject project)
     {
@@ -1720,23 +1818,11 @@
     {
         return new List<(string, string, string)>
     {
-    ("name", "Project Name", project.Metadata.Name),
-    ("about", "Project About", ((MarkupString)project.Metadata.About).ToString()),
     ("identifier", "Project Identifier", project.ProjectInfo.ProjectIdentifier),
     ("key", "Founder Key", project.ProjectInfo.FounderKey)
     };
     }
 
-    private IEnumerable<(string IconName, string Label, string Value)> GetProjectInfoData()
-    {
-        return new List<(string, string, string)>
-    {
-    ("name", "Project Name", project.Metadata.Name),
-    ("about", "Project About", ((MarkupString)project.Metadata.About).ToString()),
-    ("identifier", "Project Identifier", project.ProjectInfo.ProjectIdentifier),
-    ("key", "Founder Key", project.ProjectInfo.FounderKey)
-    };
-    }
 
     private IEnumerable<(string IconName, string Label, string Value, string color, bool fullWidth)> GetAdditionalProjectInfo()
     {
@@ -1812,6 +1898,11 @@
         return project.ProjectInfo.StartDate.AddDays(60);
     }
 
+    private async void OpenDatePicker(string inputId)
+    {
+        await JS.InvokeVoidAsync("eval", $"document.getElementById('{inputId}')?.showPicker()");
+    }
+
     private async Task AutoDeployProject()
     {
         if (!passwordComponent.HasPassword())
@@ -1834,7 +1925,7 @@
         autoDeploySpinner = true;
         isDeploying = true;
         hasErrors = false;
-        var completedSteps = new List<string>(); 
+        var completedSteps = new List<string>();
         StateHasChanged();
 
         try
@@ -1889,17 +1980,17 @@
         catch (Exception e)
         {
             _Logger.LogError(e, "Error during auto deployment. Completed steps: {CompletedSteps}", string.Join(", ", completedSteps));
-            
+
             // Show more informative error message
             var errorMessage = $"Auto deployment failed at step {currentStep}: {e.Message}";
             if (completedSteps.Any())
             {
                 errorMessage += $"\n\nCompleted steps: {string.Join(", ", completedSteps)}";
             }
-            
+
             notificationComponent.ShowErrorMessage(errorMessage);
             hasErrors = true;
-            
+
             // Set current step to the first incomplete step
             SetCurrentStepBasedOnProgress();
         }
@@ -1914,17 +2005,17 @@
     private async Task<bool> WaitForCondition(Func<bool> condition, TimeSpan timeout)
     {
         var startTime = DateTime.UtcNow;
-        
+
         while (DateTime.UtcNow - startTime < timeout)
         {
             if (condition())
             {
                 return true;
             }
-            
+
             await Task.Delay(100);
         }
-        
+
         return false;
     }
 
