@@ -15,7 +15,7 @@ public interface IWalletOperations
     Task<(string address, List<UtxoData> data)> FetchUtxoForAddressAsync(string adddress);
     List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo);
     Task<IEnumerable<FeeEstimation>> GetFeeEstimationAsync();
-    void CreateSendTransaction(SendInfo sendInfo, AccountInfo accountInfo);
+    Transaction CreateSendTransaction(SendInfo sendInfo, AccountInfo accountInfo);
     (List<Coin>? coins, List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths);
 
     TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,

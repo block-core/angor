@@ -634,7 +634,7 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    public void CreateSendTransaction(SendInfo sendInfo, AccountInfo accountInfo)
+    public Transaction CreateSendTransaction(SendInfo sendInfo, AccountInfo accountInfo)
     {
         var network = _networkConfiguration.GetNetwork();
 
@@ -653,5 +653,7 @@ public class WalletOperations : IWalletOperations
         transaction.Outputs.Add(new TxOut(Money.Satoshis(sendInfo.SendAmount), BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network).ScriptPubKey));
 
         sendInfo.UnSignedTransaction = transaction;
+
+        return transaction;
     }
 }
