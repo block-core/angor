@@ -11,7 +11,7 @@
              x:Class="AngorApp.Sections.Founder.ManageFunds.ManageFundsView" x:DataType="mf:IManageFundsViewModel">
 
     <Design.DataContext>
-        <mf:ManageFundsViewModelDesign IsUnfunded="False">
+        <mf:ManageFundsViewModelDesign IsUnfunded="True">
             <mf:ManageFundsViewModelDesign.UnfundedProjectViewModel>
                 <angorApp:UnfundedProjectViewModelDesign />
             </mf:ManageFundsViewModelDesign.UnfundedProjectViewModel>
