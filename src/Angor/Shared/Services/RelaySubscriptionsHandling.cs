@@ -20,6 +20,9 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
 
     private IDisposable _okHandlingSubscription;
     private IDisposable _eoseHandlingSubscription;
+    
+    private IDisposable _okHandlingDiscoverySubscription;
+    private IDisposable _eoseHandlingDiscoverySubscription;
 
     public RelaySubscriptionsHandling(ILogger<RelaySubscriptionsHandling> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService)
     {
@@ -35,6 +38,11 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         
         _okHandlingSubscription = client.Streams.OkStream.Subscribe(HandleOkMessages);
         _eoseHandlingSubscription = client.Streams.EoseStream.Subscribe(HandleEoseMessages);
+        
+        var discoveryClient = _communicationFactory.GetOrCreateDiscoveryClients(networkService); 
+        
+        _okHandlingDiscoverySubscription = discoveryClient.Streams.OkStream.Subscribe(HandleOkMessages);
+        _eoseHandlingDiscoverySubscription = discoveryClient.Streams.EoseStream.Subscribe(HandleEoseMessages);
     }
 
     // public void Init(INetworkService networkService)
@@ -159,6 +167,8 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         relaySubscriptions.Values.ToList().ForEach(_ => _.Dispose());
         _okHandlingSubscription.Dispose();
         _eoseHandlingSubscription.Dispose();
+        _okHandlingDiscoverySubscription.Dispose();
+        _eoseHandlingDiscoverySubscription.Dispose();
         _communicationFactory.CloseClientConnection();
     }
 }   

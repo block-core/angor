@@ -282,7 +282,7 @@ namespace Angor.Shared.Services
             return Task.FromResult(deleteEvent.Id);
         }
 
-        public string PublishNip65ListAsync(string hexPrivateKey)
+        public string PublishNip65List(string hexPrivateKey, Action<NostrOkResponse> action)
         {
             var key = NostrPrivateKey.FromHex(hexPrivateKey);
 
@@ -296,9 +296,11 @@ namespace Angor.Shared.Services
 
             var nostrClient = _communicationFactory.GetOrCreateDiscoveryClients(_networkService);
 
+            _subscriptionsHandling.TryAddOKAction(signed.Id,action);
+            
             nostrClient.Send(new NostrEventRequest(signed));
 
-            return signed.Id;
+            return signed.Id!;
         }
 
         private static NostrEvent GetNip3030NostrEvent(string content)

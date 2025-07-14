@@ -178,7 +178,7 @@ else
                 PenaltyDays = 100,
                 StartDate = DateTime.Now,
                 TargetAmount = Money.Coins(10).Satoshi,
-                ProjectIdentifier = derivationOperations.DeriveAngorKey(Encoders.Hex.EncodeData(privateFounderKey.Neuter().PubKey.ToBytes()),angorRootKey),
+                ProjectIdentifier = derivationOperations.DeriveAngorKey(angorRootKey, Encoders.Hex.EncodeData(privateFounderKey.Neuter().PubKey.ToBytes())),
                 ProjectSeeders = new ProjectSeeders()
             }
         };
@@ -201,7 +201,7 @@ else
             SendToAddress = privateFounderKey.Neuter().PubKey.GetSegwitAddress(network).ToString()
         };
 
-        _walletOperations.CalculateTransactionFee(sendInfo, localAccountInfo,  1000);
+        _walletOperations.CreateSendTransaction(sendInfo, localAccountInfo);
 
         var fee = await _walletOperations.GetFeeEstimationAsync();
 

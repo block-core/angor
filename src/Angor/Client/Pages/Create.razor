@@ -1,8 +1,6 @@
 @page "/create"
 @using Angor.Client.Models
 @using Angor.Client.Storage
-@using Angor.Client.Components
-@using Angor.Client.Shared
 @using Angor.Shared
 @using Angor.Shared.Models
 @using Angor.Shared.Protocol
@@ -10,11 +8,8 @@
 @using Angor.Shared.Utilities
 @using Blockcore.Consensus.TransactionInfo
 @using Blockcore.NBitcoin
+@using Blockcore.NBitcoin.DataEncoders
 @using Blockcore.Networks
-@using NBitcoin.DataEncoders
-@using Microsoft.AspNetCore.Components.Forms
-@using Microsoft.AspNetCore.Components
-@using Microsoft.AspNetCore.Components.Web
 @inherits BaseComponent
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
@@ -1252,7 +1247,7 @@
 
             var resultId = await _RelayService.CreateNostrProfileAsync(
             project.Metadata.ToNostrMetadata(),
-            NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes()),
+            Encoders.Hex.EncodeData(nostrKey.ToBytes()),
             _ =>
             {
                 createProfileSpinner = false;
@@ -1272,7 +1267,13 @@
                     storage.UpdateFounderProject(project);
 
                     InvokeAsync(async () => await CheckAndAdvanceStep());
-                    InvokeAsync(() => _RelayService.PublishNip65ListAsync(NBitcoin.DataEncoders.Encoders.Hex.EncodeData(nostrKey.ToBytes())));
+                    InvokeAsync(() => _RelayService.PublishNip65List(Encoders.Hex.EncodeData(nostrKey.ToBytes()),
+                        okResponse =>
+                        {
+                            if (okResponse.Accepted)
+                                return;
+                            notificationComponent.ShowErrorMessage("Failed to publish NIP-65 list", $"{okResponse.CommunicatorName} - {okResponse.Message}");
+                        }));
                 }
 
                 StateHasChanged();

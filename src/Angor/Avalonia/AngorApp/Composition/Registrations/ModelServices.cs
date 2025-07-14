@@ -1,7 +1,5 @@
-using Angor.UI.Model.Implementation.Projects;
 using AngorApp.Design;
 using AngorApp.Features.Invest;
-using AngorApp.Sections.Browse.Details;
 using AngorApp.Sections.Wallet.CreateAndRecover;
 using AngorApp.UI.Services;
 using Microsoft.Extensions.DependencyInjection;
