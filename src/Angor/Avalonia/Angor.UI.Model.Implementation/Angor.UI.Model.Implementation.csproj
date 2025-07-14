@@ -7,19 +7,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Http" />
+        <PackageReference Include="Microsoft.Extensions.Http"/>
         <PackageReference Include="ReactiveUI"/>
         <PackageReference Include="CSharpFunctionalExtensions"/>
         <PackageReference Include="ReactiveUI.SourceGenerators"/>
         <PackageReference Include="ReactiveUI.SourceGenerators.Analyzers.CodeFixes"/>
-<!--        <PackageReference Include="Zafiro.Avalonia.Dialogs" />-->
+        <PackageReference Include="Zafiro.Avalonia.Dialogs"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia.Dialogs\Zafiro.Avalonia.Dialogs.csproj" />
-      <ProjectReference Include="..\..\Shared\Angor.Shared.csproj" />
-      <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj" />
-      <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj" />
+        <ProjectReference Include="..\..\Shared\Angor.Shared.csproj"/>
+        <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj"/>
+        <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj"/>
     </ItemGroup>
 
 </Project>
