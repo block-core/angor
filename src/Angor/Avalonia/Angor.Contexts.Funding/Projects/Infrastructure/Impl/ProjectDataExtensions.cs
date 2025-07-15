@@ -46,6 +46,7 @@ public static class ProjectDataExtensions
 
             TargetAmount = data.ProjectInfo.TargetAmount,
             StartingDate = data.ProjectInfo.StartDate,
+            EndDate = data.ProjectInfo.EndDate,
             PenaltyDuration = TimeSpan.FromDays(data.ProjectInfo.PenaltyDays),
             
             InformationUri = string.IsNullOrWhiteSpace(data.NostrMetadata.Website)

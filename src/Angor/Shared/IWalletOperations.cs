@@ -20,7 +20,6 @@ public interface IWalletOperations
 
     TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, long feeRate);
-
     Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,
         Transaction signedTransaction);
 

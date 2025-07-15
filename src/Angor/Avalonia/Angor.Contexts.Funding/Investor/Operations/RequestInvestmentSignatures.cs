@@ -1,5 +1,6 @@
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -56,20 +57,16 @@ public static class RequestInvestmentSignatures
             {
                 return Result.Failure<Guid>(sendSignatureResult.Error);
             }
-
-            var requestId = sendSignatureResult.Value;
-
-            var amount = strippedInvestmentTransaction.Outputs.Sum(x => x.Value);
             
-            await investmentRepository.Add(request.WalletId, Investment.Create(request.ProjectId,request.Draft.InvestorKey,new Amount(amount),transactionId));
+            await investmentRepository.Add(request.WalletId, new InvestorPositionRecord()
+            {
+                InvestmentTransactionHash = transactionId,
+                InvestorPubKey = request.Draft.InvestorKey,
+                ProjectIdentifier = request.ProjectId.Value,
+                UnfundedReleaseAddress = null, //TODO: Set this to the actual unfunded release address once implemented
+            });
             
             return Result.Success(Guid.Empty);
-        }
-
-        private async Task<Result<Guid>> Save(string requestId, string transactionHex, string investorKey, ProjectId projectId)
-        {
-            // TODO: Implement the save logic
-            throw new NotImplementedException();
         }
 
         private async Task<Result<string>> SendSignatureRequest(WalletWords walletWords, Project project, string signedTransactionHex)

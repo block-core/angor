@@ -67,7 +67,8 @@ public class ProjectRepository(
                         {
                             Amount = Convert.ToInt64(stage.AmountToRelease), Index = i, ReleaseDate = stage.ReleaseDate
                         }),
-                        StartingDate = x.StartDate
+                        StartingDate = x.StartDate,
+                        EndDate = x.EndDate
                     });
             })
             .ToList()

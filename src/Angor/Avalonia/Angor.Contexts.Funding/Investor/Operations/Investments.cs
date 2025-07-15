@@ -63,14 +63,16 @@ public static class Investments
                             Target = new Amount(project.TargetAmount),
                             FounderStatus = investment == null ? FounderStatus.Approved : FounderStatus.Requested,
                             InvestmentStatus = investment == null ? InvestmentStatus.Invalid : InvestmentStatus.Invested,
-                            Investment = new Amount(investment?.TotalAmount ?? 0) //TODO get the trx from 
+                            Investment = new Amount(investment?.TotalAmount ?? 0),
+                            InvestmentId = investment?.TransactionId ?? string.Empty,
                         };
                         
                         if (investment != null) return Result.Success(dto);
                         
-                        var (amount, investmentStatus) = await GetInvestmentStatusFromDms(request.WalletId, project);
+                        var (amount, investmentStatus, investmentId) = await GetInvestmentStatusFromDms(request.WalletId, project);
                         dto.Investment = amount;
                         dto.InvestmentStatus = investmentStatus;
+                        dto.InvestmentId = investmentId;
 
                         return Result.Success(dto);
                     });
@@ -102,7 +104,7 @@ public static class Investments
             return result.Result.IsSuccess ? result.Result.Value : null;
         }
 
-        private async Task<(Amount, InvestmentStatus)> GetInvestmentStatusFromDms(Guid walletId, Project project)
+        private async Task<(Amount, InvestmentStatus, string)> GetInvestmentStatusFromDms(Guid walletId, Project project)
         {
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
             var pubKey =
@@ -117,6 +119,7 @@ public static class Investments
 
             var investmentStatus = InvestmentStatus.Invalid;
             var amount = new Amount(0);
+            var investmentId = string.Empty;
             var tcs = new TaskCompletionSource<InvestmentStatus>();
 
             
@@ -137,6 +140,7 @@ public static class Investments
                         var trx = networkConfiguration.GetNetwork().CreateTransaction(investmentRequest.InvestmentTransactionHex);
 
                         amount = new Amount(trx.Outputs.Sum(x => x.Value));
+                        investmentId = trx.GetHash().ToString();
                     }
                     catch (Exception e)
                     {
@@ -158,7 +162,7 @@ public static class Investments
 
             await tcs.Task.ToObservable().Timeout(TimeSpan.FromSeconds(10));
 
-            return (amount, investmentStatus);
+            return (amount, investmentStatus, investmentId);;
         }
     }
 }
