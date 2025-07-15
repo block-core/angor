@@ -979,6 +979,7 @@
             networkType = _networkConfiguration.GetNetwork().Name;
             settingsInfo = _clientStorage.GetSettingsInfo();
 
+            network = _networkConfiguration.GetNetwork();
             hasWallet = _walletStorage.HasWallet();
             StateHasChanged();
 
