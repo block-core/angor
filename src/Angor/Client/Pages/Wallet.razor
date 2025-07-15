@@ -670,14 +670,14 @@ else
                                 <label for="sendToAddress" class="form-label">Send to Address</label>
                                 <div class="input-group">
                                     <span role="button" class="btn btn-border-success btn-sm" @onclick="PasteFromClipboard">
-                                        <Icon IconName="paste" />
+                                        <Icon IconName="paste" Height="24" Width="24"/>
                                     </span>
 
                                     <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
 
 
                                     <span role="button" class="btn btn-border-danger btn-sm" @onclick="ClearAddress">
-                                        <Icon IconName="remove" />
+                                        <Icon IconName="remove" Height="24" Width="24"/>
                                     </span>
                                 </div>
                             </div>
@@ -696,7 +696,7 @@ else
 
                             <div class="d-flex align-items-center">
                                 <!-- Select UTXOs Button -->
-                                <button type="button" class="btn btn-border-success me-3"
+                                <button type="button" class="btn btn-border-success btn-sm me-3"
                                         @onclick="() => coinControlModal = true">
                                     Select UTXOs
 

@@ -1,0 +1,264 @@
+.angor-date-picker-container {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.angor-date-picker-input-group {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+}
+
+.angor-date-picker-input {
+    flex: 1;
+}
+
+.angor-date-picker-input:focus {
+    outline: none;
+    border-color: var(--form-focus-border);
+    box-shadow: 0 0 0 0.2rem var(--form-focus-shadow);
+}
+
+.angor-date-picker-input:hover {
+    border-color: var(--angor-secondary);
+}
+
+.angor-date-picker-input:disabled {
+    background-color: var(--form-disabled-bg);
+    color: var(--form-disabled-text);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.angor-date-picker-button {
+    position: absolute;
+    top: 10%;
+    right: 0.5rem;
+    width: 2rem;
+    height: 2rem;
+    background: none;
+    border: none;
+    color: var(--angor-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--angor-border-radius-sm);
+    transition: all 0.15s ease-in-out;
+}
+
+.angor-date-picker-button:hover {
+    background-color: rgba(var(--angor-secondary-rgb), 0.1);
+    color: var(--angor-secondary);
+}
+
+.angor-date-picker-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.angor-date-picker-calendar-container {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1051;
+    margin-top: 0.25rem;
+}
+
+.angor-date-picker-calendar {
+    background: var(--form-bg);
+    border: var(--angor-border-width) var(--angor-border-style) var(--form-border);
+    border-radius: var(--angor-border-radius-lg);
+    box-shadow: 0 10px 25px var(--angor-shadow-primary);
+    padding: 1.5rem;
+    min-width: 320px;
+    max-width: 360px;
+    font-family: var(--angor-font-sans-serif);
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-0.5rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.angor-date-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--form-border);
+}
+
+.angor-date-picker-nav-button {
+    background: none;
+    border: var(--angor-border-width) var(--angor-border-style) var(--btn-border);
+    color: var(--angor-secondary);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--angor-border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease-in-out;
+    min-width: 2.5rem;
+    height: 2.5rem;
+}
+
+.angor-date-picker-nav-button:hover {
+    background-color: rgba(var(--angor-secondary-rgb), 0.1);
+    border-color: var(--angor-secondary);
+}
+
+.angor-date-picker-month-year {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.angor-date-picker-month-select,
+.angor-date-picker-year-select {
+    background: var(--form-bg);
+    border: var(--angor-border-width) var(--angor-border-style) var(--form-border);
+    color: var(--form-text);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--angor-border-radius);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.angor-date-picker-month-select:focus,
+.angor-date-picker-year-select:focus {
+    outline: none;
+    border-color: var(--form-focus-border);
+    box-shadow: 0 0 0 0.2rem var(--form-focus-shadow);
+}
+
+.angor-date-picker-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.angor-date-picker-weekday {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--form-label);
+    padding: 0.5rem 0;
+}
+
+.angor-date-picker-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.angor-date-picker-day {
+    background: none;
+    border: none;
+    color: var(--form-text);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--angor-border-radius);
+    font-size: 0.875rem;
+    transition: all 0.15s ease-in-out;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+}
+
+.angor-date-picker-day:hover {
+    background-color: rgba(var(--angor-secondary-rgb), 0.1);
+}
+
+.angor-date-picker-day-other-month {
+    color: var(--form-disabled-text);
+    opacity: 0.6;
+}
+
+.angor-date-picker-day-today {
+    background: linear-gradient(135deg, rgba(40, 167, 69, .5), rgba(34, 139, 58, .5)) !important;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, .1);
+    border: 2px solid rgba(40, 167, 69, .3);
+    color: var(--angor-primary) !important;
+    font-weight: 600;
+}
+
+.angor-date-picker-day-selected {
+    background: linear-gradient(135deg, rgba(255,193,7,0.5), rgba(224,168,0,0.5)) !important;
+    box-shadow: 0 2px 4px rgba(255,193,7,0.1);
+    border: 2px solid rgba(255,193,7,0.3);
+    color: var(--angor-primary) !important;
+    font-weight: 600;
+}
+
+.angor-date-picker-day-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.angor-date-picker-day-disabled:hover {
+    background: none;
+}
+
+.angor-date-picker-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--form-border);
+}
+
+.angor-date-picker-today-button,
+.angor-date-picker-clear-button {
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-radius: var(--angor-border-radius);
+    font-size: 0.875rem;
+    transition: all 0.15s ease-in-out;
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .angor-date-picker-calendar {
+        margin: 0 0.5rem;
+        min-width: auto;
+        max-width: none;
+        padding: 1rem;
+    }
+
+    .angor-date-picker-month-year {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .angor-date-picker-month-select,
+    .angor-date-picker-year-select {
+        width: 100%;
+    }
+
+    .angor-date-picker-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .angor-date-picker-today-button,
+    .angor-date-picker-clear-button {
+        width: 100%;
+    }
+}
