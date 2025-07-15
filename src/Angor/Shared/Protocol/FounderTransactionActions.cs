@@ -34,6 +34,50 @@ public class FounderTransactionActions : IFounderTransactionActions
         _taprootScriptBuilder = taprootScriptBuilder;
     }
 
+    public NBitcoin.PSBT CreateInvestorRecoveryPsbt(ProjectInfo projectInfo, string investmentTrxHex, 
+        Transaction recoveryTransaction,  string rootExtPubKey, string path)
+    {
+
+        var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
+        var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
+        var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTrxHex, nbitcoinNetwork);
+
+        NBitcoin.ExtPubKey accountExtPubKey = NBitcoin.ExtPubKey.Parse(rootExtPubKey, nbitcoinNetwork);
+        NBitcoin.KeyPath keyPath = new KeyPath(path);
+        NBitcoin.ExtPubKey accountExtPubKeyDerived = accountExtPubKey.Derive(keyPath);
+        NBitcoin.RootedKeyPath rootedKeyPath = new NBitcoin.RootedKeyPath(accountExtPubKey, keyPath);
+
+        var (investorKey, secretHash) = GetProjectDetailsFromOpReturn(nbitcoinInvestmentTransaction);
+        
+        var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
+            .Skip(2).Take(projectInfo.Stages.Count)
+            .Select(_ => _.TxOut)
+            .ToArray();
+
+        var psbt = NBitcoin.PSBT.FromTransaction(nbitcoinRecoveryTransaction, nbitcoinNetwork);
+
+        for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
+        {
+            var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
+            var tapScript = new NBitcoin.Script(scriptStages.Recover.ToBytes()).ToTapScript(TapLeafVersion.C0);
+
+            psbt.Inputs[stageIndex].TaprootSighashType = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
+            psbt.Inputs[stageIndex].WitnessUtxo = outputs[stageIndex];
+
+            psbt.Inputs[stageIndex].HDTaprootKeyPaths.Add(
+                accountExtPubKeyDerived.GetPublicKey().GetTaprootFullPubKey().InternalKey.AsTaprootPubKey(),
+                new TaprootKeyPath(rootedKeyPath, new[] { tapScript.LeafHash }));
+
+
+
+            psbt.Inputs[stageIndex]...TaprootLeafScript = new[] { 
+                new TaprootLeafScript(tapScript.Script, tapScript.LeafVersion) 
+            };
+        }
+
+        return psbt;
+    }
+
     public SignatureInfo SignInvestorRecoveryTransactions(ProjectInfo projectInfo, string investmentTrxHex, 
         Transaction recoveryTransaction, string founderPrivateKey)
     {
@@ -53,7 +97,6 @@ public class FounderTransactionActions : IFounderTransactionActions
 
         SignatureInfo info = new SignatureInfo { ProjectIdentifier = projectInfo.ProjectIdentifier };
 
-        // todo: david change to Enumerable.Range 
         for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
         {
             var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
