@@ -56,6 +56,10 @@ namespace Angor.Shared.Services
                 {
                     network = new Angornet();
                 }
+                else if (url.Contains("debug"))
+                {
+                    network = new Angornet();
+                }
                 else if (url.Contains("localhost"))
                 {
                     network = new Angornet();
