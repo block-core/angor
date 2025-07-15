@@ -1595,7 +1595,6 @@
     private bool ValidateInputData()
     {
         var isTestnet = this.network.NetworkType == NetworkType.Testnet;
-        Console.WriteLine($"create.razor: mainnetRulesMode => {mainnetRulesMode}");
         
         if (!isTestnet || mainnetRulesMode)
         {
