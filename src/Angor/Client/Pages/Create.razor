@@ -1027,6 +1027,8 @@
         set => project.ProjectInfo.TargetAmount = Money.Coins(value).Satoshi;
     }
 
+    private bool mainnetRulesMode => storage.GetMainnetRulesMode();
+
     private int activeTab = 1;
 
     private int totalDuration;
@@ -1128,7 +1130,7 @@
         // Always update expiry date based on stages (or start date if no stages)
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
 
-        if (network.NetworkType == NetworkType.Testnet)
+        if (network.NetworkType == NetworkType.Testnet && !mainnetRulesMode)
         {
             PopulateTestnetData(project);
         }
@@ -1593,8 +1595,9 @@
     private bool ValidateInputData()
     {
         var isTestnet = this.network.NetworkType == NetworkType.Testnet;
-
-        if (!isTestnet)
+        Console.WriteLine($"create.razor: mainnetRulesMode => {mainnetRulesMode}");
+        
+        if (!isTestnet || mainnetRulesMode)
         {
             // test that need to happen in production will go here
 

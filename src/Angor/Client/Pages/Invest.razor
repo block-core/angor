@@ -975,6 +975,7 @@ else
     private async Task InvestFunds()
     {
         bool isTestnet = network.NetworkType == NetworkType.Testnet;
+        bool mainnetRulesMode = storage.GetMainnetRulesMode();
         decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.2m; // 0.2 BTC for mainnet, unlimited for testnet
         decimal minInvestmentBtc = 0.001m; // Minimum investment for all networks
 
@@ -988,7 +989,7 @@ else
         }
         else
         {
-            if (!isTestnet && Investment.InvestmentAmountBtc > maxInvestmentBtc)
+            if ((!isTestnet || mainnetRulesMode) && Investment.InvestmentAmountBtc > maxInvestmentBtc)
             {
                 notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentBtc} BTC on the mainnet");
                 return;

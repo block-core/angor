@@ -1,3 +1,4 @@
+using Angor.Client.Storage;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Blockcore.Networks;
@@ -14,6 +15,8 @@ public class NetworkConfiguration : INetworkConfiguration
     public static short NostrEventIdKeyType = 1; //TODO David use an enum for this?
 
     public int GetAngorInvestFeePercentage => AngorInvestFeePercentage;
+    public static IClientStorage? Storage;
+    private static bool MainnetRulesMode => Storage.GetMainnetRulesMode();
 
     public string GetAngorKey()
     {
@@ -44,9 +47,14 @@ public class NetworkConfiguration : INetworkConfiguration
         return currentNetwork;
     }
 
+    public bool GetMainnetRulesMode()
+    {
+        return MainnetRulesMode;
+    }
+
     public List<SettingsUrl> GetDefaultIndexerUrls()
     {
-        if (currentNetwork.NetworkType == NetworkType.Mainnet)
+        if (currentNetwork.NetworkType == NetworkType.Mainnet || MainnetRulesMode)
         {
             return new List<SettingsUrl>
             {
@@ -57,7 +65,7 @@ public class NetworkConfiguration : INetworkConfiguration
             };
         }
 
-        if (currentNetwork.NetworkType == NetworkType.Testnet)
+        if (currentNetwork.NetworkType == NetworkType.Testnet || !MainnetRulesMode)
         {
             if (currentNetwork.Name == "Angornet")
             {

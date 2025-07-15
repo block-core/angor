@@ -6,6 +6,7 @@ namespace Angor.Shared;
 public interface INetworkConfiguration
 {
     Network GetNetwork();
+    bool GetMainnetRulesMode();
     void SetNetwork(Network network);
     String GetGenesisBlockHash();
     string GetNetworkNameFromGenesisBlockHash(string genesisBlockHash);
