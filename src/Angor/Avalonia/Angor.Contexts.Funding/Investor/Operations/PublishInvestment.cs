@@ -28,6 +28,7 @@ public static class PublishInvestment
         ISeedwordsProvider seedwordsProvider,
         IProjectRepository projectRepository,
         IWalletOperations walletOperations,
+        IInvestmentRepository  investmentRepository,
         ILogger logger) : IRequestHandler<PublishInvestmentRequest, Result>
     {
         public async Task<Result> Handle(PublishInvestmentRequest request, CancellationToken cancellationToken)
@@ -37,29 +38,31 @@ public static class PublishInvestment
             if (projectResult.IsFailure)
                 return projectResult;
 
-            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId);
-            var pubKey =
-                derivationOperations.DeriveNostrPubKey(sensitiveDataResult.Value.ToWalletWords(),
-                    projectResult.Value.FounderKey);
-            var nostrPrivateKey =
-                await derivationOperations.DeriveProjectNostrPrivateKeyAsync(sensitiveDataResult.Value.ToWalletWords(),
-                    projectResult.Value.FounderKey);
+            var portfolio = await investmentRepository.GetByWalletId(request.WalletId);
+            
+            if (portfolio.IsFailure)
+                return Result.Failure(portfolio.Error);
+            
+            var investmentRecord = portfolio.Value.ProjectIdentifiers
+                .FirstOrDefault(x => x.ProjectIdentifier == request.ProjectId.Value);
+            
+            if (investmentRecord?.InvestmentTransactionHex == null || investmentRecord.RequestEventId == null || investmentRecord.RequestEventTime == null)
+                return Result.Failure("The investment transaction was not found in storage for the given investment ID");
 
-            var privateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
-
-            var investmentTransactionResult = await GetInvestmentTransactionFromSignatureRequestAsync(
-                request.InvestmentId, pubKey, privateKeyHex, projectResult.Value.NostrPubKey);
-
-            var validate = await ValidateFounderSignatures(projectResult.Value,
-                investmentTransactionResult.Value.createTime,
-                investmentTransactionResult.Value.evenbId, investmentTransactionResult.Value.transaction, pubKey,
-                privateKeyHex,
+            var transactionInfo = new TransactionInfo()
+            {
+                Transaction = networkConfiguration.GetNetwork()
+                    .CreateTransaction(investmentRecord.InvestmentTransactionHex)
+            };
+            
+            var validate = await ValidateFounderSignatures(request.WalletId, projectResult.Value,
+                investmentRecord.RequestEventTime.Value, investmentRecord.RequestEventId, transactionInfo, 
                 projectResult.Value.NostrPubKey);
 
             if (validate.IsFailure)
                 return validate;
             
-            return await PublishSignedTransactionAsync(investmentTransactionResult.Value.transaction);
+            return await PublishSignedTransactionAsync(transactionInfo);
         }
 
 
@@ -119,14 +122,23 @@ public static class PublishInvestment
         }
 
 
-        private async Task<Result<bool>> ValidateFounderSignatures(Project project, DateTime createdAt, string eventId,
-            TransactionInfo investment,
-            string senderPubKey, string privateKeyHex, string projectPubKey)
+        private async Task<Result<bool>> ValidateFounderSignatures(Guid walletId, Project project, DateTime createdAt, string eventId,
+            TransactionInfo investment,string projectPubKey)
         {
+            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
+            var pubKey =
+                derivationOperations.DeriveNostrPubKey(sensitiveDataResult.Value.ToWalletWords(),
+                    project.FounderKey);
+            var nostrPrivateKey =
+                await derivationOperations.DeriveProjectNostrPrivateKeyAsync(sensitiveDataResult.Value.ToWalletWords(),
+                    project.FounderKey);
+
+            var privateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+            
             var signatureInfo = new SignatureInfo();
             var tcs = new TaskCompletionSource<Result<bool>>();
 
-            signService.LookupSignatureForInvestmentRequest(senderPubKey, projectPubKey, createdAt, eventId,
+            signService.LookupSignatureForInvestmentRequest(pubKey, projectPubKey, createdAt, eventId,
                 async content =>
                 {
                     var signatures =
@@ -138,6 +150,8 @@ public static class PublishInvestment
                         investorTransactionActions.CheckInvestorRecoverySignatures(MapToProjectInfo(project),
                             investment.Transaction, signatureInfo);
 
+                    //TODO do we need to store the signatures in the database at this point?
+                    
                     tcs.SetResult(Result.Success(validSignatures));
                 },
                 () => { if (!tcs.Task.IsCompleted) tcs.TrySetResult(Result.Success(false));});
