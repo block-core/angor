@@ -16,7 +16,7 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public int GetAngorInvestFeePercentage => AngorInvestFeePercentage;
     public static IClientStorage? Storage;
-    private static bool MainnetRulesMode => Storage.GetMainnetRulesMode();
+    private static bool DebugMode => Storage.GetDebugMode();
 
     public string GetAngorKey()
     {
@@ -47,14 +47,14 @@ public class NetworkConfiguration : INetworkConfiguration
         return currentNetwork;
     }
 
-    public bool GetMainnetRulesMode()
+    public bool GetDebugMode()
     {
-        return MainnetRulesMode;
+        return DebugMode;
     }
 
     public List<SettingsUrl> GetDefaultIndexerUrls()
     {
-        if (currentNetwork.NetworkType == NetworkType.Mainnet || MainnetRulesMode)
+        if (currentNetwork.NetworkType == NetworkType.Mainnet)
         {
             return new List<SettingsUrl>
             {
@@ -65,7 +65,7 @@ public class NetworkConfiguration : INetworkConfiguration
             };
         }
 
-        if (currentNetwork.NetworkType == NetworkType.Testnet || !MainnetRulesMode)
+        if (currentNetwork.NetworkType == NetworkType.Testnet)
         {
             if (currentNetwork.Name == "Angornet")
             {

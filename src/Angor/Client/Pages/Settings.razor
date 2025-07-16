@@ -404,18 +404,18 @@
                 </span>
                 <div class="ms-3">
                     <h5 class="mb-0 font-weight-bolder">
-                        Mainnet Rules Mode
+                        Debug Mode
                     </h5>
                     <p class="mb-0 mt-2 font-weight-normal text-sm">
-                        Current: <strong>@(mainnetRulesMode?.ToString() ?? "False")</strong>
+                        Current: <strong>@(debugMode?.ToString() ?? "False")</strong>
                     </p>
                 </div>
             </div>
             <div class="currency-select-container w-100 w-md-auto">
                 <div class="d-flex flex-column">
-                    <label for="mainnetRulesMode" class="mb-2">Mainnet Rules Mode:</label>
-                    <select id="mainnetRulesMode" class="form-control" value="@(mainnetRulesMode?.ToString().ToLower() ?? "false")"
-                            @onchange="OnMainnetRulesModeChanged">
+                    <label for="debugMode" class="mb-2">Debug Mode:</label>
+                    <select id="debugMode" class="form-control" value="@(debugMode?.ToString().ToLower() ?? "False")"
+                            @onchange="OnDebugModeChanged">
                         <option value="true">True</option>
                         <option value="false">False</option>
                     </select>
@@ -560,7 +560,7 @@
     private string selectedNetwork = "Main"; // Default to "testnet"
 
     private string selectedCurrency = "BTC"; // Default to BTC
-    private bool? mainnetRulesMode = false; // Default to false 
+    private bool? debugMode = false; // Default to false 
 
     private SettingsInfo settingsInfo;
     private Dictionary<string, bool> _featureFlags;
@@ -577,8 +577,8 @@
 
         _networkService.OnStatusChanged += UpdateUI;
 
-        mainnetRulesMode = _clientStorage.GetMainnetRulesMode();
- 
+        debugMode = _clientStorage.GetDebugMode();
+        
         selectedCurrency = _clientStorage.GetCurrencyDisplaySetting();
 
         selectedNetwork = networkType;
@@ -991,10 +991,10 @@
         }
     }
 
-    private void OnMainnetRulesModeChanged(ChangeEventArgs e)
+    private void OnDebugModeChanged(ChangeEventArgs e)
     {
-        mainnetRulesMode = bool.Parse(e.Value.ToString());
-        _clientStorage.SetMainnetRulesMode(mainnetRulesMode);
+        debugMode = bool.Parse(e.Value.ToString());
+        _clientStorage.SetDebugMode(debugMode);
         StateHasChanged();
     }
 

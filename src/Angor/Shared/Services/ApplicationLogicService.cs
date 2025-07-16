@@ -19,8 +19,8 @@ namespace Angor.Shared.Services
 
             // on testnet we always allow to invest for testing purposes.
             var isTestnet = _networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet;
-            var mainnetRulesMode = _networkConfiguration.GetMainnetRulesMode();
-            if (isTestnet && !mainnetRulesMode) return true;
+            var debugMode = _networkConfiguration.GetDebugMode();
+            if (isTestnet && debugMode) return true;
 
             var now = DateTime.UtcNow;
 
