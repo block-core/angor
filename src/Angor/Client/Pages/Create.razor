@@ -73,17 +73,36 @@
                     <div class="info-card">
                         <div class="mb-3">
                             <label for="NostrMetadataName" class="form-label">Project name</label>
-                            <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated" />
+                            <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated" maxlength="60" />
+                            <small class="form-text text-muted">
+                                @((project.Metadata?.Name?.Length ?? 0).ToString())/60 characters
+                            </small>
                         </div>
 
                         <div class="mb-3">
                             <label for="NostrMetadataAbout" class="form-label">About</label>
-                            <InputTextArea id="NostrMetadataAbout" autocomplete="off" @bind-Value="project.Metadata.About" class="form-control" placeholder="Provide a brief description of the project" disabled="@nostrMetadataCreated" />
+                            <InputTextArea id="NostrMetadataAbout" autocomplete="off" @bind-Value="project.Metadata.About" class="form-control" placeholder="Provide a brief description of the project" disabled="@nostrMetadataCreated" maxlength="400" />
+                            <small class="form-text text-muted">
+                                @((project.Metadata?.About?.Length ?? 0).ToString())/400 characters
+                            </small>
                         </div>
 
                         <div class="mb-3">
                             <label for="NostrMetadataWebsite" class="form-label">Project website</label>
-                            <InputText id="NostrMetadataWebsite" autocomplete="off" @bind-Value="project.Metadata.Website" class="form-control" placeholder="Enter the URL of the project website" disabled="@nostrMetadataCreated" />
+                            <InputText type="url"
+                                       id="NostrMetadataWebsite"
+                                       autocomplete="off"
+                                       @bind-Value="project.Metadata.Website"
+                                       @onblur="OnWebsiteChanged"
+                                       class=@($"form-control{(websiteError ? " is-invalid" : "")}")
+                                       placeholder="Enter the URL of the project website (https://example.com)"
+                                       disabled="@nostrMetadataCreated" />
+                            @if (websiteError)
+                            {
+                                <div class="text-danger mt-1 small">
+                                    @websiteErrorMessage
+                                </div>
+                            }
                         </div>
 
                         <div class="mb-3">
@@ -122,7 +141,19 @@
                                     <label for="targetAmount" class="form-label mb-0 fw-semibold">Target Amount</label>
                                 </div>
                                 <p class="form-text text-muted mt-0 mb-2 small">The minimum amount of @network.CoinTicker this project is trying to raise.</p>
-                                <InputNumber id="targetAmount" @bind-Value="targetAmountInBTC" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated" />
+                                <InputNumber id="targetAmount"
+                                             @bind-Value="targetAmountInBTC"
+                                             class="form-control"
+                                             placeholder="Enter target amount"
+                                             min="0"
+                                             type="number"
+                                             disabled="@nostrApplicationSpecificDataCreated" />
+                                @if (targetAmountInBTC < 0)
+                                {
+                                    <div class="text-danger mt-1 small">
+                                        Target amount cannot be negative.
+                                    </div>
+                                }
                             </div>
                         </div>
 
@@ -157,7 +188,9 @@
                                 </div>
                                 @if (endDateError)
                                 {
-                                    <div class="text-danger mt-1">End date must be before the first stage date</div>
+                                    <div class="text-danger mt-1 small">
+                                        @endDateErrorMessage
+                                    </div>
                                 }
                             </div>
                         </div>
@@ -399,7 +432,7 @@
                                         }
                                         else
                                         {
-                                            <span>@project.Metadata.Name</span>
+                                            <span class="project-name">@project.Metadata.Name</span>
                                         }
                                     </h6>
                                 </div>
@@ -1013,6 +1046,7 @@
     private FounderProject project = new();
 
     private bool endDateError = false;
+    private string endDateErrorMessage = "";
 
     private readonly Dictionary<string, (int[] Percentages, int IntervalDays)> presets = new()
     {
@@ -1045,6 +1079,8 @@
     bool hasErrors;
 
     private int currentStep = 1;
+    private bool websiteError = false;
+    private string websiteErrorMessage = "";
 
     private int GetProgressPercentage() => (currentStep - 1) * 50;
 
@@ -1647,6 +1683,28 @@
             return false;
         }
 
+        if (project.Metadata.Name.Length > 200)
+        {
+            notificationComponent.ShowErrorMessage("Project name must not exceed 200 characters");
+            return false;
+        }
+
+        if (project.ProjectInfo.EndDate <= project.ProjectInfo.StartDate)
+        {
+            notificationComponent.ShowErrorMessage("End date must be after the start date");
+            return false;
+        }
+
+        if (project.ProjectInfo.Stages.Any())
+        {
+            var firstStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
+            if (project.ProjectInfo.EndDate >= firstStageDate)
+            {
+                notificationComponent.ShowErrorMessage("End date must be before the first stage date");
+                return false;
+            }
+        }
+
         if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
         {
             notificationComponent.ShowErrorMessage("The stages must sum to 100%");
@@ -1839,16 +1897,21 @@
 
     private void ValidateEndDate()
     {
-        if (project.ProjectInfo.Stages.Any())
+        endDateError = false;
+        endDateErrorMessage = "";
+
+        if (project.ProjectInfo.EndDate <= project.ProjectInfo.StartDate)
+        {
+            endDateError = true;
+            endDateErrorMessage = "End date must be after the start date";
+        }
+        else if (project.ProjectInfo.Stages.Any())
         {
             var firstStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
             if (project.ProjectInfo.EndDate >= firstStageDate)
             {
                 endDateError = true;
-            }
-            else
-            {
-                endDateError = false;
+                endDateErrorMessage = "End date must be before the first stage date";
             }
         }
 
@@ -2040,5 +2103,33 @@
     {
         StateHasChanged();
         await Task.Delay(100);
+    }
+
+    private bool ValidateWebsiteUrl()
+    {
+        if (string.IsNullOrEmpty(project.Metadata?.Website))
+        {
+            websiteError = false;
+            websiteErrorMessage = "";
+            return true;
+        }
+
+        if (!Uri.TryCreate(project.Metadata.Website, UriKind.Absolute, out Uri uriResult) ||
+            (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
+        {
+            websiteError = true;
+            websiteErrorMessage = "Please enter a valid URL (starting with http:// or https://)";
+            return false;
+        }
+
+        websiteError = false;
+        websiteErrorMessage = "";
+        return true;
+    }
+
+    private void OnWebsiteChanged()
+    {
+        ValidateWebsiteUrl();
+        StateHasChanged();
     }
 }

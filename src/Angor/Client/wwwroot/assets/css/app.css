@@ -5411,3 +5411,10 @@ input.no-native-picker[type="date"]::-moz-calendar-picker-indicator { opacity: 0
     font-weight: 600;
     color: #28a745;
 }
+
+.project-name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    -webkit-line-clamp: 1;
+}
