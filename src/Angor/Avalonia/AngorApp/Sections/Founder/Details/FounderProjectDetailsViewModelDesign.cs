@@ -1,4 +1,5 @@
 using Angor.Contexts.Funding.Founder;
+using Angor.Contexts.Funding.Founder.Operations;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
 
@@ -8,38 +9,32 @@ public class FounderProjectDetailsViewModelDesign : IFounderProjectDetailsViewMo
 {
     public string Name { get; } = "Test";
 
-    public IEnumerable<IdentityContainer<IInvestmentViewModel>> Investments { get; } = new List<IdentityContainer<IInvestmentViewModel>>()
-    {
-        new()
+    public IEnumerable<IInvestmentViewModel> Investments { get; set; } =
+    [
+        new InvestmentViewModelDesign()
         {
-            Content = new InvestmentViewModelDesign(new AmountUI(12122), "nostr pub key", DateTimeOffset.Now, InvestmentStatus.FounderSignaturesReceived)
-            {
-                Status = InvestmentStatus.PendingFounderSignatures,
-            }
+            MostRecentInvestment = { Status = InvestmentStatus.Invested, }
         },
-        new()
+        new InvestmentViewModelDesign()
         {
-            Content = new InvestmentViewModelDesign(new AmountUI(1234233), "nostr pub key", DateTimeOffset.Now.AddHours(-2),  InvestmentStatus.Invested) 
-            {
-                Status = InvestmentStatus.Invested,
-            }
+            MostRecentInvestment = { Status = InvestmentStatus.PendingFounderSignatures, }
         },
-        new()
+        new InvestmentViewModelDesign()
         {
-            Content = new InvestmentViewModelDesign(new AmountUI(423445), "nostr pub key", DateTimeOffset.Now.AddHours(-4), InvestmentStatus.PendingFounderSignatures)
-            {
-                Status = InvestmentStatus.FounderSignaturesReceived,
-            }
+            MostRecentInvestment = { Status = InvestmentStatus.Invested, }
         },
-    };
+        new InvestmentViewModelDesign()
+        {
+            MostRecentInvestment =
+            {
+                Status = InvestmentStatus.Invalid,
+            },
+            OtherInvestments = [],
+        },
+    ];
 
     public ReactiveCommand<Unit, Result<IEnumerable<IInvestmentViewModel>>> LoadInvestments { get; }
     public Uri? BannerUrl { get; set; }
     public string ShortDescription { get; } = "Short description, Bitcoin ONLY.";
     public IEnhancedCommand GoManageFunds { get; }
-}
-
-public record InvestmentViewModelDesign(IAmountUI Amount, string InvestorNostrPubKey, DateTimeOffset CreatedOn, InvestmentStatus Status) : IInvestmentViewModel
-{
-    public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; } = ReactiveCommand.Create(() => Maybe.From(Result.Success(true)), Observable.Return(Status == InvestmentStatus.PendingFounderSignatures)).Enhance();
 }
