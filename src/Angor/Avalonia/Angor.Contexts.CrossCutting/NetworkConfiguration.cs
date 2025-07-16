@@ -81,5 +81,5 @@ public class NetworkConfiguration : INetworkConfiguration
         throw new NotImplementedException();
     }
 
-    public int GetAngorInvestFeePercentage { get; }
+    public int GetAngorInvestFeePercentage { get; } = 1;
 }

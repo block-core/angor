@@ -13,22 +13,9 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class CreateInvestment
 {
-    public class CreateInvestmentTransactionRequest : IRequest<Result<Draft>>
-    {
-        public Guid WalletId { get; }
-        public ProjectId ProjectId { get; }
-        public Amount Amount { get; }
-        public DomainFeerate Feerate { get; }
+    public record CreateInvestmentTransactionRequest(Guid WalletId, ProjectId ProjectId, Amount Amount, DomainFeerate FeeRate) 
+        : IRequest<Result<Draft>> { }
 
-        public CreateInvestmentTransactionRequest(Guid walletId, ProjectId projectId, Amount amount, DomainFeerate feerate)
-        {
-            WalletId = walletId;
-            ProjectId = projectId;
-            Amount = amount;
-            Feerate = feerate;
-        }
-    }
-    
     public record Draft(string InvestorKey, string SignedTxHex, string TransactionId, Amount TransactionFee)
     {
         public Amount MinerFee { get; set; } = new Amount(-1);
@@ -46,10 +33,6 @@ public static class CreateInvestment
         {
             try
             {
-                // TODO: Don't forget to use the feerate to create the Draft. It's not used currently.
-                // feerate is the feerate that the user selected as "transaction speed" in the UI.
-                var feerate = transactionRequest.Feerate;
-                
                 // Get the project and investor key
                 var projectResult = await projectRepository.Get(transactionRequest.ProjectId);
                 if (projectResult.IsFailure)
@@ -76,23 +59,19 @@ public static class CreateInvestment
                 if (transactionResult.IsFailure)
                     return Result.Failure<Draft>(transactionResult.Error);
 
-                var signedTxResult = await SignTransaction(walletWords, transactionResult.Value);
+                var signedTxResult = await SignTransaction(walletWords, transactionResult.Value, transactionRequest.FeeRate.SatsPerVByte);
                 if (signedTxResult.IsFailure)
                 {
                     return Result.Failure<Draft>(signedTxResult.Error);
                 }
 
                 var signedTxHex = signedTxResult.Value.Transaction.ToHex();
-                var totalFee = signedTxResult.Value.TransactionFee;
-                return new Draft(investorKey,
-                    signedTxHex,
-                    signedTxResult.Value.Transaction.GetHash().ToString(),
-                    new Amount(totalFee))
-                {
-                    // TODO: Please, fill this with the correct values
-                    // MinerFee = new Amount(1234),
-                    // AngorFee = new Amount(5678),
-                };
+                var minorFee = signedTxResult.Value.TransactionFee;
+                var angorFee = signedTxResult.Value.Transaction.Outputs.AsIndexedOutputs().FirstOrDefault()?.TxOut.Value.Satoshi ?? 0;
+                    
+                return new Draft(investorKey, signedTxHex, signedTxResult.Value.Transaction.GetHash().ToString(),
+                        new Amount(minorFee + angorFee))
+                    { MinerFee = new Amount(minorFee), AngorFee = new Amount(angorFee), };
             }
             catch (Exception ex)
             {
@@ -100,7 +79,8 @@ public static class CreateInvestment
             }
         }
 
-        private async Task<Result<TransactionInfo>> SignTransaction(WalletWords walletWords, Transaction transaction)
+        private async Task<Result<TransactionInfo>> SignTransaction(WalletWords walletWords, Transaction transaction,
+            long feerate)
         {
             var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
             await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
@@ -114,15 +94,7 @@ public static class CreateInvestment
             }
 
             var changeAddress = changeAddressResult.Value!;
-
-            var feeEstimationResult = await Result.Try(walletOperations.GetFeeEstimationAsync);
-            if (feeEstimationResult.IsFailure)
-            {
-                return Result.Failure<TransactionInfo>("Error getting fee estimation");
-            }
-
-            var feerate = feeEstimationResult.Value.FirstOrDefault()?.FeeRate ?? 1;
-
+            
             var signedTransactionResult = Result.Try(() => walletOperations.AddInputsAndSignTransaction(
                 changeAddress,
                 transaction,

@@ -65,7 +65,10 @@ public class ProjectRepository(
                         TargetAmount = x.TargetAmount,
                         Stages = x.Stages.Select((stage, i) => new Stage
                         {
-                            Amount = Convert.ToInt64(stage.AmountToRelease), Index = i, ReleaseDate = stage.ReleaseDate
+                            //Amount =  Convert.ToInt64(x.TargetAmount * stage.AmountToRelease /100),
+                            Index = i, 
+                            ReleaseDate = stage.ReleaseDate,
+                            RatioOfTotal = stage.AmountToRelease
                         }),
                         StartingDate = x.StartDate,
                         EndDate = x.EndDate

@@ -9,7 +9,7 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
-using Microsoft.Extensions.Logging;
+using Serilog;
 using Stage = Angor.Shared.Models.Stage;
 
 namespace Angor.Contexts.Funding.Investor.Operations;
@@ -161,7 +161,7 @@ public static class PublishInvestment
                 PenaltyDays = project.PenaltyDuration.Days,
                 Stages = project.Stages.Select(x => new Stage
                 {
-                    AmountToRelease = x.Amount,
+                    AmountToRelease = x.RatioOfTotal,
                     ReleaseDate = x.ReleaseDate
                 }).ToList(),
                 StartDate = project.StartingDate,
@@ -180,13 +180,13 @@ public static class PublishInvestment
                 if (response.Success)
                     return Result.Success(signedTransaction.Transaction.GetHash().ToString());
                 
-                logger.LogError(response.Message);
+                logger.Error(response.Message);
                 
                 return Result.Failure<string>("Failed to publish the transaction to the blockchain");
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Error publishing signed transaction");
+                logger.Error(e, "Error publishing signed transaction");
                 return Result.Failure<string>("An error occurred while publishing the transaction");
             }
         }
