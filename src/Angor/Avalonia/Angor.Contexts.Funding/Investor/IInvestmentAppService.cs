@@ -1,4 +1,3 @@
-using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -16,4 +15,5 @@ public interface IInvestmentAppService
     Task<Result<IEnumerable<InvestedProjectDto>>> GetInvestorProjects(Guid idValue);
     Task<Result> ConfirmInvestment(int investmentId);
     Task<Result<string>> CreateProject(Guid walletId, long selectedFee, CreateProjectDto project);
+    Task<Result<IEnumerable<PenaltiesDto>>> GetPenalties(Guid walletId);
 }

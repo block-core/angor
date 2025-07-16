@@ -5,6 +5,7 @@
              xmlns:penalties="clr-namespace:AngorApp.Sections.Portfolio.Penalties"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
+             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1600" d:DesignHeight="600"
              x:Class="AngorApp.Sections.Portfolio.Penalties.PenaltiesView" x:DataType="penalties:IPenaltiesViewModel">
 
@@ -27,7 +28,7 @@
                     </Card.HeaderStartContent>
                     <Card.HeaderEndContent>
                         <UniformGrid ColumnSpacing="20" Rows="1">
-                            <IconButton HorizontalAlignment="Stretch">
+                            <IconButton Command="{Binding Load}" HorizontalAlignment="Stretch">
                                 Refresh
                                 <IconButton.Icon>
                                     <ui:Icon Source="fa-arrows-rotate" />
@@ -37,35 +38,18 @@
                     </Card.HeaderEndContent>
                 </Card>
 
-                <Loading LoadingText="Loading penalties...">
-                    <Card Header="Penalties Details">
-                        <!-- TODO: Replace this StackPanel + Grid with <SlimDataGrid /> for dynamic records -->
-                        <StackPanel>
-                            <!-- Table Header -->
-                            <Grid ColumnDefinitions="2.5*,1.5*,1.5*" Margin="0,0,0,10" HorizontalAlignment="Stretch">
-                                <TextBlock Text="PROJECT ID" Foreground="{DynamicResource SystemBaseMediumHighColor}" FontWeight="Bold" VerticalAlignment="Center" />
-                                <TextBlock Text="AMOUNT IN PENALTY" Foreground="{DynamicResource SystemBaseMediumHighColor}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" />
-                                <TextBlock Text="DAYS LEFT" Foreground="{DynamicResource SystemBaseMediumHighColor}" FontWeight="Bold" Grid.Column="2" VerticalAlignment="Center" />
-                            </Grid>
-                            <Border BorderBrush="#22505A" BorderThickness="1" />
-                            <!-- Table Row (Static Example) -->
-                            <Grid ColumnDefinitions="2.5*,1.5*,1.5*" Margin="0,10,0,10" HorizontalAlignment="Stretch">
-                                <TextBlock Text="angor1quyhg...xv76gzptm50" VerticalAlignment="Center" />
-                                <TextBlock Text="1 TBTC" Grid.Column="1" VerticalAlignment="Center" />
-                                <Button Grid.Column="2"
-                                        Background="Transparent"
-                                        Foreground="{DynamicResource SystemAccentColor}"
-                                        BorderThickness="0"
-                                        Padding="0"
-                                        HorizontalAlignment="Left"
-                                        Command="{Binding GoToRecovery}">
-                                    89 days
-                                </Button>
-                            </Grid>
-                        </StackPanel>
+                <Loading LoadingText="Loading penalties..." IsLoading="{Binding Load.IsExecuting^}">
+                    <Card Header="List of Penalties">
+                        <z:SlimDataGrid HeaderPadding="0 0 0 5"
+                                        ItemsSource="{Binding Penalties}">
+                            <z:SlimDataGrid.Columns>
+                                <z:Column Header="PROJECT ID" Binding="{Binding ProjectIdentifier}" />
+                                <z:Column Header="AMOUNT IN PENALTY" Binding="{Binding AmountInRecovery.DecimalString}" />
+                                <z:Column Header="DAYS LEFT" Binding="{Binding DaysLeftForPenalty}" />
+                            </z:SlimDataGrid.Columns>
+                        </z:SlimDataGrid>
                     </Card>
-                </Loading>
-            </DockPanel>
+                </Loading>            </DockPanel>
         </ScrollViewer>
     </a:PageContainer>
 </UserControl>
