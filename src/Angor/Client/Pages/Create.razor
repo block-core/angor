@@ -310,7 +310,7 @@
                                                     </span>
 
                                                     <!-- Input Fields -->
-                                                    <div class="row g-2 align-items-end">
+                                                    <div class="row g-2">
                                                         <!-- Percentage Field -->
                                                         <div class="col-12 col-md-4 col-lg-3">
                                                             <div class="form-group mb-0">
@@ -338,17 +338,24 @@
                                                                     <Icon IconName="calendar" Width="14" Height="14" Class="me-1" />
                                                                     Release Date
                                                                 </label>
+
                                                                 <DatePicker Value="@GetStageReleaseDate(stage)"
                                                                             ValueChanged="@(value => SetStageReleaseDate(stage, value))"
                                                                             Placeholder="Select date"
                                                                             Class="form-control form-control-modern date-picker-input"
                                                                             Disabled="@nostrApplicationSpecificDataCreated" />
+
+                                                                @if (stageDateErrors.ContainsKey(stage) && !string.IsNullOrEmpty(stageDateErrors[stage]))
+                                                                {
+                                                                    <div class="text-danger mt-1 small">
+                                                                        @stageDateErrors[stage]
+                                                                    </div>
+                                                                }
                                                             </div>
                                                         </div>
+
                                                     </div>
                                                 </div>
-
-
 
                                             </div>
                                         </div>
@@ -1082,6 +1089,8 @@
     private bool websiteError = false;
     private string websiteErrorMessage = "";
 
+    private Dictionary<Stage, string> stageDateErrors = new();
+
     private int GetProgressPercentage() => (currentStep - 1) * 50;
 
     private void NextStep()
@@ -1569,23 +1578,6 @@
         return new MarkupString(sanitizedInput);
     }
 
-    private async void SetActiveTab(int tabNumber)
-    {
-        if (!nostrMetadataCreated)
-        {
-            // Save the project before switching tabs
-            storage.UpdateFounderProject(project);
-        }
-
-        activeTab = tabNumber;
-        StateHasChanged();
-
-        // Add a slight delay before scrolling to the top
-        // This ensures the tab content has been rendered
-        await Task.Delay(10);
-        await JS.InvokeVoidAsync("window.scrollTo", 0, 0);
-    }
-
     private string GetProgressMessage()
     {
         if (!nostrMetadataCreated)
@@ -1652,9 +1644,22 @@
                 return false;
             }
 
+            if (project.ProjectInfo.EndDate <= project.ProjectInfo.StartDate)
+            {
+                notificationComponent.ShowErrorMessage("End date must be after the start date");
+                return false;
+            }
+
+
             if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.StartDate)
             {
                 notificationComponent.ShowErrorMessage("Project must expire after the start date");
+                return false;
+            }
+
+            if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.EndDate)
+            {
+                notificationComponent.ShowErrorMessage("Project must expire after the end date");
                 return false;
             }
 
@@ -1688,6 +1693,31 @@
             notificationComponent.ShowErrorMessage("Project name must not exceed 200 characters");
             return false;
         }
+
+        if (string.IsNullOrWhiteSpace(project.Metadata.About))
+        {
+            notificationComponent.ShowErrorMessage("Project description cannot be empty or whitespace.");
+            return false;
+        }
+
+        if (project.ProjectInfo.StartDate > DateTime.Today.AddYears(1))
+{
+    notificationComponent.ShowErrorMessage("Start date cannot be more than one year in the future.");
+    return false;
+}
+
+        if (project.ProjectInfo.PenaltyDays > 365)
+        {
+            notificationComponent.ShowErrorMessage("Penalty days cannot exceed 365 days.");
+            return false;
+        }
+
+
+
+        if (!ValidateImageUrl(project.Metadata.Banner, "Banner Image"))
+            return false;
+        if (!ValidateImageUrl(project.Metadata.Picture, "Avatar Image"))
+            return false;
 
         if (project.ProjectInfo.EndDate <= project.ProjectInfo.StartDate)
         {
@@ -1730,27 +1760,34 @@
 
         if (project.ProjectInfo.Stages.Any())
         {
-            // First check if first stage is after project start
-            if (project.ProjectInfo.Stages.First().ReleaseDate < project.ProjectInfo.EndDate) // end date is end of funding window
+            var stages = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).ToList();
+            var firstStageDate = stages.First().ReleaseDate;
+
+            if (firstStageDate <= project.ProjectInfo.EndDate)
             {
-                notificationComponent.ShowErrorMessage("First stage must be after project started");
+                notificationComponent.ShowErrorMessage("The first stage must start after the end of the fundraising window.");
                 return false;
             }
 
-            // Then check stages are in order
-            var sortedStages = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).ToList();
-            for (int i = 0; i < sortedStages.Count - 1; i++)
+            for (int i = 1; i < stages.Count; i++)
             {
-                if (sortedStages[i].ReleaseDate >= sortedStages[i + 1].ReleaseDate)
+                if (stages[i].ReleaseDate <= stages[i - 1].ReleaseDate)
                 {
-                    notificationComponent.ShowErrorMessage($"Stage {i + 2} must be after stage {i + 1}");
+                    notificationComponent.ShowErrorMessage($"Stage {i + 1} must be after Stage {i}");
                     return false;
                 }
             }
 
-            // Keep stages sorted
-            project.ProjectInfo.Stages = sortedStages;
+            var totalPercent = stages.Sum(s => s.AmountToRelease);
+            if (totalPercent != 100)
+            {
+                notificationComponent.ShowErrorMessage($"Stage percentages must sum to 100% (currently {totalPercent}%)");
+                return false;
+            }
+
+            project.ProjectInfo.Stages = stages; // Keep stages sorted
         }
+
 
         return true;
     }
@@ -1914,6 +1951,11 @@
                 endDateErrorMessage = "End date must be before the first stage date";
             }
         }
+        else
+        {
+            endDateError = false;
+            endDateErrorMessage = "";
+        }
 
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
         StateHasChanged();
@@ -1935,6 +1977,11 @@
         {
             project.ProjectInfo.EndDate = value.Value;
             ValidateEndDate();
+            foreach (var stage in project.ProjectInfo.Stages)
+            {
+                SetStageReleaseDate(stage, stage.ReleaseDate);
+            }
+
         }
     }
 
@@ -1945,11 +1992,47 @@
 
     private void SetStageReleaseDate(Stage stage, DateTime? value)
     {
-        if (value.HasValue)
+        if (!value.HasValue)
+            return;
+
+        stage.ReleaseDate = value.Value;
+
+        stageDateErrors[stage] = "";
+
+        var stages = project.ProjectInfo.Stages;
+
+        var index = stages.IndexOf(stage);
+
+        if (index == 0)
         {
-            stage.ReleaseDate = value.Value;
+            if (stage.ReleaseDate <= project.ProjectInfo.EndDate)
+            {
+                stageDateErrors[stage] = "Stage 1 must be after the fundraising end date.";
+            }
         }
+        else if (index > 0)
+        {
+            var previousStage = stages[index - 1];
+            if (stage.ReleaseDate <= previousStage.ReleaseDate)
+            {
+                stageDateErrors[stage] = $"Stage {index + 1} must be after Stage {index}.";
+            }
+        }
+
+        if (index < stages.Count - 1)
+        {
+            var nextStage = stages[index + 1];
+            if (stage.ReleaseDate >= nextStage.ReleaseDate)
+            {
+                stageDateErrors[stage] = $"Stage {index + 1} must be before Stage {index + 2}.";
+            }
+        }
+
+        ValidateEndDate();
+
+        StateHasChanged();
     }
+
 
     private DateTime CalculateExpiryDate()
     {
@@ -2124,6 +2207,28 @@
 
         websiteError = false;
         websiteErrorMessage = "";
+        return true;
+    }
+
+    private bool ValidateImageUrl(string url, string fieldName)
+    {
+        if (string.IsNullOrEmpty(url))
+            return true;
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult) ||
+            (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
+        {
+            notificationComponent.ShowErrorMessage($"{fieldName} must be a valid URL starting with http:// or https://");
+            return false;
+        }
+
+        var validExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" };
+        if (!validExtensions.Any(ext => url.ToLower().EndsWith(ext)))
+        {
+            notificationComponent.ShowErrorMessage($"{fieldName} must point to a valid image file (jpg, jpeg, png, gif, webp, svg)");
+            return false;
+        }
+
         return true;
     }
 
