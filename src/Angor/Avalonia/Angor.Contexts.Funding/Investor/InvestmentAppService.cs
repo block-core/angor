@@ -45,4 +45,9 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     {
         return mediator.Send(new CreateProjectConstants.CreateProject.CreateProjectRequest(walletId, selectedFee, project)); // WalletId and SelectedFeeRate are placeholders
     }
+
+    public Task<Result<IEnumerable<PenaltiesDto>>> GetPenalties(Guid walletId)
+    {
+        return mediator.Send(new GetPenalties.GetPenaltiesRequest(walletId));
+    }
 }
