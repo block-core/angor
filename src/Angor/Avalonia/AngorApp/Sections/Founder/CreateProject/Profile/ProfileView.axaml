@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
              mc:Ignorable="d" d:DesignWidth="700"
@@ -14,7 +13,7 @@
         <StyleInclude Source="../Common.axaml" />
     </UserControl.Styles>
     
-    <Card Header="Project Profile">
+    <Card Header="Project Profile" Classes="InlineNested">
         <Card.HeaderEndContent>
             <ContentControl IsVisible="{Binding IsValid^}" Foreground="LawnGreen">
                 <ui:Icon Source="fa-check" />
@@ -24,8 +23,8 @@
             <ui:Icon Source="fa-briefcase" />
         </Card.HeaderStartContent>
         <StackPanel Spacing="20">
-            <controls:CardGrid>
-                <controls:CardGrid.ItemsSource>
+            <CardGrid>
+                <CardGrid.ItemsSource>
                     <collections:ArrayList>
                         <Card Header="Project Name">
                             <TextBox Watermark="Enter the name of your project" Text="{Binding ProjectName}" />
@@ -34,14 +33,14 @@
                             <TextBox Watermark="Enter the URL of project website" Text="{Binding WebsiteUri}" />
                         </Card>
                     </collections:ArrayList>
-                </controls:CardGrid.ItemsSource>
-            </controls:CardGrid>
+                </CardGrid.ItemsSource>
+            </CardGrid>
             <HeaderedContainer Header="About Your Project">
                 <TextBox MinLines="6" Watermark="Provide a brief description of the project" Text="{Binding Description}" />
             </HeaderedContainer>
             <Card Margin="0" Padding="0 5 0 0" HeaderPadding=" 0 0 0 5" Header="Visual Identity" Theme="{StaticResource TransparentCard}">
-                <controls:CardGrid>
-                    <controls:CardGrid.ItemsSource>
+                <CardGrid>
+                    <CardGrid.ItemsSource>
                         <collections:ArrayList>
                             <Card Header="Banner Image URL">
                                 <StackPanel Spacing="5">
@@ -56,8 +55,8 @@
                                 </StackPanel>
                             </Card>
                         </collections:ArrayList>
-                    </controls:CardGrid.ItemsSource>
-                </controls:CardGrid>
+                    </CardGrid.ItemsSource>
+                </CardGrid>
             </Card>
         </StackPanel>
     </Card>

@@ -15,6 +15,7 @@ public class WalletAppService(
     IWalletFactory walletFactory,
     IWalletOperations walletOperations,
     IWalletStore walletStore,
+    IPsbtOperations psbtOperations,
     ITransactionHistory transactionHistory)
     : IWalletAppService
 {
@@ -74,19 +75,24 @@ public class WalletAppService(
             if (string.IsNullOrEmpty(changeAddress))
                 return Result.Failure<Fee>("No change address available");
 
-            var satsPerVirtualKB = feeRate.SatsPerVByte * 1000;
+            var satsPerVirtualKb = feeRate.SatsPerVByte * 1000;
             var sendInfo = new SendInfo
             {
-                FeeRate = satsPerVirtualKB,
+                FeeRate = satsPerVirtualKb,
                 SendAmount = amount.Sats,
                 SendToAddress = address.Value,
                 ChangeAddress = changeAddress,
                 SendUtxos = walletOperations.FindOutputsForTransaction(amount.Sats, accountInfo)
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
+            
+            var feeCalculationResult = await CalculateTransactionFee(sendInfo, accountInfo, walletWords, feeRate);
+            if (!feeCalculationResult.IsSuccess)
+            {
+                return Result.Failure<Fee>("Could not calculate transaction fee: " + feeCalculationResult.Error);
+            }
 
-            var estimatedFee = walletOperations.CalculateTransactionFee(sendInfo, accountInfo, feeRate.SatsPerVByte);
-            return Result.Success(new Fee((long)(estimatedFee * 100_000_000))); // Conversion to sats
+            return Result.Success(new Fee(feeCalculationResult.Value));
         }
         catch (Exception ex)
         {
@@ -113,8 +119,11 @@ public class WalletAppService(
             await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
             var address = accountInfo.GetNextReceiveAddress();
+            
             if (string.IsNullOrEmpty(address))
+            {
                 return Result.Failure<Address>("No address available");
+            }
 
             return Result.Success(new Address(address));
         }
@@ -143,21 +152,28 @@ public class WalletAppService(
             var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
             await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
             
-            var satsPerVirtualKB = feeRate.SatsPerVByte * 1000;
+            var satsPerVirtualKb = feeRate.SatsPerVByte * 1000;
             
             var sendInfo = new SendInfo
             {
                 SendAmount = amount.Sats,
                 SendToAddress = address.Value,
-                FeeRate = satsPerVirtualKB,
+                FeeRate = satsPerVirtualKb,
                 ChangeAddress = accountInfo.GetNextChangeReceiveAddress(),
                 SendUtxos = walletOperations.FindOutputsForTransaction(amount.Sats, accountInfo)
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
             
-            var fee = walletOperations.CalculateTransactionFee(sendInfo, accountInfo, satsPerVirtualKB);
-            
-            sendInfo.SendFee = fee;
+            // Calculate the real transaction fee using PSBT operations (following Wallet.razor pattern)
+            var feeCalculationResult = await CalculateTransactionFee(sendInfo, accountInfo, walletWords, feeRate);
+            if (feeCalculationResult.IsSuccess)
+            {
+                sendInfo.SendFee = feeCalculationResult.Value;
+            }
+            else
+            {
+                return Result.Failure<TxId>("Could not calculate transaction fee: " + feeCalculationResult.Error);
+            }
             
             var result = await walletOperations.SendAmountToAddress(walletWords, sendInfo);
             if (!result.Success)
@@ -181,5 +197,30 @@ public class WalletAppService(
     {
         var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
         return mnemonic.ToString();
+    }
+
+    private async Task<Result<long>> CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, WalletWords walletWords, DomainFeeRate feeRate)
+    {
+        try
+        {
+            var unsignedTransaction = walletOperations.CreateSendTransaction(sendInfo, accountInfo);
+            
+            var psbt = psbtOperations.CreatePsbtForTransaction(
+                unsignedTransaction, 
+                accountInfo, 
+                feeRate.SatsPerVByte, 
+                utxoDataWithPaths: sendInfo.SendUtxos.Values.ToList()
+            );
+            
+            var signedTransaction = psbtOperations.SignPsbt(psbt, walletWords);
+            
+            var realFeeInSatoshis = signedTransaction.TransactionFee;
+
+            return Result.Success(realFeeInSatoshis);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<long>($"Error calculating transaction fee: {ex.Message}");
+        }
     }
 }

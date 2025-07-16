@@ -1,0 +1,47 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <Style Selector="TextBlock.SizeSmall">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+    </Style>
+
+    <Style Selector="TextBlock.Wrap">
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    
+    <Style Selector="TextBlock.NoWrap">
+        <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+    
+    <Style Selector="TextBlock.SizeNormal">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+    </Style>
+
+    <Style Selector="TextBlock.SizeBig">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
+    </Style>
+    
+    <Style Selector="TextBlock.Warning">
+        <Setter Property="Foreground" Value="Orange" />
+    </Style>
+    
+    <Styles.Resources>
+        <ControlTheme x:Key="PaneTitle" TargetType="TextBlock" BasedOn="{StaticResource Regular}">
+            <Setter Property="FontWeight" Value="Bold" />
+        </ControlTheme>
+
+        <ControlTheme x:Key="Highlighted" TargetType="TextBlock" BasedOn="{StaticResource Regular}">
+            <Setter Property="Foreground" Value="Orange" />
+        </ControlTheme>
+    </Styles.Resources>
+    
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <StackPanel>
+                <TextBlock Theme="{StaticResource PaneTitle}">Pane Title</TextBlock>
+                <TextBlock Theme="{StaticResource Regular}">Regular</TextBlock>
+                <TextBlock Theme="{StaticResource Highlighted}">Highlighted</TextBlock>
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+</Styles>

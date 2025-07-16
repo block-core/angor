@@ -29,17 +29,32 @@
     </UserControl.Styles>
 
     <OverlayBorder Padding="0 0 0 20" Theme="{StaticResource CardOverlayBorder}">
-        <Grid RowDefinitions="180 *" RowSpacing="15">
+        <Grid RowDefinitions="200 *" RowSpacing="15">
             <Panel>
-                <av:AdvancedImage
-                    Stretch="UniformToFill"
-                    Source="{Binding ProfileViewModel.BannerUri}" />
-                <Border IsVisible="{Binding ProfileViewModel.BannerUri, Converter={x:Static ObjectConverters.IsNull}}">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock VerticalAlignment="Center">- Banner -</TextBlock>
-                        <TextBlock FontWeight="Thin" VerticalAlignment="Center">Please, set a banner URL</TextBlock>
-                    </StackPanel>
-                </Border>
+                <Panel x:Name="Banner">
+                    <av:AdvancedImage
+                        Stretch="UniformToFill"
+                        Source="{Binding ProfileViewModel.BannerUri}" />
+                    <Border CornerRadius="10" BorderBrush="#32FFFFFF" BorderThickness="1" IsVisible="{Binding ProfileViewModel.BannerUri, Converter={x:Static ObjectConverters.IsNull}}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0 50 0 0">
+                            <TextBlock VerticalAlignment="Center">Banner</TextBlock>
+                            <TextBlock FontWeight="Thin" VerticalAlignment="Center">Not defined</TextBlock>
+                        </StackPanel>
+                    </Border>
+                </Panel>
+                <Panel x:Name="Avatar" VerticalAlignment="Bottom" Width="60" Height="60" HorizontalAlignment="Center" Margin="20">
+                    <av:AdvancedImage
+                        Stretch="UniformToFill"
+                        Source="{Binding ProfileViewModel.AvatarUri}" />
+                    <Border CornerRadius="10" BorderBrush="#32FFFFFF" BorderThickness="1" IsVisible="{Binding ProfileViewModel.AvatarUri, Converter={x:Static ObjectConverters.IsNull}}">
+                        <Viewbox>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
+                                <TextBlock TextAlignment="Center" VerticalAlignment="Center">Avatar</TextBlock>
+                                <TextBlock FontWeight="Thin" VerticalAlignment="Center">Not defined</TextBlock>
+                            </StackPanel>
+                        </Viewbox>
+                    </Border>
+                </Panel>
             </Panel>
             <StackPanel Grid.Row="1" Spacing="15">
                 <StackPanel Spacing="10" Margin="15 0">

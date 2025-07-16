@@ -11,7 +11,7 @@
     <Design.DataContext>
         <penalties:PenaltiesViewModelDesign />
     </Design.DataContext>
-    
+
     <UserControl.Styles>
         <Style Selector="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap" />
@@ -19,40 +19,39 @@
     </UserControl.Styles>
 
     <a:PageContainer>
-        <DockPanel>
-            <Card DockPanel.Dock="Top" Header="Penalties" IsAdaptiveFlowEnabled="True" Subheader="Manage and monitor penalties for project compliance">
-                <Card.HeaderStartContent>
-                    <ui:Icon Source="svg:/Assets/lock.svg" />
-                </Card.HeaderStartContent>
-                <Card.HeaderEndContent>
-                    <UniformGrid ColumnSpacing="20" Rows="1">
-                        <IconButton HorizontalAlignment="Stretch">
-                            Refresh
-                            <IconButton.Icon>
-                                <ui:Icon Source="fa-arrows-rotate" />
-                            </IconButton.Icon>
-                        </IconButton>
-                    </UniformGrid>
-                </Card.HeaderEndContent>
-            </Card>
+        <ScrollViewer>
+            <DockPanel VerticalSpacing="20">
+                <Card DockPanel.Dock="Top" Header="Penalties" IsAdaptiveFlowEnabled="True" Subheader="Manage and monitor penalties for project compliance">
+                    <Card.HeaderStartContent>
+                        <ui:Icon Source="svg:/Assets/lock.svg" />
+                    </Card.HeaderStartContent>
+                    <Card.HeaderEndContent>
+                        <UniformGrid ColumnSpacing="20" Rows="1">
+                            <IconButton HorizontalAlignment="Stretch">
+                                Refresh
+                                <IconButton.Icon>
+                                    <ui:Icon Source="fa-arrows-rotate" />
+                                </IconButton.Icon>
+                            </IconButton>
+                        </UniformGrid>
+                    </Card.HeaderEndContent>
+                </Card>
 
-            <Loading LoadingText="Loading penalties...">
-                <StackPanel HorizontalAlignment="Stretch" Spacing="20">
-                    <TextBlock Text="Penalties Details" FontWeight="Bold" FontSize="20" Margin="0,10,0,10"/>
-                    <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Penalties Table">
+                <Loading LoadingText="Loading penalties...">
+                    <Card Header="Penalties Details">
                         <!-- TODO: Replace this StackPanel + Grid with <SlimDataGrid /> for dynamic records -->
                         <StackPanel>
                             <!-- Table Header -->
                             <Grid ColumnDefinitions="2.5*,1.5*,1.5*" Margin="0,0,0,10" HorizontalAlignment="Stretch">
-                                <TextBlock Text="PROJECT ID" Foreground="{DynamicResource SystemBaseMediumHighColor}" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <TextBlock Text="AMOUNT IN PENALTY" Foreground="{DynamicResource SystemBaseMediumHighColor}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center"/>
-                                <TextBlock Text="DAYS LEFT" Foreground="{DynamicResource SystemBaseMediumHighColor}" FontWeight="Bold" Grid.Column="2" VerticalAlignment="Center"/>
+                                <TextBlock Text="PROJECT ID" Foreground="{DynamicResource SystemBaseMediumHighColor}" FontWeight="Bold" VerticalAlignment="Center" />
+                                <TextBlock Text="AMOUNT IN PENALTY" Foreground="{DynamicResource SystemBaseMediumHighColor}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" />
+                                <TextBlock Text="DAYS LEFT" Foreground="{DynamicResource SystemBaseMediumHighColor}" FontWeight="Bold" Grid.Column="2" VerticalAlignment="Center" />
                             </Grid>
-                            <Border BorderBrush="#22505A" BorderThickness="1"/>
+                            <Border BorderBrush="#22505A" BorderThickness="1" />
                             <!-- Table Row (Static Example) -->
                             <Grid ColumnDefinitions="2.5*,1.5*,1.5*" Margin="0,10,0,10" HorizontalAlignment="Stretch">
-                                <TextBlock Text="angor1quyhg...xv76gzptm50" VerticalAlignment="Center"/>
-                                <TextBlock Text="1 TBTC" Grid.Column="1" VerticalAlignment="Center"/>
+                                <TextBlock Text="angor1quyhg...xv76gzptm50" VerticalAlignment="Center" />
+                                <TextBlock Text="1 TBTC" Grid.Column="1" VerticalAlignment="Center" />
                                 <Button Grid.Column="2"
                                         Background="Transparent"
                                         Foreground="{DynamicResource SystemAccentColor}"
@@ -65,8 +64,8 @@
                             </Grid>
                         </StackPanel>
                     </Card>
-                </StackPanel>
-            </Loading>
-        </DockPanel>
+                </Loading>
+            </DockPanel>
+        </ScrollViewer>
     </a:PageContainer>
 </UserControl>

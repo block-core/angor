@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
+             xmlns:design="clr-namespace:AngorApp.Design"
+             xmlns:manageFunds="clr-namespace:AngorApp.Sections.Founder.ManageFunds"
+             mc:Ignorable="d" d:DesignWidth="400"
+             x:Class="AngorApp.Sections.Founder.ManageFunds.ProjectStatisticsView" x:DataType="manageFunds:IProjectStatisticsViewModel">
+
+    <Design.DataContext>
+        <manageFunds:ProjectStatisticsViewModelDesign TotalStages="4" AvailableTransactions="3" TotalTransactions="6" SpentTransactions="3">
+            <manageFunds:ProjectStatisticsViewModelDesign.Withdrawable>
+                <design:DesignTimeAmount Sats="200000000" />
+            </manageFunds:ProjectStatisticsViewModelDesign.Withdrawable>
+            <manageFunds:ProjectStatisticsViewModelDesign.TotalInvested>
+                <design:DesignTimeAmount Sats="400000000" />
+            </manageFunds:ProjectStatisticsViewModelDesign.TotalInvested>
+            <manageFunds:ProjectStatisticsViewModelDesign.AvailableBalance>
+                <design:DesignTimeAmount Sats="200000000" />
+            </manageFunds:ProjectStatisticsViewModelDesign.AvailableBalance>
+        </manageFunds:ProjectStatisticsViewModelDesign>
+    </Design.DataContext>
+
+    <Card Classes="Nesting"  Header="Project Statistics">
+        <StackPanel Spacing="10">
+            <StackPanel.Styles>
+                <Style Selector="Card">
+                    <Setter Property="Theme" Value="{StaticResource RemarkableSubheaderCard}" />
+                </Style>
+            </StackPanel.Styles>
+            <CardGrid MinColumnWidth="200">
+                <CardGrid.ItemsSource>
+                    <collections:ArrayList>
+                        <Card Header="Total Investment" Subheader="{Binding TotalInvested.DecimalString}" />
+                        <Card Header="Available Balance" Subheader="{Binding AvailableBalance.DecimalString}" />
+                        <Card Header="Withdrawable" Subheader="{Binding Withdrawable.DecimalString}" />
+                        <Card Header="Total Stages" Subheader="3" />
+                    </collections:ArrayList>
+                </CardGrid.ItemsSource>
+            </CardGrid>
+            <CardGrid>
+                <CardGrid.ItemsSource>
+                    <collections:ArrayList>
+                        <Card Header="Transaction statistics">
+                            <CardGrid MinColumnWidth="120">
+                                <CardGrid.ItemsSource>
+                                    <collections:ArrayList>
+                                        <Card HeaderHorizontalAlignment="Center" Header="Total" Subheader="{Binding TotalTransactions}" />
+                                        <Card HeaderHorizontalAlignment="Center" Header="Available" Subheader="{Binding AvailableTransactions}" />
+                                        <Card HeaderHorizontalAlignment="Center" Header="Spent" Subheader="{Binding SpentTransactions}" />
+                                    </collections:ArrayList>
+                                </CardGrid.ItemsSource>
+                            </CardGrid>
+                        </Card>
+                        <Card Header="Next Stage">
+                            No upcoming stages
+                        </Card>
+                    </collections:ArrayList>
+                </CardGrid.ItemsSource>
+            </CardGrid>
+        </StackPanel>
+    </Card>
+
+</UserControl>

@@ -1,0 +1,165 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:design="clr-namespace:AngorApp.Design"
+             xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:manageFunds="clr-namespace:AngorApp.Sections.Founder.ManageFunds"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.Sections.Founder.ManageFunds.StageClaimView" x:DataType="manageFunds:IStageClaimViewModel">
+
+    <Design.DataContext>
+                <manageFunds:StageClaimViewModelDesign>
+                    <manageFunds:StageClaimViewModelDesign.ClaimableStages>
+                        <generic:List x:TypeArguments="manageFunds:IClaimableStage">
+                            <manageFunds:ClaimableStageDesign>
+                                <manageFunds:ClaimableStageDesign.Transactions>
+                                    <generic:List x:TypeArguments="manageFunds:IClaimableTransaction">
+                                        <manageFunds:ClaimableTransactionDesign ClaimStatus="Pending" Address="bc1qexampleaddress1">
+                                            <manageFunds:ClaimableTransactionDesign.Amount>
+                                                <design:DesignTimeAmount Sats="1000000" />
+                                            </manageFunds:ClaimableTransactionDesign.Amount>
+                                        </manageFunds:ClaimableTransactionDesign>
+                                        <manageFunds:ClaimableTransactionDesign ClaimStatus="WithdrawByInvestor" Address="bc1qexampleaddress2">
+                                            <manageFunds:ClaimableTransactionDesign.Amount>
+                                                <design:DesignTimeAmount Sats="2000000" />
+                                            </manageFunds:ClaimableTransactionDesign.Amount>
+                                        </manageFunds:ClaimableTransactionDesign>
+                                        <manageFunds:ClaimableTransactionDesign ClaimStatus="SpentByFounder" Address="bc1qexampleaddress3">
+                                            <manageFunds:ClaimableTransactionDesign.Amount>
+                                                <design:DesignTimeAmount Sats="300000" />
+                                            </manageFunds:ClaimableTransactionDesign.Amount>
+                                        </manageFunds:ClaimableTransactionDesign>
+                                        <manageFunds:ClaimableTransactionDesign ClaimStatus="Unspent" Address="bc1qexampleaddress4">
+                                            <manageFunds:ClaimableTransactionDesign.Amount>
+                                                <design:DesignTimeAmount Sats="300000" />
+                                            </manageFunds:ClaimableTransactionDesign.Amount>
+                                        </manageFunds:ClaimableTransactionDesign>
+                                        <manageFunds:ClaimableTransactionDesign ClaimStatus="Unspent" Address="bc1qexampleaddress5">
+                                            <manageFunds:ClaimableTransactionDesign.Amount>
+                                                <design:DesignTimeAmount Sats="3440000" />
+                                            </manageFunds:ClaimableTransactionDesign.Amount>
+                                        </manageFunds:ClaimableTransactionDesign>
+                                    </generic:List>
+                                </manageFunds:ClaimableStageDesign.Transactions>
+                            </manageFunds:ClaimableStageDesign>
+                            <manageFunds:ClaimableStageDesign>
+                            </manageFunds:ClaimableStageDesign>
+                            <manageFunds:ClaimableStageDesign>
+                            </manageFunds:ClaimableStageDesign>
+                        </generic:List>
+                    </manageFunds:StageClaimViewModelDesign.ClaimableStages>
+                </manageFunds:StageClaimViewModelDesign>
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <ControlTheme x:Key="TransactionItemTheme" BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+            <Setter Property="Interaction.Behaviors">
+                <BehaviorCollectionTemplate>
+                    <BehaviorCollection>
+                        <DataTriggerBehavior Binding="{Binding ClaimStatus, DataType=manageFunds:IClaimableTransaction}" Value="Unspent" ComparisonCondition="NotEqual">
+                            <ChangeAvaloniaPropertyAction TargetObject="{Binding $parent[ListBoxItem]}" TargetProperty="{x:Static InputElement.IsEnabledProperty}"
+                                                          Value="False" />
+                        </DataTriggerBehavior>
+                    </BehaviorCollection>
+                </BehaviorCollectionTemplate>
+            </Setter>
+        </ControlTheme>
+    </UserControl.Resources>
+
+    <HeaderedContainer Header="Claim your funds" Classes="Title">
+        <ItemsControl VerticalAlignment="Top" ItemsSource="{Binding ClaimableStages}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Classes="BigGap" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.Styles>
+                <Style Selector="TextBlock">
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                </Style>
+            </ItemsControl.Styles>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="manageFunds:IClaimableStage">
+                    <Card HeaderStartContent="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}">
+                        <Card.HeaderEndContent>
+                            <ToggleButton Theme="{StaticResource ExpandingToggleButton}" Padding="10" x:Name="ToggleButton" />
+                        </Card.HeaderEndContent>
+                        <Card.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <controls:Badge TextElement.FontWeight="Regular" FontSize="12" Color="DeepSkyBlue" Content="{Binding ClaimableAmount.DecimalString}" />
+                                <controls:Badge TextElement.FontWeight="Regular" FontSize="12" Color="Goldenrod" Content="{Binding ClaimableTransactions, StringFormat='{}{0} UTXO'}" />
+                            </StackPanel>
+                        </Card.Header>
+                        <DockPanel IsVisible="{Binding #ToggleButton.IsChecked}">
+                            <IconButton Padding="15 10" Margin="0 20 0 0" HorizontalAlignment="Right" Command="{Binding Claim}" Content="Claim Selected Coins" DockPanel.Dock="Bottom">
+                                <IconButton.Icon>
+                                    <ContentControl Height="20">
+                                        <ui:Icon Source="svg:/Assets/claim.svg" />
+                                    </ContentControl>
+                                </IconButton.Icon>
+                            </IconButton>
+                            <StackPanel DockPanel.Dock="Top" Margin="0 10" Orientation="Horizontal" Spacing="10">
+                                <IconButton IsVisible="{Binding $self.IsEffectivelyEnabled}" Command="{Binding ReactiveSelection.SelectAll}" Classes="Small" Content="Select Claimable" DockPanel.Dock="Top">
+                                    <IconButton.Icon>
+                                        <ui:Icon Source="mdi-checkbox-multiple-outline" />
+                                    </IconButton.Icon>
+                                </IconButton>
+                                <IconButton IsVisible="{Binding $self.IsEffectivelyEnabled}" Command="{Binding ReactiveSelection.Clear}" Classes="Small" Content="Clear Selection">
+                                    <IconButton.Icon>
+                                        <ui:Icon Source="mdi-checkbox-multiple-blank-outline" />
+                                    </IconButton.Icon>
+                                </IconButton>
+                            </StackPanel>
+                            <ListBox Classes="Rounded" x:Name="ListBox" Selection="{Binding ReactiveSelection.SelectionModel}" ItemsSource="{Binding Transactions}"
+                                     Grid.IsSharedSizeScope="True" ItemContainerTheme="{StaticResource TransactionItemTheme}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Amount" />
+                                                <ColumnDefinition />
+                                                <ColumnDefinition />
+                                            </Grid.ColumnDefinitions>
+                                            <CheckBox VerticalAlignment="Center"
+                                                      IsChecked="{Binding $parent[ListBoxItem].IsSelected}" />
+                                            <TextBlock Grid.Column="1" TextAlignment="Right" HorizontalAlignment="Stretch" VerticalAlignment="Center" Text="{Binding Amount.DecimalString}" />
+                                            <TextBlock Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding Address}" />
+                                            <controls:Badge HorizontalAlignment="Right" Grid.Column="3" Tag="{Binding ClaimStatus}">
+                                                <controls:Badge.Styles>
+                                                    <Style Selector="controls|Badge[Tag=Invalid]">
+                                                        <Setter Property="Color" Value="Red" />
+                                                        <Setter Property="Content" Value="-Invalid-" />
+                                                    </Style>
+                                                    <Style Selector="controls|Badge[Tag=Pending]">
+                                                        <Setter Property="Color" Value="DodgerBlue" />
+                                                        <Setter Property="Content" Value="Pending" />
+                                                    </Style>
+                                                    <Style Selector="controls|Badge[Tag=WithdrawByInvestor]">
+                                                        <Setter Property="Color" Value="OrangeRed" />
+                                                        <Setter Property="Content" Value="Withdrawn by investor" />
+                                                    </Style>
+                                                    <Style Selector="controls|Badge[Tag=SpentByFounder]">
+                                                        <Setter Property="Color" Value="Goldenrod" />
+                                                        <Setter Property="Content" Value="Spent by founder" />
+                                                    </Style>
+                                                    <Style Selector="controls|Badge[Tag=Unspent]">
+                                                        <Setter Property="Color" Value="Green" />
+                                                        <Setter Property="Content" Value="Unspent" />
+                                                    </Style>
+                                                </controls:Badge.Styles>
+                                            </controls:Badge>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
+                    </Card>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </HeaderedContainer>
+</UserControl>

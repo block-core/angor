@@ -44,7 +44,7 @@ public static class AngorConverters
     
     public static readonly FuncValueConverter<TimeSpan, string> HumanizeTimeSpan = new(offset => offset.Humanize());
     
-    public static readonly FuncValueConverter<DateTimeOffset, string> HumanizeDate = new(offset =>
+    public static readonly FuncValueConverter<DateTimeOffset, string> HumanizeDateTimeOffset = new(offset =>
     {
         if (DateTimeOffset.Now.Date - offset < 2.Days())
         {
@@ -52,6 +52,21 @@ public static class AngorConverters
         }
 
         return offset.ToString("d");
+    });
+    
+    public static readonly FuncValueConverter<DateTime?, string> HumanizeDateTime = new(offset =>
+    {
+        if (offset == null)
+        {
+            return null;
+        }
+        
+        if (DateTime.Now.Date - offset < 2.Days())
+        {
+            return offset.Humanize();
+        }
+
+        return offset.Value.ToString("d");
     });
 
     public static readonly FuncValueConverter<bool, double> BoolToOpacity = new(b => b ? 1 : 0);

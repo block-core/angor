@@ -15,8 +15,11 @@
             <Setter Property="Template">
                 <ControlTemplate>
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBox DataValidationErrors.Errors="{Binding $parent[CalendarDatePicker].(DataValidationErrors.Errors)}" VerticalContentAlignment="Center" x:Name="PART_TextBox" Watermark="{TemplateBinding Watermark}" />
+                        <TextBox VerticalAlignment="{TemplateBinding VerticalContentAlignment}" DataValidationErrors.Errors="{Binding $parent[CalendarDatePicker].(DataValidationErrors.Errors)}" VerticalContentAlignment="Center" x:Name="PART_TextBox" Watermark="{TemplateBinding Watermark}" />
                         <Button Margin="5 0 0 0" Name="PART_Button"
+                                Padding="8 5"
+                                Height="{DynamicResource TextControlThemeMinHeight}"
+                                Width="{DynamicResource TextControlThemeMinHeight}"
                                 Grid.Column="1"
                                 Focusable="False">
                             <Button.Content>

@@ -2,25 +2,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
         xmlns:zafiro="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
-        xmlns:views="clr-namespace:Zafiro.Avalonia.Dialogs.Views;assembly=Zafiro.Avalonia.Dialogs"
-        xmlns:slim="clr-namespace:Zafiro.Avalonia.Controls.Wizards.Slim;assembly=Zafiro.Avalonia">
+        xmlns:views="clr-namespace:Zafiro.Avalonia.Dialogs.Views;assembly=Zafiro.Avalonia.Dialogs">
 
     <Styles.Resources>
-        
+
         <x:Double x:Key="FontSizeLarge">24</x:Double>
         <x:Double x:Key="FontSizeBig">20</x:Double>
         <x:Double x:Key="FontSizeNormal">16</x:Double>
         <x:Double x:Key="FontSizeSmall">12</x:Double>
-        
+
         <x:Double x:Key="FlyoutThemeMaxWidth">700</x:Double>
-
-        <ControlTheme x:Key="PaneTitle" TargetType="TextBlock" BasedOn="{StaticResource Regular}">
-            <Setter Property="FontWeight" Value="Bold" />
-        </ControlTheme>
-
-        <ControlTheme x:Key="Highlighted" TargetType="TextBlock" BasedOn="{StaticResource Regular}">
-            <Setter Property="Foreground" Value="Orange" />
-        </ControlTheme>
 
         <ControlTheme x:Key="{x:Type z:SlimDataGrid}" TargetType="z:SlimDataGrid" BasedOn="{StaticResource {x:Type z:SlimDataGrid}}">
             <!-- <Setter Property="Background" Value="{StaticResource Level1}" /> -->
@@ -57,27 +48,8 @@
 
     </Styles.Resources>
 
-    <Style Selector="TextBlock.SizeSmall">
-        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
-    </Style>
 
-    <Style Selector="TextBlock.Wrap">
-        <Setter Property="TextWrapping" Value="Wrap" />
-    </Style>
-    
-    <Style Selector="TextBlock.NoWrap">
-        <Setter Property="TextWrapping" Value="NoWrap" />
-    </Style>
-    
-    <Style Selector="TextBlock.SizeNormal">
-        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
-    </Style>
-
-    <Style Selector="TextBlock.SizeBig">
-        <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
-    </Style>
-    
-    <Style Selector="views|DialogControl" >
+    <Style Selector="views|DialogControl">
         <Setter Property="MinWidth" Value="{OnFormFactor Desktop=400, Default=300, x:TypeArguments=x:Double}" />
         <Setter Property="MinHeight" Value="{OnFormFactor Desktop=300, Default=400, x:TypeArguments=x:Double}" />
         <Setter Property="MaxWidth" Value="{OnFormFactor Desktop=800, Default=700, x:TypeArguments=x:Double}" />
@@ -88,17 +60,17 @@
     <!--     <Setter Property="MinWidth" Value="{OnFormFactor Desktop=500, x:TypeArguments=x:Double}" /> -->
     <!--     <Setter Property="MinHeight" Value="{OnFormFactor Desktop=500, x:TypeArguments=x:Double}" /> -->
     <!-- </Style> -->
-    
+
     <Style Selector="Separator">
         <Setter Property="Margin" Value="0" />
         <Setter Property="Background" Value="#2B000000" />
         <Setter Property="Height" Value="2" />
     </Style>
-    
+
     <Style Selector="TextBlock.Dimmed">
         <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
     </Style>
-    
+
     <Style Selector="Border.Alert">
         <Setter Property="Background" Value="{DynamicResource SystemListLowColor}" />
         <Setter Property="BorderBrush" Value="{DynamicResource SystemListMediumColor}" />
@@ -107,11 +79,11 @@
         <Setter Property="Padding" Value="10 16" />
         <Setter Property="Margin" Value="0,16" />
     </Style>
-    
+
     <Style Selector="Button.HorizontalStretch">
         <Setter Property="HorizontalAlignment" Value="Stretch" />
     </Style>
-    
+
     <Style Selector=":is(ItemsControl):not(MenuItem):empty">
         <Setter Property="Template">
             <Setter.Value>
@@ -121,15 +93,5 @@
             </Setter.Value>
         </Setter>
     </Style>
-
-    <Design.PreviewWith>
-        <Border Padding="20">
-            <StackPanel>
-                <TextBlock Theme="{StaticResource PaneTitle}">Pane Title</TextBlock>
-                <TextBlock Theme="{StaticResource Regular}">Regular</TextBlock>
-                <TextBlock Theme="{StaticResource Highlighted}">Highlighted</TextBlock>
-            </StackPanel>
-        </Border>
-    </Design.PreviewWith>
 
 </Styles>

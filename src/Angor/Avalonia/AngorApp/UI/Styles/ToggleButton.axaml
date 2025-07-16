@@ -1,0 +1,45 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI">
+
+    <Styles.Resources>
+        <ControlTheme x:Key="ExpandingToggleButton" TargetType="ToggleButton" 
+                      BasedOn="{StaticResource {x:Type ToggleButton}}">
+            <!-- <Setter Property="Background" Value="Red"></Setter> -->
+            <Style Selector="^[IsChecked=True]">
+                <Setter Property="Content">
+                    <Setter.Value>
+                        <Template>
+                            <StackPanel Spacing="10" Orientation="Horizontal">
+                                <ContentControl>
+                                    <ui:Icon Source="fa-angle-up" />
+                                </ContentControl>
+                                <TextBlock>Collapse</TextBlock>
+                            </StackPanel>
+                        </Template>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style Selector="^[IsChecked=False]">
+                <Setter Property="Content">
+                    <Setter.Value>
+                        <Template>
+                            <StackPanel Spacing="10" Orientation="Horizontal">
+                                <ContentControl>
+                                    <ui:Icon Source="fa-angle-down" />
+                                </ContentControl>
+                                <TextBlock>Expand</TextBlock>
+                            </StackPanel>
+                        </Template>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+        </ControlTheme>
+    </Styles.Resources>
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <ToggleButton Theme="{StaticResource ExpandingToggleButton}" />
+        </Border>
+    </Design.PreviewWith>
+</Styles>

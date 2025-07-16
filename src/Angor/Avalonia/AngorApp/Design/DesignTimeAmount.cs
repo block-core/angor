@@ -1,4 +1,4 @@
-namespace AngorApp;
+namespace AngorApp.Design;
 
 public class DesignTimeAmount : IAmountUI
 {
