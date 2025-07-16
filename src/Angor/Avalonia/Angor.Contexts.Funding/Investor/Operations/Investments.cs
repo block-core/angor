@@ -51,6 +51,9 @@ public static class Investments
                 {
                     return projects.Value.Select(async project =>
                     {
+                        var investmentRecord = investmentRecordsLookup.Value.ProjectIdentifiers
+                            .First(x => x.ProjectIdentifier == project.Id.Value);
+                        
                         var investment =
                             await GetInvestmentDetails(project.Id.Value, project.FounderKey, request.WalletId);
 
@@ -61,18 +64,22 @@ public static class Investments
                             Description = project.ShortDescription,
                             LogoUri = project.Picture,
                             Target = new Amount(project.TargetAmount),
-                            FounderStatus = investment == null ? FounderStatus.Approved : FounderStatus.Requested,
+                            FounderStatus = investment == null ? FounderStatus.Requested : FounderStatus.Approved,
                             InvestmentStatus = investment == null ? InvestmentStatus.Invalid : InvestmentStatus.Invested,
                             Investment = new Amount(investment?.TotalAmount ?? 0),
                             InvestmentId = investment?.TransactionId ?? string.Empty,
                         };
                         
                         if (investment != null) return Result.Success(dto);
+
+                        var (amount, investmentStatus) = await GetInvestmentStatusFromDms(request.WalletId, project,
+                            investmentRecord.RequestEventTime, investmentRecord.RequestEventId);
                         
-                        var (amount, investmentStatus, investmentId) = await GetInvestmentStatusFromDms(request.WalletId, project);
+                        dto.FounderStatus = investmentStatus == InvestmentStatus.FounderSignaturesReceived 
+                            ? FounderStatus.Approved : FounderStatus.Requested;
                         dto.Investment = amount;
                         dto.InvestmentStatus = investmentStatus;
-                        dto.InvestmentId = investmentId;
+                        dto.InvestmentId = investmentRecord.InvestmentTransactionHash;
 
                         return Result.Success(dto);
                     });
@@ -104,65 +111,80 @@ public static class Investments
             return result.Result.IsSuccess ? result.Result.Value : null;
         }
 
-        private async Task<(Amount, InvestmentStatus, string)> GetInvestmentStatusFromDms(Guid walletId, Project project)
+        private async Task<(Amount, InvestmentStatus)> GetInvestmentStatusFromDms(Guid walletId, Project project,
+            DateTime? createdAt = null, string? eventId = null)
         {
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
             var pubKey =
                 derivationOperations.DeriveNostrPubKey(sensitiveDataResult.Value.ToWalletWords(), project.FounderKey);
             var nostrPrivateKey =
-                await derivationOperations.DeriveProjectNostrPrivateKeyAsync(sensitiveDataResult.Value.ToWalletWords(), project.FounderKey);
-    
+                await derivationOperations.DeriveProjectNostrPrivateKeyAsync(sensitiveDataResult.Value.ToWalletWords(),
+                    project.FounderKey);
+
             var privateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
-            
-            var createdAt = DateTime.MinValue;
-            var eventId = string.Empty;
 
             var investmentStatus = InvestmentStatus.Invalid;
             var amount = new Amount(0);
             var investmentId = string.Empty;
+
+
+            if (createdAt == null && eventId == null) //If we don't have a createdAt or eventId, we need to fetch it from NOSTR
+            {
+                createdAt = DateTime.MinValue;
+                eventId = string.Empty;
+
+                var requestLookupTcs = new TaskCompletionSource();
+                
+                await signService.LookupInvestmentRequestsAsync(project.NostrPubKey, pubKey, null,
+                    async (id, publisherPubKey, content, eventTime) =>
+                    {
+                        if (createdAt >= eventTime) return;
+
+                        createdAt = eventTime;
+                        eventId = id;
+                        investmentStatus = InvestmentStatus.PendingFounderSignatures;
+
+                        try
+                        {
+                            var decrypted =
+                                await decrypter.DecryptNostrContentAsync(privateKeyHex, publisherPubKey, content);
+
+                            var investmentRequest = serializer.Deserialize<SignRecoveryRequest>(decrypted);
+                            var trx = networkConfiguration.GetNetwork()
+                                .CreateTransaction(investmentRequest.InvestmentTransactionHex);
+
+                            amount = new Amount(trx.Outputs.Sum(x => x.Value));
+                            investmentId = trx.GetHash().ToString();
+                        }
+                        catch (Exception e)
+                        {
+                            requestLookupTcs.SetException(e);
+                        }
+                    }, () => { requestLookupTcs.SetResult(); });
+
+                await requestLookupTcs.Task;
+            }
+
+            if (createdAt == DateTime.MinValue || string.IsNullOrEmpty(eventId))
+            {
+                // If we still don't have a createdAt or eventId, we cannot proceed
+                return (amount, InvestmentStatus.Invalid);
+            }
+
             var tcs = new TaskCompletionSource<InvestmentStatus>();
 
-            
-            // TODO replace the old logic with better optimized one
-            await signService.LookupInvestmentRequestsAsync(project.NostrPubKey, pubKey, null, async (id, publisherPubKey, content, eventTime) =>
+
+            signService.LookupSignatureForInvestmentRequest(pubKey, project.NostrPubKey, createdAt, eventId,
+                signature =>
                 {
-                    if (createdAt >= eventTime) return;
+                    investmentStatus = InvestmentStatus.FounderSignaturesReceived;
+                    return tcs.Task;
+                },
+                () => { tcs.SetResult(investmentStatus); });
 
-                    createdAt = eventTime;
-                    eventId = id;
-                    investmentStatus = InvestmentStatus.PendingFounderSignatures;
+            await tcs.Task;
 
-                    try
-                    {
-                        var decrypted = await decrypter.DecryptNostrContentAsync(privateKeyHex,publisherPubKey, content);
-
-                        var investmentRequest = serializer.Deserialize<SignRecoveryRequest>(decrypted);
-                        var trx = networkConfiguration.GetNetwork().CreateTransaction(investmentRequest.InvestmentTransactionHex);
-
-                        amount = new Amount(trx.Outputs.Sum(x => x.Value));
-                        investmentId = trx.GetHash().ToString();
-                    }
-                    catch (Exception e)
-                    {
-                        //TODO log the error
-                    }
-                }, () =>
-                {
-                    signService.LookupSignatureForInvestmentRequest(pubKey, project.NostrPubKey, createdAt, eventId,
-                        signature =>
-                        {
-                            investmentStatus = InvestmentStatus.FounderSignaturesReceived;
-                            return tcs.Task;
-                        },
-                        () =>
-                        {
-                            tcs.SetResult(investmentStatus);
-                        });
-                });
-
-            await tcs.Task.ToObservable().Timeout(TimeSpan.FromSeconds(10));
-
-            return (amount, investmentStatus, investmentId);;
+            return (amount, investmentStatus);
         }
     }
 }
