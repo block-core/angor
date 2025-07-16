@@ -36,6 +36,7 @@ public class FounderProjectDetailsViewModelDesign : IFounderProjectDetailsViewMo
     public ReactiveCommand<Unit, Result<IEnumerable<IInvestmentViewModel>>> LoadInvestments { get; }
     public Uri? BannerUrl { get; set; }
     public string ShortDescription { get; } = "Short description, Bitcoin ONLY.";
+    public IEnhancedCommand GoManageFunds { get; }
 }
 
 public record InvestmentViewModelDesign(IAmountUI Amount, string InvestorNostrPubKey, DateTimeOffset CreatedOn, InvestmentStatus Status) : IInvestmentViewModel

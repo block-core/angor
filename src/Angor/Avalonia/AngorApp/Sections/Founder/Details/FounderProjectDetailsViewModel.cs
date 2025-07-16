@@ -2,12 +2,15 @@ using System.Threading.Tasks;
 using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
+using AngorApp.Sections.Founder.ManageFunds;
 using AngorApp.UI.Services;
 using DynamicData;
 using Zafiro;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
+using Zafiro.UI.Commands;
+using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Founder.Details;
 
@@ -15,7 +18,7 @@ public class FounderProjectDetailsViewModel : IFounderProjectDetailsViewModel
 {
     private readonly ProjectDto project;
 
-    public FounderProjectDetailsViewModel(ProjectDto project, IInvestmentAppService investmentAppService, UIServices uiServices)
+    public FounderProjectDetailsViewModel(ProjectDto project, IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigation)
     {
         this.project = project;
         LoadInvestments = ReactiveCommand.CreateFromTask(() =>
@@ -35,6 +38,8 @@ public class FounderProjectDetailsViewModel : IFounderProjectDetailsViewModel
             .Subscribe();
 
         Investments = pendingInvestments;
+
+        GoManageFunds = ReactiveCommand.CreateFromTask(() => navigation.Go<IManageFundsViewModel>()).Enhance();
     }
 
     private static async Task<Maybe<Result<bool>>> Approve(ProjectDto project, IInvestmentAppService investmentAppService, UIServices uiServices, IWallet wallet, Investment investment)
@@ -56,5 +61,6 @@ public class FounderProjectDetailsViewModel : IFounderProjectDetailsViewModel
     public ReactiveCommand<Unit, Result<IEnumerable<IInvestmentViewModel>>> LoadInvestments { get; }
     public Uri? BannerUrl => project.Banner;
     public string ShortDescription => project.ShortDescription;
+    public IEnhancedCommand GoManageFunds { get; }
     public string Name => project.Name;
 }

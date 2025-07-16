@@ -13,47 +13,26 @@
         <a:AmountViewModelDesign />
     </Design.DataContext>
 
-    <UserControl.Styles>
-        <Style Selector="ItemsControl">
-            <Setter Property="ItemsPanel">
-                <ItemsPanelTemplate>
-                    <UniformGrid Rows="1" />
-                </ItemsPanelTemplate>
-            </Setter>
-        </Style>
-        <Style Selector="ItemsControl:overflow">
-            <Setter Property="ItemsPanel">
-                <ItemsPanelTemplate>
-                    <UniformGrid Columns="1" />
-                </ItemsPanelTemplate>
-            </Setter>
-        </Style>
-    </UserControl.Styles>
-
     <ItemsControl ItemsSource="{Binding StageBreakdowns}">
-        <Interaction.Behaviors>
-            <OverflowBehavior />
-        </Interaction.Behaviors>
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <StackPanel Classes="SmallGap" />
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
             <DataTemplate>
-                <StackPanel>
-                    <!-- <Card Header="{Binding Index, StringFormat='Stage {0}'}" -->
-                    <!--       HeaderEndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.HumanizeDate}}" -->
-                    <!--       Content="{Binding Amount.SatsString}"> -->
-                    <!-- </Card> -->
-                    <Card Padding="10 5 10 10" HeaderPadding="5 5 5 0" HeaderStartContent="{Binding Index, StringFormat='Stage {0}'}" HeaderEndContent="{Binding Amount.DecimalString}">
-                        <Card.HeaderEndContentTemplate>
-                            <DataTemplate DataType="x:Object">
-                                <Border Padding="5" CornerRadius="10" Background="{DynamicResource SystemChromeHighColor}">
-                                    <ContentPresenter Content="{Binding}" FontWeight="Bold" FontSize="10" />
-                                </Border>
-                            </DataTemplate>
-                        </Card.HeaderEndContentTemplate>
-                        <StackPanel Spacing="4">
-                            <EdgePanel StartContent="{Binding ReleaseDate, StringFormat='Release: {0:d}'}" EndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.HumanizeDate}}" />
-                        </StackPanel>
-                    </Card>
-                </StackPanel>
+                <Card Padding="10" HeaderStartContent="{Binding Index, StringFormat='Stage {0}'}" HeaderEndContent="{Binding Amount.DecimalString}">
+                    <Card.HeaderEndContentTemplate>
+                        <DataTemplate DataType="x:Object">
+                            <Border Padding="5" CornerRadius="10" Background="{DynamicResource SystemChromeHighColor}">
+                                <ContentPresenter Content="{Binding}" FontWeight="Bold" FontSize="10" />
+                            </Border>
+                        </DataTemplate>
+                    </Card.HeaderEndContentTemplate>
+                    <StackPanel Spacing="4">
+                        <EdgePanel StartContent="{Binding ReleaseDate, StringFormat='Release: {0:d}'}" EndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.HumanizeDateTimeOffset}}" />
+                    </StackPanel>
+                </Card>
             </DataTemplate>
         </ItemsControl.ItemTemplate>
     </ItemsControl>
