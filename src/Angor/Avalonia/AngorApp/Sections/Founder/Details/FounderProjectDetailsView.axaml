@@ -54,7 +54,8 @@
                                 </ItemsControl.ItemsPanel>
                             </ItemsControl>
                             <Card Header="Previous offers" x:DataType="details:IInvestmentViewModel"
-                                  Background="{DynamicResource SystemChromeMediumColor}"
+                                  Subheader="These are previous offers made by this investor"
+                                  Background="{DynamicResource SystemListMediumColor}"
                                                IsVisible="{Binding AreDetailsShown, DataType=details:IInvestmentViewModel}">
                                 <sdg:SlimDataGrid Classes="NestedGrid" ItemsSource="{Binding OtherInvestments}">
                                     <sdg:SlimDataGrid.Styles>
@@ -69,10 +70,9 @@
                                     <sdg:SlimDataGrid.Columns>
                                         <sdg:Column Header="Amount" Width="*" Binding="{Binding Amount.BtcString}" />
                                         <sdg:Column Header="Date" Width="*" Binding="{Binding CreatedOn, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
-                                        <sdg:Column Header="Investor" Width="150" Binding="{Binding InvestorNostrPubKey}">
+                                        <sdg:Column Header="" Width="150" Binding="{Binding InvestorNostrPubKey}">
                                             <sdg:Column.CellTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="{Binding}" />
                                                 </DataTemplate>
                                             </sdg:Column.CellTemplate>
                                         </sdg:Column>
