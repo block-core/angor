@@ -1027,7 +1027,7 @@
         set => project.ProjectInfo.TargetAmount = Money.Coins(value).Satoshi;
     }
 
-    private bool debugMode => storage.GetDebugMode();
+    private bool debugMode; 
 
     private int activeTab = 1;
 
@@ -1079,12 +1079,13 @@
     protected override async Task OnInitializedAsync()
     {
         NavMenuState.SetActivePage("founder");
-
+        debugMode = storage?.GetDebugMode() ?? false;
+        
         if (!hasWallet)
         {
             return;
         }
-
+        
         var projects = storage.GetFounderProjects();
 
         var keys = _walletStorage.GetFounderKeys();

@@ -31,7 +31,7 @@ namespace Angor.Client.Storage
         void SetCurrencyDisplaySetting(string setting);
         
         bool GetDebugMode();
-        void SetDebugMode(bool? debugMode=false);
+        void SetDebugMode(bool? debugMode);
 
         void SetFeatureFlags(Dictionary<string, bool> featureFlags);
         Dictionary<string, bool>? GetFeatureFlags();

@@ -7,6 +7,7 @@ public interface INetworkConfiguration
 {
     Network GetNetwork();
     bool GetDebugMode();
+    void SetDebugMode(bool? debugMode);
     void SetNetwork(Network network);
     String GetGenesisBlockHash();
     string GetNetworkNameFromGenesisBlockHash(string genesisBlockHash);

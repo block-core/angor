@@ -995,6 +995,7 @@
     {
         debugMode = bool.Parse(e.Value.ToString());
         _clientStorage.SetDebugMode(debugMode);
+        _networkConfiguration.SetDebugMode(debugMode);
         StateHasChanged();
     }
 
