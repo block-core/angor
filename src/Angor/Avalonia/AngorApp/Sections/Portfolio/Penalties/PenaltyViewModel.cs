@@ -1,4 +1,4 @@
-using Angor.Contexts.Funding.Investor.Operations;
+using Angor.Contexts.Funding.Investor.Dtos;
 
 namespace AngorApp.Sections.Portfolio.Penalties;
 
