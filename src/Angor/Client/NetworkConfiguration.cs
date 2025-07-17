@@ -53,7 +53,6 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public void SetDebugMode(bool? debugMode=false)
     {
-        Console.WriteLine($"NetworkConfiguration.cs: debugMode => {debugMode}");
         _storage?.SetItem(key:DebugModeKey, data:debugMode);
     }
 
