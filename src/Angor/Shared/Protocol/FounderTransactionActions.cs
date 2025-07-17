@@ -68,11 +68,19 @@ public class FounderTransactionActions : IFounderTransactionActions
                 accountExtPubKeyDerived.GetPublicKey().GetTaprootFullPubKey().InternalKey.AsTaprootPubKey(),
                 new TaprootKeyPath(rootedKeyPath, new[] { tapScript.LeafHash }));
 
-
-
-            psbt.Inputs[stageIndex]...TaprootLeafScript = new[] { 
-                new TaprootLeafScript(tapScript.Script, tapScript.LeafVersion) 
-            };
+            // todo: 
+            // https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki
+            // https://github.com/bitcoin/bips/blob/master/bip-0371.mediawiki
+            // https://github.com/bitcoin/bips/blob/master/bip-0370.mediawiki
+            // the steps to complete this in nbitcoin
+            // 1. add PSBT_IN_TAP_SCRIPT_SIG and PSBT_IN_TAP_LEAF_SCRIPT to the psbt (only key spend is supported we need to add support for script spend)
+            // 2. we need to call the method SignTaprootKeySpend and pass the  LeafHash in the TaprootExecutionData for thet
+            //    we need to pass the TapScript of the branch that is being executed, the spec says to put it in the PSBT_IN_TAP_LEAF_SCRIPT field
+            // 3. apotential place to ptu itin NBitcoin is TaprootReadyPrecomputedTransactionData before we call the sign method
+            // 4. then when we sign further down the stack we can check if there is a leaf then it is a HashVersion.Tapscript in the TaprootExecutionData
+            // 5. this will automatically sign as a tapscript and not tapkey spend
+            // 6. then store the sig in the TaprootKeySignature (however we need two such sigs so perhaps we should put the sigs in the PartialSigs field
+           
         }
 
         return psbt;
