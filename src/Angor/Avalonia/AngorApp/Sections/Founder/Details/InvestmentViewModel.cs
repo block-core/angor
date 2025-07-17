@@ -7,8 +7,11 @@ using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder.Details;
 
-public class InvestmentViewModel : IInvestmentViewModel, IDisposable
+public partial class InvestmentViewModel : ReactiveObject, IInvestmentViewModel, IDisposable
 {
+    [ReactiveUI.SourceGenerators.Reactive]
+    private bool areDetailsShown;
+
     private readonly CompositeDisposable disposable = new();
 
     public InvestmentViewModel(IGrouping<InvestmentGroupKey, Investment> group, Func<Task<bool>> onApprove)
@@ -28,15 +31,19 @@ public class InvestmentViewModel : IInvestmentViewModel, IDisposable
                 MostRecentInvestment.Status = InvestmentStatus.FounderSignaturesReceived;
             }
             
-        }, this.WhenAnyValue(model => model.MostRecentInvestment.Status, x => x == InvestmentStatus.PendingFounderSignatures)).Enhance();
+        }, this.WhenAnyValue(model => model.MostRecentInvestment.Status, x => x == InvestmentStatus.PendingFounderSignatures)).Enhance().DisposeWith(disposable);
+
+        this.WhenAnyValue(x => x.AreDetailsShown).Subscribe(b => { });
     }
-    
+
     public void Dispose()
     {
         disposable.Dispose();
     }
 
     public IEnumerable<IInvestmentChild> OtherInvestments { get; }
+
     public IInvestmentChild MostRecentInvestment { get; }
+
     public IEnhancedCommand Approve { get; }
 }

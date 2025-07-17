@@ -1,11 +1,15 @@
 using System.Linq;
 using MoreLinq;
+using ReactiveUI.SourceGenerators;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder.Details;
 
-public class InvestmentViewModelDesign : IInvestmentViewModel
+public partial class InvestmentViewModelDesign : ReactiveObject, IInvestmentViewModel
 {
+    [Reactive]
+    private bool areDetailsShown;
+
     public IEnumerable<IInvestmentChild> OtherInvestments { get; set; } = SampleData().OrderByDescending(child => child.CreatedOn);
 
     private static IEnumerable<IInvestmentChild> SampleData()
@@ -31,5 +35,6 @@ public class InvestmentViewModelDesign : IInvestmentViewModel
     }
 
     public IInvestmentChild MostRecentInvestment { get; } = new InvestmentChildViewModelDesign();
+
     public IEnhancedCommand Approve { get; }
 }
