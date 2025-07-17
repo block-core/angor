@@ -17,11 +17,13 @@
 @inject ICacheStorage _cacheStorage;
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
+@inject IPsbtOperations _PsbtOperations
 @inject IRelayService _RelayService
 @inject ILogger<Create> _Logger;
 @inject IHtmlStripperService HtmlStripperService;
 @inject IJSRuntime JS;
 @inject NavMenuState NavMenuState
+@inject IFeatureFlagService _featureFlagService
 
 @inject IWalletUIService _walletUIService;
 
@@ -1407,7 +1409,16 @@
 
             unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), NetworkConfiguration.AngorCreateFeeSats, NetworkConfiguration.NostrEventIdKeyType, project.ProjectInfoEventId);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            if (_featureFlagService.IsFeatureHWSupportEnabled())
+            {
+                var psbt = _PsbtOperations.CreatePsbtForTransaction(unsignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
+
+                signedTransaction = _PsbtOperations.SignPsbt(psbt, words);
+            }
+            else
+            {
+                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            }
 
             showCreateModal = true;
         }
@@ -1439,12 +1450,22 @@
             var words = await passwordComponent.GetWalletAsync();
             var accountInfo = storage.GetAccountInfo(network.Name);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
-            accountInfo.GetNextChangeReceiveAddress(),
-            unsignedTransaction,
-            words,
-            accountInfo,
-            feeData.SelectedFeeEstimation.FeeRate);
+            if (_featureFlagService.IsFeatureHWSupportEnabled())
+            {
+                var psbt = _PsbtOperations.CreatePsbtForTransaction(unsignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+
+                signedTransaction = _PsbtOperations.SignPsbt(psbt, words);
+            }
+            else
+            {
+                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
+                    accountInfo.GetNextChangeReceiveAddress(),
+                    unsignedTransaction,
+                    words,
+                    accountInfo,
+                    feeData.SelectedFeeEstimation.FeeRate);
+            }
+
 
             StateHasChanged();
         }
