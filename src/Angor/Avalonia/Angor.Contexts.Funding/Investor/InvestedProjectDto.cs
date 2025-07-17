@@ -16,6 +16,7 @@ public class InvestedProjectDto
     public string Description { get; set; }
     public Amount InRecovery { get; set; }
     public InvestmentStatus InvestmentStatus { get; set; }
+    public string InvestmentId { get; set; }
 }
 
 public enum FounderStatus

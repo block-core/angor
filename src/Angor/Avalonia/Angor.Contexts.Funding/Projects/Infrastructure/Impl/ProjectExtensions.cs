@@ -20,7 +20,7 @@ public static class ProjectExtensions
             TargetAmount = project.TargetAmount,
             Stages = project.Stages.Select(stage => new StageDto
             {
-                Amount = stage.Amount,
+                //Amount = stage.Amount,
                 Index = stage.Index,
                 RatioOfTotal = stage.RatioOfTotal,
                 ReleaseDate = stage.ReleaseDate,
@@ -36,7 +36,7 @@ public static class ProjectExtensions
             Stages = project.Stages.Select(stage => new Stage
             {
                 ReleaseDate = stage.ReleaseDate,
-                AmountToRelease = (decimal)stage.Amount / 1_0000_0000,
+                AmountToRelease = stage.RatioOfTotal,
             }).ToList(),
             FounderKey = project.FounderKey,
             FounderRecoveryKey = project.FounderRecoveryKey,

@@ -36,10 +36,9 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
         return mediator.Send(new Investments.InvestmentsPortfolioRequest(walletId));
     }
 
-    public async Task<Result> ConfirmInvestment(int investmentId)
+    public Task<Result> ConfirmInvestment(string investmentId, Guid walletId, ProjectId projectId)
     {
-        await Task.Delay(2000);
-        return Result.Success();
+        return mediator.Send(new PublishInvestment.PublishInvestmentRequest(investmentId, walletId, projectId));
     }
 
     public Task<Result<string>> CreateProject(Guid walletId, long selectedFee, CreateProjectDto project)

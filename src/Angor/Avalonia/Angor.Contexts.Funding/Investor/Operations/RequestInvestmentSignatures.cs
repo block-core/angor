@@ -1,5 +1,6 @@
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -56,23 +57,22 @@ public static class RequestInvestmentSignatures
             {
                 return Result.Failure<Guid>(sendSignatureResult.Error);
             }
-
-            var requestId = sendSignatureResult.Value;
-
-            var amount = strippedInvestmentTransaction.Outputs.Sum(x => x.Value);
             
-            await investmentRepository.Add(request.WalletId, Investment.Create(request.ProjectId,request.Draft.InvestorKey,new Amount(amount),transactionId));
+            await investmentRepository.Add(request.WalletId, new InvestorPositionRecord()
+            {
+                InvestmentTransactionHash = transactionId,
+                InvestmentTransactionHex = request.Draft.SignedTxHex,
+                InvestorPubKey = request.Draft.InvestorKey,
+                ProjectIdentifier = request.ProjectId.Value,
+                UnfundedReleaseAddress = null, //TODO: Set this to the actual unfunded release address once implemented
+                RequestEventId = sendSignatureResult.Value.eventId,
+                RequestEventTime = sendSignatureResult.Value.createdTime,
+            });
             
             return Result.Success(Guid.Empty);
         }
 
-        private async Task<Result<Guid>> Save(string requestId, string transactionHex, string investorKey, ProjectId projectId)
-        {
-            // TODO: Implement the save logic
-            throw new NotImplementedException();
-        }
-
-        private async Task<Result<string>> SendSignatureRequest(WalletWords walletWords, Project project, string signedTransactionHex)
+        private async Task<Result<(DateTime createdTime,string eventId)>> SendSignatureRequest(WalletWords walletWords, Project project, string signedTransactionHex)
         {
             try
             {
@@ -84,7 +84,7 @@ public static class RequestInvestmentSignatures
 
                 if (releaseAddressResult.IsFailure)
                 {
-                    return Result.Failure<string>(releaseAddressResult.Error);
+                    return Result.Failure<(DateTime,string)>(releaseAddressResult.Error);
                 }
                 
                 var releaseAddress = releaseAddressResult.Value;
@@ -105,11 +105,11 @@ public static class RequestInvestmentSignatures
 
                 var (time, id) = signService.RequestInvestmentSigs(encryptedContent, investorNostrPrivateKeyHex, project.NostrPubKey, _ => { });
 
-                return Result.Success(id);
+                return Result.Success((time,id));
             }
             catch (Exception ex)
             {
-                return Result.Failure<string>($"Error while sending the signature request {ex.Message}");
+                return Result.Failure<(DateTime,string)>($"Error while sending the signature request {ex.Message}");
             }
         }
 

@@ -85,6 +85,7 @@ public class GetPenaltiesTests
         var investorPubKey = "test-investor-pubkey";
         var nostrEventId = "test-event-id";
         var transactionId = "test-transaction-id";
+        var transactionHex = "test-transaction-hex";
 
         var investment = new InvestmentRecords
         {
@@ -93,6 +94,7 @@ public class GetPenaltiesTests
                 ProjectIdentifier = projectIdentifier,
                 InvestorPubKey = investorPubKey,
                 InvestmentTransactionHash = transactionId,
+                InvestmentTransactionHex = transactionHex,
                 UnfundedReleaseAddress = null // Assuming this is not used in the test
             }]
         };
