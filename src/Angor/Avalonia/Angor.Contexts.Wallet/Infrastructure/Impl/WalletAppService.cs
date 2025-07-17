@@ -214,7 +214,7 @@ public class WalletAppService(
             
             var signedTransaction = psbtOperations.SignPsbt(psbt, walletWords);
             var realFeeInSatoshis = signedTransaction.TransactionFee;
-            var virtualSize = (long)signedTransaction.Transaction.GetVirtualSize(0);
+            var virtualSize = (long)signedTransaction.Transaction.GetVirtualSize(4);
 
             return Task.FromResult(Result.Success((realFeeInSatoshis, virtualSize)));
         }
