@@ -1,6 +1,5 @@
 using Angor.Shared;
 using Angor.Shared.Models;
-using Blazored.LocalStorage;
 using Blockcore.Networks;
 
 namespace Angor.Client;
@@ -13,8 +12,6 @@ public class NetworkConfiguration : INetworkConfiguration
     public static long AngorCreateFeeSats = 10001; // versioning :)
     public static int AngorInvestFeePercentage = 1;
     public static short NostrEventIdKeyType = 1; //TODO David use an enum for this?
-    private const string DebugModeKey = "debugMode";
-    private readonly ISyncLocalStorageService? _storage;
     
     public int GetAngorInvestFeePercentage => AngorInvestFeePercentage;
     public string GetAngorKey()
@@ -30,6 +27,7 @@ public class NetworkConfiguration : INetworkConfiguration
     }
 
     private Network currentNetwork;
+    private bool? _debugMode;
 
     public void SetNetwork(Network network)
     {
@@ -48,12 +46,12 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public bool GetDebugMode()
     {
-        return _storage?.GetItem<bool>(DebugModeKey) ?? false;
+        return _debugMode ?? false;
     }
 
     public void SetDebugMode(bool? debugMode=false)
     {
-        _storage?.SetItem(key:DebugModeKey, data:debugMode);
+        _debugMode = debugMode;
     }
 
     public List<SettingsUrl> GetDefaultIndexerUrls()
