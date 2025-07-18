@@ -3,7 +3,7 @@ using Angor.Shared.Models;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Wallet.Infrastructure.Impl;
+namespace Angor.Contests.CrossCutting;
 
 public class NetworkStorage(IStore store) : INetworkStorage
 {
