@@ -22,8 +22,7 @@ public static class FundingContextServices
     {
         var networkConfiguration = new NetworkConfiguration();
 
-        services.AddSingleton<IProjectAppService, ProjectAppService>();
-        services.AddSingleton<IInvestmentAppService, InvestmentAppService>();
+        
         services.AddSingleton<IInvestmentRepository, InvestmentRepository>();
         services.AddSingleton<IProjectRepository, ProjectRepository>();
         services.AddSingleton<INostrDecrypter, NostrDecrypter>();
@@ -31,7 +30,7 @@ public static class FundingContextServices
         services.TryAddSingleton<ISerializer, Serializer>();
         services.TryAddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
         services.TryAddSingleton<IRelayService, RelayService>();
-        //services.TryAddSingleton<INetworkStorage, NetworkStorage>();
+        services.TryAddSingleton<INetworkStorage, NetworkStorage>();
         //TODO change the call to use the factory
         services.TryAddScoped<HttpClient>(x => x.GetRequiredService<IHttpClientFactory>().CreateClient());
         services.TryAddSingleton<IIndexerService,MempoolSpaceIndexerApi>();
@@ -53,6 +52,9 @@ public static class FundingContextServices
         services.TryAddSingleton<IWalletOperations, WalletOperations>();
         services.AddHttpClient();
 
+        services.AddSingleton<IProjectAppService, ProjectAppService>();
+        services.AddSingleton<IInvestmentAppService, InvestmentAppService>();
+        
         return services;
     }
 }

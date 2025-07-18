@@ -3,6 +3,7 @@ using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Projects.Operations;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Zafiro.CSharpFunctionalExtensions;
@@ -27,5 +28,10 @@ public class ProjectAppService(
     public Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(Guid walletId)
     {
         return mediator.Send(new GetFounderProjects.GetFounderProjectsRequest(walletId));
+    }
+
+    public Task<Result<ProjectStatisticsDto>> GetProjectStatistics(ProjectId projectId)
+    {
+        return mediator.Send(new ProjectStatistics.ProjectStatsRequest(projectId));
     }
 }

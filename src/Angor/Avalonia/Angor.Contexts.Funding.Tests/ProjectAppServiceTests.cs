@@ -32,6 +32,17 @@ public class ProjectAppServiceTests(ITestOutputHelper output)
         Assert.NotEmpty(result.Value);
     }
 
+    [Fact]
+    public async Task Get_Project_Statistics()
+    {
+        var sut = CreateSut();
+        var projectId = new ProjectId("angor1qkmmqqktfhe79wxp20555cdp5gfardr4s26wr00");
+
+        var result = await sut.GetProjectStatistics(projectId);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+    }
 
     private IProjectAppService CreateSut()
     {
