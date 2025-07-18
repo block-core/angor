@@ -164,6 +164,11 @@ public static class Investments
 
                 await requestLookupTcs.Task;
             }
+            else
+            {
+                //If we have the event id we know we sent a request to the founder
+                investmentStatus = InvestmentStatus.PendingFounderSignatures;
+            }
 
             if (createdAt == DateTime.MinValue || string.IsNullOrEmpty(eventId))
             {
