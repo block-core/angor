@@ -4,9 +4,8 @@ namespace AngorApp.Sections.Founder.Details;
 
 public interface IInvestmentViewModel
 {
-    public IAmountUI Amount { get; }
-    public string InvestorNostrPubKey { get; }
-    public DateTimeOffset CreatedOn { get; }
-    public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; }
-    public Angor.Contexts.Funding.Founder.InvestmentStatus Status { get; }
+    IEnumerable<IInvestmentChild> OtherInvestments { get; }
+    public IInvestmentChild MostRecentInvestment { get; }
+    public IEnhancedCommand Approve { get; }
+    bool AreDetailsShown { get; set; }
 }
