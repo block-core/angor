@@ -73,9 +73,9 @@
                     <div class="info-card">
                         <div class="mb-3">
                             <label for="NostrMetadataName" class="form-label">Project name</label>
-                            <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated" maxlength="60" />
+                            <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated" maxlength="200" />
                             <small class="form-text text-muted">
-                                @((project.Metadata?.Name?.Length ?? 0).ToString())/60 characters
+                                @((project.Metadata?.Name?.Length ?? 0).ToString())/200 characters
                             </small>
                         </div>
 
@@ -207,7 +207,13 @@
                                     <label for="penaltyDays" class="form-label mb-0 fw-semibold">Penalty Days</label>
                                 </div>
                                 <p class="form-text text-muted mt-0 mb-2 small">Number of days to lock funds for departing investors who wish to withdraw early.</p>
-                                <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
+                                <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" @onblur="ValidatePenaltyDays" @oninput="OnPenaltyDaysInput" class="form-control" min="0" max="365" disabled="@nostrApplicationSpecificDataCreated" />
+                                @if (penaltyDaysError)
+                                {
+                                    <div class="text-danger mt-1 small">
+                                        @penaltyDaysErrorMessage
+                                    </div>
+                                }
                             </div>
 
                             <!-- Expiry Date -->
@@ -431,15 +437,15 @@
                                 <span class="user-select-none animate-rotate">
                                     <Icon IconName="view" Height="20" Width="20" />
                                 </span>
-                                <div class="h-100 ms-3">
-                                    <h6 class="mb-0 font-weight-bolder">
+                                <div class="h-100 ms-3 flex-grow-1 min-width-0">
+                                    <h6 class="mb-0 font-weight-bolder text-truncate">
                                         @if (string.IsNullOrEmpty(project.Metadata?.Name))
                                         {
                                             <span>Name</span>
                                         }
                                         else
                                         {
-                                            <span class="project-name">@project.Metadata.Name</span>
+                                            <span class="project-name" title="@project.Metadata.Name">@project.Metadata.Name</span>
                                         }
                                     </h6>
                                 </div>
@@ -1054,6 +1060,9 @@
 
     private bool endDateError = false;
     private string endDateErrorMessage = "";
+    
+    private bool penaltyDaysError = false;
+    private string penaltyDaysErrorMessage = "";
 
     private readonly Dictionary<string, (int[] Percentages, int IntervalDays)> presets = new()
     {
@@ -1187,6 +1196,15 @@
         // check if the project was already published to nostr
         nostrMetadataCreated = project.NostrProfileCreated;
         nostrApplicationSpecificDataCreated = !string.IsNullOrEmpty(project.ProjectInfoEventId);
+
+        // Initialize stageDateErrors dictionary for existing stages
+        foreach (var stage in project.ProjectInfo.Stages)
+        {
+            if (!stageDateErrors.ContainsKey(stage))
+            {
+                stageDateErrors[stage] = "";
+            }
+        }
     }
 
     private string GetActiveClass(int tabNumber)
@@ -1550,7 +1568,11 @@
             return;
         }
 
-        project.ProjectInfo.Stages.Add(new Stage { ReleaseDate = DateTime.UtcNow });
+        var newStage = new Stage { ReleaseDate = DateTime.UtcNow };
+        project.ProjectInfo.Stages.Add(newStage);
+
+        // Initialize error state for new stage
+        stageDateErrors[newStage] = "";
 
         // Update expiry date
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
@@ -1566,6 +1588,11 @@
         }
 
         project.ProjectInfo.Stages.Remove(stage);
+
+        if (stageDateErrors.ContainsKey(stage))
+        {
+            stageDateErrors.Remove(stage);
+        }
 
         // Update expiry date
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
@@ -1606,12 +1633,15 @@
 
         if (selectedPreset != null && presets.TryGetValue(selectedPreset, out var preset))
         {
+            stageDateErrors.Clear();
+            
             project.ProjectInfo.Stages.Clear();
             project.ProjectInfo.Stages = GenerateStages(preset.Percentages, preset.IntervalDays);
         }
         else
         {
             notificationComponent.ShowErrorMessage("Invalid preset selected.");
+            stageDateErrors.Clear();
             project.ProjectInfo.Stages.Clear();
         }
 
@@ -1706,13 +1736,18 @@
             return false;
         }
 
+        if (project.ProjectInfo.PenaltyDays < 0)
+        {
+            notificationComponent.ShowErrorMessage("Penalty days cannot be negative.");
+            return false;
+        }
+
+
         if (project.ProjectInfo.PenaltyDays > 365)
         {
             notificationComponent.ShowErrorMessage("Penalty days cannot exceed 365 days.");
             return false;
         }
-
-
 
         if (!ValidateImageUrl(project.Metadata.Banner, "Banner Image"))
             return false;
@@ -1799,11 +1834,15 @@
 
         for (int i = 0; i < percentages.Length; i++)
         {
-            stages.Add(new Stage
+            var stage = new Stage
             {
                 AmountToRelease = percentages[i],
                 ReleaseDate = currentDate
-            });
+            };
+            
+            stages.Add(stage);
+            
+            stageDateErrors[stage] = "";
 
             if (i > 0)
             {
@@ -1825,18 +1864,24 @@
             return;
         }
 
-        project.ProjectInfo.Stages.Clear(); // Reset existing stages
+        stageDateErrors.Clear();
+        
+        project.ProjectInfo.Stages.Clear();
 
         var stageDuration = totalDuration / numberOfStages;
         var stagePercentage = 100m / numberOfStages;
 
         for (int i = 0; i < numberOfStages; i++)
         {
-            project.ProjectInfo.Stages.Add(new Stage
+            var stage = new Stage
             {
                 AmountToRelease = stagePercentage,
                 ReleaseDate = project.ProjectInfo.StartDate.AddDays(i * stageDuration)
-            });
+            };
+            
+            project.ProjectInfo.Stages.Add(stage);
+            
+            stageDateErrors[stage] = "";
         }
 
         StateHasChanged();
@@ -1951,10 +1996,10 @@
                 endDateErrorMessage = "End date must be before the first stage date";
             }
         }
-        else
+
+        if (!endDateError)
         {
-            endDateError = false;
-            endDateErrorMessage = "";
+            ValidateAllStages();
         }
 
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
@@ -1996,11 +2041,22 @@
             return;
 
         stage.ReleaseDate = value.Value;
+        
+        ValidateAllStages();
+        ValidateEndDate();
+        StateHasChanged();
+    }
 
+    private void ValidateStageDate(Stage stage)
+    {
+        if (!stageDateErrors.ContainsKey(stage))
+        {
+            stageDateErrors[stage] = "";
+        }
+        
         stageDateErrors[stage] = "";
 
         var stages = project.ProjectInfo.Stages;
-
         var index = stages.IndexOf(stage);
 
         if (index == 0)
@@ -2027,10 +2083,14 @@
                 stageDateErrors[stage] = $"Stage {index + 1} must be before Stage {index + 2}.";
             }
         }
+    }
 
-        ValidateEndDate();
-
-        StateHasChanged();
+    private void ValidateAllStages()
+    {
+        foreach (var stage in project.ProjectInfo.Stages)
+        {
+            ValidateStageDate(stage);
+        }
     }
 
 
@@ -2244,5 +2304,33 @@
     {
         ValidateWebsiteUrl();
         StateHasChanged();
+    }
+
+    private void ValidatePenaltyDays()
+    {
+        penaltyDaysError = false;
+        penaltyDaysErrorMessage = "";
+
+        if (project.ProjectInfo.PenaltyDays < 0)
+        {
+            penaltyDaysError = true;
+            penaltyDaysErrorMessage = "Penalty days cannot be negative.";
+        }
+        else if (project.ProjectInfo.PenaltyDays > 365)
+        {
+            penaltyDaysError = true;
+            penaltyDaysErrorMessage = "Penalty days cannot exceed 365 days.";
+        }
+
+        StateHasChanged();
+    }
+
+    private void OnPenaltyDaysInput(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int value))
+        {
+            project.ProjectInfo.PenaltyDays = value;
+            ValidatePenaltyDays();
+        }
     }
 }
