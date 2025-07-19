@@ -1029,6 +1029,8 @@
         set => project.ProjectInfo.TargetAmount = Money.Coins(value).Satoshi;
     }
 
+    private bool debugMode; 
+
     private int activeTab = 1;
 
     private int totalDuration;
@@ -1079,12 +1081,13 @@
     protected override async Task OnInitializedAsync()
     {
         NavMenuState.SetActivePage("founder");
-
+        debugMode = storage?.GetDebugMode() ?? false;
+        
         if (!hasWallet)
         {
             return;
         }
-
+        
         var projects = storage.GetFounderProjects();
 
         var keys = _walletStorage.GetFounderKeys();
@@ -1130,7 +1133,7 @@
         // Always update expiry date based on stages (or start date if no stages)
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
 
-        if (network.NetworkType == NetworkType.Testnet)
+        if (network.NetworkType == NetworkType.Testnet && debugMode)
         {
             PopulateTestnetData(project);
         }
@@ -1614,8 +1617,8 @@
     private bool ValidateInputData()
     {
         var isTestnet = this.network.NetworkType == NetworkType.Testnet;
-
-        if (!isTestnet)
+        
+        if (!isTestnet && !debugMode)
         {
             // test that need to happen in production will go here
 

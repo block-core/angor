@@ -52,11 +52,7 @@ namespace Angor.Shared.Services
                 {
                     network = AngorNetworksSelector.NetworkByName(setNetwork);
                 } 
-                else if (url.Contains("test"))
-                {
-                    network = new Angornet();
-                }
-                else if (url.Contains("localhost"))
+                else if (url.Contains("test") || url.Contains("debug") || url.Contains("localhost"))
                 {
                     network = new Angornet();
                 }
