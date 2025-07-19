@@ -1701,10 +1701,10 @@
         }
 
         if (project.ProjectInfo.StartDate > DateTime.Today.AddYears(1))
-{
-    notificationComponent.ShowErrorMessage("Start date cannot be more than one year in the future.");
-    return false;
-}
+        {
+            notificationComponent.ShowErrorMessage("Start date cannot be more than one year in the future.");
+            return false;
+        }
 
         if (project.ProjectInfo.PenaltyDays > 365)
         {
@@ -2212,25 +2212,33 @@
 
     private bool ValidateImageUrl(string url, string fieldName)
     {
-        if (string.IsNullOrEmpty(url))
+        if (string.IsNullOrWhiteSpace(url))
             return true;
 
-        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult) ||
-            (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
+        if (!Uri.TryCreate(url.Trim(), UriKind.Absolute, out Uri uriResult))
         {
-            notificationComponent.ShowErrorMessage($"{fieldName} must be a valid URL starting with http:// or https://");
+            notificationComponent.ShowErrorMessage($"{fieldName} must be a valid URL.");
+            return false;
+        }
+
+        if (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps)
+        {
+            notificationComponent.ShowErrorMessage($"{fieldName} must start with http:// or https://.");
             return false;
         }
 
         var validExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" };
-        if (!validExtensions.Any(ext => url.ToLower().EndsWith(ext)))
+        string path = uriResult.AbsolutePath.ToLowerInvariant();
+
+        if (!validExtensions.Any(ext => path.EndsWith(ext)))
         {
-            notificationComponent.ShowErrorMessage($"{fieldName} must point to a valid image file (jpg, jpeg, png, gif, webp, svg)");
+            notificationComponent.ShowErrorMessage($"{fieldName} must link to a valid image file (jpg, jpeg, png, gif, webp, svg).");
             return false;
         }
 
         return true;
     }
+
 
     private void OnWebsiteChanged()
     {
