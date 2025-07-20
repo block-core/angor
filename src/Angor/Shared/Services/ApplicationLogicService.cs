@@ -18,7 +18,9 @@ namespace Angor.Shared.Services
             if (project == null) return false;
 
             // on testnet we always allow to invest for testing purposes.
-            if (_networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet) return true;
+            var isTestnet = _networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet;
+            var debugMode = _networkConfiguration.GetDebugMode();
+            if (isTestnet && debugMode) return true;
 
             var now = DateTime.UtcNow;
 
