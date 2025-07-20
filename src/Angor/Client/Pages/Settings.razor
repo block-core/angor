@@ -418,7 +418,8 @@
                     <div class="d-flex flex-column">
                         <label for="debugMode" class="mb-2">Debug Mode:</label>
                         <select id="debugMode" class="form-control" value="@(debugMode?.ToString().ToLower() ?? "False")"
-                                @onchange="OnDebugModeChanged">
+                                @onchange="OnDebugModeChanged" 
+                                @oninput="OnDebugModeChanged">
                             <option value="true">True</option>
                             <option value="false">False</option>
                         </select>
@@ -1001,6 +1002,9 @@
         debugMode = bool.Parse(e.Value.ToString());
         _clientStorage.SetDebugMode(debugMode);
         _networkConfiguration.SetDebugMode(debugMode);
+        
+        NavMenuState.NotifyStateChanged();
+        
         StateHasChanged();
     }
 

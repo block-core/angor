@@ -6,6 +6,7 @@
 @using Angor.Shared.Services
 @using Blockcore.Networks
 @inherits LayoutComponentBase
+@implements IDisposable
 @inject IJSRuntime Js;
 @inject INetworkConfiguration _networkConfiguration
 @inject INetworkService _networkService
@@ -29,10 +30,24 @@
                         </a>
                     </div>
                     <div class="text-sm">
-                        <h6 class="font-weight-bolder m-0" title="@networkText">
-                            <Icon IconName="network" class="me-2 d-none d-lg-inline" />
-                            <span>@networkText</span>
-                        </h6>
+                        <div class="d-flex align-items-center">
+                            <h6 class="font-weight-bolder m-0 me-2" title="@networkText">
+                                <Icon IconName="network" class="me-2 d-none d-lg-inline" />
+                                <span>@(GetBaseNetworkName())</span>
+                            </h6>
+                            @if (IsTestnet())
+                            {
+                                <span class="badge bg-info text-white px-2 py-1 me-1" style="font-size: 0.75rem;">
+                                    Testnet
+                                </span>
+                            }
+                            @if (IsDebugMode())
+                            {
+                                <span class="badge bg-warning text-dark px-2 py-1" style="font-size: 0.75rem;">
+                                    Debug
+                                </span>
+                            }
+                        </div>
                     </div>
                 </nav>
                 <div class="navbar-collapse">
@@ -143,6 +158,7 @@
     private void SetNetworkText()
     {
         var network = _networkConfiguration.GetNetwork();
+        var debugMode = storage?.GetDebugMode() ?? false;
         
         networkText = network.Name;
 
@@ -150,6 +166,28 @@
         {
             networkText += " (testnet)";
         }
+
+        if (debugMode)
+        {
+            networkText += " [Debug]";
+        }
+    }
+
+    private string GetBaseNetworkName()
+    {
+        var network = _networkConfiguration.GetNetwork();
+        return network.Name == "Angornet" ? "Angornet" : network.Name;
+    }
+
+    private bool IsTestnet()
+    {
+        var network = _networkConfiguration.GetNetwork();
+        return network.Name == "Angornet";
+    }
+
+    private bool IsDebugMode()
+    {
+        return storage?.GetDebugMode() ?? false;
     }
 
     private void NavMenuStateOnOnChange()
@@ -232,6 +270,11 @@
         {
             sidenavClass = "";
         }
+    }
+
+    public void Dispose()
+    {
+        NavMenuState.OnChange -= NavMenuStateOnOnChange;
     }
      
 }
