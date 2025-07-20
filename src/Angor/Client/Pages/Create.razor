@@ -440,7 +440,7 @@
                                     <Icon IconName="view" Height="20" Width="20" />
                                 </span>
                                 <div class="h-100 ms-3 flex-grow-1 min-width-0">
-                                    <h6 class="mb-0 font-weight-bolder text-truncate">
+                                    <h5 class="mb-0 font-weight-bolder text-truncate">
                                         @if (string.IsNullOrEmpty(project.Metadata?.Name))
                                         {
                                             <span>Name</span>
@@ -449,7 +449,7 @@
                                         {
                                             <span class="project-name" title="@project.Metadata.Name">@project.Metadata.Name</span>
                                         }
-                                    </h6>
+                                    </h5>
                                 </div>
                             </div>
 
@@ -1677,7 +1677,7 @@
     private bool ValidateInputData()
     {
 
-        if (!isTestnet && !debugMode)
+        if (isTestnet && !debugMode)
         {
             // test that need to happen in production will go here
 
@@ -2008,7 +2008,7 @@
         endDateError = false;
         endDateErrorMessage = "";
 
-        if (!isTestnet && !debugMode)
+        if (isTestnet && !debugMode)
         {
             if (project.ProjectInfo.EndDate <= project.ProjectInfo.StartDate)
             {
@@ -2085,7 +2085,7 @@
 
         stageDateErrors[stage] = "";
 
-        if (!isTestnet && !debugMode)
+        if (isTestnet && !debugMode)
         {
             var stages = project.ProjectInfo.Stages;
             var index = stages.IndexOf(stage);
@@ -2290,7 +2290,7 @@
             return true;
         }
 
-        if (!isTestnet && !debugMode)
+        if (isTestnet && !debugMode)
         {
             if (!Uri.TryCreate(project.Metadata.Website, UriKind.Absolute, out Uri uriResult) ||
                 (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
@@ -2345,7 +2345,7 @@
         penaltyDaysError = false;
         penaltyDaysErrorMessage = "";
 
-        if (!isTestnet && !debugMode)
+        if (isTestnet && !debugMode)
         {
             if (project.ProjectInfo.PenaltyDays < 0)
             {

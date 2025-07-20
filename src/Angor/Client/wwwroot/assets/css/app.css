@@ -5596,3 +5596,23 @@ input.no-native-picker[type="date"]::-moz-calendar-picker-indicator {
 .flex-grow-1 {
     flex-grow: 1;
 }
+
+.project-name-container {
+    min-width: 0;
+}
+
+.project-name-wrapper {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.project-name-title {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.project-name-link {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}

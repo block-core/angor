@@ -115,13 +115,13 @@ else
                                     var project = SessionStorage.GetProjectById(indexerData.ProjectIdentifier);
                                     if (project?.Metadata != null)
                                     {
-                                        <div class="d-flex align-items-center mb-4">
+                                        <div class="d-flex align-items-center mb-4 project-name-container">
                                             <span class="user-select-none">
                                                 <Icon IconName="view" Height="24" Width="24"></Icon>
                                             </span>
-                                            <div class="h-100 ms-3">
-                                                <h5 class="mb-0 font-weight-bolder" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
-                                                    <a href="/view/@project.ProjectInfo.ProjectIdentifier"> @project.Metadata.Name</a>
+                                            <div class="h-100 ms-3 flex-grow-1 project-name-wrapper">
+                                                <h5 class="mb-0 font-weight-bolder text-truncate project-name-title" @onclick="() => ViewProjectDetails(indexerData.ProjectIdentifier)">
+                                                    <a class="text-truncate d-block project-name-link" href="/view/@project.ProjectInfo.ProjectIdentifier"> @project.Metadata.Name</a>
                                                 </h5>
                                             </div>
                                         </div>
