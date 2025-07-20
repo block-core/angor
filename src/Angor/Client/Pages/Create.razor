@@ -54,6 +54,23 @@
                 <h5 class="header-text">Create New Project</h5>
             </div>
             <div class="header-actions">
+                @if (debugMode || isTestnet)
+                {
+                    <div class="d-flex align-items-center gap-2">
+                        @if (debugMode)
+                        {
+                            <span class="badge bg-warning text-dark px-2 py-1">
+                                Debug Mode
+                            </span>
+                        }
+                        @if (isTestnet)
+                        {
+                            <span class="badge bg-info text-white px-2 py-1">
+                                Testnet
+                            </span>
+                        }
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -1062,7 +1079,7 @@
 
     private bool endDateError = false;
     private string endDateErrorMessage = "";
-    
+
     private bool penaltyDaysError = false;
     private string penaltyDaysErrorMessage = "";
 
@@ -1079,7 +1096,8 @@
         set => project.ProjectInfo.TargetAmount = Money.Coins(value).Satoshi;
     }
 
-    private bool debugMode; 
+    private bool debugMode;
+    private bool isTestnet;
 
     private int activeTab = 1;
 
@@ -1136,12 +1154,13 @@
     {
         NavMenuState.SetActivePage("founder");
         debugMode = storage?.GetDebugMode() ?? false;
-        
+        isTestnet = network?.NetworkType == NetworkType.Testnet;
+
         if (!hasWallet)
         {
             return;
         }
-        
+
         var projects = storage.GetFounderProjects();
 
         var keys = _walletStorage.GetFounderKeys();
@@ -1658,7 +1677,7 @@
         if (selectedPreset != null && presets.TryGetValue(selectedPreset, out var preset))
         {
             stageDateErrors.Clear();
-            
+
             project.ProjectInfo.Stages.Clear();
             project.ProjectInfo.Stages = GenerateStages(preset.Percentages, preset.IntervalDays);
         }
@@ -1674,8 +1693,7 @@
 
     private bool ValidateInputData()
     {
-        var isTestnet = this.network.NetworkType == NetworkType.Testnet;
-        
+
         if (!isTestnet && !debugMode)
         {
             // test that need to happen in production will go here
@@ -1728,6 +1746,101 @@
                 notificationComponent.ShowErrorMessage("Project must start in the future");
                 return false;
             }
+            if (project.ProjectInfo.PenaltyDays > 365)
+            {
+                notificationComponent.ShowErrorMessage("Penalty days cannot exceed 365 days.");
+                return false;
+            }
+
+            if (!ValidateImageUrl(project.Metadata.Banner, "Banner Image"))
+                return false;
+
+            if (!ValidateImageUrl(project.Metadata.Picture, "Profile Image"))
+                return false;
+
+            if (project.ProjectInfo.EndDate <= project.ProjectInfo.StartDate)
+            {
+                notificationComponent.ShowErrorMessage("End date must be after the start date");
+                return false;
+            }
+
+
+            if (project.ProjectInfo.Stages.Any())
+            {
+                var firstStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
+                if (project.ProjectInfo.EndDate >= firstStageDate)
+                {
+                    notificationComponent.ShowErrorMessage("End date must be before the first stage date");
+                    return false;
+                }
+            }
+
+            if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
+            {
+                notificationComponent.ShowErrorMessage("The stages must sum to 100%");
+                return false;
+            }
+
+            foreach (var stage in project.ProjectInfo.Stages)
+            {
+                if (stage.AmountToRelease <= 0 || stage.AmountToRelease > 100)
+                {
+                    notificationComponent.ShowErrorMessage("Stage percentage must be between 1 and 100.");
+                    return false;
+                }
+            }
+
+            if (project.ProjectInfo.StartDate > DateTime.Today.AddYears(1))
+            {
+                notificationComponent.ShowErrorMessage("Start date cannot be more than one year in the future.");
+                return false;
+            }
+
+            if (project.ProjectInfo.PenaltyDays < 0)
+            {
+                notificationComponent.ShowErrorMessage("Penalty days cannot be negative.");
+                return false;
+            }
+
+
+
+            var projects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
+
+            if (projects.Any(a => project.ProjectInfo.ProjectIdentifier == a.ProjectInfo.ProjectIdentifier))
+            {
+                notificationComponent.ShowErrorMessage("This wallet already has a project with this index");
+                return false;
+            }
+
+            if (project.ProjectInfo.Stages.Any())
+            {
+                var stages = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).ToList();
+                var firstStageDate = stages.First().ReleaseDate;
+
+                if (firstStageDate <= project.ProjectInfo.EndDate)
+                {
+                    notificationComponent.ShowErrorMessage("The first stage must start after the end of the fundraising window.");
+                    return false;
+                }
+
+                for (int i = 1; i < stages.Count; i++)
+                {
+                    if (stages[i].ReleaseDate <= stages[i - 1].ReleaseDate)
+                    {
+                        notificationComponent.ShowErrorMessage($"Stage {i + 1} must be after Stage {i}");
+                        return false;
+                    }
+                }
+
+                var totalPercent = stages.Sum(s => s.AmountToRelease);
+                if (totalPercent != 100)
+                {
+                    notificationComponent.ShowErrorMessage($"Stage percentages must sum to 100% (currently {totalPercent}%)");
+                    return false;
+                }
+
+                project.ProjectInfo.Stages = stages; // Keep stages sorted
+            }
         }
 
         if (project.Metadata is null)
@@ -1754,100 +1867,6 @@
             return false;
         }
 
-        if (project.ProjectInfo.StartDate > DateTime.Today.AddYears(1))
-        {
-            notificationComponent.ShowErrorMessage("Start date cannot be more than one year in the future.");
-            return false;
-        }
-
-        if (project.ProjectInfo.PenaltyDays < 0)
-        {
-            notificationComponent.ShowErrorMessage("Penalty days cannot be negative.");
-            return false;
-        }
-
-
-        if (project.ProjectInfo.PenaltyDays > 365)
-        {
-            notificationComponent.ShowErrorMessage("Penalty days cannot exceed 365 days.");
-            return false;
-        }
-
-        if (!ValidateImageUrl(project.Metadata.Banner, "Banner Image"))
-            return false;
-        if (!ValidateImageUrl(project.Metadata.Picture, "Avatar Image"))
-            return false;
-
-        if (project.ProjectInfo.EndDate <= project.ProjectInfo.StartDate)
-        {
-            notificationComponent.ShowErrorMessage("End date must be after the start date");
-            return false;
-        }
-
-        if (project.ProjectInfo.Stages.Any())
-        {
-            var firstStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
-            if (project.ProjectInfo.EndDate >= firstStageDate)
-            {
-                notificationComponent.ShowErrorMessage("End date must be before the first stage date");
-                return false;
-            }
-        }
-
-        if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
-        {
-            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
-            return false;
-        }
-
-        foreach (var stage in project.ProjectInfo.Stages)
-        {
-            if (stage.AmountToRelease <= 0 || stage.AmountToRelease > 100)
-            {
-                notificationComponent.ShowErrorMessage("Stage percentage must be between 1 and 100.");
-                return false;
-            }
-        }
-
-        var projects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
-
-        if (projects.Any(a => project.ProjectInfo.ProjectIdentifier == a.ProjectInfo.ProjectIdentifier))
-        {
-            notificationComponent.ShowErrorMessage("This wallet already has a project with this index");
-            return false;
-        }
-
-        if (project.ProjectInfo.Stages.Any())
-        {
-            var stages = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).ToList();
-            var firstStageDate = stages.First().ReleaseDate;
-
-            if (firstStageDate <= project.ProjectInfo.EndDate)
-            {
-                notificationComponent.ShowErrorMessage("The first stage must start after the end of the fundraising window.");
-                return false;
-            }
-
-            for (int i = 1; i < stages.Count; i++)
-            {
-                if (stages[i].ReleaseDate <= stages[i - 1].ReleaseDate)
-                {
-                    notificationComponent.ShowErrorMessage($"Stage {i + 1} must be after Stage {i}");
-                    return false;
-                }
-            }
-
-            var totalPercent = stages.Sum(s => s.AmountToRelease);
-            if (totalPercent != 100)
-            {
-                notificationComponent.ShowErrorMessage($"Stage percentages must sum to 100% (currently {totalPercent}%)");
-                return false;
-            }
-
-            project.ProjectInfo.Stages = stages; // Keep stages sorted
-        }
-
-
         return true;
     }
 
@@ -1863,9 +1882,9 @@
                 AmountToRelease = percentages[i],
                 ReleaseDate = currentDate
             };
-            
+
             stages.Add(stage);
-            
+
             stageDateErrors[stage] = "";
 
             if (i > 0)
@@ -1889,7 +1908,7 @@
         }
 
         stageDateErrors.Clear();
-        
+
         project.ProjectInfo.Stages.Clear();
 
         var stageDuration = totalDuration / numberOfStages;
@@ -1902,9 +1921,9 @@
                 AmountToRelease = stagePercentage,
                 ReleaseDate = project.ProjectInfo.StartDate.AddDays(i * stageDuration)
             };
-            
+
             project.ProjectInfo.Stages.Add(stage);
-            
+
             stageDateErrors[stage] = "";
         }
 
@@ -2006,18 +2025,21 @@
         endDateError = false;
         endDateErrorMessage = "";
 
-        if (project.ProjectInfo.EndDate <= project.ProjectInfo.StartDate)
+        if (!isTestnet && !debugMode)
         {
-            endDateError = true;
-            endDateErrorMessage = "End date must be after the start date";
-        }
-        else if (project.ProjectInfo.Stages.Any())
-        {
-            var firstStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
-            if (project.ProjectInfo.EndDate >= firstStageDate)
+            if (project.ProjectInfo.EndDate <= project.ProjectInfo.StartDate)
             {
                 endDateError = true;
-                endDateErrorMessage = "End date must be before the first stage date";
+                endDateErrorMessage = "End date must be after the start date";
+            }
+            else if (project.ProjectInfo.Stages.Any())
+            {
+                var firstStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
+                if (project.ProjectInfo.EndDate >= firstStageDate)
+                {
+                    endDateError = true;
+                    endDateErrorMessage = "End date must be before the first stage date";
+                }
             }
         }
 
@@ -2065,7 +2087,7 @@
             return;
 
         stage.ReleaseDate = value.Value;
-        
+
         ValidateAllStages();
         ValidateEndDate();
         StateHasChanged();
@@ -2077,34 +2099,37 @@
         {
             stageDateErrors[stage] = "";
         }
-        
+
         stageDateErrors[stage] = "";
 
-        var stages = project.ProjectInfo.Stages;
-        var index = stages.IndexOf(stage);
+        if (!isTestnet && !debugMode)
+        {
+            var stages = project.ProjectInfo.Stages;
+            var index = stages.IndexOf(stage);
 
-        if (index == 0)
-        {
-            if (stage.ReleaseDate <= project.ProjectInfo.EndDate)
+            if (index == 0)
             {
-                stageDateErrors[stage] = "Stage 1 must be after the fundraising end date.";
+                if (stage.ReleaseDate <= project.ProjectInfo.EndDate)
+                {
+                    stageDateErrors[stage] = "Stage 1 must be after the fundraising end date.";
+                }
             }
-        }
-        else if (index > 0)
-        {
-            var previousStage = stages[index - 1];
-            if (stage.ReleaseDate <= previousStage.ReleaseDate)
+            else if (index > 0)
             {
-                stageDateErrors[stage] = $"Stage {index + 1} must be after Stage {index}.";
+                var previousStage = stages[index - 1];
+                if (stage.ReleaseDate <= previousStage.ReleaseDate)
+                {
+                    stageDateErrors[stage] = $"Stage {index + 1} must be after Stage {index}.";
+                }
             }
-        }
 
-        if (index < stages.Count - 1)
-        {
-            var nextStage = stages[index + 1];
-            if (stage.ReleaseDate >= nextStage.ReleaseDate)
+            if (index < stages.Count - 1)
             {
-                stageDateErrors[stage] = $"Stage {index + 1} must be before Stage {index + 2}.";
+                var nextStage = stages[index + 1];
+                if (stage.ReleaseDate >= nextStage.ReleaseDate)
+                {
+                    stageDateErrors[stage] = $"Stage {index + 1} must be before Stage {index + 2}.";
+                }
             }
         }
     }
@@ -2274,23 +2299,25 @@
 
     private bool ValidateWebsiteUrl()
     {
+        websiteError = false;
+        websiteErrorMessage = "";
+
         if (string.IsNullOrEmpty(project.Metadata?.Website))
         {
-            websiteError = false;
-            websiteErrorMessage = "";
             return true;
         }
 
-        if (!Uri.TryCreate(project.Metadata.Website, UriKind.Absolute, out Uri uriResult) ||
-            (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
+        if (!isTestnet && !debugMode)
         {
-            websiteError = true;
-            websiteErrorMessage = "Please enter a valid URL (starting with http:// or https://)";
-            return false;
+            if (!Uri.TryCreate(project.Metadata.Website, UriKind.Absolute, out Uri uriResult) ||
+                (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
+            {
+                websiteError = true;
+                websiteErrorMessage = "Please enter a valid URL (starting with http:// or https://)";
+                return false;
+            }
         }
 
-        websiteError = false;
-        websiteErrorMessage = "";
         return true;
     }
 
@@ -2335,15 +2362,18 @@
         penaltyDaysError = false;
         penaltyDaysErrorMessage = "";
 
-        if (project.ProjectInfo.PenaltyDays < 0)
+        if (!isTestnet && !debugMode)
         {
-            penaltyDaysError = true;
-            penaltyDaysErrorMessage = "Penalty days cannot be negative.";
-        }
-        else if (project.ProjectInfo.PenaltyDays > 365)
-        {
-            penaltyDaysError = true;
-            penaltyDaysErrorMessage = "Penalty days cannot exceed 365 days.";
+            if (project.ProjectInfo.PenaltyDays < 0)
+            {
+                penaltyDaysError = true;
+                penaltyDaysErrorMessage = "Penalty days cannot be negative.";
+            }
+            else if (project.ProjectInfo.PenaltyDays > 365)
+            {
+                penaltyDaysError = true;
+                penaltyDaysErrorMessage = "Penalty days cannot exceed 365 days.";
+            }
         }
 
         StateHasChanged();
