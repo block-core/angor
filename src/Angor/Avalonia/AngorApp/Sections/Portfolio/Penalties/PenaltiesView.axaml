@@ -5,13 +5,14 @@
              xmlns:penalties="clr-namespace:AngorApp.Sections.Portfolio.Penalties"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
+             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1600" d:DesignHeight="600"
              x:Class="AngorApp.Sections.Portfolio.Penalties.PenaltiesView" x:DataType="penalties:IPenaltiesViewModel">
 
     <Design.DataContext>
         <penalties:PenaltiesViewModelDesign />
     </Design.DataContext>
-    
+
     <UserControl.Styles>
         <Style Selector="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap" />
@@ -19,54 +20,36 @@
     </UserControl.Styles>
 
     <a:PageContainer>
-        <DockPanel>
-            <Card DockPanel.Dock="Top" Header="Penalties" IsAdaptiveFlowEnabled="True" Subheader="Manage and monitor penalties for project compliance">
-                <Card.HeaderStartContent>
-                    <ui:Icon Source="svg:/Assets/lock.svg" />
-                </Card.HeaderStartContent>
-                <Card.HeaderEndContent>
-                    <UniformGrid ColumnSpacing="20" Rows="1">
-                        <IconButton HorizontalAlignment="Stretch">
-                            Refresh
-                            <IconButton.Icon>
-                                <ui:Icon Source="fa-arrows-rotate" />
-                            </IconButton.Icon>
-                        </IconButton>
-                    </UniformGrid>
-                </Card.HeaderEndContent>
-            </Card>
+        <ScrollViewer>
+            <DockPanel VerticalSpacing="20">
+                <Card DockPanel.Dock="Top" Header="Penalties" IsAdaptiveFlowEnabled="True" Subheader="Manage and monitor penalties for project compliance">
+                    <Card.HeaderStartContent>
+                        <ui:Icon Source="svg:/Assets/lock.svg" />
+                    </Card.HeaderStartContent>
+                    <Card.HeaderEndContent>
+                        <UniformGrid ColumnSpacing="20" Rows="1">
+                            <IconButton Command="{Binding Load}" HorizontalAlignment="Stretch">
+                                Refresh
+                                <IconButton.Icon>
+                                    <ui:Icon Source="fa-arrows-rotate" />
+                                </IconButton.Icon>
+                            </IconButton>
+                        </UniformGrid>
+                    </Card.HeaderEndContent>
+                </Card>
 
-            <Loading LoadingText="Loading penalties...">
-                <StackPanel HorizontalAlignment="Stretch" Spacing="20">
-                    <TextBlock Text="Penalties Details" FontWeight="Bold" FontSize="20" Margin="0,10,0,10"/>
-                    <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Penalties Table">
-                        <!-- TODO: Replace this StackPanel + Grid with <SlimDataGrid /> for dynamic records -->
-                        <StackPanel>
-                            <!-- Table Header -->
-                            <Grid ColumnDefinitions="2.5*,1.5*,1.5*" Margin="0,0,0,10" HorizontalAlignment="Stretch">
-                                <TextBlock Text="PROJECT ID" Foreground="{DynamicResource SystemBaseMediumHighColor}" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <TextBlock Text="AMOUNT IN PENALTY" Foreground="{DynamicResource SystemBaseMediumHighColor}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center"/>
-                                <TextBlock Text="DAYS LEFT" Foreground="{DynamicResource SystemBaseMediumHighColor}" FontWeight="Bold" Grid.Column="2" VerticalAlignment="Center"/>
-                            </Grid>
-                            <Border BorderBrush="#22505A" BorderThickness="1"/>
-                            <!-- Table Row (Static Example) -->
-                            <Grid ColumnDefinitions="2.5*,1.5*,1.5*" Margin="0,10,0,10" HorizontalAlignment="Stretch">
-                                <TextBlock Text="angor1quyhg...xv76gzptm50" VerticalAlignment="Center"/>
-                                <TextBlock Text="1 TBTC" Grid.Column="1" VerticalAlignment="Center"/>
-                                <Button Grid.Column="2"
-                                        Background="Transparent"
-                                        Foreground="{DynamicResource SystemAccentColor}"
-                                        BorderThickness="0"
-                                        Padding="0"
-                                        HorizontalAlignment="Left"
-                                        Command="{Binding GoToRecovery}">
-                                    89 days
-                                </Button>
-                            </Grid>
-                        </StackPanel>
+                <Loading LoadingText="Loading penalties..." IsLoading="{Binding Load.IsExecuting^}">
+                    <Card Header="List of Penalties">
+                        <z:SlimDataGrid HeaderPadding="0 0 0 5"
+                                        ItemsSource="{Binding Penalties}">
+                            <z:SlimDataGrid.Columns>
+                                <z:Column Header="PROJECT ID" Binding="{Binding ProjectIdentifier}" />
+                                <z:Column Header="AMOUNT IN PENALTY" Binding="{Binding AmountInRecovery.DecimalString}" />
+                                <z:Column Header="DAYS LEFT" Binding="{Binding DaysLeftForPenalty}" />
+                            </z:SlimDataGrid.Columns>
+                        </z:SlimDataGrid>
                     </Card>
-                </StackPanel>
-            </Loading>
-        </DockPanel>
+                </Loading>            </DockPanel>
+        </ScrollViewer>
     </a:PageContainer>
 </UserControl>

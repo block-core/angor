@@ -124,13 +124,13 @@ public class WalletOperations : IWalletOperations
             var txSize = signTransaction.GetVirtualSize(4);
             var minimumFee = new FeeRate(Money.Satoshis(1000)).GetFee(txSize); //1000 sats per kilobyte
 
-            if (minerFee < minimumFee) //Fixed a bug in the builder that creates a fee that is too small
-            {
-                builder.SendFees(minimumFee);
-                signTransaction = builder.BuildTransaction(true);
-            }
+            if (minerFee >= minimumFee) //Fixed a bug in the builder that creates a fee that is too low
+                return new TransactionInfo { Transaction = signTransaction, TransactionFee = minerFee };
+            
+            builder.SendFees(minimumFee);
+            signTransaction = builder.BuildTransaction(true);
 
-            return new TransactionInfo { Transaction = signTransaction, TransactionFee = minerFee };
+            return new TransactionInfo { Transaction = signTransaction, TransactionFee = minimumFee  };
         }
     }
 
@@ -281,7 +281,8 @@ public class WalletOperations : IWalletOperations
         return new OperationResult<Transaction> { Success = false, Message = res };
     }
 
-    public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
+    public List<UtxoDataWithPath> 
+        FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
     {
         var utxosToSpend = new List<UtxoDataWithPath>();
 

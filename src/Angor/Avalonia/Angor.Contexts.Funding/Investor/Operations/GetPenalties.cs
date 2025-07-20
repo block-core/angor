@@ -1,5 +1,7 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
+using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -65,8 +67,8 @@ public class GetPenalties
 
             if (investments.Value.ProjectIdentifiers.Count == 0)
                 return Result.Success(Enumerable.Empty<LookupInvestment>());
-            
-            return Result.Try(() =>investments.Value.ProjectIdentifiers //lookup investments pipeline
+
+            return await Result.Try(() => investments.Value.ProjectIdentifiers //lookup investments pipeline
                 .ToObservable()
                 .Select(x => //get the investment
                     Result.Try(() => indexerService.GetInvestmentAsync(x.ProjectIdentifier, x.InvestorPubKey))
@@ -82,23 +84,33 @@ public class GetPenalties
                     Result.Try(() => indexerService.GetProjectByIdAsync(investment.ProjectIdentifier))
                         .Map(project =>
                         {
-                            investment.TransactionId = project!.TrxId;
                             investment.NostrEventId = project.NostrEventId;
                             return investment;
                         }))
-                .Select(x => x.IsSuccess ? x.Value : null)
-                .Where(x => x != null)
+                 .Where(x => x.IsSuccess)
                 .ToList() // merge to a list and get the project info for all items in the list
-                .Select(list => ProjectInfos(list.Select(item => item.NostrEventId).ToArray())
-                    .Select(info =>
-                        {
-                            var lookupInvestment = list.FirstOrDefault(item => item!.ProjectIdentifier == info.ProjectIdentifier);
-                            if (lookupInvestment != null)
-                                lookupInvestment.ProjectInfo = info;
-                            return lookupInvestment;
-                        }))
-                .Merge()
-                .ToEnumerable());
+                .Select(list =>
+                {
+                    var projectInfos = ProjectInfos(list.Select(item => item.Value.NostrEventId).ToArray())
+                        .ToEnumerable()
+                        .ToList(); // Collect emitted items before timeout
+
+                    foreach (var info in projectInfos)
+                    {
+                        var lookupInvestment =
+                            list.FirstOrDefault(item => item.Value.ProjectIdentifier == info.ProjectIdentifier);
+                        if (lookupInvestment.Value != null)
+                            lookupInvestment.Value.ProjectInfo = info;
+                    }
+                    return list; // Return the updated list even if ProjectInfos times out
+                })
+                .SelectMany(x => x) // Flatten the list of LookupInvestment
+                .Bind(ScanInvestmentSpends)
+                .Where(x => x.IsSuccess && x.Value.RecoveryTransactionId != null) // Filter out those without recovery transaction
+                .Select(x => x.Value)
+                .ToList()
+                .Select(x => x.AsEnumerable())
+                .ToTask());
         }
 
         
@@ -131,6 +143,14 @@ public class GetPenalties
                         .Where(s => Script.FromHex(s.ScriptPubKey).IsScriptType(ScriptType.P2WSH)).Sum(s => s.Balance);
                     penaltyProject.TotalAmountSats = totalsats;
 
+                    if (penaltyProject.ProjectInfo == null)
+                    {
+                        // If the project info is not available, we cannot calculate the penalty days
+                        penaltyProject.DaysLeftForPenalty = 365; //We set to maximum days
+                        penaltyProject.IsExpired = false;
+                        continue;
+                    }
+                    
                     var expieryDate = Utils.UnixTimeToDateTime(recoveryTransaction.Timestamp)
                         .AddDays(penaltyProject.ProjectInfo.PenaltyDays);
                     penaltyProject.DaysLeftForPenalty = (expieryDate.Date - DateTimeOffset.UtcNow.Date).Days;
@@ -145,12 +165,12 @@ public class GetPenalties
             return Result.Success("");
         }
 
-        public async Task ScanInvestmentSpends(LookupInvestment investorProject)
+        public async Task<Result<LookupInvestment>> ScanInvestmentSpends(LookupInvestment investorProject)
         {
             var trxInfo = await indexerService.GetTransactionInfoByIdAsync(investorProject.TransactionId);
 
             if (trxInfo == null)
-                return;
+                return investorProject;
 
             var trxHex = await indexerService.GetTransactionHexByIdAsync(investorProject.TransactionId);
             var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(trxHex);
@@ -186,7 +206,7 @@ public class GetPenalties
                             case ProjectScriptTypeEnum.EndOfProject:
                             {
                                 investorProject.EndOfProjectTransactionId = output.SpentInTransaction;
-                                return;
+                                return investorProject;
                             }
 
                             case ProjectScriptTypeEnum.InvestorWithPenalty:
@@ -200,7 +220,7 @@ public class GetPenalties
                                         .RecoveryTransactionId);
 
                                 if (spentRecoveryInfo == null) 
-                                    return;
+                                    return investorProject;
                                 
                                 if (spentRecoveryInfo.Outputs.SkipLast(1)
                                     .Any(_ => !string.IsNullOrEmpty(_.SpentInTransaction)))
@@ -209,18 +229,20 @@ public class GetPenalties
                                         .First(_ => !string.IsNullOrEmpty(_.SpentInTransaction)).SpentInTransaction;
                                 }
 
-                                return;
+                                return investorProject;
                             }
 
                             case ProjectScriptTypeEnum.InvestorNoPenalty:
                             {
                                 investorProject.UnfundedReleaseTransactionId = output.SpentInTransaction;
-                                return;
+                                return investorProject;
                             }
                         }
                     }
                 }
             }
+
+            return investorProject;
         }
     }
 }
@@ -230,8 +252,6 @@ public class LookupInvestment
     public string ProjectIdentifier { get; set; }
     public string InvestorPubKey { get; set; }
     public string NostrEventId { get; set; }
-    
-    public ProjectInvestment investment { get; set; }
     public string TransactionId { get; set; }
     public string EndOfProjectTransactionId { get; set; }
     public string RecoveryTransactionId { get; set; }
@@ -240,17 +260,6 @@ public class LookupInvestment
     public string UnfundedReleaseTransactionId { get; set; }
     public ProjectInfo ProjectInfo { get; set; }
     
-    public long TotalAmountSats { get; set; }
-    public bool IsExpired { get; set; }
-    public int DaysLeftForPenalty { get; set; }
-}
-
-
-public record PenaltiesDto()
-{
-    public string ProjectIdentifier { get; set; }
-    public string InvestorPubKey { get; set; }
-    public long AmountInRecovery { get; set; }
     public long TotalAmountSats { get; set; }
     public bool IsExpired { get; set; }
     public int DaysLeftForPenalty { get; set; }

@@ -46,6 +46,7 @@ public static class ProjectDataExtensions
 
             TargetAmount = data.ProjectInfo.TargetAmount,
             StartingDate = data.ProjectInfo.StartDate,
+            EndDate = data.ProjectInfo.EndDate,
             PenaltyDuration = TimeSpan.FromDays(data.ProjectInfo.PenaltyDays),
             
             InformationUri = string.IsNullOrWhiteSpace(data.NostrMetadata.Website)
@@ -58,13 +59,12 @@ public static class ProjectDataExtensions
         project.Stages = data.ProjectInfo.Stages
             .Select((stage, index) =>
             {
-                var stageRatio = (double)stage.AmountToRelease / 100;
                 return new Stage
                 {
                     ReleaseDate = stage.ReleaseDate,
-                    Amount = (long)stage.AmountToRelease * 1_0000_0000,
+                    //Amount = ,
                     Index = index + 1,
-                    RatioOfTotal = stageRatio,
+                    RatioOfTotal = stage.AmountToRelease,
                 };
             })
             .ToList();

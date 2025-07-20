@@ -6,6 +6,7 @@
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:portfolio="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:design="clr-namespace:AngorApp.Design"
              mc:Ignorable="d" d:DesignWidth="500"
              x:Class="AngorApp.Sections.Portfolio.Items.OfferAcceptedView" x:DataType="portfolio:IPortfolioProject">
 
@@ -19,10 +20,10 @@
     <Design.DataContext>
         <portfolio:PortfolioProjectDesign InvestmentStatus="Invested" FounderStatus="Approved" IsInvestmentCompleted="False" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
             <portfolio:PortfolioProjectDesign.Target>
-                <angorApp:DesignTimeAmount Sats="12000000" />
+                <design:DesignTimeAmount Sats="12000000" />
             </portfolio:PortfolioProjectDesign.Target>
             <portfolio:PortfolioProjectDesign.Raised>
-                <angorApp:DesignTimeAmount Sats="4400000" />
+                <design:DesignTimeAmount Sats="4400000" />
             </portfolio:PortfolioProjectDesign.Raised>
         </portfolio:PortfolioProjectDesign>
     </Design.DataContext>

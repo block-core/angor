@@ -1,4 +1,5 @@
 name: PR Testing Deploy
+run-name: "Deploy PR #${{ inputs.pr_number }} on angor-debug"
 on:
   # Manual PR 
   workflow_dispatch:

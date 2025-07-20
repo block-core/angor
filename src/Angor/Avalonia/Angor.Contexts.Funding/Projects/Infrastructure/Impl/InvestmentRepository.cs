@@ -33,7 +33,7 @@ public class InvestmentRepository(
         return await GetInvestmentRecordsFromRelayAsync(storageAccountKey, password);
     }
 
-    public async Task<Result> Add(Guid walletId, Domain.Investment newInvestment)
+    public async Task<Result> Add(Guid walletId, InvestorPositionRecord newInvestment)
     {
         // Encrypt and send the investments
         var sensiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
@@ -52,13 +52,7 @@ public class InvestmentRepository(
         if (investments.IsFailure)
             return Result.Failure(investments.Error);
         
-        investments.Value.ProjectIdentifiers.Add(new InvestorPositionRecord
-        {
-            InvestmentTransactionHash = newInvestment.TransactionId,
-            InvestorPubKey = newInvestment.InvestorPubKey,
-            ProjectIdentifier = newInvestment.ProjectId.Value,
-            UnfundedReleaseAddress = null //TODO
-        });
+        investments.Value.ProjectIdentifiers.Add(newInvestment);
         
         var encrypted = await encryptionService.EncryptData(serializer.Serialize(investments.Value), password);
 

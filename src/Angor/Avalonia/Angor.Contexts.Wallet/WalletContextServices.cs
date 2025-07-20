@@ -33,6 +33,7 @@ public static class WalletContextServices
         services.TryAddSingleton<IIndexerService,MempoolSpaceIndexerApi>();
         services.AddSingleton<IWalletFactory, WalletFactory>();
         services.AddSingleton<IWalletOperations, WalletOperations>();
+        services.AddSingleton<IPsbtOperations, PsbtOperations>();
         services.TryAddSingleton<ISensitiveWalletDataProvider, SensitiveWalletDataProvider>();
         services.AddSingleton<IWalletStore, WalletStore>();
         services.AddSingleton<ITransactionHistory, TransactionHistory>();

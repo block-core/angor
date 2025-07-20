@@ -1,9 +1,18 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:AngorApp.UI.Controls">
+        xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+        xmlns:system="clr-namespace:System;assembly=System.Runtime">
     <Design.PreviewWith>
         <Border Padding="20">
-            <controls:Badge Color="LimeGreen">Hola</controls:Badge>
+            <StackPanel Spacing="10">
+                <controls:Badge Color="DeepSkyBlue">Hola</controls:Badge>
+                <controls:Badge Color="LimeGreen">Hola</controls:Badge>
+                <controls:Badge Color="Red">
+                    <system:Int32>12</system:Int32>
+                </controls:Badge>
+                <controls:Badge Color="Orange">This is a longer badge</controls:Badge>
+            </StackPanel>
+
         </Border>
     </Design.PreviewWith>
 
@@ -12,22 +21,22 @@
             <Setter Property="Padding" Value="12 5" />
             <Setter Property="Color" Value="{DynamicResource SystemBaseHighColor}" />
             <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
             <!-- <Setter Property="TextElement.FontWeight" Value="Light"/> -->
             <Setter Property="Template">
                 <ControlTemplate>
                     <Panel>
                         <Border Padding="{TemplateBinding Padding}"
-                                Background="{DynamicResource SystemAltHighColor}"
-                                CornerRadius="{TemplateBinding CornerRadius}">
-                        </Border>
-                        <Border Padding="{TemplateBinding Padding}"
                                 CornerRadius="{TemplateBinding CornerRadius}">
                             <Border.Background>
-                                <SolidColorBrush Color="{Binding $parent[controls:Badge].Color}" Opacity="0.3" />
+                                <SolidColorBrush Color="{Binding $parent[controls:Badge].Color}" />
                             </Border.Background>
-                            <ContentPresenter Content="{TemplateBinding Content}">
+                            <ContentPresenter HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" Content="{TemplateBinding Content}">
                                 <ContentPresenter.Foreground>
-                                    <SolidColorBrush Color="{Binding $parent[controls:Badge].Color}" />
+                                    <SolidColorBrush Color="White" Opacity="0.9" />
                                 </ContentPresenter.Foreground>
                             </ContentPresenter>
                         </Border>

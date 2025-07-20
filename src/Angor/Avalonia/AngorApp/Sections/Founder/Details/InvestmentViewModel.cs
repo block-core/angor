@@ -1,31 +1,49 @@
+using System.Linq;
+using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Founder.Operations;
-using ReactiveUI.SourceGenerators;
-using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder.Details;
 
-public partial class InvestmentViewModel : ReactiveObject, IInvestmentViewModel
+public partial class InvestmentViewModel : ReactiveObject, IInvestmentViewModel, IDisposable
 {
-    private readonly Investment investment;
+    [ReactiveUI.SourceGenerators.Reactive]
+    private bool areDetailsShown;
 
-    [Reactive]
-    private InvestmentStatus status;
+    private readonly CompositeDisposable disposable = new();
 
-    public InvestmentViewModel(Investment investment, Func<Task<Maybe<Result<bool>>>> onApprove)
+    public InvestmentViewModel(IGrouping<InvestmentGroupKey, Investment> group, Func<Task<bool>> onApprove)
     {
-        this.investment = investment;
-        var canApprove = this.WhenAnyValue(model => model.Status, investmentStatus => investmentStatus == InvestmentStatus.PendingFounderSignatures);
-        Approve = ReactiveCommand.CreateFromTask(onApprove, canApprove).Enhance();
-        Approve.Values().Successes().Do(_ => Status = InvestmentStatus.FounderSignaturesReceived).Subscribe();
+        var sorted = group.OrderByDescending(x => x.CreatedOn)
+            .Select(investment => new InvestmentChildViewModel(investment))
+            .ToList();
 
-        Status = investment.Status;
+        MostRecentInvestment = sorted.First();
+        OtherInvestments = sorted.Skip(1);
+
+        Approve = ReactiveCommand.CreateFromTask(async () =>
+        {
+            var approved = await onApprove();
+            if (approved)
+            {
+                MostRecentInvestment.Status = InvestmentStatus.FounderSignaturesReceived;
+            }
+            
+        }, this.WhenAnyValue(model => model.MostRecentInvestment.Status, x => x == InvestmentStatus.PendingFounderSignatures)).Enhance().DisposeWith(disposable);
+
+        this.WhenAnyValue(x => x.AreDetailsShown).Subscribe(b => { });
     }
 
-    public IAmountUI Amount => new AmountUI(investment.Amount);
-    public string InvestorNostrPubKey => investment.InvestorNostrPubKey;
-    public DateTimeOffset CreatedOn => investment.CreatedOn;
-    public IEnhancedCommand<Unit, Maybe<Result<bool>>> Approve { get; }
+    public void Dispose()
+    {
+        disposable.Dispose();
+    }
+
+    public IEnumerable<IInvestmentChild> OtherInvestments { get; }
+
+    public IInvestmentChild MostRecentInvestment { get; }
+
+    public IEnhancedCommand Approve { get; }
 }
