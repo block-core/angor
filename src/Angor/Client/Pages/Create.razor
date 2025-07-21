@@ -1785,12 +1785,6 @@
             return false;
         }
 
-        if (project.ProjectInfo.PenaltyDays < 0)
-        {
-            notificationComponent.ShowErrorMessage("Penalty days cannot be negative.");
-            return false;
-        }
-
         if (project.ProjectInfo.EndDate < project.ProjectInfo.StartDate)
         {
             notificationComponent.ShowErrorMessage("Funding end date must be after the start date.");
@@ -1812,28 +1806,16 @@
         if (!ValidateWebsiteUrl())
             return false;
 
-        if (!ValidateImageUrl(project.Metadata.Banner, "Banner Image"))
+        if (!ValidateBannerUrl())
             return false;
 
-        if (!ValidateImageUrl(project.Metadata.Picture, "Profile Image"))
+        if (!ValidatePictureUrl())
             return false;
 
         // Skip production validations in testnet debug mode
         if (ShouldSkipProductionValidations)
         {
             return true; 
-        }
-
-        if (project.ProjectInfo.PenaltyDays < 10)
-        {
-            notificationComponent.ShowErrorMessage("Penalty period must be at least 10 days.");
-            return false;
-        }
-
-        if (project.ProjectInfo.PenaltyDays > 365)
-        {
-            notificationComponent.ShowErrorMessage("Penalty period cannot exceed 365 days.");
-            return false;
         }
 
         if (project.ProjectInfo.Stages.Count() < 3)
@@ -1845,12 +1827,6 @@
         if (targetAmountInBTC < (decimal)0.01)
         {
             notificationComponent.ShowErrorMessage("Project target amount must be at least 0.01 BTC.");
-            return false;
-        }
-
-        if (project.ProjectInfo.StartDate < DateTime.Today)
-        {
-            notificationComponent.ShowErrorMessage("Project start date must be in the future.");
             return false;
         }
 
@@ -1876,15 +1852,6 @@
             {
                 notificationComponent.ShowErrorMessage("Project expiry date must be after the last stage release date.");
                 return false;
-            }
-
-            for (int i = 1; i < stages.Count; i++)
-            {
-                if (stages[i].ReleaseDate <= stages[i - 1].ReleaseDate)
-                {
-                    notificationComponent.ShowErrorMessage($"Stage {i + 1} release date must be after Stage {i} release date.");
-                    return false;
-                }
             }
 
             var totalPercent = stages.Sum(s => s.AmountToRelease);
@@ -2403,37 +2370,6 @@
 
         return true;
     }
-
-    private bool ValidateImageUrl(string url, string fieldName)
-    {
-        if (string.IsNullOrWhiteSpace(url))
-            return true;
-
-
-        if (!Uri.TryCreate(url.Trim(), UriKind.Absolute, out Uri uriResult))
-        {
-            notificationComponent.ShowErrorMessage($"{fieldName} must be a valid URL.");
-            return false;
-        }
-
-        if (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps)
-        {
-            notificationComponent.ShowErrorMessage($"{fieldName} must start with http:// or https://.");
-            return false;
-        }
-
-        var validExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" };
-        string path = uriResult.AbsolutePath.ToLowerInvariant();
-
-        if (!validExtensions.Any(ext => path.EndsWith(ext)))
-        {
-            notificationComponent.ShowErrorMessage($"{fieldName} must link to a valid image file (jpg, jpeg, png, gif, webp, svg).");
-            return false;
-        }
-
-        return true;
-    }
-
 
     private void OnWebsiteChanged()
     {

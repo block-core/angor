@@ -182,7 +182,7 @@
     private bool IsTestnet()
     {
         var network = _networkConfiguration.GetNetwork();
-        return network.Name == "Angornet";
+        return network.NetworkType != NetworkType.Mainnet;
     }
 
     private bool IsDebugMode()
