@@ -38,10 +38,6 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(e => e.ExpiryDate)
             .IsRequired();
             
-        builder.Property(e => e.ProjectSeekerSecretHash)
-            .HasMaxLength(64)
-            .IsRequired();
-            
         builder.Property(e => e.ProjectInfoEventId)
             .HasMaxLength(64)
             .IsRequired();
@@ -66,6 +62,11 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.HasMany(e => e.Stages)
             .WithOne(s => s.Project)
             .HasForeignKey(s => s.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.HasMany(e => e.SecretHashes)
+            .WithOne(sh => sh.Project)
+            .HasForeignKey(sh => sh.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
         
         // Indexes

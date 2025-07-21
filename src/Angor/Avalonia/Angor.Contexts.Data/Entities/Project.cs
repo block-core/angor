@@ -21,8 +21,6 @@ public class Project
     
     public long ExpiryDate { get; set; }
     
-    public string ProjectSeekerSecretHash { get; set; } = string.Empty;
-    
     public string ProjectInfoEventId { get; set; } = string.Empty;
     
     public DateTime CreatedAt { get; set; }
@@ -33,4 +31,5 @@ public class Project
     public NostrUser? NostrUser { get; set; }
     public NostrEvent? NostrEvent { get; set; }
     public ICollection<ProjectStage> Stages { get; set; } = new List<ProjectStage>();
+    public ICollection<ProjectSecretHash> SecretHashes { get; set; } = new List<ProjectSecretHash>();
 }
