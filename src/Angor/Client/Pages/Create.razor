@@ -1761,7 +1761,7 @@
             return false;
         }
 
-        if (project.ProjectInfo.EndDate <= project.ProjectInfo.StartDate)
+        if (project.ProjectInfo.EndDate < project.ProjectInfo.StartDate)
         {
             notificationComponent.ShowErrorMessage("Funding end date must be after the start date.");
             return false;
