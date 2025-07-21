@@ -113,15 +113,39 @@
                                 Banner Image Url
                                 <span class="ms-2">(Recommended size: 820×312px)</span>
                             </label>
-                            <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated" />
+                            <InputText id="NostrMetadataBanner" 
+                                       autocomplete="off" 
+                                       @bind-Value="project.Metadata.Banner" 
+                                       @onblur="OnBannerChanged"
+                                       class=@($"form-control{(bannerError ? " is-invalid" : "")}")
+                                       placeholder="Enter the URL for the project banner image" 
+                                       disabled="@nostrMetadataCreated" />
+                            @if (bannerError)
+                            {
+                                <div class="text-danger mt-1 small">
+                                    @bannerErrorMessage
+                                </div>
+                            }
                         </div>
 
                         <div class="mb-3">
                             <label for="NostrMetadataPicture" class="form-label d-flex align-items-center">
-                                Avatar Image Url
+                                Profile Image Url
                                 <span class="ms-2">(Recommended size: 170×170px)</span>
                             </label>
-                            <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated" />
+                            <InputText id="NostrMetadataPicture" 
+                                       autocomplete="off" 
+                                       @bind-Value="project.Metadata.Picture" 
+                                       @onblur="OnPictureChanged"
+                                       class=@($"form-control{(pictureError ? " is-invalid" : "")}")
+                                       placeholder="Enter the URL for the project logo or profile picture" 
+                                       disabled="@nostrMetadataCreated" />
+                            @if (pictureError)
+                            {
+                                <div class="text-danger mt-1 small">
+                                    @pictureErrorMessage
+                                </div>
+                            }
                         </div>
                     </div>
 
@@ -1114,6 +1138,12 @@
     private bool websiteError = false;
     private string websiteErrorMessage = "";
 
+    private bool bannerError = false;
+    private string bannerErrorMessage = "";
+
+    private bool pictureError = false;
+    private string pictureErrorMessage = "";
+
     private bool targetAmountError = false;
     private string targetAmountErrorMessage = "";
 
@@ -2050,7 +2080,12 @@
         endDateError = false;
         endDateErrorMessage = string.Empty;
 
-        if (project.ProjectInfo.EndDate <= project.ProjectInfo.StartDate)
+        // In debug mode, allow end date to be equal to start date
+        bool isEndDateInvalid = ShouldSkipProductionValidations 
+            ? project.ProjectInfo.EndDate < project.ProjectInfo.StartDate
+            : project.ProjectInfo.EndDate <= project.ProjectInfo.StartDate;
+
+        if (isEndDateInvalid)
         {
             endDateError = true;
             endDateErrorMessage = "Funding end date must be after the start date.";
@@ -2403,6 +2438,80 @@
     private void OnWebsiteChanged()
     {
         ValidateWebsiteUrl();
+        StateHasChanged();
+    }
+
+    private bool ValidateBannerUrl()
+    {
+        bannerError = false;
+        bannerErrorMessage = "";
+
+        if (string.IsNullOrEmpty(project.Metadata?.Banner))
+        {
+            return true;
+        }
+
+        if (!Uri.TryCreate(project.Metadata.Banner, UriKind.Absolute, out Uri uriResult) ||
+            (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
+        {
+            bannerError = true;
+            bannerErrorMessage = "Please enter a valid URL (starting with http:// or https://)";
+            return false;
+        }
+
+        var validExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" };
+        string path = uriResult.AbsolutePath.ToLowerInvariant();
+
+        if (!validExtensions.Any(ext => path.EndsWith(ext)))
+        {
+            bannerError = true;
+            bannerErrorMessage = "Banner URL must link to a valid image file (jpg, jpeg, png, gif, webp, svg)";
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool ValidatePictureUrl()
+    {
+        pictureError = false;
+        pictureErrorMessage = "";
+
+        if (string.IsNullOrEmpty(project.Metadata?.Picture))
+        {
+            return true;
+        }
+
+        if (!Uri.TryCreate(project.Metadata.Picture, UriKind.Absolute, out Uri uriResult) ||
+            (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
+        {
+            pictureError = true;
+            pictureErrorMessage = "Please enter a valid URL (starting with http:// or https://)";
+            return false;
+        }
+
+        var validExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" };
+        string path = uriResult.AbsolutePath.ToLowerInvariant();
+
+        if (!validExtensions.Any(ext => path.EndsWith(ext)))
+        {
+            pictureError = true;
+            pictureErrorMessage = "Profile image URL must link to a valid image file (jpg, jpeg, png, gif, webp, svg)";
+            return false;
+        }
+
+        return true;
+    }
+
+    private void OnBannerChanged()
+    {
+        ValidateBannerUrl();
+        StateHasChanged();
+    }
+
+    private void OnPictureChanged()
+    {
+        ValidatePictureUrl();
         StateHasChanged();
     }
 
