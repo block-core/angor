@@ -2560,18 +2560,17 @@
             penaltyDaysError = true;
             penaltyDaysErrorMessage = "Penalty days cannot be negative.";
         }
-        
+        else if (project.ProjectInfo.PenaltyDays > 365)
+        {
+            penaltyDaysError = true;
+            penaltyDaysErrorMessage = "Penalty period cannot exceed 365 days.";
+        }
         else if (!ShouldSkipProductionValidations)
         {
             if (project.ProjectInfo.PenaltyDays < 10)
             {
                 penaltyDaysError = true;
                 penaltyDaysErrorMessage = "Penalty period must be at least 10 days.";
-            }
-            else if (project.ProjectInfo.PenaltyDays > 365)
-            {
-                penaltyDaysError = true;
-                penaltyDaysErrorMessage = "Penalty period cannot exceed 365 days.";
             }
         }
 
