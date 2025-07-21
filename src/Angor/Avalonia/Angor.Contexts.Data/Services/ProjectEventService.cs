@@ -1,24 +1,16 @@
 using Angor.Contexts.Data.Entities;
+using Angor.Shared.Models;
+using Angor.Shared.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Messages;
+using NostrEvent = Nostr.Client.Messages.NostrEvent;
 
 namespace Angor.Contexts.Data.Services;
 
-public class ProjectEventService : IProjectEventService
+public class ProjectEventService(AngorDbContext _context, INostrService _nostrService, ILogger<ProjectEventService> _logger, ISerializer _serializer) : IProjectEventService
 {
-    private readonly AngorDbContext _context;
-    private readonly INostrService _nostrService;
-    private readonly ILogger<ProjectEventService> _logger;
-    
     private readonly NostrKind angorProjectInfoKind = (NostrKind)3030; // Assuming 3030 is the kind for Angor project info
-
-    public ProjectEventService(AngorDbContext context, INostrService nostrService, ILogger<ProjectEventService> logger)
-    {
-        _context = context;
-        _nostrService = nostrService;
-        _logger = logger;
-    }
 
     public async Task<List<Project>> PullAndSaveProjectEventsAsync(params string[] eventIds)
     {
@@ -34,13 +26,13 @@ public class ProjectEventService : IProjectEventService
             // Process each event
             foreach (var eventResponse in eventResponses)
             {
-                if (eventResponse?.Event?.Content != null)
+                if (eventResponse?.Event?.Content == null) 
+                    continue;
+                
+                var project = ProcessProjectEvent(eventResponse.Event);
+                if (project != null)
                 {
-                    var project = await ProcessProjectEventAsync(eventResponse.Event.Content);
-                    if (project != null)
-                    {
-                        projects.Add(project);
-                    }
+                    projects.Add(project);
                 }
             }
 
@@ -62,20 +54,56 @@ public class ProjectEventService : IProjectEventService
         }
     }
 
-    public async Task<Project?> ProcessProjectEventAsync(string eventData)
+    private Project? ProcessProjectEvent(NostrEvent responseEvent)
     {
         try
         {
-            // TODO: Implement event parsing logic
-            // Parse the event data and create Project entity
-            // This will depend on your event data format
-            
             _logger.LogDebug("Processing project event data");
-            return null; // Placeholder - implement based on your event structure
+
+            // Deserialize the event data
+            var projectInfo = _serializer.Deserialize<ProjectInfo>(responseEvent.Content);
+            if (projectInfo == null || string.IsNullOrEmpty(projectInfo.ProjectIdentifier))
+            {
+                _logger.LogWarning("Invalid or incomplete project event data");
+                return null;
+            }
+
+            // Map ProjectInfo to Project entity
+            var project = new Project
+            {
+                ProjectId = projectInfo.ProjectIdentifier,
+                CreatedAt = responseEvent.CreatedAt!.Value,
+                FundingStartDate = projectInfo.StartDate,
+                FundingEndDate = projectInfo.EndDate,
+                ExpiryDate = projectInfo.ExpiryDate,
+                NostrPubKey = projectInfo.NostrPubKey,
+                ProjectReceiveAddress = projectInfo.FounderKey,
+                PenaltyDays = projectInfo.PenaltyDays,
+                ProjectInfoEventId = responseEvent!.Id!,
+                TargetAmount = projectInfo.TargetAmount,
+                UpdatedAt = DateTime.UtcNow, // Set to current time
+                Stages = projectInfo.Stages?.Select((s,i) => new ProjectStage
+                {
+                    ProjectId = projectInfo.ProjectIdentifier,
+                    CreatedAt = responseEvent.CreatedAt!.Value,
+                    StageIndex = i,
+                    AmountToRelease = s.AmountToRelease,
+                    ReleaseDate = s.ReleaseDate,
+                }).ToList() ?? new List<ProjectStage>(),
+                SecretHashes = projectInfo.ProjectSeeders.SecretHashes.Select(sh => new ProjectSecretHash
+                {
+                    ProjectId = projectInfo.ProjectIdentifier,
+                    SecretHash = sh,
+                    CreatedAt = responseEvent.CreatedAt!.Value,
+                }).ToList(),
+                LeadInvestorsThreshold = projectInfo.ProjectSeeders.Threshold
+            };
+
+            return project;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing project event: {EventData}", eventData);
+            _logger.LogError(ex, "Error processing project event: {EventData}", _serializer.Serialize(responseEvent));
             return null;
         }
     }

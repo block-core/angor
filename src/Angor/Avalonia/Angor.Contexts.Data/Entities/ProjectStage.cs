@@ -10,7 +10,7 @@ public class ProjectStage
     
     public decimal AmountToRelease { get; set; }
     
-    public long ReleaseDate { get; set; }
+    public DateTime ReleaseDate { get; set; }
     
     public DateTime? ReleasedAt { get; set; }
     
