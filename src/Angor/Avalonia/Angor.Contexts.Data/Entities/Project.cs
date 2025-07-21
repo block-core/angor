@@ -9,7 +9,7 @@ public class Project
     
     public string NostrPubKey { get; set; } = string.Empty;
     
-    public string ProjectSenderAddress { get; set; } = string.Empty;
+    public string ProjectReceiveAddress { get; set; } = string.Empty;
     
     public decimal TargetAmount { get; set; }
     
@@ -23,7 +23,7 @@ public class Project
     
     public string ProjectSeekerSecretHash { get; set; } = string.Empty;
     
-    public string NostrEventId { get; set; } = string.Empty;
+    public string ProjectInfoEventId { get; set; } = string.Empty;
     
     public DateTime CreatedAt { get; set; }
     
