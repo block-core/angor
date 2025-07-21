@@ -14,8 +14,7 @@ public static class CompositionRoot
     {
         var services = new ServiceCollection();
 
-        services.AddDbContext<AngorDbContext>(options =>
-            options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+        DataContextServices.Register(services);
         
         var logger = new LoggerConfiguration()
             .WriteTo.Console()
