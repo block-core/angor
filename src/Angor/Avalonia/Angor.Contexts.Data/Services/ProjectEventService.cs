@@ -1,6 +1,7 @@
 using Angor.Contexts.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Nostr.Client.Messages;
 
 namespace Angor.Contexts.Data.Services;
 
@@ -9,6 +10,8 @@ public class ProjectEventService : IProjectEventService
     private readonly AngorDbContext _context;
     private readonly INostrService _nostrService;
     private readonly ILogger<ProjectEventService> _logger;
+    
+    private readonly NostrKind angorProjectInfoKind = (NostrKind)3030; // Assuming 3030 is the kind for Angor project info
 
     public ProjectEventService(AngorDbContext context, INostrService nostrService, ILogger<ProjectEventService> logger)
     {
@@ -24,7 +27,7 @@ public class ProjectEventService : IProjectEventService
         try
         {
             // Get events of kind 3030 from Nostr relays
-            var eventResponses = await _nostrService.GetEventsByKindAsync(3030, eventIds);
+            var eventResponses = await _nostrService.GetEventsByKindAsync(angorProjectInfoKind, eventIds);
             
             var projects = new List<Project>();
             
