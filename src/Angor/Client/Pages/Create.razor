@@ -1788,6 +1788,7 @@
         if (!ValidateImageUrl(project.Metadata.Picture, "Profile Image"))
             return false;
 
+        // Skip production validations in testnet debug mode
         if (ShouldSkipProductionValidations)
         {
             return true; 
@@ -2356,10 +2357,6 @@
             return true;
         }
 
-        if (ShouldSkipProductionValidations)
-        {
-            return true;
-        }
 
         if (!Uri.TryCreate(project.Metadata.Website, UriKind.Absolute, out Uri uriResult) ||
             (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
