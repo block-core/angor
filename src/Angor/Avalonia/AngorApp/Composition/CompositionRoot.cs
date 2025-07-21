@@ -1,4 +1,5 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Data;
 using Angor.Contexts.Funding;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Integration.WalletFunding;
@@ -15,7 +16,6 @@ using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Settings;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -32,8 +32,7 @@ public static class CompositionRoot
     {
         var services = new ServiceCollection();
 
-        services.AddDbContext<AngorDbContext>(options =>
-            options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+        DataContextServices.Register(services);
         
         var logger = new LoggerConfiguration()
             .WriteTo.Console()
