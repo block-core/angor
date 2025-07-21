@@ -26,10 +26,10 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
             .HasPrecision(18, 8)
             .IsRequired();
             
-        builder.Property(e => e.StartDate)
+        builder.Property(e => e.FundingStartDate)
             .IsRequired();
             
-        builder.Property(e => e.EndDate)
+        builder.Property(e => e.FundingEndDate)
             .IsRequired();
             
         builder.Property(e => e.PenaltyDays)
@@ -73,8 +73,8 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.HasIndex(e => e.NostrPubKey);
         builder.HasIndex(e => e.ProjectInfoEventId);
         builder.HasIndex(e => e.ProjectReceiveAddress);
-        builder.HasIndex(e => e.StartDate);
-        builder.HasIndex(e => e.EndDate);
+        builder.HasIndex(e => e.FundingStartDate);
+        builder.HasIndex(e => e.FundingEndDate);
         builder.HasIndex(e => e.ExpiryDate);
         builder.HasIndex(e => e.CreatedAt);
     }

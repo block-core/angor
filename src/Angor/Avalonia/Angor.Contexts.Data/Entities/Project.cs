@@ -13,19 +13,20 @@ public class Project
     
     public decimal TargetAmount { get; set; }
     
-    public long StartDate { get; set; }
+    public DateTime FundingStartDate { get; set; }
     
-    public long EndDate { get; set; }
+    public DateTime FundingEndDate { get; set; }
     
     public long PenaltyDays { get; set; }
     
-    public long ExpiryDate { get; set; }
+    public DateTime ExpiryDate { get; set; }
     
     public string ProjectInfoEventId { get; set; } = string.Empty;
     
     public DateTime CreatedAt { get; set; }
     
     public DateTime UpdatedAt { get; set; }
+    public int LeadInvestorsThreshold { get; set; }
     
     // Navigation properties
     public NostrUser? NostrUser { get; set; }
