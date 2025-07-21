@@ -27,6 +27,13 @@
         <PackageReference Include="CSharpFunctionalExtensions"/>
         <PackageReference Include="Humanizer.Core"/>
         <PackageReference Include="PanAndZoom"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome"/>
         <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign"/>
         <PackageReference Include="QRCoder"/>
@@ -37,6 +44,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Angor.Contexts.Data\Angor.Contexts.Data.csproj" />
         <ProjectReference Include="../Angor.Contexts.Integration.WalletFunding/Angor.Contexts.Integration.WalletFunding.csproj"/>
         <ProjectReference Include="../Angor.UI.Model.Implementation/Angor.UI.Model.Implementation.csproj"/>
         <ProjectReference Include="../Angor.UI.Model/Angor.UI.Model.csproj"/>
@@ -46,6 +54,12 @@
 
     <ItemGroup>
         <AdditionalFiles Include="**/*.axaml"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="AppSettings.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
     <PropertyGroup>

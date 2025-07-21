@@ -1,7 +1,9 @@
+using System.IO;
 using AngorApp.Composition;
 using AngorApp.Sections.Shell;
 using Avalonia;
 using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.Configuration;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 using Projektanker.Icons.Avalonia.MaterialDesign;
@@ -27,7 +29,7 @@ public partial class App : Application
 
         AvaloniaXamlLoader.Load(this);
     }
-
+    
     public override void OnFrameworkInitializationCompleted()
     {
         IconProvider.Current
@@ -35,7 +37,12 @@ public partial class App : Application
             .Register<MaterialDesignIconProvider>()
             .RegisterPathStringIconProvider("path");
 
-        this.Connect(() => new MainView(), CompositionRoot.CreateMainViewModel, () => new MainWindow());
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
+        
+        this.Connect(() => new MainView(),x => CompositionRoot.CreateMainViewModel(x,configuration), () => new MainWindow());
 
         base.OnFrameworkInitializationCompleted();
     }

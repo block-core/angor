@@ -1,41 +1,22 @@
-using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Integration.WalletFunding;
 using Angor.Contexts.Wallet;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
-using Angor.Shared;
-using Angor.Shared.Services;
-using AngorApp.Composition.Registrations;
-using AngorApp.Composition.Registrations.Sections;
-using AngorApp.Composition.Registrations.Services;
-using AngorApp.Composition.Registrations.ViewModels;
-using AngorApp.Sections;
-using AngorApp.Sections.Browse;
-using AngorApp.Sections.Founder;
-using AngorApp.Sections.Home;
-using AngorApp.Sections.Portfolio;
-using AngorApp.Sections.Settings;
 using AngorApp.Sections.Shell;
-using AngorApp.Sections.Wallet;
-using Humanizer;
-using Microsoft.Extensions.DependencyInjection;
-using Serilog;
-using Serilog.Core;
-using Zafiro.Avalonia.Services;
-using Zafiro.UI;
-using Zafiro.UI.Navigation;
-using Zafiro.UI.Navigation.Sections;
 
 namespace AngorApp.Composition;
 
 public static class CompositionRoot
 {
-    public static IMainViewModel CreateMainViewModel(Control topLevelView)
+    public static IMainViewModel CreateMainViewModel(Control topLevelView, IConfigurationRoot configuration)
     {
         var services = new ServiceCollection();
 
+        services.AddDbContext<AngorDbContext>(options =>
+            options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+        
         var logger = new LoggerConfiguration()
             .WriteTo.Console()
             .MinimumLevel.Debug().CreateLogger();
