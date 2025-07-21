@@ -18,7 +18,7 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
             .HasMaxLength(64)
             .IsRequired();
             
-        builder.Property(e => e.ProjectSenderAddress)
+        builder.Property(e => e.ProjectReceiveAddress)
             .HasMaxLength(100)
             .IsRequired();
             
@@ -42,7 +42,7 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
             .HasMaxLength(64)
             .IsRequired();
             
-        builder.Property(e => e.NostrEventId)
+        builder.Property(e => e.ProjectInfoEventId)
             .HasMaxLength(64)
             .IsRequired();
             
@@ -60,7 +60,7 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
             
         builder.HasOne(e => e.NostrEvent)
             .WithMany()
-            .HasForeignKey(e => e.NostrEventId)
+            .HasForeignKey(e => e.ProjectInfoEventId)
             .OnDelete(DeleteBehavior.Restrict);
             
         builder.HasMany(e => e.Stages)
@@ -70,8 +70,8 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         
         // Indexes
         builder.HasIndex(e => e.NostrPubKey);
-        builder.HasIndex(e => e.NostrEventId);
-        builder.HasIndex(e => e.ProjectSenderAddress);
+        builder.HasIndex(e => e.ProjectInfoEventId);
+        builder.HasIndex(e => e.ProjectReceiveAddress);
         builder.HasIndex(e => e.StartDate);
         builder.HasIndex(e => e.EndDate);
         builder.HasIndex(e => e.ExpiryDate);
