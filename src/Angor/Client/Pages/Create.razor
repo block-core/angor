@@ -2374,10 +2374,6 @@
         if (string.IsNullOrWhiteSpace(url))
             return true;
 
-        if (ShouldSkipProductionValidations)
-        {
-            return true;
-        }
 
         if (!Uri.TryCreate(url.Trim(), UriKind.Absolute, out Uri uriResult))
         {
