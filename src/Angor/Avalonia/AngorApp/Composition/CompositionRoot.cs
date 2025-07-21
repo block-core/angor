@@ -13,6 +13,8 @@ using AngorApp.Sections.Portfolio.Penalties;
 using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Core;
@@ -24,10 +26,13 @@ namespace AngorApp.Composition;
 
 public static class CompositionRoot
 {
-    public static IMainViewModel CreateMainViewModel(Control topLevelView)
+    public static IMainViewModel CreateMainViewModel(Control topLevelView, IConfigurationRoot configuration)
     {
         var services = new ServiceCollection();
 
+        services.AddDbContext<AngorDbContext>(options =>
+            options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+        
         var logger = new LoggerConfiguration()
             .WriteTo.Console()
             .MinimumLevel.Debug().CreateLogger();
