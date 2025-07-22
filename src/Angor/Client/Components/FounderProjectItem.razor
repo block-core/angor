@@ -26,17 +26,15 @@
         </a>
 
         <div class="card-body pb-0">
-
-
-
             <div class="d-flex align-items-center justify-content-between mb-4">
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center project-name-container">
                     <span class="user-select-none">
                         <Icon IconName="view" Height="24" Width="24" />
                     </span>
-                    <div class="h-100 ms-3">
-                        <h5 class="mb-0 font-weight-bolder">
-                            <a href="/view/@FounderProject.ProjectInfo.ProjectIdentifier">
+                    <div class="h-100 ms-3 flex-grow-1 project-name-wrapper">
+                        <h5 class="mb-0 font-weight-bolder text-truncate project-name-title">
+                            <a href="/view/@FounderProject.ProjectInfo.ProjectIdentifier"
+                               class="text-truncate d-block project-name-link">
                                 @FounderProject.Metadata.Name
                             </a>
                         </h5>
