@@ -6,5 +6,5 @@ public interface IProjectEventService
 {
     Task<List<Project>> PullAndSaveProjectEventsAsync(params string[] eventIds);
     Task<bool> SaveProjectAsync(Project project);
-    Task<List<Project>> GetAllProjectsAsync();
+    Task<IEnumerable<Project>> GetProjectsByIdsAsync(params string[] projectIds);
 }
