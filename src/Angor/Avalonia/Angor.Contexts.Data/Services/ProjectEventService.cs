@@ -18,8 +18,42 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
         
         try
         {
+            if (eventIds == null || eventIds.Length == 0)
+            {
+                logger.LogWarning("No event IDs provided");
+                return new List<Project>();
+            }
+
+            // Step 1: Check which projects already exist in the database
+            var existingProjectIds = await context.Projects
+                .Where(p => eventIds.Contains(p.ProjectInfoEventId))
+                .Select(p => p.ProjectInfoEventId)
+                .ToListAsync();
+
+            logger.LogInformation("Found {ExistingCount} projects already in database out of {TotalCount} requested", 
+                existingProjectIds.Count, eventIds.Length);
+
+            // Step 2: Filter out event IDs that already have corresponding projects
+            var missingEventIds = eventIds.Except(existingProjectIds).ToArray();
+
+            if (missingEventIds.Length == 0)
+            {
+                logger.LogInformation("All requested projects already exist in database");
+            
+                // Return existing projects
+                return await context.Projects
+                    .Where(p => eventIds.Contains(p.ProjectInfoEventId))
+                    .Include(p => p.NostrUser)
+                    .Include(p => p.NostrEvent)
+                    .Include(p => p.Stages)
+                    .Include(p => p.SecretHashes)
+                    .ToListAsync();
+            }
+
+            
             // Get events of kind 3030 from Nostr relays
-            var eventResponses = await nostrService.GetEventsAsync(nameof(ProcessProjectEvent), [], [angorProjectInfoKind], null, eventIds);
+            var eventResponses = await nostrService.GetEventsAsync(nameof(ProcessProjectEvent), [],
+                [angorProjectInfoKind], null, missingEventIds);
             
             var projects = new List<Project>();
             
@@ -45,7 +79,22 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
             }
             
             logger.LogInformation($"Successfully processed {projects.Count} project events, saved {savedCount} to database");
-            return projects;
+            
+            // Step 5: Return all projects (existing + newly saved) with full includes
+            var allProjects = await context.Projects
+                .Where(p => eventIds.Contains(p.ProjectInfoEventId))
+                .Include(p => p.NostrUser)
+                .Include(p => p.NostrEvent)
+                .Include(p => p.Stages)
+                .Include(p => p.SecretHashes)
+                .OrderBy(p => p.CreatedAt)
+                .ToListAsync();
+
+            logger.LogInformation("Returning {TotalCount} total projects ({ExistingCount} existing + {NewCount} new)", 
+                allProjects.Count, existingProjectIds.Count, eventResponses.Count);
+
+            return allProjects;
+
         }
         catch (Exception ex)
         {
@@ -148,18 +197,47 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
         }
     }
 
-    public async Task<List<Project>> GetAllProjectsAsync()
+    public async Task<IEnumerable<Project>> GetProjectsByIdsAsync(params string[] projectIds)
     {
+        logger.LogInformation("Getting {Count} projects by IDs with all nested data", projectIds.Length);
+
         try
         {
-            return await context.Projects
-                .OrderByDescending(p => p.CreatedAt)
+            if (projectIds == null || projectIds.Length == 0)
+            {
+                logger.LogWarning("No project IDs provided");
+                return new List<Project>();
+            }
+
+            var projects = await context.Projects
+                .Where(p => projectIds.Contains(p.ProjectId))
+                .Include(p => p.NostrUser) // Include the associated NostrUser
+                .Include(p => p.NostrEvent) // Include the associated NostrEvent
+                .Include(p => p.Stages) // Include all project stages
+                .Include(p => p.SecretHashes) // Include all secret hashes
+                .OrderBy(p => p.CreatedAt)
                 .ToListAsync();
+
+            logger.LogInformation("Retrieved {Found} projects out of {Requested} requested IDs", 
+                projects.Count, projectIds.Length);
+
+            // Log missing projects for debugging
+            var foundIds = projects.Select(p => p.ProjectId).ToHashSet();
+            var missingIds = projectIds.Where(id => !foundIds.Contains(id)).ToArray();
+            if (missingIds.Length > 0)
+            {
+                logger.LogWarning("Projects not found in database: {MissingIds}", 
+                    string.Join(", ", missingIds));
+            }
+
+            return projects;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error retrieving projects");
+            logger.LogError(ex, "Error retrieving projects by IDs: {ProjectIds}", 
+                string.Join(", ", projectIds));
             return new List<Project>();
         }
     }
+
 }
