@@ -20,6 +20,7 @@ namespace Angor.Contexts.Data.Migrations
                     DisplayName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     About = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     Picture = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    Banner = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     Website = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
                     Nip05 = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     IsVerified = table.Column<bool>(type: "INTEGER", nullable: false, defaultValue: false),
@@ -61,14 +62,15 @@ namespace Angor.Contexts.Data.Migrations
                     ProjectId = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
                     NostrPubKey = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
                     ProjectReceiveAddress = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    TargetAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 8, nullable: false),
-                    StartDate = table.Column<long>(type: "INTEGER", nullable: false),
-                    EndDate = table.Column<long>(type: "INTEGER", nullable: false),
+                    TargetAmount = table.Column<long>(type: "INTEGER", precision: 18, scale: 8, nullable: false),
+                    FundingStartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    FundingEndDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     PenaltyDays = table.Column<long>(type: "INTEGER", nullable: false),
-                    ExpiryDate = table.Column<long>(type: "INTEGER", nullable: false),
+                    ExpiryDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     ProjectInfoEventId = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    LeadInvestorsThreshold = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -115,7 +117,7 @@ namespace Angor.Contexts.Data.Migrations
                     ProjectId = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
                     StageIndex = table.Column<int>(type: "INTEGER", nullable: false),
                     AmountToRelease = table.Column<decimal>(type: "TEXT", precision: 18, scale: 8, nullable: false),
-                    ReleaseDate = table.Column<long>(type: "INTEGER", nullable: false),
+                    ReleaseDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     ReleasedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
@@ -166,14 +168,19 @@ namespace Angor.Contexts.Data.Migrations
                 column: "CreatedAt");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Projects_EndDate",
-                table: "Projects",
-                column: "EndDate");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Projects_ExpiryDate",
                 table: "Projects",
                 column: "ExpiryDate");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Projects_FundingEndDate",
+                table: "Projects",
+                column: "FundingEndDate");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Projects_FundingStartDate",
+                table: "Projects",
+                column: "FundingStartDate");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_NostrPubKey",
@@ -189,11 +196,6 @@ namespace Angor.Contexts.Data.Migrations
                 name: "IX_Projects_ProjectReceiveAddress",
                 table: "Projects",
                 column: "ProjectReceiveAddress");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Projects_StartDate",
-                table: "Projects",
-                column: "StartDate");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProjectSecretHash_CreatedAt",
