@@ -1,5 +1,6 @@
 using Angor.Contexts.Data.Entities;
 using Angor.Shared.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Messages;
 using Nostr.Client.Messages.Metadata;
@@ -7,16 +8,38 @@ using NostrEvent = Nostr.Client.Messages.NostrEvent;
 
 namespace Angor.Contexts.Data.Services;
 
-public class UserEventService(AngorDbContext _context, INostrService _nostrService, ILogger<ProjectEventService> _logger, ISerializer _serializer) : IUserEventService
+public class UserEventService(AngorDbContext context, INostrService nostrService, ILogger<ProjectEventService> logger, ISerializer serializer) : IUserEventService
 {
     public async Task<List<NostrUser>> PullAndSaveUserEventsAsync(params string[] pubkeys)
     {
-        _logger.LogInformation("Starting to pull user events with {PubKeyCount} specific public keys...", pubkeys.Length);
+        logger.LogInformation("Starting to pull user events with {PubKeyCount} specific public keys...", pubkeys.Length);
 
         try
         {
+            // Step 1: Check which projects already exist in the database
+            var existingProjectIds = await context.NostrUsers
+                .Where(p => pubkeys.Contains(p.PubKey))
+                .Select(p => p.PubKey)
+                .ToListAsync();
+
+            logger.LogInformation("Found {ExistingCount} projects already in database out of {TotalCount} requested", 
+                existingProjectIds.Count, pubkeys.Length);
+
+            // Step 2: Filter out event IDs that already have corresponding projects
+            var missingEventIds = pubkeys.Except(existingProjectIds).ToArray();
+
+            if (missingEventIds.Length == 0)
+            {
+                logger.LogInformation("All requested projects already exist in database");
+            
+                // Return existing projects
+                return await context.NostrUsers
+                    .Where(p => pubkeys.Contains(p.PubKey))
+                    .ToListAsync();
+            }
+            
             // Get user events from Nostr relays
-            var userResponses = await _nostrService.GetEventsAsync(nameof(ProcessUserEvent), [], new[] { NostrKind.Metadata }, pubkeys);
+            var userResponses = await nostrService.GetEventsAsync(nameof(ProcessUserEvent), new[] { NostrKind.Metadata }, null, pubkeys);
 
             var users = new List<NostrUser>();
 
@@ -41,12 +64,14 @@ public class UserEventService(AngorDbContext _context, INostrService _nostrServi
                 if (saved) savedCount++;
             }
 
-            _logger.LogInformation($"Successfully processed {users.Count} user events, saved {savedCount} to database");
-            return users;
+            logger.LogInformation($"Successfully processed {users.Count} user events, saved {savedCount} to database");
+            return await context.NostrUsers
+                .Where(p => pubkeys.Contains(p.PubKey))
+                .ToListAsync();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error pulling user events");
+            logger.LogError(ex, "Error pulling user events");
             throw;
         }
     }
@@ -55,12 +80,12 @@ public class UserEventService(AngorDbContext _context, INostrService _nostrServi
     {
         try
         {
-            _logger.LogDebug("Processing user event data");
+            logger.LogDebug("Processing user event data");
 
             // Deserialize the event data
             if (responseEvent is not NostrMetadataEvent userInfo)
             {
-                _logger.LogWarning("Invalid or incomplete user event data");
+                logger.LogWarning("Invalid or incomplete user event data");
                 return null;
             }
 
@@ -83,7 +108,7 @@ public class UserEventService(AngorDbContext _context, INostrService _nostrServi
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing user event: {EventData}", _serializer.Serialize(responseEvent));
+            logger.LogError(ex, "Error processing user event: {EventData}", serializer.Serialize(responseEvent));
             return null;
         }
     }
@@ -93,7 +118,7 @@ public class UserEventService(AngorDbContext _context, INostrService _nostrServi
         try
         {
             // Check if the user already exists in the database
-            var existingUser = await _context.NostrUsers.FindAsync(user.PubKey);
+            var existingUser = await context.NostrUsers.FindAsync(user.PubKey);
 
             if (existingUser != null)
             {
@@ -106,21 +131,21 @@ public class UserEventService(AngorDbContext _context, INostrService _nostrServi
                 existingUser.IsVerified = user.IsVerified;
                 existingUser.UpdatedAt = DateTime.UtcNow;
 
-                _context.NostrUsers.Update(existingUser);
+                context.NostrUsers.Update(existingUser);
             }
             else
             {
                 // Add new user
-                await _context.NostrUsers.AddAsync(user);
+                await context.NostrUsers.AddAsync(user);
             }
 
             // Save changes to the database
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error saving user with PubKey: {PubKey}", user.PubKey);
+            logger.LogError(ex, "Error saving user with PubKey: {PubKey}", user.PubKey);
             return false;
         }
     }
