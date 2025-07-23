@@ -2356,6 +2356,54 @@ button:hover:not(:disabled) {
     color: var(--angor-secondary)
 }
 
+.stages-container {
+    width: 100%;
+}
+
+.stage-item {
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+.stage-item .row.g-2 {
+    margin: 0;
+    align-items: flex-end;
+}
+
+.stage-item .form-control-modern {
+    min-height: 42px;
+}
+
+@media (min-width: 768px) {
+    .stages-container .stage-item .row.g-2 {
+        flex-wrap: nowrap;
+    }
+}
+
+@media (max-width: 1200px) and (min-width: 992px) {
+    .stages-container .row.g-2 > .col-12.col-md-4.col-lg-3 {
+        flex: 0 0 35%;
+        max-width: 35%;
+    }
+    
+    .stages-container .row.g-2 > .col-12.col-md-8.col-lg-9 {
+        flex: 0 0 65%;
+        max-width: 65%;
+    }
+}
+
+@media (max-width: 991px) and (min-width: 769px) {
+    .stages-container .row.g-2 > .col-12.col-md-4.col-lg-3 {
+        flex: 0 0 30%;
+        max-width: 30%;
+    }
+    
+    .stages-container .row.g-2 > .col-12.col-md-8.col-lg-9 {
+        flex: 0 0 70%;
+        max-width: 70%;
+    }
+}
+
 @media (max-width:768px) {
     .stage-form-row {
         flex-direction: column;
@@ -2364,6 +2412,11 @@ button:hover:not(:disabled) {
 
     .stage-form-group {
         width: 100%
+    }
+    
+    .stages-container .row.g-2 > div {
+        flex: 0 0 100%;
+        max-width: 100%;
     }
 }
 
@@ -4436,6 +4489,7 @@ select::-ms-expand {
 }
 
 .suggestion-item {
+    -webkit-user-select: none;
     user-select: none
 }
 
@@ -5580,6 +5634,7 @@ input.no-native-picker[type="date"]::-moz-calendar-picker-indicator {
     line-clamp: 1;
     word-break: break-word;
     overflow-wrap: break-word;
+    -webkit-hyphens: auto;
     hyphens: auto;
 }
 

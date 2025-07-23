@@ -33,10 +33,10 @@
 
 .angor-date-picker-button {
     position: absolute;
-    top: 10%;
-    right: 0.5rem;
-    width: 2rem;
-    height: 2rem;
+    top: 20%;
+    right: 0.425rem;
+    width: 1.75rem;
+    height: 1.75rem;
     background: none;
     border: none;
     color: var(--angor-secondary);
@@ -72,9 +72,9 @@
     border: var(--angor-border-width) var(--angor-border-style) var(--form-border);
     border-radius: var(--angor-border-radius-lg);
     box-shadow: 0 10px 25px var(--angor-shadow-primary);
-    padding: 1.5rem;
-    min-width: 320px;
-    max-width: 360px;
+    padding: 1rem;
+    min-width: 280px;
+    max-width: 320px;
     font-family: var(--angor-font-sans-serif);
     animation: slideDown 0.2s ease-out;
 }
@@ -94,8 +94,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--form-border);
 }
 
@@ -104,14 +104,14 @@
     border: var(--angor-border-width) var(--angor-border-style) var(--btn-border);
     color: var(--angor-secondary);
     cursor: pointer;
-    padding: 0.5rem;
+    padding: 0.375rem;
     border-radius: var(--angor-border-radius);
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.15s ease-in-out;
-    min-width: 2.5rem;
-    height: 2.5rem;
+    min-width: 2rem;
+    height: 2rem;
 }
 
 .angor-date-picker-nav-button:hover {
@@ -123,6 +123,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-wrap: nowrap;
+    justify-content: center;
 }
 
 .angor-date-picker-month-select,
@@ -130,11 +132,13 @@
     background: var(--form-bg);
     border: var(--angor-border-width) var(--angor-border-style) var(--form-border);
     color: var(--form-text);
-    padding: 0.5rem 0.75rem;
+    padding: 0.375rem 0.5rem;
     border-radius: var(--angor-border-radius);
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     cursor: pointer;
     transition: border-color 0.15s ease-in-out;
+    min-width: 80px;
+    flex-shrink: 0;
 }
 
 .angor-date-picker-month-select:focus,
@@ -153,17 +157,17 @@
 
 .angor-date-picker-weekday {
     text-align: center;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: var(--form-label);
-    padding: 0.5rem 0;
+    padding: 0.375rem 0;
 }
 
 .angor-date-picker-days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 0.25rem;
-    margin-bottom: 1rem;
+    gap: 0.2rem;
+    margin-bottom: 0.75rem;
 }
 
 .angor-date-picker-day {
@@ -171,15 +175,15 @@
     border: none;
     color: var(--form-text);
     cursor: pointer;
-    padding: 0.5rem;
+    padding: 0.375rem;
     border-radius: var(--angor-border-radius);
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     transition: all 0.15s ease-in-out;
     aspect-ratio: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.5rem;
+    min-height: 2rem;
 }
 
 .angor-date-picker-day:hover {
@@ -219,19 +223,63 @@
 .angor-date-picker-footer {
     display: flex;
     justify-content: space-between;
-    gap: 0.75rem;
-    padding-top: 0.75rem;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
     border-top: 1px solid var(--form-border);
+    flex-wrap: nowrap;
 }
 
 .angor-date-picker-today-button,
 .angor-date-picker-clear-button {
     cursor: pointer;
-    padding: 0.5rem 1rem;
+    padding: 0.375rem 0.75rem;
     border-radius: var(--angor-border-radius);
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     transition: all 0.15s ease-in-out;
     flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+/* Enhanced responsive design */
+@media (max-width: 1200px) {
+    .angor-date-picker-calendar {
+        min-width: 260px;
+        max-width: 300px;
+        padding: 0.875rem;
+    }
+    
+    .angor-date-picker-nav-button {
+        min-width: 1.75rem;
+        height: 1.75rem;
+        padding: 0.25rem;
+    }
+    
+    .angor-date-picker-month-select,
+    .angor-date-picker-year-select {
+        padding: 0.25rem 0.375rem;
+        font-size: 0.75rem;
+        min-width: 70px;
+    }
+}
+
+@media (max-width: 992px) {
+    .angor-date-picker-calendar {
+        min-width: 240px;
+        max-width: 280px;
+        padding: 0.75rem;
+    }
+    
+    .angor-date-picker-day {
+        min-height: 1.75rem;
+        font-size: 0.75rem;
+        padding: 0.25rem;
+    }
+    
+    .angor-date-picker-weekday {
+        font-size: 0.65rem;
+        padding: 0.25rem 0;
+    }
 }
 
 @media (max-width: 768px) {
@@ -239,26 +287,202 @@
         margin: 0 0.5rem;
         min-width: auto;
         max-width: none;
-        padding: 1rem;
+        padding: 0.75rem;
+        width: calc(100vw - 2rem);
+        max-width: 280px;
     }
 
     .angor-date-picker-month-year {
-        flex-direction: column;
-        gap: 0.5rem;
+        flex-direction: row;
+        gap: 0.375rem;
+        justify-content: center;
+        flex-wrap: nowrap;
     }
 
     .angor-date-picker-month-select,
     .angor-date-picker-year-select {
-        width: 100%;
+        flex: 1;
+        min-width: 60px;
+        max-width: 90px;
+        font-size: 0.7rem;
+        padding: 0.25rem;
     }
 
     .angor-date-picker-footer {
-        flex-direction: column;
-        gap: 0.5rem;
+        flex-direction: row;
+        gap: 0.375rem;
+        flex-wrap: nowrap;
     }
 
     .angor-date-picker-today-button,
     .angor-date-picker-clear-button {
-        width: 100%;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .angor-date-picker-day {
+        min-height: 1.5rem;
+        font-size: 0.7rem;
+    }
+    
+    .angor-date-picker-nav-button {
+        min-width: 1.5rem;
+        height: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .angor-date-picker-calendar {
+        width: calc(100vw - 1rem);
+        max-width: 260px;
+        padding: 0.5rem;
+    }
+    
+    .angor-date-picker-month-year {
+        flex-direction: row;
+        gap: 0.25rem;
+        flex-wrap: nowrap;
+        justify-content: center;
+    }
+
+    .angor-date-picker-month-select,
+    .angor-date-picker-year-select {
+        flex: 1;
+        min-width: 50px;
+        max-width: 80px;
+        text-align: center;
+        font-size: 0.65rem;
+        padding: 0.2rem;
+    }
+
+    .angor-date-picker-footer {
+        flex-direction: row;
+        gap: 0.25rem;
+        flex-wrap: nowrap;
+    }
+
+    .angor-date-picker-today-button,
+    .angor-date-picker-clear-button {
+        flex: 1;
+        padding: 0.3rem 0.4rem;
+        font-size: 0.65rem;
+        min-width: 0;
+    }
+    
+    .angor-date-picker-day {
+        min-height: 1.25rem;
+        font-size: 0.65rem;
+    }
+}
+    
+/* Additional responsive improvements for small screens */
+@media (max-width: 360px) {
+    .angor-date-picker-calendar {
+        width: calc(100vw - 0.5rem);
+        max-width: 240px;
+        padding: 0.375rem;
+    }
+    
+    .angor-date-picker-header {
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.375rem;
+    }
+    
+    .angor-date-picker-month-year {
+        flex-direction: row;
+        gap: 0.2rem;
+        flex-wrap: nowrap;
+        justify-content: center;
+    }
+
+    .angor-date-picker-month-select,
+    .angor-date-picker-year-select {
+        flex: 1;
+        min-width: 45px;
+        max-width: 70px;
+        font-size: 0.6rem;
+        padding: 0.15rem;
+        text-align: center;
+    }
+    
+    .angor-date-picker-weekdays {
+        gap: 0.1rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .angor-date-picker-days {
+        gap: 0.1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .angor-date-picker-day {
+        min-height: 1rem;
+        font-size: 0.6rem;
+        padding: 0.125rem;
+    }
+    
+    .angor-date-picker-weekday {
+        font-size: 0.55rem;
+        padding: 0.125rem 0;
+    }
+    
+    .angor-date-picker-nav-button {
+        min-width: 1.25rem;
+        height: 1.25rem;
+        padding: 0.125rem;
+    }
+    
+    .angor-date-picker-nav-button svg {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .angor-date-picker-footer {
+        padding-top: 0.375rem;
+        flex-direction: row;
+        gap: 0.2rem;
+        flex-wrap: nowrap;
+    }
+    
+    .angor-date-picker-today-button,
+    .angor-date-picker-clear-button {
+        flex: 1;
+        padding: 0.2rem 0.3rem;
+        font-size: 0.6rem;
+        min-width: 0;
+    }
+}
+
+/* Force elements to stay in one line regardless of screen size */
+.angor-date-picker-month-year,
+.angor-date-picker-footer {
+    flex-wrap: nowrap !important;
+}
+
+.angor-date-picker-month-select,
+.angor-date-picker-year-select,
+.angor-date-picker-today-button,
+.angor-date-picker-clear-button {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Ensure proper z-index for calendar overlay */
+.angor-date-picker-calendar-container {
+    z-index: 9999;
+}
+
+/* Better mobile interaction */
+@media (hover: none) and (pointer: coarse) {
+    .angor-date-picker-day:hover {
+        background-color: rgba(var(--angor-secondary-rgb), 0.2);
+    }
+    
+    .angor-date-picker-button:hover,
+    .angor-date-picker-nav-button:hover {
+        background-color: rgba(var(--angor-secondary-rgb), 0.2);
     }
 }
