@@ -1,9 +1,12 @@
+using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Data.Services;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
+using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Zafiro.CSharpFunctionalExtensions;
@@ -18,20 +21,28 @@ public static class GetFounderProjects
         IDerivationOperations derivationOperations, 
         INetworkConfiguration networkConfiguration,
         IProjectEventService projectEventService,
-        IUserEventService userEventService) : IRequestHandler<GetFounderProjectsRequest, Result<IEnumerable<ProjectDto>>>
+        IUserEventService userEventService,
+        IIndexerService indexerService) : IRequestHandler<GetFounderProjectsRequest, Result<IEnumerable<ProjectDto>>>
     {
         public Task<Result<IEnumerable<ProjectDto>>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
         {
-            return GetProjectIds(request)
-                //.Bind(ids => projectRepository.GetAll(ids.ToArray()))
-                .Bind(ids => Result.Try(() => projectEventService.GetProjectsByIdsAsync(ids.Select(id => id.Value).ToArray())))
+             return GetProjectIds(request)
+                .Bind(ids => Result.Try(() =>  ids
+                    .Select(id => indexerService.GetProjectByIdAsync(id.Item1.Value)
+                        .ToObservable()
+                        .Where(result => result != null)
+                        .Select(result => (npub:id.Item2, result!.NostrEventId)))
+                    .Merge()
+                    .ToList()
+                    .ToTask(cancellationToken)))
                 .Bind(async projects =>
                 {
-                    await userEventService.PullAndSaveUserEventsAsync(projects.Select(p => p.NostrPubKey).ToArray());
-                    return Result.Success(projects.Select(p => p.ProjectId));
+                    await userEventService.PullAndSaveUserEventsAsync(projects.Select(p => p.npub).ToArray());
+                    return Result.Success(projects.Select(p => p.NostrEventId));
                 })
-                .Bind(ids => Result.Try(() =>projectEventService.GetProjectsByIdsAsync(ids.ToArray())))
-                .MapEach(project => new ProjectDto()
+                .Bind(ids => Result.Try(() => 
+                    projectEventService.PullAndSaveProjectEventsAsync(ids.ToArray())))
+                .Map(projects => projects.Select(project =>  new ProjectDto()
                 {
                     Id = new ProjectId(project.ProjectId),
                     Picture = Uri.TryCreate(project.NostrUser.Picture, UriKind.Absolute, out var pictureUri) ? pictureUri : null,
@@ -49,18 +60,55 @@ public static class GetFounderProjects
                         RatioOfTotal = s.AmountToRelease,
                         Index = s.StageIndex
                     }).ToList()
-                })
-                .WithTimeout(TimeSpan.FromSeconds(10));
+                }));
+            
+            
+            
+            // return GetProjectIds(request)
+            //     //.Bind(ids => projectRepository.GetAll(ids.ToArray()))
+            //     .Bind(ids => Result.Try(() =>  ids
+            //         .Select(id => indexerService.GetProjectByIdAsync(id.Value))))
+            //     .Bind(ids => Result.Try(() => 
+            //         projectEventService.PullAndSaveProjectEventsAsync(ids
+            //             .Where(x => x.Result != null)
+            //             .Select(id => id.Result.NostrEventId)
+            //             .ToArray())))
+            //     .Bind(async projects =>
+            //     {
+            //         await userEventService.PullAndSaveUserEventsAsync(projects.Select(p => p.NostrPubKey).ToArray());
+            //         return Result.Success(projects.Select(p => p.ProjectId));
+            //     })
+            //     .Bind(ids => Result.Try(() =>projectEventService.GetProjectsByIdsAsync(ids.ToArray())))
+            //     .MapEach(project => new ProjectDto()
+            //     {
+            //         Id = new ProjectId(project.ProjectId),
+            //         Picture = Uri.TryCreate(project.NostrUser.Picture, UriKind.Absolute, out var pictureUri) ? pictureUri : null,
+            //         Banner = Uri.TryCreate(project.NostrUser.Banner, UriKind.Absolute, out var bannerUri) ? bannerUri : null,
+            //         InformationUri = Uri.TryCreate(project.NostrUser.Website, UriKind.Absolute, out var infoUri) ? infoUri : null,
+            //         Name = project.NostrUser.DisplayName,
+            //         NostrNpubKey = project.NostrPubKey,
+            //         PenaltyDuration = new TimeSpan(project.PenaltyDays),
+            //         ShortDescription = project.NostrUser.About,
+            //         StartingDate = project.FundingStartDate,
+            //         TargetAmount = project.TargetAmount,
+            //         Stages = project.Stages.Select(s => new StageDto
+            //         {
+            //             ReleaseDate = s.ReleaseDate,
+            //             RatioOfTotal = s.AmountToRelease,
+            //             Index = s.StageIndex
+            //         }).ToList()
+            //     })
+            //     .WithTimeout(TimeSpan.FromSeconds(10));
         }
 
-        private Task<Result<IEnumerable<ProjectId>>> GetProjectIds(GetFounderProjectsRequest request)
+        private Task<Result<IEnumerable<(ProjectId,string)>>> GetProjectIds(GetFounderProjectsRequest request)
         {
             return seedwordsProvider.GetSensitiveData(request.WalletId)
                 .Map(p => p.ToWalletWords())
                 .Map(words => derivationOperations.DeriveProjectKeys(words, networkConfiguration.GetAngorKey()))//TODO we need to change this, the derivation code requires very heavy computations
                 .Map(collection => collection.Keys.AsEnumerable())
-                .MapEach(keys => keys.ProjectIdentifier)
-                .MapEach(fk => new ProjectId(fk));
+                .MapEach(keys => (keys.ProjectIdentifier,keys.NostrPubKey))
+                .MapEach(fk => (new ProjectId(fk.ProjectIdentifier), fk.NostrPubKey));
         }
     }
 

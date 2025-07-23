@@ -16,13 +16,24 @@ public class DataContextServices
 
 
         // Registering services
+        services.AddScoped<INostrClientWrapper, NostrClientWrapper>();
         services.AddScoped<INostrService, NostrService>();
         services.AddScoped<IProjectEventService, ProjectEventService>();
+        services.AddScoped<IUserEventService, UserEventService>();
+        
+        
         
         //
         // // Registering logging
         // services.AddLogging(builder => builder.AddSerilog(logger));
         
         return services;
+    }
+    
+    public static void ApplyMigrations(IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AngorDbContext>();
+        dbContext.Database.Migrate();
     }
 }
