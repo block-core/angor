@@ -13,8 +13,9 @@ public static class CompositionRoot
     public static IMainViewModel CreateMainViewModel(Control topLevelView, IConfigurationRoot configuration)
     {
         var services = new ServiceCollection();
-
+        
         DataContextServices.Register(services);
+        
         
         var logger = new LoggerConfiguration()
             .WriteTo.Console()
@@ -57,6 +58,8 @@ public static class CompositionRoot
         var serviceProvider = services.BuildServiceProvider();
         serviceProvider.GetRequiredService<INetworkService>().AddSettingsIfNotExist();
 
+        DataContextServices.ApplyMigrations(serviceProvider);
+        
         return serviceProvider.GetRequiredService<IMainViewModel>();
     }
 

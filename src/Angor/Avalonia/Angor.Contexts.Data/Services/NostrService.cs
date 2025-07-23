@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Nostr.Client.Messages;
 using Nostr.Client.Responses;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using Nostr.Client.Requests;
 
 namespace Angor.Contexts.Data.Services;
@@ -11,7 +12,7 @@ public class NostrService : INostrService, IDisposable
     private readonly ILogger<NostrService> _logger;
     private readonly INostrClientWrapper _clientWrapper;
 
-    private const int TimeoutSeconds = 10;
+    private const int TimeoutSeconds = 30;
 
     public NostrService(ILogger<NostrService> logger, INostrClientWrapper clientWrapper)
     {
@@ -19,7 +20,7 @@ public class NostrService : INostrService, IDisposable
         _clientWrapper = clientWrapper;
     }
 
-    public async Task<List<NostrEventResponse>> GetEventsAsync(string subscriptionId,string[] receiversPubkeys, NostrKind[] kinds, string[]? sendersPubkeys = null,
+    public async Task<List<NostrEventResponse>> GetEventsAsync(string subscriptionId,NostrKind[] kinds,string[]? receiversPubkeys = null,  string[]? sendersPubkeys = null,
         string[]? eventIds = null)
     {
         _logger.LogInformation("Fetching events of kind {Kind} with timeout {Timeout}s", kinds, TimeoutSeconds);
@@ -31,7 +32,7 @@ public class NostrService : INostrService, IDisposable
             {
                 await ConnectToRelaysAsync();
             }
-
+            
             // Get the observable stream of events
             var eventObservable = _clientWrapper.SubscribeToEvents(subscriptionId ,new NostrFilter { Kinds = kinds, P = receiversPubkeys,
                 Authors = sendersPubkeys, Ids = eventIds });
@@ -40,8 +41,8 @@ public class NostrService : INostrService, IDisposable
             var events = await eventObservable
                 .Timeout(TimeSpan.FromSeconds(TimeoutSeconds))
                 .Catch(Observable.Return<NostrEventResponse>(null)) // Handle timeout gracefully
-                .Where(e => e != null) // Filter out null events from timeout
-                .ToList(); // Collect all events into a list
+                .ToList()// Collect all events into a list
+                .ToTask(); 
 
             _logger.LogInformation("Retrieved {Count} events of kinds {Kind} from {RelayCount} relays", 
                 events.Count, kinds, _clientWrapper.ConnectedRelaysCount);

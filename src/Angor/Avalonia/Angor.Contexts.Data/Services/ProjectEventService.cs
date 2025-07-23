@@ -52,8 +52,8 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
 
             
             // Get events of kind 3030 from Nostr relays
-            var eventResponses = await nostrService.GetEventsAsync(nameof(ProcessProjectEvent), [],
-                [angorProjectInfoKind], null, missingEventIds);
+            var eventResponses = await nostrService.GetEventsAsync(nameof(ProcessProjectEvent),
+                [angorProjectInfoKind], null, null, missingEventIds);
             
             var projects = new List<Project>();
             
@@ -145,7 +145,17 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
                     SecretHash = sh,
                     CreatedAt = responseEvent.CreatedAt!.Value,
                 }).ToList(),
-                LeadInvestorsThreshold = projectInfo.ProjectSeeders.Threshold
+                LeadInvestorsThreshold = projectInfo.ProjectSeeders.Threshold,
+                NostrEvent = new Entities.NostrEvent
+                {
+                    CreatedAt = responseEvent.CreatedAt!.Value,
+                    Content = responseEvent.Content,
+                    Id = responseEvent.Id,
+                    PubKey = responseEvent.Pubkey!,
+                    Kind = (int)responseEvent.Kind,
+                    Signature = responseEvent.Sig,
+                    Tags = responseEvent.Tags.Select(t => string.Join(",", t)).ToList()
+                }
             };
 
             return project;
@@ -161,6 +171,11 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
     {
         try
         {
+            if (project == null)
+            {
+                logger.LogError("Cannot save null project");
+                return false;
+            }
             // Check if the project already exists
             var existingProject = await context.Projects
                 .Include(p => p.Stages)
@@ -181,7 +196,7 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
                 
                  // Update related entities (SecretHashes)
                  if (newHashes.Count > 0)
-                     await context.ProjectSecretHashes.AddRangeAsync();
+                     await context.ProjectSecretHashes.AddRangeAsync(newHashes);
 
                 logger.LogInformation("Updating existing project: {ProjectId}", project.ProjectId);
             }

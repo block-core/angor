@@ -69,6 +69,10 @@ namespace Angor.Contexts.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Banner")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -120,10 +124,16 @@ namespace Angor.Contexts.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("EndDate")
-                        .HasColumnType("INTEGER");
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("TEXT");
 
-                    b.Property<long>("ExpiryDate")
+                    b.Property<DateTime>("FundingEndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("FundingStartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("LeadInvestorsThreshold")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("NostrPubKey")
@@ -144,12 +154,9 @@ namespace Angor.Contexts.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("StartDate")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("TargetAmount")
+                    b.Property<long>("TargetAmount")
                         .HasPrecision(18, 8)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
@@ -158,17 +165,17 @@ namespace Angor.Contexts.Data.Migrations
 
                     b.HasIndex("CreatedAt");
 
-                    b.HasIndex("EndDate");
-
                     b.HasIndex("ExpiryDate");
+
+                    b.HasIndex("FundingEndDate");
+
+                    b.HasIndex("FundingStartDate");
 
                     b.HasIndex("NostrPubKey");
 
                     b.HasIndex("ProjectInfoEventId");
 
                     b.HasIndex("ProjectReceiveAddress");
-
-                    b.HasIndex("StartDate");
 
                     b.ToTable("Projects");
                 });
@@ -220,8 +227,8 @@ namespace Angor.Contexts.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("ReleaseDate")
-                        .HasColumnType("INTEGER");
+                    b.Property<DateTime>("ReleaseDate")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("ReleasedAt")
                         .HasColumnType("TEXT");

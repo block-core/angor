@@ -21,9 +21,8 @@ public class NostrClientWrapper : INostrClientWrapper, IDisposable
     private int _connectedRelaysCount = 0;
 
     private readonly string[] _defaultRelays = {
-        "wss://relay.damus.io",
-        "wss://nos.lol", 
-        "wss://relay.nostr.band"
+        "wss://relay.angor.io",
+        "wss://relay2.angor.io"
     };
 
     public NostrClientWrapper(ILogger<NostrClientWrapper> logger, ILoggerFactory loggerFactory)
