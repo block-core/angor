@@ -8,7 +8,7 @@ public interface INostrClientWrapper
 {
     Task ConnectAsync();
     void Disconnect();
-    IObservable<NostrEventResponse> SubscribeToEvents(NostrFilter filter);
+    IObservable<NostrEventResponse> SubscribeToEvents(string subscriptionId, NostrFilter filter);
     void CloseSubscription(string subscriptionId);
     void AddRelay(string relayUrl);
     void RemoveRelay(string relayUrl);
