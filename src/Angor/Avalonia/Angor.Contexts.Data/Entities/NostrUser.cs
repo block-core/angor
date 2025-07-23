@@ -7,6 +7,7 @@ public class NostrUser
     public string? DisplayName { get; set; }
     public string? About { get; set; }
     public string? Picture { get; set; }
+    public string? Banner { get; set; }
     public string? Website { get; set; }
     public string? Nip05 { get; set; } // NIP-05 verification
     public bool IsVerified { get; set; }
