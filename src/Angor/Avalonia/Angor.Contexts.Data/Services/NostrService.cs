@@ -19,7 +19,7 @@ public class NostrService : INostrService, IDisposable
         _clientWrapper = clientWrapper;
     }
 
-    public async Task<List<NostrEventResponse>> GetEventsAsync(string[] receiversPubkeys, NostrKind[] kinds, string[]? sendersPubkeys = null,
+    public async Task<List<NostrEventResponse>> GetEventsAsync(string subscriptionId,string[] receiversPubkeys, NostrKind[] kinds, string[]? sendersPubkeys = null,
         string[]? eventIds = null)
     {
         _logger.LogInformation("Fetching events of kind {Kind} with timeout {Timeout}s", kinds, TimeoutSeconds);
@@ -33,7 +33,7 @@ public class NostrService : INostrService, IDisposable
             }
 
             // Get the observable stream of events
-            var eventObservable = _clientWrapper.SubscribeToEvents(new NostrFilter { Kinds = kinds, P = receiversPubkeys,
+            var eventObservable = _clientWrapper.SubscribeToEvents(subscriptionId ,new NostrFilter { Kinds = kinds, P = receiversPubkeys,
                 Authors = sendersPubkeys, Ids = eventIds });
 
             // Collect events with timeout

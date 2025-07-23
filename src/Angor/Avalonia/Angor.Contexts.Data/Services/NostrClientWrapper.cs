@@ -15,7 +15,7 @@ public class NostrClientWrapper : INostrClientWrapper, IDisposable
     private readonly ILoggerFactory _loggerFactory;
     private readonly List<string> _relayUrls;
     private readonly List<INostrCommunicator> _communicators;
-    private readonly Dictionary<string, IDisposable> _activeSubscriptions;
+    private readonly Dictionary<string, (Subject<NostrEventResponse> subject,IDisposable)> _activeSubscriptions;
     private NostrMultiWebsocketClient? _client;
     private bool _isConnected = false;
     private int _connectedRelaysCount = 0;
@@ -32,7 +32,7 @@ public class NostrClientWrapper : INostrClientWrapper, IDisposable
         _loggerFactory = loggerFactory;
         _relayUrls = new List<string>(_defaultRelays);
         _communicators = new List<INostrCommunicator>();
-        _activeSubscriptions = new Dictionary<string, IDisposable>();
+        _activeSubscriptions = new Dictionary<string, (Subject<NostrEventResponse>,IDisposable)>();
     }
 
     public bool IsConnected => _isConnected;
@@ -157,71 +157,68 @@ public class NostrClientWrapper : INostrClientWrapper, IDisposable
         }
     }
 
-    public IObservable<NostrEventResponse> SubscribeToEvents(NostrFilter filter)
+    public IObservable<NostrEventResponse> SubscribeToEvents(string subscriptionId, NostrFilter filter)
+{
+    if (_client == null || !_isConnected)
     {
-        if (_client == null || !_isConnected)
-        {
-            _logger.LogError("Nostr client is not connected");
-            return Observable.Empty<NostrEventResponse>();
-        }
-
-        var subscriptionId = $"{Guid.NewGuid():N}";
-        _logger.LogDebug("Creating subscription {SubscriptionId} for events", subscriptionId);
-
-        var eventObservable = _client.Streams.EventStream
-            .Where(response => response.Subscription == subscriptionId)
-            .Do(response => _logger.LogDebug("Received event {EventId} of kind {Kind} on subscription {SubscriptionId}", 
-                response.Event?.Id, response.Event?.Kind, subscriptionId));
-
-        // Send subscription request
-        _client.Send(new NostrRequest(subscriptionId, filter));
-
-        // Create a subject that will complete when EOSE is received
-        var subject = new Subject<NostrEventResponse>();
-        
-        // Subscribe to events
-        var eventSubscription = eventObservable.Subscribe(onNext: subject.OnNext, onError: subject.OnError);
-
-        // Subscribe to EOSE to complete the observable
-        var eoseSubscription = _client.Streams.EoseStream
-            .Where(eose => eose.Subscription == subscriptionId)
-            .Take(_client.Clients.Count)
-            .Subscribe(_ =>
-                {
-                    _logger.LogDebug("Received one of the 3 required EOSE events for subscription: {SubscriptionId}", subscriptionId);
-                },
-                () =>
-                {
-                    _logger.LogDebug("Received 3 EOSE events, completing subscription: {SubscriptionId}", subscriptionId);
-                    subject.OnCompleted();
-                });
-        
-        // Subscribe to notices for this subscription
-        var noticeSubscription = _client.Streams.NoticeStream.Subscribe(notice =>
-        {
-            _logger.LogWarning("Notice received for subscription {SubscriptionId}: {Message}", subscriptionId, notice.Message);
-        });
-
-        // Combine all subscriptions
-        var compositeSubscription = new CompositeDisposable(eventSubscription, eoseSubscription, noticeSubscription);
-        
-        // Store the subscription for cleanup
-        _activeSubscriptions[subscriptionId] = compositeSubscription;
-
-        // Return observable that cleans up on disposal
-        return subject.AsObservable().Finally(() =>
-        {
-            compositeSubscription.Dispose();
-            _activeSubscriptions.Remove(subscriptionId);
-            
-            // Send close request
-            if (_client != null && _isConnected)
-            {
-                _client.Send(new NostrCloseRequest(subscriptionId));
-                _logger.LogDebug("Closed subscription: {SubscriptionId}", subscriptionId);
-            }
-        });
+        _logger.LogError("Nostr client is not connected");
+        return Observable.Empty<NostrEventResponse>();
     }
+
+    if (_activeSubscriptions.TryGetValue(subscriptionId, out var existingSubscription))
+    {
+        _logger.LogWarning("Subscription {SubscriptionId} already exists, sending subscription request again", subscriptionId);
+        _client.Send(new NostrRequest(subscriptionId, filter));
+        return existingSubscription.subject.AsObservable() ?? Observable.Empty<NostrEventResponse>();
+    }
+
+    _logger.LogDebug("Creating subscription {SubscriptionId} for events", subscriptionId);
+
+    var eventObservable = _client.Streams.EventStream
+        .Where(response => response.Subscription == subscriptionId)
+        .Do(response => _logger.LogDebug("Received event {EventId} of kind {Kind} on subscription {SubscriptionId}",
+            response.Event?.Id, response.Event?.Kind, subscriptionId));
+
+    var subject = new Subject<NostrEventResponse>();
+
+    var eventSubscription = eventObservable.Subscribe(onNext: subject.OnNext, onError: subject.OnError);
+
+    var eoseSubscription = _client.Streams.EoseStream
+        .Where(eose => eose.Subscription == subscriptionId)
+        .Take(_client.Clients.Count)
+        .Subscribe(_ =>
+            {
+                _logger.LogDebug("Received one of the 3 required EOSE events for subscription: {SubscriptionId}", subscriptionId);
+            },
+            () =>
+            {
+                _logger.LogDebug("Received 3 EOSE events, completing subscription: {SubscriptionId}", subscriptionId);
+                subject.OnCompleted(); //TODO keep the subject open for future events
+            });
+
+    var noticeSubscription = _client.Streams.NoticeStream.Subscribe(notice =>
+    {
+        _logger.LogWarning("Notice received for subscription {SubscriptionId}: {Message}", subscriptionId, notice.Message);
+    });
+
+    var compositeSubscription = new CompositeDisposable(eventSubscription, eoseSubscription, noticeSubscription);
+
+    _activeSubscriptions[subscriptionId] = (subject, compositeSubscription);
+
+    _client.Send(new NostrRequest(subscriptionId, filter));
+
+    return subject.AsObservable().Finally(() =>
+    {
+        compositeSubscription.Dispose();
+        _activeSubscriptions.Remove(subscriptionId);
+
+        if (_client != null && _isConnected)
+        {
+            _client.Send(new NostrCloseRequest(subscriptionId));
+            _logger.LogDebug("Closed subscription: {SubscriptionId}", subscriptionId);
+        }
+    });
+}
 
     public void CloseSubscription(string subscriptionId)
     {
@@ -233,7 +230,8 @@ public class NostrClientWrapper : INostrClientWrapper, IDisposable
 
         if (_activeSubscriptions.TryGetValue(subscriptionId, out var subscription))
         {
-            subscription.Dispose();
+            subscription.subject.Dispose();
+            subscription.Item2.Dispose();
             _activeSubscriptions.Remove(subscriptionId);
             _logger.LogDebug("Disposed subscription: {SubscriptionId}", subscriptionId);
         }
@@ -250,7 +248,8 @@ public class NostrClientWrapper : INostrClientWrapper, IDisposable
                 // Close all active subscriptions
                 foreach (var subscription in _activeSubscriptions.Values)
                 {
-                    subscription.Dispose();
+                    subscription.subject.Dispose();
+                    subscription.Item2.Dispose();
                 }
                 _activeSubscriptions.Clear();
 
