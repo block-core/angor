@@ -19,7 +19,7 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
         try
         {
             // Get events of kind 3030 from Nostr relays
-            var eventResponses = await nostrService.GetEventsAsync([], [angorProjectInfoKind], null, eventIds);
+            var eventResponses = await nostrService.GetEventsAsync(nameof(ProcessProjectEvent), [], [angorProjectInfoKind], null, eventIds);
             
             var projects = new List<Project>();
             

@@ -16,7 +16,7 @@ public class UserEventService(AngorDbContext _context, INostrService _nostrServi
         try
         {
             // Get user events from Nostr relays
-            var userResponses = await _nostrService.GetEventsAsync([], new[] { NostrKind.Metadata }, pubkeys);
+            var userResponses = await _nostrService.GetEventsAsync(nameof(ProcessUserEvent), [], new[] { NostrKind.Metadata }, pubkeys);
 
             var users = new List<NostrUser>();
 
