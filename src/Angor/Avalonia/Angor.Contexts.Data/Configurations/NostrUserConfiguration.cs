@@ -23,6 +23,9 @@ public class NostrUserConfiguration : IEntityTypeConfiguration<NostrUser>
             
         builder.Property(e => e.Picture)
             .HasMaxLength(500);
+        
+        builder.Property(e => e.Banner)
+            .HasMaxLength(500);
             
         builder.Property(e => e.Website)
             .HasMaxLength(200);

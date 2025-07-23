@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Angor.Shared.csproj" />
     <ProjectReference Include="..\Angor.Contexts.CrossCutting\Angor.Contexts.CrossCutting.csproj" />
+    <ProjectReference Include="..\Angor.Contexts.Data\Angor.Contexts.Data.csproj" />
   </ItemGroup>
   
 </Project>

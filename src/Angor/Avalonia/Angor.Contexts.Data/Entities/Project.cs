@@ -11,7 +11,7 @@ public class Project
     
     public string ProjectReceiveAddress { get; set; } = string.Empty;
     
-    public decimal TargetAmount { get; set; }
+    public long TargetAmount { get; set; }
     
     public DateTime FundingStartDate { get; set; }
     
