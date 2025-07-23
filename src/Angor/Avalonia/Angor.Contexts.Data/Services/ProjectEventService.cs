@@ -8,18 +8,18 @@ using NostrEvent = Nostr.Client.Messages.NostrEvent;
 
 namespace Angor.Contexts.Data.Services;
 
-public class ProjectEventService(AngorDbContext _context, INostrService _nostrService, ILogger<ProjectEventService> _logger, ISerializer _serializer) : IProjectEventService
+public class ProjectEventService(AngorDbContext context, INostrService nostrService, ILogger<ProjectEventService> logger, ISerializer serializer) : IProjectEventService
 {
     private readonly NostrKind angorProjectInfoKind = (NostrKind)3030; // Assuming 3030 is the kind for Angor project info
 
     public async Task<List<Project>> PullAndSaveProjectEventsAsync(params string[] eventIds)
     {
-        _logger.LogInformation("Starting to pull project events with {EventCount} specific event IDs...", eventIds.Length);
+        logger.LogInformation("Starting to pull project events with {EventCount} specific event IDs...", eventIds.Length);
         
         try
         {
             // Get events of kind 3030 from Nostr relays
-            var eventResponses = await _nostrService.GetEventsByKindAsync(angorProjectInfoKind, eventIds);
+            var eventResponses = await nostrService.GetEventsAsync([], [angorProjectInfoKind], null, eventIds);
             
             var projects = new List<Project>();
             
@@ -44,27 +44,27 @@ public class ProjectEventService(AngorDbContext _context, INostrService _nostrSe
                 if (saved) savedCount++;
             }
             
-            _logger.LogInformation($"Successfully processed {projects.Count} project events, saved {savedCount} to database");
+            logger.LogInformation($"Successfully processed {projects.Count} project events, saved {savedCount} to database");
             return projects;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error pulling project events");
+            logger.LogError(ex, "Error pulling project events");
             throw;
         }
     }
-
+    
     private Project? ProcessProjectEvent(NostrEvent responseEvent)
     {
         try
         {
-            _logger.LogDebug("Processing project event data");
+            logger.LogDebug("Processing project event data");
 
             // Deserialize the event data
-            var projectInfo = _serializer.Deserialize<ProjectInfo>(responseEvent.Content);
+            var projectInfo = serializer.Deserialize<ProjectInfo>(responseEvent.Content);
             if (projectInfo == null || string.IsNullOrEmpty(projectInfo.ProjectIdentifier))
             {
-                _logger.LogWarning("Invalid or incomplete project event data");
+                logger.LogWarning("Invalid or incomplete project event data");
                 return null;
             }
 
@@ -103,37 +103,47 @@ public class ProjectEventService(AngorDbContext _context, INostrService _nostrSe
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing project event: {EventData}", _serializer.Serialize(responseEvent));
+            logger.LogError(ex, "Error processing project event: {EventData}", serializer.Serialize(responseEvent));
             return null;
         }
     }
-
+    
     public async Task<bool> SaveProjectAsync(Project project)
     {
         try
         {
-            // Check if project already exists
-            var existingProject = await _context.Projects
+            // Check if the project already exists
+            var existingProject = await context.Projects
+                .Include(p => p.Stages)
+                .Include(p => p.SecretHashes)
                 .FirstOrDefaultAsync(p => p.ProjectId == project.ProjectId);
 
             if (existingProject == null)
             {
-                _context.Projects.Add(project);
-                _logger.LogInformation("Adding new project: {ProjectId}", project.ProjectId);
+                // Add new project
+                context.Projects.Add(project);
+                logger.LogInformation("Adding new project: {ProjectId}", project.ProjectId);
             }
             else
             {
-                // Update existing project
-                _context.Entry(existingProject).CurrentValues.SetValues(project);
-                _logger.LogInformation("Updating existing project: {ProjectId}", project.ProjectId);
+                var newHashes = project.SecretHashes
+                    .Where(sh => existingProject.SecretHashes.All(eh => eh.SecretHash != sh.SecretHash))
+                    .ToList();
+                
+                 // Update related entities (SecretHashes)
+                 if (newHashes.Count > 0)
+                     await context.ProjectSecretHashes.AddRangeAsync();
+
+                logger.LogInformation("Updating existing project: {ProjectId}", project.ProjectId);
             }
 
-            var result = await _context.SaveChangesAsync();
+            // Save changes to the database
+            var result = await context.SaveChangesAsync();
             return result > 0;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error saving project: {ProjectId}", project.ProjectId);
+            logger.LogError(ex, "Error saving project: {ProjectId}", project.ProjectId);
             return false;
         }
     }
@@ -142,13 +152,13 @@ public class ProjectEventService(AngorDbContext _context, INostrService _nostrSe
     {
         try
         {
-            return await _context.Projects
+            return await context.Projects
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving projects");
+            logger.LogError(ex, "Error retrieving projects");
             return new List<Project>();
         }
     }

@@ -2,7 +2,6 @@ using System.Reactive.Disposables;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Client;
 using Nostr.Client.Communicator;
-using Nostr.Client.Messages;
 using Nostr.Client.Requests;
 using Nostr.Client.Responses;
 using System.Reactive.Linq;
@@ -158,7 +157,7 @@ public class NostrClientWrapper : INostrClientWrapper, IDisposable
         }
     }
 
-    public IObservable<NostrEventResponse> SubscribeToEvents(NostrKind kind, params string[] eventIds)
+    public IObservable<NostrEventResponse> SubscribeToEvents(NostrFilter filter)
     {
         if (_client == null || !_isConnected)
         {
@@ -166,19 +165,13 @@ public class NostrClientWrapper : INostrClientWrapper, IDisposable
             return Observable.Empty<NostrEventResponse>();
         }
 
-        var subscriptionId = $"sub-{kind}-{Guid.NewGuid():N}";
-        _logger.LogDebug("Creating subscription {SubscriptionId} for events of kind {Kind}", subscriptionId, kind);
+        var subscriptionId = $"{Guid.NewGuid():N}";
+        _logger.LogDebug("Creating subscription {SubscriptionId} for events", subscriptionId);
 
         var eventObservable = _client.Streams.EventStream
-            .Where(response => response?.Event?.Kind == kind)
-            .Do(response => _logger.LogDebug("Received event {EventId} of kind {Kind}", response.Event?.Id, kind));
-
-        // Create filter - cast NostrKind to int for the filter
-        var filter = new NostrFilter
-        {
-            Kinds = new[] { kind },
-            Ids = eventIds?.Length > 0 ? eventIds : null
-        };
+            .Where(response => response.Subscription == subscriptionId)
+            .Do(response => _logger.LogDebug("Received event {EventId} of kind {Kind} on subscription {SubscriptionId}", 
+                response.Event?.Id, response.Event?.Kind, subscriptionId));
 
         // Send subscription request
         _client.Send(new NostrRequest(subscriptionId, filter));
@@ -187,21 +180,22 @@ public class NostrClientWrapper : INostrClientWrapper, IDisposable
         var subject = new Subject<NostrEventResponse>();
         
         // Subscribe to events
-        var eventSubscription = eventObservable.Subscribe(
-            onNext: subject.OnNext,
-            onError: subject.OnError
-        );
+        var eventSubscription = eventObservable.Subscribe(onNext: subject.OnNext, onError: subject.OnError);
 
         // Subscribe to EOSE to complete the observable
         var eoseSubscription = _client.Streams.EoseStream
             .Where(eose => eose.Subscription == subscriptionId)
-            .Take(1)
+            .Take(_client.Clients.Count)
             .Subscribe(_ =>
-            {
-                _logger.LogDebug("End of stored events received for subscription: {SubscriptionId}", subscriptionId);
-                subject.OnCompleted();
-            });
-
+                {
+                    _logger.LogDebug("Received one of the 3 required EOSE events for subscription: {SubscriptionId}", subscriptionId);
+                },
+                () =>
+                {
+                    _logger.LogDebug("Received 3 EOSE events, completing subscription: {SubscriptionId}", subscriptionId);
+                    subject.OnCompleted();
+                });
+        
         // Subscribe to notices for this subscription
         var noticeSubscription = _client.Streams.NoticeStream.Subscribe(notice =>
         {
@@ -229,7 +223,7 @@ public class NostrClientWrapper : INostrClientWrapper, IDisposable
         });
     }
 
-    public async Task CloseSubscriptionAsync(string subscriptionId)
+    public void CloseSubscription(string subscriptionId)
     {
         if (_client != null && _isConnected)
         {

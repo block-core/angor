@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Nostr.Client.Messages;
 using Nostr.Client.Responses;
 using System.Reactive.Linq;
+using Nostr.Client.Requests;
 
 namespace Angor.Contexts.Data.Services;
 
@@ -10,20 +11,18 @@ public class NostrService : INostrService, IDisposable
     private readonly ILogger<NostrService> _logger;
     private readonly INostrClientWrapper _clientWrapper;
 
+    private const int TimeoutSeconds = 10;
+
     public NostrService(ILogger<NostrService> logger, INostrClientWrapper clientWrapper)
     {
         _logger = logger;
         _clientWrapper = clientWrapper;
     }
 
-    public async Task<List<NostrEventResponse>> GetEventsByKindAsync(NostrKind kind, params string[] eventIds)
+    public async Task<List<NostrEventResponse>> GetEventsAsync(string[] receiversPubkeys, NostrKind[] kinds, string[]? sendersPubkeys = null,
+        string[]? eventIds = null)
     {
-        return await GetEventsByKindAsync(kind, 10, eventIds);
-    }
-
-    public async Task<List<NostrEventResponse>> GetEventsByKindAsync(NostrKind kind, int timeoutSeconds = 10, params string[] eventIds)
-    {
-        _logger.LogInformation("Fetching events of kind {Kind} with timeout {Timeout}s", kind, timeoutSeconds);
+        _logger.LogInformation("Fetching events of kind {Kind} with timeout {Timeout}s", kinds, TimeoutSeconds);
 
         try
         {
@@ -34,27 +33,29 @@ public class NostrService : INostrService, IDisposable
             }
 
             // Get the observable stream of events
-            var eventObservable = _clientWrapper.SubscribeToEvents(kind, eventIds);
+            var eventObservable = _clientWrapper.SubscribeToEvents(new NostrFilter { Kinds = kinds, P = receiversPubkeys,
+                Authors = sendersPubkeys, Ids = eventIds });
 
             // Collect events with timeout
             var events = await eventObservable
-                .Timeout(TimeSpan.FromSeconds(timeoutSeconds))
+                .Timeout(TimeSpan.FromSeconds(TimeoutSeconds))
                 .Catch(Observable.Return<NostrEventResponse>(null)) // Handle timeout gracefully
                 .Where(e => e != null) // Filter out null events from timeout
                 .ToList(); // Collect all events into a list
 
-            _logger.LogInformation("Retrieved {Count} events of kind {Kind} from {RelayCount} relays", 
-                events.Count, kind, _clientWrapper.ConnectedRelaysCount);
+            _logger.LogInformation("Retrieved {Count} events of kinds {Kind} from {RelayCount} relays", 
+                events.Count, kinds, _clientWrapper.ConnectedRelaysCount);
                 
             return events.ToList();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching events of kind {Kind}", kind);
-            return new List<NostrEventResponse>();
+            _logger.LogError(ex, "Error fetching events of kind {Kind}", kinds);
+            return [];
         }
     }
-
+    
+    
     public async Task ConnectToRelaysAsync()
     {
         _logger.LogInformation("Connecting to relays...");
