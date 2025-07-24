@@ -528,6 +528,8 @@
                             scannedInvestments.ProjectIdentifiers.Any(x => x.ProjectIdentifier == investment.ProjectIdentifier))
                             continue;
 
+                        _Logger.LogInformation($"Found scanned project {investment.ProjectIdentifier}");
+
                         scannedInvestments.ProjectIdentifiers.Add(investment);
                         foundNewProjects = true;
                     }
@@ -581,17 +583,25 @@
 
     private async Task GetInvestmentProjectDataAsync(InvestmentState investmentState)
     {
+        _Logger.LogInformation($"Scanning for project {investmentState.ProjectIdentifier}");
+
         var projectIndexerData = await _IndexerService.GetProjectByIdAsync(investmentState.ProjectIdentifier);
 
         if (projectIndexerData == null)
+        {
+            _Logger.LogWarning($"Scanned project {investmentState.ProjectIdentifier} was not found in the indexer");
             return;
+        }
 
         var words = await passwordComponent.GetWalletAsync();
 
         var investment = await _IndexerService.GetInvestmentAsync(investmentState.ProjectIdentifier, investmentState.InvestorPubKey);
 
         if (investment == null)
+        {
+            _Logger.LogWarning($"Scanned project {investmentState.ProjectIdentifier} investment data was not found in the indexer");
             return;
+        }
 
         var investorNostrPrivateKey = _DerivationOperations.DeriveProjectNostrPrivateKey(words, projectIndexerData.FounderKey);
 
@@ -609,6 +619,9 @@
             x =>
             {
                 investorProject.ProjectInfo ??= x;
+
+                _Logger.LogInformation($"Scanning for project {x.ProjectIdentifier} found in relays");
+
             },
             () =>
             {
@@ -621,6 +634,8 @@
                     (_, metadata) => { investorProject.Metadata ??= metadata; },
                     () =>
                     {
+                        _Logger.LogInformation($"Scanning for project {investorProject.ProjectInfo.ProjectIdentifier} found profile");
+
                         _SignService.LookupInvestmentRequestsAsync(investorProject.ProjectInfo.NostrPubKey, investorProject.InvestorNPub, null,
                             (id, publisherPubKey, content, eventTime) =>
                             {
@@ -628,6 +643,8 @@
                                 {
                                     createdAt = eventTime;
                                     eventId = id;
+
+                                    _Logger.LogInformation($"Scanning for project {investorProject.ProjectInfo.ProjectIdentifier} found investment request");
                                 }
                             }, () =>
                             {
@@ -648,6 +665,8 @@
                                             res.SignatureRequestEventId = eventId;
                                             res.TimeOfSignatureRequest = createdAt;
                                             investorProject.SignaturesInfo = res;
+
+                                            _Logger.LogInformation($"Scanning for project {investorProject.ProjectInfo.ProjectIdentifier} found investment signatures");
                                         }
 
                                         if (projects.All(x => x.ProjectInfo.ProjectIdentifier != investorProject.ProjectInfo.ProjectIdentifier))
@@ -673,10 +692,15 @@
 
     private async Task ScanInvestmentSpends(InvestorProject investorProject)
     {
+        _Logger.LogInformation($"Scanning for project {investorProject.ProjectInfo.ProjectIdentifier} scan investment spends");
+
         var trxInfo = await _IndexerService.GetTransactionInfoByIdAsync(investorProject.TransactionId);
 
         if (trxInfo == null)
+        {
+            _Logger.LogWarning($"Scanned project {investorProject.ProjectInfo.ProjectIdentifier} transaction was not found in the indexer");
             return;
+        }
 
         var trxHex = await _IndexerService.GetTransactionHexByIdAsync(investorProject.TransactionId);
         Blockcore.Consensus.TransactionInfo.Transaction investmentTransaction = network.CreateTransaction(trxHex);
