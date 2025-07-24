@@ -1,8 +1,9 @@
 using Angor.Contexts.Data.Entities;
+using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Data.Services;
 
 public interface IUserEventService
 {
-    public Task<List<NostrUser>> PullAndSaveUserEventsAsync(params string[] pubkeys);
+    public Task<Result> PullAndSaveUserEventsAsync(params string[] pubkeys);
 }
