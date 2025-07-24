@@ -1,6 +1,7 @@
 using Angor.Contexts.Data.Entities;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
+using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Messages;
@@ -12,7 +13,7 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
 {
     private readonly NostrKind angorProjectInfoKind = (NostrKind)3030; // Assuming 3030 is the kind for Angor project info
 
-    public async Task<List<Project>> PullAndSaveProjectEventsAsync(params string[] eventIds)
+    public async Task<Result> PullAndSaveProjectEventsAsync(params string[] eventIds)
     {
         logger.LogInformation("Starting to pull project events with {EventCount} specific event IDs...", eventIds.Length);
         
@@ -21,7 +22,7 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
             if (eventIds == null || eventIds.Length == 0)
             {
                 logger.LogWarning("No event IDs provided");
-                return new List<Project>();
+                return Result.Success();
             }
 
             // Step 1: Check which projects already exist in the database
@@ -41,13 +42,7 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
                 logger.LogInformation("All requested projects already exist in database");
             
                 // Return existing projects
-                return await context.Projects
-                    .Where(p => eventIds.Contains(p.ProjectInfoEventId))
-                    .Include(p => p.NostrUser)
-                    .Include(p => p.NostrEvent)
-                    .Include(p => p.Stages)
-                    .Include(p => p.SecretHashes)
-                    .ToListAsync();
+                return Result.Success();
             }
 
             
@@ -55,51 +50,23 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
             var eventResponses = await nostrService.GetEventsAsync(nameof(ProcessProjectEvent),
                 [angorProjectInfoKind], null, null, missingEventIds);
             
-            var projects = new List<Project>();
+            var projects = eventResponses
+                .Where(x => x.Event?.Content != null)
+                .Select(x => ProcessProjectEvent(x.Event!))
+                .Where(x => x != null)
+                .ToArray();
             
-            // Process each event
-            foreach (var eventResponse in eventResponses)
-            {
-                if (eventResponse?.Event?.Content == null) 
-                    continue;
-                
-                var project = ProcessProjectEvent(eventResponse.Event);
-                if (project != null)
-                {
-                    projects.Add(project);
-                }
-            }
-
             // Save projects to database
-            var savedCount = 0;
-            foreach (var project in projects)
-            {
-                var saved = await SaveProjectAsync(project);
-                if (saved) savedCount++;
-            }
+            var savedCount = await SaveProjectsAsync(projects!);
             
-            logger.LogInformation($"Successfully processed {projects.Count} project events, saved {savedCount} to database");
-            
-            // Step 5: Return all projects (existing + newly saved) with full includes
-            var allProjects = await context.Projects
-                .Where(p => eventIds.Contains(p.ProjectInfoEventId))
-                .Include(p => p.NostrUser)
-                .Include(p => p.NostrEvent)
-                .Include(p => p.Stages)
-                .Include(p => p.SecretHashes)
-                .OrderBy(p => p.CreatedAt)
-                .ToListAsync();
-
-            logger.LogInformation("Returning {TotalCount} total projects ({ExistingCount} existing + {NewCount} new)", 
-                allProjects.Count, existingProjectIds.Count, eventResponses.Count);
-
-            return allProjects;
+            logger.LogInformation($"Successfully processed {projects.Length} project events, saved {savedCount} to database");
+            return Result.Success();
 
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error pulling project events");
-            throw;
+            return Result.Failure(ex.Message);
         }
     }
     
@@ -166,49 +133,56 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
             return null;
         }
     }
-    
-    public async Task<bool> SaveProjectAsync(Project project)
+    public async Task<int> SaveProjectsAsync(params Project[] projects)
     {
+        if (projects == null || projects.Length == 0)
+            return 0;
+
         try
         {
-            if (project == null)
-            {
-                logger.LogError("Cannot save null project");
-                return false;
-            }
-            // Check if the project already exists
-            var existingProject = await context.Projects
-                .Include(p => p.Stages)
-                .Include(p => p.SecretHashes)
-                .FirstOrDefaultAsync(p => p.ProjectId == project.ProjectId);
+            // Get existing projects to determine updates vs inserts
+            var projectIds = projects.Select(p => p.ProjectId).ToArray();
+            var existingProjects = await context.Projects
+                .Where(p => projectIds.Contains(p.ProjectId))
+                .ToDictionaryAsync(p => p.ProjectId);
 
-            if (existingProject == null)
-            {
-                // Add new project
-                context.Projects.Add(project);
-                logger.LogInformation("Adding new project: {ProjectId}", project.ProjectId);
-            }
-            else
-            {
-                var newHashes = project.SecretHashes
-                    .Where(sh => existingProject.SecretHashes.All(eh => eh.SecretHash != sh.SecretHash))
-                    .ToList();
-                
-                 // Update related entities (SecretHashes)
-                 if (newHashes.Count > 0)
-                     await context.ProjectSecretHashes.AddRangeAsync(newHashes);
+            var projectsToAdd = new List<Project>();
+            var projectsToUpdate = new List<Project>();
 
-                logger.LogInformation("Updating existing project: {ProjectId}", project.ProjectId);
+            // Use LINQ for transformation, foreach for processing
+            foreach (var project in projects)
+            {
+                if (existingProjects.TryGetValue(project.ProjectId, out var existingProject))
+                {
+                    // Update existing project
+                    // UpdateProjectProperties(existingProject, project);
+                    // projectsToUpdate.Add(existingProject);
+                    //TODO for now we only add new projects but need to check which properties can actually be updated
+                }
+                else
+                {
+                    // Add new project
+                    projectsToAdd.Add(project);
+                }
             }
 
-            // Save changes to the database
-            var result = await context.SaveChangesAsync();
-            return result > 0;
+            // Batch database operations
+            if (projectsToAdd.Count > 0)
+            {
+                await context.Projects.AddRangeAsync(projectsToAdd);
+            }
+
+            await context.SaveChangesAsync();
+        
+            logger.LogInformation("Saved {AddCount} new projects, updated {UpdateCount} existing projects", 
+                projectsToAdd.Count, projectsToUpdate.Count);
+
+            return projectsToAdd.Count + projectsToUpdate.Count;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error saving project: {ProjectId}", project.ProjectId);
-            return false;
+            logger.LogError(ex, "Error saving {ProjectCount} projects", projects.Length);
+            throw;
         }
     }
 
