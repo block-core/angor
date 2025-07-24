@@ -1081,8 +1081,6 @@ else
     private readonly AccountBalanceInfo accountBalanceInfo = new();
 
     private readonly FeeEstimations FeeEstimations = new();
-    
-    private bool debugMode; 
 
     // Max index for the range input
     private readonly int FeeMin = 1;
@@ -1250,7 +1248,6 @@ else
             btcBalanceInUsd = await GetBtcValueInPreferredCurrency(accountBalanceInfo.TotalBalance);
             await PrecomputeFiatValues();
         }
-        debugMode = storage.GetDebugMode();
         await base.OnInitializedAsync();
     }
 
