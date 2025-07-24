@@ -31,17 +31,22 @@ public static class GetFounderProjects
                     .Select(id => indexerService.GetProjectByIdAsync(id.Item1.Value)
                         .ToObservable()
                         .Where(result => result != null)
-                        .Select(result => (npub:id.Item2, result!.NostrEventId)))
+                        .Select(result => (npub:id.Item2, result!.NostrEventId,ProjectId:id.Item1.Value)))
                     .Merge()
                     .ToList()
                     .ToTask(cancellationToken)))
                 .Bind(async projects =>
                 {
                     await userEventService.PullAndSaveUserEventsAsync(projects.Select(p => p.npub).ToArray());
-                    return Result.Success(projects.Select(p => p.NostrEventId));
+                    return Result.Success(projects.Select(p => (p.NostrEventId,p.ProjectId)).ToList());
                 })
-                .Bind(ids => Result.Try(() => 
-                    projectEventService.PullAndSaveProjectEventsAsync(ids.ToArray())))
+                .Bind(async ids =>
+                {
+                    await projectEventService.PullAndSaveProjectEventsAsync(
+                        ids.Select(id => id.NostrEventId).ToArray());
+                    return Result.Success(ids.Select(id => id.ProjectId).ToArray());
+                })
+                .Bind(ids => Result.Try(() => projectEventService.GetProjectsByIdsAsync(ids)))
                 .Map(projects => projects.Select(project =>  new ProjectDto()
                 {
                     Id = new ProjectId(project.ProjectId),
