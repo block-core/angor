@@ -133,15 +133,17 @@ public class UserEventService(AngorDbContext context, INostrService nostrService
             }
 
             // Batch operations
+            if (usersToUpdate.Any())
+            {
+                context.NostrUsers.UpdateRange(usersToUpdate);
+            }
+            
             if (usersToAdd.Any())
             {
                 await context.NostrUsers.AddRangeAsync(usersToAdd);
             }
 
-            if (usersToUpdate.Any())
-            {
-                context.NostrUsers.UpdateRange(usersToUpdate);
-            }
+
 
             // Single SaveChanges call for all operations
             await context.SaveChangesAsync();

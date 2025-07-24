@@ -7,26 +7,23 @@ namespace Angor.Contexts.Data.Services;
 public class ProjectKeyService(AngorDbContext context) : IProjectKeyService
 {
     
-    public async Task<Result<IEnumerable<(string, string)>>> GetCachedProjectKeys(Guid walletId)
+    public async Task<Result<IEnumerable<ProjectKey>>> GetCachedProjectKeys(Guid walletId)
     {
         try
         {
             var projectKeys = await context.ProjectKeys
                 .Where(pk => pk.WalletId == walletId)
-                .Select(pk => new { pk.ProjectId, pk.NostrPubKey })
                 .ToListAsync();
 
-            var result = projectKeys.Select(pk => (pk.ProjectId, pk.NostrPubKey));
-        
-            return Result.Success(result);
+            return Result.Success(projectKeys.AsEnumerable());
         }
         catch (Exception ex)
         {
-            return Result.Failure<IEnumerable<(string, string)>>($"Failed to retrieve cached project keys: {ex.Message}");
+            return Result.Failure<IEnumerable<ProjectKey>>($"Failed to retrieve cached project keys: {ex.Message}");
         }
     }
 
-    public async Task<Result> SaveProjectKeys(Guid walletId, IEnumerable<(string, string)> projectKeys)
+    public async Task<Result> SaveProjectKeys(Guid walletId, IEnumerable<ProjectKey> projectKeys)
     {
         try
         {
@@ -37,38 +34,22 @@ public class ProjectKeyService(AngorDbContext context) : IProjectKeyService
                 .Where(pk => pk.WalletId == walletId)
                 .ToListAsync();
 
-            var projectKeysList = projectKeys.ToList();
-            var keysToAdd = new List<ProjectKey>();
-        
-            foreach (var (projectId, nostrPubKey) in projectKeysList)
-            {
-                var existingKey = existingKeys.FirstOrDefault(ek => ek.ProjectId == projectId);
+            //var projectKeysList = projectKeys.ToList();
+            var keysToAdd = projectKeys.Where(pk => existingKeys.All(ek => ek.ProjectId != pk.ProjectId))
+                .Select(existingKey => new ProjectKey
+                {
+                    FounderKey = existingKey.FounderKey,
+                    FounderRecoveryKey = existingKey.FounderRecoveryKey,
+                    Index = existingKey.Index,
+                    WalletId = walletId,
+                    ProjectId = existingKey.ProjectId,
+                    NostrPubKey = existingKey.NostrPubKey,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                }).ToList();
             
-                if (existingKey == null)
-                {
-                    // Add new key
-                    keysToAdd.Add(new ProjectKey
-                    {
-                        Id = Guid.NewGuid(),
-                        WalletId = walletId,
-                        ProjectId = projectId,
-                        NostrPubKey = nostrPubKey,
-                        CreatedAt = now,
-                        UpdatedAt = now
-                    });
-                }
-                else if (existingKey.NostrPubKey != nostrPubKey)
-                {
-                    // Update existing key if NostrPubKey has changed
-                    existingKey.NostrPubKey = nostrPubKey;
-                    existingKey.UpdatedAt = now;
-                }
-            }
-        
-            if (keysToAdd.Any())
-            {
+            if (keysToAdd.Count != 0)
                 await context.ProjectKeys.AddRangeAsync(keysToAdd);
-            }
         
             await context.SaveChangesAsync();
         
@@ -80,18 +61,18 @@ public class ProjectKeyService(AngorDbContext context) : IProjectKeyService
         }
     }
 
-    public async Task<Result<bool>> HasCachedProjectKeys(Guid walletId)
+    public async Task<Result<int>> HasProjectsKeys(Guid walletId)
     {
         try
         {
             var hasKeys = await context.ProjectKeys
-                .AnyAsync(pk => pk.WalletId == walletId);
+                .CountAsync(pk => pk.WalletId == walletId);
             
             return Result.Success(hasKeys);
         }
         catch (Exception ex)
         {
-            return Result.Failure<bool>($"Failed to check for cached project keys: {ex.Message}");
+            return Result.Failure<int>($"Failed to check for cached project keys: {ex.Message}");
         }
     }
 }
