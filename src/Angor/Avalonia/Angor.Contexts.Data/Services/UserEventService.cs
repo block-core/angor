@@ -1,5 +1,6 @@
 using Angor.Contexts.Data.Entities;
 using Angor.Shared.Services;
+using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Messages;
@@ -10,7 +11,7 @@ namespace Angor.Contexts.Data.Services;
 
 public class UserEventService(AngorDbContext context, INostrService nostrService, ILogger<ProjectEventService> logger, ISerializer serializer) : IUserEventService
 {
-    public async Task<List<NostrUser>> PullAndSaveUserEventsAsync(params string[] pubkeys)
+    public async Task<Result> PullAndSaveUserEventsAsync(params string[] pubkeys)
     {
         logger.LogInformation("Starting to pull user events with {PubKeyCount} specific public keys...", pubkeys.Length);
 
@@ -31,48 +32,28 @@ public class UserEventService(AngorDbContext context, INostrService nostrService
             if (missingEventIds.Length == 0)
             {
                 logger.LogInformation("All requested projects already exist in database");
-            
                 // Return existing projects
-                return await context.NostrUsers
-                    .Where(p => pubkeys.Contains(p.PubKey))
-                    .ToListAsync();
+                return Result.Success();
             }
             
             // Get user events from Nostr relays
-            var userResponses = await nostrService.GetEventsAsync(nameof(ProcessUserEvent), new[] { NostrKind.Metadata }, null, pubkeys);
+            var userResponses = await nostrService.GetEventsAsync(
+                nameof(ProcessUserEvent), [NostrKind.Metadata], null, pubkeys);
 
-            var users = new List<NostrUser>();
-
-            // Process each user event
-            foreach (var userResponse in userResponses)
-            {
-                if (userResponse?.Event?.Content == null)
-                    continue;
-
-                var user = ProcessUserEvent(userResponse.Event);
-                if (user != null)
-                {
-                    users.Add(user);
-                }
-            }
-
-            // Save users to database
-            var savedCount = 0;
-            foreach (var user in users)
-            {
-                var saved = await SaveUserAsync(user);
-                if (saved) savedCount++;
-            }
-
-            logger.LogInformation($"Successfully processed {users.Count} user events, saved {savedCount} to database");
-            return await context.NostrUsers
-                .Where(p => pubkeys.Contains(p.PubKey))
-                .ToListAsync();
+            var users =  userResponses.Where(x => x.Event?.Content != null)
+                .Select(x => ProcessUserEvent(x.Event!))
+                .Where(x => x != null)
+                .ToArray();
+            
+            var savedCount = await SaveUsersAsync(users!);
+            
+            logger.LogInformation($"Successfully processed {users.Length} user events, saved {savedCount} to database");
+            return Result.Success();
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error pulling user events");
-            throw;
+            return Result.Failure(ex.Message);;
         }
     }
     
@@ -112,6 +93,68 @@ public class UserEventService(AngorDbContext context, INostrService nostrService
             return null;
         }
     }
+    
+    private async Task<int> SaveUsersAsync(params NostrUser[]? users)
+    {
+        if (users == null || users.Length == 0)
+            return 0;
+
+        try
+        {
+            // Get all existing users in one query
+            var pubKeys = users.Select(u => u.PubKey).ToArray();
+            var existingUsers = await context.NostrUsers
+                .Where(u => pubKeys.Contains(u.PubKey))
+                .ToDictionaryAsync(u => u.PubKey);
+
+            var usersToAdd = new List<NostrUser>();
+            var usersToUpdate = new List<NostrUser>();
+
+            // Categorize users for batch operations
+            foreach (var user in users)
+            {
+                if (existingUsers.TryGetValue(user.PubKey, out var existingUser))
+                {
+                    // Update existing user properties
+                    existingUser.About = user.About;
+                    existingUser.DisplayName = user.DisplayName;
+                    existingUser.Picture = user.Picture;
+                    existingUser.Nip05 = user.Nip05;
+                    existingUser.Website = user.Website;
+                    existingUser.IsVerified = user.IsVerified;
+                    existingUser.UpdatedAt = DateTime.UtcNow;
+                
+                    usersToUpdate.Add(existingUser);
+                }
+                else
+                {
+                    usersToAdd.Add(user);
+                }
+            }
+
+            // Batch operations
+            if (usersToAdd.Any())
+            {
+                await context.NostrUsers.AddRangeAsync(usersToAdd);
+            }
+
+            if (usersToUpdate.Any())
+            {
+                context.NostrUsers.UpdateRange(usersToUpdate);
+            }
+
+            // Single SaveChanges call for all operations
+            await context.SaveChangesAsync();
+        
+            return usersToAdd.Count + usersToUpdate.Count;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error batch saving {UserCount} users", users.Length);
+            throw;
+        }
+    }
+
     
     private async Task<bool> SaveUserAsync(NostrUser user)
     {
