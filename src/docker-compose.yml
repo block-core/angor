@@ -1,0 +1,381 @@
+version: "2.4"
+
+volumes:
+  database:
+    name: btc-db
+  blockchain:
+    name: btc-data-new
+  database1:
+    name: angor-db
+  memmpool_api:
+    name: btc-api
+  memmpool_indexer:
+    name: btc-m-db
+  mempool_blockchain:
+    name: mempool-blockchain
+  electrs_data:
+    name: electrs-data
+  conf:
+  vhost:
+  html:
+  dhparam:
+  certs:
+
+services:
+  # indexer:
+  #   container_name: tbtc-indexer
+  #   image: blockcore/indexer-angor:0.2.78
+  #   mem_limit: 2048m
+  #   cpus: 0.200
+  #   environment:
+  #     VIRTUAL_HOST: indexer.thedude.cloud
+  #     VIRTUAL_PORT: 9910
+  #     VIRTUAL_PROTO: http
+  #     VIRTUAL_NETWORK: proxy
+  #     LETSENCRYPT_HOST: indexer.thedude.cloud
+  #     LETSENCRYPT_EMAIL: admin@blockcore.net
+  #     ASPNETCORE_URLS: http://+:9910
+  #   command: ["--chain=TBTC","--Network:RPCPort=38332"] # override rpcport in signet its 38332
+  #   restart: unless-stopped
+  #   depends_on:
+  #     mongo:
+  #       condition: service_started
+  #     chain:
+  #       condition: service_started
+  #   networks:
+  #     - btcnetwork
+  #     - proxy
+
+  # chain:
+  #   container_name: tbtc-chain
+  #   build: .
+  #   mem_limit: 2048m
+  #   cpus: 2.0
+  #   healthcheck:
+  #     test: ["CMD", "bitcoin-cli", "-rpcuser=rpcuser", "-rpcpassword=rpcpassword", "-rpcport=38332", "getblockchaininfo"]
+  #     interval: 30s
+  #     retries: 10
+  #     start_period: 30s
+  #     timeout: 20s
+  #   restart: unless-stopped
+  #   stop_grace_period: 15m
+  #   volumes:
+  #     - blockchain:/root/.bitcoin
+  #   environment:
+  #     UACOMMENT: $UACOMMENT
+  #     BLOCKPRODUCTIONDELAY: ${BLOCKPRODUCTIONDELAY:-30}
+  #     MINERENABLED: ${MINERENABLED:-0} # change this to 1 if this node needs to mine (however for simplicity there should only be one mining node per challenge)
+  #     NBITS: $NBITS
+  #     MINETO: ${MINETO:-tb1qk4pq0rh75qtph47wlufhyss43flhvhvwe4zt8a}
+  #     PRIVKEY: ${PRIVKEY:-cRz3Ci2aUNmdP4pViSM8LafwKHZmvn4X6gjeCXzVkBYBLhzA3uFC} # private key path is m/84'/1'/0'/0/0 of test wallet mnemonic "margin radio diamond leg loud street announce guitar video shiver speed eyebrow"
+  #     #SIGNETCHALLENGE: ${SIGNETCHALLENGE:-512102b57c4413a0354bcc360a37e035f26670deda14bab613c28fbd30fe52b2deccc151ae}
+  #     SIGNETCHALLENGE: ${SIGNETCHALLENGE:-512102a3f8184701a033e5f8faa295647374b0bbc868082240d6e7ad8e9ecb0d86e6d451ae}
+  #     EXTERNAL_IP: $EXTERNAL_IP
+  #     RPCUSER: ${RPCUSER:-rpcuser}
+  #     RPCPASSWORD: ${RPCPASSWORD:-rpcpassword}
+  #     ADDNODE: ${ADDNODE:-207.180.254.78}
+  #     PRINTTOCONSOLE: "1"
+  #     DEBUG: "1"
+  #     LOGLEVEL: "debug"         # Can be: debug, info, warning, error
+  #   ports:
+  #     - 18333:18333 # Make this a public node.
+  #     - 8333:8333 # Make this a public node.
+  #     - 38333:38333 # Make this a public node.
+  #     - 38332:38332
+  #   networks:
+  #     - btcnetwork
+
+  # mongo:
+  #   container_name: tbtc-mongo
+  #   image: mongo:5.0.12
+  #   mem_limit: 2048m
+  #   cpus: 0.200
+  #   healthcheck:
+  #     test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/test --quiet
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 40s
+  #   restart: unless-stopped
+  #   stop_grace_period: 5m
+  #   volumes:
+  #     - database:/data/db
+  #     - database:/data/configdb
+  #   networks:
+  #     - btcnetwork
+      
+#  explorer:
+#    container_name: explorer
+#    image: blockcore/explorer:0.2.28
+#    mem_limit: 256m
+#    cpus: 0.200
+#    environment:
+#      VIRTUAL_HOST: explorer1.thedude.cloud
+#      VIRTUAL_PORT: 9911
+#      VIRTUAL_NETWORK: proxy
+#      VIRTUAL_PROTO: http
+#      LETSENCRYPT_HOST: explorer1.thedude.cloud
+#      LETSENCRYPT_EMAIL: admin@blockcore.net
+#      ASPNETCORE_URLS: http://+:9910
+#    command: ["--chain=TBTC"]
+#    restart: unless-stopped
+#    #ports:
+#    #  - 9911:9911 # Make this a public node.
+#    networks:
+#      - proxy
+#      - btcnetwork
+
+  blockcore-angor:
+    container_name: angor
+    build:
+      context: .
+      dockerfile: Dockerfile
+    mem_limit: 1024m
+    cpus: 0.200
+    restart: unless-stopped
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5500/ || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    ports:
+      - "5500:5500"
+      #- "5005:5005"
+    networks:
+      - angor
+
+  # strfry-relay:
+  #   container_name: strfry-relay
+  #   image: dockurr/strfry:latest
+  #   environment:
+  #     VIRTUAL_HOST: relay.thedude.cloud
+  #     VIRTUAL_PORT: 7777
+  #     VIRTUAL_PROTO: http
+  #     VIRTUAL_NETWORK: proxy
+  #     LETSENCRYPT_HOST: relay.thedude.cloud
+  #     LETSENCRYPT_EMAIL: admin@blockcore.net
+  #   #ports:
+  #   #  - 7777:7777
+  #   volumes:
+  #     - ./strfry/:/app/strfry-db
+  #     - ./strfry/strfry.conf:/etc/strfry.conf
+  #   networks:
+  #     - proxy
+
+  # web:
+  #   image: getumbrel/umbrel-nostr-relay
+  #   user: "1000:1000"
+  #   container_name: public-relay-web
+  #   restart: on-failure
+  #   environment:
+  #     RELAY_HOST: "strfry-relay"
+  #     RELAY_PORT: "7777"
+  #   ports:
+  #     - 3000:3000 # to access the web view use relay.angor.io:3000
+  #   networks:
+  #     - proxy
+
+  # strfry-relay-2:
+  #   container_name: strfry-relay-2
+  #   image: dockurr/strfry:latest
+  #   environment:
+  #     VIRTUAL_HOST: relay2.thedude.cloud
+  #     VIRTUAL_PORT: 7778
+  #     VIRTUAL_PROTO: http
+  #     VIRTUAL_NETWORK: proxy
+  #     LETSENCRYPT_HOST: relay2.thedude.cloud
+  #     LETSENCRYPT_EMAIL: admin@blockcore.net
+  #   #ports:
+  #   #  - 7777:7777
+  #   volumes:
+  #     - ./strfry2/:/app/strfry-db
+  #     - ./strfry2/strfry.conf:/etc/strfry.conf
+  #   networks:
+  #     - proxy
+
+  # web2:
+  #   image: getumbrel/umbrel-nostr-relay
+  #   user: "1000:1000"
+  #   container_name: public-relay-web-2
+  #   restart: on-failure
+  #   environment:
+  #     RELAY_HOST: "strfry-relay-2"
+  #     RELAY_PORT: "7778"
+  #   ports:
+  #     - 3001:3001 # to access the web view use relay.angor.io:3000
+  #   networks:
+  #     - proxy
+
+  # mempool-api:
+  #     container_name: mempool-api-main
+  #     image: blockcore/mempool-backend:latest
+  #     environment:
+  #       MEMPOOL_BACKEND: "esplora"
+  #       ESPLORA_REST_API_URL: "http://melectrs:3003"
+  #       ESPLORA_REQUEST_TIMEOUT: "50000"
+  #       ELECTRUM_HOST: "electrs"
+  #       ELECTRUM_PORT: "5001"
+  #       ELECTRUM_TLS_ENABLED: "false"
+  #       CORE_RPC_HOST: "chain"
+  #       CORE_RPC_PORT: "38332"
+  #       CORE_RPC_USERNAME: "rpcuser"
+  #       CORE_RPC_PASSWORD: "rpcpassword"
+  #       DATABASE_ENABLED: "true"
+  #       DATABASE_HOST: "mempool-db"
+  #       DATABASE_DATABASE: "mempool"
+  #       DATABASE_USERNAME: "mempool"
+  #       DATABASE_PASSWORD: "mempool"
+  #       STATISTICS_ENABLED: "true"
+  #       MEMPOOL_STDOUT_LOG_MIN_PRIORITY: "debug"
+  #       MEMPOOL_INDEXING_BLOCKS_AMOUNT: -1
+  #       ANGOR_ENABLED: "true"
+  #       VIRTUAL_HOST: mempool.thedude.cloud
+  #       VIRTUAL_PORT: 8999
+  #       VIRTUAL_PROTO: http
+  #       VIRTUAL_NETWORK: proxy
+  #       LETSENCRYPT_HOST: mempool.thedude.cloud
+  #       LETSENCRYPT_EMAIL: admin@blockcore.net
+  #       ASPNETCORE_URLS: http://+:8999
+  #     restart: unless-stopped
+  #     stop_grace_period: 1m
+  #     command: "./wait-for-it.sh mempool-db:3306 --timeout=720 --strict -- ./start.sh"
+  #     ports:
+  #       - 8999:8999
+  #     volumes:
+  #       - memmpool_api:/backend/cache
+  #     networks:
+  #       - btcnetwork
+  #       - proxy
+
+  # mempool-db:
+  #   container_name: mempool-db-main
+  #   environment:
+  #     MYSQL_DATABASE: "mempool"
+  #     MYSQL_USER: "mempool"
+  #     MYSQL_PASSWORD: "mempool"
+  #     MYSQL_ROOT_PASSWORD: "admin"
+  #   image: mariadb:10.5.21
+  #   restart: unless-stopped
+  #   stop_grace_period: 1m
+  #   volumes:
+  #     - memmpool_indexer:/var/lib/mysql
+  #   networks:
+  #     - btcnetwork
+
+  # mempool-web:
+  #   container_name: "mempool-web-main"
+  #   environment:
+  #     MAINNET_ENABLED: "false"
+  #     ROOT_NETWORK: "signet"
+  #     FRONTEND_HTTP_PORT: "8080"
+  #     BACKEND_MAINNET_HTTP_HOST: "mempool-api"
+  #     LIGHTNING: "false"
+  #     ANGOR_ENABLED: "true"
+  #     VIRTUAL_HOST: explorer.thedude.cloud
+  #     VIRTUAL_PORT: 8080
+  #     VIRTUAL_PROTO: http
+  #     VIRTUAL_NETWORK: proxy
+  #     LETSENCRYPT_HOST: explorer.thedude.cloud
+  #     LETSENCRYPT_EMAIL: admin@blockcore.net
+  #     ASPNETCORE_URLS: http://+:8080
+  #   image: blockcore/mempool-frontend:latest
+  #   user: "0:1000"
+  #   restart: always
+  #   stop_grace_period: 1m
+  #   command: "./wait-for mempool-db:3306 --timeout=720 -- nginx -g 'daemon off;'"
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - btcnetwork
+  #     - proxy
+
+  # melectrs:
+  #   container_name: melectrs
+  #   image: eugenenostrdev/electrs-app:amd64-1.1
+  #   ports:
+  #     - 5001:5001
+  #     - 3003:3003
+  #   depends_on:
+  #     chain:
+  #       condition: service_started
+  #   entrypoint:
+  #     /bin/electrs
+  #   command: |
+  #     --network signet
+  #     --jsonrpc-import
+  #     --daemon-rpc-addr tbtc-chain:38332
+  #     --cookie "rpcuser:rpcpassword"
+  #     --db-dir /electrs
+  #     --http-addr 0.0.0.0:3003
+  #     --electrum-rpc-addr 0.0.0.0:5001
+  #     -vvvv
+  #   volumes:
+  #     - electrs_data:/electrs
+  #   networks:
+  #     - btcnetwork
+
+  # hub:
+  #   container_name: angor-hub
+  #   image: blockcore/angor-hub:latest
+  #   mem_limit: 1024m
+  #   cpus: 0.200
+  #   environment:
+  #     VIRTUAL_HOST: hub.thedude.cloud
+  #     VIRTUAL_PORT: 5501
+  #     VIRTUAL_PROTO: http
+  #     VIRTUAL_NETWORK: proxy
+  #     LETSENCRYPT_HOST: hub.thedude.cloud
+  #     LETSENCRYPT_EMAIL: admin@blockcore.net
+  #     ASPNETCORE_URLS: http://+:5501
+  #     Logging__LogLevel__Default: Debug
+  #     DataConfig__UseDefaultPath: "true"
+  #   restart: unless-stopped
+  #   #ports:
+  #   #  - 5501:5501
+  #   volumes:
+  #     - database1:/root/.aspnet
+  #   networks:
+  #     - proxy
+  #     - btcnetwork
+
+
+  # proxy:
+  #   image: nginxproxy/nginx-proxy
+  #   container_name: nginx-proxy
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - conf:/etc/nginx/conf.d
+  #     - vhost:/etc/nginx/vhost.d
+  #     - html:/usr/share/nginx/html
+  #     - dhparam:/etc/nginx/dhparam
+  #     - certs:/etc/nginx/certs:ro
+  #     - /var/run/docker.sock:/tmp/docker.sock:ro
+  #     - ./nginx.conf:/etc/nginx/conf.d/blockcore.conf:ro
+  #   networks:
+  #     - angor
+  #   restart: unless-stopped
+
+  # letsencrypt:
+  #   image: nginxproxy/acme-companion:2.2.1
+  #   container_name: letsencrypt
+  #   # mem_limit: 1024m
+  #   # cpus: 0.200
+  #   volumes_from:
+  #     - proxy
+  #   volumes:
+  #     - certs:/etc/nginx/certs:rw
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #   restart: unless-stopped
+  #   networks: 
+  #     - angor
+
+networks:
+  btcnetwork:
+    external: false
+    name: btcnetwork
+  angor:
+    external: false
+    name: angor

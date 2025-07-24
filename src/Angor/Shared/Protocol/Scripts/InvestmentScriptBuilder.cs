@@ -145,7 +145,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 
 		    _logger?.LogInformation($"pubKey {pubKey.ToHex()}");
 		    _logger?.LogInformation($"pubKey to bytes test {Encoders.Hex.EncodeData(pubKey.ToBytes())}");
-		    _logger?.LogInformation($"pubKey TaprootInternalKey{pubKey.TaprootInternalKey.ToString()}");
+		    _logger?.LogInformation($"pubKey TaprootInternalKey {pubKey.TaprootInternalKey.ToString()}");
 
 
 		    var feCreate = NBitcoin.Secp256k1.FE.TryCreate(new Span<byte>(pubKey.ToBytes()), out var x);
@@ -181,8 +181,15 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 		    var ec = ecxOnlyPubKey?.AddTweak(tweak);
 		    
 		    _logger?.LogInformation($"ec {Encoders.Hex.EncodeData(ec.ToBytes())}");
-		    
-		    var key = ecxOnlyPubKey?.AddTweak(tweak).ToXOnlyPubKey(out var taprootPubKeyTweak);
+
+            ECPubKey? tweakedPubKey = null;
+            var tweakedPubKeySuccess = ecxOnlyPubKey?.TryAddTweak(tweak, out tweakedPubKey);
+            
+            _logger?.LogInformation($"ecPubKeySuccess {tweakedPubKeySuccess}");
+            _logger?.LogInformation($"tweakedPubKey {Encoders.Hex.EncodeData(tweakedPubKey?.ToBytes())}");
+
+
+            var key = ecxOnlyPubKey?.AddTweak(tweak).ToXOnlyPubKey(out var taprootPubKeyTweak);
 		    
 		    _logger?.LogInformation($"ECXOnlyPubKey key only ---- {Encoders.Hex.EncodeData(key?.ToBytes())}");
 		    
@@ -207,9 +214,9 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 
 		    _logger?.LogInformation($"taprootPubKey is null {taprootPubKey == null}");
 		    
-		    _logger?.LogInformation($"taprootPubKey {taprootPubKey.ToString()}");
-		    _logger?.LogInformation($"taprootPubKey {taprootPubKey.ToBytes()}");
-		    _logger?.LogInformation($"taprootPubKey {taprootPubKey.ScriptPubKey.ToHex()}");
+		    _logger?.LogInformation($"taprootPubKey {taprootPubKey?.ToString()}");
+		    _logger?.LogInformation($"taprootPubKey {taprootPubKey?.ToBytes()}");
+		    _logger?.LogInformation($"taprootPubKey {taprootPubKey?.ScriptPubKey.ToHex()}");
 		    
 		    
 
