@@ -17,7 +17,6 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 public static class GetFounderProjects
 {
     public class GetFounderProjectsHandler(
-        IProjectRepository projectRepository,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations, 
         INetworkConfiguration networkConfiguration,
