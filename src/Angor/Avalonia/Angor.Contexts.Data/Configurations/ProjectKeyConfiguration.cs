@@ -8,11 +8,19 @@ public class ProjectKeyConfiguration : IEntityTypeConfiguration<ProjectKey>
 {
     public void Configure(EntityTypeBuilder<ProjectKey> builder)
     {
-        builder.HasKey(pk => pk.Id);
+        builder.HasKey(pk => pk.FounderKey);
+        
+        builder.Property(pk => pk.FounderKey)
+            .HasMaxLength(64)
+            .IsRequired();
         
         builder.Property(pk => pk.WalletId)
             .IsRequired();
             
+        builder.Property(pk => pk.FounderRecoveryKey)
+            .HasMaxLength(64)
+            .IsRequired();
+        
         builder.Property(pk => pk.ProjectId)
             .HasMaxLength(64)
             .IsRequired();

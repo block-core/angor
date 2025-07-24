@@ -39,6 +39,8 @@ public class NostrService : INostrService, IDisposable
 
             // Collect events with timeout
             var events = await eventObservable
+                .Where(e => e.Event != null) // Filter out null events
+                .Distinct(e => e.Event!.Id) // Ensure distinct events by ID
                 .Timeout(TimeSpan.FromSeconds(TimeoutSeconds))
                 .Catch(Observable.Return<NostrEventResponse>(null)) // Handle timeout gracefully
                 .ToList()// Collect all events into a list

@@ -1,6 +1,7 @@
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Data.Entities;
 using Angor.Contexts.Data.Services;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -72,11 +73,11 @@ public static class GetFounderProjects
         private async Task<Result<IEnumerable<(ProjectId,string)>>> GetProjectIds(GetFounderProjectsRequest request)
         {
             // First check if we have cached keys
-            var cachedKeysResult = await projectKeyService.HasCachedProjectKeys(request.WalletId);
-            if (cachedKeysResult.IsSuccess && cachedKeysResult.Value)
+            var cachedKeysResult = await projectKeyService.HasProjectsKeys(request.WalletId);
+            if (cachedKeysResult is { IsSuccess: true, Value: > 0 })
             {
                 return await projectKeyService.GetCachedProjectKeys(request.WalletId)
-                    .Map(keys => keys.Select(k => (new ProjectId(k.Item1), k.Item2)));
+                    .Map(keys => keys.Select(k => (new ProjectId(k.ProjectId), k.NostrPubKey)));
             }
     
             // If no cached keys, derive them and cache the result
@@ -84,14 +85,23 @@ public static class GetFounderProjects
                 .Map(p => p.ToWalletWords())
                 .Map(words => derivationOperations.DeriveProjectKeys(words, networkConfiguration.GetAngorKey()))
                 .Map(collection => collection.Keys.AsEnumerable())
-                .MapEach(keys => (keys.ProjectIdentifier, keys.NostrPubKey))
-                .MapEach(fk => (fk.ProjectIdentifier, fk.NostrPubKey))
+                .MapEach(keys => new ProjectKey
+                {
+                    FounderKey = keys.FounderKey,
+                    FounderRecoveryKey = keys.FounderRecoveryKey,
+                    ProjectId = keys.ProjectIdentifier,
+                    NostrPubKey = keys.NostrPubKey,
+                    WalletId = request.WalletId,
+                    Index = keys.Index,
+                    CreatedAt = DateTime.UtcNow
+                })
                 .Bind(async projectKeys =>
                 {
+                    var keys = projectKeys.ToList();
                     // Cache the derived keys
-                    var saveResult = await projectKeyService.SaveProjectKeys(request.WalletId, projectKeys);
+                    var saveResult = await projectKeyService.SaveProjectKeys(request.WalletId, keys);
                     return saveResult.IsSuccess 
-                        ? Result.Success(projectKeys.Select(k => (new ProjectId(k.ProjectIdentifier),k.NostrPubKey)))
+                        ? Result.Success(keys.Select(k => (new ProjectId(k.ProjectId),k.NostrPubKey)))
                         : Result.Failure<IEnumerable<(ProjectId, string)>>(saveResult.Error);
                 });
         }
