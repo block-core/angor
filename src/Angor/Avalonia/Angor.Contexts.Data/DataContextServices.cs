@@ -20,6 +20,7 @@ public class DataContextServices
         services.AddScoped<INostrService, NostrService>();
         services.AddScoped<IProjectEventService, ProjectEventService>();
         services.AddScoped<IUserEventService, UserEventService>();
+        services.AddScoped<IProjectKeyService, ProjectKeyService>();
         
         
         
