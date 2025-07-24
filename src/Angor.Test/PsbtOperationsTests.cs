@@ -154,7 +154,7 @@ public class PsbtOperationsTests : AngorTestData
         };
         projectInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
         projectInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, projectInfo.FounderKey);
-        projectInfo.ProjectIdentifier = _derivationOperations.DeriveAngorKey(projectInfo.FounderKey, angorRootKey);
+        projectInfo.ProjectIdentifier = _derivationOperations.DeriveAngorKey(angorRootKey, projectInfo.FounderKey);
 
         var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, projectInfo.FounderKey);
 
