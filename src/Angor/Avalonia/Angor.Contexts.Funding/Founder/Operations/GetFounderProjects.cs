@@ -22,7 +22,8 @@ public static class GetFounderProjects
         INetworkConfiguration networkConfiguration,
         IProjectEventService projectEventService,
         IUserEventService userEventService,
-        IIndexerService indexerService) : IRequestHandler<GetFounderProjectsRequest, Result<IEnumerable<ProjectDto>>>
+        IIndexerService indexerService,
+        IProjectKeyService projectKeyService) : IRequestHandler<GetFounderProjectsRequest, Result<IEnumerable<ProjectDto>>>
     {
         public Task<Result<IEnumerable<ProjectDto>>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
         {
@@ -68,14 +69,31 @@ public static class GetFounderProjects
                 }));
         }
 
-        private Task<Result<IEnumerable<(ProjectId,string)>>> GetProjectIds(GetFounderProjectsRequest request)
+        private async Task<Result<IEnumerable<(ProjectId,string)>>> GetProjectIds(GetFounderProjectsRequest request)
         {
-            return seedwordsProvider.GetSensitiveData(request.WalletId)
+            // First check if we have cached keys
+            var cachedKeysResult = await projectKeyService.HasCachedProjectKeys(request.WalletId);
+            if (cachedKeysResult.IsSuccess && cachedKeysResult.Value)
+            {
+                return await projectKeyService.GetCachedProjectKeys(request.WalletId)
+                    .Map(keys => keys.Select(k => (new ProjectId(k.Item1), k.Item2)));
+            }
+    
+            // If no cached keys, derive them and cache the result
+            return await seedwordsProvider.GetSensitiveData(request.WalletId)
                 .Map(p => p.ToWalletWords())
-                .Map(words => derivationOperations.DeriveProjectKeys(words, networkConfiguration.GetAngorKey()))//TODO we need to change this, the derivation code requires very heavy computations
+                .Map(words => derivationOperations.DeriveProjectKeys(words, networkConfiguration.GetAngorKey()))
                 .Map(collection => collection.Keys.AsEnumerable())
-                .MapEach(keys => (keys.ProjectIdentifier,keys.NostrPubKey))
-                .MapEach(fk => (new ProjectId(fk.ProjectIdentifier), fk.NostrPubKey));
+                .MapEach(keys => (keys.ProjectIdentifier, keys.NostrPubKey))
+                .MapEach(fk => (fk.ProjectIdentifier, fk.NostrPubKey))
+                .Bind(async projectKeys =>
+                {
+                    // Cache the derived keys
+                    var saveResult = await projectKeyService.SaveProjectKeys(request.WalletId, projectKeys);
+                    return saveResult.IsSuccess 
+                        ? Result.Success(projectKeys.Select(k => (new ProjectId(k.ProjectIdentifier),k.NostrPubKey)))
+                        : Result.Failure<IEnumerable<(ProjectId, string)>>(saveResult.Error);
+                });
         }
     }
 
