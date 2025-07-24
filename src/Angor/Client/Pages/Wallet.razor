@@ -335,7 +335,7 @@
 
                         <div class="modal-footer border-0 pt-0">
                             <div class="d-flex flex-column flex-md-row justify-content-between w-100">
-                                @if ((network.NetworkType == NetworkType.Testnet && debugMode) && currentStep == 2 && isNewWallet)
+                                @if ((network.NetworkType == NetworkType.Testnet) && currentStep == 2 && isNewWallet)
                                 {
                                     <div class="order-1 order-md-0">
                                         <button class="btn btn-border-warning w-100 w-md-auto" @onclick="SkipVerification">
@@ -1081,8 +1081,6 @@ else
     private readonly AccountBalanceInfo accountBalanceInfo = new();
 
     private readonly FeeEstimations FeeEstimations = new();
-    
-    private bool debugMode; 
 
     // Max index for the range input
     private readonly int FeeMin = 1;
@@ -1250,7 +1248,6 @@ else
             btcBalanceInUsd = await GetBtcValueInPreferredCurrency(accountBalanceInfo.TotalBalance);
             await PrecomputeFiatValues();
         }
-        debugMode = storage.GetDebugMode();
         await base.OnInitializedAsync();
     }
 
