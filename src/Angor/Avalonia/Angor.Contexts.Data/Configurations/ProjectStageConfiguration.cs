@@ -12,7 +12,7 @@ public class ProjectStageConfiguration : IEntityTypeConfiguration<ProjectStage>
         builder.HasKey(e => new { e.ProjectId, e.StageIndex });
         
         builder.Property(e => e.ProjectId)
-            .HasMaxLength(64)
+            .HasMaxLength(32)
             .IsRequired();
             
         builder.Property(e => e.StageIndex)

@@ -39,7 +39,7 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
             .IsRequired();
             
         builder.Property(e => e.ProjectInfoEventId)
-            .HasMaxLength(64)
+            .HasMaxLength(32)
             .IsRequired();
             
         builder.Property(e => e.CreatedAt)
@@ -73,9 +73,5 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.HasIndex(e => e.NostrPubKey);
         builder.HasIndex(e => e.ProjectInfoEventId);
         builder.HasIndex(e => e.ProjectReceiveAddress);
-        builder.HasIndex(e => e.FundingStartDate);
-        builder.HasIndex(e => e.FundingEndDate);
-        builder.HasIndex(e => e.ExpiryDate);
-        builder.HasIndex(e => e.CreatedAt);
     }
 }
