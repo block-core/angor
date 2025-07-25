@@ -73,7 +73,7 @@ namespace Angor.Contexts.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "NostrTag",
+                name: "NostrTags",
                 columns: table => new
                 {
                     Name = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
@@ -82,9 +82,9 @@ namespace Angor.Contexts.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_NostrTag", x => x.Name);
+                    table.PrimaryKey("PK_NostrTags", x => x.Name);
                     table.ForeignKey(
-                        name: "FK_NostrTag_NostrEvents_EventId",
+                        name: "FK_NostrTags_NostrEvents_EventId",
                         column: x => x.EventId,
                         principalTable: "NostrEvents",
                         principalColumn: "Id",
@@ -184,8 +184,8 @@ namespace Angor.Contexts.Data.Migrations
                 column: "PubKey");
 
             migrationBuilder.CreateIndex(
-                name: "IX_NostrTag_EventId",
-                table: "NostrTag",
+                name: "IX_NostrTags_EventId",
+                table: "NostrTags",
                 column: "EventId");
 
             migrationBuilder.CreateIndex(
@@ -270,7 +270,7 @@ namespace Angor.Contexts.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "NostrTag");
+                name: "NostrTags");
 
             migrationBuilder.DropTable(
                 name: "ProjectKeys");

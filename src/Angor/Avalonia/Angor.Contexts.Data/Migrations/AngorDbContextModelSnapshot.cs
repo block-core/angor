@@ -73,7 +73,7 @@ namespace Angor.Contexts.Data.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("NostrTag");
+                    b.ToTable("NostrTags");
                 });
 
             modelBuilder.Entity("Angor.Contexts.Data.Entities.NostrUser", b =>
