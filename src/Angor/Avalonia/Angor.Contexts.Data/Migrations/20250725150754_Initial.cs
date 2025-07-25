@@ -15,7 +15,7 @@ namespace Angor.Contexts.Data.Migrations
                 name: "NostrUsers",
                 columns: table => new
                 {
-                    PubKey = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    PubKey = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     ProfileEventId = table.Column<string>(type: "TEXT", nullable: false),
                     DisplayName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     About = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
@@ -36,12 +36,12 @@ namespace Angor.Contexts.Data.Migrations
                 name: "ProjectKeys",
                 columns: table => new
                 {
-                    FounderKey = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    FounderKey = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     WalletId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Index = table.Column<int>(type: "INTEGER", nullable: false),
-                    ProjectId = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
-                    NostrPubKey = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
-                    FounderRecoveryKey = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    ProjectId = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
+                    NostrPubKey = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
+                    FounderRecoveryKey = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
@@ -54,11 +54,10 @@ namespace Angor.Contexts.Data.Migrations
                 name: "NostrEvents",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
-                    PubKey = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    Id = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
+                    PubKey = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     Kind = table.Column<int>(type: "INTEGER", nullable: false),
                     Content = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
-                    Tags = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     Signature = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false)
                 },
@@ -74,6 +73,25 @@ namespace Angor.Contexts.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "NostrTag",
+                columns: table => new
+                {
+                    Name = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
+                    EventId = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
+                    Content = table.Column<string>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NostrTag", x => x.Name);
+                    table.ForeignKey(
+                        name: "FK_NostrTag_NostrEvents_EventId",
+                        column: x => x.EventId,
+                        principalTable: "NostrEvents",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Projects",
                 columns: table => new
                 {
@@ -85,7 +103,7 @@ namespace Angor.Contexts.Data.Migrations
                     FundingEndDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     PenaltyDays = table.Column<long>(type: "INTEGER", nullable: false),
                     ExpiryDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ProjectInfoEventId = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    ProjectInfoEventId = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LeadInvestorsThreshold = table.Column<int>(type: "INTEGER", nullable: false)
@@ -113,8 +131,8 @@ namespace Angor.Contexts.Data.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    ProjectId = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
-                    SecretHash = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    ProjectId = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
+                    SecretHash = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -132,7 +150,7 @@ namespace Angor.Contexts.Data.Migrations
                 name: "ProjectStage",
                 columns: table => new
                 {
-                    ProjectId = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    ProjectId = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
                     StageIndex = table.Column<int>(type: "INTEGER", nullable: false),
                     AmountToRelease = table.Column<decimal>(type: "TEXT", precision: 18, scale: 8, nullable: false),
                     ReleaseDate = table.Column<DateTime>(type: "TEXT", nullable: false),
@@ -166,6 +184,11 @@ namespace Angor.Contexts.Data.Migrations
                 column: "PubKey");
 
             migrationBuilder.CreateIndex(
+                name: "IX_NostrTag_EventId",
+                table: "NostrTag",
+                column: "EventId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_NostrUsers_CreatedAt",
                 table: "NostrUsers",
                 column: "CreatedAt");
@@ -186,35 +209,15 @@ namespace Angor.Contexts.Data.Migrations
                 column: "NostrPubKey");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProjectKeys_WalletId",
+                name: "IX_ProjectKeys_ProjectId",
                 table: "ProjectKeys",
-                column: "WalletId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProjectKeys_WalletId_ProjectId",
-                table: "ProjectKeys",
-                columns: new[] { "WalletId", "ProjectId" },
+                column: "ProjectId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Projects_CreatedAt",
-                table: "Projects",
-                column: "CreatedAt");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Projects_ExpiryDate",
-                table: "Projects",
-                column: "ExpiryDate");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Projects_FundingEndDate",
-                table: "Projects",
-                column: "FundingEndDate");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Projects_FundingStartDate",
-                table: "Projects",
-                column: "FundingStartDate");
+                name: "IX_ProjectKeys_WalletId",
+                table: "ProjectKeys",
+                column: "WalletId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_NostrPubKey",
@@ -266,6 +269,9 @@ namespace Angor.Contexts.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "NostrTag");
+
             migrationBuilder.DropTable(
                 name: "ProjectKeys");
 
