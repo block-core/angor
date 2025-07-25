@@ -12,7 +12,7 @@ public class NostrUserConfiguration : IEntityTypeConfiguration<NostrUser>
         builder.HasKey(e => e.PubKey);
         
         builder.Property(e => e.PubKey)
-            .HasMaxLength(64)
+            .HasMaxLength(32)
             .IsRequired();
             
         builder.Property(e => e.DisplayName)

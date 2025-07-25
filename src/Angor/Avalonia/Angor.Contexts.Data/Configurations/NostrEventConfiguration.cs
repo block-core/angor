@@ -12,11 +12,11 @@ public class NostrEventConfiguration : IEntityTypeConfiguration<NostrEvent>
         builder.HasKey(e => e.Id);
         
         builder.Property(e => e.Id)
-            .HasMaxLength(64)
+            .HasMaxLength(32)
             .IsRequired();
             
         builder.Property(e => e.PubKey)
-            .HasMaxLength(64)
+            .HasMaxLength(32)
             .IsRequired();
             
         builder.Property(e => e.Kind)
@@ -32,13 +32,11 @@ public class NostrEventConfiguration : IEntityTypeConfiguration<NostrEvent>
             
         builder.Property(e => e.CreatedAt)
             .IsRequired();
-            
-        // Tags conversion
-        builder.Property(e => e.Tags)
-            .HasConversion(
-                v => string.Join(',', v),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList())
-            .HasMaxLength(2000);
+        
+        builder.HasMany(e => e.Tags)
+            .WithOne(t => t.Event)
+            .HasForeignKey(t => t.EventId)
+            .OnDelete(DeleteBehavior.Cascade);
         
         // Indexes
         builder.HasIndex(e => e.PubKey);

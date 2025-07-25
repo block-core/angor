@@ -117,11 +117,16 @@ public class ProjectEventService(AngorDbContext context, INostrService nostrServ
                 {
                     CreatedAt = responseEvent.CreatedAt!.Value,
                     Content = responseEvent.Content,
-                    Id = responseEvent.Id,
+                    Id = responseEvent.Id!,
                     PubKey = responseEvent.Pubkey!,
                     Kind = (int)responseEvent.Kind,
-                    Signature = responseEvent.Sig,
-                    Tags = responseEvent.Tags.Select(t => string.Join(",", t)).ToList()
+                    Signature = responseEvent.Sig!,
+                    Tags = responseEvent.Tags?.Select(tag => new NostrTag
+                    {
+                        Name = tag.TagIdentifier,
+                        Content = tag.AdditionalData.ToList(),
+                        EventId = responseEvent.Id!,
+                    }).ToList() ?? null
                 }
             };
 

@@ -19,7 +19,7 @@ namespace Angor.Contexts.Data.Migrations
             modelBuilder.Entity("Angor.Contexts.Data.Entities.NostrEvent", b =>
                 {
                     b.Property<string>("Id")
-                        .HasMaxLength(64)
+                        .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Content")
@@ -35,17 +35,12 @@ namespace Angor.Contexts.Data.Migrations
 
                     b.Property<string>("PubKey")
                         .IsRequired()
-                        .HasMaxLength(64)
+                        .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Signature")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Tags")
-                        .IsRequired()
-                        .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -59,10 +54,32 @@ namespace Angor.Contexts.Data.Migrations
                     b.ToTable("NostrEvents");
                 });
 
+            modelBuilder.Entity("Angor.Contexts.Data.Entities.NostrTag", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EventId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Name");
+
+                    b.HasIndex("EventId");
+
+                    b.ToTable("NostrTag");
+                });
+
             modelBuilder.Entity("Angor.Contexts.Data.Entities.NostrUser", b =>
                 {
                     b.Property<string>("PubKey")
-                        .HasMaxLength(64)
+                        .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("About")
@@ -146,7 +163,7 @@ namespace Angor.Contexts.Data.Migrations
 
                     b.Property<string>("ProjectInfoEventId")
                         .IsRequired()
-                        .HasMaxLength(64)
+                        .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProjectReceiveAddress")
@@ -163,14 +180,6 @@ namespace Angor.Contexts.Data.Migrations
 
                     b.HasKey("ProjectId");
 
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("ExpiryDate");
-
-                    b.HasIndex("FundingEndDate");
-
-                    b.HasIndex("FundingStartDate");
-
                     b.HasIndex("NostrPubKey");
 
                     b.HasIndex("ProjectInfoEventId");
@@ -183,7 +192,7 @@ namespace Angor.Contexts.Data.Migrations
             modelBuilder.Entity("Angor.Contexts.Data.Entities.ProjectKey", b =>
                 {
                     b.Property<string>("FounderKey")
-                        .HasMaxLength(64)
+                        .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
@@ -191,7 +200,7 @@ namespace Angor.Contexts.Data.Migrations
 
                     b.Property<string>("FounderRecoveryKey")
                         .IsRequired()
-                        .HasMaxLength(64)
+                        .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Index")
@@ -199,12 +208,12 @@ namespace Angor.Contexts.Data.Migrations
 
                     b.Property<string>("NostrPubKey")
                         .IsRequired()
-                        .HasMaxLength(64)
+                        .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProjectId")
                         .IsRequired()
-                        .HasMaxLength(64)
+                        .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -217,10 +226,10 @@ namespace Angor.Contexts.Data.Migrations
 
                     b.HasIndex("NostrPubKey");
 
-                    b.HasIndex("WalletId");
-
-                    b.HasIndex("WalletId", "ProjectId")
+                    b.HasIndex("ProjectId")
                         .IsUnique();
+
+                    b.HasIndex("WalletId");
 
                     b.ToTable("ProjectKeys");
                 });
@@ -236,12 +245,12 @@ namespace Angor.Contexts.Data.Migrations
 
                     b.Property<string>("ProjectId")
                         .IsRequired()
-                        .HasMaxLength(64)
+                        .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("SecretHash")
                         .IsRequired()
-                        .HasMaxLength(64)
+                        .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -259,7 +268,7 @@ namespace Angor.Contexts.Data.Migrations
             modelBuilder.Entity("Angor.Contexts.Data.Entities.ProjectStage", b =>
                 {
                     b.Property<string>("ProjectId")
-                        .HasMaxLength(64)
+                        .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("StageIndex")
@@ -298,6 +307,17 @@ namespace Angor.Contexts.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Angor.Contexts.Data.Entities.NostrTag", b =>
+                {
+                    b.HasOne("Angor.Contexts.Data.Entities.NostrEvent", "Event")
+                        .WithMany("Tags")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
                 });
 
             modelBuilder.Entity("Angor.Contexts.Data.Entities.Project", b =>
@@ -339,6 +359,11 @@ namespace Angor.Contexts.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Angor.Contexts.Data.Entities.NostrEvent", b =>
+                {
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("Angor.Contexts.Data.Entities.NostrUser", b =>
