@@ -11,22 +11,22 @@ public class ProjectKeyConfiguration : IEntityTypeConfiguration<ProjectKey>
         builder.HasKey(pk => pk.FounderKey);
         
         builder.Property(pk => pk.FounderKey)
-            .HasMaxLength(64)
+            .HasMaxLength(32)
             .IsRequired();
         
         builder.Property(pk => pk.WalletId)
             .IsRequired();
             
         builder.Property(pk => pk.FounderRecoveryKey)
-            .HasMaxLength(64)
+            .HasMaxLength(32)
             .IsRequired();
         
         builder.Property(pk => pk.ProjectId)
-            .HasMaxLength(64)
+            .HasMaxLength(32)
             .IsRequired();
             
         builder.Property(pk => pk.NostrPubKey)
-            .HasMaxLength(64)
+            .HasMaxLength(32)
             .IsRequired();
             
         builder.Property(pk => pk.CreatedAt)
@@ -37,7 +37,7 @@ public class ProjectKeyConfiguration : IEntityTypeConfiguration<ProjectKey>
         
         // Indexes
         builder.HasIndex(pk => pk.WalletId);
-        builder.HasIndex(pk => new { pk.WalletId, pk.ProjectId }).IsUnique();
+        builder.HasIndex(pk =>  pk.ProjectId).IsUnique();
         builder.HasIndex(pk => pk.NostrPubKey);
     }
 }
