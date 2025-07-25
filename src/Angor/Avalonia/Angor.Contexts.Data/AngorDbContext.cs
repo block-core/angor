@@ -27,6 +27,7 @@ public class AngorDbContext : DbContext
     public DbSet<ProjectSecretHash> ProjectStages { get; set; }
     public DbSet<NostrUser> NostrUsers { get; set; } = null!;
     public DbSet<NostrEvent> NostrEvents { get; set; } = null!;
+    public DbSet<NostrTag> NostrTags { get; set; } = null!;
     public DbSet<ProjectKey> ProjectKeys { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
