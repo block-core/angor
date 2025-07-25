@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Angor.Contexts.Data.Migrations
 {
     [DbContext(typeof(AngorDbContext))]
-    [Migration("20250725150754_Initial")]
+    [Migration("20250725151748_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -76,7 +76,7 @@ namespace Angor.Contexts.Data.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("NostrTag");
+                    b.ToTable("NostrTags");
                 });
 
             modelBuilder.Entity("Angor.Contexts.Data.Entities.NostrUser", b =>
