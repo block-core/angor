@@ -65,7 +65,7 @@
 
 @if (showProgress)
 {
-    <div class="investor-wizard mt-3">
+    <div class="card card-body investor-wizard mt-3">
         <div class="wizard-stepper-container">
             <div class="wizard-progress-track">
                 <div class="wizard-progress-fill" style="width: @((currentProgressStep - 1) * 50)%;"></div>
@@ -126,7 +126,7 @@
 }
 
 <div class="stats-container mt-4">
-    <div class="stats-card" style="border-color: rgba(var(--angor-secondary-rgb),.5);">
+    <div class="card card-body">
         <div class="stats-content">
             <div class="stats-icon">
                 <Icon IconName="balance" Height="32" Width="32" />
@@ -148,8 +148,19 @@
             </div>
         </div>
     </div>
-
-    <div class="stats-card" style="border-color: rgba(var(--angor-secondary-rgb),.5);">
+    <div class="card card-body">
+        <div class="stats-content">
+            <div class="stats-icon">
+                <Icon IconName="stages" Height="32" Width="32" />
+            </div>
+            <div class="stats-info">
+                <h3 class="stats-title text-muted">Total Stages</h3>
+                <p class="stats-value">@project.ProjectInfo.Stages.Count()</p>
+                <p class="stats-about">Phased release</p>
+            </div>
+        </div>
+    </div>
+    <div class="card card-body">
         <div class="stats-content">
             <div class="stats-icon">
                 <Icon IconName="calendar" Height="32" Width="32" />
@@ -166,15 +177,20 @@
             </div>
         </div>
     </div>
-    <div class="stats-card" style="border-color: rgba(var(--angor-secondary-rgb),.5);">
+    <div class="card card-body">
         <div class="stats-content">
             <div class="stats-icon">
-                <Icon IconName="stages" Height="32" Width="32" />
+                <Icon IconName="calendar" Height="32" Width="32" />
             </div>
             <div class="stats-info">
-                <h3 class="stats-title text-muted">Total Stages</h3>
-                <p class="stats-value">@project.ProjectInfo.Stages.Count()</p>
-                <p class="stats-about">Phased release</p>
+                <h3 class="stats-title text-muted">End Date</h3>
+                <p class="stats-value">@project.ProjectInfo.EndDate.FormatDate()</p>
+                <p class="stats-about">
+                    @{
+                        var dayDiff2 = (project.ProjectInfo.EndDate - DateTime.Now).Days;
+                        @(dayDiff2 < 0 ? $"{Math.Abs(dayDiff2)} Days ago" : $"{dayDiff2} Days remaining")
+                    }
+                </p>
             </div>
         </div>
     </div>
@@ -200,18 +216,22 @@
     }
     else
     {
-        <div class="status-banner mt-2">
-            <div class="stats-icon">
-                <Icon IconName="clock-circle" Width="28" Height="28" />
-            </div>
-            <div class="status-banner-text-content">
-                <h5 class="status-banner-title">Waiting for founder signature</h5>
-                <p class="status-banner-description">
-                    The founder needs to sign a recovery agreement before you can invest. This ensures
-                    your funds can be recovered if the project doesn't succeed.
-                </p>
+        <div class="card card-body">
+            <div class="d-flex status-banner">
+                <div class="stats-icon">
+                    <Icon IconName="clock-circle" Width="28" Height="28" />
+                </div>
+                <div class="status-banner-text-content">
+                    <h5 class="status-banner-title">Waiting for founder signature</h5>
+                    <p class="status-banner-description">
+                        The founder needs to sign a recovery agreement before you can invest. This ensures
+                        your funds can be recovered if the project doesn't succeed.
+                    </p>
+                </div>
             </div>
         </div>
+
+
     }
 }
 
@@ -1067,7 +1087,7 @@ else
             }
             else
             {
-                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(), 
+                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(),
                     unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
             }
 
