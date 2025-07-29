@@ -1,3 +1,4 @@
+using Angor.Contexts.Funding.Projects.Application.Dtos;
 using AngorApp.Sections.Founder.ProjectDetails.Investments;
 using AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
 
@@ -10,4 +11,6 @@ public class FounderProjectDetailsViewModelDesign : IFounderProjectDetailsViewMo
     public string ShortDescription { get; } = "Short description, Bitcoin ONLY.";
     public IProjectInvestmentsViewModel InvestmentsViewModel { get; set; } = new ProjectInvestmentsViewModelDesign(); 
     public IManageFundsViewModel ManageFundsViewModel { get; set; } = new ManageFundsViewModelDesign();
+    public bool HasProjectStarted { get; set; }
+    public ProjectDto Project { get; } = new ProjectDto();
 }

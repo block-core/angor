@@ -1,24 +1,26 @@
+using System.Linq;
 using Angor.Contexts.Funding.Investor;
+using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
 
 public class ManageFundsViewModel : ReactiveObject, IManageFundsViewModel
 {
-    public ManageFundsViewModel(IInvestmentAppService appService)
+    public ManageFundsViewModel(ProjectDto project, IInvestmentAppService appService)
     {
        // TODO: We need to fetch project information from the app service using the Load command.
        Load = ReactiveCommand.Create(() => { }).Enhance();
        ProjectViewModel = new ProjectViewModelDesign();
-       ProjectStatisticsViewModel = new ProjectStatisticsViewModelDesign();
+       ProjectStatisticsViewModel = new ProjectStatisticsViewModel(project);
        UnfundedProjectViewModel = new UnfundedProjectViewModelDesign();
        StageClaimViewModel = new StageClaimViewModelDesign();
-       TargetAmount = new AmountUI(1000000); // Example target amount
-       RaisedAmount = new AmountUI(500000); // Example raised amount
+       TargetAmount = new AmountUI(project.TargetAmount);
+       RaisedAmount = new AmountUI(project.Raised());
+       IsUnfunded = project.IsUnfunded();    
     }
     
     public IEnhancedCommand Load { get; }
-
     public IProjectViewModel ProjectViewModel { get; }
     public IProjectStatisticsViewModel ProjectStatisticsViewModel { get; }
     public IStageClaimViewModel StageClaimViewModel { get; }
@@ -26,7 +28,6 @@ public class ManageFundsViewModel : ReactiveObject, IManageFundsViewModel
     public IAmountUI RaisedAmount { get; }
     public IAmountUI TargetAmount { get; }
     public bool IsUnfunded { get; }
-    public bool IsProjectStarted { get; }
 
     public void Dispose()
     {

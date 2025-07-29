@@ -1,8 +1,8 @@
 namespace AngorApp.Sections.Founder.ProjectDetails.Investments;
 
-public partial class InvestmentsView : UserControl
+public partial class ProjectInvestmentsView : UserControl
 {
-    public InvestmentsView()
+    public ProjectInvestmentsView()
     {
         InitializeComponent();
     }

@@ -4,26 +4,21 @@ using System.Threading.Tasks;
 using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
-using AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
-using Zafiro.UI.Commands;
-using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Founder.ProjectDetails.Investments;
 
 public partial class ProjectInvestmentsViewModel : ReactiveObject, IProjectInvestmentsViewModel
 {
-    private readonly ProjectDto project;
     private readonly CompositeDisposable disposable = new();
     [ObservableAsProperty] private IEnumerable<IInvestmentViewModel> investments;
 
-    public ProjectInvestmentsViewModel(ProjectDto project, IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigation)
+    public ProjectInvestmentsViewModel(ProjectDto project, IInvestmentAppService investmentAppService, UIServices uiServices)
     {
-        this.project = project;
         LoadInvestments = ReactiveCommand.CreateFromTask(() =>
             {
                 return uiServices.WalletRoot.GetDefaultWalletAndActivate()
@@ -35,10 +30,9 @@ public partial class ProjectInvestmentsViewModel : ReactiveObject, IProjectInves
             .DisposeWith(disposable);
 
         LoadInvestments.HandleErrorsWith(uiServices.NotificationService, "Could not load the investments").DisposeWith(disposable);
-
         investmentsHelper = LoadInvestments.Successes().ToProperty(this, x => x.Investments);
-
-        GoManageFunds = ReactiveCommand.CreateFromTask(() => navigation.Go<IManageFundsViewModel>()).Enhance().DisposeWith(disposable);
+        
+        LoadInvestments.Execute().Subscribe().DisposeWith(disposable);
     }
 
     private static Task<Result<(IWallet wallet, IEnumerable<Investment> investments)>> GetWalletInvestments(ProjectDto project, IInvestmentAppService investmentAppService, IWallet wallet)
@@ -63,11 +57,6 @@ public partial class ProjectInvestmentsViewModel : ReactiveObject, IProjectInves
     }
     
     public ReactiveCommand<Unit, Result<IEnumerable<IInvestmentViewModel>>> LoadInvestments { get; }
-    public bool IsProjectStarted { get; }
-    public Uri? BannerUrl => project.Banner;
-    public string ShortDescription => project.ShortDescription;
-    public IEnhancedCommand GoManageFunds { get; }
-    public string Name => project.Name;
 
     public void Dispose()
     {

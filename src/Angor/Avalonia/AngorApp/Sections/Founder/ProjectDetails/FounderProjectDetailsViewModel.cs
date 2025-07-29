@@ -18,14 +18,17 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
     public FounderProjectDetailsViewModel(ProjectDto project, IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigation)
     {
         this.project = project;
-        InvestmentsViewModel = new ProjectInvestmentsViewModel(project, investmentAppService, uiServices, navigation).DisposeWith(disposable);
-        ManageFundsViewModel = new ManageFundsViewModel(investmentAppService).DisposeWith(disposable);
+        InvestmentsViewModel = new ProjectInvestmentsViewModel(project, investmentAppService, uiServices).DisposeWith(disposable);
+        ManageFundsViewModel = new ManageFundsViewModel(project, investmentAppService).DisposeWith(disposable);
+        HasProjectStarted = project.HasStarted();
     }
 
     public Uri? BannerUrl => project.Banner;
     public string ShortDescription => project.ShortDescription;
     public IProjectInvestmentsViewModel InvestmentsViewModel { get; }
     public IManageFundsViewModel ManageFundsViewModel { get; }
+    public bool HasProjectStarted { get; }
+    public ProjectDto Project => project;
     public string Name => project.Name;
 
     public void Dispose()

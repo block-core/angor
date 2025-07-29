@@ -12,5 +12,4 @@ public interface IManageFundsViewModel : IDisposable
     public IAmountUI RaisedAmount { get; }
     public IAmountUI TargetAmount { get; }
     public bool IsUnfunded { get; }
-    public bool IsProjectStarted { get; }
 }

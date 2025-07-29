@@ -5,12 +5,13 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:projectDetails="clr-namespace:AngorApp.Sections.Founder.ProjectDetails"
-             xmlns:mf="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.ManageFunds"
-             xmlns:i="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Investments"
+             xmlns:investments="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Investments"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.FounderProjectDetailsView" x:DataType="projectDetails:IFounderProjectDetailsViewModel">
     <Design.DataContext>
-        <projectDetails:FounderProjectDetailsViewModelDesign BannerUrl="https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg" />
+        <projectDetails:FounderProjectDetailsViewModelDesign
+            HasProjectStarted="True"
+            BannerUrl="https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg" />
     </Design.DataContext>
 
     <controls:PageContainer>
@@ -21,8 +22,20 @@
                     <TextBlock Classes="SizeBig" Text="{Binding Name}" />
                     <TextBlock TextWrapping="Wrap" Text="{Binding ShortDescription}" />
                 </StackPanel>
-                <mf:ManageFundsView IsVisible="{Binding IsProjectStarted}" DataContext="{Binding ManageFundsViewModel}" />
-                <i:InvestmentsView IsVisible="{Binding IsProjectStarted}" DataContext="{Binding InvestmentsViewModel}" />
+                <ContentControl IsVisible="{Binding HasProjectStarted}"
+                                Content="{Binding ManageFundsViewModel}" />
+                <ContentControl IsVisible="{Binding !HasProjectStarted}"
+                                Content="{Binding InvestmentsViewModel}" />
+                <Expander HorizontalAlignment="Stretch" Header="Investment History" IsVisible="{Binding HasProjectStarted}">
+                    <investments:InvestmentsGrid DataContext="{Binding InvestmentsViewModel}"  />
+                </Expander>
+                <Button Content="See Project">
+                    <Button.Flyout>
+                        <Flyout>
+                            <TextBlock Text="{Binding Project, Converter={x:Static controls:AngorConverters.ToJson}}" />
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
             </StackPanel>
         </ScrollViewer>
     </controls:PageContainer>

@@ -1,3 +1,4 @@
+using Angor.Contexts.Funding.Projects.Application.Dtos;
 using AngorApp.Sections.Founder.ProjectDetails.Investments;
 using AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
 
@@ -10,4 +11,6 @@ public interface IFounderProjectDetailsViewModel
     public string ShortDescription { get; }
     public IProjectInvestmentsViewModel InvestmentsViewModel { get; }
     public IManageFundsViewModel ManageFundsViewModel { get; }
+    public bool HasProjectStarted { get; }
+    public ProjectDto Project { get; }
 }

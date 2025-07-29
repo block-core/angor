@@ -3,18 +3,17 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:sdg="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
-             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:investments1="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Investments"
+             xmlns:i="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Investments"
              xmlns:projectDetails="clr-namespace:AngorApp.Sections.Founder.ProjectDetails"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
-             x:Class="AngorApp.Sections.Founder.ProjectDetails.Investments.InvestmentsView"
-             x:DataType="investments1:IProjectInvestmentsViewModel">
-    
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Founder.ProjectDetails.Investments.InvestmentsGrid"
+             x:DataType="i:IProjectInvestmentsViewModel">
+
     <Design.DataContext>
-        <investments1:ProjectInvestmentsViewModelDesign />
+        <i:ProjectInvestmentsViewModelDesign />
     </Design.DataContext>
-    
+
     <UserControl.Styles>
         <Style Selector="sdg|SlimDataGrid.TopLevel sdg|Row:not(.NestedGrid sdg|Row)">
             <Setter Property="BorderBrush" Value="{DynamicResource SystemBaseMediumLowColor}" />
@@ -100,72 +99,61 @@
         </Style>
 
     </UserControl.Styles>
-    
-    <StackPanel>
-        <Card Header="Investments">
-            <Card.HeaderEndContent>
-                <Button ToolTip.Tip="Reload" avalonia:Attached.Icon="fa-rotate-right" Command="{Binding LoadInvestments}" />
-            </Card.HeaderEndContent>
-            <Loading IsLoading="{Binding LoadInvestments.IsExecuting^}">
-                <ScrollViewer HorizontalScrollBarVisibility="Auto">
-                    <sdg:SlimDataGrid Classes="TopLevel" ItemsSource="{Binding Investments}">
-                        <sdg:SlimDataGrid.Styles>
-                            <Style Selector="sdg|Cell TextBlock">
-                                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                            </Style>
-                        </sdg:SlimDataGrid.Styles>
-                        <sdg:SlimDataGrid.Columns>
-                            <sdg:Column Header="Amount" Width="*" Binding="{Binding MostRecentInvestment.Amount.BtcString}" />
-                            <sdg:Column Header="Date" Width="*" Binding="{Binding MostRecentInvestment.CreatedOn, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
-                            <sdg:Column Header="Investor" Width="150" Binding="{Binding MostRecentInvestment.InvestorNostrPubKey}">
-                                <sdg:Column.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding}" />
-                                    </DataTemplate>
-                                </sdg:Column.CellTemplate>
-                            </sdg:Column>
-                            <sdg:Column Header="Status" Width="Auto" Binding="{Binding MostRecentInvestment.Status}">
-                                <sdg:Column.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Tag="{Binding}">
-                                            <TextBlock.Styles>
-                                                <Style Selector="TextBlock[Tag=PendingFounderSignatures]">
-                                                    <Setter Property="Text" Value="Pending" />
-                                                </Style>
-                                                <Style Selector="TextBlock[Tag=FounderSignaturesReceived]">
-                                                    <Setter Property="Text" Value="Approved" />
-                                                </Style>
-                                                <Style Selector="TextBlock[Tag=Invested]">
-                                                    <Setter Property="Text" Value="Invested" />
-                                                </Style>
-                                            </TextBlock.Styles>
-                                        </TextBlock>
-                                    </DataTemplate>
-                                </sdg:Column.CellTemplate>
-                            </sdg:Column>
-                            <sdg:Column Header="" Width="Auto" Binding="{Binding}">
-                                <sdg:Column.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Command="{Binding Approve}"
-                                                IsVisible="{Binding $self.IsEffectivelyEnabled}"
-                                                Content="Approve" />
-                                    </DataTemplate>
-                                </sdg:Column.CellTemplate>
-                            </sdg:Column>
-                            <sdg:Column Width="Auto" Binding="{Binding }">
-                                <sdg:Column.CellTemplate>
-                                    <DataTemplate>
-                                        <ToggleButton Theme="{StaticResource ExpandingToggleButtonNoText}" x:Name="AreDetailsShown" IsChecked="{Binding AreDetailsShown, Mode=TwoWay}" Margin="10"
-                                                      IsVisible="{Binding OtherInvestments, Converter={x:Static Enumerable.Any}}" />
-                                    </DataTemplate>
-                                </sdg:Column.CellTemplate>
-                            </sdg:Column>
-                        </sdg:SlimDataGrid.Columns>
-                    </sdg:SlimDataGrid>
-                </ScrollViewer>
-            </Loading>
-        </Card>
 
-    </StackPanel>
+    <sdg:SlimDataGrid Classes="TopLevel" ItemsSource="{Binding Investments}">
+        <sdg:SlimDataGrid.Styles>
+            <Style Selector="sdg|Cell TextBlock">
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+        </sdg:SlimDataGrid.Styles>
+        <sdg:SlimDataGrid.Columns>
+            <sdg:Column Header="Amount" Width="*" Binding="{Binding MostRecentInvestment.Amount.BtcString}" />
+            <sdg:Column Header="Date" Width="*" Binding="{Binding MostRecentInvestment.CreatedOn, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+            <sdg:Column Header="Investor" Width="150" Binding="{Binding MostRecentInvestment.InvestorNostrPubKey}">
+                <sdg:Column.CellTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" />
+                    </DataTemplate>
+                </sdg:Column.CellTemplate>
+            </sdg:Column>
+            <sdg:Column Header="Status" Width="Auto" Binding="{Binding MostRecentInvestment.Status}">
+                <sdg:Column.CellTemplate>
+                    <DataTemplate>
+                        <TextBlock Tag="{Binding}">
+                            <TextBlock.Styles>
+                                <Style Selector="TextBlock[Tag=PendingFounderSignatures]">
+                                    <Setter Property="Text" Value="Pending" />
+                                </Style>
+                                <Style Selector="TextBlock[Tag=FounderSignaturesReceived]">
+                                    <Setter Property="Text" Value="Approved" />
+                                </Style>
+                                <Style Selector="TextBlock[Tag=Invested]">
+                                    <Setter Property="Text" Value="Invested" />
+                                </Style>
+                            </TextBlock.Styles>
+                        </TextBlock>
+                    </DataTemplate>
+                </sdg:Column.CellTemplate>
+            </sdg:Column>
+            <sdg:Column Header="" Width="Auto" Binding="{Binding}">
+                <sdg:Column.CellTemplate>
+                    <DataTemplate>
+                        <Button Command="{Binding Approve}"
+                                IsVisible="{Binding $self.IsEffectivelyEnabled}"
+                                Content="Approve" />
+                    </DataTemplate>
+                </sdg:Column.CellTemplate>
+            </sdg:Column>
+            <sdg:Column Width="Auto" Binding="{Binding }">
+                <sdg:Column.CellTemplate>
+                    <DataTemplate>
+                        <ToggleButton Theme="{StaticResource ExpandingToggleButtonNoText}" x:Name="AreDetailsShown" IsChecked="{Binding AreDetailsShown, Mode=TwoWay}" Margin="10"
+                                      IsVisible="{Binding OtherInvestments, Converter={x:Static Enumerable.Any}}" />
+                    </DataTemplate>
+                </sdg:Column.CellTemplate>
+            </sdg:Column>
+        </sdg:SlimDataGrid.Columns>
+    </sdg:SlimDataGrid>
+
 </UserControl>
