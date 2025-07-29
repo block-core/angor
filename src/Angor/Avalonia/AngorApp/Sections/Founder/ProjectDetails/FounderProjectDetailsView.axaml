@@ -6,6 +6,7 @@
              xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:projectDetails="clr-namespace:AngorApp.Sections.Founder.ProjectDetails"
              xmlns:investments="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Investments"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.FounderProjectDetailsView" x:DataType="projectDetails:IFounderProjectDetailsViewModel">
     <Design.DataContext>
@@ -29,13 +30,16 @@
                 <Expander HorizontalAlignment="Stretch" Header="Investment History" IsVisible="{Binding HasProjectStarted}">
                     <investments:InvestmentsGrid DataContext="{Binding InvestmentsViewModel}"  />
                 </Expander>
-                <Button Content="See Project">
+                <IconButton Content="See Project (debug)">
+                    <IconButton.Icon>
+                        <ui:Icon Source="mdi-bug" />
+                    </IconButton.Icon>
                     <Button.Flyout>
                         <Flyout>
                             <TextBlock Text="{Binding Project, Converter={x:Static controls:AngorConverters.ToJson}}" />
                         </Flyout>
                     </Button.Flyout>
-                </Button>
+                </IconButton>
             </StackPanel>
         </ScrollViewer>
     </controls:PageContainer>
