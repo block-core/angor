@@ -2,8 +2,8 @@ using Angor.Contexts.Funding.Projects.Application.Dtos;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder;
 using AngorApp.Sections.Founder.CreateProject;
-using AngorApp.Sections.Founder.Details;
-using AngorApp.Sections.Founder.ManageFunds;
+using AngorApp.Sections.Founder.ProjectDetails;
+using AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
 using AngorApp.Sections.Home;
 using AngorApp.Sections.Portfolio.Penalties;
 using AngorApp.Sections.Portfolio;
@@ -11,6 +11,7 @@ using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
 using AngorApp.Sections.Portfolio.Recover;
 using Microsoft.Extensions.DependencyInjection;
+using FounderProjectDetailsViewModel = AngorApp.Sections.Founder.ProjectDetails.FounderProjectDetailsViewModel;
 
 namespace AngorApp.Composition.Registrations;
 

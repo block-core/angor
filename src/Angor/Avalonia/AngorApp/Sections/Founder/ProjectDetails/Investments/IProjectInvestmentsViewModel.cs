@@ -1,0 +1,45 @@
+using Angor.Contexts.Funding.Founder;
+
+namespace AngorApp.Sections.Founder.ProjectDetails.Investments;
+
+public interface IProjectInvestmentsViewModel : IDisposable
+{
+    public IEnumerable<IInvestmentViewModel> Investments { get; }
+    ReactiveCommand<Unit, Result<IEnumerable<IInvestmentViewModel>>> LoadInvestments { get; }
+    public bool IsProjectStarted { get; }
+}
+
+public class ProjectInvestmentsViewModelDesign : IProjectInvestmentsViewModel
+{
+    public IEnumerable<IInvestmentViewModel> Investments { get; set; } =
+    [
+        new InvestmentViewModelDesign()
+        {
+            MostRecentInvestment = { Status = InvestmentStatus.Invested, }
+        },
+        new InvestmentViewModelDesign()
+        {
+            MostRecentInvestment = { Status = InvestmentStatus.PendingFounderSignatures, }
+        },
+        new InvestmentViewModelDesign()
+        {
+            MostRecentInvestment = { Status = InvestmentStatus.Invested, }
+        },
+        new InvestmentViewModelDesign()
+        {
+            MostRecentInvestment =
+            {
+                Status = InvestmentStatus.Invalid,
+            },
+            OtherInvestments = [],
+        },
+    ];
+
+    public ReactiveCommand<Unit, Result<IEnumerable<IInvestmentViewModel>>> LoadInvestments { get; }
+    public bool IsProjectStarted { get; }
+
+    public void Dispose()
+    {
+        LoadInvestments.Dispose();
+    }
+}

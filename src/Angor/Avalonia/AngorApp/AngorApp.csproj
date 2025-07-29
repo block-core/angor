@@ -42,4 +42,13 @@
         <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\HeaderView.axaml" />
+      <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\ManageFundsView.axaml" />
+      <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\ProjectCard.axaml" />
+      <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\ProjectStatisticsView.axaml" />
+      <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\StageClaimView.axaml" />
+      <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\UnfundedProjectView.axaml" />
+    </ItemGroup>
+
 </Project>
