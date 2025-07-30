@@ -8,6 +8,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
 using Zafiro.Avalonia.Dialogs;
+using Zafiro.Avalonia.Misc;
 using Zafiro.Avalonia.Services;
 using Zafiro.UI;
 using Zafiro.UI.Navigation;
@@ -47,7 +48,7 @@ public static class UIServicesRegistration
             Position = NotificationPosition.BottomRight,
         };
         
-        AppUtils.SafeAreaPadding.BindTo(managedNotificationManager, manager => manager.Margin);
+        ApplicationUtils.SafeAreaPadding.BindTo(managedNotificationManager, manager => manager.Margin);
         
         return new NotificationService(managedNotificationManager);
     }

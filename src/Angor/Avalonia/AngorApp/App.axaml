@@ -146,7 +146,7 @@
         <StyleInclude Source="UI/Controls/List.axaml" />
         <StyleInclude Source="UI/Controls/IconLabel.axaml" />
         <StyleInclude Source="UI/Controls/Button.axaml" />
-        <StyleInclude Source="Sections/Wallet/CreateAndRecover/Steps/SeedWordsGeneration/SeedWordList.axaml" />
+        <StyleInclude Source="Sections/Wallet/CreateAndImport/Steps/SeedWordsGeneration/SeedWordList.axaml" />
         <StyleInclude Source="UI/Controls/IconButton.axaml" />
         <StyleInclude Source="UI/Controls/FeerateSelector.axaml" />
         <StyleInclude Source="UI/Controls/PageContainer.axaml" />
