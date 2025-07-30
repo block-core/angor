@@ -12,7 +12,7 @@
     <Design.DataContext>
         <manageFunds:ManageFundsViewModelDesign IsUnfunded="False">
             <manageFunds:ManageFundsViewModelDesign.UnfundedProjectViewModel>
-                <angorApp:UnfundedProjectViewModelDesign />
+                <manageFunds:UnfundedProjectViewModelDesign />
             </manageFunds:ManageFundsViewModelDesign.UnfundedProjectViewModel>
             <manageFunds:ManageFundsViewModelDesign.TargetAmount>
                 <design:DesignTimeAmount Sats="4000000" />

@@ -8,10 +8,11 @@
              xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             x:DataType="angorApp:IUnfundedProjectViewModel">
+             xmlns:manageFunds="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.ManageFunds"
+             x:DataType="manageFunds:IUnfundedProjectViewModel">
 
     <Design.DataContext>
-        <angorApp:UnfundedProjectViewModelDesign />
+        <manageFunds:UnfundedProjectViewModelDesign />
     </Design.DataContext>
 
     <Card>
