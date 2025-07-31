@@ -5,12 +5,13 @@
              xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="950"
              x:Class="AngorApp.Sections.Wallet.WalletSetupView" x:DataType="wallet:IWalletSectionViewModel">
 
     <UserControl.Styles>
         <Style Selector="Button">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
             <Setter Property="Padding" Value="15" />
         </Style>
     </UserControl.Styles>
@@ -54,16 +55,9 @@
     </UserControl.Resources>
 
     <Card Container.Name="Root" Container.Sizing="Width" Header="Wallet Setup" IsVisible="{Binding CanCreateWallet}" IsAdaptiveFlowEnabled="True">
-        <Card.Styles>
-            <!-- <ContainerQuery Name="Root" Query="min-width:500"> -->
-            <!--     <Style Selector="CardGrid"> -->
-            <!--         <Setter Property="MaxWidth" Value="700"></Setter> -->
-            <!--     </Style> -->
-            <!-- </ContainerQuery> -->
-        </Card.Styles>
         <DockPanel VerticalSpacing="20">
             <StackPanel Classes="BigGap" DockPanel.Dock="Top">
-                <TextBlock Classes="Warning">It seems you don't have a wallet yet. You need one to unleash the Angor experience!</TextBlock>
+                <TextBlock Classes="Warning Wrap">It seems you don't have a wallet yet. You need one to unleash the Angor experience!</TextBlock>
                 <TextBlock>With a wallet you will be able to:</TextBlock>
                 <BulletList>
                     <BulletList.ItemsSource>
@@ -74,33 +68,36 @@
                     </BulletList.ItemsSource>
                 </BulletList>
             </StackPanel>
-            <CardGrid x:Name="CardGrid">
-                <CardGrid.ItemsSource>
-                    <collections:ArrayList>
-                        <Button Command="{Binding Create}">
-                            <Button.Content>
-                                <StackPanel Classes="SmallGap">
-                                    <ContentControl ContentTemplate="{StaticResource BigIcon}">
-                                        <ui:Icon Source="svg:/Assets/add.svg" />
-                                    </ContentControl>
-                                    <TextBlock>New Wallet</TextBlock>
-                                </StackPanel>
-                            </Button.Content>
-                        </Button>
-                        <Button Command="{Binding Import}">
-                            <Button.Content>
-                                <StackPanel Classes="SmallGap">
-                                    <ContentControl ContentTemplate="{StaticResource BigIcon}">
-                                        <ui:Icon Source="svg:/Assets/recovery.svg" />
-                                    </ContentControl>
-                                    <TextBlock>Import Wallet</TextBlock>
-                                </StackPanel>
-                            </Button.Content>
-                        </Button>
-                    </collections:ArrayList>
-                </CardGrid.ItemsSource>
-            </CardGrid>
+            <ProportionalCanvas>
+                <CardGrid x:Name="CardGrid" ProportionalCanvas.Left="0.20" ProportionalCanvas.ProportionalWidth="0.6"
+                          ProportionalCanvas.Top="0.1" ProportionalCanvas.ProportionalHeight="0.3">
+                    <CardGrid.ItemsSource>
+                        <collections:ArrayList>
+                            <Button Command="{Binding Create}">
+                                <Button.Content>
+                                    <StackPanel Classes="SmallGap">
+                                        <ContentControl ContentTemplate="{StaticResource BigIcon}">
+                                            <ui:Icon Source="svg:/Assets/add.svg" />
+                                        </ContentControl>
+                                        <TextBlock>New Wallet</TextBlock>
+                                    </StackPanel>
+                                </Button.Content>
+                            </Button>
+                            <Button Command="{Binding Import}">
+                                <Button.Content>
+                                    <StackPanel Classes="SmallGap">
+                                        <ContentControl ContentTemplate="{StaticResource BigIcon}">
+                                            <ui:Icon Source="svg:/Assets/recovery.svg" />
+                                        </ContentControl>
+                                        <TextBlock>Import Wallet</TextBlock>
+                                    </StackPanel>
+                                </Button.Content>
+                            </Button>
+                        </collections:ArrayList>
+                    </CardGrid.ItemsSource>
+                </CardGrid>
 
+            </ProportionalCanvas>
         </DockPanel>
     </Card>
 </UserControl>
