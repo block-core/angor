@@ -36,6 +36,34 @@
             </Style>
 
         </ControlTheme>
+        <ControlTheme x:Key="ExpandingToggleButtonNoText" TargetType="ToggleButton" 
+                      BasedOn="{StaticResource {x:Type ToggleButton}}">
+            <!-- <Setter Property="Background" Value="Red"></Setter> -->
+            <Style Selector="^[IsChecked=True]">
+                <Setter Property="Content">
+                    <Setter.Value>
+                        <Template>
+                            <ContentControl>
+                                <ui:Icon Source="fa-angle-up" />
+                            </ContentControl>
+                        </Template>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style Selector="^[IsChecked=False]">
+                <Setter Property="Content">
+                    <Setter.Value>
+                        <Template>
+                            <ContentControl>
+                                <ui:Icon Source="fa-angle-down" />
+                            </ContentControl>
+                        </Template>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+        </ControlTheme>
+
     </Styles.Resources>
     <Design.PreviewWith>
         <Border Padding="20">

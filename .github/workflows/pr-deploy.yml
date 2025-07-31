@@ -76,7 +76,7 @@ jobs:
         
     # Run tests to make sure PR doesn't break anything
     - name: Run Tests
-      continue-on-error: true
+      continue-on-error: false 
       run: dotnet test -c Release --verbosity normal ${{env.SOLUTION_PATH}} --filter "Category!=E2E"
       
     # Prepare for deployment

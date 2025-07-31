@@ -59,7 +59,7 @@ jobs:
       run: dotnet publish -c Release -r ${{matrix.runtime}} /p:Version=${{ env.VERSION }}.${{ github.run_number }} -v m -o publish  ${{env.PROJECT_PATH}}
 
     - name: Run Tests
-      continue-on-error: true
+      continue-on-error: false 
       run: dotnet test -c Release -r ${{matrix.runtime}} --verbosity normal  ${{env.SOLUTION_PATH}} 
 
     - name: Zip Release

@@ -10,6 +10,7 @@
 @using Blockcore.NBitcoin
 @using Blockcore.NBitcoin.DataEncoders
 @using Blockcore.Networks
+@using System.Globalization
 @inherits BaseComponent
 @inject IDerivationOperations _derivationOperations
 @inject IWalletStorage _walletStorage;
@@ -17,11 +18,13 @@
 @inject ICacheStorage _cacheStorage;
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
+@inject IPsbtOperations _PsbtOperations
 @inject IRelayService _RelayService
 @inject ILogger<Create> _Logger;
 @inject IHtmlStripperService HtmlStripperService;
 @inject IJSRuntime JS;
 @inject NavMenuState NavMenuState
+@inject IFeatureFlagService _featureFlagService
 
 @inject IWalletUIService _walletUIService;
 
@@ -52,13 +55,13 @@
                 <h5 class="header-text">Create New Project</h5>
             </div>
             <div class="header-actions">
+
             </div>
         </div>
     </div>
 </div>
 
 <div class="card card-body mt-4 slide-in">
-
 
     <div class="animate-fade-in">
         <h5 class="mb-4 d-flex align-items-center">
@@ -73,17 +76,36 @@
                     <div class="info-card">
                         <div class="mb-3">
                             <label for="NostrMetadataName" class="form-label">Project name</label>
-                            <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated" />
+                            <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated" maxlength="200" />
+                            <small class="form-text text-muted">
+                                @((project.Metadata?.Name?.Length ?? 0).ToString())/200 characters
+                            </small>
                         </div>
 
                         <div class="mb-3">
                             <label for="NostrMetadataAbout" class="form-label">About</label>
-                            <InputTextArea id="NostrMetadataAbout" autocomplete="off" @bind-Value="project.Metadata.About" class="form-control" placeholder="Provide a brief description of the project" disabled="@nostrMetadataCreated" />
+                            <InputTextArea id="NostrMetadataAbout" autocomplete="off" @bind-Value="project.Metadata.About" class="form-control" placeholder="Provide a brief description of the project" disabled="@nostrMetadataCreated" maxlength="400" />
+                            <small class="form-text text-muted">
+                                @((project.Metadata?.About?.Length ?? 0).ToString())/400 characters
+                            </small>
                         </div>
 
                         <div class="mb-3">
                             <label for="NostrMetadataWebsite" class="form-label">Project website</label>
-                            <InputText id="NostrMetadataWebsite" autocomplete="off" @bind-Value="project.Metadata.Website" class="form-control" placeholder="Enter the URL of the project website" disabled="@nostrMetadataCreated" />
+                            <InputText type="url"
+                                       id="NostrMetadataWebsite"
+                                       autocomplete="off"
+                                       @bind-Value="project.Metadata.Website"
+                                       @onblur="OnWebsiteChanged"
+                                       class=@($"form-control{(websiteError ? " is-invalid" : "")}")
+                                       placeholder="Enter the URL of the project website (https://example.com)"
+                                       disabled="@nostrMetadataCreated" />
+                            @if (websiteError)
+                            {
+                                <div class="text-danger mt-1 small">
+                                    @websiteErrorMessage
+                                </div>
+                            }
                         </div>
 
                         <div class="mb-3">
@@ -91,15 +113,39 @@
                                 Banner Image Url
                                 <span class="ms-2">(Recommended size: 820×312px)</span>
                             </label>
-                            <InputText id="NostrMetadataBanner" autocomplete="off" @bind-Value="project.Metadata.Banner" class="form-control" placeholder="Enter the URL for the project banner image" disabled="@nostrMetadataCreated" />
+                            <InputText id="NostrMetadataBanner" 
+                                       autocomplete="off" 
+                                       @bind-Value="project.Metadata.Banner" 
+                                       @onblur="OnBannerChanged"
+                                       class=@($"form-control{(bannerError ? " is-invalid" : "")}")
+                                       placeholder="Enter the URL for the project banner image" 
+                                       disabled="@nostrMetadataCreated" />
+                            @if (bannerError)
+                            {
+                                <div class="text-danger mt-1 small">
+                                    @bannerErrorMessage
+                                </div>
+                            }
                         </div>
 
                         <div class="mb-3">
                             <label for="NostrMetadataPicture" class="form-label d-flex align-items-center">
-                                Avatar Image Url
+                                Profile Image Url
                                 <span class="ms-2">(Recommended size: 170×170px)</span>
                             </label>
-                            <InputText id="NostrMetadataPicture" autocomplete="off" @bind-Value="project.Metadata.Picture" class="form-control" placeholder="Enter the URL for the project logo or profile picture" disabled="@nostrMetadataCreated" />
+                            <InputText id="NostrMetadataPicture" 
+                                       autocomplete="off" 
+                                       @bind-Value="project.Metadata.Picture" 
+                                       @onblur="OnPictureChanged"
+                                       class=@($"form-control{(pictureError ? " is-invalid" : "")}")
+                                       placeholder="Enter the URL for the project logo or profile picture" 
+                                       disabled="@nostrMetadataCreated" />
+                            @if (pictureError)
+                            {
+                                <div class="text-danger mt-1 small">
+                                    @pictureErrorMessage
+                                </div>
+                            }
                         </div>
                     </div>
 
@@ -122,7 +168,26 @@
                                     <label for="targetAmount" class="form-label mb-0 fw-semibold">Target Amount</label>
                                 </div>
                                 <p class="form-text text-muted mt-0 mb-2 small">The minimum amount of @network.CoinTicker this project is trying to raise.</p>
-                                <InputNumber id="targetAmount" @bind-Value="targetAmountInBTC" class="form-control" placeholder="Enter target amount" disabled="@nostrApplicationSpecificDataCreated" />
+                                <InputNumber id="targetAmount"
+                                             @bind-Value="targetAmountInBTC"
+                                             @onblur="ValidateTargetAmount"
+                                             class="form-control"
+                                             placeholder="Enter target amount"
+                                             min="0"
+                                             type="number"
+                                             disabled="@nostrApplicationSpecificDataCreated" />
+                                @if (targetAmountError)
+                                {
+                                    <div class="invalid-feedback d-block">
+                                        @targetAmountErrorMessage
+                                    </div>
+                                }
+                                else if (targetAmountInBTC < 0)
+                                {
+                                    <div class="text-danger mt-1 small">
+                                        Target amount cannot be negative.
+                                    </div>
+                                }
                             </div>
                         </div>
 
@@ -157,7 +222,9 @@
                                 </div>
                                 @if (endDateError)
                                 {
-                                    <div class="text-danger mt-1">End date must be before the first stage date</div>
+                                    <div class="text-danger mt-1 small">
+                                        @endDateErrorMessage
+                                    </div>
                                 }
                             </div>
                         </div>
@@ -174,7 +241,13 @@
                                     <label for="penaltyDays" class="form-label mb-0 fw-semibold">Penalty Days</label>
                                 </div>
                                 <p class="form-text text-muted mt-0 mb-2 small">Number of days to lock funds for departing investors who wish to withdraw early.</p>
-                                <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" class="form-control" disabled="@nostrApplicationSpecificDataCreated" />
+                                <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" @onblur="ValidatePenaltyDays" @oninput="OnPenaltyDaysInput" class="form-control" min="0" max="365" disabled="@nostrApplicationSpecificDataCreated" />
+                                @if (penaltyDaysError)
+                                {
+                                    <div class="text-danger mt-1 small">
+                                        @penaltyDaysErrorMessage
+                                    </div>
+                                }
                             </div>
 
                             <!-- Expiry Date -->
@@ -277,9 +350,9 @@
                                                     </span>
 
                                                     <!-- Input Fields -->
-                                                    <div class="row g-2 align-items-end">
+                                                    <div class="row g-2">
                                                         <!-- Percentage Field -->
-                                                        <div class="col-12 col-md-4 col-lg-3">
+                                                        <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-3">
                                                             <div class="form-group mb-0">
                                                                 <label class="form-label small fw-semibold text-muted">
                                                                     <Icon IconName="percent" Width="14" Height="14" Class="me-1" />
@@ -299,23 +372,30 @@
                                                         </div>
 
                                                         <!-- Date Field -->
-                                                        <div class="col-12 col-md-8 col-lg-9">
+                                                        <div class="col-12 col-sm-6 col-md-8 col-lg-9 col-xl-9">
                                                             <div class="form-group mb-0">
                                                                 <label class="form-label small fw-semibold text-muted">
                                                                     <Icon IconName="calendar" Width="14" Height="14" Class="me-1" />
                                                                     Release Date
                                                                 </label>
+
                                                                 <DatePicker Value="@GetStageReleaseDate(stage)"
                                                                             ValueChanged="@(value => SetStageReleaseDate(stage, value))"
                                                                             Placeholder="Select date"
                                                                             Class="form-control form-control-modern date-picker-input"
                                                                             Disabled="@nostrApplicationSpecificDataCreated" />
+
+                                                                @if (stageDateErrors.ContainsKey(stage) && !string.IsNullOrEmpty(stageDateErrors[stage]))
+                                                                {
+                                                                    <div class="text-danger mt-1 small">
+                                                                        @stageDateErrors[stage]
+                                                                    </div>
+                                                                }
                                                             </div>
                                                         </div>
+
                                                     </div>
                                                 </div>
-
-
 
                                             </div>
                                         </div>
@@ -391,17 +471,17 @@
                                 <span class="user-select-none animate-rotate">
                                     <Icon IconName="view" Height="20" Width="20" />
                                 </span>
-                                <div class="h-100 ms-3">
-                                    <h6 class="mb-0 font-weight-bolder">
+                                <div class="h-100 ms-3 flex-grow-1 min-width-0">
+                                    <h5 class="mb-0 font-weight-bolder text-truncate">
                                         @if (string.IsNullOrEmpty(project.Metadata?.Name))
                                         {
                                             <span>Name</span>
                                         }
                                         else
                                         {
-                                            <span>@project.Metadata.Name</span>
+                                            <span class="project-name" title="@project.Metadata.Name">@project.Metadata.Name</span>
                                         }
-                                    </h6>
+                                    </h5>
                                 </div>
                             </div>
 
@@ -625,7 +705,7 @@
                                 <h6 class="mb-1">
                                     @if (currentStep == 1)
                                     {
-                                        <span>Creating Nostr Profile...</span>
+                                        <span>Creating Project Profile...</span>
                                     }
                                     else if (currentStep == 2)
                                     {
@@ -696,7 +776,7 @@
                         }
                     </div>
                     <div>
-                        <h6 class="mb-1">Create Nostr Profile</h6>
+                        <h6 class="mb-1">Create Project Profile</h6>
                         <p class="text-muted small mb-0">Establish your project's identity on the Nostr network</p>
                     </div>
                 </div>
@@ -1013,6 +1093,10 @@
     private FounderProject project = new();
 
     private bool endDateError = false;
+    private string endDateErrorMessage = "";
+
+    private bool penaltyDaysError = false;
+    private string penaltyDaysErrorMessage = "";
 
     private readonly Dictionary<string, (int[] Percentages, int IntervalDays)> presets = new()
     {
@@ -1026,6 +1110,12 @@
         get => Money.Satoshis(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC);
         set => project.ProjectInfo.TargetAmount = Money.Coins(value).Satoshi;
     }
+
+    private bool debugMode;
+    private bool isTestnet;
+
+    // Helper property to determine if production validations should be skipped
+    private bool ShouldSkipProductionValidations => isTestnet && debugMode;
 
     private int activeTab = 1;
 
@@ -1045,6 +1135,19 @@
     bool hasErrors;
 
     private int currentStep = 1;
+    private bool websiteError = false;
+    private string websiteErrorMessage = "";
+
+    private bool bannerError = false;
+    private string bannerErrorMessage = "";
+
+    private bool pictureError = false;
+    private string pictureErrorMessage = "";
+
+    private bool targetAmountError = false;
+    private string targetAmountErrorMessage = "";
+
+    private Dictionary<Stage, string> stageDateErrors = new();
 
     private int GetProgressPercentage() => (currentStep - 1) * 50;
 
@@ -1077,6 +1180,8 @@
     protected override async Task OnInitializedAsync()
     {
         NavMenuState.SetActivePage("founder");
+        debugMode = storage?.GetDebugMode() ?? false;
+        isTestnet = network?.NetworkType == NetworkType.Testnet;
 
         if (!hasWallet)
         {
@@ -1128,7 +1233,7 @@
         // Always update expiry date based on stages (or start date if no stages)
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
 
-        if (network.NetworkType == NetworkType.Testnet)
+        if (network.NetworkType == NetworkType.Testnet && debugMode)
         {
             PopulateTestnetData(project);
         }
@@ -1142,6 +1247,15 @@
         // check if the project was already published to nostr
         nostrMetadataCreated = project.NostrProfileCreated;
         nostrApplicationSpecificDataCreated = !string.IsNullOrEmpty(project.ProjectInfoEventId);
+
+        // Initialize stageDateErrors dictionary for existing stages
+        foreach (var stage in project.ProjectInfo.Stages)
+        {
+            if (!stageDateErrors.ContainsKey(stage))
+            {
+                stageDateErrors[stage] = "";
+            }
+        }
     }
 
     private string GetActiveClass(int tabNumber)
@@ -1170,7 +1284,7 @@
     {
         if (nostrMetadataCreated)
         {
-            notificationComponent.ShowErrorMessage("Nostr profile already created");
+            notificationComponent.ShowErrorMessage("Project profile already created");
             return;
         }
 
@@ -1180,7 +1294,7 @@
             return;
         }
 
-        confirmationMessage = "Are you sure you want to create the Nostr Profile?";
+        confirmationMessage = "Are you sure you want to create the project profile?";
         finalizeAction = FinalizeNostrProfileCreation;
         showConfirmationModal = true;
     }
@@ -1282,12 +1396,12 @@
 
             if (string.IsNullOrEmpty(resultId))
             {
-                notificationComponent.ShowErrorMessage("Failed to create nostr profile");
+                notificationComponent.ShowErrorMessage("Failed to create project profile");
             }
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, "Error creating nostr profile.");
+            _Logger.LogError(e, "Error creating project profile.");
             notificationComponent.ShowErrorMessage(e.Message, e);
         }
         finally
@@ -1300,7 +1414,7 @@
     {
         if (!project.NostrProfileCreated)
         {
-            notificationComponent.ShowErrorMessage("You must create the Nostr profile first.");
+            notificationComponent.ShowErrorMessage("You must create the project profile first.");
             return;
         }
 
@@ -1407,7 +1521,16 @@
 
             unsignedTransaction = _founderTransactionActions.CreateNewProjectTransaction(project.ProjectInfo.FounderKey, _derivationOperations.AngorKeyToScript(project.ProjectInfo.ProjectIdentifier), NetworkConfiguration.AngorCreateFeeSats, NetworkConfiguration.NostrEventIdKeyType, project.ProjectInfoEventId);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            if (_featureFlagService.IsFeatureHWSupportEnabled())
+            {
+                var psbt = _PsbtOperations.CreatePsbtForTransaction(unsignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
+
+                signedTransaction = _PsbtOperations.SignPsbt(psbt, words);
+            }
+            else
+            {
+                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            }
 
             showCreateModal = true;
         }
@@ -1439,12 +1562,22 @@
             var words = await passwordComponent.GetWalletAsync();
             var accountInfo = storage.GetAccountInfo(network.Name);
 
-            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
-            accountInfo.GetNextChangeReceiveAddress(),
-            unsignedTransaction,
-            words,
-            accountInfo,
-            feeData.SelectedFeeEstimation.FeeRate);
+            if (_featureFlagService.IsFeatureHWSupportEnabled())
+            {
+                var psbt = _PsbtOperations.CreatePsbtForTransaction(unsignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+
+                signedTransaction = _PsbtOperations.SignPsbt(psbt, words);
+            }
+            else
+            {
+                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
+                    accountInfo.GetNextChangeReceiveAddress(),
+                    unsignedTransaction,
+                    words,
+                    accountInfo,
+                    feeData.SelectedFeeEstimation.FeeRate);
+            }
+
 
             StateHasChanged();
         }
@@ -1505,7 +1638,11 @@
             return;
         }
 
-        project.ProjectInfo.Stages.Add(new Stage { ReleaseDate = DateTime.UtcNow });
+        var newStage = new Stage { ReleaseDate = DateTime.UtcNow };
+        project.ProjectInfo.Stages.Add(newStage);
+
+        // Initialize error state for new stage
+        stageDateErrors[newStage] = "";
 
         // Update expiry date
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
@@ -1522,6 +1659,11 @@
 
         project.ProjectInfo.Stages.Remove(stage);
 
+        if (stageDateErrors.ContainsKey(stage))
+        {
+            stageDateErrors.Remove(stage);
+        }
+
         // Update expiry date
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
         StateHasChanged();
@@ -1533,28 +1675,11 @@
         return new MarkupString(sanitizedInput);
     }
 
-    private async void SetActiveTab(int tabNumber)
-    {
-        if (!nostrMetadataCreated)
-        {
-            // Save the project before switching tabs
-            storage.UpdateFounderProject(project);
-        }
-
-        activeTab = tabNumber;
-        StateHasChanged();
-
-        // Add a slight delay before scrolling to the top
-        // This ensures the tab content has been rendered
-        await Task.Delay(10);
-        await JS.InvokeVoidAsync("window.scrollTo", 0, 0);
-    }
-
     private string GetProgressMessage()
     {
         if (!nostrMetadataCreated)
         {
-            return "Step 1: Create Nostr Profile";
+            return "Step 1: Create project profile";
         }
 
         if (!nostrApplicationSpecificDataCreated)
@@ -1578,12 +1703,15 @@
 
         if (selectedPreset != null && presets.TryGetValue(selectedPreset, out var preset))
         {
+            stageDateErrors.Clear();
+
             project.ProjectInfo.Stages.Clear();
             project.ProjectInfo.Stages = GenerateStages(preset.Percentages, preset.IntervalDays);
         }
         else
         {
             notificationComponent.ShowErrorMessage("Invalid preset selected.");
+            stageDateErrors.Clear();
             project.ProjectInfo.Stages.Clear();
         }
 
@@ -1592,106 +1720,173 @@
 
     private bool ValidateInputData()
     {
-        var isTestnet = this.network.NetworkType == NetworkType.Testnet;
-
-        if (!isTestnet)
-        {
-            // test that need to happen in production will go here
-
-            if (project.ProjectInfo.PenaltyDays < 10)
-            {
-                notificationComponent.ShowErrorMessage("Project penalty must be higher than 10 days");
-                return false;
-            }
-
-            if (project.ProjectInfo.Stages.Count() < 3)
-            {
-                notificationComponent.ShowErrorMessage("There must be at least 3 stages");
-                return false;
-            }
-
-            if (targetAmountInBTC < (decimal)0.01)
-            {
-                notificationComponent.ShowErrorMessage("Project target amount must be higher than 0.1 BTC");
-                return false;
-            }
-
-            if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.StartDate)
-            {
-                notificationComponent.ShowErrorMessage("Project must expire after the start date");
-                return false;
-            }
-
-            if (project.ProjectInfo.Stages.Any() && project.ProjectInfo.ExpiryDate < project.ProjectInfo.Stages.Last().ReleaseDate)
-            {
-                notificationComponent.ShowErrorMessage("Project expiry date must be after the last stage date");
-                return false;
-            }
-
-            if (project.ProjectInfo.StartDate < DateTime.Today)
-            {
-                notificationComponent.ShowErrorMessage("Project must start in the future");
-                return false;
-            }
-        }
-
+        
         if (project.Metadata is null)
         {
-            notificationComponent.ShowErrorMessage("Nostr profile must be filled");
+            notificationComponent.ShowErrorMessage("Project profile information is required.");
             return false;
         }
 
-        if (string.IsNullOrEmpty(project.Metadata.Name))
+        if (string.IsNullOrWhiteSpace(project.Metadata.Name))
         {
-            notificationComponent.ShowErrorMessage("Nostr profile name must be filled");
+            notificationComponent.ShowErrorMessage("Project name is required.");
             return false;
         }
 
-        if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
+        if (project.Metadata.Name.Length > 200)
         {
-            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
+            notificationComponent.ShowErrorMessage("Project name must not exceed 200 characters.");
             return false;
         }
 
-        foreach (var stage in project.ProjectInfo.Stages)
+        if (string.IsNullOrWhiteSpace(project.Metadata.About))
         {
-            if (stage.AmountToRelease <= 0 || stage.AmountToRelease > 100)
-            {
-                notificationComponent.ShowErrorMessage("Stage percentage must be between 1 and 100.");
-                return false;
-            }
+            notificationComponent.ShowErrorMessage("Project description is required.");
+            return false;
         }
 
-        var projects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
-
-        if (projects.Any(a => project.ProjectInfo.ProjectIdentifier == a.ProjectInfo.ProjectIdentifier))
+        if (project.Metadata.About.Length > 400)
         {
-            notificationComponent.ShowErrorMessage("This wallet already has a project with this index");
+            notificationComponent.ShowErrorMessage("Project description must not exceed 400 characters.");
+            return false;
+        }
+
+        ValidateTargetAmount();
+        if (targetAmountError)
+            return false;
+
+        if (targetAmountInBTC <= 0)
+        {
+            notificationComponent.ShowErrorMessage("Project target amount must be greater than 0.");
+            return false;
+        }
+
+        if (project.ProjectInfo.StartDate == default(DateTime))
+        {
+            notificationComponent.ShowErrorMessage("Project start date is required.");
+            return false;
+        }
+
+        if (project.ProjectInfo.EndDate == default(DateTime))
+        {
+            notificationComponent.ShowErrorMessage("Project end date is required.");
+            return false;
+        }
+
+        if (!project.ProjectInfo.Stages.Any())
+        {
+            notificationComponent.ShowErrorMessage("Project must have at least one funding stage.");
+            return false;
+        }
+
+        if (project.ProjectInfo.ExpiryDate == default(DateTime))
+        {
+            notificationComponent.ShowErrorMessage("Project expiry date is required.");
+            return false;
+        }
+
+        if (project.ProjectInfo.EndDate < project.ProjectInfo.StartDate)
+        {
+            notificationComponent.ShowErrorMessage("Funding end date must be after the start date.");
+            return false;
+        }
+
+        if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.StartDate)
+        {
+            notificationComponent.ShowErrorMessage("Project expiry date must be after the start date.");
+            return false;
+        }
+
+        if (project.ProjectInfo.ExpiryDate < project.ProjectInfo.EndDate)
+        {
+            notificationComponent.ShowErrorMessage("Project expiry date must be after the funding end date.");
+            return false;
+        }
+
+        if (!ValidateWebsiteUrl())
+            return false;
+
+        if (!ValidateBannerUrl())
+            return false;
+
+        if (!ValidatePictureUrl())
+            return false;
+
+        // Skip production validations in testnet debug mode
+        if (ShouldSkipProductionValidations)
+        {
+            return true; 
+        }
+
+        if (project.ProjectInfo.Stages.Count() < 3)
+        {
+            notificationComponent.ShowErrorMessage("Project must have at least 3 funding stages.");
+            return false;
+        }
+
+        if (targetAmountInBTC < (decimal)0.01)
+        {
+            notificationComponent.ShowErrorMessage("Project target amount must be at least 0.01 BTC.");
+            return false;
+        }
+
+        if (project.ProjectInfo.StartDate > DateTime.Today.AddYears(1))
+        {
+            notificationComponent.ShowErrorMessage("Project start date cannot be more than one year in the future.");
             return false;
         }
 
         if (project.ProjectInfo.Stages.Any())
         {
-            // First check if first stage is after project start
-            if (project.ProjectInfo.Stages.First().ReleaseDate < project.ProjectInfo.EndDate) // end date is end of funding window
+            var stages = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).ToList();
+            var firstStageDate = stages.First().ReleaseDate;
+            var lastStageDate = stages.Last().ReleaseDate;
+
+            if (firstStageDate <= project.ProjectInfo.EndDate)
             {
-                notificationComponent.ShowErrorMessage("First stage must be after project started");
+                notificationComponent.ShowErrorMessage("The first funding stage must start after the fundraising period ends.");
                 return false;
             }
 
-            // Then check stages are in order
-            var sortedStages = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).ToList();
-            for (int i = 0; i < sortedStages.Count - 1; i++)
+            if (project.ProjectInfo.ExpiryDate < lastStageDate)
             {
-                if (sortedStages[i].ReleaseDate >= sortedStages[i + 1].ReleaseDate)
+                notificationComponent.ShowErrorMessage("Project expiry date must be after the last stage release date.");
+                return false;
+            }
+
+            var totalPercent = stages.Sum(s => s.AmountToRelease);
+            if (Math.Abs(totalPercent - 100) > 0.01m) // Allow for small floating point differences
+            {
+                notificationComponent.ShowErrorMessage($"Stage percentages must sum to exactly 100% (currently {totalPercent:F2}%).");
+                return false;
+            }
+
+            foreach (var stage in stages)
+            {
+                if (stage.AmountToRelease <= 0)
                 {
-                    notificationComponent.ShowErrorMessage($"Stage {i + 2} must be after stage {i + 1}");
+                    notificationComponent.ShowErrorMessage("Each stage must release more than 0% of funds.");
+                    return false;
+                }
+
+                if (stage.AmountToRelease > 100)
+                {
+                    notificationComponent.ShowErrorMessage("No stage can release more than 100% of funds.");
                     return false;
                 }
             }
 
-            // Keep stages sorted
-            project.ProjectInfo.Stages = sortedStages;
+            project.ProjectInfo.Stages = stages;
+        }
+
+        var existingProjects = storage.GetFounderProjects()
+            .Where(p => !string.IsNullOrEmpty(p.CreationTransactionId))
+            .ToList();
+
+        if (existingProjects.Any(p => p.ProjectInfo.ProjectIdentifier == project.ProjectInfo.ProjectIdentifier))
+        {
+            notificationComponent.ShowErrorMessage("A project with this identifier already exists in this wallet.");
+            return false;
         }
 
         return true;
@@ -1704,11 +1899,15 @@
 
         for (int i = 0; i < percentages.Length; i++)
         {
-            stages.Add(new Stage
+            var stage = new Stage
             {
                 AmountToRelease = percentages[i],
                 ReleaseDate = currentDate
-            });
+            };
+
+            stages.Add(stage);
+
+            stageDateErrors[stage] = "";
 
             if (i > 0)
             {
@@ -1730,18 +1929,24 @@
             return;
         }
 
-        project.ProjectInfo.Stages.Clear(); // Reset existing stages
+        stageDateErrors.Clear();
+
+        project.ProjectInfo.Stages.Clear();
 
         var stageDuration = totalDuration / numberOfStages;
         var stagePercentage = 100m / numberOfStages;
 
         for (int i = 0; i < numberOfStages; i++)
         {
-            project.ProjectInfo.Stages.Add(new Stage
+            var stage = new Stage
             {
                 AmountToRelease = stagePercentage,
                 ReleaseDate = project.ProjectInfo.StartDate.AddDays(i * stageDuration)
-            });
+            };
+
+            project.ProjectInfo.Stages.Add(stage);
+
+            stageDateErrors[stage] = "";
         }
 
         StateHasChanged();
@@ -1839,17 +2044,48 @@
 
     private void ValidateEndDate()
     {
-        if (project.ProjectInfo.Stages.Any())
+        endDateError = false;
+        endDateErrorMessage = string.Empty;
+
+        // In debug mode, allow end date to be equal to start date
+        bool isEndDateInvalid = ShouldSkipProductionValidations 
+            ? project.ProjectInfo.EndDate < project.ProjectInfo.StartDate
+            : project.ProjectInfo.EndDate <= project.ProjectInfo.StartDate;
+
+        if (isEndDateInvalid)
         {
-            var firstStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
-            if (project.ProjectInfo.EndDate >= firstStageDate)
+            endDateError = true;
+            endDateErrorMessage = "Funding end date must be after the start date.";
+            StateHasChanged();
+            return;
+        }
+
+        if (!ShouldSkipProductionValidations)
+        {
+            if (project.ProjectInfo.EndDate > project.ProjectInfo.StartDate.AddYears(1))
             {
                 endDateError = true;
+                endDateErrorMessage = "Funding period cannot exceed one year.";
+                StateHasChanged();
+                return;
             }
-            else
+
+            if (project.ProjectInfo.Stages.Any())
             {
-                endDateError = false;
+                var firstStageDate = project.ProjectInfo.Stages.OrderBy(s => s.ReleaseDate).First().ReleaseDate;
+                if (project.ProjectInfo.EndDate >= firstStageDate)
+                {
+                    endDateError = true;
+                    endDateErrorMessage = "Funding end date must be before the first stage release date.";
+                    StateHasChanged();
+                    return;
+                }
             }
+        }
+
+        if (!endDateError)
+        {
+            ValidateAllStages();
         }
 
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
@@ -1872,6 +2108,11 @@
         {
             project.ProjectInfo.EndDate = value.Value;
             ValidateEndDate();
+            foreach (var stage in project.ProjectInfo.Stages)
+            {
+                SetStageReleaseDate(stage, stage.ReleaseDate);
+            }
+
         }
     }
 
@@ -1882,11 +2123,81 @@
 
     private void SetStageReleaseDate(Stage stage, DateTime? value)
     {
-        if (value.HasValue)
+        if (!value.HasValue)
+            return;
+
+        stage.ReleaseDate = value.Value;
+
+        ValidateAllStages();
+        ValidateEndDate();
+        StateHasChanged();
+    }
+
+    private void ValidateStageDate(Stage stage)
+    {
+        if (!stageDateErrors.ContainsKey(stage))
         {
-            stage.ReleaseDate = value.Value;
+            stageDateErrors[stage] = string.Empty;
+        }
+
+        stageDateErrors[stage] = string.Empty;
+
+        var stages = project.ProjectInfo.Stages;
+        var index = stages.IndexOf(stage);
+
+        if (index > 0)
+        {
+            var previousStage = stages[index - 1];
+            if (stage.ReleaseDate <= previousStage.ReleaseDate)
+            {
+                stageDateErrors[stage] = $"Stage {index + 1} must be after Stage {index}.";
+                return;
+            }
+        }
+
+        if (index < stages.Count - 1)
+        {
+            var nextStage = stages[index + 1];
+            if (stage.ReleaseDate >= nextStage.ReleaseDate)
+            {
+                stageDateErrors[stage] = $"Stage {index + 1} must be before Stage {index + 2}.";
+                return;
+            }
+        }
+
+        if (!ShouldSkipProductionValidations)
+        {
+            if (index == 0)
+            {
+                if (stage.ReleaseDate <= project.ProjectInfo.EndDate)
+                {
+                    stageDateErrors[stage] = "First stage must be after the fundraising end date.";
+                    return;
+                }
+            }
+
+            if (stage.ReleaseDate >= project.ProjectInfo.ExpiryDate)
+            {
+                stageDateErrors[stage] = "Stage must be before project expiry date.";
+                return;
+            }
+
+            if (stage.ReleaseDate > project.ProjectInfo.StartDate.AddYears(2))
+            {
+                stageDateErrors[stage] = "Stage date cannot be more than 2 years from project start.";
+                return;
+            }
         }
     }
+
+    private void ValidateAllStages()
+    {
+        foreach (var stage in project.ProjectInfo.Stages)
+        {
+            ValidateStageDate(stage);
+        }
+    }
+
 
     private DateTime CalculateExpiryDate()
     {
@@ -1931,7 +2242,6 @@
 
         try
         {
-            // Step 1: Create Nostr Profile
             if (!nostrMetadataCreated)
             {
                 currentStep = 1;
@@ -1942,7 +2252,7 @@
                 var profileCreated = await WaitForCondition(() => nostrMetadataCreated, TimeSpan.FromSeconds(30));
                 if (!profileCreated)
                 {
-                    throw new Exception("Failed to create Nostr profile within timeout period.");
+                    throw new Exception("Failed to create Project profile within timeout period.");
                 }
                 completedSteps.Add("Profile Created");
             }
@@ -1963,7 +2273,6 @@
                 completedSteps.Add("Project Info Published");
             }
 
-            // Step 3: Deploy to Blockchain
             if (string.IsNullOrEmpty(project.CreationTransactionId))
             {
                 currentStep = 3;
@@ -1982,7 +2291,6 @@
         {
             _Logger.LogError(e, "Error during auto deployment. Completed steps: {CompletedSteps}", string.Join(", ", completedSteps));
 
-            // Show more informative error message
             var errorMessage = $"Auto deployment failed at step {currentStep}: {e.Message}";
             if (completedSteps.Any())
             {
@@ -1992,7 +2300,6 @@
             notificationComponent.ShowErrorMessage(errorMessage);
             hasErrors = true;
 
-            // Set current step to the first incomplete step
             SetCurrentStepBasedOnProgress();
         }
         finally
@@ -2040,5 +2347,178 @@
     {
         StateHasChanged();
         await Task.Delay(100);
+    }
+
+    private bool ValidateWebsiteUrl()
+    {
+        websiteError = false;
+        websiteErrorMessage = "";
+
+        if (string.IsNullOrEmpty(project.Metadata?.Website))
+        {
+            return true;
+        }
+
+
+        if (!Uri.TryCreate(project.Metadata.Website, UriKind.Absolute, out Uri uriResult) ||
+            (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
+        {
+            websiteError = true;
+            websiteErrorMessage = "Please enter a valid URL (starting with http:// or https://)";
+            return false;
+        }
+
+        return true;
+    }
+
+    private void OnWebsiteChanged()
+    {
+        ValidateWebsiteUrl();
+        StateHasChanged();
+    }
+
+    private bool ValidateBannerUrl()
+    {
+        bannerError = false;
+        bannerErrorMessage = "";
+
+        if (string.IsNullOrEmpty(project.Metadata?.Banner))
+        {
+            return true;
+        }
+
+        if (!Uri.TryCreate(project.Metadata.Banner, UriKind.Absolute, out Uri uriResult) ||
+            (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
+        {
+            bannerError = true;
+            bannerErrorMessage = "Please enter a valid URL (starting with http:// or https://)";
+            return false;
+        }
+
+        var validExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" };
+        string path = uriResult.AbsolutePath.ToLowerInvariant();
+
+        if (!validExtensions.Any(ext => path.EndsWith(ext)))
+        {
+            bannerError = true;
+            bannerErrorMessage = "Banner URL must link to a valid image file (jpg, jpeg, png, gif, webp, svg)";
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool ValidatePictureUrl()
+    {
+        pictureError = false;
+        pictureErrorMessage = "";
+
+        if (string.IsNullOrEmpty(project.Metadata?.Picture))
+        {
+            return true;
+        }
+
+        if (!Uri.TryCreate(project.Metadata.Picture, UriKind.Absolute, out Uri uriResult) ||
+            (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
+        {
+            pictureError = true;
+            pictureErrorMessage = "Please enter a valid URL (starting with http:// or https://)";
+            return false;
+        }
+
+        var validExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" };
+        string path = uriResult.AbsolutePath.ToLowerInvariant();
+
+        if (!validExtensions.Any(ext => path.EndsWith(ext)))
+        {
+            pictureError = true;
+            pictureErrorMessage = "Profile image URL must link to a valid image file (jpg, jpeg, png, gif, webp, svg)";
+            return false;
+        }
+
+        return true;
+    }
+
+    private void OnBannerChanged()
+    {
+        ValidateBannerUrl();
+        StateHasChanged();
+    }
+
+    private void OnPictureChanged()
+    {
+        ValidatePictureUrl();
+        StateHasChanged();
+    }
+
+    private void ValidateTargetAmount()
+    {
+        targetAmountError = false;
+        targetAmountErrorMessage = string.Empty;
+
+        if (targetAmountInBTC <= 0)
+        {
+            targetAmountError = true;
+            targetAmountErrorMessage = "Target amount must be greater than 0.";
+            StateHasChanged();
+            return;
+        }
+
+        if (!ShouldSkipProductionValidations)
+        {
+            if (targetAmountInBTC < 0.01m)
+            {
+                targetAmountError = true;
+                targetAmountErrorMessage = "Target amount must be at least 0.01 BTC.";
+                StateHasChanged();
+                return;
+            }
+
+            if (targetAmountInBTC > 100m)
+            {
+                targetAmountError = true;
+                targetAmountErrorMessage = "Target amount cannot exceed 100 BTC.";
+                StateHasChanged();
+                return;
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private void ValidatePenaltyDays()
+    {
+        penaltyDaysError = false;
+        penaltyDaysErrorMessage = string.Empty;
+
+        if (project.ProjectInfo.PenaltyDays < 0)
+        {
+            penaltyDaysError = true;
+            penaltyDaysErrorMessage = "Penalty days cannot be negative.";
+        }
+        else if (project.ProjectInfo.PenaltyDays > 365)
+        {
+            penaltyDaysError = true;
+            penaltyDaysErrorMessage = "Penalty period cannot exceed 365 days.";
+        }
+        else if (!ShouldSkipProductionValidations)
+        {
+            if (project.ProjectInfo.PenaltyDays < 10)
+            {
+                penaltyDaysError = true;
+                penaltyDaysErrorMessage = "Penalty period must be at least 10 days.";
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private void OnPenaltyDaysInput(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int value))
+        {
+            project.ProjectInfo.PenaltyDays = value;
+            ValidatePenaltyDays();
+        }
     }
 }

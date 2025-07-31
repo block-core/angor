@@ -5,7 +5,6 @@
              xmlns:p="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:items="clr-namespace:AngorApp.Sections.Portfolio.Items"
              xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-             xmlns:a="clr-namespace:AngorApp"
              xmlns:c="clr-namespace:AngorApp.UI.Controls"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:design="clr-namespace:AngorApp.Design"
