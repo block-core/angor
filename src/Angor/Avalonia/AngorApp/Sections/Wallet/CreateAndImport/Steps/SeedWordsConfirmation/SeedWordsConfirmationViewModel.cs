@@ -1,4 +1,6 @@
 using System.Linq;
+using ReactiveUI.Validation.Extensions;
+
 // ReSharper disable once RedundantUsingDirective
 
 namespace AngorApp.Sections.Wallet.CreateAndImport.Steps.SeedWordsConfirmation;
@@ -19,7 +21,7 @@ public class SeedWordsConfirmationViewModel : ISeedWordsConfirmationViewModel
             .ToArray();
     }
     
-    #if !DEBUG
+    #if DEBUG
         public IObservable<bool> IsValid =>  Challenges.Select(x => x.IsValid()).CombineLatest(results => results.All(x => x));
     #else
         public IObservable<bool> IsValid => Observable.Return(true);
