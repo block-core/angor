@@ -27,5 +27,5 @@ steps:
   - pwsh: dotnet tool install --global DotnetPackaging.DeployerTool
     displayName: Install DotnetPackaging.DeployerTool
 
-  - pwsh: dotnetdeployer release --solution src/Angor/Avalonia/Angor.Avalonia.sln --repository angor --owner SuperJMN --token $(GitHubApiKey) --prefix AngorApp --android-keystore-base64 $(AndroidBase64Keystore) --android-key-alias $(AndroidSigningKeyAlias) --android-key-pass $(AndroidSigningKeyPass) --android-store-pass $(AndroidSigningStorePass)
+  - pwsh: dotnetdeployer release --solution src/Angor/Avalonia/Angor.Avalonia.sln --repository angor --owner SuperJMN --token $(GitHubApiKey) --prefix AngorApp --android-keystore-base64 $(AndroidBase64Keystore) --android-key-alias $(AndroidSigningKeyAlias) --android-key-pass $(AndroidSigningKeyPass) --android-store-pass $(AndroidSigningStorePass) --release-name AngorApp
     displayName: Publish NuGet packages
