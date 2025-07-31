@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:manageFunds1="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.ManageFunds"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.Sections.Founder.ProjectDetails.ManageFunds.HeaderView"
+             x:DataType="manageFunds1:IManageFundsViewModel">
+
+    <Design.DataContext>
+        <manageFunds1:ManageFundsViewModelDesign />
+    </Design.DataContext>
+
+    <Card DockPanel.Dock="Top" Header="Manage Project Funds">
+        <Card.HeaderEndContent>
+            <UniformGrid ColumnSpacing="20" Rows="1">
+                <IconButton HorizontalAlignment="Stretch" Command="{Binding Load}">
+                    Refresh
+                    <IconButton.Icon>
+                        <ui:Icon Source="fa-arrows-rotate" />
+                    </IconButton.Icon>
+                </IconButton>
+            </UniformGrid>
+        </Card.HeaderEndContent>
+        <StackPanel Spacing="10">
+            <HeaderedContainer Header="Project" Content="{Binding ProjectViewModel.Name}" />
+            <Panel>
+                <ProgressBar Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                             Foreground="{DynamicResource SystemControlBackgroundBaseMediumBrush}" Height="120" Value="{Binding RaisedAmount.Sats}" Maximum="{Binding TargetAmount.Sats}" />
+                <Panel Margin="20" x:Name="SummaryPanel">
+                    <StackPanel Spacing="10" VerticalAlignment="Center">
+                        <HeaderedContainer VerticalAlignment="Center" Header="Raised Amount" Content="{Binding RaisedAmount.DecimalString}" />
+                        <HeaderedContainer FontSize="10" VerticalAlignment="Center" Header="Start Date" Content="{Binding RaisedAmount.DecimalString}" />
+                    </StackPanel>
+                    <StackPanel HorizontalAlignment="Right" Spacing="10" VerticalAlignment="Center">
+                        <HeaderedContainer HorizontalContentAlignment="Right" Header="Target Amount" Content="{Binding TargetAmount.DecimalString}" />
+                        <HeaderedContainer FontSize="10" HorizontalContentAlignment="Right" Header="End Date" Content="{Binding TargetAmount.DecimalString}" />
+                    </StackPanel>
+                </Panel>
+            </Panel>
+        </StackPanel>
+    </Card>
+
+</UserControl>

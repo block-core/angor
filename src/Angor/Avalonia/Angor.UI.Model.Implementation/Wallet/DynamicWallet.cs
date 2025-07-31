@@ -30,7 +30,7 @@ public partial class DynamicWallet : ReactiveObject, IWallet, IDisposable
 
         var transactionsSource = new SourceCache<BroadcastedTransaction, string>(x => x.Id);
 
-        var changes = transactionsSource.Connect();
+        var changes = transactionsSource.Connect(suppressEmptyChangeSets: false);
 
         Sync = StoppableCommand.Create(() => transactionWatcher.Watch(Id), Maybe<IObservable<bool>>.None);
         

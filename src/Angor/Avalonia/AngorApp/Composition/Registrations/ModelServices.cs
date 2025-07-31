@@ -1,6 +1,6 @@
 using AngorApp.Design;
 using AngorApp.Features.Invest;
-using AngorApp.Sections.Wallet.CreateAndRecover;
+using AngorApp.Sections.Wallet.CreateAndImport;
 using AngorApp.UI.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,6 +15,6 @@ public static class ModelServices
             .AddSingleton<IWalletBuilder, WalletProvider>()
             .AddSingleton<InvestWizard>()
             .AddSingleton<WalletCreationWizard>()
-            .AddSingleton<WalletRecoveryWizard>();
+            .AddSingleton<WalletImportWizard>();
     }
 }
