@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using AngorApp.UI.Controls;
 
-namespace AngorApp;
+namespace AngorApp.Design;
 
 public class FeeCalculatorDesignTime : IFeeCalculator
 {
