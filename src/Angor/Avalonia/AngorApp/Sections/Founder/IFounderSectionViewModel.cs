@@ -7,5 +7,5 @@ public interface IFounderSectionViewModel
 {
     IEnhancedCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; }
     public IEnumerable<IFounderProjectViewModel> ProjectsList { get; }
-    public IEnhancedCommand Create { get; }
+    public IEnhancedCommand<Unit, Result<Maybe<string>>> Create { get; }
 }

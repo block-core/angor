@@ -4,6 +4,7 @@ using System.Reactive.Subjects;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using AngorApp.UI.Controls;
+using AngorApp.UI.Controls.Feerate;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;

@@ -17,6 +17,9 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
     
     public ProfileViewModel()
     {
+        this.AvatarUri = "https://picsum.photos/170/170"; // Placeholder for avatar
+        this.BannerUri = "https://picsum.photos/800/312px"; // Placeholder for banner
+        
         this.ValidationRule(x => x.ProjectName, x => !string.IsNullOrEmpty(x), "Cannot be empty").DisposeWith(disposable);
         this.ValidationRule(x => x.Description, x => !string.IsNullOrEmpty(x), "Cannot be empty").DisposeWith(disposable);
         this.ValidationRule(x => x.WebsiteUri, x => !string.IsNullOrEmpty(x) && !string.IsNullOrEmpty(x), "Cannot be empty").DisposeWith(disposable);

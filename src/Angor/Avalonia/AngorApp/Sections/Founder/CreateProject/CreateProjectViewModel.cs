@@ -1,27 +1,29 @@
-using System.Linq;
 using System.Reactive.Disposables;
-using Angor.Contexts.Funding.Investor;
+using System.Threading.Tasks;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
-using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.Sections.Founder.CreateProject.Preview;
 using AngorApp.Sections.Founder.CreateProject.Profile;
 using AngorApp.Sections.Founder.CreateProject.Stages;
 using AngorApp.Sections.Shell;
+using AngorApp.UI.Controls.Common;
 using AngorApp.UI.Services;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
+using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder.CreateProject;
 
 public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectViewModel, IHaveHeader
 {
+    private readonly IProjectAppService projectAppService;
     private readonly CompositeDisposable disposable = new();
 
-    public CreateProjectViewModel(IInvestmentAppService investmentAppService, IActiveWallet wallet)
+    public CreateProjectViewModel(IWallet wallet, UIServices uiServices, IProjectAppService projectAppService)
     {
-        Create = ReactiveCommand.Create(() => investmentAppService.CreateProject(wallet.Current.Value.Id.Value, 1000, ToProject()), this.IsValid()).Enhance().DisposeWith(disposable);
+        this.projectAppService = projectAppService;
         StagesViewModel = new StagesViewModel().DisposeWith(disposable);
         FundingStructureViewModel = new FundingStructureViewModel().DisposeWith(disposable);
         ProfileViewModel = new ProfileViewModel().DisposeWith(disposable);
@@ -29,44 +31,34 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         this.ValidationRule(StagesViewModel.IsValid, b => b, _ => "Stages are not valid").DisposeWith(disposable);
         this.ValidationRule(FundingStructureViewModel.IsValid, b => b, _ => "Funding structures not valid").DisposeWith(disposable);
         this.ValidationRule(ProfileViewModel.IsValid, b => b, _ => "Profile not valid").DisposeWith(disposable);
-    }
 
-    private CreateProjectDto ToProject()
-    {
-        return new CreateProjectDto
+        Create = ReactiveCommand.CreateFromTask(() =>
         {
-            //Nostr profile
-            ProjectName = ProfileViewModel.ProjectName,
-            Description = ProfileViewModel.Description,
-            AvatarUri = ProfileViewModel.AvatarUri,
-            BannerUri = ProfileViewModel.BannerUri,
-            WebsiteUri = ProfileViewModel.WebsiteUri,
-            Nip57 = null,//TODO: Map result...
-            Nip05 = null,//TODO: Map result...
-            Lud16 = null,//TODO: Map result...
-            
-            //Project information
-            Sats = FundingStructureViewModel.Sats!.Value,
-            StartDate = FundingStructureViewModel.StartDate,
-            ExpiryDate = FundingStructureViewModel.ExpiryDate,
-            EndDate = FundingStructureViewModel.EndDate,
-            PenaltyDays = FundingStructureViewModel.PenaltyDays!.Value,
-            TargetAmount = new Amount(FundingStructureViewModel.Sats!.Value),
-            Stages = StagesViewModel.Stages.Select(stage => new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent!.Value)),
-        };
+            var feerateSelector = new FeerateSelectionViewModel(uiServices);
+            var feerate = uiServices.Dialog.ShowAndGetResult(feerateSelector, "Select the feerate", f => f.IsValid, viewModel => viewModel.Feerate!.Value);
+            return feerate.ToResult("Choosing a feerate is mandatory")
+                .Bind(fr => DoCreateProject(wallet, this.ToDto(), fr))
+                .TapError(() => uiServices.NotificationService.Show("An error occurred while creating the project. Please try again.", "Failed to create project"));
+        }, IsValid).Enhance();
     }
 
+    public IEnhancedCommand<Result<string>> Create { get; }
+
+    private Task<Result<string>> DoCreateProject(IWallet wallet, CreateProjectDto dto, long feeRate)
+    {
+        return projectAppService.CreateProject(wallet.Id.Value, feeRate, dto);
+    }
+    
+    public IObservable<bool> IsValid => this.IsValid();
     public IStagesViewModel StagesViewModel { get; }
     public IProfileViewModel ProfileViewModel { get; }
     public IFundingStructureViewModel FundingStructureViewModel { get; }
-    public IEnhancedCommand Create { get; }
-    public IObservable<bool> IsValid => this.IsValid();
+
+    public object? Header => new PreviewHeaderViewModel(this);
 
     protected override void Dispose(bool disposing)
     {
         disposable.Dispose();
         base.Dispose(disposing);
     }
-
-    public object? Header => new PreviewHeaderViewModel(this);
 }
