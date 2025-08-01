@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
 using AngorApp.UI.Controls;
+using AngorApp.UI.Controls.Feerate;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;

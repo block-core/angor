@@ -1,5 +1,7 @@
 using Angor.Contexts.Wallet.Domain;
 using AngorApp.UI.Controls;
+using AngorApp.UI.Controls.Feerate;
+using Preset = AngorApp.UI.Controls.Feerate.Preset;
 
 namespace AngorApp.Sections.Wallet.Operate.Send.TransactionDraft;
 

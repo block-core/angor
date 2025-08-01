@@ -55,12 +55,12 @@
             <DockPanel VerticalSpacing="20">
                 <z:Card Header="Founder" DockPanel.Dock="Top">
                     <z:Card.HeaderEndContent>
-                        <IconButton Command="{Binding Create}" DockPanel.Dock="Right" VerticalAlignment="Top">
+                        <ReactiveIconButton Command="{Binding Create}" DockPanel.Dock="Right" VerticalAlignment="Top">
                             CREATE PROJECT
-                            <IconButton.Icon>
+                            <ReactiveIconButton.Icon>
                                 <ui:Icon Source="fa-plus" />
-                            </IconButton.Icon>
-                        </IconButton>
+                            </ReactiveIconButton.Icon>
+                        </ReactiveIconButton>
                     </z:Card.HeaderEndContent>
                     <z:Card.HeaderStartContent>
                         <i:Icon FontSize="40" Value="mdi-shield-account-outline" />

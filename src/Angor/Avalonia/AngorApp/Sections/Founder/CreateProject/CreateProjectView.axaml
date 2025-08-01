@@ -31,25 +31,26 @@
     </UserControl.Styles>
 
     <c:PageContainer>
-        <Grid ColumnDefinitions="{OnFormFactor Desktop='5* 3*', Mobile='*'}" RowSpacing="10" ColumnSpacing="10">
-            <ScrollViewer Grid.Column="1">
-                <p:PreviewView DockPanel.Dock="Right" IsVisible="{OnFormFactor Desktop=True}" />
-            </ScrollViewer>
-            <ScrollViewer>
-                <ScrollViewer.Styles>
-                    <Style Selector="CardGrid">
-                        <Setter Property="RowSpacing" Value="20" />
-                        <Setter Property="ColumnSpacing" Value="20" />
-                    </Style>
-                </ScrollViewer.Styles>
-                <StackPanel Spacing="10">
-                    <profile:ProfileView DataContext="{Binding ProfileViewModel}" />
-                    <fundingStructure:FundingStructure DataContext="{Binding FundingStructureViewModel}" />
-                    <stages:StagesView DataContext="{Binding StagesViewModel}" />
-                    <ReactiveButton  HorizontalAlignment="Center" Content="Create Project" Command="{Binding Create}" />
-                </StackPanel>
-            </ScrollViewer>
-        </Grid>
+        <Loading IsLoading="{Binding Create.IsExecuting^}" LoadingText="Creating project...">
+            <Grid ColumnDefinitions="{OnFormFactor Desktop='5* 3*', Mobile='*'}" RowSpacing="10" ColumnSpacing="10">
+                <ScrollViewer Grid.Column="1">
+                    <p:PreviewView DockPanel.Dock="Right" IsVisible="{OnFormFactor Desktop=True}" />
+                </ScrollViewer>
+                <ScrollViewer>
+                    <ScrollViewer.Styles>
+                        <Style Selector="CardGrid">
+                            <Setter Property="RowSpacing" Value="20" />
+                            <Setter Property="ColumnSpacing" Value="20" />
+                        </Style>
+                    </ScrollViewer.Styles>
+                    <StackPanel Spacing="10">
+                        <profile:ProfileView DataContext="{Binding ProfileViewModel}" />
+                        <fundingStructure:FundingStructure DataContext="{Binding FundingStructureViewModel}" />
+                        <stages:StagesView DataContext="{Binding StagesViewModel}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Loading>
     </c:PageContainer>
 
 </UserControl>
