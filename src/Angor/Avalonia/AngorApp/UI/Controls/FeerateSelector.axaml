@@ -10,25 +10,25 @@
         <controls:FeerateSelector Width="400" Height="500" Amount="1000">
             <controls:FeerateSelector.Presets>
                 <generic:List x:TypeArguments="controls:IFeeratePreset">
-                    <angorApp:DesignTimePreset Name="Economy">
-                        <angorApp:DesignTimePreset.Feerate>
+                    <controls:DesignTimePreset Name="Economy">
+                        <controls:DesignTimePreset.Feerate>
                             <design:DesignTimeAmount Sats="1234" />
-                        </angorApp:DesignTimePreset.Feerate>
-                    </angorApp:DesignTimePreset>
-                    <angorApp:DesignTimePreset Name="Standard">
-                        <angorApp:DesignTimePreset.Feerate>
+                        </controls:DesignTimePreset.Feerate>
+                    </controls:DesignTimePreset>
+                    <controls:DesignTimePreset Name="Standard">
+                        <controls:DesignTimePreset.Feerate>
                             <design:DesignTimeAmount Sats="1234" />
-                        </angorApp:DesignTimePreset.Feerate>
-                    </angorApp:DesignTimePreset>
-                    <angorApp:DesignTimePreset Name="Priority">
-                        <angorApp:DesignTimePreset.Feerate>
+                        </controls:DesignTimePreset.Feerate>
+                    </controls:DesignTimePreset>
+                    <controls:DesignTimePreset Name="Priority">
+                        <controls:DesignTimePreset.Feerate>
                             <design:DesignTimeAmount Sats="1234" />
-                        </angorApp:DesignTimePreset.Feerate>
-                    </angorApp:DesignTimePreset>
+                        </controls:DesignTimePreset.Feerate>
+                    </controls:DesignTimePreset>
                 </generic:List>
             </controls:FeerateSelector.Presets>
             <controls:FeerateSelector.FeeCalculator>
-                <angorApp:FeeCalculatorDesignTime />
+                <design:FeeCalculatorDesignTime />
             </controls:FeerateSelector.FeeCalculator>
         </controls:FeerateSelector>
     </Design.PreviewWith>

@@ -133,6 +133,7 @@ public partial class CustomFeeRate : ReactiveObject, IFeerateViewModel
     {
         this.WhenAnyValue(rate => rate.Sats)
             .WhereNotNull()
+            .Throttle(TimeSpan.FromSeconds(0.8), AvaloniaScheduler.Instance)
             .Select(l => new AmountUI(l))
             .BindTo(this, rate => rate.Feerate);
         

@@ -34,7 +34,7 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposab
 
         var createDraft = this.WhenAnyValue(x => x.Feerate)
             .WhereNotNull()
-            .SelectLatest(feerate => investmentAppService.CreateInvestmentDraft(wallet.Id.Value, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(amountToOffer.Sats), new DomainFeerate(feerate!.Value)), isCalculatingDraft, TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
+            .SelectLatest(feerate => investmentAppService.CreateInvestmentDraft(wallet.Id.Value, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(amountToOffer.Sats), new DomainFeerate(feerate!.Value)), isCalculatingDraft, scheduler: RxApp.MainThreadScheduler)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Publish();
         
