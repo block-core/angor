@@ -166,7 +166,7 @@
                 <Icon IconName="calendar" Height="32" Width="32" />
             </div>
             <div class="stats-info">
-                <h3 class="stats-title text-muted">Start Date</h3>
+                <h3 class="stats-title text-muted">Investment Start Date</h3>
                 <p class="stats-value">@project.ProjectInfo.StartDate.FormatDate()</p>
                 <p class="stats-about">
                     @{
@@ -183,13 +183,37 @@
                 <Icon IconName="calendar" Height="32" Width="32" />
             </div>
             <div class="stats-info">
-                <h3 class="stats-title text-muted">End Date</h3>
-                <p class="stats-value">@project.ProjectInfo.EndDate.FormatDate()</p>
+                <h3 class="stats-title text-muted">Investment End Date</h3>
+                <p class="stats-value">
+                    @{
+                        var endDate = project?.ProjectInfo?.EndDate;
+                        DateTime? displayDate = null;
+                        if (endDate == null || endDate == DateTime.MinValue)
+                        {
+                            displayDate = project?.ProjectInfo?.Stages?.FirstOrDefault()?.ReleaseDate;
+                        }
+                        else
+                        {
+                            displayDate = endDate;
+                        }
+                    }
+                    @if (displayDate != null && displayDate != DateTime.MinValue)
+                    {
+                        @displayDate.Value.FormatDate()
+                    }
+                    else
+                    {
+                        <span class="text-muted">No date available</span>
+                    }
+                </p>
                 <p class="stats-about">
                     @{
-                        var dayDiff2 = (project.ProjectInfo.EndDate - DateTime.Now).Days;
-                        @(dayDiff2 < 0 ? $"{Math.Abs(dayDiff2)} Days ago" : $"{dayDiff2} Days remaining")
-                    }
+                        var refDate = displayDate ?? DateTime.MinValue;
+                        var dayDiff2 = (refDate - DateTime.Now).Days;
+                        @(refDate == DateTime.MinValue
+                                            ? "No date available"
+                                            : (dayDiff2 < 0 ? $"{Math.Abs(dayDiff2)} Days ago" : $"{dayDiff2} Days remaining"))
+                                        }
                 </p>
             </div>
         </div>
