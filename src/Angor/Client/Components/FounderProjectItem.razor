@@ -3,56 +3,58 @@
 @using Angor.Client.Storage
 @using System.Text.RegularExpressions
 @using Blockcore.NBitcoin
+@using Microsoft.Extensions.Logging
 
 @inject IRelayService RelayService;
 @inject IClientStorage Storage;
 @inject IHtmlStripperService HtmlStripperService;
-@inject IIndexerService _IndexerService
+@inject IIndexerService IndexerService;
+@inject ILogger<FounderProjectItem> Logger;
 
 
 
 <div class="col d-flex align-items-stretch hover-effect">
     <div class="card mt-4 w-100 project-card">
         <a role="button" href=@($"/view/{FounderProject.ProjectInfo.ProjectIdentifier}")>
-        <a class="d-block">
+            <a class="d-block">
 
-            <div class="banner-container">
-                <img class="banner-image" src="@(FounderProject?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(@FounderProject?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                <div class="profile-container">
-                    <img class="profile-image" src="@(FounderProject?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="@(FounderProject?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
-                </div>
-            </div>
-
-        </a>
-
-        <div class="card-body pb-0">
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <div class="d-flex align-items-center project-name-container">
-                    <span class="user-select-none">
-                        <Icon IconName="view" Height="24" Width="24" />
-                    </span>
-                    <div class="h-100 ms-3 flex-grow-1 project-name-wrapper">
-                        <h5 class="mb-0 font-weight-bolder text-truncate project-name-title">
-                            <a href="/view/@FounderProject.ProjectInfo.ProjectIdentifier"
-                               class="text-truncate d-block project-name-link">
-                                @FounderProject.Metadata.Name
-                            </a>
-                        </h5>
+                <div class="banner-container">
+                    <img class="banner-image" src="@(FounderProject?.Metadata?.Banner ?? "/assets/img/no-image.jpg")" alt="@(@FounderProject?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
+                    <div class="profile-container">
+                        <img class="profile-image" src="@(FounderProject?.Metadata?.Picture ?? "/assets/img/no-image.jpg")" alt="@(FounderProject?.Metadata?.Banner != null ? "" : "no-image")" onerror="this.onerror=null; this.src='/assets/img/no-image.jpg';" />
                     </div>
                 </div>
 
-                @if (InvestmentRequests)
-                {
-                    <a class="d-flex align-items-center text-white" 
-                         href=@($"/signatures/{FounderProject.ProjectInfo.ProjectIdentifier}") 
-                         title="Approve investments">
+            </a>
+
+            <div class="card-body pb-0">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center project-name-container">
                         <span class="user-select-none">
-                            <Icon IconName="pendingmessage" Height="24" Width="24"></Icon>
+                            <Icon IconName="view" Height="24" Width="24" />
                         </span>
-                    </a>
-                }
-            </div>
-            <p class="mb-0 line-clamp-3 text-white">@(ConvertToMarkupString(FounderProject.Metadata.About))</p>
+                        <div class="h-100 ms-3 flex-grow-1 project-name-wrapper">
+                            <h5 class="mb-0 font-weight-bolder text-truncate project-name-title">
+                                <a href="/view/@(FounderProject?.ProjectInfo?.ProjectIdentifier ?? "")"
+                                   class="text-truncate d-block project-name-link">
+                                    @(FounderProject?.Metadata?.Name ?? "Unknown Project")
+                                </a>
+                            </h5>
+                        </div>
+                    </div>
+
+                    @if (InvestmentRequests)
+                    {
+                        <a class="d-flex align-items-center text-white"
+                           href=@($"/signatures/{FounderProject?.ProjectInfo?.ProjectIdentifier ?? ""}")
+                           title="Approve investments">
+                            <span class="user-select-none">
+                                <Icon IconName="pendingmessage" Height="24" Width="24"></Icon>
+                            </span>
+                        </a>
+                    }
+                </div>
+                <p class="mb-0 line-clamp-3 text-white">@(ConvertToMarkupString(FounderProject?.Metadata?.About ?? ""))</p>
 
 
 
@@ -75,7 +77,7 @@
                             </strong>
                             /
                             <strong>
-                                @Money.Satoshis(FounderProject.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC)
+                                @Money.Satoshis(FounderProject?.ProjectInfo?.TargetAmount ?? 0).ToUnit(MoneyUnit.BTC)
                             </strong>
                             @CoinTicker
                         </span>
@@ -90,7 +92,7 @@
                         </div>
                     </div>
                 </div>
-        </div>
+            </div>
         </a>
     </div>
 </div>
@@ -99,7 +101,7 @@
 @code {
 
     [Parameter]
-    public FounderProject FounderProject { get; set; }
+    public FounderProject FounderProject { get; set; } = default!;
 
     [Parameter]
     public string CoinTicker { get; set; } = string.Empty;
@@ -124,15 +126,18 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await RelayService.LookupSignaturesDirectMessagesForPubKeyAsync(FounderProject.ProjectInfo.NostrPubKey, FounderProject.LastRequestForSignaturesTime?.AddSeconds(1), 1,
-            _ =>
-            {
-                if (InvestmentRequests)
-                    return;
-   
-            InvestmentRequests = true;
-            StateHasChanged();
-        });
+        if (FounderProject?.ProjectInfo != null && !string.IsNullOrEmpty(FounderProject.ProjectInfo.NostrPubKey))
+        {
+            await RelayService.LookupSignaturesDirectMessagesForPubKeyAsync(FounderProject.ProjectInfo.NostrPubKey, FounderProject.LastRequestForSignaturesTime?.AddSeconds(1), 1,
+                _ =>
+                {
+                    if (InvestmentRequests)
+                        return;
+
+                    InvestmentRequests = true;
+                    StateHasChanged();
+                });
+        }
 
         await fetchProjectDetails();
         StateHasChanged();
@@ -145,21 +150,27 @@
         {
             projectStats.Loading = true;
 
-            if (FounderProject?.ProjectInfo != null)
+            if (FounderProject?.ProjectInfo != null && !string.IsNullOrEmpty(FounderProject.ProjectInfo.ProjectIdentifier))
             {
-                var data = await _IndexerService.GetProjectStatsAsync(FounderProject.ProjectInfo.ProjectIdentifier);
+                var data = await IndexerService.GetProjectStatsAsync(FounderProject.ProjectInfo.ProjectIdentifier);
 
                 if (data.stats != null)
                 {
                     projectStats.TotalInvestors = (int)data.stats.InvestorCount;
                     projectStats.TotalRaised = data.stats.AmountInvested;
 
-                    if (FounderProject.ProjectInfo.TargetAmount > 0)
+                    var targetAmount = FounderProject.ProjectInfo.TargetAmount;
+                    if (targetAmount > 0)
                     {
-                        projectStats.FundingProgressPercent = (int)(projectStats.TotalRaised * 100 / FounderProject.ProjectInfo.TargetAmount);
+                        projectStats.FundingProgressPercent = (int)(projectStats.TotalRaised * 100 / targetAmount);
                     }
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error fetching project details for project {ProjectIdentifier}",
+                FounderProject?.ProjectInfo?.ProjectIdentifier ?? "Unknown");
         }
         finally
         {
