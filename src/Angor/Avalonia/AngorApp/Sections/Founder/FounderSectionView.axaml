@@ -55,23 +55,29 @@
             <DockPanel VerticalSpacing="20">
                 <z:Card Header="Founder" DockPanel.Dock="Top">
                     <z:Card.HeaderEndContent>
-                        <ReactiveIconButton Command="{Binding Create}" DockPanel.Dock="Right" VerticalAlignment="Top">
-                            CREATE PROJECT
-                            <ReactiveIconButton.Icon>
-                                <ui:Icon Source="fa-plus" />
-                            </ReactiveIconButton.Icon>
-                        </ReactiveIconButton>
+                        <FlexPanel ColumnSpacing="10">
+                            <IconButton Command="{Binding LoadProjects}">
+                                Refresh
+                                <IconButton.Icon>
+                                    <ui:Icon Source="fa-arrows-rotate" />
+                                </IconButton.Icon>
+                            </IconButton>
+                            <ReactiveIconButton Command="{Binding Create}">
+                                CREATE PROJECT
+                                <ReactiveIconButton.Icon>
+                                    <ui:Icon Source="fa-plus" />
+                                </ReactiveIconButton.Icon>
+                            </ReactiveIconButton>
+                        </FlexPanel>
                     </z:Card.HeaderEndContent>
                     <z:Card.HeaderStartContent>
                         <i:Icon FontSize="40" Value="mdi-shield-account-outline" />
                     </z:Card.HeaderStartContent>
                 </z:Card>
                 <z:Loading LoadingText="Loading projects. Please wait." IsLoading="{Binding LoadProjects.IsExecuting^}">
-                    <CardGrid ItemsSource="{Binding ProjectsList}">
-                        <z:Empty.Content>
-                            <TextBlock VerticalAlignment="Center" TextAlignment="Center">Nothing to show</TextBlock>
-                        </z:Empty.Content>
-                    </CardGrid>
+                    <CardGrid MinColumnWidth="300"
+                              Empty.Content="Nothing to show"
+                              Classes="ShowEmptyContent" ItemsSource="{Binding ProjectsList}" />
                 </z:Loading>
             </DockPanel>
         </ScrollViewer>
