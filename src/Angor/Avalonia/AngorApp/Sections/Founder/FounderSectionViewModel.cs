@@ -40,10 +40,9 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
             return uiServices.WalletRoot.TryDefaultWalletAndActivate()
                 .Map(CreateWizard)
                 .Map(wizard => wizard.Navigate(navigator));
-        }).Enhance();
+        }).Enhance().DisposeWith(disposable);
 
-        Create.HandleErrorsWith(uiServices.NotificationService, "Cannot create project")
-            .DisposeWith(disposable);
+        Create.HandleErrorsWith(uiServices.NotificationService, "Cannot create project").DisposeWith(disposable);
 
         ProjectsList = projectList;
     }
