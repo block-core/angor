@@ -46,10 +46,10 @@
     <PackageVersion Include="Serilog.Sinks.XUnit" Version="3.0.19" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
     <PackageVersion Include="Zafiro" Version="33.0.5" />
-    <PackageVersion Include="Zafiro.Avalonia" Version="30.0.12" />
+    <PackageVersion Include="Zafiro.Avalonia" Version="30.0.19" />
     <PackageVersion Include="Zafiro.FileSystem" Version="31.0.0" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="30.0.12" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="30.0.19" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />
     <PackageVersion Include="FluentAssertions.Reactive" Version="0.2.0" />

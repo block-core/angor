@@ -115,10 +115,10 @@
                 </CardGrid>
 
                 <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading projects...">
-                    <ItemsControl ItemsSource="{Binding InvestedProjects}">
+                    <ItemsControl ItemsSource="{Binding InvestedProjects}" Empty.Content="Nothing to show">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Classes="BigGap"></StackPanel>
+                                <StackPanel Classes="BigGap" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
@@ -126,9 +126,6 @@
                                 <items:PortfolioProjectView />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
-                        <Empty.Content>
-                            <TextBlock Margin="10" TextAlignment="Center">Oops! You have not invested in any project yet</TextBlock>
-                        </Empty.Content>
                     </ItemsControl>
                 </Loading>
             </DockPanel>
