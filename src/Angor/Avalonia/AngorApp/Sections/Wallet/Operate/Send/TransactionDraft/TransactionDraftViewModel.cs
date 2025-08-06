@@ -54,6 +54,7 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
             .CombineLatest(IsCalculating, (hasDraft, calculating) => hasDraft && !calculating);
         
         Confirm = ReactiveCommand.CreateFromTask(() => Draft!.Confirm(), canConfirm).DisposeWith(disposable);
+        Confirm.HandleErrorsWith(uiServices.NotificationService, "Send failed").DisposeWith(disposable);
         IsSending = Confirm.IsExecuting;
         feeHelper = this.WhenAnyValue(model => model.Draft!.TotalFee).ToProperty(this, model => model.Fee).DisposeWith(disposable);
         createDraft.Connect().DisposeWith(disposable);

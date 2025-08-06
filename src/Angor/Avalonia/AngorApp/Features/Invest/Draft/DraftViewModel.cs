@@ -54,6 +54,7 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposab
             .CombineLatest(IsCalculatingDraft, (hasDraft, calculating) => hasDraft && !calculating);
 
         Confirm = ReactiveCommand.CreateFromTask(() => Draft!.Confirm(), canConfirm).DisposeWith(disposable);
+        Confirm.HandleErrorsWith(uiServices.NotificationService, "Could not send investment offer").DisposeWith(disposable);
         IsSending = Confirm.IsExecuting;
         feeHelper = this.WhenAnyValue(model => model.Draft!.TransactionFee).ToProperty(this, model => model.Fee).DisposeWith(disposable);
         createDraft.Connect().DisposeWith(disposable);
