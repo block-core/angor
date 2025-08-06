@@ -42,6 +42,9 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
                 .Map(wizard => wizard.Navigate(navigator));
         }).Enhance();
 
+        Create.HandleErrorsWith(uiServices.NotificationService, "Cannot create project")
+            .DisposeWith(disposable);
+
         ProjectsList = projectList;
     }
 
