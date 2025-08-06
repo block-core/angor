@@ -157,6 +157,7 @@
         <StyleInclude Source="UI/Styles/CalendarDatePicker.axaml" />
         <StyleInclude Source="UI/Styles/TextBlock.axaml" />
         <StyleInclude Source="UI/Styles/ToggleButton.axaml" />
+        <StyleInclude Source="UI/Styles/FlyoutPresenter.axaml" />
         <StyleInclude Source="UI/Styles/Styles.axaml" />
     </Application.Styles>
 
