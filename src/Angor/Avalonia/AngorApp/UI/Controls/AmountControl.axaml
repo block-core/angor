@@ -20,6 +20,7 @@
                         </Border.Styles>
                         <StackPanel>
                             <NumericUpDown ClipValueToMinMax="True" x:Name="PART_NumericUpDown"
+                                           TextInputOptions.ContentType="Number"
                                            Classes.Bitcoin="{Binding $parent[controls:AmountControl].IsBitcoin}" Watermark="{Binding $parent[controls:AmountControl].Unit, StringFormat='Amount in {0}'}"
                                            ShowButtonSpinner="False"
                                            Value="{Binding $parent[controls:AmountControl].Value}">

@@ -52,7 +52,8 @@
                                         <Slider TickPlacement="BottomRight" TickFrequency="10" Margin="0" FontSize="2" Padding="0" Minimum="1" Maximum="100" Value="{Binding Sats, Mode=TwoWay}" />
                                     </DockPanel>
 
-                                    <TextBox Watermark="Custom" Margin="0 10 0 0" Text="{Binding Sats, Mode=TwoWay}">
+                                    <TextBox Watermark="Custom" Margin="0 10 0 0" Text="{Binding Sats, Mode=TwoWay}"
+                                             TextInputOptions.ContentType="Number">
                                         <TextBox.InnerRightContent>
                                             <TextBlock VerticalAlignment="Center" Margin="0 0 6 0">sats/VByte</TextBlock>
                                         </TextBox.InnerRightContent>

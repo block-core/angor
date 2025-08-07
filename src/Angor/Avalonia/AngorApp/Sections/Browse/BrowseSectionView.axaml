@@ -7,7 +7,7 @@
              xmlns:lk="clr-namespace:AngorApp.Sections.Browse.ProjectLookup"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
+             mc:Ignorable="d" d:DesignWidth="1900" d:DesignHeight="800"
              x:Class="AngorApp.Sections.Browse.BrowseSectionView"
              x:DataType="browse:IBrowseSectionViewModel">
 
