@@ -9,6 +9,10 @@
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
     
+    <Style Selector="TextBlock.Center">
+        <Setter Property="TextAlignment" Value="Center" />
+    </Style>
+    
     <Style Selector="TextBlock.NoWrap">
         <Setter Property="TextWrapping" Value="NoWrap" />
     </Style>
