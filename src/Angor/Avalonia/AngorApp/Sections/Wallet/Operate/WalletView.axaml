@@ -13,7 +13,7 @@
     </Design.DataContext>
     
     <DockPanel VerticalSpacing="10">
-        <Card Header="Wallet" Subheader="Wallet and balances" DockPanel.Dock="Top" IsAdaptiveFlowEnabled="True">
+        <Card Classes="SectionCard" Header="Wallet" Subheader="Wallet and balances" DockPanel.Dock="Top" IsAdaptiveFlowEnabled="True">
             <Card.HeaderEndContent>
                 <UniformGrid Rows="1">
                     <UniformGrid.Styles>

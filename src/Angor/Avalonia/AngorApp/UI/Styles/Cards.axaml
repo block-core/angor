@@ -1,7 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI">
-    
+
     <Styles.Resources>
         
         <SolidColorBrush x:Key="HeaderBrush" Color="{DynamicResource SystemBaseHighColor}" />
@@ -116,7 +116,37 @@
                 </Setter.Value>
             </Setter>
         </ControlTheme>
+        
+        <ControlTheme TargetType="EdgePanel" x:Key="HeaderEdgePanel">
+            <Setter Property="Spacing" Value="10" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <FlexBox Background="{TemplateBinding Background}" Wrap="Wrap" Gap="20" JustifyContent="Center">
+                        <ContentControl x:Name="StartContent"
+                                        FlexBox.Grow="0"
+                                        ContentTemplate="{TemplateBinding StartContentTemplate}"
+                                        Content="{TemplateBinding StartContent}" />
+                        <ContentControl FlexBox.Grow="1" x:Name="MainContent" 
+                                        ContentTemplate="{TemplateBinding ContentTemplate}"
+                                        HorizontalAlignment="Left"
+                                        Content="{TemplateBinding Content}" />
+                        <ContentControl FlexBox.Grow="0" x:Name="EndContent"
+                                        HorizontalAlignment="Right"
+                                        ContentTemplate="{TemplateBinding EndContentTemplate}"
+                                        Content="{TemplateBinding EndContent}" />
+                    </FlexBox>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
     </Styles.Resources>
+
+    <Style Selector="Card.SectionCard">
+        <Setter Property="HeaderHorizontalAlignment" Value="Left" />
+    </Style>
+    
+    <Style Selector="Card.SectionCard EdgePanel">
+        <Setter Property="Theme" Value="{StaticResource HeaderEdgePanel}" />
+    </Style>
 
     <Design.PreviewWith>
         <StackPanel Width="500" Spacing="20" Margin="20">
