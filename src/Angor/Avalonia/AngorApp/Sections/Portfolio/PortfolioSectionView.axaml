@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="860"
+             mc:Ignorable="d" d:DesignWidth="460"
              x:Class="AngorApp.Sections.Portfolio.PortfolioSectionView"
              xmlns:p="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
@@ -68,7 +68,7 @@
     <a:PageContainer>
         <ScrollViewer>
             <DockPanel HorizontalSpacing="20" VerticalSpacing="20">
-                <Card DockPanel.Dock="Top" Header="Portfolio" IsAdaptiveFlowEnabled="True" Subheader="Check your project investments">
+                <Card Classes="SectionCard" DockPanel.Dock="Top" Header="Portfolio" Subheader="Check your project investments">
                     <Card.HeaderEndContent>
                         <UniformGrid ColumnSpacing="10" Rows="1">
                             <IconButton HorizontalAlignment="Stretch" Command="{Binding Load}">
