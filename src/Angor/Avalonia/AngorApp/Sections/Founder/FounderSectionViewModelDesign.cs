@@ -36,5 +36,5 @@ public class FounderSectionViewModelDesign : IFounderSectionViewModel
         }
     };
 
-    public IEnhancedCommand Create { get; }
+    public IEnhancedCommand<Unit, Result<Maybe<string>>> Create { get; }
 }

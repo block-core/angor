@@ -7,7 +7,7 @@ namespace AngorApp.Sections.Founder.CreateProject;
 
 public class CreateProjectViewModelDesign : ICreateProjectViewModel
 {
-    public IEnhancedCommand Create { get; }
+    public IEnhancedCommand<Result<string>> Create { get; }
     public IStagesViewModel StagesViewModel { get; set; }
     public IProfileViewModel ProfileViewModel { get; set; }
     public IFundingStructureViewModel FundingStructureViewModel { get; set; }

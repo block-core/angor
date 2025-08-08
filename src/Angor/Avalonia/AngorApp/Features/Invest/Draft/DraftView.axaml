@@ -2,8 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:df="clr-namespace:AngorApp.Features.Invest.Draft"
+             xmlns:feerate="clr-namespace:AngorApp.UI.Controls.Feerate"
              mc:Ignorable="d" x:Class="AngorApp.Features.Invest.Draft.DraftView"
              d:DesignWidth="500"
              x:DataType="df:IDraftViewModel">
@@ -25,9 +25,9 @@
               Subheader="{Binding  AmountToOffer.DecimalString}" />
         <UniformGrid Rows="1">
             <Card Header="Transaction speed">
-                <controls:FeerateSelector Feerate="{Binding Feerate}"
+                <feerate:FeerateSelector Feerate="{Binding Feerate}"
                                           Presets="{Binding Presets}">
-                </controls:FeerateSelector>
+                </feerate:FeerateSelector>
             </Card>
             <Card Header="Fees">
                 <Loading Theme="{StaticResource LoadingCover}" IsLoading="{Binding IsCalculatingDraft^}">

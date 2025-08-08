@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
 using AngorApp.UI.Controls;
+using AngorApp.UI.Controls.Feerate;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;
@@ -53,6 +54,7 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
             .CombineLatest(IsCalculating, (hasDraft, calculating) => hasDraft && !calculating);
         
         Confirm = ReactiveCommand.CreateFromTask(() => Draft!.Confirm(), canConfirm).DisposeWith(disposable);
+        Confirm.HandleErrorsWith(uiServices.NotificationService, "Send failed").DisposeWith(disposable);
         IsSending = Confirm.IsExecuting;
         feeHelper = this.WhenAnyValue(model => model.Draft!.TotalFee).ToProperty(this, model => model.Fee).DisposeWith(disposable);
         createDraft.Connect().DisposeWith(disposable);

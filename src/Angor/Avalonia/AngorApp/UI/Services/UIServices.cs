@@ -1,7 +1,9 @@
 using AngorApp.UI.Controls;
+using AngorApp.UI.Controls.Feerate;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Services;
 using Zafiro.UI;
+using Preset = AngorApp.UI.Controls.Feerate.Preset;
 
 namespace AngorApp.UI.Services;
 

@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:portfolio="clr-namespace:AngorApp.Sections.Portfolio"
-             xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:design="clr-namespace:AngorApp.Design"
              mc:Ignorable="d" d:DesignWidth="280"
              x:Class="AngorApp.Sections.Portfolio.Items.ProgressView" x:DataType="portfolio:IPortfolioProject">

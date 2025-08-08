@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:cp="clr-namespace:AngorApp.Sections.Founder.CreateProject"
-             xmlns:c="clr-namespace:AngorApp.UI.Controls"
              xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
              xmlns:fundingStructure="clr-namespace:AngorApp.Sections.Founder.CreateProject.FundingStructure"
              xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
@@ -30,7 +29,7 @@
         <StyleInclude Source="Common.axaml" />
     </UserControl.Styles>
 
-    <c:PageContainer>
+    <Loading IsLoading="{Binding Create.IsExecuting^}" LoadingText="Creating project...">
         <Grid ColumnDefinitions="{OnFormFactor Desktop='5* 3*', Mobile='*'}" RowSpacing="10" ColumnSpacing="10">
             <ScrollViewer Grid.Column="1">
                 <p:PreviewView DockPanel.Dock="Right" IsVisible="{OnFormFactor Desktop=True}" />
@@ -46,10 +45,9 @@
                     <profile:ProfileView DataContext="{Binding ProfileViewModel}" />
                     <fundingStructure:FundingStructure DataContext="{Binding FundingStructureViewModel}" />
                     <stages:StagesView DataContext="{Binding StagesViewModel}" />
-                    <ReactiveButton  HorizontalAlignment="Center" Content="Create Project" Command="{Binding Create}" />
                 </StackPanel>
             </ScrollViewer>
         </Grid>
-    </c:PageContainer>
+    </Loading>
 
 </UserControl>

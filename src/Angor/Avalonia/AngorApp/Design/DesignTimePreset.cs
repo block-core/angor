@@ -1,6 +1,7 @@
 using AngorApp.UI.Controls;
+using AngorApp.UI.Controls.Feerate;
 
-namespace AngorApp;
+namespace AngorApp.Design;
 
 public class DesignTimePreset : IFeeratePreset
 {
