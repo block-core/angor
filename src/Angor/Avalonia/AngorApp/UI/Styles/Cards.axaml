@@ -147,6 +147,17 @@
     <Style Selector="Card.SectionCard EdgePanel">
         <Setter Property="Theme" Value="{StaticResource HeaderEdgePanel}" />
     </Style>
+    
+    <Style Selector="CardGrid Button">
+        <Setter Property="Theme" Value="{StaticResource TransparentButton}" />
+        <Setter Property="Padding" Value="5" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="FontWeight" Value="Regular"></Setter>
+    </Style>
+
 
     <Design.PreviewWith>
         <StackPanel Width="500" Spacing="20" Margin="20">

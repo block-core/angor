@@ -30,32 +30,17 @@
         </PackageReference>
         <PackageReference Include="Serilog.Extensions.Logging"/>
         <PackageReference Include="Serilog.Sinks.Console"/>
-        <PackageReference Include="Zafiro.Avalonia"/>
-        <PackageReference Include="Zafiro.Avalonia.Dialogs"/>
+<!--        <PackageReference Include="Zafiro.Avalonia"/>-->
+<!--        <PackageReference Include="Zafiro.Avalonia.Dialogs"/>-->
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\Zafiro.Avalonia.csproj" />
         <ProjectReference Include="..\Angor.Contexts.Integration.WalletFunding\Angor.Contexts.Integration.WalletFunding.csproj"/>
         <ProjectReference Include="..\Angor.UI.Model.Implementation\Angor.UI.Model.Implementation.csproj"/>
         <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj"/>
         <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj"/>
         <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj"/>
     </ItemGroup>
-
-    <ItemGroup>
-        <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\HeaderView.axaml"/>
-        <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\ManageFundsView.axaml"/>
-        <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\ProjectCard.axaml"/>
-        <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\ProjectStatisticsView.axaml"/>
-        <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\StageClaimView.axaml"/>
-        <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\UnfundedProjectView.axaml"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Compile Update="UI\Controls\Feerate\FeerateSelector.axaml.cs">
-            <DependentUpon>FeerateSelector.axaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
-    </ItemGroup>
-
+    
 </Project>
