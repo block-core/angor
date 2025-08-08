@@ -2,7 +2,7 @@
   <!-- https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <AvaloniaVersion>11.3.2</AvaloniaVersion>
+    <AvaloniaVersion>11.3.3</AvaloniaVersion>
   </PropertyGroup>
   <ItemGroup>
     <!-- Avalonia packages -->
@@ -45,11 +45,11 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageVersion Include="Serilog.Sinks.XUnit" Version="3.0.19" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
-    <PackageVersion Include="Zafiro" Version="33.0.9" />
-    <PackageVersion Include="Zafiro.Avalonia" Version="32.0.2" />
+    <PackageVersion Include="Zafiro" Version="33.0.11" />
+    <PackageVersion Include="Zafiro.Avalonia" Version="33.0.0" />
     <PackageVersion Include="Zafiro.FileSystem" Version="31.0.0" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="32.0.2" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="33.0.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />
     <PackageVersion Include="FluentAssertions.Reactive" Version="0.2.0" />
