@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="1000"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="1000"
              x:Class="AngorApp.Sections.Founder.FounderSectionView"
              xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
              xmlns:co="clr-namespace:AngorApp.UI.Controls"
@@ -15,13 +15,7 @@
     <Design.DataContext>
         <founder:FounderSectionViewModelDesign />
     </Design.DataContext>
-
-    <Interaction.Behaviors>
-        <DataContextChangedTrigger>
-            <InvokeCommandAction Command="{Binding LoadProjects}" />
-        </DataContextChangedTrigger>
-    </Interaction.Behaviors>
-
+    
     <UserControl.DataTemplates>
 
         <DataTemplate DataType="founder:IFounderProjectViewModel">
@@ -53,9 +47,9 @@
     <co:PageContainer>
         <ScrollViewer>
             <DockPanel VerticalSpacing="20">
-                <z:Card Header="Founder" DockPanel.Dock="Top">
+                <z:Card Classes="SectionCard" Header="Founder" DockPanel.Dock="Top">
                     <z:Card.HeaderEndContent>
-                        <FlexPanel ColumnSpacing="10">
+                        <FlexBox Gap="10">
                             <IconButton Command="{Binding LoadProjects}">
                                 Refresh
                                 <IconButton.Icon>
@@ -63,12 +57,12 @@
                                 </IconButton.Icon>
                             </IconButton>
                             <ReactiveIconButton Command="{Binding Create}">
-                                CREATE PROJECT
+                                New Project
                                 <ReactiveIconButton.Icon>
                                     <ui:Icon Source="fa-plus" />
                                 </ReactiveIconButton.Icon>
                             </ReactiveIconButton>
-                        </FlexPanel>
+                        </FlexBox>
                     </z:Card.HeaderEndContent>
                     <z:Card.HeaderStartContent>
                         <i:Icon FontSize="40" Value="mdi-shield-account-outline" />

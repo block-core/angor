@@ -45,6 +45,8 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
         Create.HandleErrorsWith(uiServices.NotificationService, "Cannot create project").DisposeWith(disposable);
 
         ProjectsList = projectList;
+
+        LoadProjects.Execute().Subscribe().DisposeWith(disposable);
     }
 
     public void Dispose()
