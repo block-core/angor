@@ -40,7 +40,7 @@
                 </Card>
 
                 <Loading IsLoading="{Binding IsLoading^}">
-                    <CardGrid ItemsSource="{Binding Projects}">
+                    <CardGrid ItemsSource="{Binding Projects}" MinColumnWidth="300">
                         <CardGrid.ItemTemplate>
                             <DataTemplate DataType="browse:IProjectViewModel">
                                 <browse:ProjectItemView />
