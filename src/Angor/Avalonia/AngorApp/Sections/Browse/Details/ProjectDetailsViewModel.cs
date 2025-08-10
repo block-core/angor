@@ -61,9 +61,7 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
     {
         return Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            await uiServices.Dialog.ShowMessage("No Wallet Found", 
-                "Please create or recover a wallet to invest in this project. " +
-                "You can do this from the Wallet section in the main menu.");
+            await uiServices.Dialog.ShowMessage("No wallet found", "Please create or import a wallet to invest in this project.");
             return Maybe<Unit>.None;
         });
     }

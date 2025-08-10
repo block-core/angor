@@ -6,7 +6,6 @@
              x:Class="AngorApp.Sections.Portfolio.PortfolioSectionView"
              xmlns:p="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:items="clr-namespace:AngorApp.Sections.Portfolio.Items"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"

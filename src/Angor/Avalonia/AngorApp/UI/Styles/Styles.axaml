@@ -2,9 +2,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.PreviewWith>
         <Border Padding="20">
-            <StackPanel>
+            <StackPanel Spacing="10">
                 <Card Classes="InlineNested" Header="Header">
-                    <Card Header="Nested header" />
+                    <Card Header="Nested header">
+                        CONTENT
+                    </Card>
                 </Card>
                 <Card Classes="Nesting" Header="Header">
                     <Card Header="Nested header" Content="HOLA" />
@@ -49,7 +51,7 @@
         <Setter Property="Theme" Value="{StaticResource TransparentCard}" />
         <Setter Property="HeaderStartContentTemplate" Value="{StaticResource SmallIcon}" />
         <Setter Property="Margin" Value="0" />
-        <Setter Property="HeaderPadding" Value="0 5 0 5" />
+        <Setter Property="HeaderPadding" Value="0" />
         <Setter Property="Padding" Value=" 0 0 0 0" />
     </Style>
 
