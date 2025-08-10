@@ -21,40 +21,43 @@
                 <!-- Project Header with Banner -->
                 <StackPanel DockPanel.Dock="Top" Spacing="0">
                     <!-- Project Banner -->
-                    <Panel Height="300" ClipToBounds="False">
-                        <av:AdvancedImage Stretch="UniformToFill" Source="{Binding Project.Banner}" />
-                        <Border Background="#30000000" />
-                        
-                        <!-- Circular Profile Picture (half on banner) -->
-                        <Border Width="120" 
-                               Height="120" 
-                               CornerRadius="60" 
-                               Background="White" 
-                               Padding="6"
-                               VerticalAlignment="Bottom" 
-                               HorizontalAlignment="Center"
-                               Margin="0,0,0,-60">
-                            <av:AdvancedImage Stretch="UniformToFill" 
-                                             Source="{Binding Project.Picture}" 
-                                             CornerRadius="54" />
-                        </Border>
-                    </Panel>
+
+                    <Border Height="300" Margin="0,0,0,20" CornerRadius="10" ClipToBounds="True">
+                        <Panel>
+                            <av:AdvancedImage Stretch="UniformToFill" Source="{Binding Project.Banner}" />
+                            <Border Background="#30000000" />
+                            
+                            <!-- Circular Profile Picture (half on banner) -->
+                            <Border Width="120" 
+                                   Height="120" 
+                                   CornerRadius="60" 
+                                   Background="White" 
+                                   Padding="6"
+                                   VerticalAlignment="Bottom" 
+                                   HorizontalAlignment="Left"
+                                   Margin="10">
+                                <av:AdvancedImage Stretch="UniformToFill" 
+                                                 Source="{Binding Project.Picture}" 
+                                                 CornerRadius="54" />
+                            </Border>
+                        </Panel>
+                    </Border>
                     
                     <!-- Project Information Below Banner -->
-                    <Card Padding="25" Margin="0,-20,0,0" Background="{DynamicResource SystemChromeLowColor}">
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20" Margin="0,60,0,0">
+                    <Card Padding="20" Margin="0,0,0,0" Background="{DynamicResource SystemChromeLowColor}">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20" Margin="0,0,0,0">
                             <!-- Project Details -->
-                            <StackPanel Grid.Column="0" Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <StackPanel Grid.Column="0" Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Left">
                                 <TextBlock Text="{Binding Project.Name}" 
                                           Classes="SizeBig" 
                                           FontWeight="Bold" 
                                           TextWrapping="Wrap" 
-                                          TextAlignment="Center" />
+                                          TextAlignment="Left" />
                                 <TextBlock Text="{Binding Project.ShortDescription}" 
                                           TextWrapping="Wrap" 
                                           Opacity="0.8" 
                                           MaxWidth="400" 
-                                          TextAlignment="Center" />
+                                          TextAlignment="Left" />
                             </StackPanel>
                             
                             <!-- Target Amount -->
