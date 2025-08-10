@@ -44,8 +44,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Client", "..\Client\A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngorApp.Android", "AngorApp.Android\AngorApp.Android.csproj", "{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zafiro.Avalonia", "..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\Zafiro.Avalonia.csproj", "{93F2AC93-0A1E-4363-8661-B688CD7CF55E}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zafiro.Avalonia.Dialogs", "..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia.Dialogs\Zafiro.Avalonia.Dialogs.csproj", "{B56CF7B6-8F66-4743-A01E-36BD4E7B0DD0}"
 EndProject
 Global
@@ -106,10 +104,6 @@ Global
 		{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{93F2AC93-0A1E-4363-8661-B688CD7CF55E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{93F2AC93-0A1E-4363-8661-B688CD7CF55E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{93F2AC93-0A1E-4363-8661-B688CD7CF55E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{93F2AC93-0A1E-4363-8661-B688CD7CF55E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B56CF7B6-8F66-4743-A01E-36BD4E7B0DD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B56CF7B6-8F66-4743-A01E-36BD4E7B0DD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B56CF7B6-8F66-4743-A01E-36BD4E7B0DD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
