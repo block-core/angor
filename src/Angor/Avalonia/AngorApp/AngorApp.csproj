@@ -19,6 +19,7 @@
         <PackageReference Include="AvaloniaUI.DiagnosticsSupport"/>
         <PackageReference Include="CSharpFunctionalExtensions"/>
         <PackageReference Include="Humanizer.Core"/>
+        <PackageReference Include="PanAndZoom" />
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome"/>
         <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign"/>
         <PackageReference Include="QRCoder"/>
