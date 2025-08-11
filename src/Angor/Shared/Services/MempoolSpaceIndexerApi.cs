@@ -418,7 +418,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         return MapToQueryTransaction(trx, spends);
     }
 
-    private QueryTransaction MapToQueryTransaction(MempoolTransaction x, List<Outspent>? spends = null)
+    private static QueryTransaction MapToQueryTransaction(MempoolTransaction x, List<Outspent>? spends = null)
     {
         return new QueryTransaction
         {

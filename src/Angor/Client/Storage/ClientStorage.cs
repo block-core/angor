@@ -8,6 +8,7 @@ namespace Angor.Client.Storage;
 public class ClientStorage : IClientStorage, INetworkStorage
 {
     private const string CurrencyDisplaySettingKey = "currencyDisplaySetting";
+    private const string DebugModeKey = "debugMode";
 
     private const string utxoKey = "utxo:{0}";
     private readonly ISyncLocalStorageService _storage;
@@ -144,6 +145,16 @@ public class ClientStorage : IClientStorage, INetworkStorage
     public string GetNostrPublicKeyPerProject(string projectId)
     {
         return _storage.GetItem<string>($"project:{projectId}:nostrKey");
+    }
+    
+    public bool GetDebugMode()
+    {
+        return _storage?.GetItem<bool>(DebugModeKey) ?? false;
+    }
+
+    public void SetDebugMode(bool? debugMode=false)
+    {
+        _storage.SetItem(key:DebugModeKey, data:debugMode);
     }
 
     public string GetCurrencyDisplaySetting()

@@ -6,7 +6,6 @@
              xmlns:b="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:addressAndAmount="clr-namespace:AngorApp.Sections.Wallet.Operate.Send.AddressAndAmount"
-             xmlns:c="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" 
              d:DesignWidth="300"
              x:Class="AngorApp.Sections.Wallet.Operate.Send.AddressAndAmount.AddressAndAmountView" 
@@ -16,7 +15,7 @@
         <addressAndAmount:AddressAndAmountViewModelDesign />
     </Design.DataContext>
 
-    <StackPanel Spacing="0">
+    <StackPanel Classes="SmallGap">
         <Card Header="Enter recipient address:">
             <TextBox Text="{Binding Address}" Classes="clearButton" Watermark="Enter address" AcceptsReturn="False">
                 <Interaction.Behaviors>

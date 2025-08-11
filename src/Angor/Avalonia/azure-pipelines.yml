@@ -1,0 +1,31 @@
+variables:
+  - group: api-keys
+  - name: Agent.Source.Git.ShallowFetchDepth
+    value: 0
+
+steps:
+  - checkout: self
+
+  - task: UseDotNet@2
+    displayName: 'Install .NET Runtime 8.0.x'
+    inputs:
+      packageType: 'runtime'
+      version: '8.0.x'
+
+  - task: UseDotNet@2
+    displayName: 'Install .NET SDK 9.0.x'
+    inputs:
+      packageType: 'sdk'
+      version: '9.0.x'
+
+  - pwsh: Move-Item "global.json" "global.json.backup"
+    displayName: Rename global.json
+
+  - pwsh: dotnet workload install android
+    displayName: 'Install Android workload'
+
+  - pwsh: dotnet tool install --global DotnetPackaging.DeployerTool
+    displayName: Install DotnetPackaging.DeployerTool
+
+  - pwsh: dotnetdeployer release --solution src/Angor/Avalonia/Angor.Avalonia.sln --repository angor --owner SuperJMN --token $(GitHubApiKey) --prefix AngorApp --android-keystore-base64 $(AndroidBase64Keystore) --android-key-alias $(AndroidSigningKeyAlias) --android-key-pass $(AndroidSigningKeyPass) --android-store-pass $(AndroidSigningStorePass) --release-name AngorApp
+    displayName: Release AngorApp

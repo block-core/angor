@@ -21,7 +21,7 @@
 
     <a:PageContainer>
         <ScrollViewer>
-            <StackPanel MaxWidth="1200" VerticalAlignment="Center">
+            <StackPanel MaxWidth="1200" VerticalAlignment="Center" Spacing="10">
                 <Card Height="400"
                       Theme="{StaticResource BigCard}"
                       Header="Welcome to Angor"
@@ -30,8 +30,8 @@
                         <ui:Icon Source="svg:/Assets/angor-icon.svg" />
                     </Card.HeaderStartContent>
                 </Card>
-                <a:CardGrid>
-                    <a:CardGrid.ItemsSource>
+                <CardGrid>
+                    <CardGrid.ItemsSource>
                         <collections:ArrayList>
                             <Card Theme="{StaticResource SmallCard}" Header="Create your wallet" Subheader="Create a new wallet or recover your existing one to get started with Angor">
                                 <Card.HeaderStartContent>
@@ -54,8 +54,8 @@
                                 </Card.HeaderStartContent>
                             </Card>
                         </collections:ArrayList>
-                    </a:CardGrid.ItemsSource>
-                </a:CardGrid>
+                    </CardGrid.ItemsSource>
+                </CardGrid>
             </StackPanel></ScrollViewer>
     </a:PageContainer>
 

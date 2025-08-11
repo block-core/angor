@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
+             xmlns:recoverySeedWords1="clr-namespace:AngorApp.Sections.Wallet.CreateAndImport.Steps.RecoverySeedWords"
+             mc:Ignorable="d"
+             x:Class="AngorApp.Sections.Wallet.CreateAndImport.Steps.RecoverySeedWords.RecoverySeedWordsView" x:DataType="recoverySeedWords1:IRecoverySeedWordsViewModel">
+    <StackPanel Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <TextBlock Text="Please, enter your 12 seed words in order" TextAlignment="Center" />
+        <TextBox Watermark="Seed words" Text="{Binding RawWordList}" MinLines="4" TextWrapping="Wrap" MaxWidth="400">
+            <Interaction.Behaviors>
+                <behaviors:UntouchedClassBehavior />
+            </Interaction.Behaviors>
+        </TextBox>
+    </StackPanel>
+</UserControl>

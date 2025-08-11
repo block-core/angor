@@ -16,6 +16,7 @@
 @inject IWalletStorage _walletStorage;
 @inject ILogger<Wallet> Logger;
 @inject IWalletOperations _walletOperations
+@inject IPsbtOperations _PsbtOperations
 @inject IClipboardService _clipboardService
 @inject ICurrencyService _currencyService
 @inject IDerivationOperations _derivationOperations
@@ -334,7 +335,7 @@
 
                         <div class="modal-footer border-0 pt-0">
                             <div class="d-flex flex-column flex-md-row justify-content-between w-100">
-                                @if (network.NetworkType == NetworkType.Testnet && currentStep == 2 && isNewWallet)
+                                @if ((network.NetworkType == NetworkType.Testnet) && currentStep == 2 && isNewWallet)
                                 {
                                     <div class="order-1 order-md-0">
                                         <button class="btn btn-border-warning w-100 w-md-auto" @onclick="SkipVerification">
@@ -669,14 +670,14 @@ else
                                 <label for="sendToAddress" class="form-label">Send to Address</label>
                                 <div class="input-group">
                                     <span role="button" class="btn btn-border-success btn-sm" @onclick="PasteFromClipboard">
-                                        <Icon IconName="paste" />
+                                        <Icon IconName="paste" Height="24" Width="24"/>
                                     </span>
 
                                     <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
 
 
                                     <span role="button" class="btn btn-border-danger btn-sm" @onclick="ClearAddress">
-                                        <Icon IconName="remove" />
+                                        <Icon IconName="remove" Height="24" Width="24"/>
                                     </span>
                                 </div>
                             </div>
@@ -686,11 +687,16 @@ else
                                 <input type="number" step="0.00000001" min="0" class="form-control" id="sendAmount"
                                        @bind-value="sendAmount" @bind-value:event="oninput"
                                        placeholder="Enter amount">
+                                
+                                <small class="text-muted" role="button">
+                                    Max Balance:
+                                    <span @onclick="SetMaxInvestment" class="fw-bold text-warning">@accountBalanceInfo.TotalBalance.ToUnitBtc() @network.CoinTicker</span>
+                                </small>
                             </div>
 
                             <div class="d-flex align-items-center">
                                 <!-- Select UTXOs Button -->
-                                <button type="button" class="btn btn-border-success me-3"
+                                <button type="button" class="btn btn-border-success btn-sm me-3"
                                         @onclick="() => coinControlModal = true">
                                     Select UTXOs
 
@@ -803,7 +809,7 @@ else
                                                     <div class="info-row d-flex flex-column">
                                                         <span class="text-muted small mb-1">Amount</span>
                                                         <span class="amount fw-bold text-break">
-                                                            @_sendInfo.SendAmount.ToUnitBtc() @network.CoinTicker
+                                                            @_sendInfo.SignedTransaction.Transaction.TotalOut.Satoshi.ToUnitBtc() @network.CoinTicker
                                                         </span>
                                                     </div>
 
@@ -1119,6 +1125,11 @@ else
         }
     }
 
+    private void SetMaxInvestment()
+    {
+        sendAmount = accountBalanceInfo.TotalBalance.ToUnitBtc();
+    }
+
     private string GetStepTitle()
     {
         if (isNewWallet)
@@ -1237,7 +1248,6 @@ else
             btcBalanceInUsd = await GetBtcValueInPreferredCurrency(accountBalanceInfo.TotalBalance);
             await PrecomputeFiatValues();
         }
-
         await base.OnInitializedAsync();
     }
 
@@ -1535,11 +1545,9 @@ else
 
         try
         {
-            var accountInfo = storage.GetAccountInfo(network.Name);
+            var words = await passwordComponent.GetWalletAsync();
 
-            await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
-
-            storage.SetAccountInfo(network.Name, accountInfo);
+            await _walletUIService.RefreshWalletBalance(accountBalanceInfo);
 
             await RefreshFee();
 
@@ -1557,12 +1565,17 @@ else
             _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
             _sendInfo.FeeRate = estimationsFee.FeeRate;
 
-            if (string.IsNullOrEmpty(_sendInfo.ChangeAddress))
-            {
-                _sendInfo.ChangeAddress = accountInfo.ChangeAddressesInfo.First(f => f.HasHistory == false).Address;
-            }
+            _walletOperations.CreateSendTransaction(_sendInfo, accountBalanceInfo.AccountInfo);
 
-            _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, estimationsFee.FeeRate);
+            var psbt = _PsbtOperations.CreatePsbtForTransaction(_sendInfo.UnSignedTransaction, accountBalanceInfo.AccountInfo, estimationsFee.FeeRate, utxoDataWithPaths:_sendInfo.SendUtxos.Values.ToList());
+
+            _sendInfo.SignedTransaction = _PsbtOperations.SignPsbt(psbt, words);
+
+            _sendInfo.SendFee = _sendInfo.SignedTransaction.TransactionFee.ToUnitBtc();
+            if(_sendInfo.SignedTransaction.Transaction.Outputs.Count == 2)
+            {
+                _sendInfo.ChangeAddress = _sendInfo.SignedTransaction.Transaction.Outputs[1].ScriptPubKey.GetDestinationAddress(network)?.ToString() ?? string.Empty;
+            }
 
             sendConfirmModal = true;
         }
@@ -1580,7 +1593,7 @@ else
         StateHasChanged();
     }
 
-    private async Task SendCoins()
+    private async Task HandleFeeChanged(FeeCalculation feeCalc)
     {
         if (!passwordComponent.HasPassword())
         {
@@ -1590,18 +1603,54 @@ else
             return;
         }
 
+        try
+        {
+            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
+            {
+                _sendInfo.FeeRate = feeCalc.CustomFee.Value;
+                _sendInfo.FeeBlockCount = 0; // Custom fee doesn't have block count
+            }
+            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= FeeEstimations.Fees.Count)
+            {
+                FeePosition = feeCalc.Position.Value;
+                var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[FeePosition - 1];
+                _sendInfo.FeeRate = estimationsFee.FeeRate;
+                _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
+            }
+
+            var words = await passwordComponent.GetWalletAsync();
+
+            var psbt = _PsbtOperations.CreatePsbtForTransaction(_sendInfo.UnSignedTransaction, accountBalanceInfo.AccountInfo, _sendInfo.FeeRate, utxoDataWithPaths: _sendInfo.SendUtxos.Values.ToList());
+
+            _sendInfo.SignedTransaction = _PsbtOperations.SignPsbt(psbt, words);
+
+            _sendInfo.SendFee = _sendInfo.SignedTransaction.TransactionFee.ToUnitBtc();
+            if(_sendInfo.SignedTransaction.Transaction.Outputs.Count == 2)
+            {
+                _sendInfo.ChangeAddress = _sendInfo.SignedTransaction.Transaction.Outputs[1].ScriptPubKey.GetDestinationAddress(network)?.ToString() ?? string.Empty;
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error calculating fee");
+            notificationComponent.ShowErrorMessage("Error calculating fee");
+        }
+    }
+
+    private async Task SendCoins()
+    {
         sendConfirmSpinner = true;
         StateHasChanged();
         await Task.Delay(10);
 
         try
         {
-            var words = await passwordComponent.GetWalletAsync();
-
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
-            var res = await _walletOperations.SendAmountToAddress(words, _sendInfo);
+            var res = await _walletOperations.PublishTransactionAsync(network, _sendInfo.SignedTransaction.Transaction);
 
             if (res.Success)
             {
@@ -1654,35 +1703,6 @@ else
         return FeeEstimations.Fees.Any()
             ? Math.Max(1, FeeEstimations.Fees.Min(f => f.FeeRate))
             : 5;
-    }
-
-    private async Task HandleFeeChanged(FeeCalculation feeCalc)
-    {
-        try
-        {
-            if (feeCalc.UseCustomFee && feeCalc.CustomFee.HasValue)
-            {
-                _sendInfo.FeeRate = feeCalc.CustomFee.Value;
-                _sendInfo.FeeBlockCount = 0; // Custom fee doesn't have block count
-            }
-            else if (feeCalc.Position.HasValue && feeCalc.Position.Value <= FeeEstimations.Fees.Count)
-            {
-                FeePosition = feeCalc.Position.Value;
-                var estimationsFee = FeeEstimations.Fees.OrderBy(fee => fee.Confirmations).ToList()[FeePosition - 1];
-                _sendInfo.FeeRate = estimationsFee.FeeRate;
-                _sendInfo.FeeBlockCount = estimationsFee.Confirmations;
-            }
-
-            var accountInfo = storage.GetAccountInfo(network.Name);
-            _sendInfo.SendFee = _walletOperations.CalculateTransactionFee(_sendInfo, accountInfo, _sendInfo.FeeRate);
-
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error calculating fee");
-            notificationComponent.ShowErrorMessage("Error calculating fee");
-        }
     }
 
     private void showCoinControlModal()
@@ -2055,4 +2075,6 @@ else
         newWalletWords = e.Value?.ToString() ?? string.Empty;
         StateHasChanged();
     }
+
+
 }

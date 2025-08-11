@@ -23,7 +23,7 @@
     </UserControl.Styles>
 
 
-    <StackPanel Spacing="8" IsEnabled="{Binding !IsSending^}">
+    <StackPanel Classes="SmallGap" IsEnabled="{Binding !IsSending^}">
         <z:Card Header="Select transaction speed:">
             <controls:FeerateSelector Feerate="{Binding Feerate}"
                                       Presets="{Binding Presets}" />

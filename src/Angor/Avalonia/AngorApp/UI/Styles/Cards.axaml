@@ -11,38 +11,29 @@
                       TargetType="Card"
                       BasedOn="{StaticResource {x:Type Card}}">
             <Setter Property="HeaderStartContentTemplate" Value="{StaticResource RegularIcon}" />
-            <Setter Property="Padding" Value="20 0 20 20" />
-            <Setter Property="HeaderPadding" Value="10" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}"></Setter>
-            <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}"></Setter>
-            <Setter Property="HeaderBackground" Value="{DynamicResource SystemChromeLowColor}"></Setter>
-            <Setter Property="HeaderSpacing" Value="16" />
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
+            <!-- <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}" /> -->
+            <!-- <Setter Property="HeaderBackground" Value="{DynamicResource SystemChromeLowColor}" /> -->
+            <!-- <Setter Property="HeaderSpacing" Value="16" /> -->
         </ControlTheme>
         
         <ControlTheme x:Key="RemarkableSubheaderCard"
                       TargetType="Card"
                       BasedOn="{StaticResource {x:Type Card}}">
-    
-            <Setter Property="SubheaderTemplate">
-                <Setter.Value>
-                    <DataTemplate DataType="x:Object">
-                        <ContentControl TextElement.FontSize="18"
-                                        TextElement.Foreground="{StaticResource HeaderBrush}"
-                                        Content="{Binding}" />
-                    </DataTemplate>
-                </Setter.Value>
+            <Setter Property="HeaderTheme">
+                <ControlTheme TargetType="ContentControl">
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="Foreground" Value="{StaticResource SubheaderBrush}" />
+                </ControlTheme>
             </Setter>
-            <Setter Property="HeaderTemplate">
-                <Setter.Value>
-                    <DataTemplate DataType="x:Object">
-                        <ContentControl TextElement.FontSize="12"
-                                        TextElement.Foreground="{StaticResource SubheaderBrush}"
-                                        Content="{Binding}" />
-                    </DataTemplate>
-                </Setter.Value>
+            <Setter Property="SubheaderTheme">
+                <ControlTheme TargetType="ContentControl">
+                    <Setter Property="FontSize" Value="18" />
+                    <Setter Property="Foreground" Value="{StaticResource HeaderBrush}" />
+                </ControlTheme>
             </Setter>
         </ControlTheme>
-        
         <ControlTheme x:Key="InfoCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -61,41 +52,25 @@
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                             Margin="{TemplateBinding Padding}">
-                            <ContentPresenter x:Name="StartContent"
+                            <ContentControl x:Name="StartContent"
                                               Content="{TemplateBinding HeaderStartContent}"
                                               ContentTemplate="{TemplateBinding HeaderStartContentTemplate}" />
-                            <ContentPresenter x:Name="Header" Content="{TemplateBinding Header}"
-                                              ContentTemplate="{TemplateBinding HeaderTemplate}"
-                                              TextElement.Foreground="{StaticResource HeaderBrush}"
-                                              />
-                            <ContentPresenter x:Name="Subheader" Content="{TemplateBinding Subheader}"
-                                              ContentTemplate="{TemplateBinding SubheaderTemplate}" />
-                            <ContentPresenter x:Name="Content" Content="{TemplateBinding Content}"
-                                              IsVisible="{Binding $parent[Card].Content, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                              ContentTemplate="{TemplateBinding ContentTemplate}" />
-                            <ContentPresenter x:Name="EndContent" Content="{TemplateBinding HeaderEndContent}"
-                                              IsVisible="{Binding $parent[Card].HeaderEndContent, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                              ContentTemplate="{TemplateBinding HeaderEndContentTemplate}" />
+                            <ContentControl x:Name="Header" Content="{TemplateBinding Header}"
+                                            ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                            TextElement.Foreground="{StaticResource HeaderBrush}"
+                            />
+                            <ContentControl x:Name="Subheader" Content="{TemplateBinding Subheader}"
+                                            ContentTemplate="{TemplateBinding SubheaderTemplate}" />
+                            <ContentControl x:Name="Content" Content="{TemplateBinding Content}"
+                                            IsVisible="{Binding $parent[Card].Content, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                            ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            <ContentControl x:Name="EndContent" Content="{TemplateBinding HeaderEndContent}"
+                                            IsVisible="{Binding $parent[Card].HeaderEndContent, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                            ContentTemplate="{TemplateBinding HeaderEndContentTemplate}" />
                         </StackPanel>
                     </Border>
                 </ControlTemplate>
             </Setter>
-
-            <!-- Default shadow -->
-            <Style Selector="^ /template/ Border#Root">
-                <Setter Property="BoxShadow" Value="0 2 8 0 #19000000" />
-            </Style>
-
-            <!-- Hover effects -->
-            <Style Selector="^:pointerover /template/ Border#Root">
-                <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightBaseMediumLowBrush}" />
-                <Setter Property="BoxShadow" Value="0 4 12 0 #26000000" />
-            </Style>
-
-            <!-- Pressed effect -->
-            <Style Selector="^:pressed /template/ Border#Root">
-                <Setter Property="BoxShadow" Value="0 1 4 0 #0D000000" />
-            </Style>
             
         </ControlTheme>
 
@@ -144,8 +119,14 @@
     </Styles.Resources>
 
     <Design.PreviewWith>
-        <StackPanel Width="500">
-            <Card Header="Card" Subheader="Subheader">
+        <StackPanel Width="500" Spacing="20" Margin="20">
+            <Card Header="Card" Height="200" Subheader="Subheader">
+                <Card.DataContext>
+                    <MyViewModel Left="LEFT" />
+                </Card.DataContext>
+                <Card.HeaderEndContent>
+                    <TextBlock Text="{Binding Left, DataType=MyViewModel}" />
+                </Card.HeaderEndContent>
                 <Card.Content>
                     <TextBlock>This is the content</TextBlock>
                 </Card.Content>
@@ -187,7 +168,7 @@
                     <ui:Icon Source="fa-wallet" />
                 </Card.HeaderStartContent>
             </Card>
-            <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="RemarkableSubheaderCard" Subheader="Subheader" />
+            <Card Height="200" Theme="{StaticResource RemarkableSubheaderCard}" Header="RemarkableSubheaderCard" Subheader="Subheader" />
             <Card Theme="{StaticResource TransparentCard}" Header="TransparentCard" Subheader="Transparent" />
         </StackPanel>
     </Design.PreviewWith>

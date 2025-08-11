@@ -49,13 +49,13 @@ public class WalletAppServiceTests(ITestOutputHelper output)
         var feeRate = new DomainFeeRate(1); 
 
         // Act
-        var result = await sut.EstimateFee(walletId, amount, address, feeRate);
+        var result = await sut.EstimateFeeAndSize(walletId, amount, address, feeRate);
 
         // Assert
         Assert.True(result.IsSuccess);
-        output.WriteLine($"Estimated fee: {result.Value.Value} sats");
-        Assert.True(result.Value.Value > 0);
-        Assert.True(result.Value.Value < 50000); // Fee should be less than amount
+        output.WriteLine($"Estimated fee: {result.Value.Fee} sats");
+        Assert.True(result.Value.Fee > 0);
+        Assert.True(result.Value.Fee < 50000); // Fee should be less than amount
     }
 
     [Fact(Skip = "This really sends money. Use carefully.")]

@@ -46,14 +46,13 @@
                         <InvokeCommandAction Command="{Binding GoToDetails}" />
                     </TappedTrigger>
                 </Interaction.Behaviors>
-
             </OverlayBorder>
         </DataTemplate>
     </UserControl.DataTemplates>
 
     <co:PageContainer>
         <ScrollViewer>
-            <DockPanel>
+            <DockPanel VerticalSpacing="20">
                 <z:Card Header="Founder" DockPanel.Dock="Top">
                     <z:Card.HeaderEndContent>
                         <IconButton Command="{Binding Create}" DockPanel.Dock="Right" VerticalAlignment="Top">
@@ -68,11 +67,11 @@
                     </z:Card.HeaderStartContent>
                 </z:Card>
                 <z:Loading LoadingText="Loading projects. Please wait." IsLoading="{Binding LoadProjects.IsExecuting^}">
-                    <co:CardGrid ItemsSource="{Binding ProjectsList}">
+                    <CardGrid ItemsSource="{Binding ProjectsList}">
                         <z:Empty.Content>
                             <TextBlock VerticalAlignment="Center" TextAlignment="Center">Nothing to show</TextBlock>
                         </z:Empty.Content>
-                    </co:CardGrid>
+                    </CardGrid>
                 </z:Loading>
             </DockPanel>
         </ScrollViewer>

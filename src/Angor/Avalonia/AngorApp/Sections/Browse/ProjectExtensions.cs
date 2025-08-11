@@ -24,7 +24,7 @@ public static class ProjectExtensions
                     Amount = stage.Amount,
                     Index = stage.Index,
                     ReleaseDate = stage.ReleaseDate,
-                    RatioOfTotal = stage.RatioOfTotal
+                    RatioOfTotal = (double)stage.RatioOfTotal / 100.0 // Convert to percentage the UI expects
                 })
                 .Cast<IStage>()
                 .ToList(),

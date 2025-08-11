@@ -1,11 +1,11 @@
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
+using Angor.Contexts.Funding.Projects.Domain;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.Reactive;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Portfolio.Items;
@@ -23,8 +23,17 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
         
         var canCompleteInvestment = this.WhenAnyValue(x => x.InvestmentStatus).Select(x => x == InvestmentStatus.FounderSignaturesReceived);
         
-        CompleteInvestment = ReactiveCommand.CreateFromTask(() => investmentAppService.ConfirmInvestment(1234), canCompleteInvestment)
+        CompleteInvestment = ReactiveCommand.CreateFromTask(() => investmentAppService.ConfirmInvestment(projectDto.InvestmentId,uiServices.ActiveWallet.Current.Value.Id.Value, new ProjectId(projectDto.Id)), canCompleteInvestment)
             .Enhance()
+            .DisposeWith(disposable);
+
+        CompleteInvestment.Failures() //TODO Jose perhaps you want to refactor this
+            .SelectMany(async _ =>
+            {
+                await uiServices.Dialog.ShowMessage("Failed to invest", _);
+                return Unit.Default;
+            })
+            .Subscribe()
             .DisposeWith(disposable);
         
         CompleteInvestment.Successes()

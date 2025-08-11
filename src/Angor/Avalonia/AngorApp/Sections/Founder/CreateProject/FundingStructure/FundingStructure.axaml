@@ -20,7 +20,7 @@
         <StyleInclude Source="../Common.axaml" />
     </UserControl.Styles>
 
-    <Card Header="Funding Structure">
+    <Card Header="Funding Structure" Classes="InlineNested">
         <Card.HeaderEndContent>
             <ContentControl IsVisible="{Binding IsValid^}" Foreground="LawnGreen">
                 <ui:Icon Source="fa-check" />
@@ -33,8 +33,8 @@
             <Card Header="Target Amount" Subheader="Minimum BTC this project is trying to raise">
                 <c:AmountControl Satoshis="{Binding Sats, Mode=TwoWay}" />
             </Card>
-            <c:CardGrid>
-                <c:CardGrid.ItemsSource>
+            <CardGrid>
+                <CardGrid.ItemsSource>
                     <col:ArrayList>
                         <Card Header="Funding Start" Subheader="When the investment period begins (automatically set today)">
                             <TextBox VerticalAlignment="Bottom" IsReadOnly="True" Text="{Binding StartDate, StringFormat='d'}" />
@@ -43,10 +43,10 @@
                             <CalendarDatePicker VerticalAlignment="Bottom" SelectedDate="{Binding EndDate}" />
                         </Card>
                     </col:ArrayList>
-                </c:CardGrid.ItemsSource>
-            </c:CardGrid>
-            <c:CardGrid>
-                <c:CardGrid.ItemsSource>
+                </CardGrid.ItemsSource>
+            </CardGrid>
+            <CardGrid>
+                <CardGrid.ItemsSource>
                     <col:ArrayList>
                         <Card Header="Penalty Days" Subheader="Days to lock funds for departing investors">
                             <TextBox Watermark="Enter the penalty days" Text="{Binding PenaltyDays}" />
@@ -55,8 +55,8 @@
                             <CalendarDatePicker SelectedDate="{Binding ExpiryDate}" />
                         </Card>
                     </col:ArrayList>
-                </c:CardGrid.ItemsSource>
-            </c:CardGrid>
+                </CardGrid.ItemsSource>
+            </CardGrid>
         </StackPanel>
     </Card>
 

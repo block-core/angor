@@ -12,9 +12,8 @@ public class NetworkConfiguration : INetworkConfiguration
     public static long AngorCreateFeeSats = 10001; // versioning :)
     public static int AngorInvestFeePercentage = 1;
     public static short NostrEventIdKeyType = 1; //TODO David use an enum for this?
-
+    
     public int GetAngorInvestFeePercentage => AngorInvestFeePercentage;
-
     public string GetAngorKey()
     {
         var network = GetNetwork();
@@ -28,6 +27,7 @@ public class NetworkConfiguration : INetworkConfiguration
     }
 
     private Network currentNetwork;
+    private bool? _debugMode;
 
     public void SetNetwork(Network network)
     {
@@ -44,6 +44,16 @@ public class NetworkConfiguration : INetworkConfiguration
         return currentNetwork;
     }
 
+    public bool GetDebugMode()
+    {
+        return _debugMode ?? false;
+    }
+
+    public void SetDebugMode(bool? debugMode=false)
+    {
+        _debugMode = debugMode;
+    }
+
     public List<SettingsUrl> GetDefaultIndexerUrls()
     {
         if (currentNetwork.NetworkType == NetworkType.Mainnet)
@@ -54,9 +64,10 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "", Url = "https://fulcrum.angor.online", IsPrimary = true },
                 new SettingsUrl { Name = "", Url = "https://electrs.angor.online", IsPrimary = false },
                 new SettingsUrl { Name = "", Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
+                new SettingsUrl { Name = "", Url = "https://indexer.angor.fund", IsPrimary = false },
             };
         }
-
+        
         if (currentNetwork.NetworkType == NetworkType.Testnet)
         {
             if (currentNetwork.Name == "Angornet")
@@ -65,6 +76,7 @@ public class NetworkConfiguration : INetworkConfiguration
                 {
                     new SettingsUrl { Name = "", Url = "https://test.indexer.angor.io", IsPrimary = false },
                     new SettingsUrl { Name = "", Url = "https://signet.angor.online", IsPrimary = true},
+                    new SettingsUrl { Name = "", Url = "https://signet2.angor.online", IsPrimary = false},
                 };
             }
 
@@ -121,6 +133,7 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "", Url = "https://fulcrum.angor.online", IsPrimary = true},
                 new SettingsUrl { Name = "", Url = "https://electrs.angor.online", IsPrimary = false },
                 new SettingsUrl { Name = "", Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
+                new SettingsUrl { Name = "", Url = "https://indexer.angor.fund", IsPrimary = false },
             };
         }
 
@@ -132,6 +145,7 @@ public class NetworkConfiguration : INetworkConfiguration
                 {
                     new SettingsUrl { Name = "", Url = "https://test.explorer.angor.io", IsPrimary = false },
                     new SettingsUrl { Name = "", Url = "https://signet.angor.online", IsPrimary = true },
+                    new SettingsUrl { Name = "", Url = "https://signet2.angor.online", IsPrimary = false},
                 };
             }
 

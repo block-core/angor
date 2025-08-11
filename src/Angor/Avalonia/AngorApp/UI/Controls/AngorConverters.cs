@@ -1,8 +1,10 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Svg;
 using Humanizer;
+using Newtonsoft.Json;
 using Projektanker.Icons.Avalonia;
 using Zafiro.Mixins;
 using Zafiro.UI.Navigation.Sections;
@@ -36,15 +38,12 @@ public static class AngorConverters
     public static readonly FuncValueConverter<ISection, bool> IsActivatable = new(sectionBase => sectionBase is not ISectionSeparator);
 
     public static readonly FuncValueConverter<bool, Dock> IsPrimaryToDock = new(isPrimary => isPrimary ? Dock.Top : Dock.Bottom);
-    
-    public static readonly FuncValueConverter<DateTimeOffset, string> TimeLeft = new(offset =>
-    {
-        return offset.Humanize(dateToCompareAgainst: DateTimeOffset.Now);
-    });
-    
+
+    public static readonly FuncValueConverter<DateTimeOffset, string> TimeLeft = new(offset => { return offset.Humanize(dateToCompareAgainst: DateTimeOffset.Now); });
+
     public static readonly FuncValueConverter<TimeSpan, string> HumanizeTimeSpan = new(offset => offset.Humanize());
-    
-    public static readonly FuncValueConverter<DateTimeOffset, string> HumanizeDate = new(offset =>
+
+    public static readonly FuncValueConverter<DateTimeOffset, string> HumanizeDateTimeOffset = new(offset =>
     {
         if (DateTimeOffset.Now.Date - offset < 2.Days())
         {
@@ -54,12 +53,24 @@ public static class AngorConverters
         return offset.ToString("d");
     });
 
+    public static readonly FuncValueConverter<DateTime?, string> HumanizeDateTime = new(offset =>
+    {
+        if (offset == null)
+        {
+            return null;
+        }
+
+        if (DateTime.Now.Date - offset < 2.Days())
+        {
+            return offset.Humanize();
+        }
+
+        return offset.Value.ToString("d");
+    });
+
     public static readonly FuncValueConverter<bool, double> BoolToOpacity = new(b => b ? 1 : 0);
 
-    public static FuncValueConverter<string, string> HubProfile = new((value) =>
-    {
-        return "https://hub.angor.io/profile/" + value;
-    });
+    public static FuncValueConverter<string, string> HubProfile = new((value) => { return "https://hub.angor.io/profile/" + value; });
 
     public static string BigBtcFormat = "{0} BTC";
     public static string AmountBtcFormat = "0.0000 0000 BTC";
@@ -92,4 +103,9 @@ public static class AngorConverters
         var btc = satoshis / (decimal)1_0000_0000;
         return btc;
     });
+
+    public static readonly FuncValueConverter<object, string> ToJson = new(obt => System.Text.Json.JsonSerializer.Serialize(obt, new JsonSerializerOptions()
+    {
+        WriteIndented = true,
+    }));
 }

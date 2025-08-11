@@ -1,4 +1,3 @@
-using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using AngorApp.Features.Invest;
 using AngorApp.UI.Services;
@@ -60,7 +59,7 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
     {
         return Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            await uiServices.Dialog.ShowMessage("No wallet found", "Please create or recover a wallet to invest in this project.");
+            await uiServices.Dialog.ShowMessage("No wallet found", "Please create or import a wallet to invest in this project.");
             return Maybe<Unit>.None;
         });
     }

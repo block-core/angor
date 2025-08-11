@@ -1,4 +1,5 @@
 name: PR Testing Deploy
+run-name: "Deploy PR #${{ inputs.pr_number }} on angor-debug"
 on:
   # Manual PR 
   workflow_dispatch:
@@ -75,7 +76,7 @@ jobs:
         
     # Run tests to make sure PR doesn't break anything
     - name: Run Tests
-      continue-on-error: true
+      continue-on-error: false 
       run: dotnet test -c Release --verbosity normal ${{env.SOLUTION_PATH}} --filter "Category!=E2E"
       
     # Prepare for deployment

@@ -24,6 +24,7 @@
 @inject IClientStorage storage;
 @inject ICacheStorage SessionStorage;
 @inject IWalletOperations _WalletOperations;
+@inject IPsbtOperations _PsbtOperations
 @inject IApplicationLogicService applicationLogicService;
 @inject ISignService _SignService;
 @inject IRelayService _RelayService;
@@ -974,6 +975,7 @@ else
     private async Task InvestFunds()
     {
         bool isTestnet = network.NetworkType == NetworkType.Testnet;
+        bool debugMode = storage.GetDebugMode();
         decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.2m; // 0.2 BTC for mainnet, unlimited for testnet
         decimal minInvestmentBtc = 0.001m; // Minimum investment for all networks
 
@@ -987,7 +989,7 @@ else
         }
         else
         {
-            if (!isTestnet && Investment.InvestmentAmountBtc > maxInvestmentBtc)
+            if ((!isTestnet && !debugMode) && Investment.InvestmentAmountBtc > maxInvestmentBtc)
             {
                 notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentBtc} BTC on the mainnet");
                 return;
@@ -1059,9 +1061,9 @@ else
 
             if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
-                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
+                var psbt = _PsbtOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
-                signedTransaction = _WalletOperations.SignPsbt(psbt, words);
+                signedTransaction = _PsbtOperations.SignPsbt(psbt, words);
             }
             else
             {
@@ -1107,9 +1109,9 @@ else
 
             if (_featureFlagService.IsFeatureHWSupportEnabled())
             {
-                var psbt = _WalletOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+                var psbt = _PsbtOperations.CreatePsbtForTransaction(unSignedTransaction, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
 
-                signedTransaction = _WalletOperations.SignPsbt(psbt, await passwordComponent.GetWalletAsync());
+                signedTransaction = _PsbtOperations.SignPsbt(psbt, await passwordComponent.GetWalletAsync());
             }
             else
             {

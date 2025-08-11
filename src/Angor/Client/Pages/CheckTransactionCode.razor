@@ -201,7 +201,7 @@ else
             SendToAddress = privateFounderKey.Neuter().PubKey.GetSegwitAddress(network).ToString()
         };
 
-        _walletOperations.CalculateTransactionFee(sendInfo, localAccountInfo,  1000);
+        _walletOperations.CreateSendTransaction(sendInfo, localAccountInfo);
 
         var fee = await _walletOperations.GetFeeEstimationAsync();
 

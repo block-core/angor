@@ -19,7 +19,7 @@ public class InvestmentRepository(
     ISeedwordsProvider seedwordsProvider,
     IRelayService relayService) : IInvestmentRepository
 {
-    public async Task<Result<InvestmentRecords>> GetByWallet(Guid walletId)
+    public async Task<Result<InvestmentRecords>> GetByWalletId(Guid walletId)
     {
         // Encrypt and send the investments
         var sensiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
@@ -33,7 +33,7 @@ public class InvestmentRepository(
         return await GetInvestmentRecordsFromRelayAsync(storageAccountKey, password);
     }
 
-    public async Task<Result> Add(Guid walletId, Domain.Investment newInvestment)
+    public async Task<Result> Add(Guid walletId, InvestorPositionRecord newInvestment)
     {
         // Encrypt and send the investments
         var sensiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
@@ -52,13 +52,7 @@ public class InvestmentRepository(
         if (investments.IsFailure)
             return Result.Failure(investments.Error);
         
-        investments.Value.ProjectIdentifiers.Add(new InvestorPositionRecord
-        {
-            InvestmentTransactionHash = newInvestment.TransactionId,
-            InvestorPubKey = newInvestment.InvestorPubKey,
-            ProjectIdentifier = newInvestment.ProjectId.Value,
-            UnfundedReleaseAddress = null //TODO
-        });
+        investments.Value.ProjectIdentifiers.Add(newInvestment);
         
         var encrypted = await encryptionService.EncryptData(serializer.Serialize(investments.Value), password);
 
@@ -69,7 +63,7 @@ public class InvestmentRepository(
         return success ? Result.Success() : Result.Failure("Error adding investment");
     }
 
-    public Task<Result<IEnumerable<InvestmentDto>>> GetByProject(ProjectId projectId)
+    public Task<Result<IEnumerable<InvestmentDto>>> GetByProjectId(ProjectId projectId)
     {
         return GetProjectInvestments(projectId).Map(enumerable => enumerable.Select(inv => new InvestmentDto
         {

@@ -1,10 +1,6 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using AngorApp.Sections.Founder.Details;
-using Zafiro.UI;
+using AngorApp.Sections.Founder.ProjectDetails;
 using Zafiro.UI.Commands;
 using Zafiro.UI.Navigation;
 

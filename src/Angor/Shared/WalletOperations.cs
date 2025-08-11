@@ -37,112 +37,6 @@ public class WalletOperations : IWalletOperations
         return walletWords;
     }
 
-    public PsbtData CreatePsbtForTransaction(Transaction transaction, AccountInfo accountInfo, long feeRate, string? changeAddress = null)
-    {
-        if (string.IsNullOrEmpty(accountInfo.RootExtPubKey))
-        {
-            throw new ApplicationException("The Root ExtPubKey is missing");
-        }
-
-        Network network = _networkConfiguration.GetNetwork();
-        var nbitcoinNetwork = NetworkMapper.Map(network);
-
-        changeAddress = changeAddress ?? accountInfo.GetNextChangeReceiveAddress();
-
-        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
-        var coins = utxoDataWithPaths.Select(u => new Coin(uint256.Parse(u.UtxoData.outpoint.transactionId), (uint)u.UtxoData.outpoint.outputIndex, Money.Satoshis(u.UtxoData.value), Script.FromHex(u.UtxoData.scriptHex))).ToList();
-
-        if (!coins.Any())
-            throw new ApplicationException("No coins found to fund the transaction.");
-
-        var unsignedTx = NBitcoin.Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
-
-        foreach (var coin in coins)
-        {
-            NBitcoin.OutPoint outputint = new NBitcoin.OutPoint(new NBitcoin.uint256(coin.Outpoint.Hash.ToBytes()), coin.Outpoint.N);
-            if (unsignedTx.Inputs.Any(x => x.PrevOut == outputint))
-                continue;
-            var txin = new NBitcoin.TxIn(outputint, null);
-            txin.WitScript = new NBitcoin.WitScript(NBitcoin.Op.GetPushOp(new byte[72]), NBitcoin.Op.GetPushOp(new byte[33])); // for total size calculation
-            unsignedTx.Inputs.Add(txin);
-        }
-
-        var totalSize = unsignedTx.GetVirtualSize();
-        var totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize);
-
-        var totalSatsIn = coins.Sum(s => s.Amount);
-        var totalSatsOut = unsignedTx.Outputs.Sum(o => o.Value);
-        var totalToChange = totalSatsIn - totalSatsOut - totalFee;
-
-        var spendAll = totalSatsIn == totalSatsOut;
-        if (spendAll)
-        {
-            var lastOutput = unsignedTx.Outputs.Last();
-
-            if (totalFee >= lastOutput.Value)
-                throw new ApplicationException($"The fee {totalFee} is greater then the last output {lastOutput.Value}");
-
-            lastOutput.Value -= totalFee;
-        }
-        else
-        {
-            var changeOutput = unsignedTx.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(totalToChange.Satoshi), NBitcoin.BitcoinAddress.Create(changeAddress, nbitcoinNetwork).ScriptPubKey));
-        }
-
-        var psbt = NBitcoin.PSBT.FromTransaction(unsignedTx, nbitcoinNetwork);
-
-        NBitcoin.ExtPubKey accountExtPubKey = NBitcoin.ExtPubKey.Parse(accountInfo.RootExtPubKey, nbitcoinNetwork);
-
-        for (int i = 0; i < unsignedTx.Inputs.Count; i++)
-        {
-            var input = unsignedTx.Inputs[i];
-            var utxoInfo = utxoDataWithPaths.FirstOrDefault(u => u.UtxoData.outpoint.ToString() == input.PrevOut.ToString());
-
-            if (utxoInfo == null)
-                throw new InvalidOperationException($"Could not find UTXO information for input {input.PrevOut}");
-
-            psbt.Inputs[i].WitnessUtxo = new NBitcoin.TxOut(NBitcoin.Money.Satoshis(utxoInfo.UtxoData.value), NBitcoin.Script.FromHex(utxoInfo.UtxoData.scriptHex));
-
-            var keyPath = new NBitcoin.KeyPath(utxoInfo.HdPath);
-            var rootedKeyPath = new NBitcoin.RootedKeyPath(accountExtPubKey, keyPath);
-
-            var pubKey = _hdOperations.GeneratePublicKey(ExtPubKey.Parse(accountInfo.ExtPubKey, network), (int)keyPath.Indexes[4], keyPath.Indexes[3] == 1);
-            var path = _hdOperations.CreateHdPath(Purpose, network.Consensus.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
-
-            if (path != utxoInfo.HdPath)
-                throw new InvalidOperationException($"Path does not match {path} {utxoInfo.HdPath}");
-
-            psbt.Inputs[i].HDKeyPaths.Add(new NBitcoin.PubKey(pubKey.ToBytes()), rootedKeyPath);
-        }
-
-        return new PsbtData { PsbtHex = psbt.ToHex() };
-    }
-
-    public TransactionInfo SignPsbt(PsbtData psbtData, WalletWords walletWords)
-    {
-        Network network = _networkConfiguration.GetNetwork();
-        var nbitcoinNetwork = NetworkMapper.Map(network);
-
-        var psbt = NBitcoin.PSBT.Parse(psbtData.PsbtHex, nbitcoinNetwork);
-
-        ExtKey extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
-
-        var nbitcoinExtendedKey = NBitcoin.ExtKey.CreateFromBytes(extendedKey.ToBytes(network.Consensus.ConsensusFactory));
-
-        psbt.SignAll(NBitcoin.ScriptPubKeyType.Segwit, nbitcoinExtendedKey); 
-
-        if (!psbt.TryFinalize(out IList<NBitcoin.PSBTError>? errors))
-        {
-            throw new NBitcoin.PSBTException(errors);
-        }
-
-        NBitcoin.Transaction signedTransaction = psbt.ExtractTransaction();
-
-        NBitcoin.Money fee = psbt.GetFee();
-
-        return new TransactionInfo { Transaction = network.CreateTransaction(signedTransaction.ToHex()), TransactionFee = fee.Satoshi };
-    }
-
     public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
@@ -230,13 +124,13 @@ public class WalletOperations : IWalletOperations
             var txSize = signTransaction.GetVirtualSize(4);
             var minimumFee = new FeeRate(Money.Satoshis(1000)).GetFee(txSize); //1000 sats per kilobyte
 
-            if (minerFee < minimumFee) //Fixed a bug in the builder that creates a fee that is too small
-            {
-                builder.SendFees(minimumFee);
-                signTransaction = builder.BuildTransaction(true);
-            }
+            if (minerFee >= minimumFee) //Fixed a bug in the builder that creates a fee that is too low
+                return new TransactionInfo { Transaction = signTransaction, TransactionFee = minerFee };
+            
+            builder.SendFees(minimumFee);
+            signTransaction = builder.BuildTransaction(true);
 
-            return new TransactionInfo { Transaction = signTransaction, TransactionFee = minerFee };
+            return new TransactionInfo { Transaction = signTransaction, TransactionFee = minimumFee  };
         }
     }
 
@@ -387,7 +281,8 @@ public class WalletOperations : IWalletOperations
         return new OperationResult<Transaction> { Success = false, Message = res };
     }
 
-    public List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
+    public List<UtxoDataWithPath> 
+        FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
     {
         var utxosToSpend = new List<UtxoDataWithPath>();
 
@@ -740,7 +635,7 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    public decimal CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, long feeRate)
+    public Transaction CreateSendTransaction(SendInfo sendInfo, AccountInfo accountInfo)
     {
         var network = _networkConfiguration.GetNetwork();
 
@@ -754,16 +649,12 @@ public class WalletOperations : IWalletOperations
             }
         }
 
-        var coins = sendInfo.SendUtxos
-            .Select(_ => _.Value.UtxoData)
-            .Select(_ => new Coin(uint256.Parse(_.outpoint.transactionId), (uint)_.outpoint.outputIndex,
-                Money.Satoshis(_.value), Script.FromHex(_.scriptHex)));
+        Transaction transaction = network.CreateTransaction();
 
-        var builder = new TransactionBuilder(network)
-            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), sendInfo.SendAmount)
-            .AddCoins(coins)
-            .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network));
+        transaction.Outputs.Add(new TxOut(Money.Satoshis(sendInfo.SendAmount), BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network).ScriptPubKey));
 
-        return builder.EstimateFees(new FeeRate(Money.Satoshis(feeRate))).ToUnit(MoneyUnit.BTC);
+        sendInfo.UnSignedTransaction = transaction;
+
+        return transaction;
     }
 }
