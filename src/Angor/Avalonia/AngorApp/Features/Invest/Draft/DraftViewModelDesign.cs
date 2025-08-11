@@ -1,3 +1,4 @@
+using AngorApp.Design;
 using AngorApp.Sections.Browse;
 using AngorApp.UI.Controls;
 
