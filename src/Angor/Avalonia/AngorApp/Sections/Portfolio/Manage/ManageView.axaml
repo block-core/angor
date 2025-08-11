@@ -4,60 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:c="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:sd="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.Manage.ManageView">
 
-    <UserControl.Resources>
-        <ControlTheme x:Key="ItemCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
-            <Setter Property="HeaderTheme">
-                <ControlTheme TargetType="ContentControl">
-                    <Setter Property="Foreground" Value="{StaticResource SubheaderBrush}" />
-                    <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
-                </ControlTheme>
-            </Setter>
-            <Setter Property="SubheaderTheme">
-                <ControlTheme TargetType="ContentControl">
-                    <Setter Property="Foreground" Value="{StaticResource HeaderBrush}" />
-                    <Setter Property="HorizontalAlignment" Value="Center" />
-                    <Setter Property="FontSize" Value="{StaticResource FontSizeLarge}" />
-                </ControlTheme>
-            </Setter>
-            <Setter Property="Template">
-                <ControlTemplate>
-                    <Border Background="{TemplateBinding Background}"
-                            CornerRadius="{TemplateBinding CornerRadius}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            Padding="{TemplateBinding Padding}"
-                            BorderThickness="{TemplateBinding BorderThickness}">
-                        <StackPanel Classes="SmallGap">
-                            <FlexBox AlignContent="SpaceAround" Gap="10">
-                                <ContentControl IsVisible="{Binding $parent[Card].HeaderStartContent, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                    ContentTemplate="{TemplateBinding HeaderStartContentTemplate}"
-                                    Content="{TemplateBinding HeaderStartContent}" />
-                                <ContentControl
-                                    ContentTemplate="{TemplateBinding HeaderTemplate}"
-                                    Content="{TemplateBinding Header}"
-                                    Theme="{TemplateBinding HeaderTheme}"/>
-                                <ContentControl
-                                    ContentTemplate="{TemplateBinding HeaderStartContentTemplate}"
-                                    Content="{TemplateBinding HeaderStartContent}" />
-                            </FlexBox>
-                            <StackPanel>
-                                <ContentControl
-                                    ContentTemplate="{TemplateBinding SubheaderTemplate}"
-                                    Theme="{TemplateBinding SubheaderTheme}"
-                                    Content="{TemplateBinding Subheader}" />
-                                <ContentControl />
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-                </ControlTemplate>
-            </Setter>
-        </ControlTheme>
-    </UserControl.Resources>
 
     <StackPanel Classes="BigGap">
-        <Card Header="Manage Investment" Subheader="Mange investments">
+        <Card Theme="{StaticResource WideCard}" Header="Manage Investment" Subheader="Mange investments">
             <Card.HeaderEndContent>
                 <UniformGrid>
                     <Button Content="Refresh" />
@@ -73,17 +25,14 @@
             </CardGrid.Styles>
             <CardGrid.ItemsSource>
                 <c:ArrayList>
-                    <Card Header="Total Funds" Subheader="0 TBTC" />
-                    <Card Header="Expiry Date" Theme="{StaticResource RemarkableSubheaderCard}" Subheader="0 TBTC" />
-                    <Card Header="Penalty Period" Theme="{StaticResource RemarkableSubheaderCard}" Subheader="0 TBTC" />
-                    <Card Header="Transaction" Classes="SectionCard">
-                        <Card.HeaderEndContent>
-                            <Button Content="View" />
-                        </Card.HeaderEndContent>
+                    <Card Header="Total Funds" Content="0 TBTC" />
+                    <Card Header="Expiry Date" Content="0 TBTC" />
+                    <Card Header="Penalty Period" Content="0 TBTC" />
+                    <Card Header="Transaction" >
+                        <Button FontSize="{StaticResource FontSizeNormal}" Content="View" />
                     </Card>
                 </c:ArrayList>
             </CardGrid.ItemsSource>
         </CardGrid>
-        <sd:SlimDataGrid ItemsSource="" />
     </StackPanel>
 </UserControl>

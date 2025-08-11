@@ -13,7 +13,7 @@
         <operate:WalletViewModelDesign />
     </Design.DataContext>
     
-    <Card Classes="SectionCard" Header="{Binding Wallet.Balance.DecimalString}">
+    <Card Theme="{StaticResource WideCard}" Header="{Binding Wallet.Balance.DecimalString}">
         <Card.HeaderStartContent>
             <ui:Icon Source="fa-database" />
         </Card.HeaderStartContent>

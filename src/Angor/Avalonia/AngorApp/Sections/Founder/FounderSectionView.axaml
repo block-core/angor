@@ -43,7 +43,7 @@
     <co:PageContainer>
         <ScrollViewer>
             <DockPanel VerticalSpacing="20">
-                <z:Card Classes="SectionCard" Header="Founder" DockPanel.Dock="Top">
+                <z:Card Theme="{StaticResource WideCard}" Header="Founder" DockPanel.Dock="Top">
                     <z:Card.HeaderEndContent>
                         <FlexBox Gap="10">
                             <IconButton Command="{Binding LoadProjects}">

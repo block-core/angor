@@ -68,7 +68,7 @@
     <a:PageContainer>
         <ScrollViewer>
             <DockPanel HorizontalSpacing="20" VerticalSpacing="20">
-                <Card Classes="SectionCard" DockPanel.Dock="Top" Header="Portfolio" Subheader="Check your project investments">
+                <Card Theme="{StaticResource WideCard}" DockPanel.Dock="Top" Header="Portfolio" Subheader="Check your project investments">
                     <Card.HeaderEndContent>
                         <UniformGrid ColumnSpacing="10" Rows="1">
                             <IconButton HorizontalAlignment="Stretch" Command="{Binding Load}">

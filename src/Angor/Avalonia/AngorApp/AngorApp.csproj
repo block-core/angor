@@ -29,11 +29,12 @@
         </PackageReference>
         <PackageReference Include="Serilog.Extensions.Logging"/>
         <PackageReference Include="Serilog.Sinks.Console"/>
-        <PackageReference Include="Zafiro.Avalonia"/>
-        <PackageReference Include="Zafiro.Avalonia.Dialogs"/>
+<!--        <PackageReference Include="Zafiro.Avalonia"/>-->
+<!--        <PackageReference Include="Zafiro.Avalonia.Dialogs"/>-->
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\Zafiro.Avalonia.csproj" />
         <ProjectReference Include="..\Angor.Contexts.Integration.WalletFunding\Angor.Contexts.Integration.WalletFunding.csproj"/>
         <ProjectReference Include="..\Angor.UI.Model.Implementation\Angor.UI.Model.Implementation.csproj"/>
         <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj"/>
@@ -43,12 +44,6 @@
 
     <ItemGroup>
       <AdditionalFiles Include="Sections\Portfolio\Manage\ManageView.axaml" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="Zafiro.Avalonia">
-        <HintPath>..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\bin\Debug\net8.0\Zafiro.Avalonia.dll</HintPath>
-      </Reference>
     </ItemGroup>
     
 </Project>

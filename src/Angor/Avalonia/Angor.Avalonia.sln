@@ -44,7 +44,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Client", "..\Client\A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngorApp.Android", "AngorApp.Android\AngorApp.Android.csproj", "{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zafiro.Avalonia.Dialogs", "..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia.Dialogs\Zafiro.Avalonia.Dialogs.csproj", "{B56CF7B6-8F66-4743-A01E-36BD4E7B0DD0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zafiro.Avalonia", "..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\Zafiro.Avalonia.csproj", "{DE918AAE-6981-4675-8B2C-0A4011847C31}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zafiro.UI", "..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\libs\Zafiro\src\Zafiro.UI\Zafiro.UI.csproj", "{E75DDC76-92B6-413A-BE38-4DFB4963B765}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zafiro.Avalonia.Dialogs", "..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia.Dialogs\Zafiro.Avalonia.Dialogs.csproj", "{C886320E-A2C4-49B3-9571-0818091B7CA4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -104,10 +108,18 @@ Global
 		{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B56CF7B6-8F66-4743-A01E-36BD4E7B0DD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B56CF7B6-8F66-4743-A01E-36BD4E7B0DD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B56CF7B6-8F66-4743-A01E-36BD4E7B0DD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B56CF7B6-8F66-4743-A01E-36BD4E7B0DD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE918AAE-6981-4675-8B2C-0A4011847C31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE918AAE-6981-4675-8B2C-0A4011847C31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE918AAE-6981-4675-8B2C-0A4011847C31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE918AAE-6981-4675-8B2C-0A4011847C31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E75DDC76-92B6-413A-BE38-4DFB4963B765}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E75DDC76-92B6-413A-BE38-4DFB4963B765}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E75DDC76-92B6-413A-BE38-4DFB4963B765}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E75DDC76-92B6-413A-BE38-4DFB4963B765}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C886320E-A2C4-49B3-9571-0818091B7CA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C886320E-A2C4-49B3-9571-0818091B7CA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C886320E-A2C4-49B3-9571-0818091B7CA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C886320E-A2C4-49B3-9571-0818091B7CA4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -127,7 +139,6 @@ Global
 		{CD44C0AB-5492-73B5-DC27-A41ABCCF4388} = {4B0A97D7-BA72-4208-94B6-707935986EDC}
 		{504F4A1C-AB09-19C9-D3FA-AC18629CEDB0} = {4B0A97D7-BA72-4208-94B6-707935986EDC}
 		{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5} = {0073307D-8459-4084-B10E-EB112F0F1539}
-		{B56CF7B6-8F66-4743-A01E-36BD4E7B0DD0} = {0073307D-8459-4084-B10E-EB112F0F1539}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {83CB65B8-011F-4ED7-BCD3-A6CFA935EF7E}
