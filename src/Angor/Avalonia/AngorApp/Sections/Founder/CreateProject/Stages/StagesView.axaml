@@ -5,7 +5,7 @@
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
-             mc:Ignorable="d" d:DesignWidth="800"
+             mc:Ignorable="d" d:DesignWidth="380"
              x:Class="AngorApp.Sections.Founder.CreateProject.Stages.StagesView"
              x:DataType="stages:IStagesViewModel">
 
@@ -56,7 +56,7 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="stages:ICreateProjectStage">
                         <Border Background="#13FFFFFF" BorderThickness="1" Padding="10" CornerRadius="10" Margin="0 0 0 10">
-                            <Grid ColumnDefinitions="Auto * Auto" Margin="10 5" ColumnSpacing="20">
+                            <Grid ColumnDefinitions="Auto * Auto"  ColumnSpacing="10">
                                 <Grid.Styles>
                                     <Style Selector="Button.Aligned">
                                         <Setter Property="Height" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
@@ -81,13 +81,16 @@
                                                     </TextBox.InnerRightContent>
                                                 </TextBox>
                                             </HeaderedContainer>
-                                            <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}" Header="Release Date">
-                                                <CalendarDatePicker SelectedDate="{Binding ReleaseDate}" />
+                                            <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}">
+                                                <HeaderedContainer.Header>
+                                                    <TextBlock TextWrapping="Wrap">Release Date</TextBlock>
+                                                </HeaderedContainer.Header>
+                                                <CalendarDatePicker MinWidth="130" SelectedDate="{Binding ReleaseDate}" />
                                             </HeaderedContainer>
                                         </collections:ArrayList>
                                     </CardGrid.ItemsSource>
                                 </CardGrid>
-                                <Button Classes="Aligned" Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="3">
+                                <Button Classes="Aligned" Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="2">
                                     <ui:Icon Source="mdi-window-close" />
                                 </Button>
                             </Grid>

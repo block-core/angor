@@ -57,6 +57,11 @@
                     </CardGrid.ItemsSource>
                 </CardGrid>
                 <HeaderedContainer Header="The Angor Flow">
+                    <HeaderedContainer.HeaderTheme>
+                        <ControlTheme TargetType="TemplatedControl">
+                            <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
+                        </ControlTheme>
+                    </HeaderedContainer.HeaderTheme>
                     <HeaderedContainer.Resources>
                         <ControlTemplate x:Key="Mobile">
                             <Button Command="{Binding GoToAngorFlow}" Theme="{StaticResource TransparentButton}">
