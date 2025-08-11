@@ -17,7 +17,6 @@
     <PackageVersion Include="Avalonia.Browser" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Svg.Skia" Version="11.2.0.2" />
-    <PackageVersion Include="Avalonia.Svg" Version="11.3.0" />
     <PackageVersion Include="AsyncImageLoader.Avalonia" Version="3.3.0" />
     <PackageVersion Include="AspectInjector" Version="2.8.2" />
     <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.0.4" />
@@ -46,10 +45,10 @@
     <PackageVersion Include="Serilog.Sinks.XUnit" Version="3.0.19" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
     <PackageVersion Include="Zafiro" Version="33.0.11" />
-    <PackageVersion Include="Zafiro.Avalonia" Version="33.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia" Version="33.0.5" />
     <PackageVersion Include="Zafiro.FileSystem" Version="31.0.0" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="33.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="33.0.5" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />
     <PackageVersion Include="FluentAssertions.Reactive" Version="0.2.0" />

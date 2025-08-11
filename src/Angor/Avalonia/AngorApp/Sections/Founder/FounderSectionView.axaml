@@ -19,7 +19,7 @@
     <UserControl.DataTemplates>
 
         <DataTemplate DataType="founder:IFounderProjectViewModel">
-            <Button Command="{Binding GoToDetails}">
+            <Button Classes="CardGridItem" Command="{Binding GoToDetails}">
                 <OverlayBorder Padding="0" Theme="{StaticResource CardOverlayBorder}">
                     <Grid RowDefinitions="180 Auto Auto *">
                         <Panel>

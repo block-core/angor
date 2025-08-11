@@ -14,7 +14,6 @@
         <PackageReference Include="AsyncImageLoader.Avalonia"/>
         <PackageReference Include="Avalonia"/>
         <PackageReference Include="Avalonia.ReactiveUI"/>
-        <PackageReference Include="Avalonia.Svg"/>
         <PackageReference Include="Avalonia.Themes.Fluent"/>
         <PackageReference Include="Avalonia.Fonts.Inter"/>
         <PackageReference Include="AvaloniaUI.DiagnosticsSupport"/>
@@ -40,6 +39,16 @@
         <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj"/>
         <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj"/>
         <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Sections\Portfolio\Manage\ManageView.axaml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Zafiro.Avalonia">
+        <HintPath>..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\bin\Debug\net8.0\Zafiro.Avalonia.dll</HintPath>
+      </Reference>
     </ItemGroup>
     
 </Project>

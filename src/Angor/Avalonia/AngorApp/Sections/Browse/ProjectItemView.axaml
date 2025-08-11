@@ -24,7 +24,7 @@
         </Style>
     </UserControl.Styles>
     
-    <Button Command="{Binding GoToDetails}">
+    <Button Classes="CardGridItem" Command="{Binding GoToDetails}">
         <OverlayBorder Padding="0 0 0 20" Theme="{StaticResource CardOverlayBorder}" x:DataType="browse:IProjectViewModel">
             <Grid RowDefinitions="180 *" RowSpacing="15" Background="Transparent">
                 <Panel>

@@ -13,9 +13,6 @@
             <Setter Property="HeaderStartContentTemplate" Value="{StaticResource RegularIcon}" />
             <Setter Property="Padding" Value="20" />
             <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
-            <!-- <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}" /> -->
-            <!-- <Setter Property="HeaderBackground" Value="{DynamicResource SystemChromeLowColor}" /> -->
-            <!-- <Setter Property="HeaderSpacing" Value="16" /> -->
         </ControlTheme>
         
         <ControlTheme x:Key="RemarkableSubheaderCard"
@@ -148,7 +145,7 @@
         <Setter Property="Theme" Value="{StaticResource HeaderEdgePanel}" />
     </Style>
     
-    <Style Selector="CardGrid Button">
+    <Style Selector="Button.CardGridItem">
         <Setter Property="Theme" Value="{StaticResource TransparentButton}" />
         <Setter Property="Padding" Value="5" />
         <Setter Property="VerticalAlignment" Value="Stretch" />
