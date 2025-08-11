@@ -16,7 +16,6 @@
                   IsChecked="{Binding IsUserAware}"
                   Content="I understand that I must keep my seed words in a safe place and that they are the only way to recover my wallet." />
         <StackPanel Spacing="16">
-            <TextBlock Classes="SizeBig Wrap" TextAlignment="Center">Welcome to the Wallet Creation Wizard</TextBlock>
             <TextBlock Classes="Wrap">
                 This will guide you through the process of creating a new Bitcoin wallet securely.
             </TextBlock>
@@ -26,7 +25,7 @@
                 <TextBlock Text="Estimated time: 5 minutes" />
             </StackPanel>
 
-            <Border Classes="Alert">
+            <Border Classes="Alert" Margin="4 0">
                 <controls:List>
                     <controls:List.Header>
                         <controls:IconLabel Classes="Warning" Icon="fa-triangle-exclamation">Important Security Tips:</controls:IconLabel>
