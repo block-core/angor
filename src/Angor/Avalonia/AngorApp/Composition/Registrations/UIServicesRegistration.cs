@@ -1,10 +1,14 @@
+using System.Diagnostics;
 using Angor.Shared;
 using AngorApp.Sections.Shell;
+using AngorApp.UI;
 using AngorApp.UI.Services;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
 using Zafiro.Avalonia.Dialogs;
+using Zafiro.Avalonia.Misc;
 using Zafiro.Avalonia.Services;
 using Zafiro.UI;
 using Zafiro.UI.Navigation;
@@ -17,11 +21,10 @@ public static class UIServicesRegistration
     public static IServiceCollection Register(this IServiceCollection services, Control parent)
     {
         var topLevel = TopLevel.GetTopLevel(parent);
-
-        var notificationService = new NotificationService(new WindowNotificationManager(topLevel)
-        {
-            Position = NotificationPosition.BottomRight
-        });
+        
+        Debug.Assert(topLevel != null, "TopLevel cannot be null. Ensure that the parent control is attached to a TopLevel.");
+        
+        var notificationService = NotificationService(topLevel);
         
         return services
             .AddSingleton<ILauncherService>(_ => new LauncherService(topLevel!.Launcher))
@@ -38,6 +41,18 @@ public static class UIServicesRegistration
             .AddSingleton<UIServices>();
     }
 
+    private static NotificationService NotificationService(TopLevel topLevel)
+    {
+        var managedNotificationManager = new WindowNotificationManager(topLevel)
+        {
+            Position = NotificationPosition.BottomRight,
+        };
+        
+        ApplicationUtils.SafeAreaPadding.BindTo(managedNotificationManager, manager => manager.Margin);
+        
+        return new NotificationService(managedNotificationManager);
+    }
+
     private static IObservable<object?> GetHeader(object content, IServiceProvider sp)
     {
         if (content is SectionScope scope)
@@ -49,6 +64,6 @@ public static class UIServicesRegistration
         var network = config.GetNetwork();
         var name = network.Name;
         var networkType = network.NetworkType;
-        return System.Reactive.Linq.Observable.Return($"{name} - {networkType}");
+        return Observable.Return($"{name} - {networkType}");
     }
 }

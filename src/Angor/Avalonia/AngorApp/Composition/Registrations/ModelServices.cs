@@ -1,6 +1,8 @@
 using AngorApp.Design;
 using AngorApp.Features.Invest;
-using AngorApp.Sections.Wallet.CreateAndRecover;
+using AngorApp.Sections.Wallet.CreateAndImport;
+using AngorApp.UI.Controls;
+using AngorApp.UI.Controls.Feerate;
 using AngorApp.UI.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,10 +13,10 @@ public static class ModelServices
     public static IServiceCollection Register(this IServiceCollection services)
     {
         return services
-            .AddSingleton<IWalletProvider, WalletProviderDesign>()
             .AddSingleton<IWalletBuilder, WalletProvider>()
             .AddSingleton<InvestWizard>()
             .AddSingleton<WalletCreationWizard>()
-            .AddSingleton<WalletRecoveryWizard>();
+            .AddSingleton<IFeeCalculator, FeeCalculatorDesignTime>()
+            .AddSingleton<WalletImportWizard>();
     }
 }

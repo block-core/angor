@@ -5,6 +5,8 @@
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="700"
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="dt:IProjectDetailsViewModel">
 
@@ -14,41 +16,87 @@
 
     <controls:PageContainer>
         <ScrollViewer>
-            <StackPanel>
-                <OverlayBorder Padding="0 0 0 20" Theme="{StaticResource CardOverlayBorder}" x:DataType="dt:IProjectDetailsViewModel">
-                    <Grid RowDefinitions="180 *" RowSpacing="15">
+            <DockPanel VerticalSpacing="20">
+                
+                <!-- Project Header with Banner -->
+                <StackPanel DockPanel.Dock="Top" Spacing="0">
+                    <!-- Project Banner -->
+
+                    <Border Height="300" Margin="0,0,0,20" CornerRadius="10" ClipToBounds="True">
                         <Panel>
                             <av:AdvancedImage Stretch="UniformToFill" Source="{Binding Project.Banner}" />
+                            <Border Background="#30000000" />
+                            
+                            <!-- Circular Profile Picture (half on banner) -->
+                            <Border Width="120" 
+                                   Height="120" 
+                                   CornerRadius="60" 
+                                   Background="White" 
+                                   Padding="6"
+                                   VerticalAlignment="Bottom" 
+                                   HorizontalAlignment="Left"
+                                   Margin="10">
+                                <av:AdvancedImage Stretch="UniformToFill" 
+                                                 Source="{Binding Project.Picture}" 
+                                                 CornerRadius="54" />
+                            </Border>
                         </Panel>
-                        <StackPanel Grid.Row="1" Spacing="15">
-                            <StackPanel Spacing="10" Grid.Row="1" Margin="15 0">
-                                <TextBlock Classes="SizeBig" Text="{Binding Project.Name}" />
-                                <Separator>
-                                    <Separator.Background>
-                                        <LinearGradientBrush StartPoint="0%,100%" EndPoint="100%,100%">
-                                            <GradientStop Color="Transparent" Offset="0" />
-                                            <GradientStop Color="{DynamicResource SystemChromeHighColor}" Offset="0.3" />
-                                            <GradientStop Color="{DynamicResource SystemChromeHighColor}" Offset="0.8" />
-                                            <GradientStop Color="Transparent" Offset="1" />
-                                        </LinearGradientBrush>
-                                    </Separator.Background>
-                                </Separator>
-                                <TextBlock ToolTip.Tip="{Binding $self.Text}" TextWrapping="Wrap"
-                                           Text="{Binding Project.ShortDescription}" />
+                    </Border>
+                    
+                    <!-- Project Information Below Banner -->
+                    <Card Padding="20" Margin="0,0,0,0" Background="{DynamicResource SystemChromeLowColor}">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20" Margin="0,0,0,0">
+                            <!-- Project Details -->
+                            <StackPanel Grid.Column="0" Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                <TextBlock Text="{Binding Project.Name}" 
+                                          Classes="SizeBig" 
+                                          FontWeight="Bold" 
+                                          TextWrapping="Wrap" 
+                                          TextAlignment="Left" />
+                                <TextBlock Text="{Binding Project.ShortDescription}" 
+                                          TextWrapping="Wrap" 
+                                          Opacity="0.8" 
+                                          MaxWidth="400" 
+                                          TextAlignment="Left" />
                             </StackPanel>
-                        </StackPanel>
-                    </Grid>
-                </OverlayBorder>
-                <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
-                    <StackPanel HorizontalAlignment="Center" Spacing="20">
-                        <PathIcon Height="100" Width="200" Data="{StaticResource ShieldStar}" />
-                        <TextBlock Text="Seize the opportunity to invest in this project" TextAlignment="Center" />
-                        <ReactiveButton HorizontalAlignment="Center" Command="{Binding Invest}">INVEST NOW</ReactiveButton>
-                    </StackPanel>
-                </OverlayBorder>
-                <dt:ProjectSummary />
-                <dt:Stages />
-            </StackPanel>
+                            
+                            <!-- Target Amount -->
+                            <StackPanel Grid.Column="1" 
+                                       Spacing="5" 
+                                       HorizontalAlignment="Right" 
+                                       VerticalAlignment="Center">
+                                <TextBlock Text="Target Amount" 
+                                          FontSize="12" 
+                                          Opacity="0.7" 
+                                          HorizontalAlignment="Right" />
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <TextBlock Text="{Binding Project.TargetAmount, StringFormat={x:Static controls:AngorConverters.BigBtcFormat}}" 
+                                              Classes="SizeBig" 
+                                              Foreground="{DynamicResource SystemAccentColor}" 
+                                              FontWeight="Bold" />
+                                    <TextBlock Text="TBTC" 
+                                              Classes="SizeBig" 
+                                              FontWeight="SemiBold" 
+                                              VerticalAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Card>
+                </StackPanel>
+
+                <!-- Project Summary -->
+                <dt:ProjectSummary DockPanel.Dock="Top" />
+
+                <!-- Stages -->
+                <dt:Stages DockPanel.Dock="Top" />
+
+                <!-- Investment Dashboard -->
+                <dt:InvestmentDashboard DockPanel.Dock="Top" />
+
+                <!-- Nostr Properties -->
+                <dt:NostProperties DockPanel.Dock="Top" />
+
+            </DockPanel>
         </ScrollViewer>
     </controls:PageContainer>
 </UserControl>

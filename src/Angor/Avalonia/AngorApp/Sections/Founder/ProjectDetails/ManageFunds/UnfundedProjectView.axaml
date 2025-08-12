@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1300"
+             x:Class="AngorApp.Sections.Founder.ProjectDetails.ManageFunds.UnfundedProjectView"
+             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:manageFunds="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.ManageFunds"
+             x:DataType="manageFunds:IUnfundedProjectViewModel">
+
+    <Design.DataContext>
+        <manageFunds:UnfundedProjectViewModelDesign />
+    </Design.DataContext>
+
+
+    <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
+        <DockPanel VerticalAlignment="Stretch" VerticalSpacing="20">
+            <StackPanel Classes="SmallGap" DockPanel.Dock="Top" Margin="10">
+                <StackPanel Classes="SmallGap">
+                    <Viewbox Height="40">
+                        <ContentControl Foreground="Orange">
+                            <ui:Icon Source="mdi-alert-circle-outline" />
+                        </ContentControl>
+                    </Viewbox>
+                    <TextBlock Classes="Warning SizeBig Wrap Center">The project did not to raise enough funds</TextBlock>
+                </StackPanel>
+                <TextBlock Classes="Wrap Center" FontWeight="Regular" DockPanel.Dock="Top">As founder, you can only release the funds back to the investors</TextBlock>
+            </StackPanel>
+            <IconButton Margin="0 0 10 0" Content="Release All" DockPanel.Dock="Top" HorizontalAlignment="Right">
+                <IconButton.Icon>
+                    <ui:Icon Source="mdi-check-all" />
+                </IconButton.Icon>
+            </IconButton>
+            <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                <z:SlimDataGrid HeaderPadding="10 0 0 0" Margin="0 20 0 0" ItemsSource="{Binding Transactions}">
+                    <z:SlimDataGrid.Styles>
+                        <Style Selector="TextBlock">
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                        </Style>
+                    </z:SlimDataGrid.Styles>
+                    <z:SlimDataGrid.RowTheme>
+                        <ControlTheme TargetType="{x:Type z:Row}" BasedOn="{StaticResource {x:Type z:Row}}">
+                            <Setter Property="Padding" Value="15 12" />
+                            <Setter Property="CornerRadius" Value="10"></Setter>
+                            <Setter Property="Margin" Value="5" />
+                            <Setter Property="BorderBrush" Value="#3FFFFFFF" />
+                            <Setter Property="BorderThickness" Value="1" />
+                        </ControlTheme>
+                    </z:SlimDataGrid.RowTheme>
+                    <z:SlimDataGrid.Columns>
+                        <z:Column Header="TIME ARRIVED" Binding="{Binding Arrived, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                        <z:Column Header="TIME APPROVED" Binding="{Binding Approved, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                        <z:Column Header="TIME RELEASED" Binding="{Binding Released, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                        <z:Column>
+                            <z:Column.CellTemplate>
+                                <DataTemplate>
+                                    <IconButton HorizontalAlignment="Right" Content="Release">
+                                        <IconButton.Icon>
+                                            <ui:Icon Source="mdi-check" />
+                                        </IconButton.Icon>
+                                    </IconButton>
+                                </DataTemplate>
+                            </z:Column.CellTemplate>
+                        </z:Column>
+                    </z:SlimDataGrid.Columns>
+                </z:SlimDataGrid>
+            </ScrollViewer>
+        </DockPanel>
+    </OverlayBorder>
+</UserControl>

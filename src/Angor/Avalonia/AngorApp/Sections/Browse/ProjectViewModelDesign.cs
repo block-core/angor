@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Browse;
     
@@ -15,5 +16,5 @@ public class ProjectViewModelDesign : IProjectViewModel
     }
 
     public IProject Project { get; set; }
-    public ICommand GoToDetails { get; set; }
+    public IEnhancedCommand GoToDetails { get; set; }
 }

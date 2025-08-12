@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:z="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:step11="clr-namespace:AngorApp.Sections.Wallet.CreateAndImport.Steps.ImportWelcome"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
+             x:Class="AngorApp.Sections.Wallet.CreateAndImport.Steps.ImportWelcome.ImportWelcomeView"
+             x:DataType="step11:ImportWelcomeViewModel">
+
+    <DockPanel>
+        <StackPanel Spacing="16">
+            <TextBlock TextWrapping="Wrap"
+                       Text="This will guide you through the process of recovering a previously created Bitcoin wallet." />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <avalonia:Icon Value="fa-clock" />
+                <TextBlock Text="Estimated time: 2 minutes" />
+            </StackPanel>
+
+            <Border Classes="Alert" Margin="4 0">
+                <controls:List>
+                    <controls:List.Header>
+                        <controls:IconLabel Classes="Warning" Icon="fa-triangle-exclamation">Important Security Tips:</controls:IconLabel>
+                    </controls:List.Header>
+                    <z:Strings>
+                        <x:String>Make sure you are in a private and secure location</x:String>
+                        <x:String>Have your 12 seed words ready</x:String>
+                        <x:String>If you set a passphrase (optional) previously, you'll need it as well</x:String>
+                    </z:Strings>
+                </controls:List>
+            </Border>
+
+            <TextBlock>When you're ready, click 'Next' to proceed with the wallet import process.</TextBlock>
+        </StackPanel>
+
+    </DockPanel>
+</UserControl>

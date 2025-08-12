@@ -1,5 +1,4 @@
 using AngorApp.Composition;
-using AngorApp.Core;
 using AngorApp.Sections.Shell;
 using Avalonia;
 using Avalonia.Markup.Xaml;
@@ -8,7 +7,7 @@ using Projektanker.Icons.Avalonia.FontAwesome;
 using Projektanker.Icons.Avalonia.MaterialDesign;
 using Serilog;
 using Zafiro.Avalonia.Icons;
-using Zafiro.Avalonia.Mixins;
+using Zafiro.Avalonia.Misc;
 
 namespace AngorApp;
 

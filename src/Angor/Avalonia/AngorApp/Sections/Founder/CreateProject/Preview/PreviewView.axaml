@@ -48,7 +48,7 @@
     <StackPanel Classes="BigGap">
         <preview:ProjectBadge />
         <Card Header="Project Snapshot">
-            <CardGrid MinColumnWidth="150" MaxColumnWidth="250">
+            <CardGrid MinColumnWidth="150">
                 <CardGrid.ItemsSource>
                     <collections:ArrayList>
                         <Card Theme="{StaticResource RemarkableSubheaderCard}"

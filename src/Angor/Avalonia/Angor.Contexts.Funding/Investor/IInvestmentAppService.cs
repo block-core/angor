@@ -15,6 +15,5 @@ public interface IInvestmentAppService
     Task<Result> ApproveInvestment(Guid walletId, ProjectId projectId, Investment investment);
     Task<Result<IEnumerable<InvestedProjectDto>>> GetInvestorProjects(Guid idValue);
     Task<Result> ConfirmInvestment(string investmentId, Guid walletId, ProjectId projectId);
-    Task<Result<string>> CreateProject(Guid walletId, long selectedFee, CreateProjectDto project);
     Task<Result<IEnumerable<PenaltiesDto>>> GetPenalties(Guid walletId);
 }

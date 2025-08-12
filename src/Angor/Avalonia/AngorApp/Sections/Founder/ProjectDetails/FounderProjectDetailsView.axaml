@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:projectDetails="clr-namespace:AngorApp.Sections.Founder.ProjectDetails"
+             xmlns:investments="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Investments"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:core="clr-namespace:AngorApp.Core"
+             mc:Ignorable="d" d:DesignWidth="1200"
+             x:Class="AngorApp.Sections.Founder.ProjectDetails.FounderProjectDetailsView" x:DataType="projectDetails:IFounderProjectDetailsViewModel">
+    <Design.DataContext>
+        <projectDetails:FounderProjectDetailsViewModelDesign
+            HasProjectStarted="True"
+            BannerUrl="https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg" />
+    </Design.DataContext>
+
+    <controls:PageContainer>
+        <ScrollViewer>
+            <StackPanel Classes="BigGap">
+                <asyncImageLoader:AdvancedImage Height="200" Stretch="UniformToFill" Source="{Binding BannerUrl}" />
+                <StackPanel Margin="20" Spacing="10">
+                    <TextBlock Classes="SizeBig" Text="{Binding Name}" />
+                    <TextBlock TextWrapping="Wrap" Text="{Binding ShortDescription}" />
+                </StackPanel>
+                <ContentControl IsVisible="{Binding HasProjectStarted}"
+                                Content="{Binding ManageFundsViewModel}" />
+                <ContentControl IsVisible="{Binding !HasProjectStarted}"
+                                Content="{Binding InvestmentsViewModel}" />
+                <Expander HorizontalAlignment="Stretch" Header="Investment History" IsVisible="{Binding HasProjectStarted}">
+                    <investments:InvestmentsGrid DataContext="{Binding InvestmentsViewModel}" />
+                </Expander>
+                <IconButton Content="See Project (debug)" IsVisible="{x:Static core:AppHelper.IsDebug}">
+                    <IconButton.Icon>
+                        <ui:Icon Source="mdi-bug" />
+                    </IconButton.Icon>
+                    <Button.Flyout>
+                        <Flyout>
+                            <TextBlock Text="{Binding Project, Converter={x:Static controls:AngorConverters.ToJson}}" />
+                        </Flyout>
+                    </Button.Flyout>
+                </IconButton>
+            </StackPanel>
+        </ScrollViewer>
+    </controls:PageContainer>
+</UserControl>

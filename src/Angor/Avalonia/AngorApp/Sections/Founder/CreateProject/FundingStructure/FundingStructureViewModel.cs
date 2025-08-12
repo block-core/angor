@@ -17,6 +17,12 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
 
     public FundingStructureViewModel()
     {
+#if DEBUG
+        ExpiryDate = DateTime.Now; 
+        EndDate = DateTime.Now;
+        Sats = 1000000; // 10,000,000 Sats
+#endif
+        
         this.ValidationRule(x => x.Sats, x => x is null or > 0, _ => "Amount must be greater than zero").DisposeWith(disposable);
         this.ValidationRule(x => x.Sats, x => x is not null, _ => "Please, specify an amount").DisposeWith(disposable);
         this.ValidationRule(x => x.EndDate, x => x != null, "Enter a date").DisposeWith(disposable);

@@ -21,7 +21,7 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
         var reactiveCommand = ReactiveCommand.CreateFromTask(() =>
         {
             var bind = uiServices.WalletRoot.GetDefaultWalletAndActivate()
-                .Bind(maybeWallet => maybeWallet.ToResult("No wallet found. Please, create or recover a wallet.")
+                .Bind(maybeWallet => maybeWallet.ToResult("No wallet found. Please, create or import a wallet.")
                     .Bind(wallet => investmentAppService.GetInvestorProjects(wallet.Id.Value)));
             return bind;
         }).DisposeWith(disposable);

@@ -20,6 +20,16 @@ public class NetworkConfiguration : INetworkConfiguration
         return new Angornet();
     }
 
+    public bool GetDebugMode()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void SetDebugMode(bool? debugMode)
+    {
+        throw new NotImplementedException();
+    }
+
     public void SetNetwork(Network network)
     {
         throw new NotSupportedException("Cannot switch networks");

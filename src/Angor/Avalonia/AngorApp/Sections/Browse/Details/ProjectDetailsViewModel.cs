@@ -19,8 +19,8 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
         this.project = project;
         this.investWizard = investWizard;
         this.uiServices = uiServices;
+        
         Invest = ReactiveCommand.CreateFromTask(DoInvest).Enhance();
-
         Invest.HandleErrorsWith(uiServices.NotificationService, "Investment failed");
     }
 
@@ -49,7 +49,9 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 
     private async Task<Result> DoInvest()
     {
-        var getCurrentResult = await uiServices.WalletRoot.GetDefaultWalletAndActivate().Tap(r => r.ExecuteNoValue(ShowNoWalletMessage));
+        var getCurrentResult = await uiServices.WalletRoot.GetDefaultWalletAndActivate()
+            .Tap(r => r.ExecuteNoValue(ShowNoWalletMessage));
+        
         return await getCurrentResult
             .Map(maybeWallet => maybeWallet
                 .Bind(wallet => investWizard.Invest(wallet, project)));
@@ -59,7 +61,7 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
     {
         return Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            await uiServices.Dialog.ShowMessage("No wallet found", "Please create or recover a wallet to invest in this project.");
+            await uiServices.Dialog.ShowMessage("No wallet found", "Please create or import a wallet to invest in this project.");
             return Maybe<Unit>.None;
         });
     }

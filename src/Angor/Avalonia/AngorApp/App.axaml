@@ -14,8 +14,6 @@
 
             <IconDataTemplate x:Key="IconDataTemplate" Converter="{x:Static f:AngorIconConverter.Instance}" />
             <ResourceDictionary.MergedDictionaries>
-                <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/ProgressRingStyles.axaml" />
-                <ResourceInclude Source="avares://FluentAvalonia/Styling/ControlThemes/FAControls/NumberBoxStyles.axaml" />
                 <MergeResourceInclude Source="UI/Controls/Header.axaml" />
                 <MergeResourceInclude Source="UI/Controls/SectionItem.axaml" />
                 <MergeResourceInclude Source="UI/Resources/Icons.axaml" />
@@ -145,10 +143,9 @@
         <StyleInclude Source="UI/Controls/AmountControl.axaml" />
         <StyleInclude Source="UI/Controls/List.axaml" />
         <StyleInclude Source="UI/Controls/IconLabel.axaml" />
-        <StyleInclude Source="UI/Controls/Button.axaml" />
-        <StyleInclude Source="Sections/Wallet/CreateAndRecover/Steps/SeedWordsGeneration/SeedWordList.axaml" />
+        <StyleInclude Source="Sections/Wallet/CreateAndImport/Steps/SeedWordsGeneration/SeedWordList.axaml" />
         <StyleInclude Source="UI/Controls/IconButton.axaml" />
-        <StyleInclude Source="UI/Controls/FeerateSelector.axaml" />
+        <StyleInclude Source="UI/Controls/Feerate/FeerateSelector.axaml" />
         <StyleInclude Source="UI/Controls/PageContainer.axaml" />
         <StyleInclude Source="UI/Controls/Badge.axaml" />
         <StyleInclude Source="UI/Styles/Cards.axaml" />
@@ -157,6 +154,7 @@
         <StyleInclude Source="UI/Styles/CalendarDatePicker.axaml" />
         <StyleInclude Source="UI/Styles/TextBlock.axaml" />
         <StyleInclude Source="UI/Styles/ToggleButton.axaml" />
+        <StyleInclude Source="UI/Styles/FlyoutPresenter.axaml" />
         <StyleInclude Source="UI/Styles/Styles.axaml" />
     </Application.Styles>
 

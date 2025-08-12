@@ -7,6 +7,8 @@
              xmlns:misc="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="650" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Browse.Details.NostProperties" x:DataType="dt:IProjectDetailsViewModel">
     
@@ -16,82 +18,149 @@
     
     <UserControl.Styles>
         <Style Selector="TextBox">
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="BorderThickness" Value="1" />
             <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}" />
+            <Setter Property="FontFamily" Value="Consolas,Monaco,monospace" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="CornerRadius" Value="5" />
         </Style>
     </UserControl.Styles>
     
-    <controls:Pane IsTitleVisible="True" Title="Nostr">
-        <controls:Pane.TitleIcon>
-            <p:Icon Value="fa-regular fa-message" />
-        </controls:Pane.TitleIcon>
-
-        <StackPanel Spacing="20">
-            <HeaderedContentControl Header="Project NOSTR public key">
-                <controls:SectionItem>
-                    <TextBox Text="{Binding Project.NpubKey}" />
-                    <controls:SectionItem.RightContent>
-                        <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}">
-                            <Button.CommandParameter>
-                                <MultiBinding Converter="{x:Static conv:ZafiroStringConverters.Concat}">
-                                    <Binding>
-                                        <Binding.Source>
-                                            <x:String>https://hub.angor.io/profile/</x:String>
-                                        </Binding.Source>
-                                    </Binding>
-                                    <Binding Path="Project.NpubKey" />
-                                </MultiBinding>
-                            </Button.CommandParameter>
-                            <Button.Content>
-                                <p:Icon Value="fa-solid fa-up-right-from-square" />
-                            </Button.Content>
-                        </Button>
-                    </controls:SectionItem.RightContent>
-                </controls:SectionItem>
-            </HeaderedContentControl>
-            <HeaderedContentControl Header="Project NOSTR public key">
-                <controls:SectionItem>
-                    <TextBox Text="{Binding Project.NpubKeyHex}" />
-                    <controls:SectionItem.RightContent>
-                        <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}">
-                            <Button.CommandParameter>
-                                <MultiBinding Converter="{x:Static conv:ZafiroStringConverters.Concat}">
-                                    <Binding>
-                                        <Binding.Source>
-                                            <x:String>https://hub.angor.io/profile/</x:String>
-                                        </Binding.Source>
-                                    </Binding>
-                                    <Binding Path="Project.NpubKey" />
-                                </MultiBinding>
-                            </Button.CommandParameter>
-                            <Button.Content>
-                                <p:Icon Value="fa-solid fa-up-right-from-square" />
-                            </Button.Content>
-                        </Button>
-                    </controls:SectionItem.RightContent>
-                </controls:SectionItem>
-            </HeaderedContentControl>
-            <HeaderedContentControl Header="Relays">
-                <ItemsControl ItemsSource="{Binding Relays}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Spacing="10" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <controls:SectionItem Content="{Binding Uri}">
+    <Card Header="Nostr Integration" Subheader="Decentralized communication and verification">
+        <Card.HeaderStartContent>
+            <i:Icon FontSize="40" Value="fa-solid fa-broadcast-tower" />
+        </Card.HeaderStartContent>
+        
+        <StackPanel Spacing="25">
+            <!-- Nostr Keys Section -->
+            <OverlayBorder Theme="{StaticResource CardOverlayBorder}" Padding="20">
+                <StackPanel Spacing="20">
+                    <TextBlock Text="Public Keys" FontSize="18" FontWeight="SemiBold" />
+                    
+                    <StackPanel Spacing="15">
+                        <HeaderedContentControl Header="NOSTR Public Key (NPub)">
+                            <controls:SectionItem Theme="{StaticResource Basic}">
                                 <controls:SectionItem.LeftContent>
-                                    <p:Icon Value="fa-solid fa-arrow-right" />
+                                    <i:Icon FontSize="16" Value="fa-solid fa-key" />
                                 </controls:SectionItem.LeftContent>
+                                <TextBox Text="{Binding Project.NpubKey}" />
+                                <controls:SectionItem.RightContent>
+                                    <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}"
+                                           ToolTip.Tip="Open in Nostr Hub"
+                                           Padding="8"
+                                           CornerRadius="5">
+                                        <Button.CommandParameter>
+                                            <MultiBinding Converter="{x:Static conv:ZafiroStringConverters.Concat}">
+                                                <Binding>
+                                                    <Binding.Source>
+                                                        <x:String>https://hub.angor.io/profile/</x:String>
+                                                    </Binding.Source>
+                                                </Binding>
+                                                <Binding Path="Project.NpubKey" />
+                                            </MultiBinding>
+                                        </Button.CommandParameter>
+                                        <Button.Content>
+                                            <i:Icon FontSize="14" Value="fa-solid fa-external-link-alt" />
+                                        </Button.Content>
+                                    </Button>
+                                </controls:SectionItem.RightContent>
                             </controls:SectionItem>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </HeaderedContentControl>
+                        </HeaderedContentControl>
+                        
+                        <HeaderedContentControl Header="NOSTR Public Key (Hex)">
+                            <controls:SectionItem Theme="{StaticResource Basic}">
+                                <controls:SectionItem.LeftContent>
+                                    <i:Icon FontSize="16" Value="fa-solid fa-hashtag" />
+                                </controls:SectionItem.LeftContent>
+                                <TextBox Text="{Binding Project.NpubKeyHex}" />
+                                <controls:SectionItem.RightContent>
+                                    <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}"
+                                           ToolTip.Tip="Open in Nostr Hub"
+                                           Padding="8"
+                                           CornerRadius="5">
+                                        <Button.CommandParameter>
+                                            <MultiBinding Converter="{x:Static conv:ZafiroStringConverters.Concat}">
+                                                <Binding>
+                                                    <Binding.Source>
+                                                        <x:String>https://hub.angor.io/profile/</x:String>
+                                                    </Binding.Source>
+                                                </Binding>
+                                                <Binding Path="Project.NpubKey" />
+                                            </MultiBinding>
+                                        </Button.CommandParameter>
+                                        <Button.Content>
+                                            <i:Icon FontSize="14" Value="fa-solid fa-external-link-alt" />
+                                        </Button.Content>
+                                    </Button>
+                                </controls:SectionItem.RightContent>
+                            </controls:SectionItem>
+                        </HeaderedContentControl>
+                    </StackPanel>
+                </StackPanel>
+            </OverlayBorder>
+            
+            <!-- Nostr Relays Section -->
+            <OverlayBorder Theme="{StaticResource CardOverlayBorder}" Padding="20">
+                <StackPanel Spacing="20">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <i:Icon FontSize="20" Value="fa-solid fa-satellite-dish" />
+                        <TextBlock Text="Nostr Relays" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <Border Background="Orange" 
+                               CornerRadius="10" 
+                               Padding="8,4" 
+                               VerticalAlignment="Center">
+                            <TextBlock Text="2" 
+                                      FontSize="12" 
+                                      FontWeight="Bold" 
+                                      Foreground="White" />
+                        </Border>
+                    </StackPanel>
+                    
+                    <ItemsControl ItemsSource="{Binding Relays}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="10" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <OverlayBorder Theme="{StaticResource CardOverlayBorder}" 
+                                              Padding="15"
+                                              Background="{DynamicResource SystemChromeLowColor}">
+                                    <controls:SectionItem Theme="{StaticResource Basic}">
+                                        <controls:SectionItem.LeftContent>
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <i:Icon FontSize="16" Value="fa-solid fa-broadcast-tower" />
+                                                <TextBlock Text="Relay" FontSize="12" Opacity="0.7" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </controls:SectionItem.LeftContent>
+                                        <controls:SectionItem.Content>
+                                            <TextBlock Text="{Binding Uri}" 
+                                                      FontFamily="Consolas,Monaco,monospace" 
+                                                      FontSize="12" 
+                                                      VerticalAlignment="Center" />
+                                        </controls:SectionItem.Content>
+                                        <controls:SectionItem.RightContent>
+                                            <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}"
+                                                   CommandParameter="{Binding Uri}"
+                                                   ToolTip.Tip="Open relay URL"
+                                                   Padding="8"
+                                                   CornerRadius="5">
+                                                <Button.Content>
+                                                    <i:Icon FontSize="14" Value="fa-solid fa-external-link-alt" />
+                                                </Button.Content>
+                                            </Button>
+                                        </controls:SectionItem.RightContent>
+                                    </controls:SectionItem>
+                                </OverlayBorder>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </OverlayBorder>
         </StackPanel>
-
-    </controls:Pane>
+    </Card>
 
 </UserControl>

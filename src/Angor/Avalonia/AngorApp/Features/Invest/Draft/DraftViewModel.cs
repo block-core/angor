@@ -4,6 +4,7 @@ using System.Reactive.Subjects;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using AngorApp.UI.Controls;
+using AngorApp.UI.Controls.Feerate;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
@@ -34,7 +35,7 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposab
 
         var createDraft = this.WhenAnyValue(x => x.Feerate)
             .WhereNotNull()
-            .SelectLatest(feerate => investmentAppService.CreateInvestmentDraft(wallet.Id.Value, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(amountToOffer.Sats), new DomainFeerate(feerate!.Value)), isCalculatingDraft, TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
+            .SelectLatest(feerate => investmentAppService.CreateInvestmentDraft(wallet.Id.Value, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(amountToOffer.Sats), new DomainFeerate(feerate!.Value)), isCalculatingDraft, scheduler: RxApp.MainThreadScheduler)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Publish();
         
@@ -53,6 +54,7 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposab
             .CombineLatest(IsCalculatingDraft, (hasDraft, calculating) => hasDraft && !calculating);
 
         Confirm = ReactiveCommand.CreateFromTask(() => Draft!.Confirm(), canConfirm).DisposeWith(disposable);
+        Confirm.HandleErrorsWith(uiServices.NotificationService, "Could not send investment offer").DisposeWith(disposable);
         IsSending = Confirm.IsExecuting;
         feeHelper = this.WhenAnyValue(model => model.Draft!.TransactionFee).ToProperty(this, model => model.Fee).DisposeWith(disposable);
         createDraft.Connect().DisposeWith(disposable);
