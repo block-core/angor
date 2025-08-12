@@ -1,4 +1,4 @@
-namespace AngorApp.Sections.Founder.Manage;
+namespace AngorApp.Sections.Portfolio.Manage;
 
 public class ManageViewModel
 {

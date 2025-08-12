@@ -3,15 +3,26 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:c="clr-namespace:System.Collections;assembly=System.Runtime"
-             xmlns:sd="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="800"
-             x:Class="AngorApp.Sections.Founder.Manage.ManageView">
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:manage="clr-namespace:AngorApp.Sections.Portfolio.Manage"
+             mc:Ignorable="d" d:DesignWidth="500"
+             x:Class="AngorApp.Sections.Portfolio.Manage.ManageView" x:DataType="manage:IManageInvestorProjectViewModel">
 
+    <Design.DataContext>
+        <manage:ManageInvestorProjectViewModelDesign />
+    </Design.DataContext>
+    
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
 
     <StackPanel Classes="BigGap">
         <Card Theme="{StaticResource WideCard}" Header="Manage Investment" Subheader="Mange investments">
             <Card.HeaderEndContent>
-                <UniformGrid>
+                <UniformGrid Rows="1" HorizontalAlignment="Stretch">
                     <Button Content="Refresh" />
                     <Button Content="Message" />
                 </UniformGrid>
@@ -25,11 +36,11 @@
             </CardGrid.Styles>
             <CardGrid.ItemsSource>
                 <c:ArrayList>
-                    <Card Header="Total Funds" Content="0 TBTC" />
-                    <Card Header="Expiry Date" Content="0 TBTC" />
-                    <Card Header="Penalty Period" Content="0 TBTC" />
+                    <Card Header="Total Funds" Content="{Binding TotalFunds.DecimalString}" />
+                    <Card Header="Expiry Date" Content="{Binding ExpiryDate, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                    <Card Header="Penalty Period" Content="{Binding PenaltyPeriod.TotalDays, StringFormat='{}{0} Days'}" />
                     <Card Header="Transaction" >
-                        <Button FontSize="{StaticResource FontSizeNormal}" Content="View" />
+                        <Button Command="{Binding ViewTransaction}" FontSize="{StaticResource FontSizeNormal}" Content="View" />
                     </Card>
                 </c:ArrayList>
             </CardGrid.ItemsSource>

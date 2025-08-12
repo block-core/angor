@@ -1,8 +1,4 @@
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-
-namespace AngorApp.Sections.Founder.Manage;
+namespace AngorApp.Sections.Portfolio.Manage;
 
 public partial class ManageView : UserControl
 {
