@@ -5,7 +5,7 @@
              xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="400"
              x:Class="AngorApp.Sections.Wallet.WalletSetupView" x:DataType="wallet:IWalletSectionViewModel">
 
     <UserControl.Styles>
@@ -19,17 +19,19 @@
     <ScrollViewer>
         <Card Container.Name="Root" Container.Sizing="Width" Header="Wallet Setup" IsVisible="{Binding CanCreateWallet}">
             <DockPanel VerticalSpacing="40">
-                <StackPanel Classes="BigGap" DockPanel.Dock="Top">
-                    <TextBlock Classes="Warning Wrap">It seems you don't have a wallet yet. You need one to unleash the Angor experience!</TextBlock>
-                    <TextBlock>With a wallet you will be able to:</TextBlock>
-                    <BulletList>
-                        <BulletList.ItemsSource>
-                            <collections:ArrayList>
-                                <x:String>Invest in projects</x:String>
-                                <x:String>Create projects</x:String>
-                            </collections:ArrayList>
-                        </BulletList.ItemsSource>
-                    </BulletList>
+                <StackPanel DockPanel.Dock="Top" Classes="SmallGap">
+                    <TextBlock Classes="Warning Wrap Center">It seems you don't have a wallet yet. You need one to unleash the Angor experience!</TextBlock>
+                    <StackPanel>
+                        <TextBlock>With a wallet you will be able to:</TextBlock>
+                        <BulletList>
+                            <BulletList.ItemsSource>
+                                <collections:ArrayList>
+                                    <x:String>Invest in projects</x:String>
+                                    <x:String>Create projects</x:String>
+                                </collections:ArrayList>
+                            </BulletList.ItemsSource>
+                        </BulletList>
+                    </StackPanel>
                 </StackPanel>
                 <ItemsControl x:Name="CardGrid" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <ItemsControl.ItemsPanel>

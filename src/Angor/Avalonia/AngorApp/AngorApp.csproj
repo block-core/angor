@@ -14,12 +14,12 @@
         <PackageReference Include="AsyncImageLoader.Avalonia"/>
         <PackageReference Include="Avalonia"/>
         <PackageReference Include="Avalonia.ReactiveUI"/>
-        <PackageReference Include="Avalonia.Svg"/>
         <PackageReference Include="Avalonia.Themes.Fluent"/>
         <PackageReference Include="Avalonia.Fonts.Inter"/>
         <PackageReference Include="AvaloniaUI.DiagnosticsSupport"/>
         <PackageReference Include="CSharpFunctionalExtensions"/>
         <PackageReference Include="Humanizer.Core"/>
+        <PackageReference Include="PanAndZoom" />
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome"/>
         <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign"/>
         <PackageReference Include="QRCoder"/>
@@ -43,12 +43,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\HeaderView.axaml" />
-      <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\ManageFundsView.axaml" />
-      <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\ProjectCard.axaml" />
-      <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\ProjectStatisticsView.axaml" />
-      <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\StageClaimView.axaml" />
-      <AdditionalFiles Include="Sections\Founder\ProjectDetails\ManageFunds\UnfundedProjectView.axaml" />
+      <AdditionalFiles Include="Sections\Portfolio\Manage\ManageView.axaml" />
     </ItemGroup>
-
+    
 </Project>

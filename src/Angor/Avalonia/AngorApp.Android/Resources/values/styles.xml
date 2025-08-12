@@ -8,5 +8,10 @@
     <item name="android:windowActionBar">false</item>
     <item name="android:windowBackground">@drawable/splash_screen</item>
     <item name="android:windowNoTitle">true</item>
+    <!-- Align system bars with theme for pre-31 -->
+    <item name="android:navigationBarColor">@color/system_bars</item>
+    <item name="android:statusBarColor">@color/system_bars</item>
+    <item name="android:windowLightNavigationBar">true</item>
+    <item name="android:windowLightStatusBar">true</item>
   </style>
 </resources>

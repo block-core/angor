@@ -7,6 +7,7 @@
              xmlns:projectDetails="clr-namespace:AngorApp.Sections.Founder.ProjectDetails"
              xmlns:investments="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Investments"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:core="clr-namespace:AngorApp.Core"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.FounderProjectDetailsView" x:DataType="projectDetails:IFounderProjectDetailsViewModel">
     <Design.DataContext>
@@ -28,9 +29,9 @@
                 <ContentControl IsVisible="{Binding !HasProjectStarted}"
                                 Content="{Binding InvestmentsViewModel}" />
                 <Expander HorizontalAlignment="Stretch" Header="Investment History" IsVisible="{Binding HasProjectStarted}">
-                    <investments:InvestmentsGrid DataContext="{Binding InvestmentsViewModel}"  />
+                    <investments:InvestmentsGrid DataContext="{Binding InvestmentsViewModel}" />
                 </Expander>
-                <IconButton Content="See Project (debug)">
+                <IconButton Content="See Project (debug)" IsVisible="{x:Static core:AppHelper.IsDebug}">
                     <IconButton.Icon>
                         <ui:Icon Source="mdi-bug" />
                     </IconButton.Icon>

@@ -1,5 +1,5 @@
 using System.IO;
-using Avalonia.Svg;
+using Avalonia.Svg.Skia;
 using QRCoder;
 
 namespace AngorApp.UI.Controls;
@@ -11,7 +11,7 @@ public static class QRGenerator
         using var stream = SvgStreamFor(content);
         var svgImage = new SvgImage
         {
-            Source = SvgSource.Load(stream)
+            Source = SvgSource.LoadFromStream(stream)
         };
         
         return svgImage;

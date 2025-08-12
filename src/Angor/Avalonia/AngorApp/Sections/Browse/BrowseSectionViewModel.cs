@@ -24,11 +24,11 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
         InvestWizard investWizard,
         UIServices uiServices)
     {
-        ProjectLookupViewModel = new ProjectLookupViewModel(projectService, walletAppService, navigator, investWizard, uiServices);
+        ProjectLookupViewModel = new ProjectLookupViewModel(projectService, navigator, investWizard, uiServices);
 
         LoadLatestProjects = ReactiveCommand.CreateFromObservable(() => Observable.FromAsync(projectService.Latest)
             .Map(list => list.Select(dto => dto.ToProject()))
-            .Map(list => list.Select(project => new ProjectViewModel(walletAppService, project, navigator, uiServices, investWizard))));
+            .Map(list => list.Select(project => new ProjectViewModel(project, navigator, uiServices, investWizard))));
 
         LoadLatestProjects.HandleErrorsWith(uiServices.NotificationService, "Could not load projects");
 

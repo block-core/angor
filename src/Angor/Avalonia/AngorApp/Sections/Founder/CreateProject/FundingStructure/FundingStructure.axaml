@@ -12,8 +12,7 @@
 
     <Design.DataContext>
         <fundingStructure:FundingStructureViewModelDesign
-            PenaltyDays="30" StartDate="10/1/2025" Sats="10000001">
-        </fundingStructure:FundingStructureViewModelDesign>
+            PenaltyDays="30" StartDate="10/1/2025" Sats="10000001" />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -49,7 +48,7 @@
                 <CardGrid.ItemsSource>
                     <col:ArrayList>
                         <Card Header="Penalty Days" Subheader="Days to lock funds for departing investors">
-                            <TextBox Watermark="Enter the penalty days" Text="{Binding PenaltyDays}" />
+                            <TextBox TextInputOptions.ContentType="Number" Watermark="Enter the penalty days" Text="{Binding PenaltyDays}" />
                         </Card>
                         <Card Header="Emergency Expiry" Subheader="Emergency date for fund release">
                             <CalendarDatePicker SelectedDate="{Binding ExpiryDate}" />

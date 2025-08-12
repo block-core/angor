@@ -1,4 +1,5 @@
 using AngorApp.UI.Controls;
+using AngorApp.UI.Controls.Feerate;
 
 namespace AngorApp.Features.Invest.Draft;
 

@@ -19,8 +19,8 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
         this.project = project;
         this.investWizard = investWizard;
         this.uiServices = uiServices;
+        
         Invest = ReactiveCommand.CreateFromTask(DoInvest).Enhance();
-
         Invest.HandleErrorsWith(uiServices.NotificationService, "Investment failed");
     }
 
@@ -49,7 +49,9 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 
     private async Task<Result> DoInvest()
     {
-        var getCurrentResult = await uiServices.WalletRoot.GetDefaultWalletAndActivate().Tap(r => r.ExecuteNoValue(ShowNoWalletMessage));
+        var getCurrentResult = await uiServices.WalletRoot.GetDefaultWalletAndActivate()
+            .Tap(r => r.ExecuteNoValue(ShowNoWalletMessage));
+        
         return await getCurrentResult
             .Map(maybeWallet => maybeWallet
                 .Bind(wallet => investWizard.Invest(wallet, project)));

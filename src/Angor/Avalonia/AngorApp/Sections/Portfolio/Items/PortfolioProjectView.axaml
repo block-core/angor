@@ -3,14 +3,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:p="clr-namespace:AngorApp.Sections.Portfolio"
-             xmlns:items="clr-namespace:AngorApp.Sections.Portfolio.Items"
-             xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-             xmlns:c="clr-namespace:AngorApp.UI.Controls"
-             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:design="clr-namespace:AngorApp.Design"
+             xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:items="clr-namespace:AngorApp.Sections.Portfolio.Items"
+             xmlns:c="clr-namespace:System.Collections;assembly=System.Runtime"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d"
              MinWidth="300"
-             d:DesignWidth="500"
+             d:DesignWidth="700"
              x:Class="AngorApp.Sections.Portfolio.Items.PortfolioProjectView" x:DataType="p:IPortfolioProject">
 
     <Design.DataContext>
@@ -27,111 +27,132 @@
         </p:PortfolioProjectDesign>
     </Design.DataContext>
 
-    <UserControl.Resources>
-        <ControlTheme x:Key="Inline" TargetType="HeaderedContainer">
-            <Setter Property="ClipToBounds" Value="False" />
-            <Setter Property="Template">
-                <ControlTemplate>
-                    <Panel ClipToBounds="False">
-                        <OverlayBorder BorderThickness="{TemplateBinding BorderThickness}"
-                                       ClipToBounds="False"
-                                       BorderBrush="{TemplateBinding BorderBrush}"
-                                       CornerRadius="{TemplateBinding CornerRadius}"
-                                       BoxShadow="{TemplateBinding BoxShadow}"
-                                       Background="{TemplateBinding Background}">
-                            <Panel>
-                                <ContentPresenter x:Name="Header" Background="{TemplateBinding HeaderBackground}"
-                                                  Padding="{TemplateBinding HeaderPadding}"
-                                                  Opacity="0.7"
-                                                  HorizontalAlignment="Left"
-                                                  VerticalAlignment="Center"
-                                                  IsVisible="{Binding $parent[HeaderedContainer].Header, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                                  Content="{TemplateBinding Header}" ContentTemplate="{TemplateBinding HeaderTemplate}" />
-                                <ContentPresenter x:Name="Content"
-                                                  FontWeight="Bold"
-                                                  HorizontalAlignment="Right"
-                                                  VerticalAlignment="Center"
-                                                  IsVisible="{Binding $parent[HeaderedContainer].Content, Converter={x:Static ObjectConverters.IsNotNull}}" Padding="{TemplateBinding Padding}" Content="{TemplateBinding Content}"
-                                                  ContentTemplate="{TemplateBinding ContentTemplate}" />
-                            </Panel>
-                        </OverlayBorder>
-                    </Panel>
-                </ControlTemplate>
-            </Setter>
-        </ControlTheme>
-    </UserControl.Resources>
-
-    <Card Header="{Binding }" HeaderPadding="10" Padding="20"
-          HeaderStartContent="{Binding LogoUri}">
-        <Card.HeaderStartContentTemplate>
-            <DataTemplate DataType="x:Uri">
-                <av:AdvancedImage Width="150" Height="150" Stretch="UniformToFill" CornerRadius="20" Source="{Binding }" />
-            </DataTemplate>
-        </Card.HeaderStartContentTemplate>
-        <Card.HeaderTemplate>
-            <DataTemplate DataType="p:IPortfolioProject">
-                <DockPanel Margin="10">
-                    <TextBlock DockPanel.Dock="Top" Classes="SizeBig" TextWrapping="Wrap" Text="{Binding Name}" />
-                    <items:ProgressView />
-                </DockPanel>
-            </DataTemplate>
-        </Card.HeaderTemplate>
+    <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
         <StackPanel Classes="SmallGap">
-            <items:OfferAcceptedView>
-                <items:OfferAcceptedView.IsVisible>
-                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
-                        <Binding Path="CompleteInvestment.CanExecute^" />
-                        <Binding Path="CompleteInvestment.IsExecuting^" />
-                    </MultiBinding>
-                </items:OfferAcceptedView.IsVisible>
-            </items:OfferAcceptedView>
-            <CardGrid DockPanel.Dock="Top">
-                <CardGrid.ItemsSource>
-                    <collections:ArrayList>
-                        <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
-                            <UniformGrid Columns="1" VerticalAlignment="Top">
-                                <HeaderedContainer Theme="{StaticResource Inline}" Header="My Investment">
-                                    <TextBlock Text="{Binding Invested.DecimalString}" />
-                                </HeaderedContainer>
-                                <HeaderedContainer Theme="{StaticResource Inline}" Header="Investment Status">
-                                    <c:Badge Tag="{Binding InvestmentStatus}">
-                                        <c:Badge.Styles>
-                                            <Style Selector="c|Badge[Tag=PendingFounderSignatures]">
-                                                <Setter Property="Color" Value="DarkOrange" />
-                                                <Setter Property="Content" Value="Pending" />
-                                            </Style>
-                                            <Style Selector="c|Badge[Tag=FounderSignaturesReceived]">
-                                                <Setter Property="Color" Value="Goldenrod" />
-                                                <Setter Property="Content" Value="Approved" />
-                                            </Style>
-                                            <Style Selector="c|Badge[Tag=Invested]">
-                                                <Setter Property="Color" Value="LimeGreen" />
-                                                <Setter Property="Content" Value="Invested" />
-                                            </Style>
-                                            <Style Selector="c|Badge[Tag=Invalid]">
-                                                <Setter Property="Color" Value="Red" />
-                                                <Setter Property="Content" Value="INVALID!" />
-                                            </Style>
-                                        </c:Badge.Styles>
-                                    </c:Badge>
-                                </HeaderedContainer>
-                            </UniformGrid>
-                        </OverlayBorder>
-                        <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
-                            <UniformGrid Columns="1" VerticalAlignment="Top">
-                                <HeaderedContainer Theme="{StaticResource Inline}" Header="In Recovery">
-                                    <TextBlock Text="{Binding InRecovery.DecimalString}" />
-                                </HeaderedContainer>
-                                <HeaderedContainer Theme="{StaticResource Inline}" Header="Recovery Status">
-                                    <TextBlock Text="None" />
-                                </HeaderedContainer>
-                            </UniformGrid>
-                        </OverlayBorder>
-                    </collections:ArrayList>
-                </CardGrid.ItemsSource>
-            </CardGrid>
-
+            <FlexBox AlignItems="Center" JustifyContent="SpaceBetween" Gap="20" Wrap="Wrap">
+                <av:AdvancedImage FlexBox.Grow="2" Height="150" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
+                <TextBlock FlexBox.Grow="1" Text="{Binding Name}" Classes="SizeBig"></TextBlock>
+                <items:ProgressView FlexBox.Grow="2" />
+            </FlexBox>
+             <CardGrid DockPanel.Dock="Top">
+                 <CardGrid.ItemsSource>
+                     <c:ArrayList>
+                         <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
+                             <UniformGrid Columns="1" VerticalAlignment="Top">
+                                 <HeaderedContainer Theme="{StaticResource Inline}" Header="My Investment">
+                                     <TextBlock Text="{Binding Invested.DecimalString}" />
+                                 </HeaderedContainer>
+                                 <HeaderedContainer Theme="{StaticResource Inline}" Header="Investment Status">
+                                     <controls:Badge Tag="{Binding InvestmentStatus}">
+                                         <controls:Badge.Styles>
+                                             <Style Selector="controls|Badge[Tag=PendingFounderSignatures]">
+                                                 <Setter Property="Color" Value="DarkOrange" />
+                                                 <Setter Property="Content" Value="Pending" />
+                                             </Style>
+                                             <Style Selector="controls|Badge[Tag=FounderSignaturesReceived]">
+                                                 <Setter Property="Color" Value="Goldenrod" />
+                                                 <Setter Property="Content" Value="Approved" />
+                                             </Style>
+                                             <Style Selector="controls|Badge[Tag=Invested]">
+                                                 <Setter Property="Color" Value="LimeGreen" />
+                                                 <Setter Property="Content" Value="Invested" />
+                                             </Style>
+                                             <Style Selector="controls|Badge[Tag=Invalid]">
+                                                 <Setter Property="Color" Value="Red" />
+                                                 <Setter Property="Content" Value="INVALID!" />
+                                             </Style>
+                                         </controls:Badge.Styles>
+                                     </controls:Badge>
+                                 </HeaderedContainer>
+                             </UniformGrid>
+                         </OverlayBorder>
+                         <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
+                             <UniformGrid Columns="1" VerticalAlignment="Top">
+                                 <HeaderedContainer Theme="{StaticResource Inline}" Header="In Recovery">
+                                     <TextBlock Text="{Binding InRecovery.DecimalString}" />
+                                 </HeaderedContainer>
+                                 <HeaderedContainer Theme="{StaticResource Inline}" Header="Recovery Status">
+                                     <TextBlock Text="None" />
+                                 </HeaderedContainer>
+                             </UniformGrid>
+                         </OverlayBorder>
+                     </c:ArrayList>
+                 </CardGrid.ItemsSource>
+             </CardGrid>
         </StackPanel>
-    </Card>
+    </OverlayBorder>
+
+    <!-- <Card Header="{Binding }" HeaderPadding="10" Padding="20" -->
+    <!--       HeaderStartContent="{Binding LogoUri}"> -->
+    <!--     <Card.HeaderStartContentTemplate> -->
+    <!--         <DataTemplate DataType="x:Uri"> -->
+    <!--             <av:AdvancedImage Width="150" Height="150" Stretch="UniformToFill" CornerRadius="20" Source="{Binding }" /> -->
+    <!--         </DataTemplate> -->
+    <!--     </Card.HeaderStartContentTemplate> -->
+    <!--     <Card.HeaderTemplate> -->
+    <!--         <DataTemplate DataType="p:IPortfolioProject"> -->
+    <!--             <DockPanel Margin="10"> -->
+    <!--                 <TextBlock DockPanel.Dock="Top" Classes="SizeBig" TextWrapping="Wrap" Text="{Binding Name}" /> -->
+    <!--                 <items:ProgressView /> -->
+    <!--             </DockPanel> -->
+    <!--         </DataTemplate> -->
+    <!--     </Card.HeaderTemplate> -->
+    <!--     <StackPanel Classes="SmallGap"> -->
+    <!--         <items:OfferAcceptedView> -->
+    <!--             <items:OfferAcceptedView.IsVisible> -->
+    <!--                 <MultiBinding Converter="{x:Static BoolConverters.Or}"> -->
+    <!--                     <Binding Path="CompleteInvestment.CanExecute^" /> -->
+    <!--                     <Binding Path="CompleteInvestment.IsExecuting^" /> -->
+    <!--                 </MultiBinding> -->
+    <!--             </items:OfferAcceptedView.IsVisible> -->
+    <!--         </items:OfferAcceptedView> -->
+    <!--         <CardGrid DockPanel.Dock="Top"> -->
+    <!--             <CardGrid.ItemsSource> -->
+    <!--                 <collections:ArrayList> -->
+    <!--                     <OverlayBorder Theme="{StaticResource CardOverlayBorder}"> -->
+    <!--                         <UniformGrid Columns="1" VerticalAlignment="Top"> -->
+    <!--                             <HeaderedContainer Theme="{StaticResource Inline}" Header="My Investment"> -->
+    <!--                                 <TextBlock Text="{Binding Invested.DecimalString}" /> -->
+    <!--                             </HeaderedContainer> -->
+    <!--                             <HeaderedContainer Theme="{StaticResource Inline}" Header="Investment Status"> -->
+    <!--                                 <c:Badge Tag="{Binding InvestmentStatus}"> -->
+    <!--                                     <c:Badge.Styles> -->
+    <!--                                         <Style Selector="c|Badge[Tag=PendingFounderSignatures]"> -->
+    <!--                                             <Setter Property="Color" Value="DarkOrange" /> -->
+    <!--                                             <Setter Property="Content" Value="Pending" /> -->
+    <!--                                         </Style> -->
+    <!--                                         <Style Selector="c|Badge[Tag=FounderSignaturesReceived]"> -->
+    <!--                                             <Setter Property="Color" Value="Goldenrod" /> -->
+    <!--                                             <Setter Property="Content" Value="Approved" /> -->
+    <!--                                         </Style> -->
+    <!--                                         <Style Selector="c|Badge[Tag=Invested]"> -->
+    <!--                                             <Setter Property="Color" Value="LimeGreen" /> -->
+    <!--                                             <Setter Property="Content" Value="Invested" /> -->
+    <!--                                         </Style> -->
+    <!--                                         <Style Selector="c|Badge[Tag=Invalid]"> -->
+    <!--                                             <Setter Property="Color" Value="Red" /> -->
+    <!--                                             <Setter Property="Content" Value="INVALID!" /> -->
+    <!--                                         </Style> -->
+    <!--                                     </c:Badge.Styles> -->
+    <!--                                 </c:Badge> -->
+    <!--                             </HeaderedContainer> -->
+    <!--                         </UniformGrid> -->
+    <!--                     </OverlayBorder> -->
+    <!--                     <OverlayBorder Theme="{StaticResource CardOverlayBorder}"> -->
+    <!--                         <UniformGrid Columns="1" VerticalAlignment="Top"> -->
+    <!--                             <HeaderedContainer Theme="{StaticResource Inline}" Header="In Recovery"> -->
+    <!--                                 <TextBlock Text="{Binding InRecovery.DecimalString}" /> -->
+    <!--                             </HeaderedContainer> -->
+    <!--                             <HeaderedContainer Theme="{StaticResource Inline}" Header="Recovery Status"> -->
+    <!--                                 <TextBlock Text="None" /> -->
+    <!--                             </HeaderedContainer> -->
+    <!--                         </UniformGrid> -->
+    <!--                     </OverlayBorder> -->
+    <!--                 </collections:ArrayList> -->
+    <!--             </CardGrid.ItemsSource> -->
+    <!--         </CardGrid> -->
+    <!-- -->
+    <!--     </StackPanel> -->
+    <!-- </Card> -->
 
 </UserControl>
