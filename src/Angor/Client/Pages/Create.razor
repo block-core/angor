@@ -2035,10 +2035,10 @@
         return new List<(string, string, string, string, bool)>
     {
     ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}", "text-success", true),
-    ("calendar", "Funding start date", $"{project.ProjectInfo.StartDate.FormatDate()} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days", "text-warning", false),
-    ("calendar", "Funding end date", $"{project.ProjectInfo.EndDate.FormatDate()} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days", "text-warning", false),
-    ("unlock", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days", "text-warning", false),
-    ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate.FormatDate()} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days", "text-warning", false)
+    ("calendar", "Funding start date", $"{project.ProjectInfo.StartDate.FormatDate()} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days", "text-warning", true),
+    ("calendar", "Funding end date", $"{project.ProjectInfo.EndDate.FormatDate()} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days", "text-warning", true),
+    ("unlock", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days", "text-warning", true),
+    ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate.FormatDate()} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days", "text-warning", true)
     };
     }
 
