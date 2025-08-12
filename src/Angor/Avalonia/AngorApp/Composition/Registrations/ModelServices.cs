@@ -1,3 +1,5 @@
+using Angor.UI.Model;
+using Angor.UI.Model.Implementation;
 using AngorApp.Design;
 using AngorApp.Features.Invest;
 using AngorApp.Sections.Wallet.CreateAndImport;
@@ -13,6 +15,7 @@ public static class ModelServices
     public static IServiceCollection Register(this IServiceCollection services)
     {
         return services
+            .AddSingleton<IAmountFactory, AmountFactory>()
             .AddSingleton<IWalletBuilder, WalletProvider>()
             .AddSingleton<InvestWizard>()
             .AddSingleton<WalletCreationWizard>()

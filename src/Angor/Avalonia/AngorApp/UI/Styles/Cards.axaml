@@ -166,7 +166,7 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="VerticalContentAlignment" Value="Stretch" />
-        <Setter Property="FontWeight" Value="Regular"></Setter>
+        <Setter Property="FontWeight" Value="Regular" />
     </Style>
 
     <Design.PreviewWith>

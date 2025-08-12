@@ -4,7 +4,7 @@ public interface IAmountUI
 {
     long Sats { get; }
 
-    public string Symbol => "BTC";
+    string Symbol { get; }
     
     public string BtcString => $"{Btc:0.00 000 000} " + Symbol;
 
