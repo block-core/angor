@@ -47,7 +47,7 @@ public class AngorIconConverter : IIconConverter
         var transformer = new AngorSvgTransformer(color);
         var final = transformer.Transform(svgContents);
 
-        return new global::Avalonia.Svg.Svg(uri) { Source = final };
+        return new global::Avalonia.Svg.Skia.Svg(uri) { Source = final };
     }
 }
 

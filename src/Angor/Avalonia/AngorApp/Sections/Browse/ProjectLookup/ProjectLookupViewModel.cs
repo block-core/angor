@@ -2,10 +2,8 @@ using System.Linq;
 using System.Windows.Input;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.Contexts.Wallet.Application;
 using AngorApp.Core;
 using AngorApp.Features.Invest;
-using AngorApp.Sections.Browse.Details;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using Serilog;
@@ -25,7 +23,6 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
 
     public ProjectLookupViewModel(
         IProjectAppService projectService,
-        IWalletAppService walletAppService,
         INavigator navigator,
         InvestWizard investWizard,
         UIServices uiServices)
@@ -40,7 +37,7 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
 
                 return maybeProject.Map<IProject, IList<IProjectViewModel>>(project =>
                 {
-                    var vm = new ProjectViewModel(walletAppService, project, navigator, uiServices, investWizard);
+                    var vm = new ProjectViewModel(project, navigator, uiServices, investWizard);
                     return new List<IProjectViewModel> { vm };
                 }).AsSafeMaybe();
             }

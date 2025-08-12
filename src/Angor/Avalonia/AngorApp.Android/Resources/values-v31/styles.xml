@@ -12,10 +12,16 @@
     <item name="android:windowSplashScreenAnimatedIcon">@drawable/avalonia_anim</item>
     <item name="android:windowSplashScreenAnimationDuration">1000</item>
     <item name="postSplashScreenTheme">@style/MyTheme.Main</item>
-
+    <!-- Explicit system bar styling for Android 12+/15 -->
+    <item name="android:navigationBarColor">@color/system_bars</item>
+    <item name="android:statusBarColor">@color/system_bars</item>
+    <item name="android:windowLightNavigationBar">true</item>
+    <item name="android:windowLightStatusBar">true</item>
+    <item name="android:enforceNavigationBarContrast">false</item>
+    <item name="android:enforceStatusBarContrast">false</item>
   </style>
   <style name="MyTheme.Main"
          parent ="MyTheme.NoActionBar">
-    <item name="android:windowIsTranslucent">true</item>
+    <item name="android:windowIsTranslucent">false</item>
   </style>
 </resources>

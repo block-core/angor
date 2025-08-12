@@ -3,6 +3,7 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Svg;
+using Avalonia.Svg.Skia;
 using Humanizer;
 using Newtonsoft.Json;
 using Projektanker.Icons.Avalonia;
@@ -23,7 +24,7 @@ public static class AngorConverters
         var prefix = str.Split(":");
         if (prefix[0] == "svg")
         {
-            return new Avalonia.Svg.Svg(new Uri("avares://AngorApp"))
+            return new Avalonia.Svg.Skia.Svg(new Uri("avares://AngorApp"))
             {
                 Path = prefix[1]
             };

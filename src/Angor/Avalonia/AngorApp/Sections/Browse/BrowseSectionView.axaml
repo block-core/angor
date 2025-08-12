@@ -7,7 +7,7 @@
              xmlns:lk="clr-namespace:AngorApp.Sections.Browse.ProjectLookup"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
              x:Class="AngorApp.Sections.Browse.BrowseSectionView"
              x:DataType="browse:IBrowseSectionViewModel">
 
@@ -26,13 +26,13 @@
         <ScrollViewer>
             <DockPanel VerticalSpacing="20">
 
-                <Card Header="Browse" Subheader="Browse Projects" DockPanel.Dock="Top">
+                <Card Header="Browse" Theme="{StaticResource WideCard}" Subheader="Browse Projects" DockPanel.Dock="Top">
                     <Card.HeaderStartContent>
                         <ui:Icon Source="svg:/Assets/browse.svg" />
                     </Card.HeaderStartContent>
                 </Card>
 
-                <Card Header="Project lookup" DockPanel.Dock="Top">
+                <Card Theme="{StaticResource WideCard}" Header="Project lookup" DockPanel.Dock="Top">
                     <Card.Subheader>
                         <TextBlock TextWrapping="Wrap">You can look for a project directly by entering its <Bold>Project Id</Bold> here</TextBlock>
                     </Card.Subheader>
@@ -40,7 +40,7 @@
                 </Card>
 
                 <Loading IsLoading="{Binding IsLoading^}">
-                    <CardGrid ItemsSource="{Binding Projects}">
+                    <CardGrid ItemsSource="{Binding Projects}" MinColumnWidth="300">
                         <CardGrid.ItemTemplate>
                             <DataTemplate DataType="browse:IProjectViewModel">
                                 <browse:ProjectItemView />

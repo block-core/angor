@@ -1,9 +1,9 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI">
-    
+
     <Styles.Resources>
-        
+
         <SolidColorBrush x:Key="HeaderBrush" Color="{DynamicResource SystemBaseHighColor}" />
         <SolidColorBrush x:Key="SubheaderBrush" Color="{DynamicResource SystemBaseMediumHighColor}" />
 
@@ -13,11 +13,31 @@
             <Setter Property="HeaderStartContentTemplate" Value="{StaticResource RegularIcon}" />
             <Setter Property="Padding" Value="20" />
             <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
-            <!-- <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}" /> -->
-            <!-- <Setter Property="HeaderBackground" Value="{DynamicResource SystemChromeLowColor}" /> -->
-            <!-- <Setter Property="HeaderSpacing" Value="16" /> -->
         </ControlTheme>
-        
+
+        <ControlTheme x:Key="WideCard"
+                      TargetType="Card"
+                      BasedOn="{StaticResource LeftFlexHeaderCard}">
+            <Setter Property="HeaderStartContentTemplate" Value="{StaticResource RegularIcon}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
+        </ControlTheme>
+
+        <ControlTheme x:Key="ItemCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="HeaderTheme">
+                <ControlTheme TargetType="ContentControl">
+                    <Setter Property="Foreground" Value="{StaticResource SubheaderBrush}" />
+                    <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+                </ControlTheme>
+            </Setter>
+            <Setter Property="ContentTheme">
+                <ControlTheme TargetType="ContentControl">
+                    <Setter Property="Foreground" Value="{StaticResource HeaderBrush}" />
+                    <Setter Property="FontSize" Value="{StaticResource FontSizeLarge}" />
+                </ControlTheme>
+            </Setter>
+        </ControlTheme>
+
         <ControlTheme x:Key="RemarkableSubheaderCard"
                       TargetType="Card"
                       BasedOn="{StaticResource {x:Type Card}}">
@@ -53,12 +73,11 @@
                             VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                             Margin="{TemplateBinding Padding}">
                             <ContentControl x:Name="StartContent"
-                                              Content="{TemplateBinding HeaderStartContent}"
-                                              ContentTemplate="{TemplateBinding HeaderStartContentTemplate}" />
+                                            Content="{TemplateBinding HeaderStartContent}"
+                                            ContentTemplate="{TemplateBinding HeaderStartContentTemplate}" />
                             <ContentControl x:Name="Header" Content="{TemplateBinding Header}"
                                             ContentTemplate="{TemplateBinding HeaderTemplate}"
-                                            TextElement.Foreground="{StaticResource HeaderBrush}"
-                            />
+                                            TextElement.Foreground="{StaticResource HeaderBrush}" />
                             <ContentControl x:Name="Subheader" Content="{TemplateBinding Subheader}"
                                             ContentTemplate="{TemplateBinding SubheaderTemplate}" />
                             <ContentControl x:Name="Content" Content="{TemplateBinding Content}"
@@ -71,7 +90,7 @@
                     </Border>
                 </ControlTemplate>
             </Setter>
-            
+
         </ControlTheme>
 
         <ControlTheme x:Key="BigCard" TargetType="Card" BasedOn="{StaticResource InfoCard}">
@@ -116,7 +135,39 @@
                 </Setter.Value>
             </Setter>
         </ControlTheme>
+
+        <ControlTheme TargetType="EdgePanel" x:Key="HeaderEdgePanel">
+            <Setter Property="Spacing" Value="10" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <FlexBox Background="{TemplateBinding Background}" Wrap="Wrap" Gap="20" JustifyContent="Center">
+                        <ContentControl x:Name="StartContent"
+                                        FlexBox.Grow="0"
+                                        ContentTemplate="{TemplateBinding StartContentTemplate}"
+                                        Content="{TemplateBinding StartContent}" />
+                        <ContentControl FlexBox.Grow="1" x:Name="MainContent"
+                                        ContentTemplate="{TemplateBinding ContentTemplate}"
+                                        HorizontalAlignment="Left"
+                                        Content="{TemplateBinding Content}" />
+                        <ContentControl FlexBox.Grow="0" x:Name="EndContent"
+                                        HorizontalAlignment="Right"
+                                        ContentTemplate="{TemplateBinding EndContentTemplate}"
+                                        Content="{TemplateBinding EndContent}" />
+                    </FlexBox>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
     </Styles.Resources>
+
+    <Style Selector="Button.CardGridItem">
+        <Setter Property="Theme" Value="{StaticResource TransparentButton}" />
+        <Setter Property="Padding" Value="5" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="FontWeight" Value="Regular"></Setter>
+    </Style>
 
     <Design.PreviewWith>
         <StackPanel Width="500" Spacing="20" Margin="20">
@@ -170,6 +221,8 @@
             </Card>
             <Card Height="200" Theme="{StaticResource RemarkableSubheaderCard}" Header="RemarkableSubheaderCard" Subheader="Subheader" />
             <Card Theme="{StaticResource TransparentCard}" Header="TransparentCard" Subheader="Transparent" />
+            <Card Theme="{StaticResource WideCard}" HeaderStartContent="Left" HeaderEndContent="Right" Header="TITLE" Subheader="Subheader" Content="CONTENT" />
+            <Card Theme="{StaticResource ItemCard}" HeaderStartContent="Left" HeaderEndContent="Right" Header="TITLE" Subheader="Subheader" Content="CONTENT" />
         </StackPanel>
     </Design.PreviewWith>
 </Styles>

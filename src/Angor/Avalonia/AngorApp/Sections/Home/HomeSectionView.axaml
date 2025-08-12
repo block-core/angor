@@ -6,13 +6,13 @@
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
-             mc:Ignorable="d" d:DesignWidth="1600" d:DesignHeight="600"
+             mc:Ignorable="d" d:DesignWidth="600"
              x:Class="AngorApp.Sections.Home.HomeSectionView" x:DataType="home:IHomeSectionViewModel">
 
     <Design.DataContext>
         <home:HomeSectionViewModelDesign IsWalletSetup="False" />
     </Design.DataContext>
-    
+
     <UserControl.Styles>
         <Style Selector="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap" />
@@ -21,7 +21,7 @@
 
     <a:PageContainer>
         <ScrollViewer>
-            <StackPanel MaxWidth="1200" VerticalAlignment="Center" Spacing="10">
+            <StackPanel MaxWidth="1200" VerticalAlignment="Center" Classes="BigGap">
                 <Card Height="400"
                       Theme="{StaticResource BigCard}"
                       Header="Welcome to Angor"
@@ -56,7 +56,35 @@
                         </collections:ArrayList>
                     </CardGrid.ItemsSource>
                 </CardGrid>
-            </StackPanel></ScrollViewer>
+                <HeaderedContainer Header="The Angor Flow">
+                    <HeaderedContainer.HeaderTheme>
+                        <ControlTheme TargetType="TemplatedControl">
+                            <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
+                        </ControlTheme>
+                    </HeaderedContainer.HeaderTheme>
+                    <HeaderedContainer.Resources>
+                        <ControlTemplate x:Key="Mobile">
+                            <Button Command="{Binding GoToAngorFlow}" Theme="{StaticResource TransparentButton}">
+                                <Loading IsLoading="{Binding GoToAngorFlow.IsExecuting^}">
+                                    <Panel>
+                                        <EdgePanel Content="Click to see" VerticalAlignment="Top" HorizontalAlignment="Left">
+                                            <EdgePanel.StartContent>
+                                                <ui:Icon Source="fa-magnifying-glass" />
+                                            </EdgePanel.StartContent>
+                                        </EdgePanel>
+                                        <Image Source="/Assets/flow.png" />
+                                    </Panel>
+                                </Loading>
+                            </Button>
+                        </ControlTemplate>
+                        <ControlTemplate x:Key="Desktop">
+                            <Svg Path="/Assets/flow.svg" />
+                        </ControlTemplate>
+                    </HeaderedContainer.Resources>
+                    <ContentControl Template="{OnFormFactor Mobile={StaticResource Mobile}, Default={StaticResource Desktop}}" />
+                </HeaderedContainer>
+            </StackPanel>
+        </ScrollViewer>
     </a:PageContainer>
 
 </UserControl>

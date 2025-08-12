@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using AngorApp.UI.Controls;
+using AngorApp.UI.Controls.Feerate;
 
 namespace AngorApp.Design;
 
