@@ -16,4 +16,5 @@ public class PortfolioProjectDesign : IPortfolioProject
     public IEnhancedCommand<Result> CompleteInvestment { get; }
     public bool IsInvestmentCompleted { get; set; }
     public IAmountUI Invested { get; } = new AmountUI(123000);
+    public IEnhancedCommand GoToManageFunds { get; }
 }

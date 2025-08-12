@@ -8,7 +8,6 @@ using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI.Commands;
 using Zafiro.UI.Navigation;
-using Zafiro.UI.Shell;
 
 namespace AngorApp.Sections.Portfolio;
 
@@ -16,7 +15,7 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
 {
     private readonly CompositeDisposable disposable = new();
 
-    public PortfolioSectionViewModel(IInvestmentAppService investmentAppService, UIServices uiServices, IShell shell, INavigator navigator)
+    public PortfolioSectionViewModel(IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator)
     {
         var reactiveCommand = ReactiveCommand.CreateFromTask(() =>
         {
@@ -30,7 +29,7 @@ public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewMo
 
         Load.Successes()
             .EditDiff(project => project.Id)
-            .Transform(IPortfolioProject (project) => new PortfolioProjectViewModel(project, investmentAppService, uiServices))
+            .Transform(IPortfolioProject (project) => new PortfolioProjectViewModel(project, investmentAppService, uiServices, navigator))
             .Bind(out var investedProjects)
             .Subscribe().DisposeWith(disposable);
 

@@ -18,4 +18,5 @@ public interface IPortfolioProject
     public IEnhancedCommand<Result> CompleteInvestment { get; }
     public bool IsInvestmentCompleted { get; }
     public IAmountUI Invested { get; }
+    public IEnhancedCommand GoToManageFunds { get; }
 }

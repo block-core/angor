@@ -2,11 +2,14 @@ using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
+using AngorApp.Sections.Portfolio.Manage;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.UI;
 using Zafiro.UI.Commands;
+using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Portfolio.Items;
 
@@ -16,26 +19,21 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
     [Reactive] private InvestmentStatus investmentStatus;
     private readonly InvestedProjectDto projectDto;
     private readonly CompositeDisposable disposable = new();
-    
-    public PortfolioProjectViewModel(InvestedProjectDto projectDto, IInvestmentAppService investmentAppService, UIServices uiServices)
+
+    public PortfolioProjectViewModel(InvestedProjectDto projectDto, IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator)
     {
         this.projectDto = projectDto;
-        
+
         var canCompleteInvestment = this.WhenAnyValue(x => x.InvestmentStatus).Select(x => x == InvestmentStatus.FounderSignaturesReceived);
-        
-        CompleteInvestment = ReactiveCommand.CreateFromTask(() => investmentAppService.ConfirmInvestment(projectDto.InvestmentId,uiServices.ActiveWallet.Current.Value.Id.Value, new ProjectId(projectDto.Id)), canCompleteInvestment)
+
+        CompleteInvestment = ReactiveCommand.CreateFromTask(() => investmentAppService.ConfirmInvestment(projectDto.InvestmentId, uiServices.ActiveWallet.Current.Value.Id.Value, new ProjectId(projectDto.Id)), canCompleteInvestment)
             .Enhance()
             .DisposeWith(disposable);
 
-        CompleteInvestment.Failures() //TODO Jose perhaps you want to refactor this
-            .SelectMany(async _ =>
-            {
-                await uiServices.Dialog.ShowMessage("Failed to invest", _);
-                return Unit.Default;
-            })
-            .Subscribe()
+        CompleteInvestment
+            .HandleErrorsWith(uiServices.NotificationService, "Failed to complete investment")
             .DisposeWith(disposable);
-        
+
         CompleteInvestment.Successes()
             .SelectMany(async _ =>
             {
@@ -45,8 +43,9 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
             })
             .Subscribe()
             .DisposeWith(disposable);
-        
+
         InvestmentStatus = projectDto.InvestmentStatus;
+        GoToManageFunds = ReactiveCommand.CreateFromTask(() => navigator.Go(() => new ManageInvestorProjectViewModel())).Enhance().DisposeWith(disposable);
     }
 
     public string Name => projectDto.Name;
@@ -58,10 +57,10 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
     public Uri LogoUri => projectDto.LogoUri;
     public IEnhancedCommand<Result> CompleteInvestment { get; }
     public IAmountUI Invested { get; } = new AmountUI(1234000);
+    public IEnhancedCommand GoToManageFunds { get; }
 
     public void Dispose()
     {
         disposable.Dispose();
-        CompleteInvestment.Dispose();
     }
 }

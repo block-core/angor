@@ -8,4 +8,5 @@ public interface IManageInvestorProjectViewModel
     public IEnhancedCommand ViewTransaction { get; }
     public DateTime ExpiryDate { get; }
     public TimeSpan PenaltyPeriod { get; }
+    public IEnumerable<IInvestorProjectItem> Items { get; }
 }

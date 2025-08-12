@@ -2,7 +2,7 @@ using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Portfolio.Manage;
 
-public class ManageInvestorProjectViewModelDesign : IManageInvestorProjectViewModel
+public class ManageInvestorProjectViewModel : IManageInvestorProjectViewModel
 {
     public IAmountUI TotalFunds { get; } = new AmountUI(12345);
     public IEnhancedCommand ViewTransaction { get; } = ReactiveCommand.Create(() => {}).Enhance();
