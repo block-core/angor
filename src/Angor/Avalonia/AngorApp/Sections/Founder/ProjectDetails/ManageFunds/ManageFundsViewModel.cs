@@ -1,8 +1,7 @@
-using System.Reactive.Linq;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using AngorApp.Extensions;
 using AngorApp.UI.Services;
-using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
@@ -26,31 +25,26 @@ public partial class ManageFundsViewModel : ReactiveObject, IManageFundsViewMode
            SpentAmount = 0
        };
        
-       var loadCommand = ReactiveCommand.CreateFromTask<Result<IProjectStatisticsViewModel>>(async () => 
-       {
-           var walletResult = await walletRoot.GetDefaultWalletAndActivate()
-               .Bind(maybe => maybe.ToResult("No wallet available"));
-           
-           if (walletResult.IsFailure)
+       var loadCommand = WalletCommand.Create(
+           async wallet => 
            {
+               var statisticsResult = await projectAppService.GetProjectStatistics(wallet.Id.Value, project.Id);
+               
+               if (statisticsResult.IsSuccess)
+               {
+                   return Result.Success<IProjectStatisticsViewModel>(new ProjectStatisticsViewModel(statisticsResult.Value));
+               }
+               
+               // Return default statistics if fetch fails
                return Result.Success<IProjectStatisticsViewModel>(new ProjectStatisticsViewModel(defaultStatistics));
-           }
-           
-           var statisticsResult = await projectAppService.GetProjectStatistics(walletResult.Value.Id.Value, project.Id);
-           if (statisticsResult.IsSuccess)
-           {
-               return Result.Success<IProjectStatisticsViewModel>(new ProjectStatisticsViewModel(statisticsResult.Value));
-           }
-           
-           // Return default statistics if fetch fails
-           return Result.Success<IProjectStatisticsViewModel>(new ProjectStatisticsViewModel(defaultStatistics));
-       });
+           },
+           walletRoot);
        
        Load = loadCommand.Enhance();
        
        // Create property from the command results
        projectStatisticsViewModelHelper = loadCommand
-           .Successes()
+           .Select(result => result.IsSuccess ? result.Value : new ProjectStatisticsViewModel(defaultStatistics))
            .StartWith(new ProjectStatisticsViewModel(defaultStatistics))
            .ToProperty(this, x => x.ProjectStatisticsViewModel);
        
