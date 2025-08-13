@@ -33,4 +33,24 @@ public class ProjectAppService(
     {
         return mediator.Send(new CreateProjectConstants.CreateProject.CreateProjectRequest(walletId, selectedFee, project)); // WalletId and SelectedFeeRate are placeholders
     }
+
+    public Task<Result<ProjectStatisticsDto>> GetProjectStatistics(Guid walletId, ProjectId projectId)
+    {
+        // TODO: Implement actual statistics fetching from blockchain/indexer
+        // For now, return mock data
+        var statistics = new ProjectStatisticsDto
+        {
+            TotalInvested = 0,
+            AvailableBalance = 0,
+            WithdrawableAmount = 0,
+            TotalStages = 0,
+            NextStage = null,
+            TotalTransactions = 0,
+            SpentTransactions = 0,
+            AvailableTransactions = 0,
+            SpentAmount = 0
+        };
+        
+        return Task.FromResult(Result.Success(statistics));
+    }
 }

@@ -1,6 +1,7 @@
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.Sections.Founder.ProjectDetails.Investments;
 using AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
 using AngorApp.UI.Services;
@@ -15,11 +16,11 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
     private readonly CompositeDisposable disposable = new();
     [ObservableAsProperty] private IEnumerable<IInvestmentViewModel> investments;
 
-    public FounderProjectDetailsViewModel(ProjectDto project, IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigation)
+    public FounderProjectDetailsViewModel(ProjectDto project, IInvestmentAppService investmentAppService, IProjectAppService projectAppService, UIServices uiServices, INavigator navigation)
     {
         this.project = project;
         InvestmentsViewModel = new ProjectInvestmentsViewModel(project, investmentAppService, uiServices).DisposeWith(disposable);
-        ManageFundsViewModel = new ManageFundsViewModel(project, investmentAppService).DisposeWith(disposable);
+        ManageFundsViewModel = new ManageFundsViewModel(project, projectAppService, uiServices.WalletRoot).DisposeWith(disposable);
         HasProjectStarted = project.HasStarted();
     }
 

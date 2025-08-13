@@ -4,7 +4,7 @@ namespace AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
 
 public class ManageFundsViewModelDesign : ReactiveObject, IManageFundsViewModel
 {
-    public IEnhancedCommand Load { get; }
+    public IEnhancedCommand<Result<IProjectStatisticsViewModel>> Load { get; }
     public IProjectViewModel ProjectViewModel { get; set; } = new ProjectViewModelDesign();
     public IProjectStatisticsViewModel ProjectStatisticsViewModel { get; set; } = new ProjectStatisticsViewModelDesign();
     public IStageClaimViewModel StageClaimViewModel { get; set; } = new StageClaimViewModelDesign()
