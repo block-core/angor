@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Settings.SettingsSectionView">
+    
+    <UserControl.Styles>
+        <Style Selector="Card">
+            <Setter Property="Theme" Value="{StaticResource WideCard}" />
+        </Style>
+    </UserControl.Styles>
+    
+    <controls:PageContainer>
+        <ScrollViewer>
+            <StackPanel Classes="BigGap">
+                <Card HeaderStartContent="{Icon fa-network-wired}" Header="Network" />
+                <Card HeaderStartContent="{Icon fa-sitemap}" Header="Explorer" />
+                <Card HeaderStartContent="{Icon fa-server}" Header="Indexer" />
+                <Card HeaderStartContent="{Icon mdi-antenna}" Header="Nostr Relays" />
+            </StackPanel>
+        </ScrollViewer>
+    </controls:PageContainer>
+</UserControl>

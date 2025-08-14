@@ -57,13 +57,12 @@ public static class UIServicesRegistration
     {
         if (content is SectionScope scope)
         {
-            return scope.Navigator.Content.Select(o => new HeaderViewModel(scope.Navigator.Back, o));
+            var config = sp.GetRequiredService<INetworkConfiguration>();
+            var network = config.GetNetwork();
+            
+            return scope.Navigator.Content.Select(o => new HeaderViewModel(scope.Navigator.Back, o, network));
         }
         
-        var config = sp.GetRequiredService<INetworkConfiguration>();
-        var network = config.GetNetwork();
-        var name = network.Name;
-        var networkType = network.NetworkType;
-        return Observable.Return($"{name} - {networkType}");
+        return Observable.Return("");
     }
 }

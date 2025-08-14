@@ -3,11 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
              xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Operate"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
-             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Wallet.Operate.HistoryView"
              x:DataType="operate:IWalletViewModel">
@@ -15,70 +13,64 @@
     <Design.DataContext>
         <operate:WalletViewModelDesign />
     </Design.DataContext>
-
-    <Card Header="History">
-        <Card.HeaderStartContent>
-            <ui:Icon Source="fa-solid fa-cube" />
-        </Card.HeaderStartContent>
-        <z:SlimDataGrid ItemsSource="{Binding History}">
-            <z:SlimDataGrid.Styles>
-                <Style Selector="TextBlock">
-                    <Setter Property="VerticalAlignment" Value="Center" />
-                    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                    <Setter Property="ToolTip.Tip" Value="{Binding $self.Text}" />
-                </Style>
-            </z:SlimDataGrid.Styles>
-            <z:SlimDataGrid.Columns>
-                <z:Column Width="Auto" Binding="{Binding Content.Transaction.Balance}">
-                    <z:Column.CellTemplate>
-                        <DataTemplate DataType="model:IAmountUI">
-                            <Panel HorizontalAlignment="Left" Margin="0 0 10 0">
-                                <i:Icon Foreground="Green" IsVisible="{Binding IsPositive}" Value="fa-chevron-up" />
-                                <i:Icon IsVisible="{Binding IsZero}" Value="fa-grip-lines" />
-                                <i:Icon Foreground="Red" IsVisible="{Binding IsNegative}" Value="fa-chevron-down" />
-                            </Panel>
-                        </DataTemplate>    
-                    </z:Column.CellTemplate>
-                </z:Column>
-                <z:Column Header="Amount" Width="Auto" Binding="{Binding Content.Transaction.Balance.BtcString}">
-                    <z:Column.HeaderTemplate>
-                        <DataTemplate>
-                            <TextBlock x:DataType="x:Object" TextAlignment="Left" Text="{Binding}" />
-                        </DataTemplate>
-                    </z:Column.HeaderTemplate>
-                    <z:Column.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock TextAlignment="Right" Text="{Binding}" />
-                        </DataTemplate>
-                    </z:Column.CellTemplate>
-                </z:Column>
-                <z:Column Header="Date" Width="*" Binding="{Binding Content.Transaction.BlockTime, Converter={x:Static controls:AngorConverters.HumanizeDateTimeOffset}}">
-                    <z:Column.HeaderTemplate>
-                        <DataTemplate>
-                            <TextBlock x:DataType="x:Object" TextAlignment="Center" Text="{Binding}" />
-                        </DataTemplate>
-                    </z:Column.HeaderTemplate>
-                    <z:Column.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock TextAlignment="Center" Text="{Binding}" />
-                        </DataTemplate>
-                    </z:Column.CellTemplate>
-                </z:Column>
-                <z:Column Header="TXN" Width="Auto" Binding="{Binding Content.ShowJson}">
-                    <z:Column.HeaderTemplate>
-                        <DataTemplate >
-                            <TextBlock x:DataType="x:Object" TextAlignment="Center" Text="{Binding}" />
-                        </DataTemplate>
-                    </z:Column.HeaderTemplate>
-                    <z:Column.CellTemplate>
-                        <DataTemplate>
-                            <Button Command="{Binding}"
-                                    i:Attached.Icon="fa-solid fa-ellipsis" />
-                        </DataTemplate>
-                    </z:Column.CellTemplate>
-                </z:Column>
-            </z:SlimDataGrid.Columns>
-        </z:SlimDataGrid>
-    </Card>
+    
+    <SlimDataGrid ItemsSource="{Binding History}">
+        <SlimDataGrid.Styles>
+            <Style Selector="TextBlock">
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                <Setter Property="ToolTip.Tip" Value="{Binding $self.Text}" />
+            </Style>
+        </SlimDataGrid.Styles>
+        <SlimDataGrid.Columns>
+            <Column Width="Auto" Binding="{Binding Content.Transaction.Balance}">
+                <Column.CellTemplate>
+                    <DataTemplate DataType="model:IAmountUI">
+                        <Panel HorizontalAlignment="Left" Margin="0 0 10 0">
+                            <i:Icon Foreground="Green" IsVisible="{Binding IsPositive}" Value="fa-chevron-up" />
+                            <i:Icon IsVisible="{Binding IsZero}" Value="fa-grip-lines" />
+                            <i:Icon Foreground="Red" IsVisible="{Binding IsNegative}" Value="fa-chevron-down" />
+                        </Panel>
+                    </DataTemplate>    
+                </Column.CellTemplate>
+            </Column>
+            <Column Header="Amount" Width="Auto" Binding="{Binding Content.Transaction.Balance.BtcString}">
+                <Column.HeaderTemplate>
+                    <DataTemplate>
+                        <TextBlock x:DataType="x:Object" TextAlignment="Left" Text="{Binding}" />
+                    </DataTemplate>
+                </Column.HeaderTemplate>
+                <Column.CellTemplate>
+                    <DataTemplate>
+                        <TextBlock TextAlignment="Right" Text="{Binding}" />
+                    </DataTemplate>
+                </Column.CellTemplate>
+            </Column>
+            <Column Header="Date" Width="*" Binding="{Binding Content.Transaction.BlockTime, Converter={x:Static controls:AngorConverters.HumanizeDateTimeOffset}}">
+                <Column.HeaderTemplate>
+                    <DataTemplate>
+                        <TextBlock x:DataType="x:Object" TextAlignment="Center" Text="{Binding}" />
+                    </DataTemplate>
+                </Column.HeaderTemplate>
+                <Column.CellTemplate>
+                    <DataTemplate>
+                        <TextBlock TextAlignment="Center" Text="{Binding}" />
+                    </DataTemplate>
+                </Column.CellTemplate>
+            </Column>
+            <Column Header="TXN" Width="Auto" Binding="{Binding Content.ShowJson}">
+                <Column.HeaderTemplate>
+                    <DataTemplate >
+                        <TextBlock x:DataType="x:Object" TextAlignment="Center" Text="{Binding}" />
+                    </DataTemplate>
+                </Column.HeaderTemplate>
+                <Column.CellTemplate>
+                    <DataTemplate>
+                        <Button Command="{Binding}"
+                                i:Attached.Icon="fa-solid fa-ellipsis" />
+                    </DataTemplate>
+                </Column.CellTemplate>
+            </Column>
+        </SlimDataGrid.Columns>
+    </SlimDataGrid>
 
 </UserControl>

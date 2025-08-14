@@ -12,7 +12,7 @@
         <operate:WalletViewModelDesign />
     </Design.DataContext>
     
-    <DockPanel VerticalSpacing="10">
+    <DockPanel VerticalSpacing="20">
         <Card Theme="{StaticResource WideCard}" Header="Wallet" Subheader="Wallet and balances" DockPanel.Dock="Top">
             <Card.HeaderEndContent>
                 <UniformGrid Rows="1">
