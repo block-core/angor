@@ -129,10 +129,14 @@
                     <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContentTemplate="{StaticResource RegularIcon}" StartContent="{Icon fa-solid fa-clock}" Content="Penalty duration"
                                EndContent="{Binding Project.PenaltyDuration, Converter={x:Static controls:AngorConverters.HumanizeTimeSpan}}" />
 
-                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContentTemplate="{StaticResource RegularIcon}" StartContent="{Icon fa-solid fa-calendar-days}" Content="Project dates" />
-                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContentTemplate="{StaticResource RegularIcon}" EndContent="{Binding Project.StartDate, StringFormat='d'}" />
-                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContentTemplate="{StaticResource RegularIcon}" EndContent="{Binding Project.EndDate, StringFormat='d'}" />
-
+                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContentTemplate="{StaticResource RegularIcon}" StartContent="{Icon fa-solid fa-calendar-days}" Content="Project dates">
+                        <EdgePanel.EndContent>
+                            <StackPanel>
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding Project.StartDate, StringFormat=d}" />
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding Project.EndDate, StringFormat=d}" />
+                            </StackPanel>
+                        </EdgePanel.EndContent>
+                    </EdgePanel>
                     <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContentTemplate="{StaticResource RegularIcon}" StartContent="{Icon fa-solid fa-users}" Content="Total raised"
                                EndContent="{Binding Project.TotalRaised.DecimalString}" />
                     <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContentTemplate="{StaticResource RegularIcon}" StartContent="{Icon fa-solid fa-calculator}" Content="Total investors"
