@@ -19,7 +19,7 @@
         <PackageReference Include="AvaloniaUI.DiagnosticsSupport"/>
         <PackageReference Include="CSharpFunctionalExtensions"/>
         <PackageReference Include="Humanizer.Core"/>
-        <PackageReference Include="PanAndZoom" />
+        <PackageReference Include="PanAndZoom"/>
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome"/>
         <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign"/>
         <PackageReference Include="QRCoder"/>
@@ -30,16 +30,23 @@
         </PackageReference>
         <PackageReference Include="Serilog.Extensions.Logging"/>
         <PackageReference Include="Serilog.Sinks.Console"/>
-<!--        <PackageReference Include="Zafiro.Avalonia"/>-->
+        <!--        <PackageReference Include="Zafiro.Avalonia"/>-->
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\Zafiro.Avalonia.csproj" />
+        <ProjectReference Include="..\..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\Zafiro.Avalonia.csproj"/>
         <ProjectReference Include="..\Angor.Contexts.Integration.WalletFunding\Angor.Contexts.Integration.WalletFunding.csproj"/>
         <ProjectReference Include="..\Angor.UI.Model.Implementation\Angor.UI.Model.Implementation.csproj"/>
         <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj"/>
         <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj"/>
         <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="Sections\Browse\Details\ProjectSummary.axaml.cs">
+            <DependentUpon>ProjectSummary2.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
     </ItemGroup>
     
 </Project>

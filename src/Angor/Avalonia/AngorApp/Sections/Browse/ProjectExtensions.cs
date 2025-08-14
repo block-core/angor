@@ -6,7 +6,7 @@ namespace AngorApp.Sections.Browse;
 
 public static class ProjectExtensions
 {
-    public static IProject ToProject (this ProjectDto dto)
+    public static IProject ToProject(this ProjectDto dto)
     {
         return new Project
         {
@@ -28,9 +28,9 @@ public static class ProjectExtensions
                 })
                 .Cast<IStage>()
                 .ToList(),
-            PenaltyDuration =  dto.PenaltyDuration,
-            TargetAmount = dto.TargetAmount,
-            StartingDate = dto.StartingDate,
+            PenaltyDuration = dto.PenaltyDuration,
+            TargetAmount = new AmountUI(dto.TargetAmount),
+            StartDate = dto.StartingDate
         };
     }
 }

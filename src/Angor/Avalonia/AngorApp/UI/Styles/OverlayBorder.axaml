@@ -3,8 +3,8 @@
 
     <Styles.Resources>
         <ControlTheme x:Key="CardOverlayBorder" TargetType="OverlayBorder" BasedOn="{StaticResource CardOverlayBorder}">
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}"></Setter>
-            <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}"></Setter>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
+            <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}" />
         </ControlTheme>
     </Styles.Resources>
     
