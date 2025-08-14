@@ -41,9 +41,5 @@
         <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj"/>
         <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj"/>
     </ItemGroup>
-
-    <ItemGroup>
-      <AdditionalFiles Include="Sections\Portfolio\Manage\ManageView.axaml" />
-    </ItemGroup>
     
 </Project>

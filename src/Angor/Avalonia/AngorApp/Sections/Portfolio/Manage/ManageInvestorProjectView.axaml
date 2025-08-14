@@ -5,6 +5,7 @@
              xmlns:c="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:co="clr-namespace:AngorApp.UI.Controls"
              xmlns:manage="clr-namespace:AngorApp.Sections.Portfolio.Manage"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              mc:Ignorable="d" d:DesignWidth="500"
              x:Class="AngorApp.Sections.Portfolio.Manage.ManageInvestorProjectView" x:DataType="manage:IManageInvestorProjectViewModel">
 
@@ -12,16 +13,12 @@
         <manage:ManageInvestorProjectViewModelDesign />
     </Design.DataContext>
 
-    <UserControl.Styles>
-        <Style Selector="TextBlock">
-            <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="TextAlignment" Value="Center" />
-        </Style>
-    </UserControl.Styles>
-
     <co:PageContainer>
         <StackPanel Classes="BigGap">
-            <Card Theme="{StaticResource WideCard}" Header="Manage Investment" Subheader="Mange investments">
+            <Card Theme="{StaticResource WideCard}" Header="Manage Investment" Subheader="Manage investments">
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="fa-list-check" />
+                </Card.HeaderStartContent>
                 <Card.HeaderEndContent>
                     <UniformGrid Rows="1" HorizontalAlignment="Stretch">
                         <Button Content="Refresh" />
@@ -29,8 +26,12 @@
                     </UniformGrid>
                 </Card.HeaderEndContent>
             </Card>
-            <CardGrid ColumnSpacing="20" RowSpacing="20">
+            <CardGrid ColumnSpacing="20" RowSpacing="20" >
                 <CardGrid.Styles>
+                    <Style Selector="TextBlock">
+                        <Setter Property="TextWrapping" Value="Wrap" />
+                        <Setter Property="TextAlignment" Value="Center" />
+                    </Style>
                     <Style Selector="Card">
                         <Setter Property="Theme" Value="{StaticResource ItemCard}" />
                     </Style>
@@ -48,21 +49,10 @@
             </CardGrid>
             <Card>
                 <SlimDataGrid ItemsSource="{Binding Items}">
-                    <SlimDataGrid.Styles>
-                        <Style Selector="Row TextBlock">
-                            <Setter Property="TextAlignment" Value="Left" />
-                        </Style>
-                        <Style Selector="Cell">
-                            <Setter Property="Margin" Value="5" />
-                        </Style>
-                        <Style Selector="Cell TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Left" />
-                        </Style>
-                    </SlimDataGrid.Styles>
                     <SlimDataGrid.Columns>
                         <Column Header="Stage" Binding="{Binding Stage}" />
-                        <Column Header="Amount" Width="Auto" Binding="{Binding Amount.DecimalString}" />
-                        <Column Header="Status" Width="2*" Binding="{Binding Status}" />
+                        <Column Header="Amount" Binding="{Binding Amount.DecimalString}" />
+                        <Column Header="Status" Binding="{Binding Status}" />
                     </SlimDataGrid.Columns>
                 </SlimDataGrid>
             </Card>
