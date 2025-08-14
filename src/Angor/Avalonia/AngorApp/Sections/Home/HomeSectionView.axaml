@@ -6,6 +6,7 @@
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
+             xmlns:panels="clr-namespace:Angor.Avalonia.Panels"
              mc:Ignorable="d" d:DesignWidth="600"
              x:Class="AngorApp.Sections.Home.HomeSectionView" x:DataType="home:IHomeSectionViewModel">
 
@@ -30,32 +31,28 @@
                         <ui:Icon Source="svg:/Assets/angor-icon.svg" />
                     </Card.HeaderStartContent>
                 </Card>
-                <CardGrid>
-                    <CardGrid.ItemsSource>
-                        <collections:ArrayList>
-                            <Card Theme="{StaticResource SmallCard}" Header="Create your wallet" Subheader="Create a new wallet or recover your existing one to get started with Angor">
-                                <Card.HeaderStartContent>
-                                    <ui:Icon Source="svg:/Assets/wallet.svg" />
-                                </Card.HeaderStartContent>
-                            </Card>
-                            <Card Theme="{StaticResource SmallCard}" Header="Explore Opportunities" Subheader="Browse through innovative projects and find your next investment">
-                                <Card.HeaderStartContent>
-                                    <ui:Icon Source="svg:/Assets/browse.svg" />
-                                </Card.HeaderStartContent>
-                            </Card>
-                            <Card Theme="{StaticResource SmallCard}" Header="Launch Your Project" Subheader="Start your fundraising journey and launch your project on Angor">
-                                <Card.HeaderStartContent>
-                                    <ui:Icon Source="svg:/Assets/user.svg" />
-                                </Card.HeaderStartContent>
-                            </Card>
-                            <Card Theme="{StaticResource SmallCard}" Header="Invest Grow" Subheader="Invest in promising projects and be part of their success story">
-                                <Card.HeaderStartContent>
-                                    <ui:Icon Source="svg:/Assets/portfolio.svg" />
-                                </Card.HeaderStartContent>
-                            </Card>
-                        </collections:ArrayList>
-                    </CardGrid.ItemsSource>
-                </CardGrid>
+                <BalancedUniformWrapPanel MinItemWidth="200" HorizontalSpacing="20" VerticalSpacing="20">
+                    <Card Theme="{StaticResource SmallCard}" Header="Create your wallet" Subheader="Create a new wallet or recover your existing one to get started with Angor">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="svg:/Assets/wallet.svg" />
+                        </Card.HeaderStartContent>
+                    </Card>
+                    <Card Theme="{StaticResource SmallCard}" Header="Explore Opportunities" Subheader="Browse through innovative projects and find your next investment">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="svg:/Assets/browse.svg" />
+                        </Card.HeaderStartContent>
+                    </Card>
+                    <Card Theme="{StaticResource SmallCard}" Header="Launch Your Project" Subheader="Start your fundraising journey and launch your project on Angor">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="svg:/Assets/user.svg" />
+                        </Card.HeaderStartContent>
+                    </Card>
+                    <Card Theme="{StaticResource SmallCard}" Header="Invest Grow" Subheader="Invest in promising projects and be part of their success story">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                        </Card.HeaderStartContent>
+                    </Card>
+                </BalancedUniformWrapPanel>
                 <HeaderedContainer Header="The Angor Flow">
                     <HeaderedContainer.HeaderTheme>
                         <ControlTheme TargetType="TemplatedControl">
