@@ -4,10 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:zc="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
-             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             mc:Ignorable="d" d:DesignWidth="500"
+             mc:Ignorable="d" d:DesignWidth="300"
              x:Class="AngorApp.Sections.Browse.Details.ProjectSummary" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
@@ -19,75 +18,71 @@
             <i:Icon FontSize="40" Value="fa-solid fa-chart-line" />
         </Card.HeaderStartContent>
 
-        <StackPanel Spacing="25">
+        <StackPanel Spacing="25" Margin="0 10 0 0">
             <!-- Progress Overview Cards -->
-            <CardGrid>
-                <CardGrid.ItemsSource>
-                    <collections:ArrayList>
-                        <Card Theme="{StaticResource TransparentCard}"
-                              Header="Timeline Progress"
-                              Subheader="{Binding CurrentDays, StringFormat={}{0} days elapsed}">
-                            <Card.HeaderStartContent>
-                                <i:Icon FontSize="30" Value="fa-solid fa-calendar-check" />
-                            </Card.HeaderStartContent>
-                            <Card.Content>
-                                <StackPanel Spacing="15">
-                                    <Panel Height="100">
-                                        <zc:CircularProgressBar MaxWidth="80"
-                                                                Maximum="{Binding TotalDays}"
-                                                                Value="{Binding CurrentDays}"
-                                                                Foreground="{DynamicResource SystemAccentColor}" />
-                                        <TextBlock VerticalAlignment="Center"
-                                                   HorizontalAlignment="Center"
-                                                   FontSize="14"
-                                                   FontWeight="Bold">
-                                            <TextBlock.Text>
-                                                <MultiBinding StringFormat="{}{0}/{1}">
-                                                    <Binding Path="CurrentDays" />
-                                                    <Binding Path="TotalDays" />
-                                                </MultiBinding>
-                                            </TextBlock.Text>
-                                        </TextBlock>
-                                    </Panel>
-                                    <TextBlock Text="{Binding TotalDays, StringFormat='Total: {0} days'}"
-                                               HorizontalAlignment="Center"
-                                               FontSize="12"
-                                               Opacity="0.7" />
-                                </StackPanel>
-                            </Card.Content>
-                        </Card>
+            <BalancedUniformWrapPanel MinItemWidth="150" HorizontalSpacing="20" VerticalSpacing="20">
+                <Card Theme="{StaticResource TransparentCard}"
+                      Header="Timeline Progress"
+                      Subheader="{Binding CurrentDays, StringFormat={}{0} days elapsed}">
+                    <Card.HeaderStartContent>
+                        <i:Icon FontSize="30" Value="fa-solid fa-calendar-check" />
+                    </Card.HeaderStartContent>
+                    <Card.Content>
+                        <StackPanel Spacing="15">
+                            <Panel Height="100">
+                                <zc:CircularProgressBar MaxWidth="80"
+                                                        Maximum="{Binding TotalDays}"
+                                                        Value="{Binding CurrentDays}"
+                                                        Foreground="{DynamicResource SystemAccentColor}" />
+                                <TextBlock VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"
+                                           FontSize="14"
+                                           FontWeight="Bold">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0}/{1}">
+                                            <Binding Path="CurrentDays" />
+                                            <Binding Path="TotalDays" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </Panel>
+                            <TextBlock Text="{Binding TotalDays, StringFormat='Total: {0} days'}"
+                                       HorizontalAlignment="Center"
+                                       FontSize="12"
+                                       Opacity="0.7" />
+                        </StackPanel>
+                    </Card.Content>
+                </Card>
 
-                        <Card Theme="{StaticResource TransparentCard}"
-                              Header="Funding Progress"
-                              Subheader="{Binding CurrentInvestment, StringFormat={}{0:F2} TBTC raised}">
-                            <Card.HeaderStartContent>
-                                <i:Icon FontSize="30" Value="fa-solid fa-coins" />
-                            </Card.HeaderStartContent>
-                            <Card.Content>
-                                <StackPanel Spacing="15">
-                                    <Panel Height="100">
-                                        <zc:CircularProgressBar MaxWidth="80"
-                                                                x:Name="Funding"
-                                                                Maximum="{Binding TotalInvestment}"
-                                                                Value="{Binding CurrentInvestment}"
-                                                                Foreground="Orange" />
-                                        <TextBlock Text="{Binding #Funding.Proportion, StringFormat={}{0:P0}}"
-                                                   VerticalAlignment="Center"
-                                                   HorizontalAlignment="Center"
-                                                   FontSize="14"
-                                                   FontWeight="Bold"
-                                                   Foreground="Orange" />
-                                    </Panel>
-                                    <TextBlock Text="{Binding TotalInvestment, StringFormat='Target: {0:F2} TBTC'}"
-                                               HorizontalAlignment="Center"
-                                               FontSize="12"
-                                               Opacity="0.7" />
-                                </StackPanel>
-                            </Card.Content>
-                        </Card>
-                    </collections:ArrayList>
-                </CardGrid.ItemsSource>
-            </CardGrid>
+                <Card Theme="{StaticResource TransparentCard}"
+                      Header="Funding Progress"
+                      Subheader="{Binding CurrentInvestment, StringFormat={}{0:F2} TBTC raised}">
+                    <Card.HeaderStartContent>
+                        <i:Icon FontSize="30" Value="fa-solid fa-coins" />
+                    </Card.HeaderStartContent>
+                    <Card.Content>
+                        <StackPanel Spacing="15">
+                            <Panel Height="100">
+                                <zc:CircularProgressBar MaxWidth="80"
+                                                        x:Name="Funding"
+                                                        Maximum="{Binding TotalInvestment}"
+                                                        Value="{Binding CurrentInvestment}"
+                                                        Foreground="Orange" />
+                                <TextBlock Text="{Binding #Funding.Proportion, StringFormat={}{0:P0}}"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"
+                                           FontSize="14"
+                                           FontWeight="Bold"
+                                           Foreground="Orange" />
+                            </Panel>
+                            <TextBlock Text="{Binding TotalInvestment, StringFormat='Target: {0:F2} TBTC'}"
+                                       HorizontalAlignment="Center"
+                                       FontSize="12"
+                                       Opacity="0.7" />
+                        </StackPanel>
+                    </Card.Content>
+                </Card>
+            </BalancedUniformWrapPanel>
 
             <Card Theme="{StaticResource TransparentCard}" Header="Project Information" Subheader="Key project details and metrics">
                 <StackPanel Classes="BigGap" Grid.IsSharedSizeScope="True">

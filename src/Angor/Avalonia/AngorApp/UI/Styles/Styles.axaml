@@ -3,22 +3,9 @@
     <Design.PreviewWith>
         <Border Padding="20">
             <StackPanel Spacing="10">
-                <Card Classes="InlineNested" Header="Header">
+                <Card Header="Header">
                     <Card Header="Nested header">
                         CONTENT
-                    </Card>
-                </Card>
-                <Card Classes="Nesting" Header="Header">
-                    <Card Header="Nested header" Content="HOLA" />
-                </Card>
-                <Card Classes="Nesting" Header="Header">
-                    <Card Classes="Nesting" Header="Header">
-                        <Card Header="Nested header" Content="HOLA" />
-                    </Card>
-                </Card>
-                <Card Header="Header">
-                    <Card Header="Header">
-                        <Card Header="Nested header" Content="HOLA" />
                     </Card>
                 </Card>
             </StackPanel>
@@ -42,17 +29,9 @@
         <Setter Property="Spacing" Value="10" />
     </Style>
 
-    <Style Selector="Card.Nesting Card">
-        <Setter Property="Background" Value="#14FFFFFF" />
-        <Setter Property="HeaderBackground" Value="#14FFFFFF" />
+    <Style Selector="Card Card">
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Background" Value="#31000000" />
     </Style>
     
-    <Style Selector="Card.InlineNested Card">
-        <Setter Property="Theme" Value="{StaticResource TransparentCard}" />
-        <Setter Property="HeaderStartContentTemplate" Value="{StaticResource SmallIcon}" />
-        <Setter Property="Margin" Value="0" />
-        <Setter Property="HeaderPadding" Value="0" />
-        <Setter Property="Padding" Value=" 0 0 0 0" />
-    </Style>
-
 </Styles>
