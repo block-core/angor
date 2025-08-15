@@ -11,8 +11,8 @@
     </Design.DataContext>
 
     <StackPanel Margin="5" HorizontalAlignment="Center" Orientation="Horizontal" Classes="SmallGap">
-        <ContentControl Content="{Icon fa-network-wired}" />
-        <TextBlock Text="{Binding Name}" />
-        <TextBlock FontWeight="Thin" Text="{Binding NetworkType}" />
+        <ContentControl VerticalAlignment="Center" Content="{Icon fa-network-wired}" />
+        <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+        <TextBlock VerticalAlignment="Center" FontWeight="Thin" Text="{Binding NetworkType}" />
     </StackPanel>
 </UserControl>

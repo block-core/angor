@@ -62,7 +62,7 @@
                             <Button Command="{Binding GoToAngorFlow}" Theme="{StaticResource TransparentButton}">
                                 <Loading IsLoading="{Binding GoToAngorFlow.IsExecuting^}">
                                     <Panel>
-                                        <EdgePanel Content="Click to see" VerticalAlignment="Top" HorizontalAlignment="Left">
+                                        <EdgePanel Content="Tap to see" VerticalAlignment="Top" HorizontalAlignment="Left">
                                             <EdgePanel.StartContent>
                                                 <ui:Icon Source="fa-magnifying-glass" />
                                             </EdgePanel.StartContent>
