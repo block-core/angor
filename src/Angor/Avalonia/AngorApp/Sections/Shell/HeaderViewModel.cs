@@ -9,10 +9,12 @@ namespace AngorApp.Sections.Shell;
 
 public class HeaderViewModel : ReactiveObject
 {
+    private readonly Blockcore.Networks.Network network;
     private readonly ObservableAsPropertyHelper<object?> currentHeader;
 
-    public HeaderViewModel(IEnhancedCommand back, object content)
+    public HeaderViewModel(IEnhancedCommand back, object content, Blockcore.Networks.Network network)
     {
+        this.network = network;
         Back = back;
         currentHeader = Header(content).ToProperty(this, vm => vm.Content);
     }
@@ -20,7 +22,7 @@ public class HeaderViewModel : ReactiveObject
     public IEnhancedCommand Back { get; }
     public object? Content => currentHeader.Value;
 
-    private static IObservable<object?> Header(object source)
+    private IObservable<object?> Header(object source)
     {
         if (source is IHaveHeader headered)
         {
@@ -33,7 +35,7 @@ public class HeaderViewModel : ReactiveObject
             return WizardHeader(navigator.Wizard);
         }
 
-        return Observable.Return<object?>(null);
+        return Observable.Return(new NetworkViewModel(network));
     }
 
     private static IObservable<object?> WizardHeader(ISlimWizard wizard)

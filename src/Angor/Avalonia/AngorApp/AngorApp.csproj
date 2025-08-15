@@ -19,7 +19,7 @@
         <PackageReference Include="AvaloniaUI.DiagnosticsSupport"/>
         <PackageReference Include="CSharpFunctionalExtensions"/>
         <PackageReference Include="Humanizer.Core"/>
-        <PackageReference Include="PanAndZoom" />
+        <PackageReference Include="PanAndZoom"/>
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome"/>
         <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign"/>
         <PackageReference Include="QRCoder"/>
@@ -30,8 +30,7 @@
         </PackageReference>
         <PackageReference Include="Serilog.Extensions.Logging"/>
         <PackageReference Include="Serilog.Sinks.Console"/>
-        <PackageReference Include="Zafiro.Avalonia"/>
-        <PackageReference Include="Zafiro.Avalonia.Dialogs"/>
+                <PackageReference Include="Zafiro.Avalonia"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -43,7 +42,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <AdditionalFiles Include="Sections\Portfolio\Manage\ManageView.axaml" />
+        <Compile Update="Sections\Browse\Details\ProjectSummary.axaml.cs">
+            <DependentUpon>ProjectSummary2.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
     </ItemGroup>
     
 </Project>

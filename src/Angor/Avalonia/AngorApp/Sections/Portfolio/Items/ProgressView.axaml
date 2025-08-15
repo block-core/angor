@@ -37,9 +37,7 @@
                                FontSize="12"
                                HorizontalAlignment="Center" />
                 </Panel>
-
-
-                <!-- Información financiera en layout vertical compacto -->
+                
                 <Grid Margin="0,4,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -47,7 +45,6 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Raised -->
                     <StackPanel Grid.Column="0">
                         <TextBlock Text="RAISED"
                                    FontSize="9"
@@ -61,13 +58,11 @@
                                    TextTrimming="CharacterEllipsis" />
                     </StackPanel>
 
-                    <!-- Separador visual sutil -->
                     <Rectangle Grid.Column="1"
                                Width="1"
                                Fill="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
                                Margin="0,8" />
 
-                    <!-- Target -->
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="TARGET"
                                    FontSize="9"
@@ -83,7 +78,6 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- Status pill si está disponible -->
                 <Border Background="Orange"
                         CornerRadius="8"
                         Padding="8,3"
@@ -100,14 +94,12 @@
         </AdaptivePanel.OverflowContent>
         <AdaptivePanel.Content>
             <StackPanel Spacing="12">
-                <!-- Indicadores de monto -->
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Cantidad recaudada -->
                     <StackPanel Grid.Column="0" HorizontalAlignment="Left">
                         <TextBlock Text="Raised" FontSize="11" Opacity="0.6" Margin="0,0,0,2" />
                         <TextBlock Text="{Binding Raised.DecimalString}"
@@ -125,14 +117,12 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- Barra de progreso con porcentaje -->
                 <StackPanel Spacing="5">
                     <ProgressBar Maximum="{Binding Target.Sats}"
                                  Value="{Binding Raised.Sats}"
                                  Height="16"
                                  CornerRadius="8" />
 
-                    <!-- Porcentaje debajo de la barra -->
                     <TextBlock Text="{Binding Progress, StringFormat='{}{0:P1}'}"
                                HorizontalAlignment="Center"
                                FontWeight="SemiBold"

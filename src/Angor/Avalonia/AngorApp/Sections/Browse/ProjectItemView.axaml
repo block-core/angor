@@ -18,7 +18,7 @@
 
     <UserControl.Styles>
         <Style Selector="TextBlock">
-            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>

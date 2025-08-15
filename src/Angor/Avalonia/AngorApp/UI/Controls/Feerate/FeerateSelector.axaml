@@ -2,27 +2,28 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
         xmlns:design="clr-namespace:AngorApp.Design"
-        xmlns:feerate="clr-namespace:AngorApp.UI.Controls.Feerate">
+        xmlns:feerate="clr-namespace:AngorApp.UI.Controls.Feerate"
+        xmlns:ds="clr-namespace:AngorApp.UI.Controls">
 
     <Design.PreviewWith>
         <feerate:FeerateSelector Width="400" Height="500" Amount="1000">
             <feerate:FeerateSelector.Presets>
                 <generic:List x:TypeArguments="feerate:IFeeratePreset">
-                    <design:DesignTimePreset Name="Economy">
-                        <design:DesignTimePreset.Feerate>
+                    <ds:DesignTimePreset Name="Economy">
+                        <ds:DesignTimePreset.Feerate>
                             <design:DesignTimeAmount Sats="1234" />
-                        </design:DesignTimePreset.Feerate>
-                    </design:DesignTimePreset>
-                    <design:DesignTimePreset Name="Standard">
-                        <design:DesignTimePreset.Feerate>
+                        </ds:DesignTimePreset.Feerate>
+                    </ds:DesignTimePreset>
+                    <ds:DesignTimePreset Name="Standard">
+                        <ds:DesignTimePreset.Feerate>
                             <design:DesignTimeAmount Sats="1234" />
-                        </design:DesignTimePreset.Feerate>
-                    </design:DesignTimePreset>
-                    <design:DesignTimePreset Name="Priority">
-                        <design:DesignTimePreset.Feerate>
+                        </ds:DesignTimePreset.Feerate>
+                    </ds:DesignTimePreset>
+                    <ds:DesignTimePreset Name="Priority">
+                        <ds:DesignTimePreset.Feerate>
                             <design:DesignTimeAmount Sats="1234" />
-                        </design:DesignTimePreset.Feerate>
-                    </design:DesignTimePreset>
+                        </ds:DesignTimePreset.Feerate>
+                    </ds:DesignTimePreset>
                 </generic:List>
             </feerate:FeerateSelector.Presets>
             <feerate:FeerateSelector.FeeCalculator>

@@ -31,8 +31,10 @@
                             </Panel>
                         </Panel>
                         <StackPanel Spacing="10" Grid.Row="1" Margin="15">
-                            <TextBlock Classes="SizeBig" TextAlignment="Center" TextWrapping="Wrap" Grid.Row="1" Text="{Binding Name}" />
-                            <TextBlock ToolTip.Tip="{Binding $self.Text}" TextTrimming="CharacterEllipsis" TextAlignment="Center" TextWrapping="Wrap" MaxLines="4" Grid.Row="2" Text="{Binding ShortDescription}" />
+                            <TextBlock Classes="SizeBig" TextWrapping="Wrap" HorizontalAlignment="Center" Text="{Binding Name}" />
+                            <TextBlock ToolTip.Tip="{Binding $self.Text}"
+                                       HorizontalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" TextWrapping="Wrap" MaxLines="4" Text="{Binding ShortDescription}" />
                         </StackPanel>
                     </Grid>
                 </OverlayBorder>

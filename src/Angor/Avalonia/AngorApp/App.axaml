@@ -7,7 +7,6 @@
              xmlns:navigation="clr-namespace:Zafiro.UI.Navigation;assembly=Zafiro.UI"
              x:Class="AngorApp.App"
              RequestedThemeVariant="Dark">
-    <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.Resources>
         <ResourceDictionary>

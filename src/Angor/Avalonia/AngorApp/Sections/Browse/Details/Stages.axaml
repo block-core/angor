@@ -3,63 +3,64 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
-             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
-             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="400" 
              x:Class="AngorApp.Sections.Browse.Details.Stages" x:DataType="dt:IProjectDetailsViewModel">
-    
+
     <Design.DataContext>
         <dt:ProjectDetailsViewModelDesign />
     </Design.DataContext>
-    
+
     <Card Header="Project Stages" Subheader="Funding stages and release schedule">
         <Card.HeaderStartContent>
             <i:Icon FontSize="40" Value="fa-solid fa-timeline" />
         </Card.HeaderStartContent>
-        
+
         <StackPanel Spacing="20">
             <!-- Stage Overview -->
             <OverlayBorder Theme="{StaticResource CardOverlayBorder}" Padding="20">
                 <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="20" RowSpacing="15">
                     <StackPanel Grid.Column="0" HorizontalAlignment="Center" Spacing="8">
                         <i:Icon FontSize="24" Value="fa-solid fa-play-circle" Foreground="{DynamicResource SystemAccentColor}" />
-                        <TextBlock Text="Current Stage" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
+                        <TextBlock Text="Current Stage" Classes="Wrap" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
                         <TextBlock Text="Stage 1" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" />
                     </StackPanel>
-                    
+
                     <StackPanel Grid.Column="1" HorizontalAlignment="Center" Spacing="8">
                         <i:Icon FontSize="24" Value="fa-solid fa-list-ol" Foreground="Orange" />
-                        <TextBlock Text="Total Stages" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
+                        <TextBlock Text="Total Stages" Classes="Wrap" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
                         <TextBlock Text="3" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" />
                     </StackPanel>
-                    
+
                     <StackPanel Grid.Column="2" HorizontalAlignment="Center" Spacing="8">
                         <i:Icon FontSize="24" Value="fa-solid fa-calendar-alt" Foreground="LimeGreen" />
-                        <TextBlock Text="Next Release" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
+                        <TextBlock Classes="Wrap" Text="Next Release" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
                         <TextBlock Text="15 days" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" />
                     </StackPanel>
                 </Grid>
             </OverlayBorder>
-            
+
             <!-- Data Grid with Enhanced Styling -->
             <OverlayBorder Theme="{StaticResource CardOverlayBorder}" Padding="15">
                 <StackPanel Spacing="15">
                     <TextBlock Text="Stage Details" FontSize="18" FontWeight="SemiBold" />
-                    
-                    <z:SlimDataGrid ItemsSource="{Binding Project.Stages}" 
-                                   Background="Transparent"
-                                   Margin="0,10,0,0">
-                        <z:SlimDataGrid.Columns>
-                            <z:Column Header="STAGE" Binding="{Binding Index}" Width="80" />
-                            <z:Column Header="STAGE %" Binding="{Binding RatioOfTotal, StringFormat={}{0:P0}}" Width="100" />
-                            <z:Column Header="RELEASE DATE" Binding="{Binding ReleaseDate, StringFormat=d}" Width="150" />
-                            <z:Column Header="DAYS UNTIL STAGE" Binding="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.TimeLeft}}" Width="180" />
-                            <z:Column Header="AMOUNT PER STAGE" Binding="{Binding Amount, Converter={x:Static controls:AngorConverters.SatsToBtc}, StringFormat={}{0} TBTC}" Width="200" />
-                        </z:SlimDataGrid.Columns>
-                    </z:SlimDataGrid>
+
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                        <SlimDataGrid ItemsSource="{Binding Project.Stages}"
+                                        Background="Transparent"
+                                        Margin="0,10,0,0">
+                            <SlimDataGrid.Columns>
+                                <Column Header="STAGE" Binding="{Binding Index}" Width="80" />
+                                <Column Header="STAGE %" Binding="{Binding RatioOfTotal, StringFormat={}{0:P0}}" Width="100" />
+                                <Column Header="RELEASE DATE" Binding="{Binding ReleaseDate, StringFormat=d}" Width="150" />
+                                <Column Header="DAYS UNTIL STAGE" Binding="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.TimeLeft}}" Width="Auto" />
+                                <Column Header="AMOUNT PER STAGE"
+                                          Binding="{Binding Amount, Converter={x:Static controls:AngorConverters.SatsToBtc}, StringFormat={}{0} TBTC}" Width="200">
+                                </Column>
+                            </SlimDataGrid.Columns>
+                        </SlimDataGrid>
+                    </ScrollViewer>
                 </StackPanel>
             </OverlayBorder>
         </StackPanel>

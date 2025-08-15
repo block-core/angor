@@ -1,3 +1,5 @@
+using Angor.Contexts.Funding.Projects.Application.Dtos;
+
 namespace AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
 
 public interface IProjectStatisticsViewModel
@@ -7,7 +9,7 @@ public interface IProjectStatisticsViewModel
     
     public IAmountUI Withdrawable { get; }
     public int TotalStages { get; }
-    public IStage? NextStage { get; }
+    public NextStageDto? NextStage { get; }
     
     public int SpentTransactions { get; }
     public int AvailableTransactions { get; }

@@ -5,7 +5,6 @@
              xmlns:home="clr-namespace:AngorApp.Sections.Home"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
-             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              mc:Ignorable="d" d:DesignWidth="600"
              x:Class="AngorApp.Sections.Home.HomeSectionView" x:DataType="home:IHomeSectionViewModel">
 
@@ -30,32 +29,28 @@
                         <ui:Icon Source="svg:/Assets/angor-icon.svg" />
                     </Card.HeaderStartContent>
                 </Card>
-                <CardGrid>
-                    <CardGrid.ItemsSource>
-                        <collections:ArrayList>
-                            <Card Theme="{StaticResource SmallCard}" Header="Create your wallet" Subheader="Create a new wallet or recover your existing one to get started with Angor">
-                                <Card.HeaderStartContent>
-                                    <ui:Icon Source="svg:/Assets/wallet.svg" />
-                                </Card.HeaderStartContent>
-                            </Card>
-                            <Card Theme="{StaticResource SmallCard}" Header="Explore Opportunities" Subheader="Browse through innovative projects and find your next investment">
-                                <Card.HeaderStartContent>
-                                    <ui:Icon Source="svg:/Assets/browse.svg" />
-                                </Card.HeaderStartContent>
-                            </Card>
-                            <Card Theme="{StaticResource SmallCard}" Header="Launch Your Project" Subheader="Start your fundraising journey and launch your project on Angor">
-                                <Card.HeaderStartContent>
-                                    <ui:Icon Source="svg:/Assets/user.svg" />
-                                </Card.HeaderStartContent>
-                            </Card>
-                            <Card Theme="{StaticResource SmallCard}" Header="Invest Grow" Subheader="Invest in promising projects and be part of their success story">
-                                <Card.HeaderStartContent>
-                                    <ui:Icon Source="svg:/Assets/portfolio.svg" />
-                                </Card.HeaderStartContent>
-                            </Card>
-                        </collections:ArrayList>
-                    </CardGrid.ItemsSource>
-                </CardGrid>
+                <BalancedWrapGrid MinItemWidth="200" HorizontalSpacing="20" VerticalSpacing="20">
+                    <Card Theme="{StaticResource SmallCard}" Header="Create your wallet" Subheader="Create a new wallet or recover your existing one to get started with Angor">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="svg:/Assets/wallet.svg" />
+                        </Card.HeaderStartContent>
+                    </Card>
+                    <Card Theme="{StaticResource SmallCard}" Header="Explore Opportunities" Subheader="Browse through innovative projects and find your next investment">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="svg:/Assets/browse.svg" />
+                        </Card.HeaderStartContent>
+                    </Card>
+                    <Card Theme="{StaticResource SmallCard}" Header="Launch Your Project" Subheader="Start your fundraising journey and launch your project on Angor">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="svg:/Assets/user.svg" />
+                        </Card.HeaderStartContent>
+                    </Card>
+                    <Card Theme="{StaticResource SmallCard}" Header="Invest Grow" Subheader="Invest in promising projects and be part of their success story">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                        </Card.HeaderStartContent>
+                    </Card>
+                </BalancedWrapGrid>
                 <HeaderedContainer Header="The Angor Flow">
                     <HeaderedContainer.HeaderTheme>
                         <ControlTheme TargetType="TemplatedControl">
@@ -67,7 +62,7 @@
                             <Button Command="{Binding GoToAngorFlow}" Theme="{StaticResource TransparentButton}">
                                 <Loading IsLoading="{Binding GoToAngorFlow.IsExecuting^}">
                                     <Panel>
-                                        <EdgePanel Content="Click to see" VerticalAlignment="Top" HorizontalAlignment="Left">
+                                        <EdgePanel Content="Tap to see" VerticalAlignment="Top" HorizontalAlignment="Left">
                                             <EdgePanel.StartContent>
                                                 <ui:Icon Source="fa-magnifying-glass" />
                                             </EdgePanel.StartContent>
@@ -78,7 +73,7 @@
                             </Button>
                         </ControlTemplate>
                         <ControlTemplate x:Key="Desktop">
-                            <Svg Path="/Assets/flow.svg" />
+                            <Svg MaxWidth="800" Path="/Assets/flow.svg" />
                         </ControlTemplate>
                     </HeaderedContainer.Resources>
                     <ContentControl Template="{OnFormFactor Mobile={StaticResource Mobile}, Default={StaticResource Desktop}}" />

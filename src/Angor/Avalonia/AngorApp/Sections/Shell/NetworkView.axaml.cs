@@ -2,11 +2,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace AngorApp.Sections.Founder.Manage;
+namespace AngorApp.Sections.Shell;
 
-public partial class ManageView : UserControl
+public partial class NetworkView : UserControl
 {
-    public ManageView()
+    public NetworkView()
     {
         InitializeComponent();
     }

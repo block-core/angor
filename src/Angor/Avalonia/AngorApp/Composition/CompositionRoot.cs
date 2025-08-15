@@ -11,6 +11,7 @@ using AngorApp.Sections.Founder;
 using AngorApp.Sections.Home;
 using AngorApp.Sections.Portfolio.Penalties;
 using AngorApp.Sections.Portfolio;
+using AngorApp.Sections.Settings;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,7 +61,9 @@ public static class CompositionRoot
                 .Add<IWalletSectionViewModel>("Wallet", new Icon { Source = "svg:/Assets/wallet.svg" })
                 .Add<IBrowseSectionViewModel>("Browse", new Icon { Source = "svg:/Assets/browse.svg" })
                 .Add<IPortfolioSectionViewModel>("Portfolio",  new Icon { Source = "svg:/Assets/portfolio.svg" })
-                .Add<IFounderSectionViewModel>("Founder", new Icon { Source = "svg:/Assets/user.svg" }) 
+                .Add<IFounderSectionViewModel>("Founder", new Icon { Source = "svg:/Assets/user.svg" })
+                .Separator()
+                .Add<ISettingsSectionViewModel>("Settings", new Icon { Source = "svg:/Assets/settings.svg" })
                 .Command("Angor Hub", provider => ReactiveCommand.CreateFromTask(() => provider.GetRequiredService<ILauncherService>().LaunchUri(new Uri("https://hub.angor.io"))), new Icon { Source = "svg:/Assets/browse.svg" } , false)
             , logger);
     }

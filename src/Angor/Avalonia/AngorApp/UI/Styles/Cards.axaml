@@ -108,6 +108,7 @@
                 <Setter.Value>
                     <DataTemplate DataType="x:Object">
                         <ContentControl TextElement.FontSize="20"
+                                        TextBlock.TextWrapping="Wrap"
                                         TextElement.Foreground="{StaticResource SubheaderBrush}"
                                         TextBlock.TextAlignment="Center" Content="{Binding}" />
                     </DataTemplate>
@@ -166,7 +167,7 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="VerticalContentAlignment" Value="Stretch" />
-        <Setter Property="FontWeight" Value="Regular"></Setter>
+        <Setter Property="FontWeight" Value="Regular" />
     </Style>
 
     <Design.PreviewWith>

@@ -4,7 +4,7 @@ namespace AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
 
 public interface IManageFundsViewModel : IDisposable
 {
-    IEnhancedCommand Load { get; }
+    IEnhancedCommand<Result<IProjectStatisticsViewModel>> Load { get; }
     IProjectViewModel ProjectViewModel { get; }
     IProjectStatisticsViewModel ProjectStatisticsViewModel { get; }
     IStageClaimViewModel StageClaimViewModel { get; }

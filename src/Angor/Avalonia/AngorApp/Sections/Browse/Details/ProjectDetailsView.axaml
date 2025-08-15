@@ -5,8 +5,6 @@
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="700"
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="dt:IProjectDetailsViewModel">
 
@@ -16,8 +14,8 @@
 
     <controls:PageContainer>
         <ScrollViewer>
-            <DockPanel VerticalSpacing="20">
-                
+            <StackPanel Classes="BigGap">
+
                 <!-- Project Header with Banner -->
                 <StackPanel DockPanel.Dock="Top" Spacing="0">
                     <!-- Project Banner -->
@@ -26,58 +24,54 @@
                         <Panel>
                             <av:AdvancedImage Stretch="UniformToFill" Source="{Binding Project.Banner}" />
                             <Border Background="#30000000" />
-                            
+
                             <!-- Circular Profile Picture (half on banner) -->
-                            <Border Width="120" 
-                                   Height="120" 
-                                   CornerRadius="60" 
-                                   Background="White" 
-                                   Padding="6"
-                                   VerticalAlignment="Bottom" 
-                                   HorizontalAlignment="Left"
-                                   Margin="10">
-                                <av:AdvancedImage Stretch="UniformToFill" 
-                                                 Source="{Binding Project.Picture}" 
-                                                 CornerRadius="54" />
+                            <Border Width="120"
+                                    Height="120"
+                                    CornerRadius="60"
+                                    Background="White"
+                                    Padding="6"
+                                    VerticalAlignment="Bottom"
+                                    HorizontalAlignment="Left"
+                                    Margin="10">
+                                <av:AdvancedImage Stretch="UniformToFill"
+                                                  Source="{Binding Project.Picture}"
+                                                  CornerRadius="54" />
                             </Border>
                         </Panel>
                     </Border>
-                    
+
                     <!-- Project Information Below Banner -->
                     <Card Padding="20" Margin="0,0,0,0" Background="{DynamicResource SystemChromeLowColor}">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20" Margin="0,0,0,0">
                             <!-- Project Details -->
                             <StackPanel Grid.Column="0" Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <TextBlock Text="{Binding Project.Name}" 
-                                          Classes="SizeBig" 
-                                          FontWeight="Bold" 
-                                          TextWrapping="Wrap" 
-                                          TextAlignment="Left" />
-                                <TextBlock Text="{Binding Project.ShortDescription}" 
-                                          TextWrapping="Wrap" 
-                                          Opacity="0.8" 
-                                          MaxWidth="400" 
-                                          TextAlignment="Left" />
+                                <TextBlock Text="{Binding Project.Name}"
+                                           Classes="SizeBig"
+                                           FontWeight="Bold"
+                                           TextWrapping="Wrap"
+                                           TextAlignment="Left" />
+                                <TextBlock Text="{Binding Project.ShortDescription}"
+                                           TextWrapping="Wrap"
+                                           Opacity="0.8"
+                                           MaxWidth="400"
+                                           TextAlignment="Left" />
                             </StackPanel>
-                            
+
                             <!-- Target Amount -->
-                            <StackPanel Grid.Column="1" 
-                                       Spacing="5" 
-                                       HorizontalAlignment="Right" 
-                                       VerticalAlignment="Center">
-                                <TextBlock Text="Target Amount" 
-                                          FontSize="12" 
-                                          Opacity="0.7" 
-                                          HorizontalAlignment="Right" />
+                            <StackPanel Grid.Column="1"
+                                        Spacing="5"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="Target Amount"
+                                           FontSize="12"
+                                           Opacity="0.7"
+                                           HorizontalAlignment="Right" />
                                 <StackPanel Orientation="Horizontal" Spacing="5">
-                                    <TextBlock Text="{Binding Project.TargetAmount, StringFormat={x:Static controls:AngorConverters.BigBtcFormat}}" 
-                                              Classes="SizeBig" 
-                                              Foreground="{DynamicResource SystemAccentColor}" 
-                                              FontWeight="Bold" />
-                                    <TextBlock Text="TBTC" 
-                                              Classes="SizeBig" 
-                                              FontWeight="SemiBold" 
-                                              VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Project.TargetAmount.DecimalString}"
+                                               Classes="SizeBig"
+                                               Foreground="{DynamicResource SystemAccentColor}"
+                                               FontWeight="Bold" />
                                 </StackPanel>
                             </StackPanel>
                         </Grid>
@@ -96,7 +90,7 @@
                 <!-- Nostr Properties -->
                 <dt:NostProperties DockPanel.Dock="Top" />
 
-            </DockPanel>
+            </StackPanel>
         </ScrollViewer>
     </controls:PageContainer>
 </UserControl>

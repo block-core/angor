@@ -4,20 +4,24 @@ namespace AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
 
 public class ProjectStatisticsViewModel : IProjectStatisticsViewModel
 {
-    public ProjectStatisticsViewModel(ProjectDto project)
+    public ProjectStatisticsViewModel(ProjectStatisticsDto statistics)
     {
-        TotalInvested = new AmountUI(project.Raised());
-        TotalStages = project.Stages.Count;
-        
-        // TODO: We need to figure out how to get the rest of the data
+        TotalInvested = new AmountUI(statistics.TotalInvested);
+        AvailableBalance = new AmountUI(statistics.AvailableBalance);
+        Withdrawable = new AmountUI(statistics.WithdrawableAmount);
+        TotalStages = statistics.TotalStages;
+        NextStage = statistics.NextStage;
+        SpentTransactions = statistics.SpentTransactions;
+        AvailableTransactions = statistics.AvailableTransactions;
+        TotalTransactions = statistics.TotalTransactions;
     }
 
     public IAmountUI TotalInvested { get; }
+    public IAmountUI AvailableBalance { get; }
+    public IAmountUI Withdrawable { get; }
     public int TotalStages { get; }
-    public IAmountUI AvailableBalance { get; } = new AmountUI(12345);
-    public IAmountUI Withdrawable { get; } = new AmountUI(12345);
-    public IStage? NextStage { get; }
-    public int SpentTransactions { get; } = 2;
-    public int AvailableTransactions { get; } = 4;
-    public int TotalTransactions { get; } = 5;
+    public NextStageDto? NextStage { get; }
+    public int SpentTransactions { get; }
+    public int AvailableTransactions { get; }
+    public int TotalTransactions { get; }
 }
