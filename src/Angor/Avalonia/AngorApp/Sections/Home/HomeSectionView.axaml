@@ -59,18 +59,19 @@
                     </HeaderedContainer.HeaderTheme>
                     <HeaderedContainer.Resources>
                         <ControlTemplate x:Key="Mobile">
-                            <Button Command="{Binding GoToAngorFlow}" Theme="{StaticResource TransparentButton}">
-                                <Loading IsLoading="{Binding GoToAngorFlow.IsExecuting^}">
-                                    <Panel>
-                                        <EdgePanel Content="Tap to see" VerticalAlignment="Top" HorizontalAlignment="Left">
-                                            <EdgePanel.StartContent>
-                                                <ui:Icon Source="fa-magnifying-glass" />
-                                            </EdgePanel.StartContent>
-                                        </EdgePanel>
-                                        <Image Source="/Assets/flow.png" />
-                                    </Panel>
-                                </Loading>
-                            </Button>
+                            <StackPanel Classes="SmallGap">
+                                <Image RenderOptions.BitmapInterpolationMode="None" Source="/Assets/flow.png" />
+                                <EdgePanel Content="Tap to see" VerticalAlignment="Top" HorizontalAlignment="Right">
+                                    <EdgePanel.StartContent>
+                                        <ui:Icon Source="fa-magnifying-glass" />
+                                    </EdgePanel.StartContent>
+                                </EdgePanel>
+                                <Interaction.Behaviors>
+                                    <TappedEventTrigger>
+                                        <InvokeCommandAction Command="{Binding GoToAngorFlow}" />
+                                    </TappedEventTrigger>
+                                </Interaction.Behaviors>
+                            </StackPanel>
                         </ControlTemplate>
                         <ControlTemplate x:Key="Desktop">
                             <Svg MaxWidth="800" Path="/Assets/flow.svg" />
