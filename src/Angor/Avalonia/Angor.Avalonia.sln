@@ -44,12 +44,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Client", "..\Client\A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngorApp.Android", "AngorApp.Android\AngorApp.Android.csproj", "{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zafiro.Avalonia", "..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia\Zafiro.Avalonia.csproj", "{B1C2A914-EA56-4006-BE8E-E959557752B0}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zafiro.UI", "..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\libs\Zafiro\src\Zafiro.UI\Zafiro.UI.csproj", "{E5C34208-C46A-4A3B-93DD-AC8E2C0A1F3C}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zafiro.Avalonia.Dialogs", "..\..\..\..\..\SuperJMN-Zafiro\Zafiro.Avalonia\src\Zafiro.Avalonia.Dialogs\Zafiro.Avalonia.Dialogs.csproj", "{970E66FC-C77E-45B2-8C67-46B82C8FE3AD}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,18 +102,6 @@ Global
 		{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B0BF8AB-14C3-4F52-8CE8-13AF71E8F1A5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B1C2A914-EA56-4006-BE8E-E959557752B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B1C2A914-EA56-4006-BE8E-E959557752B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B1C2A914-EA56-4006-BE8E-E959557752B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B1C2A914-EA56-4006-BE8E-E959557752B0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E5C34208-C46A-4A3B-93DD-AC8E2C0A1F3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E5C34208-C46A-4A3B-93DD-AC8E2C0A1F3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E5C34208-C46A-4A3B-93DD-AC8E2C0A1F3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E5C34208-C46A-4A3B-93DD-AC8E2C0A1F3C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{970E66FC-C77E-45B2-8C67-46B82C8FE3AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{970E66FC-C77E-45B2-8C67-46B82C8FE3AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{970E66FC-C77E-45B2-8C67-46B82C8FE3AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{970E66FC-C77E-45B2-8C67-46B82C8FE3AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
