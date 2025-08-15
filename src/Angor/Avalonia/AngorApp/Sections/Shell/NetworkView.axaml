@@ -10,7 +10,7 @@
         <shell:NetworkViewModelDesign />
     </Design.DataContext>
 
-    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Classes="SmallGap">
+    <StackPanel Margin="5" HorizontalAlignment="Center" Orientation="Horizontal" Classes="SmallGap">
         <ContentControl Content="{Icon fa-network-wired}" />
         <TextBlock Text="{Binding Name}" />
         <TextBlock FontWeight="Thin" Text="{Binding NetworkType}" />

@@ -20,7 +20,7 @@
 
         <StackPanel Spacing="25" Margin="0 10 0 0">
             <!-- Progress Overview Cards -->
-            <BalancedUniformWrapPanel MinItemWidth="150" HorizontalSpacing="20" VerticalSpacing="20">
+            <BalancedWrapGrid MinItemWidth="150" HorizontalSpacing="20" VerticalSpacing="20">
                 <Card Theme="{StaticResource TransparentCard}"
                       Header="Timeline Progress"
                       Subheader="{Binding CurrentDays, StringFormat={}{0} days elapsed}">
@@ -82,7 +82,7 @@
                         </StackPanel>
                     </Card.Content>
                 </Card>
-            </BalancedUniformWrapPanel>
+            </BalancedWrapGrid>
 
             <Card Theme="{StaticResource TransparentCard}" Header="Project Information" Subheader="Key project details and metrics">
                 <StackPanel Classes="BigGap" Grid.IsSharedSizeScope="True">

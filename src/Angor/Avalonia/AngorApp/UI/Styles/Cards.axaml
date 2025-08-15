@@ -108,6 +108,7 @@
                 <Setter.Value>
                     <DataTemplate DataType="x:Object">
                         <ContentControl TextElement.FontSize="20"
+                                        TextBlock.TextWrapping="Wrap"
                                         TextElement.Foreground="{StaticResource SubheaderBrush}"
                                         TextBlock.TextAlignment="Center" Content="{Binding}" />
                     </DataTemplate>
