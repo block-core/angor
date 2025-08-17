@@ -1,46 +1,52 @@
 using Angor.Shared;
 using Angor.Shared.Models;
+using Angor.Contexts.Wallet.Infrastructure.Interfaces;
+using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Wallet.Infrastructure.Impl;
 
-public class NetworkStorage : INetworkStorage
+public class NetworkStorage(IStore store) : INetworkStorage
 {
-    public SettingsInfo GetSettings()
-    {
-        return new SettingsInfo()
+    private const string SettingsFile = "settings.json";
+
+    public SettingsInfo GetSettings() => Load()
+        .Map(data => new SettingsInfo
         {
-            Indexers = new List<SettingsUrl>()
-            {
-                new SettingsUrl()
-                {
-                    Name = "test",
-                    IsPrimary = true,
-                    Url = "https://signet.angor.online",
-                }
-            },
-            Relays = new List<SettingsUrl>()
-            {
-                new SettingsUrl()
-                {
-                    Name = "relay",
-                    IsPrimary = true,
-                    Url = "wss://relay.angor.io",
-                }
-            } 
-        };
-    }
+            Explorers = data.Explorers,
+            Indexers = data.Indexers,
+            Relays = data.Relays
+        })
+        .OnFailureCompensate(_ => new SettingsInfo())
+        .Value;
 
     public void SetSettings(SettingsInfo settingsInfo)
     {
+        var data = Load().OnFailureCompensate(_ => new SettingsData()).Value;
+        data.Explorers = settingsInfo.Explorers;
+        data.Indexers = settingsInfo.Indexers;
+        data.Relays = settingsInfo.Relays;
+        store.Save(SettingsFile, data);
     }
 
     public void SetNetwork(string network)
     {
-        throw new NotImplementedException();
+        var data = Load().OnFailureCompensate(_ => new SettingsData()).Value;
+        data.Network = network;
+        store.Save(SettingsFile, data);
     }
 
-    public string GetNetwork()
+    public string GetNetwork() => Load()
+        .Map(d => d.Network)
+        .OnFailureCompensate(_ => "Angornet")
+        .Value;
+
+    private Result<SettingsData> Load() => store.Load<SettingsData>(SettingsFile).GetAwaiter().GetResult();
+
+    private class SettingsData
     {
-        throw new NotImplementedException();
+        public string Network { get; set; } = "Angornet";
+        public List<SettingsUrl> Explorers { get; set; } = new();
+        public List<SettingsUrl> Indexers { get; set; } = new();
+        public List<SettingsUrl> Relays { get; set; } = new();
     }
 }

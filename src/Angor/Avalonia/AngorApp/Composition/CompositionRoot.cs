@@ -32,23 +32,39 @@ public static class CompositionRoot
         var logger = new LoggerConfiguration()
             .WriteTo.Console()
             .MinimumLevel.Debug().CreateLogger();
-        
+
+        var store = new FileStore("Angor");
+        var networkStorage = new NetworkStorage(store);
+        var network = networkStorage.GetNetwork() switch
+        {
+            "Mainnet" => BitcoinNetwork.Mainnet,
+            _ => BitcoinNetwork.Testnet
+        };
+
         RegisterLogger(services, logger);
-        services.AddSingleton<Func<BitcoinNetwork>>(() => BitcoinNetwork.Testnet);
+        services.AddSingleton<IStore>(store);
+
+        services.AddSingleton<Func<BitcoinNetwork>>(sp =>
+        {
+            var cfg = sp.GetRequiredService<INetworkConfiguration>();
+            var name = cfg.GetNetwork().Name;
+            return name == "Main" || name == "Mainnet" ? BitcoinNetwork.Mainnet : BitcoinNetwork.Testnet;
+        });
 
         ModelServices.Register(services);
         ViewModels.Register(services);
         UIServicesRegistration.Register(services, topLevelView);
         SecurityContext.Register(services);
-        RegisterWalletServices(services, logger);
+        RegisterWalletServices(services, logger, network);
         FundingContextServices.Register(services, logger);
 
         // Integration services
         services.AddSingleton<ISeedwordsProvider, SeedwordsProvider>();
-        
+
         RegisterSections(services, logger);
 
         var serviceProvider = services.BuildServiceProvider();
+        serviceProvider.GetRequiredService<INetworkService>().AddSettingsIfNotExist();
 
         return serviceProvider.GetRequiredService<IMainViewModel>();
     }
@@ -68,11 +84,9 @@ public static class CompositionRoot
             , logger);
     }
 
-    private static void RegisterWalletServices(ServiceCollection services, Logger logger)
+    private static void RegisterWalletServices(ServiceCollection services, Logger logger, BitcoinNetwork network)
     {
-        // TODO: Set network from configuration
-        WalletContextServices.Register(services, logger, BitcoinNetwork.Testnet)
-            .AddSingleton<IStore>(new FileStore("Angor"));
+        WalletContextServices.Register(services, logger, network);
     }
 
     private static void RegisterLogger(ServiceCollection services, Logger logger)

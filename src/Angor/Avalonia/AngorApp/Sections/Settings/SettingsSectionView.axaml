@@ -3,22 +3,80 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:settings="clr-namespace:AngorApp.Sections.Settings"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.Sections.Settings.SettingsSectionView">
-    
+             x:Class="AngorApp.Sections.Settings.SettingsSectionView"
+             x:DataType="settings:ISettingsSectionViewModel"
+             x:Name="root">
+
     <UserControl.Styles>
         <Style Selector="Card">
             <Setter Property="Theme" Value="{StaticResource WideCard}" />
         </Style>
     </UserControl.Styles>
-    
+
     <controls:PageContainer>
         <ScrollViewer>
             <StackPanel Classes="BigGap">
-                <Card HeaderStartContent="{Icon fa-network-wired}" Header="Network" />
-                <Card HeaderStartContent="{Icon fa-sitemap}" Header="Explorer" />
-                <Card HeaderStartContent="{Icon fa-server}" Header="Indexer" />
-                <Card HeaderStartContent="{Icon mdi-antenna}" Header="Nostr Relays" />
+                <Card HeaderStartContent="{Icon fa-network-wired}" Header="Network">
+                    <ComboBox Items="{Binding Networks}" SelectedItem="{Binding Network}" />
+                </Card>
+                <Card HeaderStartContent="{Icon fa-sitemap}" Header="Explorer">
+                    <StackPanel>
+                        <ItemsControl Items="{Binding Explorers}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="settings:SettingsUrlViewModel">
+                                    <DockPanel Margin="0,5">
+                                        <RadioButton GroupName="Explorers" IsChecked="{Binding IsPrimary}" Command="{Binding SetPrimary}" />
+                                        <TextBox Text="{Binding Url}" Margin="5,0" Width="300" />
+                                        <Button Content="Delete" Command="{Binding Remove}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <TextBox Text="{Binding NewExplorer}" Width="300" />
+                            <Button Content="Add" Command="{Binding AddExplorer}" Margin="5,0,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+                </Card>
+                <Card HeaderStartContent="{Icon fa-server}" Header="Indexer">
+                    <StackPanel>
+                        <ItemsControl Items="{Binding Indexers}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="settings:SettingsUrlViewModel">
+                                    <DockPanel Margin="0,5">
+                                        <RadioButton GroupName="Indexers" IsChecked="{Binding IsPrimary}" Command="{Binding SetPrimary}" />
+                                        <TextBox Text="{Binding Url}" Margin="5,0" Width="300" />
+                                        <Button Content="Delete" Command="{Binding Remove}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <TextBox Text="{Binding NewIndexer}" Width="300" />
+                            <Button Content="Add" Command="{Binding AddIndexer}" Margin="5,0,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+                </Card>
+                <Card HeaderStartContent="{Icon mdi-antenna}" Header="Nostr Relays">
+                    <StackPanel>
+                        <ItemsControl Items="{Binding Relays}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="settings:SettingsUrlViewModel">
+                                    <DockPanel Margin="0,5">
+                                        <TextBox Text="{Binding Url}" Width="300" />
+                                        <Button Content="Delete" Margin="5,0,0,0" Command="{Binding Remove}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <TextBox Text="{Binding NewRelay}" Width="300" />
+                            <Button Content="Add" Command="{Binding AddRelay}" Margin="5,0,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+                </Card>
             </StackPanel>
         </ScrollViewer>
     </controls:PageContainer>
