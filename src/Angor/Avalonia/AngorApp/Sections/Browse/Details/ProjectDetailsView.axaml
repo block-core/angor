@@ -54,7 +54,6 @@
                                 <TextBlock Text="{Binding Project.ShortDescription}"
                                            TextWrapping="Wrap"
                                            Opacity="0.8"
-                                           MaxWidth="400"
                                            TextAlignment="Left" />
                             </StackPanel>
 
