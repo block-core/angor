@@ -12,6 +12,12 @@
         </Border>
     </Design.PreviewWith>
     
+    <Styles.Resources>
+        <x:Double x:Key="SmallGap">10</x:Double>
+        <x:Double x:Key="BigGap">20</x:Double>
+    </Styles.Resources>
+    
+    
     <Style Selector="ListBox.Rounded">
         <Setter Property="CornerRadius" Value="10" />
     </Style>
@@ -22,11 +28,11 @@
     </Style>
     
     <Style Selector="StackPanel.BigGap"> 
-        <Setter Property="Spacing" Value="20" />
+        <Setter Property="Spacing" Value="{StaticResource BigGap}" />
     </Style>
     
     <Style Selector="StackPanel.SmallGap"> 
-        <Setter Property="Spacing" Value="10" />
+        <Setter Property="Spacing" Value="{StaticResource SmallGap}" />
     </Style>
 
     <Style Selector="Card Card">
