@@ -5,7 +5,7 @@ using System.Reactive;
 
 namespace AngorApp.Sections.Settings;
 
-internal class SettingsUrlViewModel : ReactiveObject
+public class SettingsUrlViewModel : ReactiveObject
 {
     string url;
     bool isPrimary;

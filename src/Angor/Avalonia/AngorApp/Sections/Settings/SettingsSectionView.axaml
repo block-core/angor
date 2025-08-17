@@ -19,11 +19,11 @@
         <ScrollViewer>
             <StackPanel Classes="BigGap">
                 <Card HeaderStartContent="{Icon fa-network-wired}" Header="Network">
-                    <ComboBox Items="{Binding Networks}" SelectedItem="{Binding Network}" />
+                    <ComboBox ItemsSource="{Binding Networks}" SelectedItem="{Binding Network}" />
                 </Card>
                 <Card HeaderStartContent="{Icon fa-sitemap}" Header="Explorer">
                     <StackPanel>
-                        <ItemsControl Items="{Binding Explorers}">
+                        <ItemsControl ItemsSource="{Binding Explorers}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="settings:SettingsUrlViewModel">
                                     <DockPanel Margin="0,5">
@@ -42,7 +42,7 @@
                 </Card>
                 <Card HeaderStartContent="{Icon fa-server}" Header="Indexer">
                     <StackPanel>
-                        <ItemsControl Items="{Binding Indexers}">
+                        <ItemsControl ItemsSource="{Binding Indexers}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="settings:SettingsUrlViewModel">
                                     <DockPanel Margin="0,5">
@@ -61,7 +61,7 @@
                 </Card>
                 <Card HeaderStartContent="{Icon mdi-antenna}" Header="Nostr Relays">
                     <StackPanel>
-                        <ItemsControl Items="{Binding Relays}">
+                        <ItemsControl ItemsSource="{Binding Relays}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="settings:SettingsUrlViewModel">
                                     <DockPanel Margin="0,5">

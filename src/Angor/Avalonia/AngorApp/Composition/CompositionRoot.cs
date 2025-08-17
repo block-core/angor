@@ -5,6 +5,8 @@ using Angor.Contexts.Wallet;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
+using Angor.Shared;
+using Angor.Shared.Services;
 using AngorApp.Composition.Registrations;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder;
@@ -44,7 +46,7 @@ public static class CompositionRoot
         RegisterLogger(services, logger);
         services.AddSingleton<IStore>(store);
 
-        services.AddSingleton<Func<BitcoinNetwork>>(sp =>
+        services.AddSingleton<Func<BitcoinNetwork>>(sp => () =>
         {
             var cfg = sp.GetRequiredService<INetworkConfiguration>();
             var name = cfg.GetNetwork().Name;
