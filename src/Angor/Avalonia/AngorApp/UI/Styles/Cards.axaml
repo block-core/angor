@@ -19,6 +19,7 @@
                       TargetType="Card"
                       BasedOn="{StaticResource LeftFlexHeaderCard}">
             <Setter Property="HeaderStartContentTemplate" Value="{StaticResource RegularIcon}" />
+            <Setter Property="HeaderPadding" Value="0 0 0 10"></Setter>
             <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
         </ControlTheme>
 

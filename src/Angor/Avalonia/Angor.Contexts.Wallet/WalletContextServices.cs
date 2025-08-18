@@ -25,6 +25,8 @@ public static class WalletContextServices
         services.AddSingleton<IWalletAppService, WalletAppService>();
         services.AddSingleton<IHdOperations, HdOperations>();
         var networkConfiguration = new NetworkConfiguration();
+        var blockcoreNetwork = bitcoinNetwork == BitcoinNetwork.Mainnet ? new BitcoinMain() : new Angornet();
+        networkConfiguration.SetNetwork(blockcoreNetwork);
         services.AddSingleton<INetworkConfiguration>(networkConfiguration);
         services.AddSingleton<INetworkService, NetworkService>();
         services.AddSingleton<INetworkStorage, NetworkStorage>();

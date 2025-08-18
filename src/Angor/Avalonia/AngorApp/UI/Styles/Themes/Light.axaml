@@ -78,14 +78,4 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
     </Style>
 
-    <Style Selector=":is(ItemsControl):not(MenuItem):empty">
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate>
-                    <ContentControl Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(zafiro:Empty.Content)}" />
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
 </Styles>

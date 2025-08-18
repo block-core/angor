@@ -26,7 +26,7 @@ public static class ViewModels
                 .AddTransient<IBrowseSectionViewModel, BrowseSectionViewModel>()
                 .AddTransient<IPortfolioSectionViewModel, PortfolioSectionViewModel>()
                 .AddTransient<IFounderSectionViewModel, FounderSectionViewModel>()
-                .AddTransient<ISettingsSectionViewModel, SettingsSectionViewModelDesign>()
+                .AddTransient<ISettingsSectionViewModel, SettingsSectionViewModel>()
                 .AddScoped<IPenaltiesViewModel, PenaltiesViewModel>()
                 .AddScoped<IRecoverViewModel, RecoverViewModel>()
                 .AddScoped<IManageFundsViewModel, ManageFundsViewModelDesign>()
