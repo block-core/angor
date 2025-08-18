@@ -94,17 +94,17 @@ public class InvestmentRepository(
                 {
                     var decrypted = await encryptionService.DecryptData(nostrEvent.Content, password);
                     var investmentRecords = serializer.Deserialize<InvestmentRecords>(decrypted);
-                    tcs.SetResult(investmentRecords);
+                    tcs.TrySetResult(investmentRecords);
                 }
                 catch (Exception e)
                 {
-                    tcs.SetException(e);
+                    tcs.TrySetException(e);
                 }
 
             }, new[] { storageAccountKey }, false,
             () =>
             {
-                tcs.SetResult(Result.Success(new InvestmentRecords(){ProjectIdentifiers = [] }));
+                tcs.TrySetResult(Result.Success(new InvestmentRecords(){ProjectIdentifiers = [] }));
             });
 
         

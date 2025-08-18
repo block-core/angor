@@ -1,6 +1,6 @@
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Wallet.Infrastructure.Interfaces;
+namespace Angor.Contests.CrossCutting;
 
 public interface IStore
 {

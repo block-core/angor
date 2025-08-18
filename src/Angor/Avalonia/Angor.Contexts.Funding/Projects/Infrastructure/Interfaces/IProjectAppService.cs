@@ -10,5 +10,5 @@ public interface IProjectAppService
     Task<Maybe<ProjectDto>> FindById(ProjectId projectId);
     Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(Guid walletId);
     Task<Result<string>> CreateProject(Guid walletId, long selectedFee, CreateProjectDto project);
-    Task<Result<ProjectStatisticsDto>> GetProjectStatistics(Guid walletId, ProjectId projectId);
+    Task<Result<ProjectStatisticsDto>> GetProjectStatistics(ProjectId projectId);
 }
