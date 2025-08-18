@@ -8,6 +8,10 @@
              x:Class="AngorApp.Sections.Settings.SettingsSectionView"
              x:DataType="settings:ISettingsSectionViewModel">
 
+    <Design.DataContext>
+        <settings:SettingsSectionViewModelDesign />
+    </Design.DataContext>
+
     <UserControl.Styles>
         <Style Selector="Card">
             <Setter Property="Theme" Value="{StaticResource WideCard}" />
@@ -35,68 +39,83 @@
         <ScrollViewer>
             <StackPanel Classes="BigGap">
                 <Card HeaderStartContent="{Icon fa-network-wired}" Header="Network">
-                    <ComboBox MinWidth="200" Margin="0 10 0 0" ItemsSource="{Binding Networks}" SelectedItem="{Binding Network}" />
+                    <StackPanel Classes="BigGap">
+                        <TextBlock Classes="Warning Wrap Center">WARNING NOTICE: Changing networks will wipe your wallet data.</TextBlock>
+                        <ComboBox HorizontalAlignment="Center" MinWidth="200" ItemsSource="{Binding Networks}" SelectedItem="{Binding Network}" />
+                    </StackPanel>
                 </Card>
                 <Card HeaderStartContent="{Icon fa-sitemap}" Header="Explorer">
-                    <StackPanel>
-                        <DockPanel>
+                    <StackPanel Classes="BigGap">
+                        <DockPanel Margin="0 0 20 0">
                             <Button DockPanel.Dock="Right" Content="{Icon fa-plus}" Command="{Binding AddExplorer}" />
                             <TextBox VerticalContentAlignment="Center" Watermark="Enter new explorer link" Text="{Binding NewExplorer}" />
                         </DockPanel>
-                        <Card>
-                            <ItemsControl ItemsSource="{Binding Explorers}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="settings:SettingsUrlViewModel">
-                                        <DockPanel>
-                                            <RadioButton GroupName="Explorers" IsChecked="{Binding IsPrimary}" Command="{Binding SetPrimary}" />
-                                            <TextBox Text="{Binding Url}" Margin="5,0" Width="300" />
+                        <SlimDataGrid ItemsSource="{Binding Explorers}">
+                            <SlimDataGrid.Columns>
+                                <Column Header="Primary" Width="Auto" Binding="{Binding}">
+                                    <Column.CellTemplate>
+                                        <DataTemplate>
+                                            <RadioButton GroupName="Explorer" Command="{Binding SetPrimary}" IsChecked="{Binding IsPrimary, Mode=TwoWay}" />
+                                        </DataTemplate>
+                                    </Column.CellTemplate>
+                                </Column>
+                                <Column Header="Address" Binding="{Binding Url}" />
+                                <Column Width="Auto" Binding="{Binding}">
+                                    <Column.CellTemplate>
+                                        <DataTemplate>
                                             <Button Content="{Icon fa-trash}" Command="{Binding Remove}" />
-                                        </DockPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Card>
+                                        </DataTemplate>
+                                    </Column.CellTemplate>
+                                </Column>
+                            </SlimDataGrid.Columns>
+                        </SlimDataGrid>
                     </StackPanel>
                 </Card>
                 <Card HeaderStartContent="{Icon fa-server}" Header="Indexer">
                     <StackPanel>
-                        <DockPanel>
+                        <DockPanel  Margin="0 0 20 0">
                             <Button DockPanel.Dock="Right" Content="{Icon fa-plus}" Command="{Binding AddIndexer}" />
                             <TextBox VerticalContentAlignment="Center" Watermark="Enter new indexer link" Text="{Binding NewIndexer}" />
                         </DockPanel>
-                        <Card>
-                            <ItemsControl ItemsSource="{Binding Indexers}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="settings:SettingsUrlViewModel">
-                                        <DockPanel>
-                                            <RadioButton GroupName="Indexers" IsChecked="{Binding IsPrimary}" Command="{Binding SetPrimary}" />
-                                            <TextBox Text="{Binding Url}" Width="300" />
+                        <SlimDataGrid ItemsSource="{Binding Indexers}">
+                            <SlimDataGrid.Columns>
+                                <Column Header="Primary" Width="Auto" Binding="{Binding}">
+                                    <Column.CellTemplate>
+                                        <DataTemplate>
+                                            <RadioButton GroupName="Indexer" Command="{Binding SetPrimary}" IsChecked="{Binding IsPrimary, Mode=TwoWay}" />
+                                        </DataTemplate>
+                                    </Column.CellTemplate>
+                                </Column>
+                                <Column Header="Address" Binding="{Binding Url}" />
+                                <Column Width="Auto" Binding="{Binding}">
+                                    <Column.CellTemplate>
+                                        <DataTemplate>
                                             <Button Content="{Icon fa-trash}" Command="{Binding Remove}" />
-                                        </DockPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Card>
+                                        </DataTemplate>
+                                    </Column.CellTemplate>
+                                </Column>
+                            </SlimDataGrid.Columns>
+                        </SlimDataGrid>
                     </StackPanel>
                 </Card>
                 <Card HeaderStartContent="{Icon mdi-antenna}" Header="Nostr Relays">
                     <StackPanel>
-                        <DockPanel>
+                        <DockPanel Margin="0 0 20 0">
                             <Button Content="{Icon fa-plus}" Command="{Binding AddRelay}" />
                             <TextBox Watermark="Enter new relay link" Text="{Binding NewRelay}" />
                         </DockPanel>
-                        <Card>
-                            <ItemsControl ItemsSource="{Binding Relays}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="settings:SettingsUrlViewModel">
-                                        <DockPanel>
-                                            <TextBox Text="{Binding Url}" Width="300" />
-                                            <Button Content="{Icon fa-trash}" Margin="5,0,0,0" Command="{Binding Remove}" />
-                                        </DockPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Card>
+                        <SlimDataGrid ItemsSource="{Binding Relays}">
+                            <SlimDataGrid.Columns>
+                                <Column Header="Address" Binding="{Binding Url}" />
+                                <Column Width="Auto" Binding="{Binding}">
+                                    <Column.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Icon fa-trash}" Command="{Binding Remove}" />
+                                        </DataTemplate>
+                                    </Column.CellTemplate>
+                                </Column>
+                            </SlimDataGrid.Columns>
+                        </SlimDataGrid>
                     </StackPanel>
                 </Card>
             </StackPanel>

@@ -7,35 +7,27 @@ using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Services;
 using System.Linq;
+using System.Reactive.Disposables;
 using AngorApp.UI.Services;
 using ReactiveUI;
 using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.Sections.Settings;
 
-public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSectionViewModel, IDisposable
+public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSectionViewModel
 {
     private readonly INetworkStorage networkStorage;
-    private readonly IWalletStore walletStore;
-    private readonly UIServices uiServices;
-    private readonly INetworkService networkService;
-    private readonly INetworkConfiguration networkConfiguration;
-    private string currentNetwork;
 
     private string network;
     private string newExplorer;
     private string newIndexer;
     private string newRelay;
 
-    private readonly IDisposable networkChanged;
-
+    private readonly CompositeDisposable disposable = new();
+    
     public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, INetworkService networkService, INetworkConfiguration networkConfiguration)
     {
         this.networkStorage = networkStorage;
-        this.walletStore = walletStore;
-        this.uiServices = uiServices;
-        this.networkService = networkService;
-        this.networkConfiguration = networkConfiguration;
 
         networkService.AddSettingsIfNotExist();
 
@@ -44,15 +36,15 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Indexers = new ObservableCollection<SettingsUrlViewModel>(settings.Indexers.Select(CreateIndexer));
         Relays = new ObservableCollection<SettingsUrlViewModel>(settings.Relays.Select(CreateRelay));
 
-        currentNetwork = networkStorage.GetNetwork();
+        var currentNetwork = networkStorage.GetNetwork();
         networkConfiguration.SetNetwork(currentNetwork == "Mainnet" ? new BitcoinMain() : new Angornet());
         Network = currentNetwork;
 
-        AddExplorer = ReactiveCommand.Create(AddExplorerImpl, this.WhenAnyValue(x => x.NewExplorer, url => !string.IsNullOrWhiteSpace(url)));
-        AddIndexer = ReactiveCommand.Create(AddIndexerImpl, this.WhenAnyValue(x => x.NewIndexer, url => !string.IsNullOrWhiteSpace(url)));
-        AddRelay = ReactiveCommand.Create(AddRelayImpl, this.WhenAnyValue(x => x.NewRelay, url => !string.IsNullOrWhiteSpace(url)));
+        AddExplorer = ReactiveCommand.Create(DoAddExplorer, this.WhenAnyValue(x => x.NewExplorer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);;
+        AddIndexer = ReactiveCommand.Create(DoAddIndexer, this.WhenAnyValue(x => x.NewIndexer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);;
+        AddRelay = ReactiveCommand.Create(DoAddRelay, this.WhenAnyValue(x => x.NewRelay, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
 
-        networkChanged = this.WhenAnyValue(x => x.Network)
+        this.WhenAnyValue(x => x.Network)
             .Skip(1)
             .SelectMany(async n => (n, await uiServices.Dialog.ShowConfirmation("Change network?", "Changing network will delete the current wallet")))
             .ObserveOn(RxApp.MainThreadScheduler)
@@ -69,7 +61,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
                         Reset(Explorers, s.Explorers.Select(CreateExplorer));
                         Reset(Indexers, s.Indexers.Select(CreateIndexer));
                         Reset(Relays, s.Relays.Select(CreateRelay));
-                        walletStore.SaveAll(Enumerable.Empty<EncryptedWallet>());
+                        walletStore.SaveAll([]);
                         currentNetwork = t.n;
                     }
                     else
@@ -82,12 +74,14 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
                 {
                     Network = currentNetwork;
                     return Unit.Default;
-                }));
+                }))
+            .DisposeWith(disposable);
 
-        Save = ReactiveCommand.Create(SaveSettings);
+        Save = ReactiveCommand.Create(SaveSettings).DisposeWith(disposable);
 
         this.WhenAnyObservable(x => x.AddExplorer, x => x.AddIndexer, x => x.AddRelay)
-            .InvokeCommand(Save);
+            .InvokeCommand(Save)
+            .DisposeWith(disposable);
     }
 
     public ObservableCollection<SettingsUrlViewModel> Explorers { get; }
@@ -126,32 +120,32 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         set => this.RaiseAndSetIfChanged(ref newRelay, value);
     }
 
-    void AddExplorerImpl()
+    private void DoAddExplorer()
     {
         Explorers.Add(CreateExplorer(new SettingsUrl { Url = NewExplorer, IsPrimary = Explorers.Count == 0 }));
         NewExplorer = string.Empty;
         Refresh(Explorers);
     }
 
-    void AddIndexerImpl()
+    private void DoAddIndexer()
     {
         Indexers.Add(CreateIndexer(new SettingsUrl { Url = NewIndexer, IsPrimary = Indexers.Count == 0 }));
         NewIndexer = string.Empty;
         Refresh(Indexers);
     }
 
-    void AddRelayImpl()
+    private void DoAddRelay()
     {
         Relays.Add(CreateRelay(new SettingsUrl { Url = NewRelay }));
         NewRelay = string.Empty;
         Refresh(Relays);
     }
 
-    SettingsUrlViewModel CreateExplorer(SettingsUrl url) => new(url.Url, url.IsPrimary, RemoveExplorerImpl, SetPrimaryExplorerImpl);
-    SettingsUrlViewModel CreateIndexer(SettingsUrl url) => new(url.Url, url.IsPrimary, RemoveIndexerImpl, SetPrimaryIndexerImpl);
-    SettingsUrlViewModel CreateRelay(SettingsUrl url) => new(url.Url, url.IsPrimary, RemoveRelayImpl);
+    private SettingsUrlViewModel CreateExplorer(SettingsUrl url) => new(url.Url, url.IsPrimary, DoRemoveExplorer, DoSetPrimaryExplorer);
+    private SettingsUrlViewModel CreateIndexer(SettingsUrl url) => new(url.Url, url.IsPrimary, DoRemoveIndexer, DoSetPrimaryIndexer);
+    private SettingsUrlViewModel CreateRelay(SettingsUrl url) => new(url.Url, url.IsPrimary, DoRemoveRelay);
 
-    void RemoveExplorerImpl(SettingsUrlViewModel url)
+    private void DoRemoveExplorer(SettingsUrlViewModel url)
     {
         var wasPrimary = url.IsPrimary;
         Explorers.Remove(url);
@@ -162,7 +156,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Refresh(Explorers);
     }
 
-    void SetPrimaryExplorerImpl(SettingsUrlViewModel url)
+    private void DoSetPrimaryExplorer(SettingsUrlViewModel url)
     {
         foreach (var e in Explorers)
         {
@@ -172,7 +166,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Refresh(Explorers);
     }
 
-    void RemoveIndexerImpl(SettingsUrlViewModel url)
+    private void DoRemoveIndexer(SettingsUrlViewModel url)
     {
         var wasPrimary = url.IsPrimary;
         Indexers.Remove(url);
@@ -183,7 +177,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Refresh(Indexers);
     }
 
-    void SetPrimaryIndexerImpl(SettingsUrlViewModel url)
+    private void DoSetPrimaryIndexer(SettingsUrlViewModel url)
     {
         foreach (var e in Indexers)
         {
@@ -193,13 +187,13 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Refresh(Indexers);
     }
 
-    void RemoveRelayImpl(SettingsUrlViewModel url)
+    private void DoRemoveRelay(SettingsUrlViewModel url)
     {
         Relays.Remove(url);
         Refresh(Relays);
     }
 
-    static void Refresh(ObservableCollection<SettingsUrlViewModel> collection)
+    private static void Refresh(ObservableCollection<SettingsUrlViewModel> collection)
     {
         for (var i = 0; i < collection.Count; i++)
         {
@@ -208,7 +202,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         }
     }
 
-    static void Reset(ObservableCollection<SettingsUrlViewModel> collection, IEnumerable<SettingsUrlViewModel> items)
+    private static void Reset(ObservableCollection<SettingsUrlViewModel> collection, IEnumerable<SettingsUrlViewModel> items)
     {
         collection.Clear();
         foreach (var item in items)
@@ -218,7 +212,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Refresh(collection);
     }
 
-    void SaveSettings()
+    private void SaveSettings()
     {
         var info = new SettingsInfo
         {
@@ -231,11 +225,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     public void Dispose()
     {
-        AddExplorer.Dispose();
-        AddIndexer.Dispose();
-        AddRelay.Dispose();
-        Save.Dispose();
-        networkChanged.Dispose();
+        disposable.Dispose();
     }
 }
-

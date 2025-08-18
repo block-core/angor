@@ -55,6 +55,7 @@
                         <ReactiveButton Command="{Binding Invest}"
                                         FontSize="{StaticResource FontSizeNormal}"
                                         Classes="Expand"
+                                        HorizontalContentAlignment="Center"
                                         FontWeight="Bold">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <i:Icon FontSize="16" Value="fa-solid fa-coins" />
