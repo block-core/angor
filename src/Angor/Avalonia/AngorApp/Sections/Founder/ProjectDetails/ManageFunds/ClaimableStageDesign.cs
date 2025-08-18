@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls.Selection;
 using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Misc;
@@ -17,7 +18,7 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
         
         var selectedCountChanged = this.WhenAnyValue(design => design.ReactiveSelection.SelectedItems.Count);
         
-        Claim = ReactiveCommand.Create(() => { }, selectedCountChanged.Select(i => i > 0)).Enhance();
+        Claim = ReactiveCommand.CreateFromTask(() => Task.FromResult(Result.Success()), selectedCountChanged.Select(i => i > 0)).Enhance();
 
         claimableAmountHelper = this.WhenAnyValue<ClaimableStageDesign, IEnumerable<IClaimableTransaction>>(design => design.Transactions)
             .WhereNotNull()
@@ -30,13 +31,13 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
                     .Sum());
             }).ToProperty<ClaimableStageDesign, IAmountUI>(this, design => design.ClaimableAmount);
         
-        claimableTransactionsHelper = this.WhenAnyValue<ClaimableStageDesign, IEnumerable<IClaimableTransaction>>(design => design.Transactions)
+        claimableTransactionsCountHelper = this.WhenAnyValue<ClaimableStageDesign, IEnumerable<IClaimableTransaction>>(design => design.Transactions)
             .WhereNotNull()
             .Select(txn =>
             {
                 var claimable = txn.Where(transaction => transaction.IsClaimable).ToList();
                 return claimable.Count;
-            }).ToProperty(this, design => design.ClaimableTransactions);
+            }).ToProperty(this, design => design.ClaimableTransactionsCount);
         
         Transactions = new List<IClaimableTransaction>();
     }
@@ -45,12 +46,12 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
 
 
     [ObservableAsProperty]
-    private int claimableTransactions;
+    private int claimableTransactionsCount;
 
     [Reactive]
     private IEnumerable<IClaimableTransaction> transactions;
     [ObservableAsProperty]
     private IAmountUI claimableAmount;
 
-    public IEnhancedCommand Claim { get; }
+    public IEnhancedCommand<Result> Claim { get; }
 }

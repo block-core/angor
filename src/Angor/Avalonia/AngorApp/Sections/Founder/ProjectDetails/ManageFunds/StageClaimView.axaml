@@ -90,17 +90,11 @@
                         <Card.Header>
                             <StackPanel Orientation="Horizontal" Spacing="10">
                                 <controls:Badge TextElement.FontWeight="Regular" FontSize="12" Color="DeepSkyBlue" Content="{Binding ClaimableAmount.DecimalString}" />
-                                <controls:Badge TextElement.FontWeight="Regular" FontSize="12" Color="Goldenrod" Content="{Binding ClaimableTransactions, StringFormat='{}{0} UTXO'}" />
+                                <controls:Badge TextElement.FontWeight="Regular" FontSize="12" Color="Goldenrod" Content="{Binding ClaimableTransactionsCount, StringFormat='{}{0} UTXO'}" />
                             </StackPanel>
                         </Card.Header>
                         <DockPanel IsVisible="{Binding #ToggleButton.IsChecked}">
-                            <IconButton Padding="15 10" Margin="0 20 0 0" HorizontalAlignment="Right" Command="{Binding Claim}" Content="Claim Selected Coins" DockPanel.Dock="Bottom">
-                                <IconButton.Icon>
-                                    <ContentControl Height="20">
-                                        <ui:Icon Source="svg:/Assets/claim.svg" />
-                                    </ContentControl>
-                                </IconButton.Icon>
-                            </IconButton>
+                            <ReactiveIconButton Icon="{Icon svg:/Assets/claim.svg}" Padding="15 10" Margin="0 20 0 0" HorizontalAlignment="Right" Command="{Binding Claim}" Content="Claim Selected Coins" DockPanel.Dock="Bottom" />
                             <StackPanel DockPanel.Dock="Top" Margin="0 10" Orientation="Horizontal" Spacing="10">
                                 <IconButton IsVisible="{Binding $self.IsEffectivelyEnabled}" Command="{Binding ReactiveSelection.SelectAll}" Classes="Small" Content="Select Claimable" DockPanel.Dock="Top">
                                     <IconButton.Icon>

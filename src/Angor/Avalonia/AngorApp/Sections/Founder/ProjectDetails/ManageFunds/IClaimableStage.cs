@@ -5,9 +5,9 @@ namespace AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
 
 public interface IClaimableStage
 {
-    public int ClaimableTransactions { get; }
+    public int ClaimableTransactionsCount { get; }
     public IEnumerable<IClaimableTransaction> Transactions { get; }
     public IAmountUI ClaimableAmount { get; }
-    IEnhancedCommand Claim { get; }
+    IEnhancedCommand<Result> Claim { get; }
     ReactiveSelection<IClaimableTransaction, string> ReactiveSelection { get; }
 }

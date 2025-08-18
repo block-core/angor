@@ -1,6 +1,6 @@
+using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using AngorApp.Extensions;
 using AngorApp.UI.Services;
 using Zafiro.UI.Commands;
 
@@ -10,9 +10,9 @@ public partial class ManageFundsViewModel : ReactiveObject, IManageFundsViewMode
 {
     private readonly ObservableAsPropertyHelper<IProjectStatisticsViewModel> projectStatisticsViewModelHelper;
     
-    public ManageFundsViewModel(ProjectDto project, IProjectAppService projectAppService, IWalletRoot walletRoot)
+    public ManageFundsViewModel(ProjectDto project, IProjectAppService projectAppService, IInvestmentAppService investmentAppService, UIServices uiServices)
     {
-       var defaultStatistics = new ProjectStatisticsDto
+        var defaultStatistics = new ProjectStatisticsDto
        {
            TotalInvested = project.Raised(),
            AvailableBalance = 0,
@@ -24,8 +24,8 @@ public partial class ManageFundsViewModel : ReactiveObject, IManageFundsViewMode
            SpentAmount = 0
        };
        
-       var loadCommand = WalletCommand.Create(
-           async wallet => 
+       var loadCommand = ReactiveCommand.CreateFromTask(
+           async () => 
            {
                var statisticsResult = await projectAppService.GetProjectStatistics(project.Id);
                
@@ -36,8 +36,7 @@ public partial class ManageFundsViewModel : ReactiveObject, IManageFundsViewMode
                
                // Return default statistics if fetch fails
                return Result.Success<IProjectStatisticsViewModel>(new ProjectStatisticsViewModel(defaultStatistics));
-           },
-           walletRoot);
+           });
        
        Load = loadCommand.Enhance();
        
@@ -49,10 +48,10 @@ public partial class ManageFundsViewModel : ReactiveObject, IManageFundsViewMode
        
        ProjectViewModel = new ProjectViewModelDesign();
        UnfundedProjectViewModel = new UnfundedProjectViewModelDesign();
-       StageClaimViewModel = new StageClaimViewModelDesign();
+       StageClaimViewModel = new StageClaimViewModel(investmentAppService, project.Id, uiServices);
        TargetAmount = new AmountUI(project.TargetAmount);
        RaisedAmount = new AmountUI(project.Raised());
-       IsUnfunded = project.IsUnfunded();
+       IsUnfunded = false; //project.IsUnfunded();
        
        // Execute load command to fetch statistics
        Load.Execute().Subscribe();

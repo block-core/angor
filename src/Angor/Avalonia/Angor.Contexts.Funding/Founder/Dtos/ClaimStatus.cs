@@ -1,4 +1,4 @@
-namespace AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
+namespace Angor.Contexts.Funding.Founder.Dtos;
 
 public enum ClaimStatus
 {

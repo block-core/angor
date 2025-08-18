@@ -1,3 +1,5 @@
+using Angor.Contexts.Funding.Founder.Dtos;
+
 namespace AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
 
 public interface IClaimableTransaction

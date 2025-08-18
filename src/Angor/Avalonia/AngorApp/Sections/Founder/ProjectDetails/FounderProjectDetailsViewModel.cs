@@ -20,7 +20,7 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
     {
         this.project = project;
         InvestmentsViewModel = new ProjectInvestmentsViewModel(project, investmentAppService, uiServices).DisposeWith(disposable);
-        ManageFundsViewModel = new ManageFundsViewModel(project, projectAppService, uiServices.WalletRoot).DisposeWith(disposable);
+        ManageFundsViewModel = new ManageFundsViewModel(project, projectAppService, investmentAppService, uiServices).DisposeWith(disposable);
         HasProjectStarted = project.HasStarted();
     }
 
