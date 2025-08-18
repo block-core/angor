@@ -3,9 +3,15 @@
     <Design.PreviewWith>
         <Border Padding="20">
             <Card>
-                <Button Content="Hi"></Button>
+                <Button Content="Hi" />
             </Card>
         </Border>
     </Design.PreviewWith>
 
+    
+    <Style Selector=":is(Control).Expand">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+    </Style>
+    
 </Styles>

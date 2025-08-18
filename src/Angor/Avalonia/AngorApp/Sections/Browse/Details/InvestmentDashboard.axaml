@@ -4,84 +4,81 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="400"
-             x:Class="AngorApp.Sections.Browse.Details.InvestmentDashboard" 
+             mc:Ignorable="d" d:DesignWidth="600"
+             MinWidth="300"
+             x:Class="AngorApp.Sections.Browse.Details.InvestmentDashboard"
              x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
         <dt:ProjectDetailsViewModelDesign />
     </Design.DataContext>
+    
+    <UserControl.Styles>
+        <StyleInclude Source="/UI/Styles/Button.axaml" />
+    </UserControl.Styles>
 
-    <Card Header="Investment Dashboard" Subheader="Manage your investment and track project progress">
-        <Card.HeaderStartContent>
-            <i:Icon FontSize="40" Value="fa-solid fa-chart-pie" />
-        </Card.HeaderStartContent>
-
+    <Card Header="Investment Dashboard" HeaderStartContent="{Icon fa-solid fa-chart-pie}" Theme="{StaticResource WideCard}" Subheader="Manage your investment and track project progress">
         <StackPanel Spacing="25">
             <!-- Investment Opportunity Section -->
-            <Panel Height="250" ClipToBounds="True">
-                <Border Background="{DynamicResource SystemAccentColor}" 
-                       CornerRadius="15" 
-                       Opacity="0.1" />
-                <Border Background="{DynamicResource SystemAccentColor}" 
-                       CornerRadius="15" 
-                       Opacity="0.8" />
-                
-                <Grid RowDefinitions="Auto,*,Auto" Margin="30" RowSpacing="10">
+            <Panel>
+                <Border Background="{DynamicResource SystemAccentColor}"
+                        CornerRadius="15"
+                        Opacity="0.1" />
+                <Border Background="{DynamicResource SystemAccentColor}"
+                        CornerRadius="15"
+                        Opacity="0.8" />
+
+                <Grid RowDefinitions="Auto,*,Auto" Margin="20" RowSpacing="10">
                     <!-- Header -->
-                    <StackPanel Grid.Row="0" HorizontalAlignment="Center" Spacing="15">
+                    <StackPanel Grid.Row="0" Spacing="15">
                         <i:Icon FontSize="50" Value="fa-solid fa-star" Foreground="White" />
-                        <TextBlock Text="Investment Opportunity" 
-                                  Classes="SizeBig" 
-                                  Foreground="White" 
-                                  FontWeight="Bold" 
-                                  TextAlignment="Center" />
-                        <TextBlock Text="Join this project and be part of its journey to success" 
-                                  Foreground="White" 
-                                  TextAlignment="Center" 
-                                  TextWrapping="Wrap" 
-                                  MaxWidth="400" 
-                                  Opacity="0.9" />
+                        <TextBlock Text="Investment Opportunity"
+                                   TextWrapping="Wrap"
+                                   HorizontalAlignment="Center"
+                                   Classes="SizeBig"
+                                   Foreground="White"
+                                   FontWeight="Bold" />
+                        <TextBlock Text="Join this project and be part of its journey to success"
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   Opacity="0.9" />
                     </StackPanel>
 
                     <!-- Investment Actions -->
-                    <BalancedWrapGrid Grid.Row="2" MinItemWidth="140" MaxItemWidth="200" 
+                    <BalancedWrapGrid Grid.Row="2"
+                                      MinItemWidth="110"
+                                      MaxItemWidth="200"
                                       VerticalSpacing="10"
                                       HorizontalSpacing="10"
-                               HorizontalAlignment="Center" >
+                                      HorizontalAlignment="Center">
                         <ReactiveButton Command="{Binding Invest}"
-                                        HorizontalAlignment="Stretch"
-                                       Classes="Accent"
-                                       
-                                       FontSize="16"
-                                       FontWeight="Bold">
+                                        FontSize="{StaticResource FontSizeNormal}"
+                                        Classes="Expand"
+                                        FontWeight="Bold">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <i:Icon FontSize="16" Value="fa-solid fa-coins" />
                                 <TextBlock Text="Invest Now" />
                             </StackPanel>
                         </ReactiveButton>
-                        
-                        <Button Classes="Secondary"
-                               HorizontalAlignment="Stretch"
-                               FontSize="16"
-                               FontWeight="Bold">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <i:Icon FontSize="16" Value="fa-solid fa-info-circle" />
-                                <TextBlock Text="Learn More" />
-                            </StackPanel>
-                        </Button>
+
+                        <IconButton Icon="{Icon fa-solid fa-info-circle}" Content="Learn more"
+                                    FontSize="16"
+                                    Classes="Expand"
+                                    FontWeight="Bold">
+                        </IconButton>
                     </BalancedWrapGrid>
                 </Grid>
             </Panel>
 
             <!-- Investment Management Section (Hidden by default, shown after investment) -->
-            <Card Header="Investment Management" 
+            <Card Header="Investment Management"
                   Subheader="Track and manage your investment"
                   IsVisible="False">
                 <Card.HeaderStartContent>
                     <i:Icon FontSize="30" Value="fa-solid fa-wallet" />
                 </Card.HeaderStartContent>
-                
+
                 <StackPanel Spacing="20">
                     <!-- Investment Stats -->
                     <UniformGrid Columns="3" ColumnSpacing="15">
@@ -92,7 +89,7 @@
                                 <TextBlock Text="0.5 TBTC" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" />
                             </StackPanel>
                         </OverlayBorder>
-                        
+
                         <OverlayBorder Theme="{StaticResource CardOverlayBorder}" Padding="15">
                             <StackPanel Spacing="8" HorizontalAlignment="Center">
                                 <i:Icon FontSize="20" Value="fa-solid fa-chart-pie" Foreground="Orange" />
@@ -100,7 +97,7 @@
                                 <TextBlock Text="33%" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" />
                             </StackPanel>
                         </OverlayBorder>
-                        
+
                         <OverlayBorder Theme="{StaticResource CardOverlayBorder}" Padding="15">
                             <StackPanel Spacing="8" HorizontalAlignment="Center">
                                 <i:Icon FontSize="20" Value="fa-solid fa-clock" Foreground="Blue" />
@@ -109,34 +106,34 @@
                             </StackPanel>
                         </OverlayBorder>
                     </UniformGrid>
-                    
-                    <!-- Management Actions -->
-                    <UniformGrid Columns="2" ColumnSpacing="15">
-                        <Button Classes="Secondary" Padding="15,10" CornerRadius="8">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <i:Icon FontSize="16" Value="fa-solid fa-chart-pie" />
-                                <TextBlock Text="View Performance" />
-                            </StackPanel>
-                        </Button>
-                        
-                        <Button Classes="Secondary" Padding="15,10" CornerRadius="8">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <i:Icon FontSize="16" Value="fa-solid fa-download" />
-                                <TextBlock Text="Download Reports" />
-                            </StackPanel>
-                        </Button>
-                    </UniformGrid>
+
+                    <!-- ~1~ Management Actions @1@ -->
+                    <!-- <UniformGrid Columns="2" ColumnSpacing="15"> -->
+                    <!--     <Button Padding="15,10" CornerRadius="8"> -->
+                    <!--         <StackPanel Orientation="Horizontal" Spacing="8"> -->
+                    <!--             <i:Icon FontSize="16" Value="fa-solid fa-chart-pie" /> -->
+                    <!--             <TextBlock Text="View Performance" /> -->
+                    <!--         </StackPanel> -->
+                    <!--     </Button> -->
+                    <!-- -->
+                    <!--     <Button Classes="Expand" Padding="15,10" CornerRadius="8"> -->
+                    <!--         <StackPanel Orientation="Horizontal" Spacing="8"> -->
+                    <!--             <i:Icon FontSize="16" Value="fa-solid fa-download" /> -->
+                    <!--             <TextBlock Text="Download Reports" /> -->
+                    <!--         </StackPanel> -->
+                    <!--     </Button> -->
+                    <!-- </UniformGrid> -->
                 </StackPanel>
             </Card>
 
             <!-- Founder Dashboard Section (Hidden by default, shown for founders) -->
-            <Card Header="Founder Dashboard" 
+            <Card Header="Founder Dashboard"
                   Subheader="Manage your project and funds"
                   IsVisible="False">
                 <Card.HeaderStartContent>
                     <i:Icon FontSize="30" Value="fa-solid fa-user" />
                 </Card.HeaderStartContent>
-                
+
                 <StackPanel Spacing="20">
                     <!-- Founder Actions -->
                     <UniformGrid Columns="2" ColumnSpacing="15" RowSpacing="15">
@@ -146,21 +143,21 @@
                                 <TextBlock Text="Manage Funds" />
                             </StackPanel>
                         </Button>
-                        
+
                         <Button Classes="Secondary" Padding="15,12" CornerRadius="8">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <i:Icon FontSize="16" Value="fa-solid fa-pen" />
                                 <TextBlock Text="Edit Project" />
                             </StackPanel>
                         </Button>
-                        
+
                         <Button Classes="Secondary" Padding="15,12" CornerRadius="8">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <i:Icon FontSize="16" Value="fa-solid fa-users" />
                                 <TextBlock Text="View Investors" />
                             </StackPanel>
                         </Button>
-                        
+
                         <Button Classes="Secondary" Padding="15,12" CornerRadius="8">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <i:Icon FontSize="16" Value="fa-solid fa-chart-pie" />
