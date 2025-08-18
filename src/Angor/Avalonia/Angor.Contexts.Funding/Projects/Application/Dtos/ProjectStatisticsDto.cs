@@ -12,11 +12,3 @@ public class ProjectStatisticsDto
     public int AvailableTransactions => TotalTransactions - SpentTransactions;
     public long SpentAmount { get; set; }
 }
-
-public class NextStageDto
-{
-    public int StageIndex { get; set; }
-    public DateTime ReleaseDate { get; set; }
-    public int DaysUntilRelease { get; set; }
-    public decimal PercentageToRelease { get; set; }
-}

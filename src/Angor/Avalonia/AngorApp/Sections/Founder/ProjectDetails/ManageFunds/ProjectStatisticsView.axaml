@@ -35,7 +35,7 @@
                         <Card Header="Total Investment" Subheader="{Binding TotalInvested.DecimalString}" />
                         <Card Header="Available Balance" Subheader="{Binding AvailableBalance.DecimalString}" />
                         <Card Header="Withdrawable" Subheader="{Binding Withdrawable.DecimalString}" />
-                        <Card Header="Total Stages" Subheader="3" />
+                        <Card Header="Total Stages" Subheader="{Binding TotalStages}" />
                     </collections:ArrayList>
                 </CardGrid.ItemsSource>
             </CardGrid>
