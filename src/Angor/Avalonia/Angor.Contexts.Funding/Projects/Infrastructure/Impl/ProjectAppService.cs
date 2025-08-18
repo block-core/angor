@@ -13,7 +13,7 @@ public class ProjectAppService(
     IProjectRepository projectRepository, IMediator mediator)
     : IProjectAppService
 {
-    [MemoizeTimed]
+    //[MemoizeTimed]
     public async Task<Result<IEnumerable<ProjectDto>>> Latest()
     {
         return await projectRepository.Latest().Map(t => t.AsEnumerable()).MapEach(project => project.ToDto());
