@@ -1,6 +1,5 @@
 using Angor.Shared;
 using Angor.Shared.Models;
-using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;
 
 namespace Angor.Contests.CrossCutting;
