@@ -22,6 +22,8 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     private string newExplorer;
     private string newIndexer;
     private string newRelay;
+    private bool restoringNetwork;
+    private string currentNetwork;
 
     private readonly CompositeDisposable disposable = new();
     
@@ -36,7 +38,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Indexers = new ObservableCollection<SettingsUrlViewModel>(settings.Indexers.Select(CreateIndexer));
         Relays = new ObservableCollection<SettingsUrlViewModel>(settings.Relays.Select(CreateRelay));
 
-        var currentNetwork = networkStorage.GetNetwork();
+        currentNetwork = networkStorage.GetNetwork();
         networkConfiguration.SetNetwork(currentNetwork == "Mainnet" ? new BitcoinMain() : new Angornet());
         Network = currentNetwork;
 
@@ -46,6 +48,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
         this.WhenAnyValue(x => x.Network)
             .Skip(1)
+            .Where(_ => !restoringNetwork)
             .SelectMany(async n => (n, await uiServices.Dialog.ShowConfirmation("Change network?", "Changing network will delete the current wallet")))
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(t => t.Item2.Match(
@@ -66,13 +69,13 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
                     }
                     else
                     {
-                        Network = currentNetwork;
+                        RestoreNetwork();
                     }
                     return Unit.Default;
                 },
                 () =>
                 {
-                    Network = currentNetwork;
+                    RestoreNetwork();
                     return Unit.Default;
                 }))
             .DisposeWith(disposable);
@@ -226,5 +229,12 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     public void Dispose()
     {
         disposable.Dispose();
+    }
+    
+    void RestoreNetwork()
+    {
+        restoringNetwork = true;
+        Network = currentNetwork;
+        restoringNetwork = false;
     }
 }
