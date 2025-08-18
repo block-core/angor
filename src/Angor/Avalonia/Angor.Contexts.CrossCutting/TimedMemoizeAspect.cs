@@ -1,5 +1,4 @@
 using AspectInjector.Broker;
-using JetBrains.Annotations;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Angor.Contests.CrossCutting;
