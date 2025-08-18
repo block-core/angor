@@ -9,18 +9,8 @@ public class ProjectStatisticsDto
     public NextStageDto? NextStage { get; set; }
     public int TotalTransactions { get; set; }
     public int SpentTransactions { get; set; }
-    public int AvailableTransactions { get; set; }
+    public int AvailableTransactions => TotalTransactions - SpentTransactions;
     public long SpentAmount { get; set; }
-
-    public StageDto NextStage { get; set; }
-    public TimeSpan? TimeUntilNextStage { get; set; }
-    public long TotalAvailableInvestedAmount { get; set; }
-    public int TotalInvestedTransactions { get; set; }
-    public long TotalSpentAmount { get; set; }
-    public int TotalSpentTransactions { get; set; }
-    public long CurrentWithdrawableAmount { get; set; }
-    public long TotalInvestedAmount { get; set; }
-
 }
 
 public class NextStageDto

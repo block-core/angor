@@ -21,14 +21,13 @@ public partial class ManageFundsViewModel : ReactiveObject, IManageFundsViewMode
            NextStage = null,
            TotalTransactions = 0,
            SpentTransactions = 0,
-           AvailableTransactions = 0,
            SpentAmount = 0
        };
        
        var loadCommand = WalletCommand.Create(
            async wallet => 
            {
-               var statisticsResult = await projectAppService.GetProjectStatistics(wallet.Id.Value, project.Id);
+               var statisticsResult = await projectAppService.GetProjectStatistics(project.Id);
                
                if (statisticsResult.IsSuccess)
                {

@@ -42,19 +42,17 @@ public static class ProjectStatistics
                 .OrderBy(stage => stage.Stage.ReleaseDate)
                 .FirstOrDefault();
 
-            var currentStage = stagesInformation.FirstOrDefault(stage => stage.Stage.ReleaseDate <= DateTime.UtcNow);
+            var currentStage = stagesInformation.OrderBy(x => x.StageIndex).LastOrDefault(stage => stage.Stage.ReleaseDate <= DateTime.UtcNow);
             
             var dto = new ProjectStatisticsDto
             {
-                NextStage = new StageDto(){RatioOfTotal = currentStage.Stage.AmountToRelease, ReleaseDate = currentStage.Stage.ReleaseDate},
+                NextStage = new NextStageDto()
+                {
+                    PercentageToRelease = currentStage.Stage.AmountToRelease, ReleaseDate = currentStage.Stage.ReleaseDate,
+                    DaysUntilRelease = nextStage != null ? (nextStage.Stage.ReleaseDate - DateTime.UtcNow).Days : 0,
+                    StageIndex = nextStage != null ? stagesInformation.IndexOf(nextStage) : stagesInformation.Count - 1,
+                },
                 TotalStages = stagesInformation.Count != 0 ? stagesInformation.Count : 1,
-                TimeUntilNextStage = nextStage != null ? nextStage.Stage.ReleaseDate - DateTime.UtcNow : null,
-                TotalAvailableInvestedAmount = 0,
-                TotalInvestedTransactions = 0,
-                TotalSpentAmount = 0,
-                TotalSpentTransactions = 0,
-                CurrentWithdrawableAmount = 0,
-                TotalInvestedAmount = 0
             };
 
             foreach (var stage in stagesInformation)
@@ -66,15 +64,15 @@ public static class ProjectStatistics
                 var spentStageTransactions = stage.Items.Count(c => c.IsSpent);
                 var daysUntilRelease = (stage.Stage.ReleaseDate - DateTime.UtcNow).Days;
 
-                dto.TotalInvestedAmount += investedAmount;
-                dto.TotalAvailableInvestedAmount += availableInvestedAmount;
-                dto.TotalInvestedTransactions += totalStageTransactions;
-                dto.TotalSpentAmount += spentStageAmount;
-                dto.TotalSpentTransactions += spentStageTransactions;
+                dto.TotalInvested += investedAmount;
+                dto.AvailableBalance += availableInvestedAmount;
+                dto.TotalTransactions += totalStageTransactions;
+                dto.SpentAmount += spentStageAmount;
+                dto.SpentTransactions += spentStageTransactions;
 
                 if (daysUntilRelease <= 0)
                 {
-                    dto.CurrentWithdrawableAmount += availableInvestedAmount;
+                    dto.WithdrawableAmount += availableInvestedAmount;
                 }
             }
             return dto;
@@ -132,12 +130,14 @@ public static class ProjectStatistics
           {
               var network = networkConfiguration.GetNetwork();
               
+              var stageIndexInTransaction = stageIndex + 2;
+              
               var item = new StageDataTrx
               {
                   Trxid = investmentTransaction.GetHash().ToString(),
                   Outputindex = stageIndex,
-                  OutputAddress = investmentTransaction.Outputs[stageIndex].ScriptPubKey.WitHash.GetAddress(network).ToString(),
-                  Amount = investmentTransaction.Outputs[stageIndex].Value.Satoshi
+                  OutputAddress = investmentTransaction.Outputs[stageIndexInTransaction].ScriptPubKey.WitHash.GetAddress(network).ToString(),
+                  Amount = investmentTransaction.Outputs[stageIndexInTransaction].Value.Satoshi
               };
               
             if (!string.IsNullOrEmpty(output.SpentInTransaction))
