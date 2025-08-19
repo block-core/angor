@@ -25,6 +25,11 @@ public class ProjectAppService(
         return projectRepository.Get(projectId).Map(project1 => project1.ToDto()).AsMaybe();
     }
 
+    public Task<Result<ProjectDto>> Get(ProjectId projectId)
+    {
+        return projectRepository.Get(projectId).Map(project => project.ToDto());
+    }
+
     public Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(Guid walletId)
     {
         return mediator.Send(new GetFounderProjects.GetFounderProjectsRequest(walletId));

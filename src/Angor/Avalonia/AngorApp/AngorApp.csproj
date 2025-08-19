@@ -42,10 +42,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Update="Sections\Browse\Details\ProjectSummary.axaml.cs">
-            <DependentUpon>ProjectSummary2.axaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
+      <Compile Update="Sections\Founder\ProjectDetails\ProjectCard.axaml.cs">
+        <DependentUpon>ProjectCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
-    
+
 </Project>

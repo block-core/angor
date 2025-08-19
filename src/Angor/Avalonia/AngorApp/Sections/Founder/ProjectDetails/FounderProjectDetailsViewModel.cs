@@ -1,36 +1,46 @@
 using System.Reactive.Disposables;
+using System.Threading.Tasks;
 using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Projects.Application.Dtos;
+using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using AngorApp.Sections.Founder.ProjectDetails.Investments;
-using AngorApp.Sections.Founder.ProjectDetails.ManageFunds;
+using AngorApp.Sections.Founder.ProjectDetails.MainView;
+using AngorApp.Sections.Founder.ProjectDetails.MainView.Approve;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
-using Zafiro.UI.Navigation;
+using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.UI;
+using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder.ProjectDetails;
 
 public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderProjectDetailsViewModel, IDisposable
 {
-    private readonly ProjectDto project;
-    private readonly CompositeDisposable disposable = new();
-    [ObservableAsProperty] private IEnumerable<IInvestmentViewModel> investments;
+    private readonly IProjectAppService projectAppService;
 
-    public FounderProjectDetailsViewModel(ProjectDto project, IInvestmentAppService investmentAppService, IProjectAppService projectAppService, UIServices uiServices, INavigator navigation)
+    [ObservableAsProperty]
+    private IProjectMainViewModel projectMain;
+    
+    private readonly CompositeDisposable disposable = new();
+
+    public FounderProjectDetailsViewModel(ProjectId projectId, IProjectAppService projectAppService, IInvestmentAppService investmentAppService, UIServices uiServices)
     {
-        this.project = project;
-        InvestmentsViewModel = new ProjectInvestmentsViewModel(project, investmentAppService, uiServices).DisposeWith(disposable);
-        ManageFundsViewModel = new ManageFundsViewModel(project, projectAppService, investmentAppService, uiServices).DisposeWith(disposable);
-        HasProjectStarted = project.HasStarted();
+        this.projectAppService = projectAppService;
+        Load = ReactiveCommand.CreateFromTask(() => DoLoadFullProject(projectId).Map(project => (IProjectMainViewModel)new ProjectMainViewModel(project, investmentAppService, uiServices))).Enhance();
+        Load.HandleErrorsWith(uiServices.NotificationService);
+
+        projectMainHelper = Load.Successes().ToProperty(this, x => x.ProjectMain).DisposeWith(disposable);
+        Load.Execute().Subscribe().DisposeWith(disposable);
     }
 
-    public Uri? BannerUrl => project.Banner;
-    public string ShortDescription => project.ShortDescription;
-    public IProjectInvestmentsViewModel InvestmentsViewModel { get; }
-    public IManageFundsViewModel ManageFundsViewModel { get; }
-    public bool HasProjectStarted { get; }
-    public ProjectDto Project => project;
-    public string Name => project.Name;
+    public IEnhancedCommand<Result<IProjectMainViewModel>> Load { get; }
+
+    private Task<Result<FullProject>> DoLoadFullProject(ProjectId projectId)
+    {
+        return from project in projectAppService.Get(projectId)
+            from stats in projectAppService.GetProjectStatistics(projectId)
+            select new FullProject(project, stats);
+    }
+
 
     public void Dispose()
     {
