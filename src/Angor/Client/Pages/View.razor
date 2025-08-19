@@ -219,7 +219,27 @@
                             </div>
                             <div class="d-flex flex-column justify-content-center">
                                 <p class="text-break mb-0 mt-2">
-                                    <b>@project.ProjectInfo.EndDate.FormatDate()</b>
+                                    <b>
+                                        @{
+                                            var endDate = project?.ProjectInfo?.EndDate;
+                                            if (endDate == null || endDate == DateTime.MinValue)
+                                            {
+                                                var firstStageDate = project?.ProjectInfo?.Stages?.FirstOrDefault()?.ReleaseDate;
+                                                if (firstStageDate != null && firstStageDate != DateTime.MinValue)
+                                                {
+                                                    @firstStageDate.Value.FormatDate()
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">No date available</span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                @endDate.Value.FormatDate()
+                                            }
+                                        }
+                                    </b>
                                 </p>
                             </div>
                         </div>
@@ -343,7 +363,7 @@
                                             else if (currentDate >= startDate && currentDate <= investmentEndDate)
                                             {
                                                 var daysLeft = (investmentEndDate - currentDate).Days;
-                                                <h4 class="mb-0">@daysLeft days left</h4>
+                                                <h4 class="mb-0">@daysLeft Days remaining</h4>
                                             }
                                             else
                                             {
@@ -785,14 +805,14 @@
     }
 
     readonly ProjectStats projectStats = new()
-        {
-            Loading = true,
-            TimeLeft = 0,
-            TotalInvestors = 0,
-            TotalRaised = 0,
-            TotalSeeders = 0,
-            FundingProgressPercent = 0
-        };
+    {
+        Loading = true,
+        TimeLeft = 0,
+        TotalInvestors = 0,
+        TotalRaised = 0,
+        TotalSeeders = 0,
+        FundingProgressPercent = 0
+    };
 
     bool founder;
     bool invested;
