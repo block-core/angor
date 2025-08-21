@@ -49,7 +49,8 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
         var transactions = ReactiveSelection.SelectedItems.Select(x => $"· {x.Amount.DecimalString} from {x.Address}").JoinWithLines();
         return uiServices.Dialog.ShowConfirmation("Claim funds?", "Proceed to claim the funds of the selected transactions?\n\n" + transactions)
             .Where(confirmed => confirmed)
-            .Map(_ => DoClaim(ReactiveSelection.SelectedItems));
+            .Map(_ => DoClaim(ReactiveSelection.SelectedItems)
+                .Tap(() => uiServices.Dialog.ShowMessage("Claim successful", "The funds have been successfully claimed.", "Close")));
     }
 
     private Task<Result> DoClaim(IEnumerable<IClaimableTransaction> selected)

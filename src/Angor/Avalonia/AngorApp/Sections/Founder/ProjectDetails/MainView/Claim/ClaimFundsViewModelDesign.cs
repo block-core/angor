@@ -1,4 +1,5 @@
 using Angor.Contexts.Funding.Founder.Dtos;
+using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder.ProjectDetails.MainView.Claim;
 
@@ -43,6 +44,8 @@ public class ClaimFundsViewModelDesign : ReactiveObject, IClaimFundsViewModel
             ],
         }
     ];
+
+    public IEnhancedCommand<Result<IEnumerable<IClaimableStage>>> LoadClaimableStages { get; }
 
     public DateTime EstimatedCompletion { get; set; } = DateTime.Now.AddDays(30);
 }
