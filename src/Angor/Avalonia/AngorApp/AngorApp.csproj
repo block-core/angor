@@ -41,11 +41,4 @@
         <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <Compile Update="Sections\Founder\ProjectDetails\ProjectCard.axaml.cs">
-        <DependentUpon>ProjectCard.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-    </ItemGroup>
-
 </Project>
