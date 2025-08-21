@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
+using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using AngorApp.Extensions;
@@ -42,22 +43,22 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
     {
         return investmentAppService
             .GetClaimableTransactions(wallet.Id.Value, projectId)
-            .Map(claimableTransactionDto =>
-            {
-                var groupedByStage = claimableTransactionDto.GroupBy(dto => dto.StageId)
-                    .Select(IClaimableStage (group) =>
-                    {
-                        var claimableTransactions = group.Select(IClaimableTransaction (dto) => new ClaimableTransaction(dto)).ToList();
-                        return new ClaimableStage(projectId, group.Key, claimableTransactions.ToList(), investmentAppService, uiServices);
-                    });
-                return groupedByStage;
-            });
+            .Map(CreateStage);
     }
 
-    public IEnhancedCommand<Result<IEnumerable<IClaimableStage>>> Load { get; set; }
-    
-    public DateTime EstimatedCompletion { get; set; } = DateTime.Now.AddDays(30);
+    private IEnumerable<IClaimableStage> CreateStage(IEnumerable<ClaimableTransactionDto> claimableTransactionDto)
+    {
+        var stages = claimableTransactionDto.GroupBy(dto => dto.StageId)
+            .Select(IClaimableStage (group) =>
+            {
+                var claimableTransactions = group.Select(IClaimableTransaction (dto) => new ClaimableTransaction(dto)).ToList();
+                return new ClaimableStage(projectId, group.Key, claimableTransactions.ToList(), investmentAppService, uiServices);
+            });
+        return stages;
+    }
 
+    public IEnhancedCommand<Result<IEnumerable<IClaimableStage>>> Load { get; }
+    
     public void Dispose()
     {
         disposable.Dispose();
