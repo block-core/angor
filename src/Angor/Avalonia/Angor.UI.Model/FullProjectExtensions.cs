@@ -1,8 +1,6 @@
-using AngorApp.Sections.Portfolio;
+namespace Angor.UI.Model;
 
-namespace AngorApp.Sections.Founder.ProjectDetails;
-
-public static class ProjectExtensions
+public static class FullProjectExtensions
 {
     public static long Raised(this FullProject project)
     {

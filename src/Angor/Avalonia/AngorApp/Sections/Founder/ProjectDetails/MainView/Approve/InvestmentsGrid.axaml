@@ -4,8 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:sdg="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:i="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Investments"
-             xmlns:projectDetails="clr-namespace:AngorApp.Sections.Founder.ProjectDetails"
              xmlns:approve="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.MainView.Approve"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.MainView.Approve.InvestmentsGrid"

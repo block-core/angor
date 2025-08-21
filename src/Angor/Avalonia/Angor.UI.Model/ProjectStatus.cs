@@ -1,8 +1,8 @@
-namespace AngorApp.Sections.Portfolio;
+namespace Angor.UI.Model;
 
 public enum ProjectStatus
 {
-    Invalid,
+    Invalid = 0,
     Started,
     Funding,
     Succeeded,
