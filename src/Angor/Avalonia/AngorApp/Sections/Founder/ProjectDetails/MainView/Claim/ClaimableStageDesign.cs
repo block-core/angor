@@ -18,7 +18,7 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
         
         var selectedCountChanged = this.WhenAnyValue(design => design.ReactiveSelection.SelectedItems.Count);
         
-        Claim = ReactiveCommand.CreateFromTask(() => Task.FromResult(Result.Success()), selectedCountChanged.Select(i => i > 0)).Enhance();
+        Claim = ReactiveCommand.CreateFromTask(() => Task.FromResult(Maybe.From(Result.Success())), selectedCountChanged.Select(i => i > 0)).Enhance();
 
         claimableAmountHelper = this.WhenAnyValue<ClaimableStageDesign, IEnumerable<IClaimableTransaction>>(design => design.Transactions)
             .WhereNotNull()
@@ -53,5 +53,5 @@ public partial class ClaimableStageDesign : ReactiveObject, IClaimableStage
     [ObservableAsProperty]
     private IAmountUI claimableAmount;
 
-    public IEnhancedCommand<Result> Claim { get; }
+    public IEnhancedCommand<Maybe<Result>> Claim { get; }
 }

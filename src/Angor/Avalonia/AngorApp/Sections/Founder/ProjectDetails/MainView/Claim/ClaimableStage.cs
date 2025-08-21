@@ -5,7 +5,10 @@ using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using AngorApp.UI.Services;
 using Avalonia.Controls.Selection;
+using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Misc;
+using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.Mixins;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
 
@@ -22,31 +25,41 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
         this.projectId = projectId;
         this.stageId = stageId;
         this.investmentAppService = investmentAppService;
-        
+
         ReactiveSelection = new ReactiveSelection<IClaimableTransaction, string>(new SelectionModel<IClaimableTransaction>
         {
             SingleSelect = false
         }, x => x.Address, transaction => transaction.IsClaimable);
-        
+
         var selectedCountChanged = this.WhenAnyValue(design => design.ReactiveSelection.SelectedItems.Count);
-        
-        Claim = ReactiveCommand.CreateFromTask(() => DoClaim(ReactiveSelection.SelectedItems), selectedCountChanged.Select(i => i > 0)).Enhance();
-        Claim.HandleErrorsWith(uiServices.NotificationService, "Error claiming transactions");
-        
+
+        Claim = ReactiveCommand.CreateFromTask(() => ClaimSelectedTransactions(uiServices), selectedCountChanged.Select(i => i > 0))
+            .Enhance();
+
+        Claim.Values().HandleErrorsWith(uiServices.NotificationService, "Error claiming transactions");
+
         Transactions = transactions;
         ClaimableTransactionsCount = transactions.Count(transaction => transaction.IsClaimable);
         var sats = transactions.Sum(transaction => transaction.Amount.Sats);
         ClaimableAmount = new AmountUI(sats);
     }
 
+    private Task<Maybe<Result>> ClaimSelectedTransactions(UIServices uiServices)
+    {
+        var transactions = ReactiveSelection.SelectedItems.Select(x => $"· {x.Amount.DecimalString} from {x.Address}").JoinWithLines();
+        return uiServices.Dialog.ShowConfirmation("Claim funds?", "Proceed to claim the funds of the selected transactions?\n\n" + transactions)
+            .Where(confirmed => confirmed)
+            .Map(_ => DoClaim(ReactiveSelection.SelectedItems));
+    }
+
     private Task<Result> DoClaim(IEnumerable<IClaimableTransaction> selected)
     {
         var spends = selected.Select(claimable => new SpendTransactionDto
         {
-            InvestorAddress = claimable.Address, 
+            InvestorAddress = claimable.Address,
             StageId = stageId
         });
-        
+
         return investmentAppService.Spend(projectId, spends);
     }
 
@@ -59,5 +72,5 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
 
     public IAmountUI ClaimableAmount { get; }
 
-    public IEnhancedCommand<Result> Claim { get; }
+    public IEnhancedCommand<Maybe<Result>> Claim { get; }
 }

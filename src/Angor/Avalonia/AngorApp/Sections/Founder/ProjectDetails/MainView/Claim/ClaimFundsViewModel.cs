@@ -18,7 +18,7 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
     private readonly IInvestmentAppService investmentAppService;
     private readonly ProjectId projectId;
     private readonly UIServices uiServices;
-    [ObservableAsProperty] private IEnumerable<IClaimableStage> claimableStages;
+    [ObservableAsProperty] private IEnumerable<IClaimableStage>? claimableStages;
 
     private readonly CompositeDisposable disposable = new();
     public ClaimFundsViewModel(ProjectId projectId, IInvestmentAppService investmentAppService, UIServices uiServices)
@@ -26,16 +26,24 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
         this.investmentAppService = investmentAppService;
         this.projectId = projectId;
         this.uiServices = uiServices;
-        Load = WalletCommand.Create(wallet => GetClaimableStages(wallet), uiServices.WalletRoot)
+        LoadClaimableStages = WalletCommand.Create(GetClaimableStages, uiServices.WalletRoot)
             .Enhance()
             .DisposeWith(disposable);
         
-        Load.HandleErrorsWith(uiServices.NotificationService, "Error loading claimable stages")
+        LoadClaimableStages.HandleErrorsWith(uiServices.NotificationService, "Error loading claimable stages")
             .DisposeWith(disposable);
-            
-        claimableStagesHelper = Load.Successes().ToProperty(this, x => x.ClaimableStages).DisposeWith(disposable);
+        
+        claimableStagesHelper = LoadClaimableStages.Successes().ToProperty(this, x => x.ClaimableStages).DisposeWith(disposable);
 
-        Load.Execute().Subscribe().DisposeWith(disposable);
+        // Reload the claimable stages after any Claim command executes in the latest set of stages
+        LoadClaimableStages.Successes()
+            .Select(stages => stages.Select(stage => stage.Claim.Values()).Merge())
+            .Switch()
+            .SelectMany(_ => LoadClaimableStages.Execute())
+            .Subscribe()
+            .DisposeWith(disposable);
+        
+        LoadClaimableStages.Execute().Subscribe().DisposeWith(disposable);
         claimableStagesHelper.DisposeWith(disposable);
     }
 
@@ -53,11 +61,11 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
             {
                 var claimableTransactions = group.Select(IClaimableTransaction (dto) => new ClaimableTransaction(dto)).ToList();
                 return new ClaimableStage(projectId, group.Key, claimableTransactions.ToList(), investmentAppService, uiServices);
-            });
+            }).ToList();
         return stages;
     }
 
-    public IEnhancedCommand<Result<IEnumerable<IClaimableStage>>> Load { get; }
+    public IEnhancedCommand<Result<IEnumerable<IClaimableStage>>> LoadClaimableStages { get; }
     
     public void Dispose()
     {
