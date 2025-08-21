@@ -238,7 +238,7 @@
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 <div class="input-group">
                                                     <input type="@passwordInputType" class="form-control"
-                                                           @bind="newWalletPassword" placeholder="Enter password">
+                                                           @bind="newWalletPassword" @bind:event="oninput" placeholder="Enter password">
                                                     <button class="btn btn-border btn-sm" @onclick="TogglePasswordVisibility">
                                                         @if (passwordToggleText == "Show")
                                                         {
@@ -312,7 +312,7 @@
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 <div class="input-group">
                                                     <input type="@passwordInputType" class="form-control"
-                                                           @bind="newWalletPassword" placeholder="Enter password">
+                                                           @bind="newWalletPassword" @bind:event="oninput" placeholder="Enter password">
                                                     <button class="btn btn-border btn-sm" @onclick="TogglePasswordVisibility">
 
                                                         @if (passwordToggleText == "Show")
