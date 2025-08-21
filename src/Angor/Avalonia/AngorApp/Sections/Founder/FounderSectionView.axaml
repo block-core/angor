@@ -66,7 +66,7 @@
                         <i:Icon FontSize="40" Value="mdi-shield-account-outline" />
                     </z:Card.HeaderStartContent>
                 </z:Card>
-                <z:Loading LoadingText="Loading projects. Please wait." IsLoading="{Binding LoadProjects.IsExecuting^}">
+                <z:Loading LoadingText="Loading your projects. Please wait." IsLoading="{Binding LoadProjects.IsExecuting^}">
                     <CardGrid MinColumnWidth="300"
                               Empty.Content="Nothing to show"
                               Classes="ShowEmptyContent" ItemsSource="{Binding ProjectsList}" />
