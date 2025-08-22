@@ -338,12 +338,13 @@
                         @if (stage.StageIndex == expandedStageId)
                         {
                             <div class="mt-3 animate-fade-in">
-                                @if (stage.Items.Any(x => !x.IsSpent))
+                                @if (HasActiveUnspentUtxos(stage.StageIndex, stageisActive))
                                 {
                                     <div class="d-flex justify-content-start mb-3">
                                         <button class="btn btn-border btn-sm"
-                                                @onclick="() => SelectAllUnspentUtxos(stage.StageIndex)">
-                                            <span class="ms-1">@(AreAllUnspentUtxosSelected(stage.StageIndex) ? "Deselect All" : "Select All Available")</span>
+                                                disabled="@(!HasActiveUnspentUtxos(stage.StageIndex, stageisActive))"
+                                                @onclick="() => SelectAllUnspentUtxos(stage.StageIndex, stageisActive)">
+                                            <span class="ms-1">@(AreAllActiveUnspentUtxosSelected(stage.StageIndex, stageisActive) ? "Deselect All" : "Select All Available")</span>
                                         </button>
                                     </div>
                                 }
@@ -1053,7 +1054,19 @@
 
     private bool IsCheckboxSelectedForStage(int stageIndex)
     {
-        return selectedUtxos.Any(utxo => GetStageIndexForUtxo(utxo.Key) == stageIndex && utxo.Value);
+        var stage = stageDatas.First(s => s.StageIndex == stageIndex);
+        var stageIsActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
+        
+        return selectedUtxos.Any(utxo => 
+        {
+            if (GetStageIndexForUtxo(utxo.Key) != stageIndex || !utxo.Value)
+                return false;
+                
+            var transaction = stage.Items.FirstOrDefault(item => 
+                item.Trxid == utxo.Key.Trxid && item.Outputindex == utxo.Key.Outputindex);
+                
+            return transaction != null && !transaction.IsSpent && stageIsActive;
+        });
     }
 
 
@@ -1136,12 +1149,12 @@
         NavigationManager.NavigateTo($"/unfunded/{ProjectId}");
     }
 
-    private void SelectAllUnspentUtxos(int stageIndex)
+    private void SelectAllUnspentUtxos(int stageIndex, bool stageIsActive)
     {
         var stage = stageDatas.First(s => s.StageIndex == stageIndex);
-        bool areAllSelected = AreAllUnspentUtxosSelected(stageIndex);
+        bool areAllSelected = AreAllActiveUnspentUtxosSelected(stageIndex, stageIsActive);
 
-        foreach (var transaction in stage.Items.Where(x => !x.IsSpent))
+        foreach (var transaction in stage.Items.Where(x => !x.IsSpent && stageIsActive))
         {
             var key = new UtxoKey(transaction.Trxid, transaction.Outputindex);
             if (areAllSelected)
@@ -1155,11 +1168,21 @@
         }
     }
 
-    private bool AreAllUnspentUtxosSelected(int stageIndex)
+    private bool AreAllActiveUnspentUtxosSelected(int stageIndex, bool stageIsActive)
     {
         var stage = stageDatas.First(s => s.StageIndex == stageIndex);
-        var unspentUtxos = stage.Items.Where(x => !x.IsSpent);
-        return unspentUtxos.All(transaction =>
+        var activeUnspentUtxos = stage.Items.Where(x => !x.IsSpent && stageIsActive);
+        
+        if (!activeUnspentUtxos.Any())
+            return false;
+            
+        return activeUnspentUtxos.All(transaction =>
             selectedUtxos.ContainsKey(new UtxoKey(transaction.Trxid, transaction.Outputindex)));
+    }
+
+    private bool HasActiveUnspentUtxos(int stageIndex, bool stageIsActive)
+    {
+        var stage = stageDatas.First(s => s.StageIndex == stageIndex);
+        return stage.Items.Any(x => !x.IsSpent && stageIsActive);
     }
 }
