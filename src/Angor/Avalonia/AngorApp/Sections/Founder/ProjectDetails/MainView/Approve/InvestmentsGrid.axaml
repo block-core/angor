@@ -31,7 +31,7 @@
                         <DockPanel>
                             <ItemsControl ItemsSource="{TemplateBinding Properties}" DockPanel.Dock="Top">
                                 <ItemsControl.ItemContainerTheme>
-                                    <ControlTheme TargetType="sdg:Cell" BasedOn="{StaticResource {x:Type sdg:Cell}}">
+                                    <ControlTheme TargetType="Cell" BasedOn="{StaticResource {x:Type Cell}}">
                                         <Setter Property="Grid.Column" Value="{Binding $self.Index}" />
                                     </ControlTheme>
                                 </ItemsControl.ItemContainerTheme>
@@ -39,8 +39,8 @@
                                     <ItemsPanelTemplate>
                                         <Grid>
                                             <Interaction.Behaviors>
-                                                <sdg:BindableColumnDefinitionsBehavior
-                                                    ColumnDefinitions="{Binding $parent[sdg:SlimDataGrid].Columns, Mode=OneWay, Converter={x:Static sdg:Converters.ColumnDefsConverter}}" />
+                                                <BindableColumnDefinitionsBehavior
+                                                    ColumnDefinitions="{Binding $parent[SlimDataGrid].Columns, Mode=OneWay, Converter={x:Static Converters.ColumnDefsConverter}}" />
                                             </Interaction.Behaviors>
                                         </Grid>
                                     </ItemsPanelTemplate>
@@ -50,8 +50,8 @@
                                   Subheader="These are previous offers made by this investor"
                                   Background="{DynamicResource SystemListMediumColor}"
                                   IsVisible="{Binding AreDetailsShown, DataType=approve:IInvestmentViewModel}">
-                                <sdg:SlimDataGrid Classes="NestedGrid" ItemsSource="{Binding OtherInvestments}">
-                                    <sdg:SlimDataGrid.Styles>
+                                <SlimDataGrid Classes="NestedGrid" ItemsSource="{Binding OtherInvestments}">
+                                    <SlimDataGrid.Styles>
                                         <Style Selector="sdg|Row">
                                             <Setter Property="Margin" Value="0 10" />
                                         </Style>
@@ -59,18 +59,18 @@
                                             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
                                             <Setter Property="VerticalAlignment" Value="Center" />
                                         </Style>
-                                    </sdg:SlimDataGrid.Styles>
-                                    <sdg:SlimDataGrid.Columns>
-                                        <sdg:Column Header="Amount" Width="*" Binding="{Binding Amount.BtcString}" />
-                                        <sdg:Column Header="Date" Width="*" Binding="{Binding CreatedOn, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
-                                        <sdg:Column Header="" Width="150" Binding="{Binding InvestorNostrPubKey}">
-                                            <sdg:Column.CellTemplate>
+                                    </SlimDataGrid.Styles>
+                                    <SlimDataGrid.Columns>
+                                        <Column Header="Amount" Width="*" Binding="{Binding Amount.BtcString}" />
+                                        <Column Header="Date" Width="*" Binding="{Binding CreatedOn, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                                        <Column Header="" Width="150" Binding="{Binding InvestorNostrPubKey}">
+                                            <Column.CellTemplate>
                                                 <DataTemplate>
                                                 </DataTemplate>
-                                            </sdg:Column.CellTemplate>
-                                        </sdg:Column>
-                                        <sdg:Column Header="Status" Width="Auto" Binding="{Binding Status}">
-                                            <sdg:Column.CellTemplate>
+                                            </Column.CellTemplate>
+                                        </Column>
+                                        <Column Header="Status" Width="Auto" Binding="{Binding Status}">
+                                            <Column.CellTemplate>
                                                 <DataTemplate>
                                                     <TextBlock Tag="{Binding}">
                                                         <TextBlock.Styles>
@@ -86,10 +86,10 @@
                                                         </TextBlock.Styles>
                                                     </TextBlock>
                                                 </DataTemplate>
-                                            </sdg:Column.CellTemplate>
-                                        </sdg:Column>
-                                    </sdg:SlimDataGrid.Columns>
-                                </sdg:SlimDataGrid>
+                                            </Column.CellTemplate>
+                                        </Column>
+                                    </SlimDataGrid.Columns>
+                                </SlimDataGrid>
                             </Card>
                         </DockPanel>
                     </Border>
@@ -99,25 +99,25 @@
 
     </UserControl.Styles>
 
-    <sdg:SlimDataGrid Classes="TopLevel" ItemsSource="{Binding Investments}">
-        <sdg:SlimDataGrid.Styles>
+    <SlimDataGrid Classes="TopLevel" ItemsSource="{Binding Investments}">
+        <SlimDataGrid.Styles>
             <Style Selector="sdg|Cell TextBlock">
                 <Setter Property="TextTrimming" Value="CharacterEllipsis" />
                 <Setter Property="VerticalAlignment" Value="Center" />
             </Style>
-        </sdg:SlimDataGrid.Styles>
-        <sdg:SlimDataGrid.Columns>
-            <sdg:Column Header="Amount" Width="*" Binding="{Binding MostRecentInvestment.Amount.BtcString}" />
-            <sdg:Column Header="Date" Width="*" Binding="{Binding MostRecentInvestment.CreatedOn, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
-            <sdg:Column Header="Investor" Width="150" Binding="{Binding MostRecentInvestment.InvestorNostrPubKey}">
-                <sdg:Column.CellTemplate>
+        </SlimDataGrid.Styles>
+        <SlimDataGrid.Columns>
+            <Column Header="Amount" Width="*" Binding="{Binding MostRecentInvestment.Amount.BtcString}" />
+            <Column Header="Date" Width="*" Binding="{Binding MostRecentInvestment.CreatedOn, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+            <Column Header="Investor" Width="150" Binding="{Binding MostRecentInvestment.InvestorNostrPubKey}">
+                <Column.CellTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding}" />
                     </DataTemplate>
-                </sdg:Column.CellTemplate>
-            </sdg:Column>
-            <sdg:Column Header="Status" Width="Auto" Binding="{Binding MostRecentInvestment.Status}">
-                <sdg:Column.CellTemplate>
+                </Column.CellTemplate>
+            </Column>
+            <Column Header="Status" Width="Auto" Binding="{Binding MostRecentInvestment.Status}">
+                <Column.CellTemplate>
                     <DataTemplate>
                         <TextBlock Tag="{Binding}">
                             <TextBlock.Styles>
@@ -133,26 +133,26 @@
                             </TextBlock.Styles>
                         </TextBlock>
                     </DataTemplate>
-                </sdg:Column.CellTemplate>
-            </sdg:Column>
-            <sdg:Column Header="" Width="Auto" Binding="{Binding}">
-                <sdg:Column.CellTemplate>
+                </Column.CellTemplate>
+            </Column>
+            <Column Header="" Width="Auto" Binding="{Binding}">
+                <Column.CellTemplate>
                     <DataTemplate>
                         <Button Command="{Binding Approve}"
                                 IsVisible="{Binding $self.IsEffectivelyEnabled}"
                                 Content="Approve" />
                     </DataTemplate>
-                </sdg:Column.CellTemplate>
-            </sdg:Column>
-            <sdg:Column Width="Auto" Binding="{Binding }">
-                <sdg:Column.CellTemplate>
+                </Column.CellTemplate>
+            </Column>
+            <Column Width="Auto" Binding="{Binding }">
+                <Column.CellTemplate>
                     <DataTemplate>
                         <ToggleButton Theme="{StaticResource ExpandingToggleButtonNoText}" x:Name="AreDetailsShown" IsChecked="{Binding AreDetailsShown, Mode=TwoWay}" Margin="10"
                                       IsVisible="{Binding OtherInvestments, Converter={x:Static Enumerable.Any}}" />
                     </DataTemplate>
-                </sdg:Column.CellTemplate>
-            </sdg:Column>
-        </sdg:SlimDataGrid.Columns>
-    </sdg:SlimDataGrid>
+                </Column.CellTemplate>
+            </Column>
+        </SlimDataGrid.Columns>
+    </SlimDataGrid>
 
 </UserControl>
