@@ -7,7 +7,7 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:claim="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.MainView.Claim"
-             mc:Ignorable="d" d:DesignWidth="800"
+             mc:Ignorable="d" d:DesignWidth="400"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.MainView.Claim.ClaimFundsView" x:DataType="claim:IClaimFundsViewModel">
 
     <Design.DataContext>
@@ -84,9 +84,9 @@
                 </ItemsControl.Styles>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="claim:IClaimableStage">
-                        <Card HeaderStartContent="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}">
+                        <Card HeaderStartContent="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}" Theme="{StaticResource WideCard}">
                             <Card.HeaderEndContent>
-                                <ToggleButton Theme="{StaticResource ExpandingToggleButton}" Padding="10" x:Name="ToggleButton" />
+                                <ToggleButton HorizontalAlignment="Stretch" Theme="{StaticResource ExpandingToggleButton}" Padding="10" x:Name="ToggleButton" />
                             </Card.HeaderEndContent>
                             <Card.Header>
                                 <StackPanel Orientation="Horizontal" Spacing="10">
@@ -112,18 +112,18 @@
                                          Grid.IsSharedSizeScope="True" ItemContainerTheme="{StaticResource TransactionItemTheme}">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid>
+                                            <Grid ColumnSpacing="10">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="Auto" SharedSizeGroup="Amount" />
                                                     <ColumnDefinition />
-                                                    <ColumnDefinition />
+                                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Badge" />
                                                 </Grid.ColumnDefinitions>
                                                 <CheckBox VerticalAlignment="Center"
                                                           IsChecked="{Binding $parent[ListBoxItem].IsSelected}" />
                                                 <TextBlock Grid.Column="1" TextAlignment="Right" HorizontalAlignment="Stretch" VerticalAlignment="Center" Text="{Binding Amount.DecimalString}" />
-                                                <TextBlock Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding Address}" />
-                                                <controls:Badge HorizontalAlignment="Right" Grid.Column="3" Tag="{Binding ClaimStatus}">
+                                                <TextBlock Grid.Column="2" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding Address}" />
+                                                <controls:Badge HorizontalAlignment="Stretch" Grid.Column="3" Tag="{Binding ClaimStatus}">
                                                     <controls:Badge.Styles>
                                                         <Style Selector="controls|Badge[Tag=Invalid]">
                                                             <Setter Property="Color" Value="Red" />
@@ -135,11 +135,11 @@
                                                         </Style>
                                                         <Style Selector="controls|Badge[Tag=WithdrawByInvestor]">
                                                             <Setter Property="Color" Value="OrangeRed" />
-                                                            <Setter Property="Content" Value="Withdrawn by investor" />
+                                                            <Setter Property="Content" Value="Withdrawn" />
                                                         </Style>
                                                         <Style Selector="controls|Badge[Tag=SpentByFounder]">
                                                             <Setter Property="Color" Value="Goldenrod" />
-                                                            <Setter Property="Content" Value="Spent by founder" />
+                                                            <Setter Property="Content" Value="Spent" />
                                                         </Style>
                                                         <Style Selector="controls|Badge[Tag=Unspent]">
                                                             <Setter Property="Color" Value="Green" />
