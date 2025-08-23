@@ -76,7 +76,7 @@
                     <div class="info-card">
                         <div class="mb-3">
                             <label for="NostrMetadataName" class="form-label">Project name</label>
-                            <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated" maxlength="200" />
+                            <InputText id="NostrMetadataName" autocomplete="off" @bind-Value="project.Metadata.Name" @bind-Value:after="SaveProjectToStorage" class="form-control" placeholder="Enter the name of your project" disabled="@nostrMetadataCreated" maxlength="200" />
                             <small class="form-text text-muted">
                                 @((project.Metadata?.Name?.Length ?? 0).ToString())/200 characters
                             </small>
@@ -84,7 +84,7 @@
 
                         <div class="mb-3">
                             <label for="NostrMetadataAbout" class="form-label">About</label>
-                            <InputTextArea id="NostrMetadataAbout" autocomplete="off" @bind-Value="project.Metadata.About" class="form-control" placeholder="Provide a brief description of the project" disabled="@nostrMetadataCreated" maxlength="400" />
+                            <InputTextArea id="NostrMetadataAbout" autocomplete="off" @bind-Value="project.Metadata.About" @bind-Value:after="SaveProjectToStorage" class="form-control" placeholder="Provide a brief description of the project" disabled="@nostrMetadataCreated" maxlength="400" />
                             <small class="form-text text-muted">
                                 @((project.Metadata?.About?.Length ?? 0).ToString())/400 characters
                             </small>
@@ -96,6 +96,7 @@
                                        id="NostrMetadataWebsite"
                                        autocomplete="off"
                                        @bind-Value="project.Metadata.Website"
+                                       @bind-Value:after="SaveProjectToStorage"
                                        @onblur="OnWebsiteChanged"
                                        class=@($"form-control{(websiteError ? " is-invalid" : "")}")
                                        placeholder="Enter the URL of the project website (https://example.com)"
@@ -116,6 +117,7 @@
                             <InputText id="NostrMetadataBanner" 
                                        autocomplete="off" 
                                        @bind-Value="project.Metadata.Banner" 
+                                       @bind-Value:after="SaveProjectToStorage"
                                        @onblur="OnBannerChanged"
                                        class=@($"form-control{(bannerError ? " is-invalid" : "")}")
                                        placeholder="Enter the URL for the project banner image" 
@@ -136,6 +138,7 @@
                             <InputText id="NostrMetadataPicture" 
                                        autocomplete="off" 
                                        @bind-Value="project.Metadata.Picture" 
+                                       @bind-Value:after="SaveProjectToStorage"
                                        @onblur="OnPictureChanged"
                                        class=@($"form-control{(pictureError ? " is-invalid" : "")}")
                                        placeholder="Enter the URL for the project logo or profile picture" 
@@ -170,6 +173,7 @@
                                 <p class="form-text text-muted mt-0 mb-2 small">The minimum amount of @network.CoinTicker this project is trying to raise.</p>
                                 <InputNumber id="targetAmount"
                                              @bind-Value="targetAmountInBTC"
+                                             @bind-Value:after="SaveProjectToStorage"
                                              @onblur="ValidateTargetAmount"
                                              class="form-control"
                                              placeholder="Enter target amount"
@@ -241,7 +245,7 @@
                                     <label for="penaltyDays" class="form-label mb-0 fw-semibold">Penalty Days</label>
                                 </div>
                                 <p class="form-text text-muted mt-0 mb-2 small">Number of days to lock funds for departing investors who wish to withdraw early.</p>
-                                <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" @onblur="ValidatePenaltyDays" @oninput="OnPenaltyDaysInput" class="form-control" min="0" max="365" disabled="@nostrApplicationSpecificDataCreated" />
+                                <InputNumber id="penaltyDays" @bind-Value="project.ProjectInfo.PenaltyDays" @bind-Value:after="SaveProjectToStorage" @onblur="ValidatePenaltyDays" @oninput="OnPenaltyDaysInput" class="form-control" min="0" max="365" disabled="@nostrApplicationSpecificDataCreated" />
                                 @if (penaltyDaysError)
                                 {
                                     <div class="text-danger mt-1 small">
@@ -302,11 +306,11 @@
                                 <!-- Automatic Generation Inputs -->
                                 <div class="mb-3">
                                     <label for="totalDuration" class="form-label">Total Project Duration (in days)</label>
-                                    <InputNumber id="totalDuration" @bind-Value="totalDuration" class="form-control" placeholder="Enter total duration in days" disabled="@nostrApplicationSpecificDataCreated" />
+                                    <InputNumber id="totalDuration" @bind-Value="totalDuration" @bind-Value:after="SaveProjectToStorage" class="form-control" placeholder="Enter total duration in days" disabled="@nostrApplicationSpecificDataCreated" />
                                 </div>
                                 <div class="mb-3">
                                     <label for="numberOfStages" class="form-label">Number of Stages</label>
-                                    <InputNumber id="numberOfStages" @bind-Value="numberOfStages" class="form-control" placeholder="Enter number of stages" disabled="@nostrApplicationSpecificDataCreated" />
+                                    <InputNumber id="numberOfStages" @bind-Value="numberOfStages" @bind-Value:after="SaveProjectToStorage" class="form-control" placeholder="Enter number of stages" disabled="@nostrApplicationSpecificDataCreated" />
                                 </div>
                                 <button type="button" class="btn btn-border-success mb-3" @onclick="GenerateSmartStages" disabled="@nostrApplicationSpecificDataCreated">
                                     <Icon IconName="server-path" Height="20" Width="20" Color="var(--angor-primary)" Class="me-2"></Icon>
@@ -360,6 +364,7 @@
                                                                 </label>
                                                                 <div class="position-relative">
                                                                     <InputNumber @bind-Value="stage.AmountToRelease"
+                                                                                 @bind-Value:after="SaveProjectToStorage"
                                                                                  class="form-control form-control-modern pe-5"
                                                                                  placeholder="Enter %"
                                                                                  min="1"
@@ -1646,6 +1651,7 @@
 
         // Update expiry date
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
+        SaveProjectToStorage();
         StateHasChanged();
     }
 
@@ -1666,6 +1672,7 @@
 
         // Update expiry date
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
+        SaveProjectToStorage();
         StateHasChanged();
     }
 
@@ -1707,6 +1714,7 @@
 
             project.ProjectInfo.Stages.Clear();
             project.ProjectInfo.Stages = GenerateStages(preset.Percentages, preset.IntervalDays);
+            SaveProjectToStorage();
         }
         else
         {
@@ -1949,6 +1957,7 @@
             stageDateErrors[stage] = "";
         }
 
+        SaveProjectToStorage();
         StateHasChanged();
     }
 
@@ -2112,7 +2121,7 @@
             {
                 SetStageReleaseDate(stage, stage.ReleaseDate);
             }
-
+            SaveProjectToStorage();
         }
     }
 
@@ -2130,6 +2139,7 @@
 
         ValidateAllStages();
         ValidateEndDate();
+        SaveProjectToStorage();
         StateHasChanged();
     }
 
@@ -2519,6 +2529,19 @@
         {
             project.ProjectInfo.PenaltyDays = value;
             ValidatePenaltyDays();
+            SaveProjectToStorage();
+        }
+    }
+
+    private void SaveProjectToStorage()
+    {
+        try
+        {
+            storage.UpdateFounderProject(project);
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogError(ex, "Error saving project to storage");
         }
     }
 }
