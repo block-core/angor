@@ -28,5 +28,13 @@ namespace Angor.Shared.Services
 
             return false;
         }
+
+        public bool IsProjectFunded(long target, long current, bool started)
+        {
+            if (current < target && started)
+                return false;
+
+            return true;
+        }
     }
 }
