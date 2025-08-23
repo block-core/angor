@@ -24,31 +24,22 @@
         </Style>
     </UserControl.Styles>
     
-    <Button Classes="CardGridItem" Command="{Binding GoToDetails}">
-        <OverlayBorder Padding="0 0 0 20" Theme="{StaticResource CardOverlayBorder}" x:DataType="browse:IProjectViewModel">
-            <Grid RowDefinitions="180 *" RowSpacing="15" Background="Transparent">
-                <Panel>
-                    <av:AdvancedImage Stretch="UniformToFill" Source="{Binding Project.Banner}" />
-                </Panel>
-                <StackPanel Grid.Row="1" Spacing="15">
-                    <StackPanel Spacing="10" Grid.Row="1" Margin="15 0">
-                        <TextBlock Classes="SizeBig" Text="{Binding Project.Name}" />
-                        <Separator>
-                            <Separator.Background>
-                                <LinearGradientBrush StartPoint="0%,100%" EndPoint="100%,100%">
-                                    <GradientStop Color="Transparent" Offset="0" />
-                                    <GradientStop Color="{DynamicResource SystemChromeHighColor}" Offset="0.3" />
-                                    <GradientStop Color="{DynamicResource SystemChromeHighColor}" Offset="0.8" />
-                                    <GradientStop Color="Transparent" Offset="1" />
-                                </LinearGradientBrush>
-                            </Separator.Background>
-                        </Separator>
-                        <TextBlock ToolTip.Tip="{Binding $self.Text}"
-                                   MaxLines="6" Grid.Row="2" Text="{Binding Project.ShortDescription}" />
-                    </StackPanel>
-                </StackPanel>
-            </Grid>
-        </OverlayBorder>
-    </Button>
+    <Border Padding="0 0 0 20"  Background="{DynamicResource SystemChromeLowColor}"
+            BorderBrush="{DynamicResource SystemChromeMediumColor}" CornerRadius="10"  x:DataType="browse:IProjectViewModel">
+        <DockPanel VerticalSpacing="15" >
+            <av:AdvancedImage  Margin="5" CornerRadius="10" Height="180" Stretch="UniformToFill" Source="{Binding Project.Banner}" DockPanel.Dock="Top" />
+            <StackPanel Classes="SmallGap" Margin="15 0">
+                <TextBlock Classes="SizeBig" Text="{Binding Project.Name}" />
+                <Separator Background="{DynamicResource SystemChromeAltLowColor}" />
+                <TextBlock ToolTip.Tip="{Binding $self.Text}"
+                           MaxLines="6" Grid.Row="2" Text="{Binding Project.ShortDescription}" />
+            </StackPanel>
+            <Interaction.Behaviors>
+                <TappedEventTrigger>
+                    <InvokeCommandAction Command="{Binding GoToDetails}" />
+                </TappedEventTrigger>
+            </Interaction.Behaviors>
+        </DockPanel>
+    </Border>
 
 </UserControl>
