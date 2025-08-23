@@ -13,6 +13,7 @@
 @inject IRelayService RelayService;
 @inject IIndexerService _IndexerService
 @inject ISerializer serializer
+@inject ILogger<Founder> _Logger;
 
 @inherits BaseComponent
 
@@ -156,6 +157,8 @@
                         var nostrMetadata = serializer.Deserialize<ProjectMetadata>(e.Content);
                         var existingProject = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
 
+                        _Logger.LogInformation("Received Metadata for {PubKey}", e.Pubkey);
+
                         if (existingProject != null)
                         {
                             existingProject.Metadata ??= nostrMetadata;
@@ -178,9 +181,11 @@
                         var projectInfo = serializer.Deserialize<ProjectInfo>(e.Content);
                         var project = founderProjects.FirstOrDefault(_ => _.ProjectInfo.NostrPubKey == e.Pubkey);
 
+                        _Logger.LogInformation("Received ProjectInfo for {PubKey}", e.Pubkey);
+
                         if (project != null)
                         {
-                            if (!string.IsNullOrEmpty(project.ProjectInfo.ProjectIdentifier))
+                            if (project.ProjectInfo.Stages.Count > 0)
                                 return;
 
                             project.ProjectInfo = projectInfo;
