@@ -17,7 +17,7 @@
 
         <ControlTheme x:Key="WideCard"
                       TargetType="Card"
-                      BasedOn="{StaticResource LeftFlexHeaderCard}">
+                      BasedOn="{StaticResource WrapGridCard}">
             <Setter Property="HeaderStartContentTemplate" Value="{StaticResource BigIcon}" />
             <Setter Property="HeaderPadding" Value="0 0 0 10" />
             <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
