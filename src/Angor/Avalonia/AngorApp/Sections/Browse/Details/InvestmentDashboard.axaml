@@ -16,7 +16,7 @@
         <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
     </UserControl.Styles>
 
-    <Card Header="Investment Dashboard" HeaderStartContent="{Icon fa-solid fa-chart-pie}" Theme="{StaticResource WideCard}" Subheader="Manage your investment and track project progress">
+    <Card Header="Investment Dashboard" HeaderStartContent="{Icon fa-solid fa-chart-pie}" Theme="{StaticResource WideCard}" Subheader="Manage your investment and track project progress" HeaderAndBodySpacing="30">
         <StackPanel Spacing="25">
             <!-- Investment Opportunity Section -->
             <Panel MaxWidth="600">
