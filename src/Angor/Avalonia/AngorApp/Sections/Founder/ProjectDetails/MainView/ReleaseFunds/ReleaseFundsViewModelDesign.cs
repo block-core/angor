@@ -1,3 +1,5 @@
+using Zafiro.UI.Commands;
+
 namespace AngorApp.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
 
 public class ReleaseFundsViewModelDesign : IReleaseFundsViewModel
@@ -21,4 +23,6 @@ public class ReleaseFundsViewModelDesign : IReleaseFundsViewModel
             Arrived = DateTime.Now,
         }
     };
+
+    public IEnhancedCommand<Maybe<Result>> ReleaseAll { get; }
 }

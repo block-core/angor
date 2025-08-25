@@ -26,7 +26,7 @@
                 </StackPanel>
                 <TextBlock Classes="Wrap Center" FontWeight="Regular" DockPanel.Dock="Top">As founder, you can only release the funds back to the investors</TextBlock>
             </StackPanel>
-            <IconButton Margin="0 0 10 0" Content="Release All" DockPanel.Dock="Top" HorizontalAlignment="Right">
+            <IconButton Margin="0 0 10 0" Command="{Binding ReleaseAll}" Content="Release All" DockPanel.Dock="Top" HorizontalAlignment="Right">
                 <IconButton.Icon>
                     <ui:Icon Source="mdi-check-all" />
                 </IconButton.Icon>
@@ -69,10 +69,10 @@
                         <Column Header="TIME ARRIVED" Binding="{Binding Arrived, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
                         <Column Header="TIME APPROVED" Binding="{Binding Approved, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
                         <Column Header="TIME RELEASED" Binding="{Binding Released, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
-                        <Column>
+                        <Column Binding="{Binding}">
                             <Column.CellTemplate>
                                 <DataTemplate>
-                                    <IconButton HorizontalAlignment="Right" Content="Release">
+                                    <IconButton Command="{Binding Release}" HorizontalAlignment="Right" Content="Release">
                                         <IconButton.Icon>
                                             <ui:Icon Source="mdi-check" />
                                         </IconButton.Icon>
@@ -100,7 +100,6 @@
                             </Card>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
-
                 </ItemsControl>
             </Panel>
         </DockPanel>

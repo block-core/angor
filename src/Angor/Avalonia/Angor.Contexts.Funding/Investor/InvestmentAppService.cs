@@ -55,4 +55,16 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     {
         return mediator.Send(new GetClaimableTransactions.GetClaimableTransactionsRequest(walletId, projectId));
     }
+    
+    // Gets a list of all the transactions than can be released for a given project
+    public Task<Result<IEnumerable<ReleaseableTransactionDto>>> GetReleaseableTransactions(Guid walletId, ProjectId projectId)
+    {
+        return mediator.Send(new GetReleaseableTransactions.GetReleaseableTransactionsRequest(walletId, projectId));
+    }
+
+    // Note: you can release multiple investors at once, hence the list
+    public Task<Result> ReleaseInvestorTransactions(Guid walletId, ProjectId projectId, IEnumerable<string> investorAddresses)
+    {
+        return mediator.Send(new ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest(walletId, projectId, investorAddresses));
+    }
 }

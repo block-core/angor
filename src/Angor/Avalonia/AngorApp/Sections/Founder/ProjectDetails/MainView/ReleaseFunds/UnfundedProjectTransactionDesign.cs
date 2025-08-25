@@ -7,5 +7,6 @@ public class UnfundedProjectTransactionDesign : IUnfundedProjectTransaction
     public DateTime Arrived { get; set; }
     public DateTime Approved { get; set; }
     public DateTime? Released { get; set; }
-    public IEnhancedCommand Release { get; } = ReactiveCommand.Create(() => { }).Enhance();
+    public string InvestorAddress { get; set; }
+    public IEnhancedCommand<Maybe<Result>> Release { get; }
 }

@@ -16,7 +16,7 @@ public class ProjectMainViewModel : IProjectMainViewModel
     {
         this.project = project;
         Status = project.Status;
-        ReleaseFundsViewModel = new ReleaseFundsViewModelDesign();
+        ReleaseFundsViewModel = new ReleaseFundsViewModel(project.Info.Id, investmentAppService, uiServices);
         ClaimFundsViewModel = new ClaimFundsViewModel(project.Info.Id, investmentAppService, uiServices);
         ApproveInvestmentsViewModel = new ApproveInvestmentsViewModel(project.Info.Id, investmentAppService, uiServices);
         ProjectStatisticsViewModel = new ProjectStatisticsViewModel(project);
