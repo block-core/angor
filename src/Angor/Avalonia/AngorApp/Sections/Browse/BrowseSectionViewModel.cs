@@ -1,6 +1,6 @@
 using System.Linq;
+using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.Contexts.Wallet.Application;
 using AngorApp.Features.Invest;
 using AngorApp.Sections.Browse.ProjectLookup;
 using AngorApp.UI.Services;
@@ -9,6 +9,7 @@ using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Mixins;
 using Zafiro.Reactive;
 using Zafiro.UI;
+using Zafiro.UI.Commands;
 using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Browse;
@@ -16,41 +17,36 @@ namespace AngorApp.Sections.Browse;
 public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionViewModel, IDisposable
 {
     [Reactive] private string? projectId;
+    private readonly CompositeDisposable disposable = new();
 
     [ObservableAsProperty] private IEnumerable<IProjectViewModel>? projects;
 
-    public BrowseSectionViewModel(IWalletAppService walletAppService, 
-        IProjectAppService projectService, INavigator navigator,
+    public BrowseSectionViewModel(IProjectAppService projectService, INavigator navigator,
         InvestWizard investWizard,
         UIServices uiServices)
     {
-        ProjectLookupViewModel = new ProjectLookupViewModel(projectService, navigator, investWizard, uiServices);
+        ProjectLookupViewModel = new ProjectLookupViewModel(projectService, navigator, investWizard, uiServices).DisposeWith(disposable);
 
-        LoadLatestProjects = ReactiveCommand.CreateFromObservable(() => Observable.FromAsync(projectService.Latest)
+        LoadProjects = ReactiveCommand.CreateFromObservable(() => Observable.FromAsync(projectService.Latest)
             .Map(list => list.Select(dto => dto.ToProject()))
-            .Map(list => list.Select(project => new ProjectViewModel(project, navigator, uiServices, investWizard))));
+            .Map(list => list.Select(IProjectViewModel (project) => new ProjectViewModel(project, navigator, uiServices, investWizard))))
+            .Enhance()
+            .DisposeWith(disposable);
 
-        LoadLatestProjects.HandleErrorsWith(uiServices.NotificationService, "Could not load projects");
+        LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Could not load projects");
 
-        OpenHub = ReactiveCommand.CreateFromTask(() =>
-            uiServices.LauncherService.LaunchUri(new Uri("https://www.angor.io")));
-        projectsHelper = LoadLatestProjects.Successes().ToProperty(this, x => x.Projects);
-        IsLoading = LoadLatestProjects.IsExecuting;
-        LoadLatestProjects.Execute().Subscribe();
+        projectsHelper = LoadProjects.Successes().ToProperty(this, x => x.Projects).DisposeWith(disposable);
+        LoadProjects.Execute().Subscribe().DisposeWith(disposable);
     }
 
-    public IObservable<bool> IsLoading { get; }
 
     public IProjectLookupViewModel ProjectLookupViewModel { get; }
 
-    public ReactiveCommand<Unit, Result<IEnumerable<ProjectViewModel>>> LoadLatestProjects { get; }
+    public IEnhancedCommand<Result<IEnumerable<IProjectViewModel>>> LoadProjects { get; }
 
-    public ReactiveCommand<Unit, Unit> OpenHub { get; set; }
 
     public void Dispose()
     {
-        projectsHelper.Dispose();
-        LoadLatestProjects.Dispose();
-        OpenHub.Dispose();
+        disposable.Dispose();
     }
 }
