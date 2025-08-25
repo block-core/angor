@@ -29,9 +29,15 @@ namespace Angor.Shared.Services
             return false;
         }
 
-        public bool IsProjectFunded(long target, long current, bool started)
+        public bool IsProjectFunded(long target, long current)
         {
-            if (current < target && started)
+            var feePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
+
+            // reduce the fee from the total amount;
+            long angorFee = (target * feePercentage) / 100;
+            target -= angorFee;
+
+            if (current < target)
                 return false;
 
             return true;

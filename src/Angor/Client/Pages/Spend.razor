@@ -28,6 +28,7 @@
 @inject ILogger<Recover> Logger;
 @inject IClipboardService _clipboardService
 @inject IInvestorTransactionActions _InvestorTransactionActions
+@inject IApplicationLogicService _ApplicationLogicService
 
 @inherits BaseComponent
 
@@ -91,13 +92,13 @@
     }
     else
     {
-        @if (totalInvestedAmount < founderProject.ProjectInfo.TargetAmount && founderProject.ProjectHasStarted())
+        @if (!_ApplicationLogicService.IsProjectFunded(founderProject.ProjectInfo.TargetAmount, totalInvestedAmount ) && founderProject.ProjectHasStarted())
         {
             <div class="card card-body slide-in mt-4">
 
                 <div class="info-alert">
                     <Icon IconName="info" Class="alert-icon" Width="24" Height="24" />
-                    <p class="text-warning">The target investment amount has not been reached. As founder, you can only release the funds back to the investors.</p>
+                    <p class="text-warning">The target investment amount has not been reached. you may only release the funds back to the investors.</p>
                 </div>
 
                 <div class="row g-4 mt-2">
@@ -854,12 +855,6 @@
 
     protected async Task ClaimCoinsCheckPassword(int stageId)
     {
-        if (totalInvestedAmount < founderProject.ProjectInfo.TargetAmount)
-        {
-            notificationComponent.ShowErrorMessage("Target investment amount has not been reached, you can only release the funds back to the investors");
-            return;
-        }
-
         if (passwordComponent.HasPassword())
         {
             await ClaimCoins(stageId);
