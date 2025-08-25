@@ -238,7 +238,7 @@
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 <div class="input-group">
                                                     <input type="@passwordInputType" class="form-control"
-                                                           @bind="newWalletPassword" placeholder="Enter password">
+                                                           @bind="newWalletPassword" @bind:event="oninput" placeholder="Enter password">
                                                     <button class="btn btn-border btn-sm" @onclick="TogglePasswordVisibility">
                                                         @if (passwordToggleText == "Show")
                                                         {
@@ -312,7 +312,7 @@
                                                 <p class="text-muted mb-3">@stepDescription</p>
                                                 <div class="input-group">
                                                     <input type="@passwordInputType" class="form-control"
-                                                           @bind="newWalletPassword" placeholder="Enter password">
+                                                           @bind="newWalletPassword" @bind:event="oninput" placeholder="Enter password">
                                                     <button class="btn btn-border btn-sm" @onclick="TogglePasswordVisibility">
 
                                                         @if (passwordToggleText == "Show")
@@ -2012,6 +2012,22 @@ else
         string input = e.Value?.ToString() ?? string.Empty;
         userVerificationInputs[wordIndex] = input;
         showSuggestions[wordIndex] = !string.IsNullOrWhiteSpace(input);
+        
+        // Auto-complete if 4+ characters and only one suggestion
+        if (input.Length >= 4)
+        {
+            var suggestions = GetFilteredWordSuggestions(input).ToList();
+            if (suggestions.Count == 1 && suggestions[0] != input)
+            {
+                userVerificationInputs[wordIndex] = suggestions[0];
+                showSuggestions[wordIndex] = false;
+                invalidWordIndices[wordIndex] = false;
+                ValidateWordInput();
+                StateHasChanged();  
+                return;
+            }
+        }
+        
         ValidateWordInput();
         ValidateWordInstant(wordIndex, input);
     }
