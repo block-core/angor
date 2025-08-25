@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="600" 
+             mc:Ignorable="d" d:DesignWidth="1200" 
              x:Class="AngorApp.Sections.Browse.Details.InvestmentDashboard"
              x:DataType="dt:IProjectDetailsViewModel">
 
@@ -19,7 +19,7 @@
     <Card Header="Investment Dashboard" HeaderStartContent="{Icon fa-solid fa-chart-pie}" Theme="{StaticResource WideCard}" Subheader="Manage your investment and track project progress">
         <StackPanel Spacing="25">
             <!-- Investment Opportunity Section -->
-            <Panel>
+            <Panel MaxWidth="600">
                 <Border Background="{DynamicResource SystemAccentColor}"
                         CornerRadius="15"
                         Opacity="0.1" />
