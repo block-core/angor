@@ -18,12 +18,12 @@
         </Style>
     </UserControl.Styles>
 
-    <StackPanel IsEnabled="{Binding !IsSending^}">
+    <StackPanel IsEnabled="{Binding !IsSending^}" Classes="SmallGap">
         <Card Header="Project" Theme="{StaticResource RemarkableSubheaderCard}"
               Subheader="{Binding Project.Name}" />
         <Card Header="Amount to offer" Theme="{StaticResource RemarkableSubheaderCard}"
               Subheader="{Binding  AmountToOffer.DecimalString}" />
-        <UniformGrid Rows="1">
+        <UniformGrid Rows="1" ColumnSpacing="{StaticResource SmallGap}">
             <Card Header="Transaction speed">
                 <feerate:FeerateSelector Feerate="{Binding Feerate}"
                                           Presets="{Binding Presets}">

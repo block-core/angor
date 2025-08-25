@@ -1,6 +1,8 @@
 using System.Reactive.Disposables;
+using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder.CreateProject;
 using AngorApp.UI.Controls.Common.Success;
 using AngorApp.UI.Services;
@@ -21,7 +23,7 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
     private readonly IProjectAppService projectAppService;
     private readonly UIServices uiServices;
 
-    public FounderSectionViewModel(UIServices uiServices, IProjectAppService projectAppService, Func<ProjectDto, IFounderProjectViewModel> projectViewModelFactory, INavigator navigator)
+    public FounderSectionViewModel(UIServices uiServices, IInvestmentAppService investmentAppService, IProjectAppService projectAppService, INavigator navigator)
     {
         this.uiServices = uiServices;
         this.projectAppService = projectAppService;
@@ -30,7 +32,7 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
         LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Failed to get investments").DisposeWith(disposable);
         LoadProjects.Successes()
             .EditDiff(dto => dto.Id)
-            .Transform(dto => projectViewModelFactory(dto))
+            .Transform(dto => new FounderProjectViewModel(navigator, dto, investmentAppService, projectAppService, uiServices))
             .Bind(out var projectList)
             .Subscribe()
             .DisposeWith(disposable);

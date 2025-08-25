@@ -40,7 +40,7 @@
         <TextBox x:Name="SearchBox" Text="{Binding ProjectId}" Watermark="Enter Angor project identifier">
             <TextBox.InnerRightContent>
                 <StackPanel Orientation="Horizontal">
-                    <fa:ProgressRing Width="20" Height="20" IsVisible="{Binding IsBusy^}" />
+                    <fa:ProgressRing Width="20" Height="20" Foreground="{DynamicResource SystemAccentColor}" IsVisible="{Binding IsBusy^}" />
                     <i:Icon Value="fa-magnifying-glass" Margin="10" />
                 </StackPanel>
             </TextBox.InnerRightContent>
@@ -57,7 +57,7 @@
                     <Binding Path="ProjectId" Converter="{x:Static StringConverters.IsNotNullOrEmpty}" />
                 </MultiBinding>
             </Popup.IsOpen>
-            <Border x:Name="PopupBorder" Background="White" ClipToBounds="True" BorderThickness="1 0 1 1 " CornerRadius="0 0 10 10">
+            <Border x:Name="PopupBorder" Background="{DynamicResource SystemListMediumColor}" ClipToBounds="True" BorderThickness="1 0 1 1 " CornerRadius="0 0 10 10">
                 <Panel>
                     <Panel>
                         <TextBlock Margin="20">

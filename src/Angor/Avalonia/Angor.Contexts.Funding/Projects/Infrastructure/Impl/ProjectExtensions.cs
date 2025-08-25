@@ -13,10 +13,13 @@ public static class ProjectExtensions
         {
             Id = project.Id,
             Banner = project.Banner,
-            Picture = project.Picture,
+            Avatar = project.Picture,
             Name = project.Name,
             ShortDescription = project.ShortDescription,
-            StartingDate = project.StartingDate,
+            FundingStartDate = project.StartingDate,
+            PenaltyDuration = project.PenaltyDuration,
+            FundingEndDate = project.EndDate,
+            InformationUri = project.InformationUri,
             TargetAmount = project.TargetAmount,
             Stages = project.Stages.Select(stage => new StageDto
             {

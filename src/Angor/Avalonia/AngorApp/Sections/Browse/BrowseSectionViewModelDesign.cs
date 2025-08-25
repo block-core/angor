@@ -3,6 +3,7 @@ using AngorApp.Sections.Browse.ProjectLookup;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
 using CSharpFunctionalExtensions;
+using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Browse;
 
@@ -14,9 +15,6 @@ public class BrowseSectionViewModelDesign : IBrowseSectionViewModel
     }
 
     public IEnumerable<IProjectViewModel> Projects { get; }
-    public ReactiveCommand<Unit, Unit> OpenHub { get; set; }
-    public string? ProjectId { get; set; }
-    public IObservable<bool> IsBusy { get; set; }
     public IProjectLookupViewModel ProjectLookupViewModel { get; }
-    public IObservable<bool> IsLoading { get; }
+    public IEnhancedCommand<Result<IEnumerable<IProjectViewModel>>> LoadProjects { get; }
 }

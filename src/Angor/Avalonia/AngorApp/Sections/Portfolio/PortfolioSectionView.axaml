@@ -87,7 +87,7 @@
                     </Card.HeaderEndContent>
                 </Card>
 
-                <CardGrid DockPanel.Dock="Top">
+                <CardGrid DockPanel.Dock="Top" Classes="ShowEmptyContent" Empty.Content="Nothing to show">
                     <CardGrid.ItemsSource>
                         <collections:ArrayList>
                             <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Funded Projects" Subheader="{Binding FundedProjects}">

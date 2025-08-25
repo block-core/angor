@@ -15,6 +15,7 @@
     <Styles.Resources>
         <x:Double x:Key="SmallGap">10</x:Double>
         <x:Double x:Key="BigGap">20</x:Double>
+        <x:Double x:Key="HugeGap">40</x:Double>
     </Styles.Resources>
     
     
@@ -25,6 +26,10 @@
     <Style Selector=":is(TemplatedControl).Small">
         <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
         <Setter Property="FontWeight" Value="Regular" />
+    </Style>
+    
+    <Style Selector="StackPanel.HugeGap"> 
+        <Setter Property="Spacing" Value="{StaticResource BigGap}" />
     </Style>
     
     <Style Selector="StackPanel.BigGap"> 

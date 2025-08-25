@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mainView="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.MainView"
+             xmlns:claim="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.MainView.Claim"
+             xmlns:approve="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.MainView.Approve"
+             xmlns:releaseFunds="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.MainView.ReleaseFunds"
+             xmlns:statistics="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Statistics"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Founder.ProjectDetails.MainView.ProjectMainView" x:DataType="mainView:IProjectMainViewModel">
+
+    <Design.DataContext>
+        <mainView:ProjectMainViewModelDesign Status="Failed" />
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="Failed" DataType="mainView:IProjectMainViewModel">
+            <StackPanel>
+                <releaseFunds:ReleaseFundsView DataContext="{Binding ReleaseFundsViewModel}" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="Succeeded" DataType="mainView:IProjectMainViewModel">
+            <StackPanel>
+                <claim:ClaimFundsView DataContext="{Binding ClaimFundsViewModel}" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="Started" DataType="mainView:IProjectMainViewModel">
+            <StackPanel>
+                <approve:ApproveInvestmentsView DataContext="{Binding ApproveInvestmentsViewModel}" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="Funding" DataType="mainView:IProjectMainViewModel">
+            <StackPanel>
+                <approve:ApproveInvestmentsView DataContext="{Binding ApproveInvestmentsViewModel}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <StackPanel Classes="BigGap">
+        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding Status}" />
+        <ContentControl Content="{Binding}" Tag="{Binding Status}">
+            <ContentControl.Styles>
+                <Style Selector="ContentControl[Tag=Failed]">
+                    <Setter Property="ContentTemplate" Value="{StaticResource Failed}" />
+                </Style>
+                <Style Selector="ContentControl[Tag=Succeeded]">
+                    <Setter Property="ContentTemplate" Value="{StaticResource Succeeded}" />
+                </Style>
+                <Style Selector="ContentControl[Tag=Started]">
+                    <Setter Property="ContentTemplate" Value="{StaticResource Started}" />
+                </Style>
+                <Style Selector="ContentControl[Tag=Funding]">
+                    <Setter Property="ContentTemplate" Value="{StaticResource Funding}" />
+                </Style>
+            </ContentControl.Styles>
+        </ContentControl>
+        <statistics:ProjectStatisticsView DataContext="{Binding ProjectStatisticsViewModel}" />
+    </StackPanel>
+
+</UserControl>
