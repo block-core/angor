@@ -1051,24 +1051,10 @@
         return stageDatas.First(stage => stage.Items.Any(item => item.Trxid == utxoKey.Trxid && item.Outputindex == utxoKey.Outputindex)).StageIndex;
     }
 
-
     private bool IsCheckboxSelectedForStage(int stageIndex)
     {
-        var stage = stageDatas.First(s => s.StageIndex == stageIndex);
-        var stageIsActive = stage.Stage.ReleaseDate < DateTime.UtcNow;
-        
-        return selectedUtxos.Any(utxo => 
-        {
-            if (GetStageIndexForUtxo(utxo.Key) != stageIndex || !utxo.Value)
-                return false;
-                
-            var transaction = stage.Items.FirstOrDefault(item => 
-                item.Trxid == utxo.Key.Trxid && item.Outputindex == utxo.Key.Outputindex);
-                
-            return transaction != null && !transaction.IsSpent && stageIsActive;
-        });
+        return selectedUtxos.Any(utxo => GetStageIndexForUtxo(utxo.Key) == stageIndex && utxo.Value);
     }
-
 
     private async Task CopyTRXToClipboard(string trxData)
     {
