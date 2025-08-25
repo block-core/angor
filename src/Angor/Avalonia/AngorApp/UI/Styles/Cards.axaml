@@ -83,7 +83,16 @@
                                             ContentTemplate="{TemplateBinding SubheaderTemplate}" />
                             <ContentControl x:Name="Content" Content="{TemplateBinding Content}"
                                             IsVisible="{Binding $parent[Card].Content, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                            ContentTemplate="{TemplateBinding ContentTemplate}" />
+                                            ContentTemplate="{TemplateBinding ContentTemplate}">
+                                <ContentControl.Margin>
+                                    <Binding Path="$parent[Card].HeaderAndBodySpacing" Converter="{x:Static ThicknessConverters.DoubleToThicknessSides}">
+                                        <Binding.ConverterParameter>
+                                            <Sides>Top</Sides>
+                                        </Binding.ConverterParameter>
+                                    </Binding>
+                                </ContentControl.Margin>
+                            </ContentControl>
+
                             <ContentControl x:Name="EndContent" Content="{TemplateBinding HeaderEndContent}"
                                             IsVisible="{Binding $parent[Card].HeaderEndContent, Converter={x:Static ObjectConverters.IsNotNull}}"
                                             ContentTemplate="{TemplateBinding HeaderEndContentTemplate}" />
