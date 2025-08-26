@@ -27,7 +27,7 @@
                     TextBlock.TextAlignment="Center"
                     TextBlock.TextTrimming="CharacterEllipsis"
                     VerticalContentAlignment="Center"
-                    Background="{DynamicResource SystemListLowColor}" Content="{Binding}" />
+                    Background="{DynamicResource SystemControlPageBackgroundChromeLowBrush}" Content="{Binding}" />
             </DataTemplate>
         </zs:ShellView.HeaderContentTemplate>
     </zs:ShellView>

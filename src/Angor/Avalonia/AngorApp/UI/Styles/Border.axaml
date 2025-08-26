@@ -1,0 +1,27 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <StackPanel>
+            <Border Classes="Card" Padding="20">
+                <TextBlock>CONTENT</TextBlock>
+            </Border>
+            <Border Classes="CardAlt" Padding="20">
+                <TextBlock>CONTENT</TextBlock>
+            </Border>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Style Selector="Border.Card">
+        <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="20" />
+    </Style>
+
+    <Style Selector="Border.CardAlt">
+        <Setter Property="BorderBrush" Value="{DynamicResource SystemBaseMediumLowColor}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="20" />
+    </Style>
+</Styles>

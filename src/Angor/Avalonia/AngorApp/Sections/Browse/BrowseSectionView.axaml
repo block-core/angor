@@ -21,7 +21,7 @@
         </Style>
     </UserControl.Styles>
 
-    <a:PageContainer>
+    <a:PageContainer IsEnabled="{Binding !IsBusy^}">
         <ScrollViewer>
             <DockPanel VerticalSpacing="20">
 
@@ -47,10 +47,12 @@
                 </Card>
 
                 <Loading IsLoading="{Binding LoadProjects.IsExecuting^}">
-                    <CardGrid ItemsSource="{Binding Projects}" MinColumnWidth="300">
+                    <CardGrid ItemsSource="{Binding Projects}" MinColumnWidth="300" MaxColumnWidth="450">
                         <CardGrid.ItemTemplate>
                             <DataTemplate DataType="browse:IProjectViewModel">
-                                <browse:ProjectItemView />
+                                <ReactiveButton Classes="CardButton" Command="{Binding GoToDetails}">
+                                    <browse:ProjectItemView />
+                                </ReactiveButton>
                             </DataTemplate>
                         </CardGrid.ItemTemplate>
                     </CardGrid>

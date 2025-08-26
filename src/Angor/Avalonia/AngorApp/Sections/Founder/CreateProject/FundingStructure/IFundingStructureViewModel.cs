@@ -4,11 +4,11 @@ public interface IFundingStructureViewModel
 {
     IObservable<bool> IsValid { get; }
     long? Sats { get; set; }
-    DateTime StartDate { get; }
+    DateTime FundingStartDate { get; }
 
     int? PenaltyDays { get; set; }
 
-    DateTime? EndDate { get; set; }
+    DateTime? FundingEndDate { get; set; }
 
     DateTime? ExpiryDate { get; set; }
     

@@ -2,13 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="460"
+             mc:Ignorable="d" d:DesignWidth="360"
              x:Class="AngorApp.Sections.Portfolio.PortfolioSectionView"
              xmlns:p="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:items="clr-namespace:AngorApp.Sections.Portfolio.Items"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
-             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:design="clr-namespace:AngorApp.Design"
              x:DataType="p:IPortfolioSectionViewModel">
 
@@ -87,35 +86,31 @@
                     </Card.HeaderEndContent>
                 </Card>
 
-                <CardGrid DockPanel.Dock="Top" Classes="ShowEmptyContent" Empty.Content="Nothing to show">
-                    <CardGrid.ItemsSource>
-                        <collections:ArrayList>
-                            <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Funded Projects" Subheader="{Binding FundedProjects}">
-                                <Card.HeaderStartContent>
-                                    <ui:Icon Source="svg:/Assets/portfolio.svg" />
-                                </Card.HeaderStartContent>
-                            </Card>
-                            <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Total Invested" Subheader="{Binding TotalInvested.DecimalString}">
-                                <Card.HeaderStartContent>
-                                    <ui:Icon Source="svg:/Assets/btc.svg" />
-                                </Card.HeaderStartContent>
-                            </Card>
-                            <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Recovered To Penalty" Subheader="{Binding RecoveredToPenalty.DecimalString}">
-                                <Card.HeaderStartContent>
-                                    <ui:Icon Source="svg:/Assets/recovery.svg" />
-                                </Card.HeaderStartContent>
-                            </Card>
-                            <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Projects In Recovery" Subheader="{Binding ProjectsInRecovery}">
-                                <Card.HeaderStartContent>
-                                    <ui:Icon Source="svg:/Assets/recovery.svg" />
-                                </Card.HeaderStartContent>
-                            </Card>
-                        </collections:ArrayList>
-                    </CardGrid.ItemsSource>
-                </CardGrid>
+                <BalancedWrapGrid DockPanel.Dock="Top" MinItemWidth="210" MaxItemWidth="300">
+                    <Card Theme="{StaticResource AngorHighlightedContentCard}" HeaderStartContentTemplate="{StaticResource BigIcon}" Header="Funded Projects" Content="{Binding FundedProjects}">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                        </Card.HeaderStartContent>
+                    </Card>
+                    <Card Theme="{StaticResource AngorHighlightedContentCard}" HeaderStartContentTemplate="{StaticResource BigIcon}" Header="Total Invested" Content="{Binding TotalInvested.DecimalString}">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="svg:/Assets/btc.svg" />
+                        </Card.HeaderStartContent>
+                    </Card>
+                    <Card Theme="{StaticResource AngorHighlightedContentCard}" HeaderStartContentTemplate="{StaticResource BigIcon}" Header="Recovered To Penalty" Content="{Binding RecoveredToPenalty.DecimalString}">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="svg:/Assets/recovery.svg" />
+                        </Card.HeaderStartContent>
+                    </Card>
+                    <Card Theme="{StaticResource AngorHighlightedContentCard}" HeaderStartContentTemplate="{StaticResource BigIcon}" Header="Projects In Recovery" Content="{Binding ProjectsInRecovery}">
+                        <Card.HeaderStartContent>
+                            <ui:Icon Source="svg:/Assets/recovery.svg" />
+                        </Card.HeaderStartContent>
+                    </Card>
+                </BalancedWrapGrid>
 
                 <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading projects...">
-                    <ItemsControl ItemsSource="{Binding InvestedProjects}" Empty.Content="Nothing to show">
+                    <ItemsControl Classes="ShowEmptyContent" ItemsSource="{Binding InvestedProjects}" Empty.Content="Nothing to show">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel Classes="BigGap" />

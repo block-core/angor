@@ -63,7 +63,7 @@
                                         <Setter Property="Width" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
                                         <Setter Property="Margin" Value="1" />
                                     </Style>
-                                    <Style Selector="HeaderedContainer /template/ ContentPresenter#Header">
+                                    <Style Selector="HeaderedContainer /template/ ContentControl#Header">
                                         <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
                                         <Setter Property="FontWeight" Value="Normal" />
                                     </Style>

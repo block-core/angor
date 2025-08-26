@@ -3,9 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
-             mc:Ignorable="d" d:DesignWidth="700"
+             mc:Ignorable="d" d:DesignWidth="400"
              x:Class="AngorApp.Sections.Founder.CreateProject.Profile.ProfileView"
              x:DataType="profile:IProfileViewModel">
 
@@ -13,7 +12,7 @@
         <StyleInclude Source="../Common.axaml" />
     </UserControl.Styles>
 
-    <Card Header="Project Profile" Classes="InlineNested">
+    <Card Header="Project Profile">
         <Card.HeaderEndContent>
             <ContentControl IsVisible="{Binding IsValid^}" Foreground="LawnGreen">
                 <ui:Icon Source="fa-check" />
@@ -23,40 +22,32 @@
             <ui:Icon Source="fa-briefcase" />
         </Card.HeaderStartContent>
         <StackPanel Spacing="20">
-            <CardGrid>
-                <CardGrid.ItemsSource>
-                    <collections:ArrayList>
-                        <Card Header="Project Name">
-                            <TextBox Watermark="Enter the name of your project" Text="{Binding ProjectName}" />
-                        </Card>
-                        <Card Header="Project Website">
-                            <TextBox TextInputOptions.ContentType="Url" Watermark="Enter the URL of project website" Text="{Binding WebsiteUri}" />
-                        </Card>
-                    </collections:ArrayList>
-                </CardGrid.ItemsSource>
-            </CardGrid>
+            <BalancedWrapGrid>
+                <Card Header="Project Name">
+                    <TextBox Watermark="Enter the name of your project" Text="{Binding ProjectName}" />
+                </Card>
+                <Card Header="Project Website">
+                    <TextBox TextInputOptions.ContentType="Url" Watermark="Enter the URL of project website" Text="{Binding WebsiteUri}" />
+                </Card>
+            </BalancedWrapGrid>
             <Card Header="About Your Project">
                 <TextBox MinLines="6" MaxLength="1000" TextInputOptions.Multiline="True" Watermark="Provide a brief description of the project" Text="{Binding Description}" />
             </Card>
-            <Card Margin="0" Padding="0 5 0 0" HeaderPadding=" 0 0 0 5" Header="Visual Identity" Theme="{StaticResource TransparentCard}">
-                <CardGrid>
-                    <CardGrid.ItemsSource>
-                        <collections:ArrayList>
-                            <Card Header="Banner Image URL">
-                                <StackPanel Spacing="5">
-                                    <TextBox TextInputOptions.ContentType="Url" Watermark="Enter the URL for the project banner image" Text="{Binding BannerUri}" />
-                                    <TextBlock Classes="Dimmed">Recommended size: 820×312px</TextBlock>
-                                </StackPanel>
-                            </Card>
-                            <Card Header="Avatar Image URL">
-                                <StackPanel Spacing="5">
-                                    <TextBox TextInputOptions.ContentType="Url" Watermark="Enter the URL for the project logo or profile picture" Text="{Binding AvatarUri}" />
-                                    <TextBlock Classes="Dimmed">Recommended size: 170×170px</TextBlock>
-                                </StackPanel>
-                            </Card>
-                        </collections:ArrayList>
-                    </CardGrid.ItemsSource>
-                </CardGrid>
+            <Card Header="Visual Identity">
+               <BalancedWrapGrid MinItemWidth="250">
+                   <HeaderedContainer Header="Banner Image URL">
+                       <StackPanel Spacing="5">
+                           <TextBox TextInputOptions.ContentType="Url" Watermark="Project banner image URL" Text="{Binding BannerUri}" />
+                           <TextBlock Classes="Dimmed">Recommended size: 820×312px</TextBlock>
+                       </StackPanel>
+                   </HeaderedContainer>
+                   <HeaderedContainer Header="Avatar Image URL">
+                       <StackPanel Spacing="5">
+                           <TextBox TextInputOptions.ContentType="Url" Watermark="Project logo or profile URL" Text="{Binding AvatarUri}" />
+                           <TextBlock Classes="Dimmed">Recommended size: 170×170px</TextBlock>
+                       </StackPanel>
+                   </HeaderedContainer>
+               </BalancedWrapGrid>
             </Card>
         </StackPanel>
     </Card>

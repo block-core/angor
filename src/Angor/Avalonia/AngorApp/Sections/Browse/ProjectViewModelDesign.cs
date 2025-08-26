@@ -16,5 +16,5 @@ public class ProjectViewModelDesign : IProjectViewModel
     }
 
     public IProject Project { get; set; }
-    public IEnhancedCommand GoToDetails { get; set; }
+    public IEnhancedCommand<Result<Unit>> GoToDetails { get; set; }
 }

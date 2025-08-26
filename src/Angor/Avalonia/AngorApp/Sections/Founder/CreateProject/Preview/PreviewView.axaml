@@ -8,23 +8,20 @@
              xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
              xmlns:fundingStructure="clr-namespace:AngorApp.Sections.Founder.CreateProject.FundingStructure"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="400"
              x:Class="AngorApp.Sections.Founder.CreateProject.Preview.PreviewView"
              x:DataType="cp:ICreateProjectViewModel">
     
     <UserControl.Styles>
         <StyleInclude Source="../Common.axaml" />
-        <Style Selector="Card">
-            <Setter Property="Padding" Value="15 5 10 10" />
-            <Setter Property="HeaderPadding" Value="7 5 0 0" />
-        </Style>
     </UserControl.Styles>
 
     <Design.DataContext>
         <cp:CreateProjectViewModelDesign>
             <cp:CreateProjectViewModelDesign.FundingStructureViewModel>
                 <fundingStructure:FundingStructureViewModelDesign
-                    PenaltyDays="30" StartDate="10/1/2025" Sats="10000000">
+                    PenaltyDays="30" FundingStartDate="10/1/2025" Sats="10000000">
                 </fundingStructure:FundingStructureViewModelDesign>
             </cp:CreateProjectViewModelDesign.FundingStructureViewModel>
             <cp:CreateProjectViewModelDesign.StagesViewModel>
@@ -46,26 +43,22 @@
     </Design.DataContext>
 
     <StackPanel Classes="BigGap">
-        <preview:ProjectBadge />
+        <controls:ProjectCard Banner="{Binding ProfileViewModel.BannerUri}" Avatar="{Binding ProfileViewModel.AvatarUri}" ProjectName="{Binding ProfileViewModel.ProjectName}" ShortDescription="{Binding ProfileViewModel.Description}" />
         <Card Header="Project Snapshot">
-            <CardGrid MinColumnWidth="150">
-                <CardGrid.ItemsSource>
-                    <collections:ArrayList>
-                        <Card Theme="{StaticResource RemarkableSubheaderCard}"
-                              Header="Target Amount"
-                              Content="{Binding FundingStructureViewModel.TargetAmount.DecimalString, FallbackValue=?}" />
-                        <Card Theme="{StaticResource RemarkableSubheaderCard}"
-                              Header="Stages"
-                              Content="{Binding StagesViewModel.Stages.Count}" />
-                        <Card Theme="{StaticResource RemarkableSubheaderCard}"
-                              Header="Penalty Days"
-                              Content="{Binding FundingStructureViewModel.PenaltyDays, FallbackValue=?}" />
-                        <Card Theme="{StaticResource RemarkableSubheaderCard}"
-                              Header="Starts"
-                              Content="{Binding FundingStructureViewModel.StartDate, StringFormat=d, FallbackValue=?}" />
-                    </collections:ArrayList>
-                </CardGrid.ItemsSource>
-            </CardGrid>
+            <BalancedWrapGrid MinItemWidth="150">
+                <Card Theme="{StaticResource AngorHighlightedContentCard}"
+                      Header="Target Amount"
+                      Content="{Binding FundingStructureViewModel.TargetAmount.DecimalString, FallbackValue=?}" />
+                <Card Theme="{StaticResource AngorHighlightedContentCard}"
+                      Header="Stages"
+                      Content="{Binding StagesViewModel.Stages.Count}" />
+                <Card Theme="{StaticResource AngorHighlightedContentCard}"
+                      Header="Penalty Days"
+                      Content="{Binding FundingStructureViewModel.PenaltyDays, FallbackValue=?}" />
+                <Card Theme="{StaticResource AngorHighlightedContentCard}"
+                      Header="Starts"
+                      Content="{Binding FundingStructureViewModel.FundingStartDate, StringFormat=d, FallbackValue=?}" />
+            </BalancedWrapGrid>
         </Card>
         <Card Header="Funding Milestones">
             <CardGrid ItemsSource="{Binding StagesViewModel.Stages}">
@@ -77,7 +70,7 @@
                                     <Setter Property="VerticalAlignment" Value="Center" />
                                 </Style>
                             </OverlayBorder.Styles>
-                            <EdgePanel>
+                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}">
                                 <EdgePanel.Content>
                                     <TextBlock Text="{Binding Percent, StringFormat='{}{0}% Release'}" />
                                 </EdgePanel.Content>

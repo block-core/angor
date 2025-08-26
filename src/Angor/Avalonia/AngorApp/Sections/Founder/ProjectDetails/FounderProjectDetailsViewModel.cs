@@ -1,8 +1,8 @@
 using System.Reactive.Disposables;
-using System.Threading.Tasks;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.UI.Model.Implementation.Projects;
 using AngorApp.Sections.Founder.ProjectDetails.MainView;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.Approve;
 using AngorApp.UI.Services;
@@ -25,7 +25,7 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
     public FounderProjectDetailsViewModel(ProjectId projectId, IProjectAppService projectAppService, IInvestmentAppService investmentAppService, UIServices uiServices)
     {
         this.projectAppService = projectAppService;
-        Load = ReactiveCommand.CreateFromTask(() => DoLoadFullProject(projectId).Map(project => (IProjectMainViewModel)new ProjectMainViewModel(project, investmentAppService, uiServices))).Enhance();
+        Load = ReactiveCommand.CreateFromTask(() => projectAppService.GetFullProject(projectId).Map(IProjectMainViewModel (project) => new ProjectMainViewModel(project, investmentAppService, uiServices))).Enhance();
         Load.HandleErrorsWith(uiServices.NotificationService);
 
         projectMainHelper = Load.Successes().ToProperty(this, x => x.ProjectMain).DisposeWith(disposable);
@@ -33,15 +33,7 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
     }
 
     public IEnhancedCommand<Result<IProjectMainViewModel>> Load { get; }
-
-    private Task<Result<FullProject>> DoLoadFullProject(ProjectId projectId)
-    {
-        return from project in projectAppService.Get(projectId)
-            from stats in projectAppService.GetProjectStatistics(projectId)
-            select new FullProject(project, stats);
-    }
-
-
+    
     public void Dispose()
     {
         disposable.Dispose();

@@ -2,20 +2,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:p="https://github.com/projektanker/icons.avalonia"
              xmlns:conv="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
              xmlns:misc="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="650" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="650"
              x:Class="AngorApp.Sections.Browse.Details.NostProperties" x:DataType="dt:IProjectDetailsViewModel">
-    
+
     <Design.DataContext>
         <dt:ProjectDetailsViewModelDesign />
     </Design.DataContext>
-    
+
     <UserControl.Styles>
         <Style Selector="TextBox">
             <Setter Property="Padding" Value="10" />
@@ -27,139 +25,138 @@
             <Setter Property="CornerRadius" Value="5" />
         </Style>
     </UserControl.Styles>
-    
+
     <Card Header="Nostr Integration" Subheader="Decentralized communication and verification">
         <Card.HeaderStartContent>
             <i:Icon FontSize="40" Value="fa-solid fa-broadcast-tower" />
         </Card.HeaderStartContent>
-        
-        <StackPanel Spacing="25">
+
+        <StackPanel Classes="BigGap">
             <!-- Nostr Keys Section -->
-            <OverlayBorder Theme="{StaticResource CardOverlayBorder}" Padding="20">
-                <StackPanel Spacing="20">
-                    <TextBlock Text="Public Keys" FontSize="18" FontWeight="SemiBold" />
-                    
-                    <StackPanel Spacing="15">
-                        <HeaderedContentControl Header="NOSTR Public Key (NPub)">
-                            <controls:SectionItem Theme="{StaticResource Basic}">
-                                <controls:SectionItem.LeftContent>
+            <HeaderedContainer Header="Public Keys">
+                <StackPanel Classes="BigGap">
+                    <HeaderedContainer Header="NOSTR Public Key (NPub)" Classes="NoPadding">
+                        <Border Classes="CardAlt">
+                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}">
+                                <EdgePanel.StartContent>
                                     <i:Icon FontSize="16" Value="fa-solid fa-key" />
-                                </controls:SectionItem.LeftContent>
-                                <TextBox Text="{Binding Project.NpubKey}" />
-                                <controls:SectionItem.RightContent>
+                                </EdgePanel.StartContent>
+                                <SelectableTextBlock Text="{Binding Project.NostrNpubKey}" />
+                                <EdgePanel.EndContent>
                                     <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}"
-                                           ToolTip.Tip="Open in Nostr Hub"
-                                           Padding="8"
-                                           CornerRadius="5">
+                                            ToolTip.Tip="Open in Nostr Hub"
+                                            Padding="8"
+                                            CornerRadius="5">
                                         <Button.CommandParameter>
                                             <MultiBinding Converter="{x:Static conv:ZafiroStringConverters.Concat}">
                                                 <Binding>
                                                     <Binding.Source>
-                                                        <x:String>https://hub.angor.io/profile/</x:String>
+                                                        <x:Uri>https://hub.angor.io/profile/</x:Uri>
                                                     </Binding.Source>
                                                 </Binding>
-                                                <Binding Path="Project.NpubKey" />
+                                                <Binding Path="Project.NostrNpubKey" />
                                             </MultiBinding>
                                         </Button.CommandParameter>
                                         <Button.Content>
                                             <i:Icon FontSize="14" Value="fa-solid fa-external-link-alt" />
                                         </Button.Content>
                                     </Button>
-                                </controls:SectionItem.RightContent>
-                            </controls:SectionItem>
-                        </HeaderedContentControl>
-                        
-                        <HeaderedContentControl Header="NOSTR Public Key (Hex)">
-                            <controls:SectionItem Theme="{StaticResource Basic}">
-                                <controls:SectionItem.LeftContent>
-                                    <i:Icon FontSize="16" Value="fa-solid fa-hashtag" />
-                                </controls:SectionItem.LeftContent>
-                                <TextBox Text="{Binding Project.NpubKeyHex}" />
-                                <controls:SectionItem.RightContent>
+                                </EdgePanel.EndContent>
+                            </EdgePanel>
+                        </Border>
+                    </HeaderedContainer>
+
+                    <HeaderedContainer Header="NOSTR Public Key (Hex)" Classes="NoPadding">
+                        <Border Classes="CardAlt">
+                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="{Icon fa-solid fa-hashtag}">
+                                <SelectableTextBlock Text="{Binding Project.NostrNpubKey}" />
+                                <EdgePanel.EndContent>
                                     <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}"
-                                           ToolTip.Tip="Open in Nostr Hub"
-                                           Padding="8"
-                                           CornerRadius="5">
+                                            ToolTip.Tip="Open in Nostr Hub"
+                                            Padding="8"
+                                            CornerRadius="5">
                                         <Button.CommandParameter>
                                             <MultiBinding Converter="{x:Static conv:ZafiroStringConverters.Concat}">
                                                 <Binding>
                                                     <Binding.Source>
-                                                        <x:String>https://hub.angor.io/profile/</x:String>
+                                                        <x:Uri>https://hub.angor.io/profile/</x:Uri>
                                                     </Binding.Source>
                                                 </Binding>
-                                                <Binding Path="Project.NpubKey" />
+                                                <Binding Path="Project.NostrNpubKey" />
                                             </MultiBinding>
                                         </Button.CommandParameter>
                                         <Button.Content>
                                             <i:Icon FontSize="14" Value="fa-solid fa-external-link-alt" />
                                         </Button.Content>
                                     </Button>
-                                </controls:SectionItem.RightContent>
-                            </controls:SectionItem>
-                        </HeaderedContentControl>
-                    </StackPanel>
+                                </EdgePanel.EndContent>
+                            </EdgePanel>
+                        </Border>
+                    </HeaderedContainer>
                 </StackPanel>
-            </OverlayBorder>
-            
+
+            </HeaderedContainer>
+
             <!-- Nostr Relays Section -->
-            <OverlayBorder Theme="{StaticResource CardOverlayBorder}" Padding="20">
-                <StackPanel Spacing="20">
+            <HeaderedContainer>
+                <HeaderedContainer.Header>
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <i:Icon FontSize="20" Value="fa-solid fa-satellite-dish" />
                         <TextBlock Text="Nostr Relays" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
-                        <Border Background="Orange" 
-                               CornerRadius="10" 
-                               Padding="8,4" 
-                               VerticalAlignment="Center">
-                            <TextBlock Text="2" 
-                                      FontSize="12" 
-                                      FontWeight="Bold" 
-                                      Foreground="White" />
+                        <Border Background="Orange"
+                                CornerRadius="10"
+                                Padding="8,4"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Relays, Converter={x:Static Enumerable.Count}}"
+                                       FontSize="12"
+                                       FontWeight="Bold"
+                                       Foreground="White" />
                         </Border>
                     </StackPanel>
-                    
+                </HeaderedContainer.Header>
+
+                <StackPanel Classes="BigGap">
                     <ItemsControl ItemsSource="{Binding Relays}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Spacing="10" />
+                                <StackPanel Classes="SmallGap" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <OverlayBorder Theme="{StaticResource CardOverlayBorder}" 
-                                              Padding="15"
-                                              Background="{DynamicResource SystemChromeLowColor}">
-                                    <controls:SectionItem Theme="{StaticResource Basic}">
-                                        <controls:SectionItem.LeftContent>
+                                <Border Classes="CardAlt">
+                                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}">
+                                        <EdgePanel.StartContent>
                                             <StackPanel Orientation="Horizontal" Spacing="10">
                                                 <i:Icon FontSize="16" Value="fa-solid fa-broadcast-tower" />
                                                 <TextBlock Text="Relay" FontSize="12" Opacity="0.7" VerticalAlignment="Center" />
                                             </StackPanel>
-                                        </controls:SectionItem.LeftContent>
-                                        <controls:SectionItem.Content>
-                                            <TextBlock Text="{Binding Uri}" 
-                                                      FontFamily="Consolas,Monaco,monospace" 
-                                                      FontSize="12" 
-                                                      VerticalAlignment="Center" />
-                                        </controls:SectionItem.Content>
-                                        <controls:SectionItem.RightContent>
+                                        </EdgePanel.StartContent>
+                                        <EdgePanel.Content>
+                                            <SelectableTextBlock Text="{Binding Uri}"
+                                                                 FontFamily="Consolas,Monaco,monospace"
+                                                                 FontSize="12"
+                                                                 VerticalAlignment="Center" />
+                                        </EdgePanel.Content>
+                                        <EdgePanel.EndContent>
                                             <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}"
-                                                   CommandParameter="{Binding Uri}"
-                                                   ToolTip.Tip="Open relay URL"
-                                                   Padding="8"
-                                                   CornerRadius="5">
+                                                    CommandParameter="{Binding Uri}"
+                                                    ToolTip.Tip="Open relay URL"
+                                                    Padding="8"
+                                                    CornerRadius="5">
                                                 <Button.Content>
                                                     <i:Icon FontSize="14" Value="fa-solid fa-external-link-alt" />
                                                 </Button.Content>
                                             </Button>
-                                        </controls:SectionItem.RightContent>
-                                    </controls:SectionItem>
-                                </OverlayBorder>
+                                        </EdgePanel.EndContent>
+                                    </EdgePanel>
+                                </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
-            </OverlayBorder>
+            </HeaderedContainer>
+
         </StackPanel>
     </Card>
 

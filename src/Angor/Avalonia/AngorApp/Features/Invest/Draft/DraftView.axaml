@@ -19,10 +19,10 @@
     </UserControl.Styles>
 
     <StackPanel IsEnabled="{Binding !IsSending^}" Classes="SmallGap">
-        <Card Header="Project" Theme="{StaticResource RemarkableSubheaderCard}"
-              Subheader="{Binding Project.Name}" />
-        <Card Header="Amount to offer" Theme="{StaticResource RemarkableSubheaderCard}"
-              Subheader="{Binding  AmountToOffer.DecimalString}" />
+        <Card Header="Project" Theme="{StaticResource AngorHighlightedContentCard}"
+              Content="{Binding Project.Name}" />
+        <Card Header="Amount to offer" Theme="{StaticResource AngorHighlightedContentCard}"
+              Content="{Binding  AmountToOffer.DecimalString}" />
         <UniformGrid Rows="1" ColumnSpacing="{StaticResource SmallGap}">
             <Card Header="Transaction speed">
                 <feerate:FeerateSelector Feerate="{Binding Feerate}"
@@ -34,10 +34,10 @@
                     <Panel>
                         <ItemsControl IsVisible="{Binding Feerate, Converter={x:Static ObjectConverters.IsNotNull}}">
                             <ItemsControl.Styles>
-                                <Style Selector="HeaderedContainer /template/ ContentPresenter#Content">
+                                <Style Selector="HeaderedContainer /template/ ContentControl#Content">
                                     <Setter Property="TextElement.FontSize" Value="23" />
                                 </Style>
-                                <Style Selector="HeaderedContainer /template/ ContentPresenter#Header">
+                                <Style Selector="HeaderedContainer /template/ ContentControl#Header">
                                     <Setter Property="TextElement.FontSize" Value="13" />
                                     <Setter Property="TextElement.FontWeight" Value="Light" />
                                 </Style>

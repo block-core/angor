@@ -13,6 +13,7 @@
     </Design.PreviewWith>
     
     <Styles.Resources>
+        <x:Double x:Key="TinyGap">5</x:Double>
         <x:Double x:Key="SmallGap">10</x:Double>
         <x:Double x:Key="BigGap">20</x:Double>
         <x:Double x:Key="HugeGap">40</x:Double>
@@ -39,10 +40,23 @@
     <Style Selector="StackPanel.SmallGap"> 
         <Setter Property="Spacing" Value="{StaticResource SmallGap}" />
     </Style>
+    
+    <Style Selector="StackPanel.TinyGap"> 
+        <Setter Property="Spacing" Value="{StaticResource TinyGap}" />
+    </Style>
 
     <Style Selector="Card Card">
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Background" Value="#31000000" />
+    </Style>
+    
+    <Style Selector="BalancedWrapGrid">
+        <Setter Property="HorizontalSpacing" Value="10" />
+        <Setter Property="VerticalSpacing" Value="10" />
+    </Style>
+    
+    <Style Selector=":is(TemplatedControl).NoPadding">
+        <Setter Property="Padding" Value="0" />
     </Style>
     
 </Styles>

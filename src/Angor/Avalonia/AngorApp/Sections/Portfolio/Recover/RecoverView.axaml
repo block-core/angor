@@ -21,7 +21,7 @@
     <a:PageContainer>
         <ScrollViewer>
             <DockPanel VerticalSpacing="20">
-                <Card DockPanel.Dock="Top" Header="Recovery" IsAdaptiveFlowEnabled="True" Subheader="Manage and monitor recovery stages for your project">
+                <Card DockPanel.Dock="Top" Header="Recovery" Theme="{StaticResource WideCard}" IsAdaptiveFlowEnabled="True" Subheader="Manage and monitor recovery stages for your project">
                     <Card.HeaderStartContent>
                         <ui:Icon Source="svg:/Assets/recovery.svg" />
                     </Card.HeaderStartContent>
@@ -46,20 +46,20 @@
                 <Loading LoadingText="Loading recover...">
                     <StackPanel HorizontalAlignment="Stretch" Spacing="20">
                         <!-- Project ID Box -->
-                        <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Project ID" Subheader="angor1quyhgedvff22h2fmjc3lwvlruxx6xv76gzptm50" />
+                        <Card Theme="{StaticResource AngorHighlightedContentCard}" Header="Project ID" Content="angor1quyhgedvff22h2fmjc3lwvlruxx6xv76gzptm50" />
 
                         <!-- Info Cards -->
                         <UniformGrid Columns="2" Rows="2" ColumnSpacing="20" RowSpacing="20" >
-                            <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Total Funds" Subheader="0 TBTC" />
-                            <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Expiry Date" Subheader="05/09/2025" />
-                            <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Penalty Period" Subheader="90 days" />
-                            <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Transaction">
+                            <Card Theme="{StaticResource AngorHighlightedContentCard}" Header="Total Funds" Content="0 TBTC" />
+                            <Card Theme="{StaticResource AngorHighlightedContentCard}" Header="Expiry Date" Content="05/09/2025" />
+                            <Card Theme="{StaticResource AngorHighlightedContentCard}" Header="Penalty Period" Content="90 days" />
+                            <Card Theme="{StaticResource AngorHighlightedContentCard}" Header="Transaction">
                                 <Button Content="View" Width="80" Height="36" />
                             </Card>
                         </UniformGrid>
 
                         <!-- Table -->
-                        <Card Theme="{StaticResource RemarkableSubheaderCard}" Header="Stages">
+                        <Card Theme="{StaticResource AngorHighlightedContentCard}" Header="Stages">
                             <StackPanel>
                                 <!-- Table Header -->
                                 <Grid ColumnDefinitions="1.5*,2*,2*" Margin="0,0,0,10" HorizontalAlignment="Stretch">

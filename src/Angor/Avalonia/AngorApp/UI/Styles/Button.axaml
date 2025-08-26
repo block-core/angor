@@ -1,0 +1,34 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <!-- Add Controls for Previewer Here -->
+        </Border>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <ControlTheme x:Key="ThinTransparentButton" TargetType="Button" BasedOn="{StaticResource TransparentButton}">
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="FontWeight" Value="Normal" />
+        </ControlTheme>
+    </Styles.Resources>
+    
+    <Style Selector="ReactiveButton.CardButton">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Theme" Value="{StaticResource FullLoadingReactiveButton}" />
+        <Setter Property="ButtonTheme" Value="{StaticResource ThinTransparentButton}" />
+    </Style>
+    
+    <Style Selector="Button.Card">
+        <Setter Property="Theme" Value="{StaticResource TransparentButton}" />
+        <Setter Property="Padding" Value="5" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="FontWeight" Value="Regular" />
+    </Style>
+</Styles>

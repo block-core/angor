@@ -35,7 +35,7 @@
                                     HorizontalAlignment="Left"
                                     Margin="10">
                                 <av:AdvancedImage Stretch="UniformToFill"
-                                                  Source="{Binding Project.Picture}"
+                                                  Source="{Binding Project.Avatar}"
                                                   CornerRadius="54" />
                             </Border>
                         </Panel>
@@ -43,7 +43,7 @@
 
                     <!-- Project Information Below Banner -->
                     <Card Padding="20" Margin="0,0,0,0" Background="{DynamicResource SystemChromeLowColor}">
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20" Margin="0,0,0,0">
+                        <StackPanel Classes="BigGap">
                             <!-- Project Details -->
                             <StackPanel Grid.Column="0" Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Left">
                                 <TextBlock Text="{Binding Project.Name}"
@@ -58,36 +58,31 @@
                             </StackPanel>
 
                             <!-- Target Amount -->
-                            <StackPanel Grid.Column="1"
-                                        Spacing="5"
-                                        HorizontalAlignment="Right"
+                            <StackPanel Classes="TinyGap"
+                                        HorizontalAlignment="Center"
                                         VerticalAlignment="Center">
                                 <TextBlock Text="Target Amount"
                                            FontSize="12"
                                            Opacity="0.7"
-                                           HorizontalAlignment="Right" />
-                                <StackPanel Orientation="Horizontal" Spacing="5">
-                                    <TextBlock Text="{Binding Project.TargetAmount.DecimalString}"
-                                               Classes="SizeBig"
-                                               Foreground="{DynamicResource SystemAccentColor}"
-                                               FontWeight="Bold" />
-                                </StackPanel>
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding Project.TargetAmount.DecimalString}"
+                                           Classes="SizeBig"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource SystemAccentColor}"
+                                           FontWeight="Bold" />
                             </StackPanel>
-                        </Grid>
+                        </StackPanel>
                     </Card>
                 </StackPanel>
 
-                <!-- Project Summary -->
-                <dt:ProjectSummary DockPanel.Dock="Top" />
+                <BalancedWrapGrid MinItemWidth="400">
+                    <dt:ProjectSummary />
+                    <dt:Stages />
+                </BalancedWrapGrid>
 
-                <!-- Stages -->
-                <dt:Stages DockPanel.Dock="Top" />
-
-                <!-- Investment Dashboard -->
-                <dt:InvestmentDashboard DockPanel.Dock="Top" />
-
-                <!-- Nostr Properties -->
-                <dt:NostProperties DockPanel.Dock="Top" />
+                <dt:InvestmentDashboard />
+                
+                <dt:NostProperties />
 
             </StackPanel>
         </ScrollViewer>

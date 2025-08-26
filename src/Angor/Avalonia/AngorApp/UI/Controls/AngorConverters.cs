@@ -40,7 +40,8 @@ public static class AngorConverters
 
     public static readonly FuncValueConverter<bool, Dock> IsPrimaryToDock = new(isPrimary => isPrimary ? Dock.Top : Dock.Bottom);
 
-    public static readonly FuncValueConverter<DateTimeOffset, string> TimeLeft = new(offset => { return offset.Humanize(dateToCompareAgainst: DateTimeOffset.Now); });
+    public static readonly FuncValueConverter<DateTimeOffset, string> TimeLeftDateTimeOffset = new(offset => { return offset.Humanize(dateToCompareAgainst: DateTimeOffset.Now); });
+    public static readonly FuncValueConverter<DateTime, string> TimeLeftDateTime = new(offset => { return offset.Humanize(dateToCompareAgainst: DateTime.Now); });
 
     public static readonly FuncValueConverter<TimeSpan, string> HumanizeTimeSpan = new(offset => offset.Humanize());
 

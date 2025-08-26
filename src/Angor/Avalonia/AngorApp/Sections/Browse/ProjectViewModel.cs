@@ -1,19 +1,38 @@
+using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.UI.Model.Implementation.Projects;
 using AngorApp.Features.Invest;
 using AngorApp.Sections.Browse.Details;
 using AngorApp.UI.Services;
+using Zafiro.UI;
 using Zafiro.UI.Commands;
 using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Browse;
 
-public class ProjectViewModel(
-    IProject project,
-    INavigator navigator,
-    UIServices uiServices,
-    InvestWizard investWizard)
-    : ReactiveObject, IProjectViewModel
+public class ProjectViewModel : ReactiveObject, IProjectViewModel
 {
-    public IProject Project { get; } = project;
+    public ProjectViewModel(IProject project,
+        IProjectAppService projectAppService,
+        INavigator navigator,
+        UIServices uiServices,
+        InvestWizard investWizard)
+    {
+        Project = project;
 
-    public IEnhancedCommand GoToDetails { get; set; } = ReactiveCommand.CreateFromTask(() => navigator.Go(() => new ProjectDetailsViewModel(project, investWizard, uiServices))).Enhance();
+        GoToDetails = ReactiveCommand.CreateFromTask(async () =>
+        {
+            var fullProject = await projectAppService.GetFullProject(new ProjectId(project.Id))
+                .Map(fullProject => new ProjectDetailsViewModel(fullProject, investWizard, uiServices));
+
+            var result = await fullProject.Bind(details => navigator.Go(() => details));
+            return result;
+        }).Enhance();
+        
+        GoToDetails.HandleErrorsWith(uiServices.NotificationService, "Could not load project details");
+    }
+
+    public IProject Project { get; }
+
+    public IEnhancedCommand<Result<Unit>> GoToDetails { get; set; }
 }

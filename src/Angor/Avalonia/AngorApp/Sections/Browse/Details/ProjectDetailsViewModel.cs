@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Angor.UI.Model.Implementation.Projects;
 using AngorApp.Features.Invest;
 using AngorApp.UI.Services;
 using Avalonia.Threading;
@@ -10,22 +11,22 @@ namespace AngorApp.Sections.Browse.Details;
 
 public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 {
-    private readonly IProject project;
+    private readonly FullProject project;
     private readonly InvestWizard investWizard;
     private readonly UIServices uiServices;
 
-    public ProjectDetailsViewModel(IProject project, InvestWizard investWizard, UIServices uiServices)
+    public ProjectDetailsViewModel(FullProject project, InvestWizard investWizard, UIServices uiServices)
     {
         this.project = project;
         this.investWizard = investWizard;
         this.uiServices = uiServices;
-        
-        Invest = ReactiveCommand.CreateFromTask(DoInvest).Enhance();
+
+        IsInsideInvestmentPeriod = DateTime.Now <= project.FundingEndDate;
+        Invest = ReactiveCommand.CreateFromTask(DoInvest, Observable.Return(IsInsideInvestmentPeriod)).Enhance();
         Invest.HandleErrorsWith(uiServices.NotificationService, "Investment failed");
     }
 
-    public object Icon => project.Picture;
-    public object Picture => project.Banner;
+    public bool IsInsideInvestmentPeriod { get; }
 
     public IEnhancedCommand<Result> Invest { get; }
 
@@ -41,17 +42,13 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
         }
     ];
 
-    public double TotalDays { get; } = 119;
-    public double TotalInvestment { get; } = 1.5d;
-    public double CurrentDays { get; } = 11;
-    public double CurrentInvestment { get; } = 0.79d;
-    public IProject Project => project;
+    public IFullProject Project => project;
 
     private async Task<Result> DoInvest()
     {
         var getCurrentResult = await uiServices.WalletRoot.GetDefaultWalletAndActivate()
             .Tap(r => r.ExecuteNoValue(ShowNoWalletMessage));
-        
+
         return await getCurrentResult
             .Map(maybeWallet => maybeWallet
                 .Bind(wallet => investWizard.Invest(wallet, project)));

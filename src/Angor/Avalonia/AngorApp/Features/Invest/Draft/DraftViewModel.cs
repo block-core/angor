@@ -3,6 +3,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.UI.Model.Implementation.Projects;
 using AngorApp.UI.Controls;
 using AngorApp.UI.Controls.Feerate;
 using AngorApp.UI.Services;
@@ -16,7 +17,7 @@ namespace AngorApp.Features.Invest.Draft;
 
 public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposable
 {
-    public IProject Project { get; }
+    public FullProject Project { get; }
     public IAmountUI AmountToOffer { get; }
     private readonly UIServices uiServices;
     [ObservableAsProperty] private IInvestmentDraft? draft;
@@ -25,7 +26,7 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposab
     private readonly BehaviorSubject<bool> isCalculatingDraft = new(false);
     private readonly CompositeDisposable disposable = new();
 
-    public DraftViewModel(IInvestmentAppService investmentAppService, IWallet wallet, IAmountUI amountToOffer, IProject project, UIServices uiServices)
+    public DraftViewModel(IInvestmentAppService investmentAppService, IWallet wallet, IAmountUI amountToOffer, FullProject project, UIServices uiServices)
     {
         AmountToOffer = amountToOffer;
         Project = project;
@@ -35,7 +36,7 @@ public partial class DraftViewModel : ReactiveObject, IDraftViewModel, IDisposab
 
         var createDraft = this.WhenAnyValue(x => x.Feerate)
             .WhereNotNull()
-            .SelectLatest(feerate => investmentAppService.CreateInvestmentDraft(wallet.Id.Value, new ProjectId(project.Id), new Angor.Contexts.Funding.Projects.Domain.Amount(amountToOffer.Sats), new DomainFeerate(feerate!.Value)), isCalculatingDraft, scheduler: RxApp.MainThreadScheduler)
+            .SelectLatest(feerate => investmentAppService.CreateInvestmentDraft(wallet.Id.Value, project.Info.Id, new Angor.Contexts.Funding.Projects.Domain.Amount(amountToOffer.Sats), new DomainFeerate(feerate!.Value)), isCalculatingDraft, scheduler: RxApp.MainThreadScheduler)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Publish();
         

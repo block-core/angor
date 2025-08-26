@@ -1,4 +1,5 @@
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
@@ -9,6 +10,7 @@ using AngorApp.Sections.Founder.CreateProject.Stages;
 using AngorApp.Sections.Shell;
 using AngorApp.UI.Controls.Common;
 using AngorApp.UI.Services;
+using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.Avalonia.Dialogs;
@@ -24,9 +26,15 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
     public CreateProjectViewModel(IWallet wallet, UIServices uiServices, IProjectAppService projectAppService)
     {
         this.projectAppService = projectAppService;
-        StagesViewModel = new StagesViewModel().DisposeWith(disposable);
         FundingStructureViewModel = new FundingStructureViewModel().DisposeWith(disposable);
+        var endDateChanges = FundingStructureViewModel.WhenAnyValue(x => x.FundingEndDate);
+        StagesViewModel = new StagesViewModel(() => FundingStructureViewModel.FundingEndDate, endDateChanges).DisposeWith(disposable);
         ProfileViewModel = new ProfileViewModel().DisposeWith(disposable);
+
+        StagesViewModel.LastStageDate
+            .Select(date => date?.AddDays(60))
+            .Subscribe(date => FundingStructureViewModel.ExpiryDate = date)
+            .DisposeWith(disposable);
 
         this.ValidationRule(StagesViewModel.IsValid, b => b, _ => "Stages are not valid").DisposeWith(disposable);
         this.ValidationRule(FundingStructureViewModel.IsValid, b => b, _ => "Funding structures not valid").DisposeWith(disposable);
