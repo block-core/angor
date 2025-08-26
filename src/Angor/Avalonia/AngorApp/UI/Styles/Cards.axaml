@@ -10,16 +10,16 @@
         <ControlTheme x:Key="{x:Type Card}"
                       TargetType="Card"
                       BasedOn="{StaticResource {x:Type Card}}">
-            <Setter Property="HeaderStartContentTemplate" Value="{StaticResource RegularIcon}" />
+            <Setter Property="HeaderStartContentTemplate" Value="{StaticResource BigIcon}" />
             <Setter Property="Padding" Value="20" />
             <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
         </ControlTheme>
 
         <ControlTheme x:Key="WideCard"
                       TargetType="Card"
-                      BasedOn="{StaticResource LeftFlexHeaderCard}">
-            <Setter Property="HeaderStartContentTemplate" Value="{StaticResource RegularIcon}" />
-            <Setter Property="HeaderPadding" Value="0 0 0 10"></Setter>
+                      BasedOn="{StaticResource WrapGridCard}">
+            <Setter Property="HeaderStartContentTemplate" Value="{StaticResource BigIcon}" />
+            <Setter Property="HeaderPadding" Value="0 0 0 10" />
             <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
         </ControlTheme>
 
@@ -83,7 +83,16 @@
                                             ContentTemplate="{TemplateBinding SubheaderTemplate}" />
                             <ContentControl x:Name="Content" Content="{TemplateBinding Content}"
                                             IsVisible="{Binding $parent[Card].Content, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                            ContentTemplate="{TemplateBinding ContentTemplate}" />
+                                            ContentTemplate="{TemplateBinding ContentTemplate}">
+                                <ContentControl.Margin>
+                                    <Binding Path="$parent[Card].HeaderAndBodySpacing" Converter="{x:Static ThicknessConverters.DoubleToThicknessSides}">
+                                        <Binding.ConverterParameter>
+                                            <Sides>Top</Sides>
+                                        </Binding.ConverterParameter>
+                                    </Binding>
+                                </ContentControl.Margin>
+                            </ContentControl>
+
                             <ContentControl x:Name="EndContent" Content="{TemplateBinding HeaderEndContent}"
                                             IsVisible="{Binding $parent[Card].HeaderEndContent, Converter={x:Static ObjectConverters.IsNotNull}}"
                                             ContentTemplate="{TemplateBinding HeaderEndContentTemplate}" />

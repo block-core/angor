@@ -1,7 +1,7 @@
+using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Investor.Operations;
-using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using CSharpFunctionalExtensions;
 using MediatR;
@@ -44,5 +44,27 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     public Task<Result<IEnumerable<PenaltiesDto>>> GetPenalties(Guid walletId)
     {
         return mediator.Send(new GetPenalties.GetPenaltiesRequest(walletId));
+    }
+
+    public Task<Result> Spend(ProjectId projectId, IEnumerable<SpendTransactionDto> toSpend)
+    {
+        return mediator.Send(new SpendInvestorTransaction.SpendInvestorTransactionRequest(projectId, toSpend));
+    }
+
+    public Task<Result<IEnumerable<ClaimableTransactionDto>>> GetClaimableTransactions(Guid walletId, ProjectId projectId)
+    {
+        return mediator.Send(new GetClaimableTransactions.GetClaimableTransactionsRequest(walletId, projectId));
+    }
+    
+    // Gets a list of all the transactions than can be released for a given project
+    public Task<Result<IEnumerable<ReleaseableTransactionDto>>> GetReleaseableTransactions(Guid walletId, ProjectId projectId)
+    {
+        return mediator.Send(new GetReleaseableTransactions.GetReleaseableTransactionsRequest(walletId, projectId));
+    }
+
+    // Note: you can release multiple investors at once, hence the list
+    public Task<Result> ReleaseInvestorTransactions(Guid walletId, ProjectId projectId, IEnumerable<string> investorAddresses)
+    {
+        return mediator.Send(new ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest(walletId, projectId, investorAddresses));
     }
 }

@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
-             xmlns:designTime="clr-namespace:Zafiro.Avalonia.DesignTime;assembly=Zafiro.Avalonia"
              xmlns:lk="clr-namespace:AngorApp.Sections.Browse.ProjectLookup"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
@@ -12,7 +11,7 @@
              x:DataType="browse:IBrowseSectionViewModel">
 
     <Design.DataContext>
-        <browse:BrowseSectionViewModelDesign IsBusy="{designTime:Return True}" />
+        <browse:BrowseSectionViewModelDesign />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -27,6 +26,14 @@
             <DockPanel VerticalSpacing="20">
 
                 <Card Header="Browse" Theme="{StaticResource WideCard}" Subheader="Browse Projects" DockPanel.Dock="Top">
+                    <Card.HeaderEndContent>
+                        <IconButton Classes="Expand CenterContent" Command="{Binding LoadProjects}">
+                            Refresh
+                            <IconButton.Icon>
+                                <ui:Icon Source="fa-arrows-rotate" />
+                            </IconButton.Icon>
+                        </IconButton>
+                    </Card.HeaderEndContent>
                     <Card.HeaderStartContent>
                         <ui:Icon Source="svg:/Assets/browse.svg" />
                     </Card.HeaderStartContent>
@@ -39,7 +46,7 @@
                     <lk:ProjectLookupView DataContext="{Binding ProjectLookupViewModel}" />
                 </Card>
 
-                <Loading IsLoading="{Binding IsLoading^}">
+                <Loading IsLoading="{Binding LoadProjects.IsExecuting^}">
                     <CardGrid ItemsSource="{Binding Projects}" MinColumnWidth="300">
                         <CardGrid.ItemTemplate>
                             <DataTemplate DataType="browse:IProjectViewModel">

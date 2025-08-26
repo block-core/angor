@@ -14,7 +14,6 @@ public class ProjectAppService(
     IProjectRepository projectRepository, IMediator mediator)
     : IProjectAppService
 {
-    //[MemoizeTimed]
     public async Task<Result<IEnumerable<ProjectDto>>> Latest()
     {
         return await projectRepository.Latest().Map(t => t.AsEnumerable()).MapEach(project => project.ToDto());
@@ -22,7 +21,12 @@ public class ProjectAppService(
 
     public Task<Maybe<ProjectDto>> FindById(ProjectId projectId)
     {
-        return projectRepository.Get(projectId).Map(project1 => project1.ToDto()).AsMaybe();
+        return projectRepository.Get(projectId).Map(p => p.ToDto()).AsMaybe();
+    }
+
+    public Task<Result<ProjectDto>> Get(ProjectId projectId)
+    {
+        return projectRepository.Get(projectId).Map(project => project.ToDto());
     }
 
     public Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(Guid walletId)

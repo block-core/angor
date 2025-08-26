@@ -45,32 +45,32 @@
     <co:PageContainer>
         <ScrollViewer>
             <DockPanel VerticalSpacing="20">
-                <z:Card Theme="{StaticResource WideCard}" Header="Founder" DockPanel.Dock="Top">
-                    <z:Card.HeaderEndContent>
-                        <FlexBox Gap="10">
-                            <IconButton Command="{Binding LoadProjects}">
+                <Card Theme="{StaticResource WideCard}" Header="Founder" DockPanel.Dock="Top">
+                    <Card.HeaderEndContent>
+                        <UniformGrid Rows="1" ColumnSpacing="10">
+                            <IconButton Classes="Expand CenterContent" Command="{Binding LoadProjects}">
                                 Refresh
                                 <IconButton.Icon>
                                     <ui:Icon Source="fa-arrows-rotate" />
                                 </IconButton.Icon>
                             </IconButton>
-                            <ReactiveIconButton Command="{Binding Create}">
+                            <ReactiveIconButton Classes="Expand CenterContent" Command="{Binding Create}">
                                 New Project
                                 <ReactiveIconButton.Icon>
                                     <ui:Icon Source="fa-plus" />
                                 </ReactiveIconButton.Icon>
                             </ReactiveIconButton>
-                        </FlexBox>
-                    </z:Card.HeaderEndContent>
-                    <z:Card.HeaderStartContent>
+                        </UniformGrid>
+                    </Card.HeaderEndContent>
+                    <Card.HeaderStartContent>
                         <i:Icon FontSize="40" Value="mdi-shield-account-outline" />
-                    </z:Card.HeaderStartContent>
-                </z:Card>
-                <z:Loading LoadingText="Loading projects. Please wait." IsLoading="{Binding LoadProjects.IsExecuting^}">
+                    </Card.HeaderStartContent>
+                </Card>
+                <Loading LoadingText="Loading your projects. Please wait." IsLoading="{Binding LoadProjects.IsExecuting^}">
                     <CardGrid MinColumnWidth="300"
                               Empty.Content="Nothing to show"
                               Classes="ShowEmptyContent" ItemsSource="{Binding ProjectsList}" />
-                </z:Loading>
+                </Loading>
             </DockPanel>
         </ScrollViewer>
     </co:PageContainer>

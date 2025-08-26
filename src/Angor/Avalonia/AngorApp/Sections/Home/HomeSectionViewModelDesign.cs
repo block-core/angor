@@ -10,4 +10,5 @@ public class HomeSectionViewModelDesign : IHomeSectionViewModel
     public ICommand GoToFounderSection { get; }
     public ICommand OpenHub { get; }
     public IEnhancedCommand GoToAngorFlow { get; set; }
+    public ReactiveCommand<string, Unit> GoToSection { get; }
 }

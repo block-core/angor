@@ -54,6 +54,44 @@ public static class WalletCommand
         }, canExecute);
     }
     
+    public static ReactiveCommand<Unit, Maybe<Result<T>>> Create<T>(
+        Func<IWallet, Task<Maybe<Result<T>>>> execute,
+        IWalletRoot walletRoot,
+        IObservable<bool> canExecute)
+    {
+        return ReactiveCommand.CreateFromTask(async () =>
+        {
+            var walletResult = await walletRoot.GetDefaultWalletAndActivate()
+                .Bind(maybe => maybe.ToResult("No wallet available"));
+            
+            if (walletResult.IsFailure)
+            {
+                return Result.Failure<T>(walletResult.Error);
+            }
+            
+            return await execute(walletResult.Value);
+        }, canExecute);
+    }
+    
+    public static ReactiveCommand<Unit, Maybe<Result>> Create(
+        Func<IWallet, Task<Maybe<Result>>> execute,
+        IWalletRoot walletRoot,
+        IObservable<bool> canExecute)
+    {
+        return ReactiveCommand.CreateFromTask(async () =>
+        {
+            var walletResult = await walletRoot.GetDefaultWalletAndActivate()
+                .Bind(maybe => maybe.ToResult("No wallet available"));
+            
+            if (walletResult.IsFailure)
+            {
+                return Result.Failure(walletResult.Error);
+            }
+            
+            return await execute(walletResult.Value);
+        }, canExecute);
+    }
+    
     /// <summary>
     /// Creates a ReactiveCommand with parameters that requires an active wallet to execute.
     /// </summary>

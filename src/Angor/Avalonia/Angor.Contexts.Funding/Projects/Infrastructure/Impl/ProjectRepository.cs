@@ -14,119 +14,151 @@ public class ProjectRepository(
     IRelayService relayService,
     IIndexerService indexerService) : IProjectRepository
 {
+    private Task<Result<Maybe<Project>>> GetSingle(ProjectId id)
+    {
+        return Get([id]).Map(projects => projects.TryFirst());
+    }
+
+    private Task<Result<IEnumerable<Project>>> Get(params ProjectId[] projectIds)
+    {
+        return GetProjects(() => GetIndexerDatasIgnoreNotFound(projectIds));
+    }
+
+    private IEnumerable<Project> Combine(IEnumerable<ProjectIndexerData> indexerItems, IEnumerable<ProjectMetadataWithNpub> metadatas, IEnumerable<ProjectInfo> infos)
+    {
+        // Inner join by ProjectIdentifier and Nostr pub key; assume both always exist
+        var query = from indexer in indexerItems
+            join info in infos on indexer.ProjectIdentifier equals info.ProjectIdentifier
+            join metadataWithNpub in metadatas on info.NostrPubKey equals metadataWithNpub.Npub
+            select new { info, metadata = metadataWithNpub.NostrMetadata };
+
+        return query.Select(item =>
+        {
+            var info = item.info;
+            var metadata = item.metadata;
+
+            var project = new Project
+            {
+                Id = new ProjectId(info.ProjectIdentifier),
+                FounderKey = info.FounderKey,
+                ExpiryDate = info.ExpiryDate,
+                FounderRecoveryKey = info.FounderRecoveryKey,
+                NostrPubKey = info.NostrPubKey,
+                PenaltyDuration = TimeSpan.FromDays(info.PenaltyDays),
+                TargetAmount = info.TargetAmount,
+                Stages = info.Stages.Select((stage, i) => new Stage
+                {
+                    Index = i,
+                    ReleaseDate = stage.ReleaseDate,
+                    RatioOfTotal = stage.AmountToRelease
+                }),
+                StartingDate = info.StartDate,
+                EndDate = info.EndDate,
+                Banner = TryGetUri(metadata.Banner),
+                InformationUri = TryGetUri(metadata.Website),
+                Picture = TryGetUri(metadata.Picture),
+                Name = metadata.Name,
+                ShortDescription = metadata.About
+            };
+
+            return project;
+        });
+    }
+
+    private Uri? TryGetUri(string uriString)
+    {
+        return Uri.TryCreate(uriString, UriKind.Absolute, out var uri) ? uri : null;
+    }
+
+    private Task<Result<IEnumerable<ProjectInfo>>> GetProjectInfos(IEnumerable<ProjectIndexerData> projectMetadatas)
+    {
+        return Wrapper.ProjectInfos(relayService, projectMetadatas.Select(data => data.NostrEventId));
+    }
+
+    private Task<Result<IEnumerable<ProjectMetadataWithNpub>>> GetProjectMetadatas(IEnumerable<ProjectInfo> indexerData)
+    {
+        return Wrapper.ProjectMetadatas(relayService, indexerData.Select(data => data.NostrPubKey)).Map(list => list.AsEnumerable());
+    }
+
+    private Task<Result<IEnumerable<ProjectIndexerData>>> GetIndexerDatas(IEnumerable<ProjectId> ids)
+    {
+        return ids
+            .Select(id => Result.Try(() => indexerService.GetProjectByIdAsync(id.Value))
+                .EnsureNotNull(() => $"Project not found: {id.Value}"))
+            .CombineInOrder();
+    }
+
+
+    private Task<Result<IEnumerable<ProjectIndexerData>>> GetIndexerDatasIgnoreNotFound(IEnumerable<ProjectId> ids)
+    {
+        return ids
+            .Select(id => Result.Try(() => indexerService.GetProjectByIdAsync(id.Value).AsMaybe()))
+            .CombineInOrder()
+            .Map(maybes => maybes.Values());
+    }
+
     public Task<Result<Project>> Get(ProjectId id)
     {
-        return TryGet(id).Bind(maybe => maybe.ToResult("Project not found"));
+        return GetSingle(id).ToResult($"Project not found: {id.Value}");
     }
 
-    public async Task<Result<IEnumerable<Project>>> GetAll(params ProjectId[] ids)
+    public Task<Result<IEnumerable<Project>>> GetAll(params ProjectId[] ids)
     {
-        if (ids == null || ids.Length == 0)
-            return Result.Success(Enumerable.Empty<Project>());
-        
-        
-        return await GetAllProjectData(ids.ToObservable()
-                .Select(id => indexerService.GetProjectByIdAsync(id.Value))
-                .Where(x => x.Result != null)
-                .Select(x => x.Result!))
-            .ToList()
-            .Select(x => x.AsEnumerable())
-            .ToResult();
-
+        return Get(ids);
     }
 
-    public Task<Result<IList<Project>>> Latest()
+    public Task<Result<IEnumerable<Project>>> Latest()
     {
-        return Result.Try(() => GetAllProjectData(indexerService.GetLatest()).ToList().ToTask());
+        return GetProjects(() => Result.Try(() => indexerService.GetProjectsAsync(null, 20)).Map(list => list.AsEnumerable()));
     }
 
     public Task<Result<Maybe<Project>>> TryGet(ProjectId projectId)
     {
-        return Result.Try(() => indexerService.GetProjectByIdAsync(projectId.Value))
-            .Map(data => data.AsMaybe())
-            .Map(maybe => maybe.Map(async data => await GetAllProjectData(new[] { data }.ToObservable())));
+        return GetSingle(projectId);
     }
 
-    private IObservable<Project> GetAllProjectData(IObservable<ProjectIndexerData> projectIndexerDataList)
+    private static class Wrapper
     {
-        return projectIndexerDataList
-            .ToList()
-            .SelectMany(indexerList =>
-            {
-                return ProjectInfos(indexerList.Select(info => info.NostrEventId))
-                    .Select(x => new Project
-                    {
-                        Id = new ProjectId(x.ProjectIdentifier),
-                        FounderKey = x.FounderKey,
-                        ExpiryDate = x.ExpiryDate,
-                        FounderRecoveryKey = x.FounderRecoveryKey,
-                        NostrPubKey = x.NostrPubKey,
-                        PenaltyDuration = TimeSpan.FromDays(x.PenaltyDays),
-                        TargetAmount = x.TargetAmount,
-                        Stages = x.Stages.Select((stage, i) => new Stage
-                        {
-                            //Amount =  Convert.ToInt64(x.TargetAmount * stage.AmountToRelease /100),
-                            Index = i, 
-                            ReleaseDate = stage.ReleaseDate,
-                            RatioOfTotal = stage.AmountToRelease
-                        }),
-                        StartingDate = x.StartDate,
-                        EndDate = x.EndDate
-                    });
-            })
-            .ToList()
-            .SelectMany(projects =>
-            {
-                return ProjectMetadatas(projects
-                        .Where(x => string.IsNullOrEmpty(x.NostrPubKey) == false)
-                        .Select(project => project.NostrPubKey))
-                    .Select(projectInfo =>
-                    {
-                        var project = projects.FirstOrDefault(p => p.NostrPubKey == projectInfo.Item1);
-                        if (project == null) return null;
-                        project.Banner = Uri.TryCreate(projectInfo.Item2.Banner, UriKind.Absolute, out var bannerUri)
-                            ? bannerUri
-                            : null;
-                        project.InformationUri = Uri.TryCreate(projectInfo.Item2.Website, UriKind.Absolute, out var uri)
-                            ? uri
-                            : null;
-                        project.Picture = Uri.TryCreate(projectInfo.Item2.Picture, UriKind.Absolute, out var pictureUri)
-                            ? pictureUri
-                            : null;
-                        project.Name = projectInfo.Item2.Name;
-                        project.ShortDescription = projectInfo.Item2.About;
-                        return project;
-                    });
-            });
-    }
-
-    private IObservable<ProjectInfo> ProjectInfos(IEnumerable<string> eventIds)
-    {
-        return Observable.Create<ProjectInfo>(observer =>
+        public static Task<Result<IEnumerable<ProjectInfo>>> ProjectInfos(IRelayService relayService, IEnumerable<string> eventIds)
         {
-            relayService.LookupProjectsInfoByEventIds<ProjectInfo>(
-                observer.OnNext,
-                observer.OnCompleted,
-                eventIds.ToArray()
-            );
+            var projectInfos = Observable.Create<ProjectInfo>(observer =>
+                {
+                    relayService.LookupProjectsInfoByEventIds<ProjectInfo>(
+                        observer.OnNext,
+                        observer.OnCompleted,
+                        eventIds.ToArray()
+                    );
 
-            return Disposable.Empty;
-        }).Timeout(TimeSpan.FromSeconds(30))
-          .Catch<ProjectInfo, Exception>(ex => Observable.Empty<ProjectInfo>());
-        
+                    return Disposable.Empty;
+                })
+                .Timeout(TimeSpan.FromSeconds(30));
+
+            return Result.Try(async () => await projectInfos.ToList()).Map(list => list.AsEnumerable());
+        }
+
+        public static Task<Result<IEnumerable<ProjectMetadataWithNpub>>> ProjectMetadatas(IRelayService relayService, IEnumerable<string> projectIds)
+        {
+            var projectMetadatas = Observable.Create<ProjectMetadataWithNpub>(observer =>
+            {
+                relayService.LookupNostrProfileForNPub(
+                    (npub, nostrMetadata) => observer.OnNext(new ProjectMetadataWithNpub(npub, nostrMetadata)),
+                    observer.OnCompleted,
+                    projectIds.Where(x => x != null).ToArray());
+
+                return Disposable.Empty;
+            }).Timeout(TimeSpan.FromSeconds(30));
+
+            return Result.Try(async () => await projectMetadatas.ToList()).Map(list => list.AsEnumerable());
+        }
     }
 
-    private IObservable<(string, ProjectMetadata)> ProjectMetadatas(IEnumerable<string> projectInfos)
-    {
-        return Observable.Create<(string, ProjectMetadata)>(observer =>
-        {
-            relayService.LookupNostrProfileForNPub(
-                (npub, nostrMetadata) => observer.OnNext((npub, nostrMetadata)),
-                observer.OnCompleted,
-                projectInfos.Where(x => x != null).ToArray());
+    private record ProjectMetadataWithNpub(string Npub, ProjectMetadata NostrMetadata);
 
-            return Disposable.Empty;
-        }).Timeout(TimeSpan.FromSeconds(30))
-          .Catch<(string, ProjectMetadata), Exception>(ex => Observable.Empty<(string, ProjectMetadata)>());
+    private Task<Result<IEnumerable<Project>>> GetProjects(Func<Task<Result<IEnumerable<ProjectIndexerData>>>> func)
+    {
+        return from indexerItems in func()
+            from infos in GetProjectInfos(indexerItems)
+            from metadatas in GetProjectMetadatas(infos)
+            select Combine(indexerItems, metadatas, infos);
     }
 }

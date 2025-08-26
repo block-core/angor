@@ -21,34 +21,59 @@
     <a:PageContainer>
         <ScrollViewer>
             <StackPanel MaxWidth="1200" VerticalAlignment="Center" Classes="BigGap">
-                <Card Height="400"
-                      Theme="{StaticResource BigCard}"
+                <Card Theme="{StaticResource BigCard}"
+                      Padding="50"
                       Header="Welcome to Angor"
+                      HeaderAndBodySpacing="20"
                       Subheader="A P2P funding protocol built on Bitcoin and Nostr">
                     <Card.HeaderStartContent>
                         <ui:Icon Source="svg:/Assets/angor-icon.svg" />
                     </Card.HeaderStartContent>
+                    <UniformGrid Rows="1" HorizontalAlignment="Center" ColumnSpacing="20">
+                        <Button Command="{Binding GoToSection}" CommandParameter="Wallet">Get Started</Button>
+                        <Button Command="{Binding OpenHub}">Learn More</Button>
+                    </UniformGrid>
                 </Card>
                 <BalancedWrapGrid MinItemWidth="200" HorizontalSpacing="20" VerticalSpacing="20">
                     <Card Theme="{StaticResource SmallCard}" Header="Create your wallet" Subheader="Create a new wallet or recover your existing one to get started with Angor">
                         <Card.HeaderStartContent>
                             <ui:Icon Source="svg:/Assets/wallet.svg" />
                         </Card.HeaderStartContent>
+                        <Interaction.Behaviors>
+                            <TappedEventTrigger>
+                                <InvokeCommandAction Command="{Binding GoToSection}" CommandParameter="Wallet" />
+                            </TappedEventTrigger>
+                        </Interaction.Behaviors>
                     </Card>
                     <Card Theme="{StaticResource SmallCard}" Header="Explore Opportunities" Subheader="Browse through innovative projects and find your next investment">
                         <Card.HeaderStartContent>
                             <ui:Icon Source="svg:/Assets/browse.svg" />
                         </Card.HeaderStartContent>
+                        <Interaction.Behaviors>
+                            <TappedEventTrigger>
+                                <InvokeCommandAction Command="{Binding GoToSection}" CommandParameter="Browse" />
+                            </TappedEventTrigger>
+                        </Interaction.Behaviors>
                     </Card>
                     <Card Theme="{StaticResource SmallCard}" Header="Launch Your Project" Subheader="Start your fundraising journey and launch your project on Angor">
                         <Card.HeaderStartContent>
                             <ui:Icon Source="svg:/Assets/user.svg" />
                         </Card.HeaderStartContent>
+                        <Interaction.Behaviors>
+                            <TappedEventTrigger>
+                                <InvokeCommandAction Command="{Binding GoToSection}" CommandParameter="Founder" />
+                            </TappedEventTrigger>
+                        </Interaction.Behaviors>
                     </Card>
-                    <Card Theme="{StaticResource SmallCard}" Header="Invest Grow" Subheader="Invest in promising projects and be part of their success story">
+                    <Card Theme="{StaticResource SmallCard}" Header="Invest &amp; Grow" Subheader="Invest in promising projects and be part of their success story">
                         <Card.HeaderStartContent>
                             <ui:Icon Source="svg:/Assets/portfolio.svg" />
                         </Card.HeaderStartContent>
+                        <Interaction.Behaviors>
+                            <TappedEventTrigger>
+                                <InvokeCommandAction Command="{Binding GoToSection}" CommandParameter="Portfolio" />
+                            </TappedEventTrigger>
+                        </Interaction.Behaviors>
                     </Card>
                 </BalancedWrapGrid>
                 <HeaderedContainer Header="The Angor Flow">

@@ -10,7 +10,7 @@ public static class ProjectExtensions
     {
         return new Project
         {
-            Picture = dto.Picture,
+            Picture = dto.Avatar,
             Id = dto.Id.Value,
             InformationUri = dto.InformationUri,
             Name = dto.Name,
@@ -30,7 +30,7 @@ public static class ProjectExtensions
                 .ToList(),
             PenaltyDuration = dto.PenaltyDuration,
             TargetAmount = new AmountUI(dto.TargetAmount),
-            StartDate = dto.StartingDate
+            StartDate = dto.FundingStartDate
         };
     }
 }
