@@ -339,7 +339,8 @@
                         @if (stage.StageIndex == expandedStageId)
                         {
                             <div class="mt-3 animate-fade-in">
-                                @if (stage.Items.Any(x => !x.IsSpent))
+   
+                                @if (stage.Items.Any(x => !x.IsSpent) && stageisActive)
                                 {
                                     <div class="d-flex justify-content-start mb-3">
                                         <button class="btn btn-border btn-sm"
@@ -1045,12 +1046,10 @@
         return stageDatas.First(stage => stage.Items.Any(item => item.Trxid == utxoKey.Trxid && item.Outputindex == utxoKey.Outputindex)).StageIndex;
     }
 
-
     private bool IsCheckboxSelectedForStage(int stageIndex)
     {
         return selectedUtxos.Any(utxo => GetStageIndexForUtxo(utxo.Key) == stageIndex && utxo.Value);
     }
-
 
     private async Task CopyTRXToClipboard(string trxData)
     {
