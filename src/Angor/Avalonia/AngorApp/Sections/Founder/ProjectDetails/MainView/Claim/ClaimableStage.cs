@@ -50,11 +50,11 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
     {
         var feerate = uiServices.Dialog.ShowAndGetResult(new FeerateSelectionViewModel(uiServices), "Select your feerate", model => model.IsValid, model => model.Feerate.Value);
         return feerate
-            .Map(fr => DoClaim(ReactiveSelection.SelectedItems, fr)
+            .Map(fr => DoClaim(ReactiveSelection.SelectedItems,uiServices.ActiveWallet.Current.Value.Id.Value, fr)
                 .Tap(() => uiServices.Dialog.ShowMessage("Claim successful", "The funds have been successfully claimed.", "Close")));
     }
 
-    private Task<Result> DoClaim(IEnumerable<IClaimableTransaction> selected, long feerate)
+    private Task<Result> DoClaim(IEnumerable<IClaimableTransaction> selected, Guid walletId, long feerate)
     {
         var toSpend = selected.Select(claimable => new SpendTransactionDto
         {
@@ -62,7 +62,7 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
             StageId = stageId
         });
 
-        return investmentAppService.Spend(projectId, toSpend, feerate);
+        return investmentAppService.Spend(walletId,new DomainFeerate(feerate),projectId, toSpend); //TODO: Jose handle the fee rate properly
     }
 
     public ReactiveSelection<IClaimableTransaction, string> ReactiveSelection { get; }

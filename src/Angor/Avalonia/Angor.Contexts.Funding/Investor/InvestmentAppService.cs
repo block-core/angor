@@ -3,6 +3,7 @@ using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Investment = Angor.Contexts.Funding.Founder.Operations.Investment;
@@ -46,9 +47,11 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
         return mediator.Send(new GetPenalties.GetPenaltiesRequest(walletId));
     }
 
-    public Task<Result> Spend(ProjectId projectId, IEnumerable<SpendTransactionDto> toSpend, long feeRate)
+    public Task<Result> Spend(Guid walletId, DomainFeerate fee, ProjectId projectId, IEnumerable<SpendTransactionDto> toSpend)
     {
-        return mediator.Send(new SpendInvestorTransaction.SpendInvestorTransactionRequest(projectId, toSpend, feeRate));
+        return mediator.Send(
+            new SpendInvestorTransaction.SpendInvestorTransactionRequest(walletId, projectId,
+                new FeeEstimation { FeeRate = fee.SatsPerVByte }, toSpend));
     }
 
     public Task<Result<IEnumerable<ClaimableTransactionDto>>> GetClaimableTransactions(Guid walletId, ProjectId projectId)
