@@ -5,7 +5,7 @@ using MediatR;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
-public class GetReleaseableTransactions
+public static class GetReleaseableTransactions
 {
     public record GetReleaseableTransactionsRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ReleaseableTransactionDto>>>;
 

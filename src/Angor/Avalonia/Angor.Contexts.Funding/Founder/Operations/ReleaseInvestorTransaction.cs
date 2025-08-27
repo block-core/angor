@@ -4,7 +4,7 @@ using MediatR;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
-public class ReleaseInvestorTransaction
+public static class ReleaseInvestorTransaction
 {
     public record ReleaseInvestorTransactionRequest(Guid WalletId, ProjectId ProjectId, IEnumerable<string> InvestorAddressList) : IRequest<Result>;
 

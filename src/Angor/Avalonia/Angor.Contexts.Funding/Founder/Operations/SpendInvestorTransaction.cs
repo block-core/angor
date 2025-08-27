@@ -5,7 +5,7 @@ using MediatR;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
-public class SpendInvestorTransaction
+public static class SpendInvestorTransaction
 {
     public record SpendInvestorTransactionRequest(ProjectId ProjectId, IEnumerable<SpendTransactionDto> ToSpend, long Feerate) : IRequest<Result>;
 

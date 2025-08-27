@@ -153,7 +153,7 @@ internal static class CreateProjectConstants
                 var projectInfo = new ProjectInfo
                 {
                     FounderKey = founderKeys.FounderKey,
-                    EndDate = project.StartDate,
+                    EndDate = project.EndDate ?? throw new InvalidOperationException("End date is required"),
                     StartDate = project.StartDate,
                     ExpiryDate = project.ExpiryDate ?? project.Stages.OrderByDescending(x => x.startDate).First()
                         .startDate.AddMonths(2).ToDateTime(TimeOnly.MinValue),
