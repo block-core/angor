@@ -9,15 +9,10 @@ namespace Angor.Contexts.Wallet.Infrastructure.Impl
     {
         public IObservable<Result<Event>> Watch(WalletId id)
         {
-            var initial = Observable.Defer(() => GetTransactions(id));
+            var transactions = Observable.Timer(TimeSpan.Zero, TimeSpan.FromMinutes(10)) // TODO we really should check if the block height and block hash changed
+                .SelectMany(_ => GetTransactions(id));
             
-            var polling = Observable.Timer(TimeSpan.FromMinutes(10)) // TODO we really should check if the block height and block hash changed
-                .SelectMany(_ => GetTransactions(id))
-                .Repeat();
-            
-            var source = initial.Concat(polling);
-
-            return source.SelectMany(result => 
+            return transactions.SelectMany(result => 
                     result.Match(
                         success => success.Select(Result.Success),
                         error => [Result.Failure<Event>(error)]
