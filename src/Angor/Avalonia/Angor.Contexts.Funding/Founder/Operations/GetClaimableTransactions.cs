@@ -21,13 +21,20 @@ public static class GetClaimableTransactions
                 return Result.Failure<IEnumerable<ClaimableTransactionDto>>(resultList.Error);
             }
             
-            var list = resultList.Value.SelectMany(x => x.Items.Select<StageDataTrx, ClaimableTransactionDto>(item => 
+            var list = resultList.Value.SelectMany(x => x.Items
+                .Select<StageDataTrx, ClaimableTransactionDto>(item => 
                 new ClaimableTransactionDto()
                 {
                     StageId = x.StageIndex,
                     Amount = new Amount(item.Amount),
                     InvestorAddress = item.OutputAddress,
-                    ClaimStatus = item.IsSpent ? ClaimStatus.SpentByFounder : ClaimStatus.Unspent
+                    ClaimStatus = item.SpentType switch
+                    {
+                        "founder" => ClaimStatus.SpentByFounder, 
+                        "investor" => ClaimStatus.WithdrawByInvestor,
+                        "pending" => ClaimStatus.Pending,
+                        _ => ClaimStatus.Unspent
+                    },
                 }));
             
             return Result.Success(list);

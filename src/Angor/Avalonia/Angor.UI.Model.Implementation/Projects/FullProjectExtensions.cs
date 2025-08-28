@@ -20,12 +20,12 @@ public static class FullProjectExtensions
     
     public static bool HasStartedFunding(this FullProject project)
     {
-        return DateTime.UtcNow >= project.Info.FundingStartDate;
+        return DateTime.UtcNow.Date >= project.Info.FundingStartDate.Date;
     }
     
     public static bool FundingHasFinished(this FullProject project)
     {
-        return DateTime.UtcNow >= project.Info.FundingEndDate;
+        return DateTime.UtcNow.Date >= project.Info.FundingEndDate.Date;
     }
     
     public static bool HasReachedTarget(this FullProject project)

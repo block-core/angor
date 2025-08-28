@@ -53,7 +53,7 @@ public static class ProjectStatistics
                 var availableInvestedAmount = stage.Items.Where(c => !c.IsSpent).Sum(c => c.Amount);
                 var spentStageAmount = stage.Items.Where(c => c.IsSpent).Sum(c => c.Amount);
                 var spentStageTransactions = stage.Items.Count(c => c.IsSpent);
-                var daysUntilRelease = (stage.Stage.ReleaseDate - DateTime.UtcNow).Days;
+                var daysUntilRelease = stage.Stage.ReleaseDate.Date < DateTime.UtcNow.Date ? 0 : (stage.Stage.ReleaseDate.Date - DateTime.UtcNow.Date).Days;
 
                 dto.TotalInvested += investedAmount;
                 dto.AvailableBalance += availableInvestedAmount;
