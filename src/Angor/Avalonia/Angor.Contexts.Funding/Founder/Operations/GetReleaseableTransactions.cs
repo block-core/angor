@@ -1,3 +1,4 @@
+using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
@@ -37,23 +38,13 @@ public static class GetReleaseableTransactions
                 Approved = x.ApprovaleTime,
                 Arrived = x.InvestmentRequestTime,
                 Released = x.ReleaseSignaturesTime,
-                InvestorAddress = x.SignRecoveryRequest
+                InvestmentEventId = x.SignRecoveryRequestEventId
             });
                 
             return Result.Success(list);
         }
         
-        public class SignatureReleaseItem
-        {
-            public string investorNostrPubKey;
-            public DateTime InvestmentRequestTime { get; set; }
-            public string EncryptedSignRecoveryMessage { get; set; }
-            public string EventId { get; set; }
-            public DateTime ApprovaleTime { get; set; }
-            public DateTime ReleaseSignaturesTime { get; set; }
-            
-            public string? SignRecoveryRequest { get; set; }
-        }
+
 
         public Task<IEnumerable<SignatureReleaseItem>> FetchSignatureRequestsAsync(string projectNostrPubKey)
         {
@@ -121,12 +112,12 @@ public static class GetReleaseableTransactions
                         !string.IsNullOrWhiteSpace(testingValidity.InvestmentTransactionHex) &&
                         !string.IsNullOrWhiteSpace(testingValidity.UnfundedReleaseAddress))
                     {
-                        signatureReleaseItem.SignRecoveryRequest = signatureReleaseItem.SignRecoveryRequest;
+                        signatureReleaseItem.SignRecoveryRequestEventId = signatureReleaseItem.EventId;
                     }
                 }
                 catch (Exception e)
                 {
-                    signatureReleaseItem.SignRecoveryRequest = null; // should we remove the item instead?
+                    signatureReleaseItem.SignRecoveryRequestEventId = null; // should we remove the item instead?
                 }
             }
             

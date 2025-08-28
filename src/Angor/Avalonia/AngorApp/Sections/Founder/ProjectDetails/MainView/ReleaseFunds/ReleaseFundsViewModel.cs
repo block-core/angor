@@ -81,8 +81,8 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
 
     private Task<Maybe<Result>> DoReleaseAll(IWallet wallet)
     {
-        var addresses = Transactions.Select(transaction => transaction.InvestorAddress);
-
+        var addresses = Transactions.Select(transaction => transaction.InvestmentEventId);
+        
         return UserFlow.PromptAndNotify(
             () => investmentAppService.ReleaseInvestorTransactions(wallet.Id.Value, projectId, addresses), uiServices,
             "Are you sure you want to release all the funds?",

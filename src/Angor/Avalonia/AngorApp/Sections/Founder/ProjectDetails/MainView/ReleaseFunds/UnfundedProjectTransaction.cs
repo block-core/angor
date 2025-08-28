@@ -13,9 +13,9 @@ public class UnfundedProjectTransaction : IUnfundedProjectTransaction
         Arrived = dto.Arrived;
         Released = dto.Released;
         Approved = dto.Approved;
-        InvestorAddress = dto.InvestorAddress;
+        InvestmentEventId = dto.InvestmentEventId;
 
-        Release = ReactiveCommand.CreateFromTask(() => UserFlow.PromptAndNotify(() => investmentAppService.ReleaseInvestorTransactions(walletId, projectId, [InvestorAddress]), uiServices,
+        Release = ReactiveCommand.CreateFromTask(() => UserFlow.PromptAndNotify(() => investmentAppService.ReleaseInvestorTransactions(walletId, projectId, [InvestmentEventId]), uiServices,
                 "Are you sure you want to release these funds?",
                 "Confirm Release",
                 "Success fully released",
@@ -28,5 +28,5 @@ public class UnfundedProjectTransaction : IUnfundedProjectTransaction
     public DateTime Approved { get; }
     public DateTime? Released { get; }
     public IEnhancedCommand<Maybe<Result>> Release { get; }
-    public string InvestorAddress { get; set; }
+    public string InvestmentEventId { get; set; }
 }
