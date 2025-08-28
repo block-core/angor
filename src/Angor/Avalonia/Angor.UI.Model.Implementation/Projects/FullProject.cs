@@ -28,7 +28,7 @@ public class FullProject(ProjectDto info, ProjectStatisticsDto stats) : IFullPro
     public TimeSpan TimeToFundingEndDate => Info.FundingEndDate - DateTime.Now;
     public TimeSpan FundingPeriod => Info.FundingEndDate - Info.FundingStartDate;
     public TimeSpan TimeFromFundingStartingDate => DateTime.Now - Info.FundingStartDate;
-    public string NostrNpubKey => Info.NostrNpubKey;
+    public string NostrNpubKeyHex => Info.NostrNpubKeyHex;
     public Uri? Avatar => Info.Avatar;
     public string ShortDescription => Info.ShortDescription;
     public Uri? Banner => info.Banner;

@@ -23,7 +23,7 @@ public class FullProjectDesign : IFullProject
     public TimeSpan TimeToFundingEndDate { get; } = TimeSpan.FromDays(12);
     public TimeSpan FundingPeriod { get; } = TimeSpan.FromDays(22);
     public TimeSpan TimeFromFundingStartingDate { get; } = TimeSpan.FromDays(10);
-    public string NostrNpubKey { get; } = "npub1examplekey1234567890abcdefg";
+    public string NostrNpubKeyHex { get; } = "ca6e84aa974d00af805a754b34bc4e3c9a899aac14487a6f2e21fe9ea4b9fe43";
     public Uri? Avatar { get; } = new ("https://images.pexels.com/photos/998641/pexels-photo-998641.jpeg?auto=compress&cs=tinysrgb&w=600");
     public string ShortDescription { get; } = "This is a short description of the test project.";
     public Uri? Banner { get; } = new Uri("https://images.pexels.com/photos/998641/pexels-photo-998641.jpeg?auto=compress&cs=tinysrgb&w=600");

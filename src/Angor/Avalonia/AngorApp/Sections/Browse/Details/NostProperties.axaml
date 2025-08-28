@@ -41,7 +41,7 @@
                                 <EdgePanel.StartContent>
                                     <i:Icon FontSize="16" Value="fa-solid fa-key" />
                                 </EdgePanel.StartContent>
-                                <SelectableTextBlock Text="{Binding Project.NostrNpubKey}" />
+                                <SelectableTextBlock Text="{Binding Project.NostrNpubKeyHex, Converter={x:Static controls:AngorConverters.HexToNpub}}" />
                                 <EdgePanel.EndContent>
                                     <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}"
                                             ToolTip.Tip="Open in Nostr Hub"
@@ -54,7 +54,7 @@
                                                         <x:Uri>https://hub.angor.io/profile/</x:Uri>
                                                     </Binding.Source>
                                                 </Binding>
-                                                <Binding Path="Project.NostrNpubKey" />
+                                                <Binding Path="Project.NostrNpubKeyHex" />
                                             </MultiBinding>
                                         </Button.CommandParameter>
                                         <Button.Content>
@@ -69,7 +69,7 @@
                     <HeaderedContainer Header="NOSTR Public Key (Hex)" Classes="NoPadding">
                         <Border Classes="CardAlt">
                             <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="{Icon fa-solid fa-hashtag}">
-                                <SelectableTextBlock Text="{Binding Project.NostrNpubKey}" />
+                                <SelectableTextBlock Text="{Binding Project.NostrNpubKeyHex}" />
                                 <EdgePanel.EndContent>
                                     <Button Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}"
                                             ToolTip.Tip="Open in Nostr Hub"
@@ -82,7 +82,7 @@
                                                         <x:Uri>https://hub.angor.io/profile/</x:Uri>
                                                     </Binding.Source>
                                                 </Binding>
-                                                <Binding Path="Project.NostrNpubKey" />
+                                                <Binding Path="Project.NostrNpubKeyHex" />
                                             </MultiBinding>
                                         </Button.CommandParameter>
                                         <Button.Content>

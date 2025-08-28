@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using Angor.Contests.CrossCutting;
 using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Svg;
@@ -110,4 +111,10 @@ public static class AngorConverters
     {
         WriteIndented = true,
     }));
+
+    // Adds a converter to transform a Nostr npub (Bech32) into 64-char hex public key
+    public static readonly IValueConverter NpubToHex = NpubToHexConverter.Instance;
+    
+    // Adds a converter to transform a Nostr npub (Bech32) into 64-char hex public key
+    public static readonly IValueConverter HexToNpub = new FuncValueConverter<string?, string?>(s => NostrKeyCodec.EncodeHexToNpub(s));
 }

@@ -17,7 +17,7 @@ public interface IFullProject
     TimeSpan TimeToFundingEndDate { get; }
     TimeSpan FundingPeriod { get; }
     TimeSpan TimeFromFundingStartingDate { get; }
-    public string NostrNpubKey { get; }
+    public string NostrNpubKeyHex { get; }
     public Uri? Avatar { get; }
     public string ShortDescription { get; }
     public Uri? Banner { get; }

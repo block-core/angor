@@ -13,7 +13,7 @@ public class Project : IProject
     public DateTime StartDate { get; set; }
     public IEnumerable<IStage> Stages { get; set; }
     public string NpubKey { get; set; }
-    public string NpubKeyHex { get; set; }
+    public string NpubKeyHex { get; set; } // Added to fulfill IProject interface: hex form of npub key
     public TimeSpan PenaltyDuration { get; set; }
     public Uri InformationUri { get; set; }
     public DateTime EndDate { get; }
