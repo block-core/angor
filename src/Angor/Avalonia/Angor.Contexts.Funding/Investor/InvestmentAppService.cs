@@ -46,9 +46,9 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
         return mediator.Send(new GetPenalties.GetPenaltiesRequest(walletId));
     }
 
-    public Task<Result> Spend(ProjectId projectId, IEnumerable<SpendTransactionDto> toSpend)
+    public Task<Result> Spend(ProjectId projectId, IEnumerable<SpendTransactionDto> toSpend, long feeRate)
     {
-        return mediator.Send(new SpendInvestorTransaction.SpendInvestorTransactionRequest(projectId, toSpend));
+        return mediator.Send(new SpendInvestorTransaction.SpendInvestorTransactionRequest(projectId, toSpend, feeRate));
     }
 
     public Task<Result<IEnumerable<ClaimableTransactionDto>>> GetClaimableTransactions(Guid walletId, ProjectId projectId)
