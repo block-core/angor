@@ -153,7 +153,7 @@ public static class ReleaseInvestorTransaction
                 var encryptedContent = await encryptionService.EncryptNostrContentAsync(nostrFounderPrivateKeyHex,
                     payload.SignatureReleaseItem.investorNostrPubKey, sigJson);
 
-                signService.SendReleaseSigsToInvestor(encryptedContent, founderRecoveryPrivateKeyHex,
+                signService.SendReleaseSigsToInvestor(encryptedContent, nostrFounderPrivateKeyHex,
                     payload.SignatureReleaseItem.investorNostrPubKey, payload.SignatureReleaseItem.EventId);
 
                 return Result.Success();

@@ -34,8 +34,6 @@ public static class SpendInvestorTransaction
             var selectedStageId = groupedByStage.First().Key;
             var network = networkConfiguration.GetNetwork();
 
-            
-
             var project = await projectRepository.Get(request.ProjectId);
             if (project.IsFailure)
             {
