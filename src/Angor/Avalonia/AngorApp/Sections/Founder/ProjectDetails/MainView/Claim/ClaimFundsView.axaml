@@ -7,7 +7,7 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:claim="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.MainView.Claim"
-             mc:Ignorable="d" d:DesignWidth="400"
+             mc:Ignorable="d" d:DesignWidth="600"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.MainView.Claim.ClaimFundsView" x:DataType="claim:IClaimFundsViewModel">
 
     <Design.DataContext>
@@ -89,10 +89,10 @@
                                 <ToggleButton HorizontalAlignment="Stretch" Theme="{StaticResource ExpandingToggleButton}" Padding="10" x:Name="ToggleButton" />
                             </Card.HeaderEndContent>
                             <Card.Header>
-                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                <BalancedWrapGrid MinItemWidth="80" MaxItemWidth="120">
                                     <controls:Badge TextElement.FontWeight="Regular" FontSize="12" Color="DeepSkyBlue" Content="{Binding ClaimableAmount.DecimalString}" />
                                     <controls:Badge TextElement.FontWeight="Regular" FontSize="12" Color="Goldenrod" Content="{Binding ClaimableTransactionsCount, StringFormat='{}{0} UTXO'}" />
-                                </StackPanel>
+                                </BalancedWrapGrid>
                             </Card.Header>
                             <DockPanel IsVisible="{Binding #ToggleButton.IsChecked}">
                                 <ReactiveIconButton Icon="{Icon svg:/Assets/claim.svg}" Padding="15 10" Margin="0 20 0 0" HorizontalAlignment="Right" Command="{Binding Claim}" Content="Claim Selected Coins" DockPanel.Dock="Bottom" />
