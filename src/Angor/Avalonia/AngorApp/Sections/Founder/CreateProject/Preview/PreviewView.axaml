@@ -45,7 +45,7 @@
     <StackPanel Classes="BigGap">
         <controls:ProjectCard Banner="{Binding ProfileViewModel.BannerUri}" Avatar="{Binding ProfileViewModel.AvatarUri}" ProjectName="{Binding ProfileViewModel.ProjectName}" ShortDescription="{Binding ProfileViewModel.Description}" />
         <Card Header="Project Snapshot">
-            <BalancedWrapGrid MinItemWidth="150">
+            <BalancedWrapGrid MinItemWidth="200">
                 <Card Theme="{StaticResource AngorHighlightedContentCard}"
                       Header="Target Amount"
                       Content="{Binding FundingStructureViewModel.TargetAmount.DecimalString, FallbackValue=?}" />
