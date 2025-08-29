@@ -6,5 +6,5 @@ public interface IStage
     long Amount { get; }
     IAmountUI AmountUI => new AmountUI(Amount);
     int Index { get; }
-    double RatioOfTotal { get; }
+    decimal RatioOfTotal { get; }
 }

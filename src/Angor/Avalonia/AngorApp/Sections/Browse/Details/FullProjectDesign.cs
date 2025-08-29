@@ -11,9 +11,9 @@ public class FullProjectDesign : IFullProject
 
     public IEnumerable<IStage> Stages { get; } =
     [
-        new StageDesign() { Amount = 123, Index = 1, RatioOfTotal = 0.25, ReleaseDate = DateTime.Now.AddDays(3) },
-        new StageDesign() { Amount = 123, Index = 2, RatioOfTotal = 0.25, ReleaseDate = DateTime.Now.AddDays(6) },
-        new StageDesign() { Amount = 123, Index = 3, RatioOfTotal = 0.5, ReleaseDate = DateTime.Now.AddDays(12) }
+        new StageDesign() { Amount = 123, Index = 1, RatioOfTotal = 0.25m, ReleaseDate = DateTime.Now.AddDays(3) },
+        new StageDesign() { Amount = 123, Index = 2, RatioOfTotal = 0.25m, ReleaseDate = DateTime.Now.AddDays(6) },
+        new StageDesign() { Amount = 123, Index = 3, RatioOfTotal = 0.5m, ReleaseDate = DateTime.Now.AddDays(12) }
     ];
     public string Name { get; } = "Test Project";
     public TimeSpan PenaltyDuration { get; } = TimeSpan.FromDays(90);

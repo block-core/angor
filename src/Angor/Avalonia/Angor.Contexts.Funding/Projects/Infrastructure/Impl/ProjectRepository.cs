@@ -50,7 +50,7 @@ public class ProjectRepository(
                 {
                     Index = i + 1,
                     ReleaseDate = stage.ReleaseDate,
-                    RatioOfTotal = (double)(stage.AmountToRelease / 100)
+                    RatioOfTotal = stage.AmountToRelease / 100m
                 }),
                 StartingDate = info.StartDate,
                 EndDate = info.EndDate,

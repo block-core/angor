@@ -175,7 +175,7 @@ public static class PublishInvestment
                 PenaltyDays = project.PenaltyDuration.Days,
                 Stages = project.Stages.Select(x => new Stage
                 {
-                    AmountToRelease = (decimal)(x.RatioOfTotal * 100),
+                    AmountToRelease = x.RatioOfTotal * 100,
                     ReleaseDate = x.ReleaseDate
                 }).ToList(),
                 StartDate = project.StartingDate,

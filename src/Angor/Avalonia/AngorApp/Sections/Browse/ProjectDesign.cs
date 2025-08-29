@@ -15,10 +15,10 @@ public class ProjectDesign : IProject
 
     public IEnumerable<IStage> Stages { get; } =
     [
-        new StageDesign { ReleaseDate = DateTime.Today, Amount = 1000_000, Index = 1, RatioOfTotal = 0.25d },
-        new StageDesign { ReleaseDate = DateTime.Today.AddDays(20), Amount = 400_0000, Index = 2, RatioOfTotal = 0.25d },
-        new StageDesign { ReleaseDate = DateTime.Today.AddDays(40), Amount = 800_0000, Index = 3, RatioOfTotal = 0.25d },
-        new StageDesign { ReleaseDate = DateTime.Today.AddDays(60), Amount = 1000_0000, Index = 4, RatioOfTotal = 0.25d }
+        new StageDesign { ReleaseDate = DateTime.Today, Amount = 1000_000, Index = 1, RatioOfTotal = 0.25m },
+        new StageDesign { ReleaseDate = DateTime.Today.AddDays(20), Amount = 400_0000, Index = 2, RatioOfTotal = 0.25m},
+        new StageDesign { ReleaseDate = DateTime.Today.AddDays(40), Amount = 800_0000, Index = 3, RatioOfTotal = 0.25m },
+        new StageDesign { ReleaseDate = DateTime.Today.AddDays(60), Amount = 1000_0000, Index = 4, RatioOfTotal = 0.25m }
     ];
 
     public string NostrNpubKeyHex { get; } = "f75e8fb9ac1d1d2249b7a679536ef58397d00f77c221052b9360f418c024203c";
