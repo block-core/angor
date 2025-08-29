@@ -164,7 +164,7 @@ internal static class CreateProjectConstants
                     TargetAmount = project.TargetAmount.Sats,
                     Stages = project.Stages.Select(stage => new Stage()
                     {
-                        AmountToRelease = stage.PercentageOfTotal,
+                        AmountToRelease = stage.PercentageOfTotal * 100,
                         ReleaseDate = stage.startDate.ToDateTime(TimeOnly.MinValue),
                     }).ToList()
                 };

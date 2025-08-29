@@ -104,7 +104,7 @@ public static class ProjectStatistics
             var stageDataList = await project.Value.Stages
                 .Select(async x => new StageData
                 {
-                    Stage = new Stage { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal },
+                    Stage = new Stage { ReleaseDate = x.ReleaseDate, AmountToRelease = (decimal)(x.RatioOfTotal * 100) },
                     StageIndex = x.Index,
                     Items = await investments.Select(tuple =>
                             CheckSpentFund(tuple.trxInfo.Outputs

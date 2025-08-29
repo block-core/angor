@@ -11,12 +11,12 @@ public class FullProject(ProjectDto info, ProjectStatisticsDto stats) : IFullPro
 
     public ProjectId ProjectId => Info.Id;
     public IAmountUI TargetAmount => new AmountUI(info.TargetAmount);
-    public IEnumerable<IStage> Stages => info.Stages.Select(dto => (IStage)new Stage()
+    public IEnumerable<IStage> Stages => info.Stages.Select(IStage (dto) => new Stage()
     {
         Amount = dto.Amount,
         Index = dto.Index,
         ReleaseDate = dto.ReleaseDate,
-        RatioOfTotal = (double)dto.Amount / info.TargetAmount
+        RatioOfTotal = dto.RatioOfTotal
     });
 
     public string Name => Info.Name;
