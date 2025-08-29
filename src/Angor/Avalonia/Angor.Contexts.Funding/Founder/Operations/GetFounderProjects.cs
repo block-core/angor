@@ -16,7 +16,8 @@ public static class GetFounderProjects
         IProjectRepository projectRepository,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations, 
-        INetworkConfiguration networkConfiguration) : IRequestHandler<GetFounderProjectsRequest, Result<IEnumerable<ProjectDto>>>
+        INetworkConfiguration networkConfiguration,
+        IStore store) : IRequestHandler<GetFounderProjectsRequest, Result<IEnumerable<ProjectDto>>>
     {
         public Task<Result<IEnumerable<ProjectDto>>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
         {
@@ -26,14 +27,27 @@ public static class GetFounderProjects
                 .WithTimeout(TimeSpan.FromSeconds(10));
         }
 
-        private Task<Result<IEnumerable<ProjectId>>> GetProjectIds(GetFounderProjectsRequest request)
+        private async Task<Result<IEnumerable<ProjectId>>> GetProjectIds(GetFounderProjectsRequest request)
         {
-            return seedwordsProvider.GetSensitiveData(request.WalletId)
+            var key = $"founder-projects-{request.WalletId}";
+            var cached = await store.Load<IEnumerable<ProjectId>>(key);
+
+            if (cached.IsSuccess && cached.Value is not null)
+            {
+                return Result.Success(cached.Value);
+            }
+            
+            var result = await seedwordsProvider.GetSensitiveData(request.WalletId)
                 .Map(p => p.ToWalletWords())
                 .Map(words => derivationOperations.DeriveProjectKeys(words, networkConfiguration.GetAngorKey()))//TODO we need to change this, the derivation code requires very heavy computations
                 .Map(collection => collection.Keys.AsEnumerable())
                 .MapEach(keys => keys.ProjectIdentifier)
                 .MapEach(fk => new ProjectId(fk));
+            
+            if (result.IsSuccess)
+                await store.Save(key, result.Value); // Cache for 10 minutes
+            
+            return result;
         }
     }
 

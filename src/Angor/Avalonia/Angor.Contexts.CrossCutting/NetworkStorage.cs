@@ -8,6 +8,8 @@ public class NetworkStorage(IStore store) : INetworkStorage
 {
     private const string SettingsFile = "settings.json";
 
+    private SettingsData? _settingsData;
+    
     public SettingsInfo GetSettings() => Load()
         .Map(data => new SettingsInfo
         {
@@ -39,7 +41,26 @@ public class NetworkStorage(IStore store) : INetworkStorage
         .OnFailureCompensate(_ => "Angornet")
         .Value;
 
-    private Result<SettingsData> Load() => store.Load<SettingsData>(SettingsFile).GetAwaiter().GetResult();
+    private Result<SettingsData> Load()
+    {
+        if (_settingsData != null)
+        {
+            return Result.Success(_settingsData);
+        }
+
+        var result = store.Load<SettingsData>(SettingsFile).GetAwaiter().GetResult();
+
+        if (result.IsSuccess)
+        {
+            _settingsData = result.Value;
+            return Result.Success(_settingsData);
+        }
+        else
+        {
+            _settingsData = null;
+            return Result.Failure<SettingsData>(result.Error);
+        }
+    } 
 
     private class SettingsData
     {
