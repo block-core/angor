@@ -59,4 +59,9 @@
         <Setter Property="Padding" Value="0" />
     </Style>
     
+    <Style Selector="CardGrid.Listing">
+        <Setter Property="MinColumnWidth" Value="300" />
+        <Setter Property="MaxColumnWidth" Value="450" />
+    </Style>
+    
 </Styles>

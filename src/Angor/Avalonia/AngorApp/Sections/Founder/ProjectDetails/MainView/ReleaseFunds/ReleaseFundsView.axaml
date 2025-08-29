@@ -82,7 +82,7 @@
                         </Column>
                     </SlimDataGrid.Columns>
                 </SlimDataGrid>
-                <ItemsControl x:Name="PlainList" ItemsSource="{Binding Transactions}">
+                <ItemsControl Classes="ShowEmptyContent" Empty.Content="Nothing to show" x:Name="PlainList" ItemsSource="{Binding Transactions}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Classes="SmallGap" />

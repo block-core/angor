@@ -66,9 +66,8 @@
                     </Card.HeaderStartContent>
                 </Card>
                 <Loading LoadingText="Loading your projects. Please wait." IsLoading="{Binding LoadProjects.IsExecuting^}">
-                    <CardGrid MinColumnWidth="300"
-                              Empty.Content="Nothing to show"
-                              Classes="ShowEmptyContent" ItemsSource="{Binding ProjectsList}" />
+                    <CardGrid Empty.Content="Nothing to show"
+                              Classes="ShowEmptyContent Listing" ItemsSource="{Binding ProjectsList}" />
                 </Loading>
             </DockPanel>
         </ScrollViewer>

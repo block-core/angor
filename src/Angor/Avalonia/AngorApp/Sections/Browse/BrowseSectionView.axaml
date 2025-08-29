@@ -47,7 +47,7 @@
                 </Card>
 
                 <Loading IsLoading="{Binding LoadProjects.IsExecuting^}">
-                    <CardGrid ItemsSource="{Binding Projects}" MinColumnWidth="300" MaxColumnWidth="450">
+                    <CardGrid ItemsSource="{Binding Projects}" Classes="Listing">
                         <CardGrid.ItemTemplate>
                             <DataTemplate DataType="browse:IProjectViewModel">
                                 <ReactiveButton Classes="CardButton" Command="{Binding GoToDetails}">
@@ -57,7 +57,6 @@
                         </CardGrid.ItemTemplate>
                     </CardGrid>
                 </Loading>
-
             </DockPanel>
         </ScrollViewer>
 
