@@ -21,8 +21,7 @@ public class ProjectDesign : IProject
         new StageDesign { ReleaseDate = DateTime.Today.AddDays(60), Amount = 1000_0000, Index = 4, RatioOfTotal = 0.25d }
     ];
 
-    public string NpubKey { get; } = "npub17a0glwdvr5wjyjdh5eu4xmh4swtaqrmhcgss22unvr6p3spyyq7qeh4kaz";
-    public string NpubKeyHex { get; } = "f75e8fb9ac1d1d2249b7a679536ef58397d00f77c221052b9360f418c024203c";
+    public string NostrNpubKeyHex { get; } = "f75e8fb9ac1d1d2249b7a679536ef58397d00f77c221052b9360f418c024203c";
     public TimeSpan PenaltyDuration { get; } = TimeSpan.FromDays(90);
     public Uri InformationUri { get; } = new("https://www.google.com");
     public DateTime EndDate { get; } = DateTime.Now.AddDays(120);
