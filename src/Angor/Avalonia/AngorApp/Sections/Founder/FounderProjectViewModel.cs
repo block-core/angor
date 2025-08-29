@@ -26,7 +26,7 @@ public class FounderProjectViewModel(INavigator navigation, ProjectDto dto, IInv
 
     public DateTime StartingDate { get; } = dto.FundingStartDate;
     public TimeSpan PenaltyDuration { get; } = dto.PenaltyDuration;
-    public string NostrNpubKey { get; } = dto.NostrNpubKey;
+    public string NostrNpubKey { get; } = dto.NostrNpubKeyHex;
     public Uri? InformationUri { get; } = dto.InformationUri;
     public List<StageDto> Stages { get; } = dto.Stages;
 

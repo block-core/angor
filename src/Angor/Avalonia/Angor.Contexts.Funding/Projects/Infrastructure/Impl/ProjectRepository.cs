@@ -48,9 +48,9 @@ public class ProjectRepository(
                 TargetAmount = info.TargetAmount,
                 Stages = info.Stages.Select((stage, i) => new Stage
                 {
-                    Index = i,
+                    Index = i + 1,
                     ReleaseDate = stage.ReleaseDate,
-                    RatioOfTotal = stage.AmountToRelease
+                    RatioOfTotal = stage.AmountToRelease / 100m
                 }),
                 StartingDate = info.StartDate,
                 EndDate = info.EndDate,

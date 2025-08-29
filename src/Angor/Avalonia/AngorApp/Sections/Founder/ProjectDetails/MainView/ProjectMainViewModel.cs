@@ -1,4 +1,5 @@
 using Angor.Contexts.Funding.Investor;
+using Angor.UI.Model.Implementation.Projects;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.Approve;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.Claim;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;

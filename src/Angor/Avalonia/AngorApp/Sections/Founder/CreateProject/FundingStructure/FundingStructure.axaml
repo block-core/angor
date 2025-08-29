@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:c="clr-namespace:AngorApp.UI.Controls"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:col="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:fundingStructure="clr-namespace:AngorApp.Sections.Founder.CreateProject.FundingStructure"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Founder.CreateProject.FundingStructure.FundingStructure"
@@ -12,14 +11,31 @@
 
     <Design.DataContext>
         <fundingStructure:FundingStructureViewModelDesign
-            PenaltyDays="30" StartDate="10/1/2025" Sats="10000001" />
+            PenaltyDays="30" FundingStartDate="10/1/2025" Sats="10000001" />
     </Design.DataContext>
 
     <UserControl.Styles>
         <StyleInclude Source="../Common.axaml" />
+        
+        <Style Selector="CalendarDatePicker">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+    
+        <Style Selector="BalancedWrapGrid">
+            <Setter Property="HorizontalSpacing" Value="10" />
+            <Setter Property="VerticalSpacing" Value="10" />
+        </Style>
+    
+        <Style Selector="Card">
+            <Setter Property="Theme" Value="{StaticResource  WideCard}" />
+        </Style>
+    
+        <Style Selector="StackPanel Card">
+            <Setter Property="Padding" Value="10" />
+        </Style>
     </UserControl.Styles>
 
-    <Card Header="Funding Structure" Classes="InlineNested">
+    <Card Header="Funding Structure">
         <Card.HeaderEndContent>
             <ContentControl IsVisible="{Binding IsValid^}" Foreground="LawnGreen">
                 <ui:Icon Source="fa-check" />
@@ -28,34 +44,26 @@
         <Card.HeaderStartContent>
             <ui:Icon Source="svg:/Assets/clock-square.svg" />
         </Card.HeaderStartContent>
-        <StackPanel>
+        <StackPanel Classes="SmallGap">
             <Card Header="Target Amount" Subheader="Minimum BTC this project is trying to raise">
                 <c:AmountControl Satoshis="{Binding Sats, Mode=TwoWay}" />
             </Card>
-            <CardGrid>
-                <CardGrid.ItemsSource>
-                    <col:ArrayList>
-                        <Card Header="Funding Start" Subheader="When the investment period begins (automatically set today)">
-                            <TextBox VerticalAlignment="Bottom" IsReadOnly="True" Text="{Binding StartDate, StringFormat='d'}" />
-                        </Card>
-                        <Card Header="Funding End" Subheader="When the investment period ends">
-                            <CalendarDatePicker VerticalAlignment="Bottom" SelectedDate="{Binding EndDate}" />
-                        </Card>
-                    </col:ArrayList>
-                </CardGrid.ItemsSource>
-            </CardGrid>
-            <CardGrid>
-                <CardGrid.ItemsSource>
-                    <col:ArrayList>
-                        <Card Header="Penalty Days" Subheader="Days to lock funds for departing investors">
-                            <TextBox TextInputOptions.ContentType="Number" Watermark="Enter the penalty days" Text="{Binding PenaltyDays}" />
-                        </Card>
-                        <Card Header="Emergency Expiry" Subheader="Emergency date for fund release">
-                            <CalendarDatePicker SelectedDate="{Binding ExpiryDate}" />
-                        </Card>
-                    </col:ArrayList>
-                </CardGrid.ItemsSource>
-            </CardGrid>
+           <BalancedWrapGrid>
+               <Card Header="Funding Start" Subheader="When the investment period begins (automatically set today)">
+                   <TextBox VerticalAlignment="Bottom" IsReadOnly="True" Text="{Binding FundingStartDate, StringFormat='d'}" />
+               </Card>
+               <Card Header="Funding End" Subheader="When the investment period ends">
+                   <CalendarDatePicker VerticalAlignment="Bottom" SelectedDate="{Binding FundingEndDate}" />
+               </Card>
+           </BalancedWrapGrid>
+           <BalancedWrapGrid>
+               <Card Header="Penalty Days" Subheader="Days to lock funds for departing investors">
+                   <TextBox TextInputOptions.ContentType="Number" Watermark="Enter the penalty days" Text="{Binding PenaltyDays}" />
+               </Card>
+               <Card Header="Emergency Expiry" Subheader="Emergency date for fund release">
+                   <CalendarDatePicker SelectedDate="{Binding ExpiryDate}" />
+               </Card>
+           </BalancedWrapGrid>
         </StackPanel>
     </Card>
 

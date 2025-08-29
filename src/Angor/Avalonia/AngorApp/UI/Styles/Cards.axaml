@@ -12,15 +12,18 @@
                       BasedOn="{StaticResource {x:Type Card}}">
             <Setter Property="HeaderStartContentTemplate" Value="{StaticResource BigIcon}" />
             <Setter Property="Padding" Value="20" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
+        </ControlTheme>
+        
+        <ControlTheme x:Key="AngorHighlightedContentCard"
+                      TargetType="Card"
+                      BasedOn="{StaticResource HighlightedContentCard}">
+            <Setter Property="HeaderStartContentTemplate" Value="{StaticResource BigIcon}" />
         </ControlTheme>
 
         <ControlTheme x:Key="WideCard"
                       TargetType="Card"
                       BasedOn="{StaticResource WrapGridCard}">
             <Setter Property="HeaderStartContentTemplate" Value="{StaticResource BigIcon}" />
-            <Setter Property="HeaderPadding" Value="0 0 0 10" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
         </ControlTheme>
 
         <ControlTheme x:Key="ItemCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
@@ -39,22 +42,6 @@
             </Setter>
         </ControlTheme>
 
-        <ControlTheme x:Key="RemarkableSubheaderCard"
-                      TargetType="Card"
-                      BasedOn="{StaticResource {x:Type Card}}">
-            <Setter Property="HeaderTheme">
-                <ControlTheme TargetType="ContentControl">
-                    <Setter Property="FontSize" Value="12" />
-                    <Setter Property="Foreground" Value="{StaticResource SubheaderBrush}" />
-                </ControlTheme>
-            </Setter>
-            <Setter Property="SubheaderTheme">
-                <ControlTheme TargetType="ContentControl">
-                    <Setter Property="FontSize" Value="18" />
-                    <Setter Property="Foreground" Value="{StaticResource HeaderBrush}" />
-                </ControlTheme>
-            </Setter>
-        </ControlTheme>
         <ControlTheme x:Key="InfoCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -170,14 +157,10 @@
         </ControlTheme>
     </Styles.Resources>
 
-    <Style Selector="Button.CardGridItem">
-        <Setter Property="Theme" Value="{StaticResource TransparentButton}" />
-        <Setter Property="Padding" Value="5" />
-        <Setter Property="VerticalAlignment" Value="Stretch" />
-        <Setter Property="HorizontalAlignment" Value="Stretch" />
-        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="VerticalContentAlignment" Value="Stretch" />
-        <Setter Property="FontWeight" Value="Regular" />
+    
+    <Style Selector="Card.Transparent">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Padding" Value="0" />
     </Style>
 
     <Design.PreviewWith>
@@ -230,7 +213,6 @@
                     <ui:Icon Source="fa-wallet" />
                 </Card.HeaderStartContent>
             </Card>
-            <Card Height="200" Theme="{StaticResource RemarkableSubheaderCard}" Header="RemarkableSubheaderCard" Subheader="Subheader" />
             <Card Theme="{StaticResource TransparentCard}" Header="TransparentCard" Subheader="Transparent" />
             <Card Theme="{StaticResource WideCard}" HeaderStartContent="Left" HeaderEndContent="Right" Header="TITLE" Subheader="Subheader" Content="CONTENT" />
             <Card Theme="{StaticResource ItemCard}" HeaderStartContent="Left" HeaderEndContent="Right" Header="TITLE" Subheader="Subheader" Content="CONTENT" />

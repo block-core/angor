@@ -18,12 +18,12 @@ public static class ProjectExtensions
             ShortDescription = project.ShortDescription,
             FundingStartDate = project.StartingDate,
             PenaltyDuration = project.PenaltyDuration,
+            NostrNpubKeyHex = project.NostrPubKey,
             FundingEndDate = project.EndDate,
             InformationUri = project.InformationUri,
             TargetAmount = project.TargetAmount,
             Stages = project.Stages.Select(stage => new StageDto
             {
-                //Amount = stage.Amount,
                 Index = stage.Index,
                 RatioOfTotal = stage.RatioOfTotal,
                 ReleaseDate = stage.ReleaseDate,
@@ -39,7 +39,7 @@ public static class ProjectExtensions
             Stages = project.Stages.Select(stage => new Stage
             {
                 ReleaseDate = stage.ReleaseDate,
-                AmountToRelease = stage.RatioOfTotal,
+                AmountToRelease = stage.RatioOfTotal * 100m,
             }).ToList(),
             FounderKey = project.FounderKey,
             FounderRecoveryKey = project.FounderRecoveryKey,

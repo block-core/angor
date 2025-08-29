@@ -7,7 +7,6 @@
              x:Class="AngorApp.Sections.Founder.FounderSectionView"
              xmlns:founder="clr-namespace:AngorApp.Sections.Founder"
              xmlns:co="clr-namespace:AngorApp.UI.Controls"
-             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              x:DataType="founder:IFounderSectionViewModel">
@@ -19,7 +18,7 @@
     <UserControl.DataTemplates>
 
         <DataTemplate DataType="founder:IFounderProjectViewModel">
-            <Button Classes="CardGridItem" Command="{Binding GoToDetails}">
+            <ReactiveButton Classes="CardButton" Command="{Binding GoToDetails}">
                 <OverlayBorder Padding="0" Theme="{StaticResource CardOverlayBorder}">
                     <Grid RowDefinitions="180 Auto Auto *">
                         <Panel>
@@ -38,7 +37,7 @@
                         </StackPanel>
                     </Grid>
                 </OverlayBorder>
-            </Button>
+            </ReactiveButton>
         </DataTemplate>
     </UserControl.DataTemplates>
 
@@ -67,9 +66,8 @@
                     </Card.HeaderStartContent>
                 </Card>
                 <Loading LoadingText="Loading your projects. Please wait." IsLoading="{Binding LoadProjects.IsExecuting^}">
-                    <CardGrid MinColumnWidth="300"
-                              Empty.Content="Nothing to show"
-                              Classes="ShowEmptyContent" ItemsSource="{Binding ProjectsList}" />
+                    <CardGrid Empty.Content="Nothing to show"
+                              Classes="ShowEmptyContent Listing" ItemsSource="{Binding ProjectsList}" />
                 </Loading>
             </DockPanel>
         </ScrollViewer>

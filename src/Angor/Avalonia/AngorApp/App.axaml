@@ -122,7 +122,7 @@
                                        ChromeDisabledLow="#ff75b5c2"
                                        ChromeGray="#ff59a1b0"
                                        ChromeHigh="#08c7e0"
-                                       ChromeLow="#002F37"
+                                       ChromeLow="#083B46"
                                        ChromeMedium="#ff023e54"
                                        ChromeMediumLow="#ff083B46"
                                        ChromeWhite="#ffe8f2f4"
@@ -142,9 +142,10 @@
         <StyleInclude Source="UI/Controls/AmountControl.axaml" />
         <StyleInclude Source="UI/Controls/List.axaml" />
         <StyleInclude Source="UI/Controls/IconLabel.axaml" />
-        <StyleInclude Source="Sections/Wallet/CreateAndImport/Steps/SeedWordsGeneration/SeedWordList.axaml" />
+        <StyleInclude Source="UI/Controls/ProjectCard.axaml" />
         <StyleInclude Source="UI/Controls/IconButton.axaml" />
         <StyleInclude Source="UI/Controls/Feerate/FeerateSelector.axaml" />
+        <StyleInclude Source="Sections/Wallet/CreateAndImport/Steps/SeedWordsGeneration/SeedWordList.axaml" />
         <StyleInclude Source="UI/Controls/PageContainer.axaml" />
         <StyleInclude Source="UI/Controls/Badge.axaml" />
         <StyleInclude Source="UI/Styles/Cards.axaml" />
@@ -155,6 +156,9 @@
         <StyleInclude Source="UI/Styles/ToggleButton.axaml" />
         <StyleInclude Source="UI/Styles/FlyoutPresenter.axaml" />
         <StyleInclude Source="UI/Styles/Styles.axaml" />
+        <StyleInclude Source="UI/Styles/Button.axaml" />
+        <StyleInclude Source="UI/Styles/HeaderedContainer.axaml" />
+        <StyleInclude Source="UI/Styles/Border.axaml" />
     </Application.Styles>
 
     <Application.DataTemplates>

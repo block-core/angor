@@ -16,5 +16,6 @@ public class BrowseSectionViewModelDesign : IBrowseSectionViewModel
 
     public IEnumerable<IProjectViewModel> Projects { get; }
     public IProjectLookupViewModel ProjectLookupViewModel { get; }
-    public IEnhancedCommand<Result<IEnumerable<IProjectViewModel>>> LoadProjects { get; }
+    public IEnhancedCommand<Result<List<IProjectViewModel>>> LoadProjects { get; }
+    public IObservable<bool> IsBusy { get; } = Observable.Return(false);
 }

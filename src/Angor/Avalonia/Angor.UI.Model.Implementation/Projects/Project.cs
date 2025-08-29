@@ -2,7 +2,7 @@ namespace Angor.UI.Model.Implementation.Projects;
 
 public class Project : IProject
 {
-    public string NostrNpubKey { get; set; }
+    public string NostrNpubKeyHex { get; set; }
     public string Id { get; set; }
     public string Name { get; set; }
     public Uri Banner { get; set; }
@@ -13,7 +13,6 @@ public class Project : IProject
     public DateTime StartDate { get; set; }
     public IEnumerable<IStage> Stages { get; set; }
     public string NpubKey { get; set; }
-    public string NpubKeyHex { get; set; }
     public TimeSpan PenaltyDuration { get; set; }
     public Uri InformationUri { get; set; }
     public DateTime EndDate { get; }

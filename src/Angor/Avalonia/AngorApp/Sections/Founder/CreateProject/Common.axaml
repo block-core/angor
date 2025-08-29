@@ -10,6 +10,14 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
     </Style>
     
+    <Style Selector="Card">
+        <Setter Property="Theme" Value="{StaticResource  WideCard}" />
+    </Style>
+    
+    <Style Selector="StackPanel Card">
+        <Setter Property="Padding" Value="10" />
+    </Style>
+    
     <Styles.Resources>
         <SolidColorBrush x:Key="SystemControlErrorTextForegroundBrush" Color="{DynamicResource SystemBaseHighColor}" />
     </Styles.Resources>

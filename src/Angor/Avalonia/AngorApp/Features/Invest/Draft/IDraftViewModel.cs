@@ -1,3 +1,4 @@
+using Angor.UI.Model.Implementation.Projects;
 using AngorApp.UI.Controls;
 using AngorApp.UI.Controls.Feerate;
 
@@ -10,7 +11,7 @@ public interface IDraftViewModel
     public IEnumerable<IFeeratePreset> Presets { get; }
     public IObservable<bool> IsCalculatingDraft { get; }
     public IObservable<bool> IsSending { get; }
-    IProject Project { get; }
+    FullProject Project { get; }
     IInvestmentDraft? Draft { get; }
     public IAmountUI AmountToOffer { get; }
 }

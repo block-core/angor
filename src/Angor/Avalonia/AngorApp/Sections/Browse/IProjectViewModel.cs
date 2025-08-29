@@ -7,5 +7,5 @@ namespace AngorApp.Sections.Browse;
 public interface IProjectViewModel
 {
     IProject Project { get; }
-    public IEnhancedCommand GoToDetails { get; set; }
+    public IEnhancedCommand<Result<Unit>> GoToDetails { get; set; }
 }

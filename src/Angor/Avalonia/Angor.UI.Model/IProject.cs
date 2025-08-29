@@ -11,8 +11,7 @@ public interface IProject
     public IAmountUI TargetAmount { get; }
     public DateTime StartDate { get; }
     IEnumerable<IStage> Stages { get; }
-    public string NpubKey { get; }
-    public string NpubKeyHex { get; }
+    public string NostrNpubKeyHex { get; }
     public TimeSpan PenaltyDuration { get; }
     public Uri InformationUri { get; }
     public DateTime EndDate { get; }

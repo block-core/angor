@@ -9,7 +9,6 @@
     </Styles.Resources>
     
     <Design.PreviewWith>
-        <OverlayBorder Theme="{StaticResource CardOverlayBorder}" Padding="20">
-        </OverlayBorder>
+        <OverlayBorder Theme="{StaticResource CardOverlayBorder}" Padding="20" />
     </Design.PreviewWith>
 </Styles>

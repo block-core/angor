@@ -8,8 +8,8 @@ namespace AngorApp.Sections.Founder.CreateProject.FundingStructure;
 public partial class FundingStructureViewModel : ReactiveValidationObject, IFundingStructureViewModel
 {
     [Reactive] private long? sats;
-    [Reactive] private int? penaltyDays = 60;
-    [Reactive] private DateTime? endDate;
+    [Reactive] private int? penaltyDays = 100;
+    [Reactive] private DateTime? fundingEndDate;
     [Reactive] private DateTime? expiryDate;
     [ObservableAsProperty] private IAmountUI targetAmount;
     
@@ -17,17 +17,12 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
 
     public FundingStructureViewModel()
     {
-#if DEBUG
-        ExpiryDate = DateTime.Now; 
-        EndDate = DateTime.Now;
-        Sats = 1000000; // 10,000,000 Sats
-#endif
-        
         this.ValidationRule(x => x.Sats, x => x is null or > 0, _ => "Amount must be greater than zero").DisposeWith(disposable);
         this.ValidationRule(x => x.Sats, x => x is not null, _ => "Please, specify an amount").DisposeWith(disposable);
-        this.ValidationRule(x => x.EndDate, x => x != null, "Enter a date").DisposeWith(disposable);
+        this.ValidationRule(x => x.FundingEndDate, x => x != null, "Enter a date").DisposeWith(disposable);
         this.ValidationRule(x => x.ExpiryDate, x => x != null, "Enter a date").DisposeWith(disposable);
         this.ValidationRule(x => x.PenaltyDays, x => x >=0, "Should be greater than 0").DisposeWith(disposable);
+        this.ValidationRule(x => x.FundingEndDate, time => time >= FundingStartDate, "Funding end date should be after the funding start date").DisposeWith(disposable);
         
         targetAmountHelper = this.WhenAnyValue(x => x.Sats)
             .WhereNotNull()
@@ -43,5 +38,5 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
     }
 
     public IObservable<bool> IsValid => this.IsValid();
-    public DateTime StartDate { get; } = DateTime.Now;
+    public DateTime FundingStartDate { get; } = DateTime.Now;
 }

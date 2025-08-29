@@ -33,7 +33,8 @@ public static class ProjectStatistics
                 return Result.Failure<ProjectStatisticsDto>(stagesInformation.Error);
             }
             
-            return CalculateTotalValues(stagesInformation.Value.ToList());
+            // TODO Jose: protect against exceptions until the method handles nulls properly
+            return Result.Try(() => CalculateTotalValues(stagesInformation.Value.ToList()));
         }
         
         private static ProjectStatisticsDto CalculateTotalValues(List<StageData> stagesInformation)
@@ -48,6 +49,8 @@ public static class ProjectStatistics
             {
                 NextStage = new NextStageDto()
                 {
+                    // TODO Jose: Handle the case when there is no current stage
+                    // currentStage can be null!
                     PercentageToRelease = currentStage.Stage.AmountToRelease, ReleaseDate = currentStage.Stage.ReleaseDate,
                     DaysUntilRelease = nextStage != null ? (nextStage.Stage.ReleaseDate - DateTime.UtcNow).Days : 0,
                     StageIndex = nextStage != null ? stagesInformation.IndexOf(nextStage) : stagesInformation.Count - 1,
@@ -101,7 +104,7 @@ public static class ProjectStatistics
             var stageDataList = await project.Value.Stages
                 .Select(async x => new StageData
                 {
-                    Stage = new Stage { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal },
+                    Stage = new Stage { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal * 100 },
                     StageIndex = x.Index,
                     Items = await investments.Select(tuple =>
                             CheckSpentFund(tuple.trxInfo.Outputs

@@ -14,8 +14,7 @@ public static class ProjectExtensions
             Id = dto.Id.Value,
             InformationUri = dto.InformationUri,
             Name = dto.Name,
-            NpubKey = dto.NostrNpubKey,
-            NostrNpubKey = dto.NostrNpubKey,
+            NostrNpubKeyHex = dto.NostrNpubKeyHex,
             Banner = dto.Banner,
             ShortDescription = dto.ShortDescription?.Trim(),
             Stages = dto.Stages
@@ -24,7 +23,7 @@ public static class ProjectExtensions
                     Amount = stage.Amount,
                     Index = stage.Index,
                     ReleaseDate = stage.ReleaseDate,
-                    RatioOfTotal = (double)stage.RatioOfTotal / 100.0 // Convert to percentage the UI expects
+                    RatioOfTotal = stage.RatioOfTotal
                 })
                 .Cast<IStage>()
                 .ToList(),

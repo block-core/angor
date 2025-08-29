@@ -7,5 +7,6 @@ public interface IBrowseSectionViewModel
 {
     public IEnumerable<IProjectViewModel> Projects { get; }
     public IProjectLookupViewModel ProjectLookupViewModel { get; }
-    IEnhancedCommand<Result<IEnumerable<IProjectViewModel>>> LoadProjects { get; }
+    IEnhancedCommand<Result<List<IProjectViewModel>>> LoadProjects { get; }
+    IObservable<bool> IsBusy { get; }
 }

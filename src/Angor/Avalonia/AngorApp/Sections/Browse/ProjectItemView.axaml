@@ -24,8 +24,7 @@
         </Style>
     </UserControl.Styles>
     
-    <Border Padding="0 0 0 20"  Background="{DynamicResource SystemChromeLowColor}"
-            BorderBrush="{DynamicResource SystemChromeMediumColor}" CornerRadius="10"  x:DataType="browse:IProjectViewModel">
+    <Border Padding="0 0 0 20" Classes="Card"  x:DataType="browse:IProjectViewModel">
         <DockPanel VerticalSpacing="15" >
             <av:AdvancedImage  Margin="5" CornerRadius="10" Height="180" Stretch="UniformToFill" Source="{Binding Project.Banner}" DockPanel.Dock="Top" />
             <StackPanel Classes="SmallGap" Margin="15 0">
@@ -34,11 +33,6 @@
                 <TextBlock ToolTip.Tip="{Binding $self.Text}"
                            MaxLines="6" Grid.Row="2" Text="{Binding Project.ShortDescription}" />
             </StackPanel>
-            <Interaction.Behaviors>
-                <TappedEventTrigger>
-                    <InvokeCommandAction Command="{Binding GoToDetails}" />
-                </TappedEventTrigger>
-            </Interaction.Behaviors>
         </DockPanel>
     </Border>
 

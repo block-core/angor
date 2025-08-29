@@ -22,7 +22,7 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
     [Reactive] private IProjectViewModel? selectedProject;
 
     public ProjectLookupViewModel(
-        IProjectAppService projectService,
+        IProjectAppService projectAppService,
         INavigator navigator,
         InvestWizard investWizard,
         UIServices uiServices)
@@ -32,12 +32,12 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
         Lookup = ReactiveCommand.CreateFromTask<string, SafeMaybe<IList<IProjectViewModel>>>(
             async pid =>
             {
-                var maybeProject = await projectService.FindById(new ProjectId(pid)).Map(dto => dto.ToProject());
+                var maybeProject = await projectAppService.FindById(new ProjectId(pid)).Map(dto => dto.ToProject());
                 Log.Debug("Got project {ProjectId}", pid);
 
                 return maybeProject.Map<IProject, IList<IProjectViewModel>>(project =>
                 {
-                    var vm = new ProjectViewModel(project, navigator, uiServices, investWizard);
+                    var vm = new ProjectViewModel(project, projectAppService, navigator, uiServices, investWizard);
                     return new List<IProjectViewModel> { vm };
                 }).AsSafeMaybe();
             }

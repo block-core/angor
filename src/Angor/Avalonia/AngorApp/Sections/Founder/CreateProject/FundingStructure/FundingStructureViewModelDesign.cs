@@ -14,7 +14,7 @@ public partial class FundingStructureViewModelDesign : ReactiveValidationObject,
     {
         this.ValidationRule(x => x.Sats, x => x is null or > 0, _ => "Amount must be greater than zero").DisposeWith(disposable);
         this.ValidationRule(x => x.Sats, x => x is not null, _ => "Please, specify an amount").DisposeWith(disposable);
-        this.ValidationRule(x => x.EndDate, x => x != null, "Enter a date").DisposeWith(disposable);
+        this.ValidationRule(x => x.FundingEndDate, x => x != null, "Enter a date").DisposeWith(disposable);
         this.ValidationRule(x => x.ExpiryDate, x => x != null, "Enter a date").DisposeWith(disposable);
         this.ValidationRule(x => x.PenaltyDays, x => x >=0, "Should be greater than 0").DisposeWith(disposable);
         
@@ -26,9 +26,9 @@ public partial class FundingStructureViewModelDesign : ReactiveValidationObject,
 
     public IObservable<bool> IsValid { get; set; } = Observable.Return(true);
 
-    public DateTime StartDate { get; set; }
+    public DateTime FundingStartDate { get; set; }
     public int? PenaltyDays { get; set; }
-    public DateTime? EndDate { get; set; }
+    public DateTime? FundingEndDate { get; set; }
     public DateTime? ExpiryDate { get; set; }
     
     protected override void Dispose(bool disposing)

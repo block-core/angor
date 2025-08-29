@@ -11,4 +11,5 @@ public class ProjectStatisticsDto
     public int SpentTransactions { get; set; }
     public int AvailableTransactions => TotalTransactions - SpentTransactions;
     public long SpentAmount { get; set; }
+    public int? TotalInvestors { get; set; }
 }

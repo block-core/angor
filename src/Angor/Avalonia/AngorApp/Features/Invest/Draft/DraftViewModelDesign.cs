@@ -1,3 +1,5 @@
+using Angor.Contexts.Funding.Projects.Application.Dtos;
+using Angor.UI.Model.Implementation.Projects;
 using AngorApp.Design;
 using AngorApp.Sections.Browse;
 using AngorApp.UI.Controls;
@@ -15,7 +17,7 @@ public class DraftViewModelDesign : IDraftViewModel
     public IEnumerable<IFeeratePreset> Presets { get; }
     public IObservable<bool> IsCalculatingDraft { get; }
     public IObservable<bool> IsSending { get; set; }
-    public IProject Project { get; } = new ProjectDesign();
+    public FullProject Project { get; } = new FullProject(new ProjectDto(), new ProjectStatisticsDto());
 
     private static string TransactionJson()
     {

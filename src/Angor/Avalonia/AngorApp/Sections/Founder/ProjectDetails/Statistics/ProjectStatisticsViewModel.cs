@@ -1,4 +1,5 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
+using Angor.UI.Model.Implementation.Projects;
 
 namespace AngorApp.Sections.Founder.ProjectDetails.Statistics;
 

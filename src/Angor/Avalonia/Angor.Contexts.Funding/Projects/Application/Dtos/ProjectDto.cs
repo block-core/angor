@@ -13,7 +13,7 @@ public record ProjectDto
     public DateTime FundingStartDate { get; set; }
     public DateTime FundingEndDate { get; set; }
     public TimeSpan PenaltyDuration { get; set; }
-    public string NostrNpubKey { get; set; }
+    public string NostrNpubKeyHex { get; set; }
     public Uri? InformationUri { get; set; }
     public List<StageDto> Stages { get; set; }
 }

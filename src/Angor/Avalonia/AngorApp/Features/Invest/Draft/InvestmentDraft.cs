@@ -2,10 +2,11 @@ using System.Threading.Tasks;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.UI.Model.Implementation.Projects;
 
 namespace AngorApp.Features.Invest.Draft;
 
-public class InvestmentDraft(IInvestmentAppService investmentAppService, IWallet wallet, IProject project,  CreateInvestment.Draft draftModel) : IInvestmentDraft
+public class InvestmentDraft(IInvestmentAppService investmentAppService, IWallet wallet, FullProject project,  CreateInvestment.Draft draftModel) : IInvestmentDraft
 {
     public CreateInvestment.Draft DraftModel { get; } = draftModel;
 
@@ -15,6 +16,6 @@ public class InvestmentDraft(IInvestmentAppService investmentAppService, IWallet
 
     public Task<Result<Guid>> Confirm()
     {
-        return investmentAppService.Invest(wallet.Id.Value, new ProjectId(project.Id), DraftModel);
+        return investmentAppService.Invest(wallet.Id.Value, project.Info.Id, DraftModel);
     }
 }

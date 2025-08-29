@@ -1,8 +1,10 @@
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
+using AngorApp.UI.Controls.Common;
 using AngorApp.UI.Services;
 using Avalonia.Controls.Selection;
 using Zafiro.Avalonia.Dialogs;
@@ -46,22 +48,21 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
 
     private Task<Maybe<Result>> ClaimSelectedTransactions(UIServices uiServices)
     {
-        var transactions = ReactiveSelection.SelectedItems.Select(x => $"· {x.Amount.DecimalString} from {x.Address}").JoinWithLines();
-        return uiServices.Dialog.ShowConfirmation("Claim funds?", "Proceed to claim the funds of the selected transactions?\n\n" + transactions)
-            .Where(confirmed => confirmed)
-            .Map(_ => DoClaim(ReactiveSelection.SelectedItems)
+        var feerate = uiServices.Dialog.ShowAndGetResult(new FeerateSelectionViewModel(uiServices), "Select your feerate", model => model.IsValid, model => model.Feerate.Value);
+        return feerate
+            .Map(fr => DoClaim(ReactiveSelection.SelectedItems, fr)
                 .Tap(() => uiServices.Dialog.ShowMessage("Claim successful", "The funds have been successfully claimed.", "Close")));
     }
 
-    private Task<Result> DoClaim(IEnumerable<IClaimableTransaction> selected)
+    private Task<Result> DoClaim(IEnumerable<IClaimableTransaction> selected, long feerate)
     {
-        var spends = selected.Select(claimable => new SpendTransactionDto
+        var toSpend = selected.Select(claimable => new SpendTransactionDto
         {
             InvestorAddress = claimable.Address,
             StageId = stageId
         });
 
-        return investmentAppService.Spend(projectId, spends);
+        return investmentAppService.Spend(projectId, toSpend, feerate);
     }
 
     public ReactiveSelection<IClaimableTransaction, string> ReactiveSelection { get; }
