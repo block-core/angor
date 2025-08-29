@@ -43,7 +43,7 @@
             </BalancedWrapGrid>
             <BalancedWrapGrid MinItemWidth="200">
                 <Card Header="Transaction statistics">
-                    <BalancedWrapGrid MinWidth="200">
+                    <BalancedWrapGrid MinItemWidth="120">
                         <Card HeaderHorizontalAlignment="Center" Header="Total" Subheader="{Binding TotalTransactions}" />
                         <Card HeaderHorizontalAlignment="Center" Header="Available" Subheader="{Binding AvailableTransactions}" />
                         <Card HeaderHorizontalAlignment="Center" Header="Spent" Subheader="{Binding SpentTransactions}" />
