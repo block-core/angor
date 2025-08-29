@@ -1,4 +1,5 @@
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.UI.Model.Implementation.Projects;
 
 namespace AngorApp.Sections.Browse.Details;
 

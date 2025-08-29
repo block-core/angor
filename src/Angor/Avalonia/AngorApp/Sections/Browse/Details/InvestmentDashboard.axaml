@@ -4,29 +4,34 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="1200" 
+             mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.Sections.Browse.Details.InvestmentDashboard"
              x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
-        <dt:ProjectDetailsViewModelDesign IsInsideInvestmentPeriod="True" />
+        <dt:ProjectDetailsViewModelDesign IsInsideInvestmentPeriod="False" />
     </Design.DataContext>
 
     <UserControl.Styles>
         <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
     </UserControl.Styles>
 
-    <Card Header="Investment Dashboard" HeaderStartContent="{Icon fa-solid fa-chart-pie}" Theme="{StaticResource WideCard}"  Subheader="Manage your investment and track project progress" HeaderAndBodySpacing="30">
+    <Card Header="Investment Dashboard" HeaderStartContent="{Icon fa-solid fa-chart-pie}" Theme="{StaticResource WideCard}" Subheader="Manage your investment and track project progress" HeaderAndBodySpacing="30">
         <StackPanel Spacing="25">
             <!-- Investment Opportunity Section -->
             <Panel MaxWidth="600" Margin="20 40">
-                <Border Classes="Alert" IsVisible="{Binding !IsInsideInvestmentPeriod}">
-                    <TextBlock HorizontalAlignment="Center" TextAlignment="Center">
-                        <Bold>Sorry, you cannot invest in this project</Bold>
-                        <LineBreak />
-                        <LineBreak />
-                        <Run>The investment period already finished</Run>
-                    </TextBlock>
+                <Border Classes="Alert CardAlt" IsVisible="{Binding !IsInsideInvestmentPeriod}" HorizontalAlignment="Center" Padding="20 20 0 20">
+                    <EdgePanel StartContentTemplate="{StaticResource BigIcon}" Spacing="20">
+                        <EdgePanel.StartContent>
+                           <Icon Source="fa-face-frown" />
+                        </EdgePanel.StartContent>
+                        <TextBlock>
+                            <Bold>Sorry, you cannot invest in this project</Bold>
+                            <LineBreak />
+                            <LineBreak />
+                            <Run>The investment period already finished</Run>
+                        </TextBlock>
+                    </EdgePanel>
                 </Border>
                 <Border IsVisible="{Binding IsInsideInvestmentPeriod}"
                         Background="{DynamicResource SystemAccentColor}"

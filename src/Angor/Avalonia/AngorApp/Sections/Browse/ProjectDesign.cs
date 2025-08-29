@@ -1,3 +1,5 @@
+using Angor.UI.Model.Implementation.Projects;
+
 namespace AngorApp.Sections.Browse;
 
 public class ProjectDesign : IProject

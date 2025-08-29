@@ -9,4 +9,6 @@ public interface IProjectDetailsViewModel
     public IEnumerable<INostrRelay> Relays { get; }
     public IFullProject Project { get; }
     bool IsInsideInvestmentPeriod { get; }
+    public TimeSpan? NextRelease { get; }
+    public IStage? CurrentStage { get; }
 }

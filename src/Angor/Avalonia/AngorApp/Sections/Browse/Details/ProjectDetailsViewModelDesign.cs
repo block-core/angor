@@ -36,6 +36,8 @@ public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
     public IAmountUI RaisedAmount { get; } = new AmountUI(100);
     public IFullProject Project { get; set; } = new FullProjectDesign();
     public bool IsInsideInvestmentPeriod { get; set; } = true;
+    public TimeSpan? NextRelease { get; } = TimeSpan.FromDays(15);
+    public IStage? CurrentStage { get; } = new StageDesign();
     public TimeSpan FundingPeriod => TimeSpan.FromDays(78);
     public TimeSpan PenaltyDuration { get; } = TimeSpan.FromDays(90);
 }

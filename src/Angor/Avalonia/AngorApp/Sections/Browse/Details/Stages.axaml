@@ -24,19 +24,19 @@
                     <StackPanel HorizontalAlignment="Center" Spacing="8">
                         <i:Icon FontSize="24" Value="fa-solid fa-play-circle" Foreground="{DynamicResource SystemAccentColor}" />
                         <TextBlock Text="Current Stage" Classes="Wrap" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
-                        <TextBlock Text="Stage 1" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding CurrentStage.Index, TargetNullValue=Unknown, FallbackValue=Unknown}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" />
                     </StackPanel>
 
                     <StackPanel HorizontalAlignment="Center" Spacing="8">
                         <i:Icon FontSize="24" Value="fa-solid fa-list-ol" Foreground="Orange" />
                         <TextBlock Text="Total Stages" Classes="Wrap" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
-                        <TextBlock Text="3" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding Project.Stages, Converter={x:Static Enumerable.Count}}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" />
                     </StackPanel>
 
                     <StackPanel HorizontalAlignment="Center" Spacing="8">
                         <i:Icon FontSize="24" Value="fa-solid fa-calendar-alt" Foreground="LimeGreen" />
                         <TextBlock Classes="Wrap" Text="Next Release" FontSize="12" Opacity="0.7" HorizontalAlignment="Center" />
-                        <TextBlock Text="15 days" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding NextRelease, Converter={x:Static controls:AngorConverters.HumanizeTimeSpan}, StringFormat='In {0}', FallbackValue='Unknown'}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" />
                     </StackPanel>
                 </BalancedWrapGrid>
             </Card>
@@ -86,10 +86,10 @@
                                 <Border Classes="Card" Padding="10">
                                     <HeaderedContainer Header="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}">
                                         <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
-                                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="%" Content="{Binding RatioOfTotal, StringFormat='{}{0:P}'}" />
-                                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Release date" Content="{Binding ReleaseDate, StringFormat=d}" />
-                                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Time until release" Content="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.TimeLeftDateTime}}" />
-                                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Amount" Content="{Binding AmountUI.DecimalString}" />
+                                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Percentage" EndContent="{Binding RatioOfTotal, StringFormat='{}{0:P0}'}" />
+                                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Release date" EndContent="{Binding ReleaseDate, StringFormat=d}" />
+                                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Time until release" EndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.TimeLeftDateTime}}" />
+                                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Amount" EndContent="{Binding AmountUI.DecimalString}" />
                                         </StackPanel>
                                     </HeaderedContainer>
                                 </Border>

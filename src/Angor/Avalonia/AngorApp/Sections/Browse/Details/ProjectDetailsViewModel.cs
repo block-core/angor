@@ -27,6 +27,8 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
     }
 
     public bool IsInsideInvestmentPeriod { get; }
+    public TimeSpan? NextRelease { get; }
+    public IStage? CurrentStage { get; }
 
     public IEnhancedCommand<Result> Invest { get; }
 
