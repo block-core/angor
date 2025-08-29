@@ -27,7 +27,7 @@ public static class GetClaimableTransactions
                 {
                     StageId = x.StageIndex,
                     Amount = new Amount(item.Amount),
-                    InvestorAddress = item.OutputAddress,
+                    InvestorAddress = item.InvestorPublicKey,
                     ClaimStatus = item.SpentType switch
                     {
                         "founder" => ClaimStatus.SpentByFounder, 

@@ -1,10 +1,12 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
+using Microsoft.Extensions.DependencyInjection;
 using Zafiro.CSharpFunctionalExtensions;
 using Stage = Angor.Contexts.Funding.Projects.Domain.Stage;
 
@@ -12,16 +14,43 @@ namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
 public class ProjectRepository(
     IRelayService relayService,
-    IIndexerService indexerService) : IProjectRepository
+    IIndexerService indexerService,
+    [FromKeyedServices("memory")] IStore store) : IProjectRepository
 {
     private Task<Result<Maybe<Project>>> GetSingle(ProjectId id)
     {
         return Get([id]).Map(projects => projects.TryFirst());
     }
 
-    private Task<Result<IEnumerable<Project>>> Get(params ProjectId[] projectIds)
+    private async Task<Result<IEnumerable<Project>>> Get(params ProjectId[] projectIds)
     {
-        return GetProjects(() => GetIndexerDatasIgnoreNotFound(projectIds));
+        var projects = new List<Project>();
+
+        foreach (var projectId in projectIds)
+        {
+            var cached = await store.Load<Project>(projectId.Value);
+            if (cached.IsSuccess)
+            {
+                projects.Add(cached.Value);
+            }
+        }   
+        
+        var lookups = GetProjects(() => GetIndexerDatasIgnoreNotFound(projectIds.Where(x => projects.All(p => p.Id != x))));
+        
+        var lookupResult = await lookups;
+        if (lookupResult.IsFailure)
+            return projects.Any()
+                ? Result.Success<IEnumerable<Project>>(projects)
+                : Result.Failure<IEnumerable<Project>>("Failed to retrieve some projects: " + lookupResult.Error);
+        
+        
+        projects.AddRange(lookupResult.Value);
+        foreach (var project in lookupResult.Value)
+        {
+            await store.Save(project.Id.Value, project);
+        }
+        
+        return Result.Success(projects.AsEnumerable());
     }
 
     private IEnumerable<Project> Combine(IEnumerable<ProjectIndexerData> indexerItems, IEnumerable<ProjectMetadataWithNpub> metadatas, IEnumerable<ProjectInfo> infos)
@@ -48,7 +77,7 @@ public class ProjectRepository(
                 TargetAmount = info.TargetAmount,
                 Stages = info.Stages.Select((stage, i) => new Stage
                 {
-                    Index = i + 1,
+                    Index = i,
                     ReleaseDate = stage.ReleaseDate,
                     RatioOfTotal = stage.AmountToRelease / 100m
                 }),

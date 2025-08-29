@@ -43,8 +43,10 @@ public static class CompositionRoot
         };
 
         RegisterLogger(services, logger);
-        services.AddSingleton<IStore>(store);
+        services.AddKeyedSingleton<IStore>("file", store);
+        services.AddSingleton<IStore>(provider => provider.GetKeyedService<IStore>("file"));
 
+        
         services.AddSingleton<Func<BitcoinNetwork>>(sp => () =>
         {
             var cfg = sp.GetRequiredService<INetworkConfiguration>();

@@ -26,9 +26,10 @@ public class ProjectInvestmentsRepository(IProjectRepository projectRepository, 
 
             try
             {
-                var investments = await indexerService.GetInvestmentsAsync(projectId)
+                var projectInvestments = await indexerService.GetInvestmentsAsync(projectId);
+                
+                var investments = await projectInvestments
                     .ToObservable()
-                    .SelectMany(trxsList => trxsList.ToObservable()) //Flatten the list of transactions and look at the task result
                     .Select(x => indexerService.GetTransactionHexByIdAsync(x.TransactionId))
                     .Select(hex => network.CreateTransaction(hex.Result))
                     .Select(trx => indexerService.GetTransactionInfoByIdAsync(trx.GetHash().ToString())
@@ -44,10 +45,15 @@ public class ProjectInvestmentsRepository(IProjectRepository projectRepository, 
                         StageIndex = x.Index,
                         Items = await investments.Select(tuple =>
                                 CheckSpentFund(tuple.trxInfo.Outputs
-                                            .First(outp => outp.Index == x.Index + 2), // +2 because the first two outputs are the Angor fee and Op return output
-                                        tuple.trx, project.Value.ToProjectInfo(),
-                                        x.Index)
+                                            .First(outp => outp.Index == x.Index + 2), // +2 because the first two outputs are the Angor fee and Op return output but the stages start from index 1
+                                        tuple.trx, project.Value.ToProjectInfo(), x.Index)
                                     .ToObservable() 
+                                    .Select(stageDataTrx =>
+                                    {
+                                        stageDataTrx.Value.InvestorPublicKey = projectInvestments
+                                            .First(p => p.TransactionId == stageDataTrx.Value.Trxid).InvestorPublicKey;
+                                        return stageDataTrx;
+                                    })
                             )
                             .Merge()
                             .Where(result => result.IsSuccess)
@@ -74,14 +80,16 @@ public class ProjectInvestmentsRepository(IProjectRepository projectRepository, 
     {
         var network = networkConfiguration.GetNetwork();
               
-              var stageIndexInTransaction = stageIndex + 2;
+              var stageIndexInTransaction = stageIndex + 2; 
+              
+              var txOut = investmentTransaction.Outputs[stageIndexInTransaction];
               
               var item = new StageDataTrx
               {
                   Trxid = investmentTransaction.GetHash().ToString(),
                   Outputindex = stageIndexInTransaction,
-                  OutputAddress = investmentTransaction.Outputs[stageIndexInTransaction].ScriptPubKey.WitHash.GetAddress(network).ToString(),
-                  Amount = investmentTransaction.Outputs[stageIndexInTransaction].Value.Satoshi
+                  OutputAddress = txOut.ScriptPubKey.WitHash.GetAddress(network).ToString(),
+                  Amount = txOut.Value.Satoshi
               };
               
             if (!string.IsNullOrEmpty(output.SpentInTransaction))

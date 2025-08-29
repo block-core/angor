@@ -11,5 +11,6 @@ public class StageDataTrx
     public bool IsSpent;
     public string SpentType;  // "founder" or "investor"
     public string InvestorNpub;  // Optional, can be null
+    public string InvestorPublicKey;
     public ProjectScriptType ProjectScriptType;
 }
