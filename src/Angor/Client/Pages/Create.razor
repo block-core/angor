@@ -207,7 +207,7 @@
                                     <label for="startDate" class="form-label mb-0 fw-semibold">Start Date</label>
                                 </div>
                                 <p class="form-text text-muted mt-0 mb-2 small">This is when the investment period begins (automatically set to today).</p>
-                                <div class="form-control disabled">@DateTime.Today.FormatDate()</div>
+                                <div class="form-control disabled">@DateTime.UtcNow.Date.FormatDate()</div>
                                 <input type="hidden" @bind="project.ProjectInfo.StartDate" />
                             </div>
 
@@ -1214,7 +1214,7 @@
         ?? CreateDefaultProject(projectsKeys);
 
         // Set start date to today automatically
-        project.ProjectInfo.StartDate = DateTime.Today;
+        project.ProjectInfo.StartDate = DateTime.UtcNow.Date;
 
         // Select a preset if no stages exist
         if (!project.ProjectInfo.Stages.Any())
@@ -1232,7 +1232,7 @@
         else
         {
             // If no stages exist, set EndDate to today
-            project.ProjectInfo.EndDate = DateTime.Today;
+            project.ProjectInfo.EndDate = DateTime.UtcNow.Date;
         }
 
         // Always update expiry date based on stages (or start date if no stages)
@@ -1273,11 +1273,11 @@
                 {
                     // to make it easier for testing we pre add some stages
                     project.ProjectInfo.Stages = new List<Stage>
-    {
-    new() { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
-    new() { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
-    new() { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) }
-    };
+                    {
+                        new() { AmountToRelease = 10, ReleaseDate = DateTime.UtcNow }, //.AddDays(10) }, during testing we often need to spend a stage immediately
+                        new() { AmountToRelease = 30, ReleaseDate = DateTime.UtcNow.AddDays(20) },
+                        new() { AmountToRelease = 60, ReleaseDate = DateTime.UtcNow.AddDays(30) }
+                    };
                 }
             }
         }
@@ -1838,7 +1838,7 @@
             return false;
         }
 
-        if (project.ProjectInfo.StartDate > DateTime.Today.AddYears(1))
+        if (project.ProjectInfo.StartDate > DateTime.UtcNow.Date.AddYears(1))
         {
             notificationComponent.ShowErrorMessage("Project start date cannot be more than one year in the future.");
             return false;
@@ -1969,23 +1969,23 @@
 
     private readonly string[] spacePhotos = new[]
     {
-    "https://images-assets.nasa.gov/image/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/PIA22081/PIA22081~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000282/GSFC_20171208_Archive_e000282~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001894/GSFC_20171208_Archive_e001894~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/PIA08216/PIA08216~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001465/GSFC_20171208_Archive_e001465~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001518/GSFC_20171208_Archive_e001518~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/PIA25433/PIA25433~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/PIA15415/PIA15415~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002086/GSFC_20171208_Archive_e002086~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/PIA14731/PIA14731~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002020/GSFC_20171208_Archive_e002020~thumb.jpg?as=webp",
-    "https://images-assets.nasa.gov/image/0203048/0203048~thumb.jpg?as=webp"
+        "https://images-assets.nasa.gov/image/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o/hubble-observes-one-of-a-kind-star-nicknamed-nasty_17754652960_o~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA22081/PIA22081~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000282/GSFC_20171208_Archive_e000282~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001894/GSFC_20171208_Archive_e001894~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA08216/PIA08216~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001465/GSFC_20171208_Archive_e001465~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o/hubble-sees-the-wings-of-a-butterfly-the-twin-jet-nebula_20283986193_o~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001518/GSFC_20171208_Archive_e001518~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA25433/PIA25433~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA15415/PIA15415~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002086/GSFC_20171208_Archive_e002086~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/PIA14731/PIA14731~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002020/GSFC_20171208_Archive_e002020~thumb.jpg?as=webp",
+        "https://images-assets.nasa.gov/image/0203048/0203048~thumb.jpg?as=webp"
     };
 
     private FounderProject CreateDefaultProject(FounderKeys projectsKeys)
@@ -2000,9 +2000,9 @@
                 FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
                 ProjectIdentifier = projectsKeys.ProjectIdentifier,
                 NostrPubKey = projectsKeys.NostrPubKey,
-                StartDate = DateTime.UtcNow.AddMinutes(2), // to allow testing and spending immediately
+                StartDate = DateTime.UtcNow.Date.AddMinutes(2), // to allow testing and spending immediately
                 PenaltyDays = 90,
-                ExpiryDate = DateTime.UtcNow.AddDays(120),
+                ExpiryDate = DateTime.UtcNow.Date.AddDays(120),
                 TargetAmount = Money.Coins(50).Satoshi
             }
         };
@@ -2032,23 +2032,23 @@
     private IEnumerable<(string IconName, string Label, string Value)> GetProjectInfo()
     {
         return new List<(string, string, string)>
-    {
-    ("identifier", "Project Identifier", project.ProjectInfo.ProjectIdentifier),
-    ("key", "Founder Key", project.ProjectInfo.FounderKey)
-    };
+        {
+            ("identifier", "Project Identifier", project.ProjectInfo.ProjectIdentifier),
+            ("key", "Founder Key", project.ProjectInfo.FounderKey)
+        };
     }
 
 
     private IEnumerable<(string IconName, string Label, string Value, string color, bool fullWidth)> GetAdditionalProjectInfo()
     {
         return new List<(string, string, string, string, bool)>
-    {
-    ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}", "text-success", true),
-    ("calendar", "Funding start date", $"{project.ProjectInfo.StartDate.FormatDate()} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days", "text-warning", true),
-    ("calendar", "Funding end date", $"{project.ProjectInfo.EndDate.FormatDate()} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days", "text-warning", true),
-    ("unlock", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days", "text-warning", true),
-    ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate.FormatDate()} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days", "text-warning", true)
-    };
+        {
+            ("balance", "Target amount", $"{targetAmountInBTC} {network.CoinTicker}", "text-success", true),
+            ("calendar", "Funding start date", $"{project.ProjectInfo.StartDate.FormatDate()} in {(project.ProjectInfo.StartDate - DateTime.Now).Days} days", "text-warning", true),
+            ("calendar", "Funding end date", $"{project.ProjectInfo.EndDate.FormatDate()} in {(project.ProjectInfo.EndDate - DateTime.Now).Days} days", "text-warning", true),
+            ("unlock", "Penalty days", $"{project.ProjectInfo.PenaltyDays} days", "text-warning", true),
+            ("calendar", "Expiry date", $"{project.ProjectInfo.ExpiryDate.FormatDate()} in {(project.ProjectInfo.ExpiryDate - DateTime.Now).Days} days", "text-warning", true)
+        };
     }
 
     private void ValidateEndDate()

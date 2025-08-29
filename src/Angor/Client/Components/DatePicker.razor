@@ -115,7 +115,7 @@
     private int currentMonth;
     private int currentYear;
     private string displayValue = "";
-    private DateTime displayDate = DateTime.Today;
+    private DateTime displayDate = DateTime.UtcNow.Date;
 
     private static readonly List<DatePicker> _openPickers = new();
     private bool _isRegistered = false;
@@ -125,7 +125,8 @@
         if (Value.HasValue)
         {
             displayDate = Value.Value;
-            displayValue = Value.Value.ToString(Format);
+
+            displayValue = Value.Value.ToLocalTime().ToString(Format);
         }
         
         currentMonth = displayDate.Month;
@@ -163,7 +164,7 @@
         if (Value.HasValue)
         {
             displayDate = Value.Value;
-            displayValue = Value.Value.ToString(Format);
+            displayValue = Value.Value.ToLocalTime().ToString(Format);
             currentMonth = displayDate.Month;
             currentYear = displayDate.Year;
         }
@@ -239,7 +240,7 @@
                 if (IsValidDate(parsedDate))
                 {
                     await SetValue(parsedDate);
-                    displayValue = parsedDate.ToString(Format);
+                    displayValue = parsedDate.ToLocalTime().ToString(Format);
                     return;
                 }
             }
@@ -251,7 +252,7 @@
             if (IsValidDate(generalParsedDate))
             {
                 await SetValue(generalParsedDate);
-                displayValue = generalParsedDate.ToString(Format);
+                displayValue = generalParsedDate.ToLocalTime().ToString(Format);
                 return;
             }
         }
@@ -259,7 +260,7 @@
         // If all parsing attempts fail, revert to previous value
         if (Value.HasValue)
         {
-            displayValue = Value.Value.ToString(Format);
+            displayValue = Value.Value.ToLocalTime().ToString(Format);
         }
         else
         {
@@ -319,13 +320,13 @@
     private async Task SelectDate(DateTime date)
     {
         await SetValue(date);
-        displayValue = date.ToString(Format);
+        displayValue = date.ToLocalTime().ToString(Format);
         await CloseCalendar();
     }
 
     private async Task SelectToday()
     {
-        await SelectDate(DateTime.Today);
+        await SelectDate(DateTime.UtcNow.Date);
     }
 
     private async Task ClearDate()
@@ -389,7 +390,7 @@
 
     private IEnumerable<CalendarDay> GetCalendarDays()
     {
-        var firstDayOfMonth = new DateTime(currentYear, currentMonth, 1);
+        var firstDayOfMonth = new DateTime(currentYear, currentMonth, 1, 0, 0, 0, DateTimeKind.Utc);
         var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
         
         // Always use Sunday as the first day of the week (English standard)
@@ -415,7 +416,7 @@
                 Date = currentDate,
                 Day = currentDate.Day,
                 IsCurrentMonth = currentDate.Month == currentMonth,
-                IsToday = currentDate.Date == DateTime.Today,
+                IsToday = currentDate.Date == DateTime.UtcNow.Date,
                 IsSelected = Value.HasValue && currentDate.Date == Value.Value.Date
             });
             
