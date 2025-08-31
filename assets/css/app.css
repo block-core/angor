@@ -1044,8 +1044,8 @@ img {
 }
 
 .font-custom {
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: 0.8rem;
+    font-weight: 500;
 }
 
 
@@ -1232,8 +1232,7 @@ a p {
     transition: all .3s ease
 }
 
-.hover-effect:hover,
-.profile-card:hover {
+.hover-effect:hover {
     transform: translateY(-5px)
 }
 
@@ -3306,10 +3305,6 @@ input[type=number] {
 
 .investor-wizard {
     padding: 1.5rem 0;
-    background: var(--form-bg);
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, .05);
-    border: 1px solid rgba(var(--angor-secondary-rgb), .5);
     transition: all .3s ease;
 }
 
@@ -3352,7 +3347,7 @@ input[type=number] {
 .wizard-step-indicator {
     width: 42px;
     height: 42px;
-    border-radius: 0.3rem;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3455,10 +3450,6 @@ input[type=number] {
 .status-banner {
     display: flex;
     align-items: center;
-    background-color: var(--form-bg);
-    border: 1px solid rgba(var(--angor-secondary-rgb), .5);
-    padding: 1.5rem;
-    border-radius: var(--angor-border-radius-lg);
     gap: 1.8rem;
 }
 
@@ -5096,12 +5087,10 @@ body.dark .message-item.outgoing .message-bubble {
 @keyframes slideIn {
     0% {
         opacity: 0;
-        transform: translateY(20px)
     }
 
     to {
         opacity: 1;
-        transform: translateY(0)
     }
 }
 

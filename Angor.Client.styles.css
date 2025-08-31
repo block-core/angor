@@ -722,7 +722,6 @@
     background-color: rgba(0, 0, 0, 0.1);
     height: 35px;
     width: 35px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
 .sidebar.collapsed .sidebar-header .toggler.rotate[b-fe9ehfui7y] {
