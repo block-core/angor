@@ -13,7 +13,7 @@
             <Setter Property="HeaderStartContentTemplate" Value="{StaticResource BigIcon}" />
             <Setter Property="Padding" Value="20" />
         </ControlTheme>
-        
+
         <ControlTheme x:Key="AngorHighlightedContentCard"
                       TargetType="Card"
                       BasedOn="{StaticResource HighlightedContentCard}">
@@ -39,6 +39,35 @@
                     <Setter Property="Foreground" Value="{StaticResource HeaderBrush}" />
                     <Setter Property="FontSize" Value="{StaticResource FontSizeLarge}" />
                 </ControlTheme>
+            </Setter>
+        </ControlTheme>
+
+        <ControlTheme x:Key="LeftItemCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
+            <Setter Property="HeaderTemplate">
+                <DataTemplate>
+                    <ContentControl Content="{Binding DataType={x:Type x:Object}}" />
+                </DataTemplate>
+            </Setter>
+            <Setter Property="SubheaderTemplate">
+                <DataTemplate>
+                    <ContentControl FontWeight="Bold" FontSize="{StaticResource FontSizeLarge}" Content="{Binding DataType={x:Type x:Object}}" />
+                </DataTemplate>
+            </Setter>
+
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Classes="Card">
+                        <StackPanel Orientation="Horizontal" Spacing="20">
+                            <Viewbox>
+                                <ContentControl ContentTemplate="{TemplateBinding HeaderStartContentTemplate}" Content="{TemplateBinding HeaderStartContent}" />
+                            </Viewbox>
+                            <StackPanel Spacing="5">
+                                <ContentControl ContentTemplate="{TemplateBinding HeaderTemplate}" Content="{TemplateBinding Header}" />
+                                <ContentControl VerticalAlignment="Bottom" ContentTemplate="{TemplateBinding SubheaderTemplate}" Content="{TemplateBinding Subheader}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </ControlTemplate>
             </Setter>
         </ControlTheme>
 
@@ -157,14 +186,32 @@
         </ControlTheme>
     </Styles.Resources>
 
-    
+
     <Style Selector="Card.Transparent">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Padding" Value="0" />
     </Style>
 
     <Design.PreviewWith>
-        <StackPanel Width="500" Spacing="20" Margin="20">
+        <StackPanel Width="400" Spacing="20" Margin="20">
+            <Card HorizontalAlignment="Center" Theme="{StaticResource LeftItemCard}" HeaderStartContentTemplate="{StaticResource RegularIcon}"
+                  Header="Funded Projects" Subheader="123">
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                </Card.HeaderStartContent>
+            </Card>
+            <Card HorizontalAlignment="Center" Theme="{StaticResource LeftItemCard}" HeaderStartContentTemplate="{StaticResource RegularIcon}"
+                  Header="Total Invested" Subheader="123">
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                </Card.HeaderStartContent>
+            </Card>
+            <Card HorizontalAlignment="Center" Theme="{StaticResource LeftItemCard}" HeaderStartContentTemplate="{StaticResource RegularIcon}"
+                  Header="Recovered to penalty" Subheader="123">
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                </Card.HeaderStartContent>
+            </Card>
             <Card Header="Card" Height="200" Subheader="Subheader">
                 <Card.DataContext>
                     <MyViewModel Left="LEFT" />

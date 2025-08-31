@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="360"
+             mc:Ignorable="d" d:DesignWidth="530"
              x:Class="AngorApp.Sections.Portfolio.PortfolioSectionView"
              xmlns:p="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
@@ -86,23 +86,23 @@
                     </Card.HeaderEndContent>
                 </Card>
 
-                <BalancedWrapGrid DockPanel.Dock="Top" MinItemWidth="210" MaxItemWidth="300">
-                    <Card Theme="{StaticResource AngorHighlightedContentCard}" HeaderStartContentTemplate="{StaticResource BigIcon}" Header="Funded Projects" Content="{Binding FundedProjects}">
+                <BalancedWrapGrid DockPanel.Dock="Top" MinItemWidth="260">
+                    <Card Theme="{StaticResource LeftItemCard}" HeaderStartContentTemplate="{StaticResource BigIcon}" Header="Funded Projects" Subheader="{Binding FundedProjects}">
                         <Card.HeaderStartContent>
                             <ui:Icon Source="svg:/Assets/portfolio.svg" />
                         </Card.HeaderStartContent>
                     </Card>
-                    <Card Theme="{StaticResource AngorHighlightedContentCard}" HeaderStartContentTemplate="{StaticResource BigIcon}" Header="Total Invested" Content="{Binding TotalInvested.DecimalString}">
+                    <Card Theme="{StaticResource LeftItemCard}" Header="Total Invested" Subheader="{Binding TotalInvested.DecimalString}">
                         <Card.HeaderStartContent>
                             <ui:Icon Source="svg:/Assets/btc.svg" />
                         </Card.HeaderStartContent>
                     </Card>
-                    <Card Theme="{StaticResource AngorHighlightedContentCard}" HeaderStartContentTemplate="{StaticResource BigIcon}" Header="Recovered To Penalty" Content="{Binding RecoveredToPenalty.DecimalString}">
+                    <Card Theme="{StaticResource LeftItemCard}" Header="Recovered To Penalty" Subheader="{Binding RecoveredToPenalty.DecimalString}">
                         <Card.HeaderStartContent>
                             <ui:Icon Source="svg:/Assets/recovery.svg" />
                         </Card.HeaderStartContent>
                     </Card>
-                    <Card Theme="{StaticResource AngorHighlightedContentCard}" HeaderStartContentTemplate="{StaticResource BigIcon}" Header="Projects In Recovery" Content="{Binding ProjectsInRecovery}">
+                    <Card Theme="{StaticResource LeftItemCard}" Header="Projects In Recovery" Subheader="{Binding ProjectsInRecovery}">
                         <Card.HeaderStartContent>
                             <ui:Icon Source="svg:/Assets/recovery.svg" />
                         </Card.HeaderStartContent>
