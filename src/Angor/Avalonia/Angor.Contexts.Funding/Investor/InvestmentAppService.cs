@@ -69,4 +69,10 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     {
         return mediator.Send(new ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest(walletId, projectId, investorAddresses));
     }
+
+    // TODO: implement properly with Request and Handler 
+    public async Task<Result<InvestorStatsDto>> GetInvestorStats(Guid idValue)
+    {
+        return new InvestorStatsDto() { FundedProjects = 1, ProjectsInRecovery = 1, RecoveredToPenalty = 123, TotalInvested = 1234, };
+    }
 }

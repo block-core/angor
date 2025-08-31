@@ -5,51 +5,59 @@ using AngorApp.Sections.Portfolio.Items;
 using AngorApp.Sections.Portfolio.Penalties;
 using AngorApp.UI.Services;
 using DynamicData;
+using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.Reactive;
+using Zafiro.UI;
 using Zafiro.UI.Commands;
 using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Portfolio;
 
-public class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewModel, IDisposable
+public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewModel, IDisposable
 {
     private readonly CompositeDisposable disposable = new();
+    
+    [ObservableAsProperty]
+    private IWallet wallet;
+    
+    [ObservableAsProperty] private IEnumerable<IPortfolioProject> investedProjects;
+    [ObservableAsProperty] private InvestorStatsViewModel investorStats;
 
     public PortfolioSectionViewModel(IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator)
     {
-        var reactiveCommand = ReactiveCommand.CreateFromTask(() =>
-        {
-            var bind = uiServices.WalletRoot.GetDefaultWalletAndActivate()
-                .Bind(maybeWallet => maybeWallet.ToResult("No wallet found. Please, create or import a wallet.")
-                    .Bind(wallet => investmentAppService.GetInvestorProjects(wallet.Id.Value)));
-            return bind;
-        }).DisposeWith(disposable);
+        LoadWallet = ReactiveCommand.CreateFromTask(() => uiServices.WalletRoot.TryDefaultWalletAndActivate("You need to create a wallet before having a Portfolio")).Enhance().DisposeWith(disposable);
+        LoadWallet.HandleErrorsWith(uiServices.NotificationService, "Failed to load wallet").DisposeWith(disposable);
+        walletHelper = LoadWallet.Successes().ToProperty(this, x => x.Wallet).DisposeWith(disposable);
 
-        Load = reactiveCommand.Enhance();
+        var hasWallet = this.WhenAnyValue(model => model.Wallet).NotNull();
+        
+        LoadPortfolio = ReactiveCommand.CreateFromTask(() => investmentAppService.GetInvestorProjects(Wallet.Id.Value).MapEach(IPortfolioProject (dto) => new PortfolioProjectViewModel(dto, investmentAppService, uiServices, navigator)), hasWallet).DisposeWith(disposable).Enhance();
+        LoadPortfolio.HandleErrorsWith(uiServices.NotificationService, "Failed to load portfolio projects").DisposeWith(disposable);
+        investedProjectsHelper = LoadPortfolio.Successes().ToProperty(this, x => x.InvestedProjects).DisposeWith(disposable);
+        
+        LoadStats = ReactiveCommand.CreateFromTask(() => investmentAppService.GetInvestorStats(Wallet.Id.Value).Map(dto => new InvestorStatsViewModel(dto)), hasWallet).Enhance().DisposeWith(disposable);
+        LoadStats.HandleErrorsWith(uiServices.NotificationService, "Failed to load investor stats").DisposeWith(disposable);
+        investorStatsHelper = LoadStats.Successes().ToProperty(this, x => x.InvestorStats).DisposeWith(disposable);
 
-        Load.Successes()
-            .EditDiff(project => project.Id)
-            .Transform(IPortfolioProject (project) => new PortfolioProjectViewModel(project, investmentAppService, uiServices, navigator))
-            .Bind(out var investedProjects)
-            .Subscribe().DisposeWith(disposable);
+        LoadWallet.Execute().Subscribe().DisposeWith(disposable);
 
-        Load.Execute().Subscribe().DisposeWith(disposable);
+        LoadWallet.ToSignal().InvokeCommand(LoadPortfolio).DisposeWith(disposable);
+        LoadWallet.ToSignal().InvokeCommand(LoadStats).DisposeWith(disposable);
 
-        GoToPenalties = ReactiveCommand.Create(() => navigator.Go<IPenaltiesViewModel>());
-
-        InvestedProjects = investedProjects;
+        GoToPenalties = ReactiveCommand.Create(navigator.Go<IPenaltiesViewModel>);
     }
+
+    public IEnhancedCommand<Result<IEnumerable<IPortfolioProject>>> LoadPortfolio { get; }
+
+    public IEnhancedCommand<Result<InvestorStatsViewModel>> LoadStats { get; }
+
+    public IEnhancedCommand<Result<IWallet>> LoadWallet { get; }
 
     public void Dispose()
     {
         disposable.Dispose();
     }
 
-    public IEnhancedCommand<Result<IEnumerable<InvestedProjectDto>>> Load { get; }
-    public int FundedProjects { get; } = 123;
-    public IAmountUI TotalInvested { get; } = new AmountUI(1000000);
-    public IAmountUI RecoveredToPenalty { get; } = new AmountUI(240000);
-    public int ProjectsInRecovery { get; } = 6;
-    public IEnumerable<IPortfolioProject> InvestedProjects { get; }
     public ICommand GoToPenalties { get; }
 }

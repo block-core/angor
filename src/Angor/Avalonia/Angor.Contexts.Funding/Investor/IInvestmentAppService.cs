@@ -20,4 +20,5 @@ public interface IInvestmentAppService
     Task<Result<IEnumerable<ClaimableTransactionDto>>> GetClaimableTransactions(Guid walletId, ProjectId projectId);
     Task<Result<IEnumerable<ReleaseableTransactionDto>>> GetReleaseableTransactions(Guid walletId, ProjectId projectId);
     Task<Result> ReleaseInvestorTransactions(Guid walletId, ProjectId projectId, IEnumerable<string> investorAddresses);
+    Task<Result<InvestorStatsDto>> GetInvestorStats(Guid idValue);
 }

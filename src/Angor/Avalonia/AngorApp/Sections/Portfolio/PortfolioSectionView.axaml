@@ -28,13 +28,7 @@
     </UserControl.Styles>
 
     <Design.DataContext>
-        <p:PortfolioSectionViewModelDesign FundedProjects="1" ProjectsInRecovery="4">
-            <p:PortfolioSectionViewModelDesign.RecoveredToPenalty>
-                <design:DesignTimeAmount Sats="4321" />
-            </p:PortfolioSectionViewModelDesign.RecoveredToPenalty>
-            <p:PortfolioSectionViewModelDesign.TotalInvested>
-                <design:DesignTimeAmount Sats="1234" />
-            </p:PortfolioSectionViewModelDesign.TotalInvested>
+        <p:PortfolioSectionViewModelDesign>
             <p:PortfolioSectionViewModelDesign.InvestedProjects>
                 <p:PortfolioProjectDesign InvestmentStatus="FounderSignaturesReceived" FounderStatus="Approved" IsInvestmentCompleted="False" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
                     <p:PortfolioProjectDesign.Target>
@@ -70,7 +64,7 @@
                 <Card Theme="{StaticResource WideCard}" DockPanel.Dock="Top" Header="Portfolio" Subheader="Check your project investments">
                     <Card.HeaderEndContent>
                         <UniformGrid ColumnSpacing="10" Rows="1">
-                            <IconButton HorizontalAlignment="Stretch" Command="{Binding Load}">
+                            <IconButton HorizontalAlignment="Stretch" Command="{Binding LoadWallet}">
                                 Refresh
                                 <IconButton.Icon>
                                     <ui:Icon Source="fa-arrows-rotate" />
@@ -86,42 +80,48 @@
                     </Card.HeaderEndContent>
                 </Card>
 
-                <BalancedWrapGrid DockPanel.Dock="Top" MinItemWidth="260">
-                    <Card Theme="{StaticResource LeftItemCard}" HeaderStartContentTemplate="{StaticResource BigIcon}" Header="Funded Projects" Subheader="{Binding FundedProjects}">
-                        <Card.HeaderStartContent>
-                            <ui:Icon Source="svg:/Assets/portfolio.svg" />
-                        </Card.HeaderStartContent>
-                    </Card>
-                    <Card Theme="{StaticResource LeftItemCard}" Header="Total Invested" Subheader="{Binding TotalInvested.DecimalString}">
-                        <Card.HeaderStartContent>
-                            <ui:Icon Source="svg:/Assets/btc.svg" />
-                        </Card.HeaderStartContent>
-                    </Card>
-                    <Card Theme="{StaticResource LeftItemCard}" Header="Recovered To Penalty" Subheader="{Binding RecoveredToPenalty.DecimalString}">
-                        <Card.HeaderStartContent>
-                            <ui:Icon Source="svg:/Assets/recovery.svg" />
-                        </Card.HeaderStartContent>
-                    </Card>
-                    <Card Theme="{StaticResource LeftItemCard}" Header="Projects In Recovery" Subheader="{Binding ProjectsInRecovery}">
-                        <Card.HeaderStartContent>
-                            <ui:Icon Source="svg:/Assets/recovery.svg" />
-                        </Card.HeaderStartContent>
-                    </Card>
-                </BalancedWrapGrid>
+                <Loading IsLoading="{Binding LoadWallet.IsExecuting^}" LoadingText="Loading wallet. Please wait." DockPanel.Dock="Top">
+                    <StackPanel Classes="BigGap">
+                        <Loading IsLoading="{Binding LoadStats.IsExecuting^}" LoadingText="Loading portfolio stats">
+                            <BalancedWrapGrid DockPanel.Dock="Top" MinItemWidth="260">
+                                <Card Theme="{StaticResource LeftItemCard}" Header="Funded Projects" Subheader="{Binding InvestorStats.FundedProjects, FallbackValue=0}">
+                                    <Card.HeaderStartContent>
+                                        <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                                    </Card.HeaderStartContent>
+                                </Card>
+                                <Card Theme="{StaticResource LeftItemCard}" Header="Total Invested" Subheader="{Binding InvestorStats.TotalInvested.ShortDecimalString, FallbackValue=0}">
+                                    <Card.HeaderStartContent>
+                                        <ui:Icon Source="svg:/Assets/btc.svg" />
+                                    </Card.HeaderStartContent>
+                                </Card>
+                                <Card Theme="{StaticResource LeftItemCard}" Header="Recovered To Penalty" Subheader="{Binding InvestorStats.RecoveredToPenalty.ShortDecimalString, FallbackValue=0}">
+                                    <Card.HeaderStartContent>
+                                        <ui:Icon Source="svg:/Assets/recovery.svg" />
+                                    </Card.HeaderStartContent>
+                                </Card>
+                                <Card Theme="{StaticResource LeftItemCard}" Header="Projects In Recovery" Subheader="{Binding InvestorStats.ProjectsInRecovery, FallbackValue=0}">
+                                    <Card.HeaderStartContent>
+                                        <ui:Icon Source="svg:/Assets/recovery.svg" />
+                                    </Card.HeaderStartContent>
+                                </Card>
+                            </BalancedWrapGrid>
+                        </Loading>
 
-                <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading projects...">
-                    <ItemsControl Classes="ShowEmptyContent" ItemsSource="{Binding InvestedProjects}" Empty.Content="Nothing to show">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Classes="BigGap" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <items:PortfolioProjectView />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                        <Loading IsLoading="{Binding LoadPortfolio.IsExecuting^}" LoadingText="Loading your portfolio">
+                            <ItemsControl Classes="ShowEmptyContent" ItemsSource="{Binding InvestedProjects}" Empty.Content="Nothing to show">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Classes="BigGap" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <items:PortfolioProjectView />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Loading>
+                    </StackPanel>
                 </Loading>
             </DockPanel>
         </ScrollViewer>
