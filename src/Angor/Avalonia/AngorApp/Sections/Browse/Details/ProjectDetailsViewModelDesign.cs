@@ -29,15 +29,8 @@ public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
         }
     ];
 
-    public TimeSpan TimeFromFundingStartingDate { get; } = TimeSpan.FromDays(12);
-    public IAmountUI TargetAmount { get; } = new AmountUI(200);
-    public TimeSpan TimeToFundingEndDate { get; } = TimeSpan.FromDays(90);
-    public double CurrentDays { get; } = 11;
-    public IAmountUI RaisedAmount { get; } = new AmountUI(100);
     public IFullProject Project { get; set; } = new FullProjectDesign();
     public bool IsInsideInvestmentPeriod { get; set; } = true;
     public TimeSpan? NextRelease { get; } = TimeSpan.FromDays(15);
     public IStage? CurrentStage { get; } = new StageDesign();
-    public TimeSpan FundingPeriod => TimeSpan.FromDays(78);
-    public TimeSpan PenaltyDuration { get; } = TimeSpan.FromDays(90);
 }

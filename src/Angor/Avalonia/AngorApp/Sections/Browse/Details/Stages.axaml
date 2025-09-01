@@ -5,7 +5,7 @@
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="800"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="800"
              x:Class="AngorApp.Sections.Browse.Details.Stages" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
@@ -66,12 +66,12 @@
                                   Background="Transparent"
                                   Margin="0,10,0,0">
                         <SlimDataGrid.Columns>
-                            <Column Header="STAGE" Binding="{Binding Index}" Width="80" />
+                            <Column Header="STAGE" Binding="{Binding Index, Converter={x:Static MiscConverters.AddOne}}" Width="80" />
                             <Column Header="STAGE %" Binding="{Binding RatioOfTotal, StringFormat={}{0:P0}}" Width="100" />
                             <Column Header="RELEASE DATE" Binding="{Binding ReleaseDate, StringFormat=d}" Width="150" />
                             <Column Header="DAYS UNTIL STAGE" Binding="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.TimeLeftDateTime}}" Width="Auto" />
                             <Column Header="AMOUNT PER STAGE"
-                                    Binding="{Binding Amount, Converter={x:Static controls:AngorConverters.SatsToBtc}, StringFormat={}{0} TBTC}" Width="200">
+                                    Binding="{Binding AmountUI.ShortDecimalString}" Width="200">
                             </Column>
                         </SlimDataGrid.Columns>
                     </SlimDataGrid>
