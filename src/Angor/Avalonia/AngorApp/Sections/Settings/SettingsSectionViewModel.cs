@@ -80,11 +80,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
                 }))
             .DisposeWith(disposable);
 
-        Save = ReactiveCommand.Create(SaveSettings).DisposeWith(disposable);
-
-        this.WhenAnyObservable(x => x.AddExplorer, x => x.AddIndexer, x => x.AddRelay)
-            .InvokeCommand(Save)
-            .DisposeWith(disposable);
     }
 
     public ObservableCollection<SettingsUrlViewModel> Explorers { get; }
@@ -96,8 +91,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     public ReactiveCommand<Unit, Unit> AddExplorer { get; }
     public ReactiveCommand<Unit, Unit> AddIndexer { get; }
     public ReactiveCommand<Unit, Unit> AddRelay { get; }
-
-    public ReactiveCommand<Unit, Unit> Save { get; }
 
     public string Network
     {
@@ -128,6 +121,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Explorers.Add(CreateExplorer(new SettingsUrl { Url = NewExplorer, IsPrimary = Explorers.Count == 0 }));
         NewExplorer = string.Empty;
         Refresh(Explorers);
+        SaveSettings();
     }
 
     private void DoAddIndexer()
@@ -135,6 +129,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Indexers.Add(CreateIndexer(new SettingsUrl { Url = NewIndexer, IsPrimary = Indexers.Count == 0 }));
         NewIndexer = string.Empty;
         Refresh(Indexers);
+        SaveSettings();
     }
 
     private void DoAddRelay()
@@ -142,6 +137,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Relays.Add(CreateRelay(new SettingsUrl { Url = NewRelay }));
         NewRelay = string.Empty;
         Refresh(Relays);
+        SaveSettings();
     }
 
     private SettingsUrlViewModel CreateExplorer(SettingsUrl url) => new(url.Url, url.IsPrimary, DoRemoveExplorer, DoSetPrimaryExplorer);
@@ -157,6 +153,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
             Explorers[0].IsPrimary = true;
         }
         Refresh(Explorers);
+        SaveSettings();
     }
 
     private void DoSetPrimaryExplorer(SettingsUrlViewModel url)
@@ -167,6 +164,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         }
         url.IsPrimary = true;
         Refresh(Explorers);
+        SaveSettings();
     }
 
     private void DoRemoveIndexer(SettingsUrlViewModel url)
@@ -178,6 +176,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
             Indexers[0].IsPrimary = true;
         }
         Refresh(Indexers);
+        SaveSettings();
     }
 
     private void DoSetPrimaryIndexer(SettingsUrlViewModel url)
@@ -188,12 +187,14 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         }
         url.IsPrimary = true;
         Refresh(Indexers);
+        SaveSettings();
     }
 
     private void DoRemoveRelay(SettingsUrlViewModel url)
     {
         Relays.Remove(url);
         Refresh(Relays);
+        SaveSettings();
     }
 
     private static void Refresh(ObservableCollection<SettingsUrlViewModel> collection)
