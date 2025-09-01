@@ -1,11 +1,19 @@
-using Angor.Contexts.Funding.Founder.Dtos;
+using System.Linq;
 
 namespace AngorApp.Sections.Portfolio;
 
-public class InvestorStatsViewModel(InvestorStatsDto dto)
+public class InvestorStatsViewModel : IInvestorStatsViewModel
 {
-    public IAmountUI TotalInvested { get; } = new AmountUI(dto.TotalInvested);
-    public IAmountUI RecoveredToPenalty { get; }  = new AmountUI(dto.TotalInvested);
-    public int ProjectsInRecovery { get; } = dto.ProjectsInRecovery;
-    public int FundedProjects { get; } = dto.FundedProjects;
+    public InvestorStatsViewModel(ICollection<IPortfolioProject> projects)
+    {
+        TotalInvested = new AmountUI(projects.Sum(project => project.Invested.Sats));
+        RecoveredToPenalty = new AmountUI(projects.Sum(project => project.InRecovery.Sats));
+        ProjectsInRecovery = projects.Count(project => project.InRecovery.Sats > 0);
+        FundedProjects = projects.Count;
+    }
+
+    public IAmountUI TotalInvested { get; }
+    public IAmountUI RecoveredToPenalty { get; }
+    public int ProjectsInRecovery { get; }
+    public int FundedProjects { get; }
 }

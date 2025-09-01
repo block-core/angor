@@ -20,17 +20,32 @@ public class PortfolioSectionViewModelDesign : IPortfolioSectionViewModel
 
     public IReadOnlyCollection<PortfolioItem> Items { get; }
     public IEnumerable<IPortfolioProject> InvestedProjects { get; } = new List<IPortfolioProject>();
-    public InvestorStatsViewModel InvestorStats { get; } = new(new InvestorStatsDto()
+    public IInvestorStatsViewModel InvestorStats { get; } = new InvestorStatsViewModelDesign
     {
         FundedProjects = 1,
         ProjectsInRecovery = 1,
-        TotalInvested = 1234,
-        RecoveredToPenalty = 0023,
-    });
+        TotalInvested = new AmountUI(12345),
+        RecoveredToPenalty = new AmountUI(1024),
+    };
 
     public ICommand GoToPenalties { get; }
-
     public IEnhancedCommand<Result<IWallet>> LoadWallet { get; }
     public IEnhancedCommand<Result<InvestorStatsViewModel>> LoadStats { get; }
     public IEnhancedCommand<Result<IEnumerable<IPortfolioProject>>> LoadPortfolio { get; }
+}
+
+public class InvestorStatsViewModelDesign : IInvestorStatsViewModel
+{
+    public int FundedProjects { get; set; }
+    public int ProjectsInRecovery { get; set; }
+    public IAmountUI TotalInvested { get; set; }
+    public IAmountUI RecoveredToPenalty { get; set; }
+}
+
+public interface IInvestorStatsViewModel
+{
+    int FundedProjects { get;  }
+    int ProjectsInRecovery { get; }
+    IAmountUI TotalInvested { get; }
+    IAmountUI RecoveredToPenalty { get; }
 }

@@ -9,9 +9,8 @@ namespace AngorApp.Sections.Portfolio;
 public interface IPortfolioSectionViewModel
 {
     public IEnumerable<IPortfolioProject> InvestedProjects { get; }
-    public InvestorStatsViewModel InvestorStats { get; }
+    public IInvestorStatsViewModel InvestorStats { get; }
     public ICommand GoToPenalties { get; }
     IEnhancedCommand<Result<IWallet>> LoadWallet { get; }
-    IEnhancedCommand<Result<InvestorStatsViewModel>> LoadStats { get; }
     IEnhancedCommand<Result<IEnumerable<IPortfolioProject>>> LoadPortfolio { get; }
 }

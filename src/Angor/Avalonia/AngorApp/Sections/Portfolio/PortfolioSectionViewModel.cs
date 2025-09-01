@@ -1,10 +1,10 @@
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Windows.Input;
 using Angor.Contexts.Funding.Investor;
 using AngorApp.Sections.Portfolio.Items;
 using AngorApp.Sections.Portfolio.Penalties;
 using AngorApp.UI.Services;
-using DynamicData;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
@@ -22,7 +22,7 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
     private IWallet wallet;
     
     [ObservableAsProperty] private IEnumerable<IPortfolioProject> investedProjects;
-    [ObservableAsProperty] private InvestorStatsViewModel investorStats;
+    [ObservableAsProperty] private IInvestorStatsViewModel investorStats;
 
     public PortfolioSectionViewModel(IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator)
     {
@@ -31,26 +31,24 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
         walletHelper = LoadWallet.Successes().ToProperty(this, x => x.Wallet).DisposeWith(disposable);
 
         var hasWallet = this.WhenAnyValue(model => model.Wallet).NotNull();
+
+        investorStatsHelper = this.WhenAnyValue(model => model.InvestedProjects)
+            .WhereNotNull()
+            .Select(IInvestorStatsViewModel (projects) => new InvestorStatsViewModel(projects.ToList())).ToProperty(this, x => x.InvestorStats).DisposeWith(disposable);
         
         LoadPortfolio = ReactiveCommand.CreateFromTask(() => investmentAppService.GetInvestorProjects(Wallet.Id.Value).MapEach(IPortfolioProject (dto) => new PortfolioProjectViewModel(dto, investmentAppService, uiServices, navigator)), hasWallet).DisposeWith(disposable).Enhance();
         LoadPortfolio.HandleErrorsWith(uiServices.NotificationService, "Failed to load portfolio projects").DisposeWith(disposable);
         investedProjectsHelper = LoadPortfolio.Successes().ToProperty(this, x => x.InvestedProjects).DisposeWith(disposable);
         
-        LoadStats = ReactiveCommand.CreateFromTask(() => investmentAppService.GetInvestorStats(Wallet.Id.Value).Map(dto => new InvestorStatsViewModel(dto)), hasWallet).Enhance().DisposeWith(disposable);
-        LoadStats.HandleErrorsWith(uiServices.NotificationService, "Failed to load investor stats").DisposeWith(disposable);
-        investorStatsHelper = LoadStats.Successes().ToProperty(this, x => x.InvestorStats).DisposeWith(disposable);
-
         LoadWallet.Execute().Subscribe().DisposeWith(disposable);
 
         LoadWallet.ToSignal().InvokeCommand(LoadPortfolio).DisposeWith(disposable);
-        LoadWallet.ToSignal().InvokeCommand(LoadStats).DisposeWith(disposable);
 
         GoToPenalties = ReactiveCommand.Create(navigator.Go<IPenaltiesViewModel>);
     }
 
     public IEnhancedCommand<Result<IEnumerable<IPortfolioProject>>> LoadPortfolio { get; }
 
-    public IEnhancedCommand<Result<InvestorStatsViewModel>> LoadStats { get; }
 
     public IEnhancedCommand<Result<IWallet>> LoadWallet { get; }
 
