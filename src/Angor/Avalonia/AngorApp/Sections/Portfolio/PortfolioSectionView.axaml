@@ -82,30 +82,28 @@
 
                 <Loading IsLoading="{Binding LoadWallet.IsExecuting^}" LoadingText="Loading wallet. Please wait." DockPanel.Dock="Top">
                     <StackPanel Classes="BigGap">
-                        <Loading IsLoading="{Binding LoadStats.IsExecuting^}" LoadingText="Loading portfolio stats">
-                            <BalancedWrapGrid DockPanel.Dock="Top" MinItemWidth="260">
-                                <Card Theme="{StaticResource LeftItemCard}" Header="Funded Projects" Subheader="{Binding InvestorStats.FundedProjects, FallbackValue=0}">
-                                    <Card.HeaderStartContent>
-                                        <ui:Icon Source="svg:/Assets/portfolio.svg" />
-                                    </Card.HeaderStartContent>
-                                </Card>
-                                <Card Theme="{StaticResource LeftItemCard}" Header="Total Invested" Subheader="{Binding InvestorStats.TotalInvested.ShortDecimalString, FallbackValue=0}">
-                                    <Card.HeaderStartContent>
-                                        <ui:Icon Source="svg:/Assets/btc.svg" />
-                                    </Card.HeaderStartContent>
-                                </Card>
-                                <Card Theme="{StaticResource LeftItemCard}" Header="Recovered To Penalty" Subheader="{Binding InvestorStats.RecoveredToPenalty.ShortDecimalString, FallbackValue=0}">
-                                    <Card.HeaderStartContent>
-                                        <ui:Icon Source="svg:/Assets/recovery.svg" />
-                                    </Card.HeaderStartContent>
-                                </Card>
-                                <Card Theme="{StaticResource LeftItemCard}" Header="Projects In Recovery" Subheader="{Binding InvestorStats.ProjectsInRecovery, FallbackValue=0}">
-                                    <Card.HeaderStartContent>
-                                        <ui:Icon Source="svg:/Assets/recovery.svg" />
-                                    </Card.HeaderStartContent>
-                                </Card>
-                            </BalancedWrapGrid>
-                        </Loading>
+                        <BalancedWrapGrid DockPanel.Dock="Top" MinItemWidth="260">
+                            <Card Theme="{StaticResource LeftItemCard}" Header="Funded Projects" Subheader="{Binding InvestorStats.FundedProjects, FallbackValue=0}">
+                                <Card.HeaderStartContent>
+                                    <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                                </Card.HeaderStartContent>
+                            </Card>
+                            <Card Theme="{StaticResource LeftItemCard}" Header="Total Invested" Subheader="{Binding InvestorStats.TotalInvested.ShortDecimalString, FallbackValue=0}">
+                                <Card.HeaderStartContent>
+                                    <ui:Icon Source="svg:/Assets/btc.svg" />
+                                </Card.HeaderStartContent>
+                            </Card>
+                            <Card Theme="{StaticResource LeftItemCard}" Header="Recovered To Penalty" Subheader="{Binding InvestorStats.RecoveredToPenalty.ShortDecimalString, FallbackValue=0}">
+                                <Card.HeaderStartContent>
+                                    <ui:Icon Source="svg:/Assets/recovery.svg" />
+                                </Card.HeaderStartContent>
+                            </Card>
+                            <Card Theme="{StaticResource LeftItemCard}" Header="Projects In Recovery" Subheader="{Binding InvestorStats.ProjectsInRecovery, FallbackValue=0}">
+                                <Card.HeaderStartContent>
+                                    <ui:Icon Source="svg:/Assets/recovery.svg" />
+                                </Card.HeaderStartContent>
+                            </Card>
+                        </BalancedWrapGrid>
 
                         <Loading IsLoading="{Binding LoadPortfolio.IsExecuting^}" LoadingText="Loading your portfolio">
                             <ItemsControl Classes="ShowEmptyContent" ItemsSource="{Binding InvestedProjects}" Empty.Content="Nothing to show">
