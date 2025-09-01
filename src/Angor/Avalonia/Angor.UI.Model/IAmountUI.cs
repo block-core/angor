@@ -11,7 +11,26 @@ public interface IAmountUI
     private decimal Btc => Sats / (decimal)1_0000_0000;
 
     public string DecimalString => $"{Btc:G} {Symbol}";
-    public string ShortDecimalString => Btc < 0.0001m ? SatsString : DecimalString;
+    public string RoundedDecimalString => $"{Btc:N2} {Symbol}";
+    
+    public string ShortDecimalString
+    {
+        get
+        {
+            if (Btc < 0.0001m)
+            {
+                return SatsString;
+            }
+
+            if (DecimalString.Length > 8)
+            {
+                return RoundedDecimalString;
+            }
+
+            return DecimalString;
+        }
+    }
+
     public string SatsString => $"{Sats} sats";
     public string FeeRateString => $"{Sats} sats/VByte";
     public bool IsNegative => Sats < 0;

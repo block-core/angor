@@ -7,7 +7,7 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:claim="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.MainView.Claim"
-             mc:Ignorable="d" d:DesignWidth="600"
+             mc:Ignorable="d" d:DesignWidth="300"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.MainView.Claim.ClaimFundsView" x:DataType="claim:IClaimFundsViewModel">
 
     <Design.DataContext>
@@ -39,7 +39,7 @@
                                 </claim:ClaimableTransactionDesign>
                                 <claim:ClaimableTransactionDesign ClaimStatus="Unspent" Address="bc1qexampleaddress5">
                                     <claim:ClaimableTransactionDesign.Amount>
-                                        <design:DesignTimeAmount Sats="3440000" />
+                                        <design:DesignTimeAmount Sats="34412344" />
                                     </claim:ClaimableTransactionDesign.Amount>
                                 </claim:ClaimableTransactionDesign>
                             </generic:List>
@@ -90,7 +90,7 @@
                             </Card.HeaderEndContent>
                             <Card.Header>
                                 <BalancedWrapGrid MinItemWidth="80" MaxItemWidth="120">
-                                    <controls:Badge TextElement.FontWeight="Regular" FontSize="12" Color="DeepSkyBlue" Content="{Binding ClaimableAmount.DecimalString}" />
+                                    <controls:Badge TextElement.FontWeight="Regular" FontSize="12" Color="DeepSkyBlue" Content="{Binding ClaimableAmount.ShortDecimalString}" />
                                     <controls:Badge TextElement.FontWeight="Regular" FontSize="12" Color="Goldenrod" Content="{Binding ClaimableTransactionsCount, StringFormat='{}{0} UTXO'}" />
                                 </BalancedWrapGrid>
                             </Card.Header>
