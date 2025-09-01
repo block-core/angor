@@ -50,7 +50,7 @@
                         </Style>
                     </ContainerQuery>
                 </Panel.Styles>
-                <SlimDataGrid HeaderPadding="10 0 0 0" Margin="0 20 0 0" ItemsSource="{Binding Transactions}">
+                <SlimDataGrid HeaderPadding="10 0 0 0" Margin="0 20 0 0" Empty.Content="No release items found" ItemsSource="{Binding Transactions}">
                     <SlimDataGrid.Styles>
                         <Style Selector="TextBlock">
                             <Setter Property="VerticalAlignment" Value="Center" />
@@ -82,7 +82,7 @@
                         </Column>
                     </SlimDataGrid.Columns>
                 </SlimDataGrid>
-                <ItemsControl Classes="ShowEmptyContent" Empty.Content="Nothing to show" x:Name="PlainList" ItemsSource="{Binding Transactions}">
+                <ItemsControl Classes="ShowEmptyContent" Empty.Content="No release items found" x:Name="PlainList" ItemsSource="{Binding Transactions}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Classes="SmallGap" />

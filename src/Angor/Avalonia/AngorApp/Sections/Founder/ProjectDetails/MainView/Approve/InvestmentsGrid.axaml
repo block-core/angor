@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:approve="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.MainView.Approve"
-             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="750"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.MainView.Approve.InvestmentsGrid"
              x:DataType="approve:IApproveInvestmentsViewModel">
 
@@ -116,7 +116,7 @@
                 </Style>
             </ContainerQuery>
         </Panel.Styles>
-        <SlimDataGrid Classes="TopLevel" ItemsSource="{Binding Investments}">
+        <SlimDataGrid Classes="TopLevel" ItemsSource="{Binding Investments}" Empty.Content="No investments found">
             <SlimDataGrid.Styles>
                 <Style Selector="Cell TextBlock">
                     <Setter Property="TextTrimming" Value="CharacterEllipsis" />
@@ -171,7 +171,7 @@
                 </Column>
             </SlimDataGrid.Columns>
         </SlimDataGrid>
-        <ItemsControl x:Name="PlainList" ItemsSource="{Binding Investments}">
+        <ItemsControl x:Name="PlainList" Classes="ShowEmptyContent" ItemsSource="{Binding Investments}" Empty.Content="No investments found">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <StackPanel Classes="SmallGap" />

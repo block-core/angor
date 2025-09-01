@@ -71,7 +71,7 @@
 
     <Loading IsLoading="{Binding LoadClaimableStages.IsExecuting^}" LoadingText="Loading claimable stages...">
         <HeaderedContainer Header="Claim your funds" Classes="Title" Padding="0">
-            <ItemsControl VerticalAlignment="Top" ItemsSource="{Binding ClaimableStages}">
+            <ItemsControl VerticalAlignment="Top" Classes="ShowEmptyContent" ItemsSource="{Binding ClaimableStages}" Empty.Content="No coin items found">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Classes="BigGap" />
