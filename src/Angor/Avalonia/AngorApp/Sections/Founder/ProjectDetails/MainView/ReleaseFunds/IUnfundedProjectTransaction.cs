@@ -8,5 +8,5 @@ public interface IUnfundedProjectTransaction
     public DateTime Approved { get;  }
     public DateTime? Released { get; }
     IEnhancedCommand<Maybe<Result>> Release { get; }
-    string InvestorAddress { get; set; }
+    string InvestmentEventId { get; set; }
 }

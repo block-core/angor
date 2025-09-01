@@ -1,44 +1,42 @@
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;
 using MediatR;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
-public class GetClaimableTransactions
+public static class GetClaimableTransactions
 {
     public record GetClaimableTransactionsRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ClaimableTransactionDto>>>;
 
-    public class GetClaimableTransactionsHandler : IRequestHandler<GetClaimableTransactionsRequest, Result<IEnumerable<ClaimableTransactionDto>>>
+    public class GetClaimableTransactionsHandler(IProjectInvestmentsRepository projectInvestmentsRepository) : IRequestHandler<GetClaimableTransactionsRequest, Result<IEnumerable<ClaimableTransactionDto>>>
     {
         public async Task<Result<IEnumerable<ClaimableTransactionDto>>> Handle(GetClaimableTransactionsRequest request, CancellationToken cancellationToken)
         {
-            // TODO: Implement the logic for retrieving claimable transactions for a project.
-            // Mocked data
-            IEnumerable<ClaimableTransactionDto> list = new List<ClaimableTransactionDto>()
+            var resultList = await projectInvestmentsRepository.ScanFullInvestments(request.ProjectId.Value);
+
+            if (resultList.IsFailure)
             {
-                new()
+                return Result.Failure<IEnumerable<ClaimableTransactionDto>>(resultList.Error);
+            }
+            
+            var list = resultList.Value.SelectMany(x => x.Items
+                .Select<StageDataTrx, ClaimableTransactionDto>(item => 
+                new ClaimableTransactionDto()
                 {
-                    StageId = 1,
-                    Amount = new Amount(1234),
-                    InvestorAddress = "1234abcd5678efgh9012ijklmnopqrstuvwx",
-                    ClaimStatus = ClaimStatus.Pending
-                },
-                new()
-                {
-                    StageId = 1,
-                    Amount = new Amount(1234),
-                    InvestorAddress = "1234abcd5678efgh9012ijklmnopqrstuvwx",
-                    ClaimStatus = ClaimStatus.SpentByFounder
-                },
-                new()
-                {
-                    StageId = 2,
-                    Amount = new Amount(1234),
-                    InvestorAddress = "1234abcd5678efgh9012ijklmnopqrstuvwx",
-                    ClaimStatus = ClaimStatus.Unspent
-                }
-            };
+                    StageId = x.StageIndex,
+                    Amount = new Amount(item.Amount),
+                    InvestorAddress = item.InvestorPublicKey,
+                    ClaimStatus = item.SpentType switch
+                    {
+                        "founder" => ClaimStatus.SpentByFounder, 
+                        "investor" => ClaimStatus.WithdrawByInvestor,
+                        "pending" => ClaimStatus.Pending,
+                        _ => ClaimStatus.Unspent
+                    },
+                }));
+            
             return Result.Success(list);
         }
     }
