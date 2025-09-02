@@ -2,13 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="530"
+             mc:Ignorable="d" d:DesignWidth="430"
              x:Class="AngorApp.Sections.Portfolio.PortfolioSectionView"
              xmlns:p="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:items="clr-namespace:AngorApp.Sections.Portfolio.Items"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
              xmlns:design="clr-namespace:AngorApp.Design"
+             d:DesignHeight="800"
              x:DataType="p:IPortfolioSectionViewModel">
 
     <UserControl.Resources>
@@ -58,70 +59,86 @@
         </p:PortfolioSectionViewModelDesign>
     </Design.DataContext>
 
-    <a:PageContainer>
-        <ScrollViewer>
-            <DockPanel HorizontalSpacing="20" VerticalSpacing="20">
-                <Card Theme="{StaticResource WideCard}" DockPanel.Dock="Top" Header="Portfolio" Subheader="Check your project investments">
-                    <Card.HeaderEndContent>
-                        <UniformGrid ColumnSpacing="10" Rows="1">
-                            <IconButton HorizontalAlignment="Stretch" Command="{Binding LoadWallet}">
-                                Refresh
-                                <IconButton.Icon>
-                                    <ui:Icon Source="fa-arrows-rotate" />
-                                </IconButton.Icon>
-                            </IconButton>
-                            <IconButton HorizontalAlignment="Stretch" Command="{Binding GoToPenalties}">
-                                Penalties
-                                <IconButton.Icon>
-                                    <ui:Icon Source="fa-unlock" />
-                                </IconButton.Icon>
-                            </IconButton>
-                        </UniformGrid>
-                    </Card.HeaderEndContent>
-                </Card>
+    <a:PageContainer Container.Name="RootPanel" Container.Sizing="Width">
+        <DockPanel HorizontalSpacing="20" VerticalSpacing="20">
+            <Card Theme="{StaticResource WideCard}" DockPanel.Dock="Top" Header="Portfolio" Subheader="Check your project investments">
+                <Card.HeaderEndContent>
+                    <UniformGrid ColumnSpacing="10" Rows="1">
+                        <IconButton HorizontalAlignment="Stretch" Command="{Binding LoadWallet}">
+                            Refresh
+                            <IconButton.Icon>
+                                <ui:Icon Source="fa-arrows-rotate" />
+                            </IconButton.Icon>
+                        </IconButton>
+                        <IconButton HorizontalAlignment="Stretch" Command="{Binding GoToPenalties}">
+                            Penalties
+                            <IconButton.Icon>
+                                <ui:Icon Source="fa-unlock" />
+                            </IconButton.Icon>
+                        </IconButton>
+                    </UniformGrid>
+                </Card.HeaderEndContent>
+            </Card>
 
-                <Loading IsLoading="{Binding LoadWallet.IsExecuting^}" LoadingText="Loading wallet. Please wait." DockPanel.Dock="Top">
+            <Loading IsLoading="{Binding IsLoading^}" LoadingText="Your portfolio is loading. Please wait.">
+                <ScrollViewer>
                     <StackPanel Classes="BigGap">
-                        <BalancedWrapGrid DockPanel.Dock="Top" MinItemWidth="260">
-                            <Card Theme="{StaticResource LeftItemCard}" Header="Funded Projects" Subheader="{Binding InvestorStats.FundedProjects, FallbackValue=0}">
+                        <BalancedWrapGrid DockPanel.Dock="Top">
+                            <BalancedWrapGrid.Styles>
+                                <ContainerQuery Name="RootPanel" Query="min-width:0">
+                                    <Style Selector="BalancedWrapGrid">
+                                        <Setter Property="MinItemWidth" Value="190" />
+                                    </Style>
+                                    <Style Selector="Card">
+                                        <Setter Property="Theme" Value="{StaticResource CompactLeftItemCard}" />
+                                    </Style>
+                                </ContainerQuery>
+                                <ContainerQuery Name="RootPanel" Query="min-width:500">
+                                    <Style Selector="BalancedWrapGrid">
+                                        <Setter Property="MinItemWidth" Value="250" />
+                                    </Style>
+                                    <Style Selector="Card">
+                                        <Setter Property="Theme" Value="{StaticResource LeftItemCard}" />
+                                    </Style>
+                                </ContainerQuery>
+                            </BalancedWrapGrid.Styles>
+                            <Card Header="Funded Projects" Subheader="{Binding InvestorStats.FundedProjects, FallbackValue=0}">
                                 <Card.HeaderStartContent>
                                     <ui:Icon Source="svg:/Assets/portfolio.svg" />
                                 </Card.HeaderStartContent>
                             </Card>
-                            <Card Theme="{StaticResource LeftItemCard}" Header="Total Invested" Subheader="{Binding InvestorStats.TotalInvested.ShortDecimalString, FallbackValue=0}">
+                            <Card Header="Total Invested" Subheader="{Binding InvestorStats.TotalInvested.ShortDecimalString, FallbackValue=0}">
                                 <Card.HeaderStartContent>
                                     <ui:Icon Source="svg:/Assets/btc.svg" />
                                 </Card.HeaderStartContent>
                             </Card>
-                            <Card Theme="{StaticResource LeftItemCard}" Header="Recovered To Penalty" Subheader="{Binding InvestorStats.RecoveredToPenalty.ShortDecimalString, FallbackValue=0}">
+                            <Card Header="Recovered To Penalty" Subheader="{Binding InvestorStats.RecoveredToPenalty.ShortDecimalString, FallbackValue=0}">
                                 <Card.HeaderStartContent>
                                     <ui:Icon Source="svg:/Assets/recovery.svg" />
                                 </Card.HeaderStartContent>
                             </Card>
-                            <Card Theme="{StaticResource LeftItemCard}" Header="Projects In Recovery" Subheader="{Binding InvestorStats.ProjectsInRecovery, FallbackValue=0}">
+                            <Card Header="Projects In Recovery" Subheader="{Binding InvestorStats.ProjectsInRecovery, FallbackValue=0}">
                                 <Card.HeaderStartContent>
                                     <ui:Icon Source="svg:/Assets/recovery.svg" />
                                 </Card.HeaderStartContent>
                             </Card>
                         </BalancedWrapGrid>
 
-                        <Loading IsLoading="{Binding LoadPortfolio.IsExecuting^}" LoadingText="Loading your portfolio">
-                            <ItemsControl Classes="ShowEmptyContent" ItemsSource="{Binding InvestedProjects}" Empty.Content="Nothing to show">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Classes="BigGap" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <items:PortfolioProjectView />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Loading>
+                        <ItemsControl Classes="ShowEmptyContent" ItemsSource="{Binding InvestedProjects}" Empty.Content="Nothing to show">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Classes="BigGap" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <items:PortfolioProjectView />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
-                </Loading>
-            </DockPanel>
-        </ScrollViewer>
+                </ScrollViewer>
+            </Loading>
+        </DockPanel>
     </a:PageContainer>
 </UserControl>

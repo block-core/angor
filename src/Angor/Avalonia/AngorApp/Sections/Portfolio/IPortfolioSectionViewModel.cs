@@ -13,4 +13,5 @@ public interface IPortfolioSectionViewModel
     public ICommand GoToPenalties { get; }
     IEnhancedCommand<Result<IWallet>> LoadWallet { get; }
     IEnhancedCommand<Result<IEnumerable<IPortfolioProject>>> LoadPortfolio { get; }
+    public IObservable<bool> IsLoading { get; }
 }

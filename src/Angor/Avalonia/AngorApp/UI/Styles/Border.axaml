@@ -17,6 +17,13 @@
         <Setter Property="CornerRadius" Value="10" />
         <Setter Property="Padding" Value="20" />
     </Style>
+    
+    <Style Selector="Border.CompactCard">
+        <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="10" />
+    </Style>
 
     <Style Selector="Border.CardAlt">
         <Setter Property="BorderBrush" Value="{DynamicResource SystemBaseMediumLowColor}" />

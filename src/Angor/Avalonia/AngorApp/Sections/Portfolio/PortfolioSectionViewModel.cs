@@ -45,9 +45,12 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
         LoadWallet.ToSignal().InvokeCommand(LoadPortfolio).DisposeWith(disposable);
 
         GoToPenalties = ReactiveCommand.Create(navigator.Go<IPenaltiesViewModel>);
+
+        IsLoading = LoadWallet.IsExecuting.CombineLatest(LoadPortfolio.IsExecuting).Select(tuple => tuple.AnyTrue());
     }
 
     public IEnhancedCommand<Result<IEnumerable<IPortfolioProject>>> LoadPortfolio { get; }
+    public IObservable<bool> IsLoading { get; }
 
 
     public IEnhancedCommand<Result<IWallet>> LoadWallet { get; }
@@ -58,4 +61,24 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
     }
 
     public ICommand GoToPenalties { get; }
+}
+
+public static class TupleExtensions
+{
+    public static bool AllTrue(this ValueTuple<bool, bool> tuple)
+    {
+        return tuple.ToEnumerable().All(b => b);
+    }
+    
+    public static bool AnyTrue(this ValueTuple<bool, bool> tuple)
+    {
+        return tuple.ToEnumerable().Any(b => b);
+    }
+
+
+    public static IEnumerable<T> ToEnumerable<T>(this ValueTuple<T, T> tuple)
+    {
+        yield return tuple.Item1;
+        yield return tuple.Item2;
+    }
 }

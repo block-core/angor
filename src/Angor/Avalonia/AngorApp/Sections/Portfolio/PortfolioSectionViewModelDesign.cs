@@ -30,8 +30,8 @@ public class PortfolioSectionViewModelDesign : IPortfolioSectionViewModel
 
     public ICommand GoToPenalties { get; }
     public IEnhancedCommand<Result<IWallet>> LoadWallet { get; }
-    public IEnhancedCommand<Result<InvestorStatsViewModel>> LoadStats { get; }
     public IEnhancedCommand<Result<IEnumerable<IPortfolioProject>>> LoadPortfolio { get; }
+    public IObservable<bool> IsLoading => Observable.Return(false);
 }
 
 public class InvestorStatsViewModelDesign : IInvestorStatsViewModel
