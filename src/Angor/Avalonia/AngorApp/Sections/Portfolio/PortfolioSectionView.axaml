@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="430"
+             mc:Ignorable="d" d:DesignWidth="730"
              x:Class="AngorApp.Sections.Portfolio.PortfolioSectionView"
              xmlns:p="clr-namespace:AngorApp.Sections.Portfolio"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
@@ -63,20 +63,32 @@
         <DockPanel HorizontalSpacing="20" VerticalSpacing="20">
             <Card Theme="{StaticResource WideCard}" DockPanel.Dock="Top" Header="Portfolio" Subheader="Check your project investments">
                 <Card.HeaderEndContent>
-                    <UniformGrid ColumnSpacing="10" Rows="1">
-                        <IconButton HorizontalAlignment="Stretch" Command="{Binding LoadWallet}">
-                            Refresh
-                            <IconButton.Icon>
-                                <ui:Icon Source="fa-arrows-rotate" />
-                            </IconButton.Icon>
-                        </IconButton>
-                        <IconButton HorizontalAlignment="Stretch" Command="{Binding GoToPenalties}">
-                            Penalties
-                            <IconButton.Icon>
-                                <ui:Icon Source="fa-unlock" />
-                            </IconButton.Icon>
-                        </IconButton>
-                    </UniformGrid>
+                    <StackPanel Orientation="Horizontal" Classes="SmallGap">
+                        <UniformGrid ColumnSpacing="10" Rows="1">
+                            <IconButton HorizontalAlignment="Stretch" Command="{Binding LoadWallet}">
+                                Refresh
+                                <IconButton.Icon>
+                                    <ui:Icon Source="fa-arrows-rotate" />
+                                </IconButton.Icon>
+                            </IconButton>
+                            <IconButton HorizontalAlignment="Stretch" Command="{Binding GoToPenalties}">
+                                Penalties
+                                <IconButton.Icon>
+                                    <ui:Icon Source="fa-unlock" />
+                                </IconButton.Icon>
+                            </IconButton>
+                        </UniformGrid>
+                        <ToggleButton x:Name="GridView" Width="38" CornerRadius="10" Height="38" Padding="0">
+                            <ToggleButton.Styles>
+                                <Style Selector="ToggleButton[IsChecked=True]">
+                                    <Setter Property="Content" Value="{Icon mdi-view-grid-outline}" />
+                                </Style>
+                                <Style Selector="ToggleButton[IsChecked=False]">
+                                    <Setter Property="Content" Value="{Icon mdi-dns-outline}" />
+                                </Style>
+                            </ToggleButton.Styles>
+                        </ToggleButton>
+                    </StackPanel>
                 </Card.HeaderEndContent>
             </Card>
 
@@ -93,7 +105,7 @@
                                         <Setter Property="Theme" Value="{StaticResource CompactLeftItemCard}" />
                                     </Style>
                                 </ContainerQuery>
-                                <ContainerQuery Name="RootPanel" Query="min-width:500">
+                                <ContainerQuery Name="RootPanel" Query="min-width:600">
                                     <Style Selector="BalancedWrapGrid">
                                         <Setter Property="MinItemWidth" Value="250" />
                                     </Style>
@@ -124,7 +136,7 @@
                             </Card>
                         </BalancedWrapGrid>
 
-                        <ItemsControl Classes="ShowEmptyContent" ItemsSource="{Binding InvestedProjects}" Empty.Content="Nothing to show">
+                        <ItemsControl IsVisible="{Binding !#GridView.IsChecked}" Classes="ShowEmptyContent" ItemsSource="{Binding InvestedProjects}" Empty.Content="Nothing to show">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Classes="BigGap" />
@@ -136,6 +148,14 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+
+                        <CardGrid IsVisible="{Binding #GridView.IsChecked}" ItemsSource="{Binding InvestedProjects}" MinColumnWidth="300" MaxColumnWidth="500">
+                            <CardGrid.ItemTemplate>
+                                <DataTemplate>
+                                    <items:PortfolioProjectView />
+                                </DataTemplate>
+                            </CardGrid.ItemTemplate>
+                        </CardGrid>
                     </StackPanel>
                 </ScrollViewer>
             </Loading>
