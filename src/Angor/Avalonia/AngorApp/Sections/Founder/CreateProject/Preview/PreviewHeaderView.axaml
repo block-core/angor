@@ -3,21 +3,41 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:preview="clr-namespace:AngorApp.Sections.Founder.CreateProject.Preview"
-             mc:Ignorable="d" d:DesignWidth="800"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="500"
              x:Class="AngorApp.Sections.Founder.CreateProject.Preview.PreviewHeaderView"
              x:DataType="preview:PreviewHeaderViewModel">
-    <Button Margin="5" Padding="10 5" x:Name="PreviewButton" FontSize="13" FontWeight="Regular" Content="Show Preview" 
+    <Button Margin="5" Padding="10 5" x:Name="PreviewButton" FontSize="13" FontWeight="Regular" Content="Show Preview"
             IsVisible="{OnFormFactor Mobile=True, Desktop=False}" HorizontalAlignment="Center">
         <Button.Flyout>
             <Flyout>
                 <Flyout.FlyoutPresenterTheme>
-                    <ControlTheme TargetType="FlyoutPresenter" 
+                    <ControlTheme TargetType="FlyoutPresenter"
                                   BasedOn="{StaticResource {x:Type FlyoutPresenter}}">
                         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+                        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
                     </ControlTheme>
                 </Flyout.FlyoutPresenterTheme>
-                <preview:PreviewView DataContext="{Binding CreateProject}" />
+                <DockPanel>
+                    <Panel DockPanel.Dock="Top" Margin="0 0 0 10">
+                        <StackPanel HorizontalAlignment="Left" Classes="SmallGap" Orientation="Horizontal">
+                            <ContentControl Margin="5 0 0 0" VerticalAlignment="Center">
+                                <Icon Source="fa-eye" />
+                            </ContentControl>
+                            <TextBlock FontSize="{StaticResource FontSizeNormal}" VerticalAlignment="Center">Preview</TextBlock>
+                        </StackPanel>
+                        <Button x:Name="HideButton" Content="{Icon fa-xmark}" HorizontalAlignment="Right" VerticalAlignment="Top" />
+                    </Panel>
+                    <ScrollViewer>
+                        <preview:PreviewView DataContext="{Binding CreateProject}" />
+                    </ScrollViewer>
+                </DockPanel>
             </Flyout>
         </Button.Flyout>
+
+        <Interaction.Behaviors>
+            <EventTriggerBehavior EventName="Click" SourceObject="HideButton">
+                <HideFlyoutAction TargetControl="PreviewButton" Flyout="{Binding #PreviewButton.Flyout}" />
+            </EventTriggerBehavior>
+        </Interaction.Behaviors>
     </Button>
 </UserControl>
