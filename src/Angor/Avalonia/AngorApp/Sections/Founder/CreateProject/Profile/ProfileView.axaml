@@ -22,18 +22,18 @@
             <ui:Icon Source="fa-briefcase" />
         </Card.HeaderStartContent>
         <StackPanel Spacing="20">
-            <BalancedWrapGrid>
-                <Card Header="Project Name">
+            <BalancedWrapGrid MinItemWidth="200">
+                <Card Header="Project Name" Classes="Transparent">
                     <TextBox Watermark="Enter the name of your project" Text="{Binding ProjectName}" />
                 </Card>
-                <Card Header="Project Website">
+                <Card Header="Project Website" Classes="Transparent">
                     <TextBox TextInputOptions.ContentType="Url" Watermark="Enter the URL of project website" Text="{Binding WebsiteUri}" />
                 </Card>
             </BalancedWrapGrid>
-            <Card Header="About Your Project">
+            <Card Header="About Your Project" Classes="Transparent">
                 <TextBox MinLines="6" MaxLength="1000" TextInputOptions.Multiline="True" Watermark="Provide a brief description of the project" Text="{Binding Description}" />
             </Card>
-            <Card Header="Visual Identity">
+            <Card Header="Visual Identity" Classes="Transparent">
                <BalancedWrapGrid MinItemWidth="250">
                    <HeaderedContainer Header="Banner Image URL">
                        <StackPanel Spacing="5">

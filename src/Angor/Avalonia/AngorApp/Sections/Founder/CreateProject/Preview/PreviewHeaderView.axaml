@@ -3,11 +3,20 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:preview="clr-namespace:AngorApp.Sections.Founder.CreateProject.Preview"
-             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="500"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="500"
              x:Class="AngorApp.Sections.Founder.CreateProject.Preview.PreviewHeaderView"
-             x:DataType="preview:PreviewHeaderViewModel">
+             x:DataType="preview:PreviewHeaderViewModel" Container.Name="Root" Container.Sizing="Width">
+    
+    <UserControl.Styles>
+        <ContainerQuery Name="Root" Query="min-width:800">
+            <Style Selector="Button#PreviewButton">
+                <Setter Property="IsVisible" Value="False" />
+            </Style>
+        </ContainerQuery>
+    </UserControl.Styles>
+    
     <Button Margin="5" Padding="10 5" x:Name="PreviewButton" FontSize="13" FontWeight="Regular" Content="Show Preview"
-            IsVisible="{OnFormFactor Mobile=True, Desktop=False}" HorizontalAlignment="Center">
+            HorizontalAlignment="Center">
         <Button.Flyout>
             <Flyout>
                 <Flyout.FlyoutPresenterTheme>

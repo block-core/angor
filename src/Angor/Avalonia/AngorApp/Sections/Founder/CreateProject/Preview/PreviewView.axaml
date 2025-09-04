@@ -4,8 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:cp="clr-namespace:AngorApp.Sections.Founder.CreateProject"
              xmlns:p="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
-             xmlns:preview="clr-namespace:AngorApp.Sections.Founder.CreateProject.Preview"
-             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
              xmlns:fundingStructure="clr-namespace:AngorApp.Sections.Founder.CreateProject.FundingStructure"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
