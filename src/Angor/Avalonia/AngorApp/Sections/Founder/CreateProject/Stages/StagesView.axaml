@@ -71,25 +71,21 @@
                                 <Button Classes="Aligned" Width="33" Height="33">
                                     <TextBlock VerticalAlignment="Center" Text="{ItemIndex StartFromOne=True}" />
                                 </Button>
-                                <CardGrid Grid.Column="1" MinColumnWidth="140" ColumnSpacing="20" RowSpacing="10">
-                                    <CardGrid.ItemsSource>
-                                        <collections:ArrayList>
-                                            <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}" Header="Percentage">
-                                                <TextBox TextAlignment="Center" x:Name="TextBox" Text="{Binding Percent, Mode=TwoWay}">
-                                                    <TextBox.InnerRightContent>
-                                                        <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock>
-                                                    </TextBox.InnerRightContent>
-                                                </TextBox>
-                                            </HeaderedContainer>
-                                            <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}">
-                                                <HeaderedContainer.Header>
-                                                    <TextBlock TextWrapping="Wrap">Release Date</TextBlock>
-                                                </HeaderedContainer.Header>
-                                                <CalendarDatePicker MinWidth="130" SelectedDate="{Binding ReleaseDate}" />
-                                            </HeaderedContainer>
-                                        </collections:ArrayList>
-                                    </CardGrid.ItemsSource>
-                                </CardGrid>
+                                <BalancedWrapGrid MinItemWidth="250" Grid.Column="1"  HorizontalSpacing="20" VerticalSpacing="10" Grid.IsSharedSizeScope="True">
+                                    <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}" Header="Percentage">
+                                        <TextBox TextAlignment="Center" x:Name="TextBox" Text="{Binding Percent, Mode=TwoWay}">
+                                            <TextBox.InnerRightContent>
+                                                <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock>
+                                            </TextBox.InnerRightContent>
+                                        </TextBox>
+                                    </HeaderedContainer>
+                                    <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}">
+                                        <HeaderedContainer.Header>
+                                            <TextBlock TextWrapping="Wrap">Release Date</TextBlock>
+                                        </HeaderedContainer.Header>
+                                        <CalendarDatePicker MinWidth="130" SelectedDate="{Binding ReleaseDate}" />
+                                    </HeaderedContainer>
+                                </BalancedWrapGrid>
                                 <Button Classes="Aligned" Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="2">
                                     <ui:Icon Source="mdi-window-close" />
                                 </Button>
