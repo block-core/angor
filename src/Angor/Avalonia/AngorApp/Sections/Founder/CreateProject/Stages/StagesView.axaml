@@ -55,8 +55,8 @@
             <ItemsControl ItemsSource="{Binding Stages}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="stages:ICreateProjectStage">
-                        <Border Background="#13FFFFFF" BorderThickness="1" Padding="10" CornerRadius="10" Margin="0 0 0 10">
-                            <Grid ColumnDefinitions="Auto * Auto"  ColumnSpacing="10">
+                        <Border Classes="CardAlt"  Padding="10" CornerRadius="10" Margin="0 0 0 10">
+                            <Grid ColumnDefinitions="Auto * Auto"  ColumnSpacing="15">
                                 <Grid.Styles>
                                     <Style Selector="Button.Aligned">
                                         <Setter Property="Height" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
@@ -72,19 +72,33 @@
                                     <TextBlock VerticalAlignment="Center" Text="{ItemIndex StartFromOne=True}" />
                                 </Button>
                                 <BalancedWrapGrid MinItemWidth="250" Grid.Column="1"  HorizontalSpacing="20" VerticalSpacing="10" Grid.IsSharedSizeScope="True">
-                                    <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}" Header="Percentage">
-                                        <TextBox TextAlignment="Center" x:Name="TextBox" Text="{Binding Percent, Mode=TwoWay}">
-                                            <TextBox.InnerRightContent>
-                                                <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock>
-                                            </TextBox.InnerRightContent>
-                                        </TextBox>
-                                    </HeaderedContainer>
-                                    <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}">
-                                        <HeaderedContainer.Header>
-                                            <TextBlock TextWrapping="Wrap">Release Date</TextBlock>
-                                        </HeaderedContainer.Header>
-                                        <CalendarDatePicker MinWidth="130" SelectedDate="{Binding ReleaseDate}" />
-                                    </HeaderedContainer>
+                                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Stage %">
+                                        <EdgePanel.Content>
+                                            <TextBox TextAlignment="Center" Text="{Binding Percent, Mode=TwoWay}">
+                                                <TextBox.InnerRightContent>
+                                                    <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock>
+                                                </TextBox.InnerRightContent>
+                                            </TextBox>
+                                        </EdgePanel.Content>
+                                    </EdgePanel>
+                                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Release Date">
+                                        <EdgePanel.Content>
+                                            <CalendarDatePicker MinWidth="130" SelectedDate="{Binding ReleaseDate}" />
+                                        </EdgePanel.Content>
+                                    </EdgePanel>
+                                    <!-- <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}" Header="Percentage"> -->
+                                    <!--     <TextBox TextAlignment="Center" x:Name="TextBox" Text="{Binding Percent, Mode=TwoWay}"> -->
+                                    <!--         <TextBox.InnerRightContent> -->
+                                    <!--             <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock> -->
+                                    <!--         </TextBox.InnerRightContent> -->
+                                    <!--     </TextBox> -->
+                                    <!-- </HeaderedContainer> -->
+                                    <!-- <HeaderedContainer Theme="{StaticResource InlineHeaderedContainer}"> -->
+                                    <!--     <HeaderedContainer.Header> -->
+                                    <!--         <TextBlock TextWrapping="Wrap">Release Date</TextBlock> -->
+                                    <!--     </HeaderedContainer.Header> -->
+                                    <!--     <CalendarDatePicker MinWidth="130" SelectedDate="{Binding ReleaseDate}" /> -->
+                                    <!-- </HeaderedContainer> -->
                                 </BalancedWrapGrid>
                                 <Button Classes="Aligned" Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="2">
                                     <ui:Icon Source="mdi-window-close" />
