@@ -36,6 +36,7 @@ public static class UIServicesRegistration
             .AddSingleton<IActiveWallet, ActiveWallet>()
             .AddSingleton(sp => new ShellProperties("Angor", content => GetHeader(content, sp)))
             .AddSingleton<IShell, Shell>()
+            .AddSingleton<ISectionActions, SectionActions>()
             .AddSingleton<IWalletRoot, WalletRoot>()
             .AddSingleton<INotificationService>(_ => notificationService)
             .AddSingleton<UIServices>();

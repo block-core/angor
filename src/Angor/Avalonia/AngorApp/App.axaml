@@ -164,13 +164,10 @@
     <Application.DataTemplates>
         <!-- TEMPLATE PRIORITY IS IMPORTANT! -->
         <!-- The first template that matches the type will be used, so first templates in this list are checked for a match before the others -->
-        <DataTemplate DataType="navigation:ISectionScope">
-            <SectionScopeView x:Name="ScopeView" IsBackButtonVisible="False" SectionScope="{Binding}" />
-        </DataTemplate>
         <DataTemplate DataType="ui:IIcon">
             <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
         </DataTemplate>
-        <NamingConventionViewLocator />
+        <DataTypeViewLocator />
         <DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
         <DataTemplate DataType="password:IIcon">
             <avalonia:Icon FontSize="40" VerticalAlignment="Center" Value="{Binding Key}" />
