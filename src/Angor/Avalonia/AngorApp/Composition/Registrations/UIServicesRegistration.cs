@@ -56,12 +56,12 @@ public static class UIServicesRegistration
 
     private static IObservable<object?> GetHeader(object content, IServiceProvider sp)
     {
-        if (content is SectionScope scope)
+        if (content is INavigator navigator)
         {
             var config = sp.GetRequiredService<INetworkConfiguration>();
             var network = config.GetNetwork();
             
-            return scope.Navigator.Content.Select(o => new HeaderViewModel(scope.Navigator.Back, o, network));
+            return navigator.Content.Select(content => new HeaderViewModel(navigator.Back, content, network));
         }
         
         return Observable.Return("");
