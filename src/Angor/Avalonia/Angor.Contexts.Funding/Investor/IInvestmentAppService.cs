@@ -20,5 +20,10 @@ public interface IInvestmentAppService
     Task<Result<IEnumerable<ClaimableTransactionDto>>> GetClaimableTransactions(Guid walletId, ProjectId projectId);
     Task<Result<IEnumerable<ReleaseableTransactionDto>>> GetReleaseableTransactions(Guid walletId, ProjectId projectId);
     Task<Result> ReleaseInvestorTransactions(Guid walletId, ProjectId projectId, IEnumerable<string> investorAddresses);
+    
+    // Methods for Founder/Manage funds
     Task<Result<InvestorProjectRecoveryDto>> GetInvestorProjectRecovery(Guid walletId, ProjectId projectId);
+    Task<Result> RecoverInvestorFunds(Guid walletId, ProjectId projectId, int stageIndex);
+    Task<Result> ReleaseInvestorFunds(Guid walletId, ProjectId projectId, int stageIndex);
+    Task<Result> ClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, int stageIndex);
 }

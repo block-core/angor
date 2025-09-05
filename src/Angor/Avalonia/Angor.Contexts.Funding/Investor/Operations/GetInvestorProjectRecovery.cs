@@ -23,121 +23,77 @@ public static class GetInvestorProjectRecovery
         IInvestorTransactionActions investorTransactionActions
     ) : IRequestHandler<GetInvestorProjectRecoveryRequest, Result<InvestorProjectRecoveryDto>>
     {
-        public async Task<Result<InvestorProjectRecoveryDto>> Handle(GetInvestorProjectRecoveryRequest request, CancellationToken cancellationToken)
+        public Task<Result<InvestorProjectRecoveryDto>> Handle(GetInvestorProjectRecoveryRequest request, CancellationToken cancellationToken)
         {
-            var portfolio = await investmentRepository.GetByWalletId(request.WalletId);
-            if (portfolio.IsFailure)
-                return Result.Failure<InvestorProjectRecoveryDto>(portfolio.Error);
-
-            var projectResult = await projectRepository.Get(request.ProjectId);
-            if (projectResult.IsFailure)
-                return Result.Failure<InvestorProjectRecoveryDto>(projectResult.Error);
-
-            var project = projectResult.Value;
-
-            var record = portfolio.Value.ProjectIdentifiers.FirstOrDefault(p => p.ProjectIdentifier == request.ProjectId.Value);
-            if (record is null)
-                return Result.Failure<InvestorProjectRecoveryDto>("No investment record found for this project and wallet");
-
-            // Load investment transaction info and hex
-            var trxInfo = await indexerService.GetTransactionInfoByIdAsync(record.InvestmentTransactionHash);
-            var trxHex = await indexerService.GetTransactionHexByIdAsync(record.InvestmentTransactionHash);
-            if (trxInfo is null || string.IsNullOrEmpty(trxHex))
-                return Result.Failure<InvestorProjectRecoveryDto>("Investment transaction not found on indexer");
-
-            var transaction = networkConfiguration.GetNetwork().CreateTransaction(trxHex);
+            // TODO: Implement real logic here
+            var now = DateTime.UtcNow;
+            var expiry = now.AddDays(60);
 
             var dto = new InvestorProjectRecoveryDto
             {
                 ProjectIdentifier = request.ProjectId.Value,
-                Name = project.Name,
-                ExpiryDate = project.ExpiryDate,
-                PenaltyDays = project.PenaltyDuration.Days,
+                Name = "Manage Investment (Test Data)",
+                ExpiryDate = expiry,
+                PenaltyDays = 90,
+                CanRecover = true,
+                CanRelease = true,
+                EndOfProject = false,
             };
 
-            long totalSpendable = 0;
-            long totalInPenalty = 0;
-
-            DateTimeOffset? penaltyExpiry = null;
-
-            for (int stageIndex = 0; stageIndex < project.Stages.Count(); stageIndex++)
+            // 1) Not spent (eligible for Recover)
+            dto.Items.Add(new InvestorStageItemDto
             {
-                var outIndex = stageIndex + 2; // skip angor+change
-                var output = trxInfo.Outputs.FirstOrDefault(o => o.Index == outIndex);
-                long amount = output?.Balance ?? 0;
+                StageIndex = 0,
+                Amount = 198_0000,
+                IsSpent = false,
+                Status = "Not Spent",
+                ScriptType = ProjectScriptTypeEnum.Unknown,
+            });
 
-                var item = new InvestorStageItemDto { StageIndex = stageIndex, Amount = amount };
+            // 2) In penalty (not expired)
+            dto.Items.Add(new InvestorStageItemDto
+            {
+                StageIndex = 1,
+                Amount = 594_0000,
+                IsSpent = true,
+                Status = "Penalty, released in 37.1 days",
+                ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty,
+            });
 
-                if (output == null || string.IsNullOrEmpty(output.SpentInTransaction))
-                {
-                    // Not spent
-                    item.IsSpent = false;
-                    item.Status = "Not Spent";
-                    totalSpendable += amount;
-                }
-                else
-                {
-                    item.IsSpent = true;
-                    // Discover script type
-                    var spentInfo = await indexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
-                    var spentInput = spentInfo?.Inputs.FirstOrDefault(i => i.InputTransactionId == record.InvestmentTransactionHash && i.InputIndex == outIndex);
+            // 3) In penalty (expired)
+            dto.Items.Add(new InvestorStageItemDto
+            {
+                StageIndex = 2,
+                Amount = 1_188_0000,
+                IsSpent = true,
+                Status = "Penalty can be released",
+                ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty,
+            });
 
-                    if (spentInput != null)
-                    {
-                        var scriptType = investorTransactionActions.DiscoverUsedScript(project.ToProjectInfo(), transaction, stageIndex, spentInput.WitScript);
-                        item.ScriptType = scriptType.ScriptType;
+            // 4) Spent by founder
+            dto.Items.Add(new InvestorStageItemDto
+            {
+                StageIndex = 3,
+                Amount = 250_0000,
+                IsSpent = true,
+                Status = "Spent by founder",
+                ScriptType = ProjectScriptTypeEnum.Founder,
+            });
 
-                        switch (scriptType.ScriptType)
-                        {
-                            case ProjectScriptTypeEnum.Founder:
-                                item.Status = "Spent by founder";
-                                break;
-                            case ProjectScriptTypeEnum.InvestorNoPenalty:
-                                item.Status = "Spent by investor";
-                                break;
-                            case ProjectScriptTypeEnum.EndOfProject:
-                                item.Status = "End of project";
-                                break;
-                            case ProjectScriptTypeEnum.InvestorWithPenalty:
-                                // Determine remaining days
-                                var recoveryTx = await indexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
-                                if (recoveryTx != null)
-                                {
-                                    var expiry = Utils.UnixTimeToDateTime(recoveryTx.Timestamp).AddDays(project.PenaltyDuration.Days);
-                                    var days = (expiry - DateTime.UtcNow).TotalDays;
-                                    if (days > 0)
-                                    {
-                                        item.Status = $"Penalty, released in {days:0.0} days";
-                                    }
-                                    else
-                                    {
-                                        item.Status = "Penalty can be released";
-                                    }
-                                    penaltyExpiry ??= expiry;
-                                }
-                                totalInPenalty += amount;
-                                break;
-                            default:
-                                item.Status = "Unknown";
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        item.Status = "Spent";
-                    }
-                }
+            // 5) Spent by investor (unfunded release)
+            dto.Items.Add(new InvestorStageItemDto
+            {
+                StageIndex = 4,
+                Amount = 350_0000,
+                IsSpent = true,
+                Status = "Spent by investor",
+                ScriptType = ProjectScriptTypeEnum.InvestorNoPenalty,
+            });
 
-                dto.Items.Add(item);
-            }
+            dto.TotalSpendable = dto.Items.Where(i => !i.IsSpent).Sum(i => i.Amount);
+            dto.TotalInPenalty = dto.Items.Where(i => i.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty).Sum(i => i.Amount);
 
-            dto.TotalSpendable = totalSpendable;
-            dto.TotalInPenalty = totalInPenalty;
-            dto.CanRecover = dto.Items.Any(i => !i.IsSpent);
-            dto.EndOfProject = project.ExpiryDate < DateTime.UtcNow;
-            dto.CanRelease = totalInPenalty > 0 && penaltyExpiry.HasValue && DateTime.UtcNow >= penaltyExpiry.Value;
-
-            return Result.Success(dto);
+            return Task.FromResult(Result.Success(dto));
         }
     }
 }
