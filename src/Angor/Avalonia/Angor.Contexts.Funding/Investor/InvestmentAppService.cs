@@ -71,8 +71,9 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     }
 
     // TODO: implement properly with Request and Handler 
-    public async Task<Result<InvestorStatsDto>> GetInvestorStats(Guid idValue)
+
+    public Task<Result<InvestorProjectRecoveryDto>> GetInvestorProjectRecovery(Guid walletId, ProjectId projectId)
     {
-        return new InvestorStatsDto() { FundedProjects = 1, ProjectsInRecovery = 1, RecoveredToPenalty = 123, TotalInvested = 1234, };
+        return mediator.Send(new Operations.GetInvestorProjectRecovery.GetInvestorProjectRecoveryRequest(walletId, projectId));
     }
 }

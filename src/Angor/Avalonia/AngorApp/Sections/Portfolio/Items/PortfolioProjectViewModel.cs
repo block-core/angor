@@ -45,7 +45,7 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
             .DisposeWith(disposable);
 
         InvestmentStatus = projectDto.InvestmentStatus;
-        GoToManageFunds = ReactiveCommand.CreateFromTask(() => navigator.Go(() => new ManageInvestorProjectViewModel())).Enhance().DisposeWith(disposable);
+        GoToManageFunds = ReactiveCommand.CreateFromTask(() => navigator.Go(() => new ManageInvestorProjectViewModel(new ProjectId(projectDto.Id), investmentAppService, uiServices))).Enhance().DisposeWith(disposable);
     }
 
     public string Name => projectDto.Name;
