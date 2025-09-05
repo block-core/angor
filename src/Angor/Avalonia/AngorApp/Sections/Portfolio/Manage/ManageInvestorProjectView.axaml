@@ -2,11 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:c="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:co="clr-namespace:AngorApp.UI.Controls"
              xmlns:manage="clr-namespace:AngorApp.Sections.Portfolio.Manage"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             mc:Ignorable="d" d:DesignWidth="500"
+             mc:Ignorable="d" d:DesignWidth="700"
              x:Class="AngorApp.Sections.Portfolio.Manage.ManageInvestorProjectView" x:DataType="manage:IManageInvestorProjectViewModel">
 
     <Design.DataContext>
@@ -15,7 +14,7 @@
 
     <co:PageContainer>
         <StackPanel Classes="BigGap">
-            <Card Theme="{StaticResource WideCard}" Header="Manage Investment" Subheader="Manage investments">
+            <Card Theme="{StaticResource WideCard}" Header="Manage Investment" Subheader="{Binding Project.Name}">
                 <Card.HeaderStartContent>
                     <ui:Icon Source="fa-list-check" />
                 </Card.HeaderStartContent>
@@ -26,27 +25,16 @@
                     </UniformGrid>
                 </Card.HeaderEndContent>
             </Card>
-            <CardGrid ColumnSpacing="20" RowSpacing="20" >
-                <CardGrid.Styles>
-                    <Style Selector="TextBlock">
-                        <Setter Property="TextWrapping" Value="Wrap" />
-                        <Setter Property="TextAlignment" Value="Center" />
-                    </Style>
-                    <Style Selector="Card">
-                        <Setter Property="Theme" Value="{StaticResource ItemCard}" />
-                    </Style>
-                </CardGrid.Styles>
-                <CardGrid.ItemsSource>
-                    <c:ArrayList>
-                        <Card Header="Total Funds" Content="{Binding TotalFunds.DecimalString}" />
-                        <Card Header="Expiry Date" Content="{Binding ExpiryDate, Converter={x:Static co:AngorConverters.HumanizeDateTime}}" />
-                        <Card Header="Penalty Period" Content="{Binding PenaltyPeriod.TotalDays, StringFormat='{}{0} Days'}" />
-                        <Card Header="Transaction">
-                            <Button Command="{Binding ViewTransaction}" FontSize="{StaticResource FontSizeNormal}" Content="View" />
-                        </Card>
-                    </c:ArrayList>
-                </CardGrid.ItemsSource>
-            </CardGrid>
+            <BalancedWrapGrid MinItemWidth="200">
+                <Card Header="Total Funds" Theme="{StaticResource LeftItemCard}" Subheader="{Binding Project.TotalFunds.DecimalString}" />
+                <Card Header="Expiry Date" Theme="{StaticResource LeftItemCard}" Subheader="{Binding Project.ExpiryDate, Converter={x:Static co:AngorConverters.HumanizeDateTime}}" />
+                <Card Header="Penalty Period" Theme="{StaticResource LeftItemCard}" Subheader="{Binding Project.PenaltyPeriod.TotalDays, StringFormat='{}{0} Days'}" />
+                <Card Header="Transaction" Theme="{StaticResource LeftItemCard}">
+                    <Card.Subheader>
+                        <Button Command="{Binding ViewTransaction}" FontSize="{StaticResource FontSizeSmall}" Content="View" />
+                    </Card.Subheader>
+                </Card>
+            </BalancedWrapGrid>
             <Card>
                 <SlimDataGrid ItemsSource="{Binding Items}">
                     <SlimDataGrid.Columns>

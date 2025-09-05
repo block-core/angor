@@ -9,4 +9,13 @@ public interface IManageInvestorProjectViewModel
     public DateTime ExpiryDate { get; }
     public TimeSpan PenaltyPeriod { get; }
     public IEnumerable<IInvestorProjectItem> Items { get; }
+    public IInvestedProject Project { get; }
+}
+
+public interface IInvestedProject
+{
+    public IAmountUI TotalFunds { get; }
+    public DateTime ExpiryDate { get; }
+    public TimeSpan PenaltyPeriod { get; }
+    public string Name { get; }
 }

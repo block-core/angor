@@ -58,7 +58,7 @@
                 <ControlTemplate>
                     <Border Classes="Card">
                         <StackPanel Orientation="Horizontal" Spacing="20">
-                            <Viewbox>
+                            <Viewbox IsVisible="{TemplateBinding HeaderStartContent, Converter={x:Static ObjectConverters.IsNotNull}}">
                                 <ContentControl ContentTemplate="{TemplateBinding HeaderStartContentTemplate}" Content="{TemplateBinding HeaderStartContent}" />
                             </Viewbox>
                             <StackPanel Spacing="5">

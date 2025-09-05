@@ -16,4 +16,6 @@ public class ManageInvestorProjectViewModelDesign : IManageInvestorProjectViewMo
         new InvestorProjectItemDesign(),
         new InvestorProjectItemDesign(),
     };
+
+    public IInvestedProject Project { get; } = new InvestedProjectDesign();
 }
