@@ -5,7 +5,7 @@
              xmlns:co="clr-namespace:AngorApp.UI.Controls"
              xmlns:manage="clr-namespace:AngorApp.Sections.Portfolio.Manage"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             mc:Ignorable="d" d:DesignWidth="700"
+             mc:Ignorable="d" d:DesignWidth="500"
              x:Class="AngorApp.Sections.Portfolio.Manage.ManageInvestorProjectView" x:DataType="manage:IManageInvestorProjectViewModel">
 
     <Design.DataContext>
@@ -46,14 +46,39 @@
                 </Card>
             </BalancedWrapGrid>
             <Card>
-                <SlimDataGrid ItemsSource="{Binding Items}">
-                    <SlimDataGrid.Columns>
-                        <Column Header="Stage" Binding="{Binding Stage}" />
-                        <Column Header="Amount" Binding="{Binding Amount.DecimalString}" />
-                        <Column Header="Status" Binding="{Binding Status}" />
-                        <Column Header="Actions" Binding="{Binding}" CellTemplate="{StaticResource ActionsTemplate}" />
-                    </SlimDataGrid.Columns>
-                </SlimDataGrid>
+                <ResponsivePresenter Breakpoint="600">
+                    <ResponsivePresenter.Narrow>
+                        <ItemsControl Classes="ShowEmptyContent" Empty.Content="No release items found" ItemsSource="{Binding Items}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Classes="SmallGap" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Card Theme="{StaticResource WideCard}" Header="{ItemIndex StartFromOne=True, StringFormat='Investment {0}'}">
+                                        <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
+                                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Stage:" Content="{Binding  Stage}" />
+                                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Amount:" Content="{Binding Amount.DecimalString}" />
+                                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Status:" Content="{Binding Status}" />
+                                            <ContentControl HorizontalAlignment="Center" Content="{Binding}" ContentTemplate="{StaticResource ActionsTemplate}" />
+                                        </StackPanel>
+                                    </Card>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ResponsivePresenter.Narrow>
+                    <ResponsivePresenter.Wide>
+                        <SlimDataGrid ItemsSource="{Binding Items}">
+                            <SlimDataGrid.Columns>
+                                <Column Header="Stage" Binding="{Binding Stage}" />
+                                <Column Header="Amount" Binding="{Binding Amount.DecimalString}" />
+                                <Column Header="Status" Binding="{Binding Status}" />
+                                <Column Header="Actions" Binding="{Binding}" CellTemplate="{StaticResource ActionsTemplate}" />
+                            </SlimDataGrid.Columns>
+                        </SlimDataGrid>
+                    </ResponsivePresenter.Wide>
+                </ResponsivePresenter>
             </Card>
         </StackPanel>
     </co:PageContainer>
