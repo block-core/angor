@@ -20,9 +20,7 @@
                             <TextBox.InnerRightContent>
                                 <Button Margin="2" Name="PART_Button"
                                         Theme="{StaticResource ThinTransparentButton}"
-                                        Padding="8 5"
-                                        Height="{DynamicResource TextControlThemeMinHeight}"
-                                        Width="{DynamicResource TextControlThemeMinHeight}"
+                                        Padding="5 5"
                                         Grid.Column="1"
                                         Focusable="False">
                                     <Button.Content>
