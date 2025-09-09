@@ -7,16 +7,38 @@
              xmlns:mainView="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.MainView"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.FounderProjectDetailsView" x:DataType="pr:IFounderProjectDetailsViewModel">
-    
+
     <Design.DataContext>
         <pr:FounderProjectDetailsViewModelDesign />
     </Design.DataContext>
-    
+
     <controls:PageContainer>
         <ScrollViewer>
             <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading Project Details...">
                 <StackPanel Classes="BigGap" DataContext="{Binding ProjectMain}">
-                    <controls:ProjectCard Banner="{Binding Banner}" Avatar="{Binding Avatar}" ProjectName="{Binding Name}" ShortDescription="{Binding ShortDescription}" />
+                    <Panel>
+                        <controls:ProjectCard Banner="{Binding Banner}" Avatar="{Binding Avatar}" ProjectName="{Binding Name}" ShortDescription="{Binding ShortDescription}" />
+                        <Badge VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="20" Tag="{Binding Status}">
+                            <Badge.Styles>
+                                <Style Selector="Badge[Tag=Funding]">
+                                    <Setter Property="Content" Value="Funding" />
+                                    <Setter Property="Color" Value="DeepSkyBlue" />
+                                </Style>
+                                <Style Selector="Badge[Tag=Started]">
+                                    <Setter Property="Content" Value="Started" />
+                                    <Setter Property="Color" Value="Orange" />
+                                </Style>
+                                <Style Selector="Badge[Tag=Failed]">
+                                    <Setter Property="Content" Value="Failed" />
+                                    <Setter Property="Color" Value="Red" />
+                                </Style>
+                                <Style Selector="Badge[Tag=Succeeded]">
+                                    <Setter Property="Content" Value="Succeeded" />
+                                    <Setter Property="Color" Value="ForestGreen" />
+                                </Style>
+                            </Badge.Styles>
+                        </Badge>
+                    </Panel>
                     <mainView:ProjectMainView />
                 </StackPanel>
             </Loading>

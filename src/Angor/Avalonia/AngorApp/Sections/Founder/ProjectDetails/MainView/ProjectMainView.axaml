@@ -38,7 +38,6 @@
     </UserControl.Resources>
 
     <StackPanel Classes="BigGap">
-        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding Status}" />
         <ContentControl Content="{Binding}" Tag="{Binding Status}">
             <ContentControl.Styles>
                 <Style Selector="ContentControl[Tag=Failed]">
