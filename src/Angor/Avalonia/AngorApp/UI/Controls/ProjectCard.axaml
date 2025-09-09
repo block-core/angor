@@ -9,15 +9,8 @@
         mc:Ignorable="d">
 
   <Design.PreviewWith>
-    <ContentControl>
-      <ContentControl.DataContext>
-        <mf:ProjectViewModelDesign Name="Sample Project"
-                                   ShortDescription="Sample project with long description bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah"
-                                   Banner="https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"
-                                   Avatar="https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg" />
-      </ContentControl.DataContext>
-      <controls:ProjectCard />
-    </ContentControl>
+    <controls:ProjectCard Width="500" Avatar="https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg" 
+                          Banner="https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg" ShortDescription="Sample project with long description bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah" />
   </Design.PreviewWith>
 
   <Style Selector="controls|ProjectCard">
