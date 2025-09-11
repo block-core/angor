@@ -6,10 +6,22 @@
 
         <SolidColorBrush x:Key="HeaderBrush" Color="{DynamicResource SystemBaseHighColor}" />
         <SolidColorBrush x:Key="SubheaderBrush" Color="{DynamicResource SystemBaseMediumHighColor}" />
-        
+
+        <ControlTheme x:Key="HugeFontContentControl"
+                      TargetType="ContentControl">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeHuge}" />
+        </ControlTheme>
+        <ControlTheme x:Key="LargeFontContentControl"
+                      TargetType="ContentControl">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeLarge}" />
+        </ControlTheme>
         <ControlTheme x:Key="BigFontContentControl"
                       TargetType="ContentControl">
             <Setter Property="FontSize" Value="{StaticResource FontSizeLarge}" />
+        </ControlTheme>
+        <ControlTheme x:Key="NormalFontContentControl"
+                      TargetType="ContentControl">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
         </ControlTheme>
         <ControlTheme x:Key="SmallFontContentControl"
                       TargetType="ContentControl">

@@ -9,7 +9,7 @@ public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
     public ProjectDetailsViewModelDesign()
     {
         Picture = new Uri("https://images.pexels.com/photos/998641/pexels-photo-998641.jpeg?auto=compress&cs=tinysrgb&w=600");
-        Icon = new Uri("https://images.pexels.com/photos/998641/pexels-photo-998641.jpeg?auto=compress&cs=tinysrgb&w=600");
+        Icon = new Uri("https://i.nostr.build/3bjqfqHOOBFWckk7.png");
     }
 
     public object Icon { get; }
