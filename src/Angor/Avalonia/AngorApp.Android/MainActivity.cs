@@ -8,7 +8,7 @@ using Avalonia.Android;
 namespace AngorApp.Android;
 
 [Activity(
-    Label = "AngorApp.Android",
+    Label = "Angor",
     Theme = "@style/MyTheme.NoActionBar",
     Icon = "@drawable/icon",
     MainLauncher = true,

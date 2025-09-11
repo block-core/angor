@@ -7,7 +7,8 @@
              xmlns:fundingStructure="clr-namespace:AngorApp.Sections.Founder.CreateProject.FundingStructure"
              xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
              xmlns:p="clr-namespace:AngorApp.Sections.Founder.CreateProject.Preview"
-             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="800"
+             Container.Name="Root" Container.Sizing="Width"
              x:Class="AngorApp.Sections.Founder.CreateProject.CreateProjectView"
              x:DataType="cp:ICreateProjectViewModel">
 
@@ -27,27 +28,29 @@
 
     <UserControl.Styles>
         <StyleInclude Source="Common.axaml" />
+
     </UserControl.Styles>
 
     <Loading IsLoading="{Binding Create.IsExecuting^}" LoadingText="Creating project...">
-        <Grid ColumnDefinitions="{OnFormFactor Desktop='5* 3*', Mobile='*'}" RowSpacing="10" ColumnSpacing="10">
-            <ScrollViewer Grid.Column="1">
-                <p:PreviewView DockPanel.Dock="Right" IsVisible="{OnFormFactor Desktop=True}" />
+        <DockPanel HorizontalSpacing="10">
+            <ScrollViewer DockPanel.Dock="Right">
+                <ScrollViewer.Styles>
+                    <ContainerQuery Name="Root" Query="max-width:800">
+                        <Style Selector="p|PreviewView#PreviewView">
+                            <Setter Property="IsVisible" Value="False" />
+                        </Style>
+                    </ContainerQuery>
+                </ScrollViewer.Styles>
+                <p:PreviewView x:Name="PreviewView" Width="400" />
             </ScrollViewer>
             <ScrollViewer>
-                <ScrollViewer.Styles>
-                    <Style Selector="CardGrid">
-                        <Setter Property="RowSpacing" Value="20" />
-                        <Setter Property="ColumnSpacing" Value="20" />
-                    </Style>
-                </ScrollViewer.Styles>
                 <StackPanel Spacing="10">
                     <profile:ProfileView DataContext="{Binding ProfileViewModel}" />
                     <fundingStructure:FundingStructure DataContext="{Binding FundingStructureViewModel}" />
                     <stages:StagesView DataContext="{Binding StagesViewModel}" />
                 </StackPanel>
             </ScrollViewer>
-        </Grid>
+        </DockPanel>
     </Loading>
 
 </UserControl>

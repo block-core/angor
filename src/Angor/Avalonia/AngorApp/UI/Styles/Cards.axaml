@@ -7,13 +7,34 @@
         <SolidColorBrush x:Key="HeaderBrush" Color="{DynamicResource SystemBaseHighColor}" />
         <SolidColorBrush x:Key="SubheaderBrush" Color="{DynamicResource SystemBaseMediumHighColor}" />
 
+        <ControlTheme x:Key="HugeFontContentControl"
+                      TargetType="ContentControl">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeHuge}" />
+        </ControlTheme>
+        <ControlTheme x:Key="LargeFontContentControl"
+                      TargetType="ContentControl">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeLarge}" />
+        </ControlTheme>
+        <ControlTheme x:Key="BigFontContentControl"
+                      TargetType="ContentControl">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeLarge}" />
+        </ControlTheme>
+        <ControlTheme x:Key="NormalFontContentControl"
+                      TargetType="ContentControl">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        </ControlTheme>
+        <ControlTheme x:Key="SmallFontContentControl"
+                      TargetType="ContentControl">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+        </ControlTheme>
+
         <ControlTheme x:Key="{x:Type Card}"
                       TargetType="Card"
                       BasedOn="{StaticResource {x:Type Card}}">
             <Setter Property="HeaderStartContentTemplate" Value="{StaticResource BigIcon}" />
             <Setter Property="Padding" Value="20" />
         </ControlTheme>
-        
+
         <ControlTheme x:Key="AngorHighlightedContentCard"
                       TargetType="Card"
                       BasedOn="{StaticResource HighlightedContentCard}">
@@ -41,6 +62,47 @@
                 </ControlTheme>
             </Setter>
         </ControlTheme>
+
+        <ControlTheme x:Key="LeftItemCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
+            <Setter Property="HeaderTheme" Value="{StaticResource SmallFontContentControl}" />
+            <Setter Property="SubheaderTheme" Value="{StaticResource BigFontContentControl}" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Classes="Card">
+                        <StackPanel Orientation="Horizontal" Spacing="20">
+                            <Viewbox IsVisible="{TemplateBinding HeaderStartContent, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                <ContentControl ContentTemplate="{TemplateBinding HeaderStartContentTemplate}" Content="{TemplateBinding HeaderStartContent}" />
+                            </Viewbox>
+                            <StackPanel Spacing="5">
+                                <ContentControl Theme="{TemplateBinding HeaderTheme}" ContentTemplate="{TemplateBinding HeaderTemplate}" Content="{TemplateBinding Header}" />
+                                <ContentControl Theme="{TemplateBinding SubheaderTheme}" VerticalAlignment="Bottom" ContentTemplate="{TemplateBinding SubheaderTemplate}" Content="{TemplateBinding Subheader}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+        
+        <ControlTheme x:Key="CompactLeftItemCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
+            <Setter Property="HeaderTheme" Value="{StaticResource SmallFontContentControl}" />
+            <Setter Property="SubheaderTheme" Value="{StaticResource SmallFontContentControl}" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Classes="CompactCard" Padding="1">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Viewbox>
+                                <ContentControl ContentTemplate="{TemplateBinding HeaderStartContentTemplate}" Content="{TemplateBinding HeaderStartContent}" />
+                            </Viewbox>
+                            <StackPanel Spacing="5" VerticalAlignment="Center">
+                                <ContentControl Theme="{TemplateBinding HeaderTheme}" ContentTemplate="{TemplateBinding HeaderTemplate}" Content="{TemplateBinding Header}" />
+                                <ContentControl Theme="{TemplateBinding SubheaderTheme}" VerticalAlignment="Bottom" ContentTemplate="{TemplateBinding SubheaderTemplate}" Content="{TemplateBinding Subheader}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+
 
         <ControlTheme x:Key="InfoCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
             <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -157,14 +219,38 @@
         </ControlTheme>
     </Styles.Resources>
 
-    
+
     <Style Selector="Card.Transparent">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Padding" Value="0" />
     </Style>
 
     <Design.PreviewWith>
-        <StackPanel Width="500" Spacing="20" Margin="20">
+        <StackPanel Width="400" Spacing="20" Margin="20">
+            <Card HorizontalAlignment="Center" Theme="{StaticResource CompactLeftItemCard}" HeaderStartContentTemplate="{StaticResource RegularIcon}"
+                  Header="Funded Projects" Subheader="123">
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                </Card.HeaderStartContent>
+            </Card>
+            <Card HorizontalAlignment="Center" Theme="{StaticResource LeftItemCard}" HeaderStartContentTemplate="{StaticResource RegularIcon}"
+                  Header="Funded Projects" Subheader="123">
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                </Card.HeaderStartContent>
+            </Card>
+            <Card HorizontalAlignment="Center" Theme="{StaticResource LeftItemCard}" HeaderStartContentTemplate="{StaticResource RegularIcon}"
+                  Header="Total Invested" Subheader="123">
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                </Card.HeaderStartContent>
+            </Card>
+            <Card HorizontalAlignment="Center" Theme="{StaticResource LeftItemCard}" HeaderStartContentTemplate="{StaticResource RegularIcon}"
+                  Header="Recovered to penalty" Subheader="123">
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="svg:/Assets/portfolio.svg" />
+                </Card.HeaderStartContent>
+            </Card>
             <Card Header="Card" Height="200" Subheader="Subheader">
                 <Card.DataContext>
                     <MyViewModel Left="LEFT" />

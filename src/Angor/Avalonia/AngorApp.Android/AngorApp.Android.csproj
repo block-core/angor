@@ -25,9 +25,9 @@
         <AspectInjectorEnabled>false</AspectInjectorEnabled>
     </PropertyGroup>
     <ItemGroup>
-        <AndroidResource Include="Icon.png">
-            <Link>Resources\drawable\Icon.png</Link>
-        </AndroidResource>
+        <!-- Android app icon with day/night variants -->
+        <AndroidResource Include="Resources\drawable\icon.png" />
+        <AndroidResource Include="Resources\drawable-night\icon.png" />
     </ItemGroup>
 
     <ItemGroup>

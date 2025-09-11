@@ -2,7 +2,7 @@ using Blockcore.Networks;
 
 namespace AngorApp.Sections.Shell;
 
-internal class NetworkViewModel : INetworkViewModel
+public class NetworkViewModel : INetworkViewModel
 {
     public NetworkViewModel(Blockcore.Networks.Network network)
     {

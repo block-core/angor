@@ -26,16 +26,16 @@
         </p:PortfolioProjectDesign>
     </Design.DataContext>
 
-    <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
-        <StackPanel Classes="SmallGap">
-            <FlexBox AlignItems="Center" JustifyContent="SpaceBetween" Gap="20" Wrap="Wrap">
-                <av:AdvancedImage FlexBox.Grow="2" Height="150" Stretch="UniformToFill" CornerRadius="20" Source="{Binding LogoUri}" />
-                <TextBlock FlexBox.Grow="1" Text="{Binding Name}" Classes="SizeBig" />
-                <items:ProgressView FlexBox.Grow="2" />
-            </FlexBox>
+    <Border Classes="Card">
+        <StackPanel Classes="BigGap">
+            <StackPanel Classes="BigGap">
+                <TextBlock Text="{Binding Name}" Classes="SizeBig Center" />
+                <av:AdvancedImage Height="150" Stretch="UniformToFill" CornerRadius="10" Source="{Binding LogoUri}" />
+                <items:ProgressView />
+            </StackPanel>
             <BalancedWrapGrid MinItemWidth="230" DockPanel.Dock="Top">
-                <Border Classes="Card" Padding="10">
-                    <UniformGrid Grid.IsSharedSizeScope="True" Columns="1" VerticalAlignment="Top" RowSpacing="10">
+                <Border Classes="CardAlt" Padding="10">
+                    <UniformGrid Grid.IsSharedSizeScope="True" Columns="1" VerticalAlignment="Center" RowSpacing="10">
                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="My Investment" EndContent="{Binding Invested.DecimalString}" />
                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Investment Status">
                             <EdgePanel.EndContent>
@@ -64,21 +64,19 @@
                         </EdgePanel>
                     </UniformGrid>
                 </Border>
-                <Border Classes="Card" Padding="10">
-                    <UniformGrid Columns="1" VerticalAlignment="Top" Grid.IsSharedSizeScope="True" RowSpacing="10">
+                <Border Classes="CardAlt" Padding="10">
+                    <UniformGrid Columns="1" VerticalAlignment="Center" Grid.IsSharedSizeScope="True" RowSpacing="10">
                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}"  StartContent="In Recovery" EndContent="{Binding InRecovery.DecimalString}" />
                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Recovery Status" EndContent="None" />
                     </UniformGrid>
                 </Border>
             </BalancedWrapGrid>
-            <MinMaxUniformGrid>
-                <ReactiveIconButton Command="{Binding GoToManageFunds}" Content="Manage funds">
-                    <ReactiveIconButton.Icon>
-                        <ui:Icon Source="mdi-cog" />
-                    </ReactiveIconButton.Icon>
-                </ReactiveIconButton>
-            </MinMaxUniformGrid>
+            <ReactiveIconButton HorizontalAlignment="Right" Command="{Binding GoToManageFunds}" Content="Manage funds">
+                <ReactiveIconButton.Icon>
+                    <ui:Icon Source="mdi-cog" />
+                </ReactiveIconButton.Icon>
+            </ReactiveIconButton>
         </StackPanel>
-    </OverlayBorder>
+    </Border>
 
 </UserControl>

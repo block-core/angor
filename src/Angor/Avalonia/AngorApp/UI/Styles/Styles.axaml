@@ -64,4 +64,8 @@
         <Setter Property="MaxColumnWidth" Value="450" />
     </Style>
     
+    <Style Selector="Frame">
+        <Setter Property="IsBackButtonVisible" Value="False" />
+    </Style>
+
 </Styles>

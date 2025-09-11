@@ -31,77 +31,63 @@
                     <ui:Icon Source="mdi-check-all" />
                 </IconButton.Icon>
             </IconButton>
-            <Panel Container.Name="RootPanel" Container.Sizing="Width">
-                <Panel.Styles>
-                    <ContainerQuery Name="RootPanel" Query="min-width:0">
-                        <Style Selector="SlimDataGrid">
-                            <Setter Property="IsVisible" Value="False" />
-                        </Style>
-                        <Style Selector="ItemsControl#PlainList">
-                            <Setter Property="IsVisible" Value="True" />
-                        </Style>
-                    </ContainerQuery>
-                    <ContainerQuery Name="RootPanel" Query="min-width:600">
-                        <Style Selector="SlimDataGrid">
-                            <Setter Property="IsVisible" Value="True" />
-                        </Style>
-                        <Style Selector="ItemsControl#PlainList">
-                            <Setter Property="IsVisible" Value="False" />
-                        </Style>
-                    </ContainerQuery>
-                </Panel.Styles>
-                <SlimDataGrid HeaderPadding="10 0 0 0" Margin="0 20 0 0" ItemsSource="{Binding Transactions}">
-                    <SlimDataGrid.Styles>
-                        <Style Selector="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center" />
-                        </Style>
-                    </SlimDataGrid.Styles>
-                    <SlimDataGrid.RowTheme>
-                        <ControlTheme TargetType="{x:Type Row}" BasedOn="{StaticResource {x:Type Row}}">
-                            <Setter Property="Padding" Value="15 12" />
-                            <Setter Property="CornerRadius" Value="10"></Setter>
-                            <Setter Property="Margin" Value="5" />
-                            <Setter Property="BorderBrush" Value="#3FFFFFFF" />
-                            <Setter Property="BorderThickness" Value="1" />
-                        </ControlTheme>
-                    </SlimDataGrid.RowTheme>
-                    <SlimDataGrid.Columns>
-                        <Column Header="TIME ARRIVED" Binding="{Binding Arrived, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
-                        <Column Header="TIME APPROVED" Binding="{Binding Approved, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
-                        <Column Header="TIME RELEASED" Binding="{Binding Released, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
-                        <Column Binding="{Binding}">
-                            <Column.CellTemplate>
-                                <DataTemplate>
-                                    <IconButton Command="{Binding Release}" HorizontalAlignment="Right" Content="Release">
-                                        <IconButton.Icon>
-                                            <ui:Icon Source="mdi-check" />
-                                        </IconButton.Icon>
-                                    </IconButton>
-                                </DataTemplate>
-                            </Column.CellTemplate>
-                        </Column>
-                    </SlimDataGrid.Columns>
-                </SlimDataGrid>
-                <ItemsControl Classes="ShowEmptyContent" Empty.Content="Nothing to show" x:Name="PlainList" ItemsSource="{Binding Transactions}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Classes="SmallGap" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Card Theme="{StaticResource WideCard}" Header="{ItemIndex StartFromOne=True, StringFormat='Investment {0}'}">
-                                <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
-                                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Arrived:" Content="{Binding Arrived, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
-                                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Approved:" Content="{Binding Approved, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
-                                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Released:" Content="{Binding Released, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
-                                    <Button HorizontalAlignment="Right" Command="{Binding Release}" Content="Release" IsVisible="{Binding $self.IsEffectivelyEnabled}" />
-                                </StackPanel>
-                            </Card>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </Panel>
+            <ResponsivePresenter Breakpoint="600">
+                <ResponsivePresenter.Narrow>
+                    <ItemsControl Classes="ShowEmptyContent" Empty.Content="No release items found" ItemsSource="{Binding Transactions}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Classes="SmallGap" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Card Theme="{StaticResource WideCard}" Header="{ItemIndex StartFromOne=True, StringFormat='Investment {0}'}">
+                                    <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
+                                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Arrived:" Content="{Binding Arrived, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Approved:" Content="{Binding Approved, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Released:" Content="{Binding Released, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                                        <Button HorizontalAlignment="Right" Command="{Binding Release}" Content="Release" IsVisible="{Binding $self.IsEffectivelyEnabled}" />
+                                    </StackPanel>
+                                </Card>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ResponsivePresenter.Narrow>
+                <ResponsivePresenter.Wide>
+                    <SlimDataGrid HeaderPadding="10 0 0 0" Margin="0 20 0 0" Empty.Content="No release items found" ItemsSource="{Binding Transactions}">
+                        <SlimDataGrid.Styles>
+                            <Style Selector="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                            </Style>
+                        </SlimDataGrid.Styles>
+                        <SlimDataGrid.RowTheme>
+                            <ControlTheme TargetType="{x:Type Row}" BasedOn="{StaticResource {x:Type Row}}">
+                                <Setter Property="Padding" Value="15 12" />
+                                <Setter Property="CornerRadius" Value="10"></Setter>
+                                <Setter Property="Margin" Value="5" />
+                                <Setter Property="BorderBrush" Value="#3FFFFFFF" />
+                                <Setter Property="BorderThickness" Value="1" />
+                            </ControlTheme>
+                        </SlimDataGrid.RowTheme>
+                        <SlimDataGrid.Columns>
+                            <Column Header="TIME ARRIVED" Binding="{Binding Arrived, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                            <Column Header="TIME APPROVED" Binding="{Binding Approved, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                            <Column Header="TIME RELEASED" Binding="{Binding Released, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                            <Column Binding="{Binding}">
+                                <Column.CellTemplate>
+                                    <DataTemplate>
+                                        <IconButton Command="{Binding Release}" HorizontalAlignment="Right" Content="Release">
+                                            <IconButton.Icon>
+                                                <ui:Icon Source="mdi-check" />
+                                            </IconButton.Icon>
+                                        </IconButton>
+                                    </DataTemplate>
+                                </Column.CellTemplate>
+                            </Column>
+                        </SlimDataGrid.Columns>
+                    </SlimDataGrid>
+                </ResponsivePresenter.Wide>
+            </ResponsivePresenter>
         </DockPanel>
     </OverlayBorder>
 </UserControl>

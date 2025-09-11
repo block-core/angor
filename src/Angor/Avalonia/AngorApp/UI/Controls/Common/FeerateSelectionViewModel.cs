@@ -7,7 +7,7 @@ using Zafiro.UI;
 
 namespace AngorApp.UI.Controls.Common;
 
-internal partial class FeerateSelectionViewModel : ReactiveValidationObject, IValidatable
+public partial class FeerateSelectionViewModel : ReactiveValidationObject, IValidatable
 {
     private readonly UIServices services;
     [Reactive] private IFeeCalculator? feeCalculator;

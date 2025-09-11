@@ -5,86 +5,76 @@
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="700"
+             mc:Ignorable="d" d:DesignWidth="500"
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
         <dt:ProjectDetailsViewModelDesign />
     </Design.DataContext>
 
-    <controls:PageContainer>
-        <ScrollViewer>
-            <StackPanel Classes="BigGap">
-
-                <!-- Project Header with Banner -->
-                <StackPanel DockPanel.Dock="Top" Spacing="0">
-                    <!-- Project Banner -->
-
-                    <Border Height="300" Margin="0,0,0,20" CornerRadius="10" ClipToBounds="True">
-                        <Panel>
-                            <av:AdvancedImage Stretch="UniformToFill" Source="{Binding Project.Banner}" />
-                            <Border Background="#30000000" />
-
-                            <!-- Circular Profile Picture (half on banner) -->
-                            <Border Width="120"
-                                    Height="120"
-                                    CornerRadius="60"
-                                    Background="White"
-                                    Padding="6"
-                                    VerticalAlignment="Bottom"
-                                    HorizontalAlignment="Left"
-                                    Margin="10">
-                                <av:AdvancedImage Stretch="UniformToFill"
-                                                  Source="{Binding Project.Avatar}"
-                                                  CornerRadius="54" />
-                            </Border>
-                        </Panel>
-                    </Border>
-
-                    <!-- Project Information Below Banner -->
-                    <Card Padding="20" Margin="0,0,0,0" Background="{DynamicResource SystemChromeLowColor}">
-                        <StackPanel Classes="BigGap">
-                            <!-- Project Details -->
-                            <StackPanel Grid.Column="0" Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <TextBlock Text="{Binding Project.Name}"
-                                           Classes="SizeBig"
-                                           FontWeight="Bold"
-                                           TextWrapping="Wrap"
-                                           TextAlignment="Left" />
-                                <TextBlock Text="{Binding Project.ShortDescription}"
-                                           TextWrapping="Wrap"
-                                           Opacity="0.8"
-                                           TextAlignment="Left" />
-                            </StackPanel>
-
-                            <!-- Target Amount -->
+    <ScrollViewer>
+        <StackPanel Container.Name="Root" Container.Sizing="Width">
+            <av:AdvancedImage Stretch="UniformToFill" Source="{Binding Project.Banner}">
+                <av:AdvancedImage.Styles>
+                    <ContainerQuery Name="Root" Query="min-width:0 and max-width:500">
+                        <Style Selector="av|AdvancedImage">
+                            <Setter Property="Height" Value="180" />
+                        </Style>
+                    </ContainerQuery>
+                    <ContainerQuery Name="Root" Query="min-width:501">
+                        <Style Selector="av|AdvancedImage">
+                            <Setter Property="Height" Value="250" />
+                        </Style>
+                    </ContainerQuery>
+                </av:AdvancedImage.Styles>
+            </av:AdvancedImage>
+            <controls:PageContainer ClipToBounds="False">
+                <StackPanel Classes="BigGap" Margin="0 -50 0 0">
+                    <Border Classes="Card" Padding="30">
+                        <Border.Styles>
+                            <ContainerQuery Name="Root" Query="min-width:0 and max-width:500">
+                                <Style Selector="av|AdvancedImage">
+                                    <Setter Property="DockPanel.Dock" Value="Top" />
+                                    <Setter Property="Margin" Value="0 -100 0 0"></Setter>
+                                </Style>
+                            </ContainerQuery>
+                        </Border.Styles>
+                        <DockPanel HorizontalSpacing="30" VerticalSpacing="20">
+                            <av:AdvancedImage VerticalAlignment="Top" Stretch="UniformToFill" Source="{Binding Project.Avatar}" Height="140" Width="140" CornerRadius="120" />
                             <StackPanel Classes="TinyGap"
+                                        DockPanel.Dock="Bottom"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center">
                                 <TextBlock Text="Target Amount"
-                                           FontSize="12"
+                                           Classes="SizeBig"
                                            Opacity="0.7"
                                            HorizontalAlignment="Center" />
                                 <TextBlock Text="{Binding Project.TargetAmount.DecimalString}"
-                                           Classes="SizeBig"
+                                           Classes="SizeLarge"
                                            HorizontalAlignment="Center"
                                            Foreground="{DynamicResource SystemAccentColor}"
                                            FontWeight="Bold" />
                             </StackPanel>
-                        </StackPanel>
-                    </Card>
+                            <StackPanel Spacing="20">
+                                <TextBlock Classes="SizeHuge" FontWeight="Bold" TextWrapping="Wrap" Text="{Binding Project.Name}"
+                                           Foreground="{DynamicResource SystemAccentColor}" />
+                                <ContentControl Theme="{StaticResource NormalFontContentControl}" FontWeight="SemiLight">
+                                    <TextBlock Text="{Binding Project.ShortDescription}" TextWrapping="Wrap" />
+                                </ContentControl>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+
+                    <BalancedWrapGrid MinItemWidth="400" HorizontalSpacing="20" VerticalSpacing="20">
+                        <dt:ProjectSummary />
+                        <dt:Stages />
+                    </BalancedWrapGrid>
+
+                    <dt:InvestmentDashboard />
+                    <dt:NostProperties />
                 </StackPanel>
-
-                <BalancedWrapGrid MinItemWidth="400">
-                    <dt:ProjectSummary />
-                    <dt:Stages />
-                </BalancedWrapGrid>
-
-                <dt:InvestmentDashboard />
-                
-                <dt:NostProperties />
-
-            </StackPanel>
-        </ScrollViewer>
-    </controls:PageContainer>
+            </controls:PageContainer>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

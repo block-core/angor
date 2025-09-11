@@ -31,4 +31,5 @@
         <Setter Property="VerticalContentAlignment" Value="Stretch" />
         <Setter Property="FontWeight" Value="Regular" />
     </Style>
+    
 </Styles>

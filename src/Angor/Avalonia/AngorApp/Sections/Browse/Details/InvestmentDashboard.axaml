@@ -25,7 +25,7 @@
                         <EdgePanel.StartContent>
                            <Icon Source="fa-face-frown" />
                         </EdgePanel.StartContent>
-                        <TextBlock>
+                        <TextBlock TextWrapping="Wrap">
                             <Bold>Sorry, you cannot invest in this project</Bold>
                             <LineBreak />
                             <LineBreak />

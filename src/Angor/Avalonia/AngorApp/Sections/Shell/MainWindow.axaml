@@ -7,6 +7,5 @@
         Height="800"
         WindowStartupLocation="CenterOwner"
         x:Class="AngorApp.Sections.Shell.MainWindow"
-        Icon="/Assets/angor-logo.ico"
         Title="Angor">
 </Window>

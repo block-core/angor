@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Angor.UI.Model.Implementation.Wallet.Password;
 using AngorApp.Sections.Home;
+using Zafiro.UI.Navigation;
 using Zafiro.UI.Navigation.Sections;
 using Zafiro.UI.Shell;
 
@@ -36,4 +37,5 @@ public class ShellDesign : IShell
     public IObservable<object> ContentHeader => Observable.Return("Header content");
     public IEnumerable<ISection> Sections { get; }
     public IContentSection SelectedSection { get; set; }
+    public INavigator Navigator { get; }
 }

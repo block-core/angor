@@ -25,6 +25,14 @@
         <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
     </Style>
     
+    <Style Selector="TextBlock.SizeLarge">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeLarge}" />
+    </Style>
+    
+    <Style Selector="TextBlock.SizeHuge">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeHuge}" />
+    </Style>
+    
     <Style Selector="TextBlock.Warning">
         <Setter Property="Foreground" Value="Orange" />
     </Style>
