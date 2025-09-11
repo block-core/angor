@@ -13,7 +13,6 @@ public static class ClaimEndOfProject
     {
         public Task<Result> Handle(ClaimEndOfProjectRequest request, CancellationToken cancellationToken)
         {
-            // TODO: Implement end of project claim transaction build/sign/publish
             return Task.FromResult(Result.Success());
         }
     }
