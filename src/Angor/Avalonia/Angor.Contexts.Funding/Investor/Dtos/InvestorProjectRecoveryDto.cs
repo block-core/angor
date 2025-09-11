@@ -1,5 +1,3 @@
-using Angor.Shared.Models;
-
 namespace Angor.Contexts.Funding.Investor.Dtos;
 
 public class InvestorProjectRecoveryDto
@@ -19,13 +17,4 @@ public class InvestorProjectRecoveryDto
     public string? ExplorerLink { get; set; }
 
     public List<InvestorStageItemDto> Items { get; set; } = new();
-}
-
-public class InvestorStageItemDto
-{
-    public int StageIndex { get; set; }
-    public long Amount { get; set; }
-    public bool IsSpent { get; set; }
-    public string Status { get; set; } = string.Empty;
-    public ProjectScriptTypeEnum ScriptType { get; set; } = ProjectScriptTypeEnum.Unknown;
 }
