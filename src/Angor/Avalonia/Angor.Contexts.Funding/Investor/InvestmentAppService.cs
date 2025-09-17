@@ -70,27 +70,27 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
         return mediator.Send(new ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest(walletId, projectId, investorAddresses));
     }
 
-    #region Methods for Founder/Manage funds. Remove this region ASAP. It's only for clarity.
+    #region Methods for Investor/Manage funds. Remove this region ASAP. It's only for clarity.
     
-    // Founder/Manage Funds: Retrieve recovery info for an investment. Also contains a list of InvestorStageItemDtos 
+    // Investor/Manage Funds: Retrieve recovery info for an investment. Also contains a list of InvestorStageItemDtos 
     public Task<Result<InvestorProjectRecoveryDto>> GetInvestorProjectRecovery(Guid walletId, ProjectId projectId)
     {
         return mediator.Send(new Operations.GetInvestorProjectRecovery.GetInvestorProjectRecoveryRequest(walletId, projectId));
     }
 
-    // Founder/Manage Funds
+    // Investor/Manage Funds
     public Task<Result> RecoverInvestorFunds(Guid walletId, ProjectId projectId, int stageIndex)
     {
         return mediator.Send(new Operations.RecoverFunds.RecoverFundsRequest(walletId, projectId, stageIndex));
     }
 
-    // Founder/Manage Funds
+    // Investor/Manage Funds
     public Task<Result> ReleaseInvestorFunds(Guid walletId, ProjectId projectId, int stageIndex)
     {
         return mediator.Send(new Operations.ReleaseFunds.ReleaseFundsRequest(walletId, projectId, stageIndex));
     }
 
-    // Founder/Manage Funds
+    // Investor/Manage Funds
     public Task<Result> ClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, int stageIndex)
     {
         return mediator.Send(new Operations.ClaimEndOfProject.ClaimEndOfProjectRequest(walletId, projectId, stageIndex));
