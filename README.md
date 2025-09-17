@@ -11,7 +11,7 @@
 
 ## What is Angor?
 
-Angor is a Bitcoin funding platform with two unique features:
+Angor is a Bitcoin funding protocol with two unique features:
 
 1. Angor is **fully decentralized**, meaning there is no middleman involved in the investment process. Angor has no backend – the platform leverages the **Bitcoin network** for transaction processing, while **Nostr** is being used for decentralized storage of projects' metadata and direct communication with founders. Angor uses Bitcoin's Taproot upgrade for improved efficiency and privacy.
 
@@ -23,9 +23,9 @@ For more details:
   
 ## How to Use Angor?
 
-Angor is a browser-based platform that can be installed as a PWA (Progressive Web App).
+Angor is available on web, desktop, and mobile. The web app can be installed as a PWA (Progressive Web App) to provide an app-like experience on supported devices.
 
-It can be downloaded directly from this repository or accessed via the website: [https://angor.io/](https://angor.io/)
+You can access Angor online at [https://angor.io/](https://angor.io/), or download the app directly from this repository for local use.
 
 ## Contributing
 
