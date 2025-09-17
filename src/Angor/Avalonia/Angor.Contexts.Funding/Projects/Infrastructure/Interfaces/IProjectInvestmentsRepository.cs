@@ -12,4 +12,6 @@ public interface IProjectInvestmentsRepository
     Task<Result<StageDataTrx>> CheckSpentFund(QueryTransactionOutput output, Transaction investmentTransaction,
         ProjectInfo projectInfo,
         int stageIndex);
+
+    Task<Result<InvestmentSpendingLookup>> ScanInvestmentSpends(ProjectInfo project, string transactionId);
 }
