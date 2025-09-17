@@ -18,8 +18,8 @@
 
 <div class="modal-wrapper">
     <div class="modal fade show d-block" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content modern-modal animate-fade-in">
+        <div class="modal-dialog @(_isMaximized ? "modal-maximized" : "modal-dialog-centered modal-xl")">
+            <div class="modal-content modern-modal animate-fade-in @(_isMaximized ? "modal-content-maximized" : "")">
                 <div class="modal-header border-0 pb-0">
                     <div class="d-flex align-items-center">
                         <Icon IconName="chat" Height="32" Width="32" class="me-2" />
@@ -48,6 +48,11 @@
                             @if (showActionsMenu)
                             {
                                 <div class="card card-body position-absolute end-0 mt-1 p-1 border rounded shadow-sm" style="z-index: 1000; min-width: 200px;">
+                                    <button class="dropdown-item d-flex align-items-center px-3 py-2" @onclick="ToggleMaximize">
+                                        <Icon IconName="@(_isMaximized ? "minimize" : "maximize")" Height="16" Width="16" class="me-2" />
+                                        <span>@(_isMaximized ? "Restore" : "Maximize")</span>
+                                    </button>
+                                    <hr class="dropdown-divider" />
                                     <button class="dropdown-item d-flex align-items-center px-3 py-2" @onclick="RefreshMessagesAsync" disabled="@MessageService.IsRefreshing">
                                         <Icon IconName="refresh" Height="16" Width="16" class="me-2" />
                                         <span>Refresh Messages</span>
@@ -73,11 +78,11 @@
                     </div>
                 </div>
 
-                <div class="modal-body py-4">
-                    <div class="d-flex flex-column">
+                <div class="modal-body py-4 d-flex flex-column">
+                    <div class="d-flex flex-column h-100">
                         <!-- Messages Section -->
-                        <div class="info-card chat-container-modal">
-                            <div class="chat-messages" @ref="messagesContainerRef" style="height: 300px; overflow-y: auto;">
+                        <div class="info-card chat-container-modal d-flex flex-column">
+                            <div class="chat-messages flex-grow-1" @ref="messagesContainerRef" >
                                 @if (MessageService.IsLoadingMessages)
                                 {
                                     <div class="loading-messages d-flex justify-content-center align-items-center h-100">
@@ -113,7 +118,7 @@
                             </div>
 
                             <!-- Input -->
-                            <div class="chat-input mt-3">
+                            <div class="chat-input mt-3 flex-shrink-0">
                                 <div class="input-group">
                                     <input type="text" class="form-control"
                                            placeholder="Type a message..."
@@ -161,6 +166,7 @@
     private bool _needsScroll = false;
     private int _messageCount = 0;
     private bool _localIsRefreshing = false;
+    private bool _isMaximized = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -313,6 +319,15 @@
         showActionsMenu = !showActionsMenu;
         StateHasChanged();
     }
+
+    private void ToggleMaximize()
+    {
+        _isMaximized = !_isMaximized;
+        showActionsMenu = false;
+        StateHasChanged();
+    }
+
+ 
 
     private void CloseModal()
     {

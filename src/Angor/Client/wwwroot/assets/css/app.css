@@ -4527,7 +4527,114 @@ select::-ms-expand {
 }
 
 .chat-container-modal {
-    max-height: 300px
+    height: 300px;
+    transition: none !important;
+}
+
+.modal-maximized .chat-container-modal {
+    height: 100% !important;
+    transition: none !important;
+}
+
+/* Modal Responsive Design */
+.modal-maximized {
+    position: fixed !important;
+    top: 2vh !important;
+    left: 2vw !important;
+    width: 96vw !important;
+    height: 96vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    z-index: 1060 !important;
+}
+
+.modal-content-maximized {
+    height: 100% !important;
+    max-height: none !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.modal-maximized .modal-body {
+    flex: 1 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Desktop responsive */
+@media (min-width: 992px) {
+    .modal-maximized {
+        top: 5vh !important;
+        left: 5vw !important;
+        width: 90vw !important;
+        height: 90vh !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .modal-maximized {
+        top: 3vh !important;
+        left: 3vw !important;
+        width: 94vw !important;
+        height: 80vh !important;
+    }
+    
+    .modal-dialog:not(.modal-maximized) {
+        max-width: 90vw !important;
+        margin: 1rem auto !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .modal-maximized {
+        top: 1vh !important;
+        left: 1vw !important;
+        width: 98vw !important;
+        height: 85vh !important;
+    }
+    
+    .modal-dialog:not(.modal-maximized) {
+        max-width: 95vw !important;
+        margin: 0.5rem auto !important;
+    }
+    
+    .modal-content:not(.modal-content-maximized) {
+        max-height: 95vh !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .modal-body {
+        flex: 1 !important;
+        overflow: hidden !important;
+        padding: 0.75rem !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .modal-header {
+        padding: 0.75rem !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .chat-container-modal {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .chat-input {
+        padding: 0.5rem !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .chat-messages {
+        flex: 1 !important;
+        min-height: 0 !important;
+    }
 }
 
 .chat-header {
@@ -4547,7 +4654,13 @@ select::-ms-expand {
 
 .chat-input {
     border-top: 1px solid var(--border-color);
-    background-color: var(--card-bg)
+    background-color: var(--card-bg);
+    padding: 0.75rem;
+    flex-shrink: 0;
+}
+
+.chat-input .input-group {
+    margin-bottom: 0;
 }
 
 .chat-input textarea {
