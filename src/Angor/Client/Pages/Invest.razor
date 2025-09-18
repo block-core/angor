@@ -405,12 +405,12 @@
                             <div class="stage-card animate-fade-up">
                                 <div class="stage-header">
                                     <h6 class="mb-0">Stage @stage.StageNumber</h6>
-                                    <span class="badge bg-primary">@stage.AmountBtc @network.CoinTicker</span>
+                                    <span class="badge bg-primary">@stage.AmountBtc.ToString("0.00000000") @network.CoinTicker</span>
                                 </div>
                                 <div class="stage-body">
                                     <p class="mb-2">
                                         <Icon IconName="calendar" Height="16" Width="16" class="me-2" />
-                                        Release: @stage.StageDateTime.FormatDate()
+                                        @stage.StageDateTime.FormatDate()
                                     </p>
                                     <p class="mb-0">
                                         <Icon IconName="clock-square" Height="16" Width="16" class="me-2" />
@@ -513,7 +513,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="text-muted small mt-2">
-                                                    @stage.AmountToRelease% of investment - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after start
+                                                    @stage.AmountToRelease.ToString("F2")% of investment - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after start
                                                 </div>
                                             </div>
 

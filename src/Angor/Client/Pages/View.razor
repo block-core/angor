@@ -420,7 +420,7 @@
                             var amountInStage = Money.Satoshis(projectStats.TotalRaised).ToUnit(MoneyUnit.BTC) * stage.AmountToRelease / 100;
                             <tr>
                                 <td>@(index + 1)</td>
-                                <td>@stage.AmountToRelease %</td>
+                                <td>@stage.AmountToRelease.ToString("F2") %</td>
                                 <td>@stage.ReleaseDate.FormatDate()</td>
                                 <td>
                                     @if (daysUntilStage == 0)

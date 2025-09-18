@@ -575,7 +575,7 @@
                                                         <div class="flex-grow-1 min-width-zero">
                                                             <div class="text-muted mb-1 small">Stage Percent</div>
                                                             <div class="text-nowrap overflow-auto font-custom">
-                                                                @stage.AmountToRelease %
+                                                                @stage.AmountToRelease.ToString("F2") %
                                                             </div>
                                                         </div>
                                                         <div class="ms-2 flex-shrink-0">
@@ -1004,7 +1004,7 @@
                                             <Icon IconName="percent" Height="32" Width="32" />
                                         </div>
                                         <div class="stage-info">
-                                            <p class="stage-text"><strong>Stage Percent:</strong> @stage.AmountToRelease %</p>
+                                            <p class="stage-text"><strong>Stage Percent:</strong> @stage.AmountToRelease.ToString("F2") %</p>
                                         </div>
                                     </div>
                                     <div class="stage-content">
