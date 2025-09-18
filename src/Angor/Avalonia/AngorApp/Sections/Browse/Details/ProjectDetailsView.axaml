@@ -5,7 +5,7 @@
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="500"
+             mc:Ignorable="d" d:DesignWidth="300"
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
@@ -66,7 +66,22 @@
                     </Border>
 
 
-                    <BalancedWrapGrid MinItemWidth="400" HorizontalSpacing="20" VerticalSpacing="20">
+                    <ResponsivePresenter Breakpoint="600">
+                        <ResponsivePresenter.Narrow>
+                            <WrapPanel>
+                                <dt:ProjectSummary />
+                                <dt:Stages />
+                            </WrapPanel>
+                        </ResponsivePresenter.Narrow>
+                        <ResponsivePresenter.Wide>
+                            <BalancedWrapGrid MinItemWidth="180" HorizontalSpacing="20" VerticalSpacing="20">
+                                <dt:ProjectSummary />
+                                <dt:Stages />
+                            </BalancedWrapGrid>
+                        </ResponsivePresenter.Wide>
+                    </ResponsivePresenter>
+
+                    <BalancedWrapGrid MinItemWidth="180" HorizontalSpacing="20" VerticalSpacing="20">
                         <dt:ProjectSummary />
                         <dt:Stages />
                     </BalancedWrapGrid>

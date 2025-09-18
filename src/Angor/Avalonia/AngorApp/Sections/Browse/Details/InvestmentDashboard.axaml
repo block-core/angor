@@ -68,11 +68,11 @@
                                             FontWeight="Bold">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <i:Icon FontSize="16" Value="fa-solid fa-coins" />
-                                    <TextBlock Text="Invest Now" />
+                                    <TextBlock TextWrapping="Wrap" Text="Invest Now" />
                                 </StackPanel>
                             </ReactiveButton>
 
-                            <IconButton Icon="{Icon fa-solid fa-info-circle}" Content="Learn more"
+                            <IconButton Icon="{Icon fa-solid fa-info-circle}" TextBlock.TextWrapping="Wrap" Content="Learn more"
                                         FontSize="16"
                                         Classes="Expand"
                                         FontWeight="Bold">

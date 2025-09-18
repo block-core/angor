@@ -13,6 +13,7 @@
         <PackageReference Include="ReactiveUI.SourceGenerators"/>
         <PackageReference Include="ReactiveUI.SourceGenerators.Analyzers.CodeFixes"/>
         <PackageReference Include="Zafiro.Avalonia.Dialogs"/>
+        <PackageReference Include="Zafiro.Avalonia.Generators" />
     </ItemGroup>
 
     <ItemGroup>
