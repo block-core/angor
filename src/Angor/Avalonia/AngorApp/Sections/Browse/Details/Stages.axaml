@@ -5,7 +5,7 @@
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="800"
+             mc:Ignorable="d" d:DesignWidth="360"
              x:Class="AngorApp.Sections.Browse.Details.Stages" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
@@ -59,7 +59,7 @@
                                                 <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Percentage" EndContent="{Binding RatioOfTotal, StringFormat='{}{0:P0}'}" />
                                                 <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Release date" EndContent="{Binding ReleaseDate, StringFormat=d}" />
                                                 <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Time until release" EndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.TimeLeftDateTime}}" />
-                                                <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Amount" EndContent="{Binding AmountUI.DecimalString}" />
+                                                <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Amount" EndContent="{Binding AmountUI.ShortDecimalString}" />
                                             </StackPanel>
                                         </HeaderedContainer>
                                     </Border>
