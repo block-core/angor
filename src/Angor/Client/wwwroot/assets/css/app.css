@@ -4546,7 +4546,7 @@ select::-ms-expand {
     max-width: none !important;
     max-height: none !important;
     margin: 0 !important;
-    z-index: 1060 !important;
+    z-index: 1060;
 }
 
 .modal-content-maximized {
