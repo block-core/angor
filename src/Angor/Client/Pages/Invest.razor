@@ -128,14 +128,14 @@
 <div class="stats-container mt-4">
     <div class="card card-body">
         <div class="stats-content">
-            <div class="stats-icon">
-                <Icon IconName="balance" Height="32" Width="32" />
-            </div>
             @{
                 var cappedPercent = Math.Min(projectStats.FundingProgressPercent, 100);
             }
             <div class="stats-info">
-                <h3 class="stats-title text-muted">Target Amount</h3>
+                <h3 class="stats-title text-muted d-flex align-items-center">
+                    <Icon IconName="balance" Height="20" Width="20" Class="me-2" />
+                    Target Amount
+                </h3>
                 <p class="stats-value">@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</p>
                 <div class="stats-about d-flex align-items-center">
                     <div class="angor-progress rounded-pill flex-grow-1">
@@ -150,11 +150,11 @@
     </div>
     <div class="card card-body">
         <div class="stats-content">
-            <div class="stats-icon">
-                <Icon IconName="stages" Height="32" Width="32" />
-            </div>
             <div class="stats-info">
-                <h3 class="stats-title text-muted">Total Stages</h3>
+                <h3 class="stats-title text-muted d-flex align-items-center">
+                    <Icon IconName="stages" Height="20" Width="20" Class="me-2" />
+                    Total Stages
+                </h3>
                 <p class="stats-value">@project.ProjectInfo.Stages.Count()</p>
                 <p class="stats-about">Phased release</p>
             </div>
@@ -162,11 +162,11 @@
     </div>
     <div class="card card-body">
         <div class="stats-content">
-            <div class="stats-icon">
-                <Icon IconName="calendar" Height="32" Width="32" />
-            </div>
             <div class="stats-info">
-                <h3 class="stats-title text-muted">Investment Start Date</h3>
+                <h3 class="stats-title text-muted d-flex align-items-center">
+                    <Icon IconName="calendar" Height="20" Width="20" Class="me-2" />
+                    Investment Start Date
+                </h3>
                 <p class="stats-value">@project.ProjectInfo.StartDate.FormatDate()</p>
                 <p class="stats-about">
                     @{
@@ -179,11 +179,11 @@
     </div>
     <div class="card card-body">
         <div class="stats-content">
-            <div class="stats-icon">
-                <Icon IconName="calendar" Height="32" Width="32" />
-            </div>
             <div class="stats-info">
-                <h3 class="stats-title text-muted">Investment End Date</h3>
+                <h3 class="stats-title text-muted d-flex align-items-center">
+                    <Icon IconName="calendar" Height="20" Width="20" Class="me-2" />
+                    Investment End Date
+                </h3>
                 <p class="stats-value">
                     @{
                         var endDate = project?.ProjectInfo?.EndDate;
