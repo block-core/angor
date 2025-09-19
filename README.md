@@ -23,7 +23,7 @@ For more details:
   
 ## How to Use Angor?
 
-Angor is available on web, desktop, and mobile. The web app can be installed as a PWA (Progressive Web App) to provide an app-like experience on supported devices.
+Angor is available on web, (and desktop, mobile in the future). The web app can be installed as a PWA (Progressive Web App) to provide an app-like experience on supported devices.
 
 You can access Angor online at [https://angor.io/](https://angor.io/), or download the app directly from this repository for local use.
 
