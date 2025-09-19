@@ -9,17 +9,17 @@
              x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
-        <dt:ProjectDetailsViewModelDesign IsInsideInvestmentPeriod="False" />
+        <dt:ProjectDetailsViewModelDesign IsInsideInvestmentPeriod="True" />
     </Design.DataContext>
 
     <UserControl.Styles>
         <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
     </UserControl.Styles>
 
-    <Card Header="Investment Dashboard" HeaderStartContent="{Icon fa-solid fa-chart-pie}" Theme="{StaticResource WideCard}" Subheader="Manage your investment and track project progress" HeaderAndBodySpacing="30">
+    <Card Header="Investment Dashboard" Theme="{StaticResource WideCard}" Subheader="Manage your investment and track project progress" HeaderAndBodySpacing="30">
         <StackPanel Spacing="25">
             <!-- Investment Opportunity Section -->
-            <Panel MaxWidth="600" Margin="20 40">
+            <Panel MaxWidth="600" Margin="20 30">
                 <Border Classes="Alert CardAlt" IsVisible="{Binding !IsInsideInvestmentPeriod}" HorizontalAlignment="Center" Padding="20 20 0 20">
                     <EdgePanel StartContentTemplate="{StaticResource BigIcon}" Spacing="20">
                         <EdgePanel.StartContent>
