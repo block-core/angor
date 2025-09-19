@@ -1905,11 +1905,36 @@
         var stages = new List<Stage>();
         var currentDate = project.ProjectInfo.StartDate;
 
-        for (int i = 0; i < percentages.Length; i++)
+        // Convert int percentages to decimal and ensure proper rounding
+        var stagePercentages = new decimal[percentages.Length];
+        var totalOriginal = percentages.Sum();
+        
+        if (totalOriginal > 0)
+        {
+            for (int i = 0; i < percentages.Length; i++)
+            {
+                stagePercentages[i] = Math.Round((decimal)percentages[i] * 100m / totalOriginal, 2);
+            }
+            
+            // Adjust last stage to ensure total = 100%
+            var total = stagePercentages.Sum();
+            var remainder = 100m - total;
+            if (remainder != 0 && stagePercentages.Length > 0)
+            {
+                stagePercentages[stagePercentages.Length - 1] = Math.Round(stagePercentages[stagePercentages.Length - 1] + remainder, 2);
+            }
+        }
+        else
+        {
+            // Fallback to equal distribution if original percentages are invalid
+            stagePercentages = DistributeStages(percentages.Length);
+        }
+
+        for (int i = 0; i < stagePercentages.Length; i++)
         {
             var stage = new Stage
             {
-                AmountToRelease = percentages[i],
+                AmountToRelease = stagePercentages[i],
                 ReleaseDate = currentDate
             };
 
@@ -1920,7 +1945,7 @@
             if (i > 0)
             {
                 var daysBetween = (currentDate - stages[i - 1].ReleaseDate).Days;
-                _Logger.LogInformation($"Days between stage {i} and {i + 1}: @daysBetween days");
+                _Logger.LogInformation($"Days between stage {i} and {i + 1}: {daysBetween} days");
             }
 
             currentDate = currentDate.AddDays(intervalDays);
@@ -1942,13 +1967,13 @@
         project.ProjectInfo.Stages.Clear();
 
         var stageDuration = totalDuration / numberOfStages;
-        var stagePercentage = 100m / numberOfStages;
+        var stagePercentages = DistributeStages(numberOfStages);
 
         for (int i = 0; i < numberOfStages; i++)
         {
             var stage = new Stage
             {
-                AmountToRelease = stagePercentage,
+                AmountToRelease = stagePercentages[i],
                 ReleaseDate = project.ProjectInfo.StartDate.AddDays(i * stageDuration)
             };
 
@@ -1959,6 +1984,31 @@
 
         SaveProjectToStorage();
         StateHasChanged();
+    }
+
+    private decimal[] DistributeStages(int stageCount)
+    {
+        if (stageCount <= 0)
+            return new decimal[0];
+
+        var stages = new decimal[stageCount];
+        var basePercentage = 100m / stageCount;
+        var roundedPercentage = Math.Round(basePercentage, 2);
+
+        for (int i = 0; i < stageCount; i++)
+        {
+            stages[i] = roundedPercentage;
+        }
+
+        var total = stages.Sum();
+        var remainder = 100m - total;
+
+        if (remainder != 0 && stageCount > 0)
+        {
+            stages[stageCount - 1] = Math.Round(stages[stageCount - 1] + remainder, 2);
+        }
+
+        return stages;
     }
 
     private void ToggleStageMode()
