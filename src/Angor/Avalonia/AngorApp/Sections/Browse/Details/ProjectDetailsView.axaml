@@ -5,7 +5,7 @@
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="380"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="500"
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
@@ -35,7 +35,7 @@
                             <ContainerQuery Name="Root" Query="min-width:0 and max-width:500">
                                 <Style Selector="av|AdvancedImage">
                                     <Setter Property="DockPanel.Dock" Value="Top" />
-                                    <Setter Property="Margin" Value="0 -100 0 0"></Setter>
+                                    <Setter Property="Margin" Value="0 -100 0 0" />
                                 </Style>
                             </ContainerQuery>
                         </Border.Styles>
@@ -79,11 +79,6 @@
                             </BalancedWrapGrid>
                         </ResponsivePresenter.Wide>
                     </ResponsivePresenter>
-
-                    <BalancedWrapGrid MinItemWidth="150" HorizontalSpacing="20" VerticalSpacing="20">
-                        <dt:ProjectSummary />
-                        <dt:Stages />
-                    </BalancedWrapGrid>
 
                     <dt:InvestmentDashboard />
                     <dt:NostProperties />

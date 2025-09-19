@@ -8,6 +8,8 @@ using Projektanker.Icons.Avalonia.MaterialDesign;
 using Serilog;
 using Zafiro.Avalonia.Icons;
 using Zafiro.Avalonia.Misc;
+using Humanizer.Configuration;
+using AngorApp.Localization;
 
 namespace AngorApp;
 
@@ -19,6 +21,9 @@ public partial class App : Application
             .WriteTo.Console()
             .MinimumLevel.Debug()
             .CreateLogger();
+
+        // Register Humanizer strategy to prefer "in X" over "X from now" in English
+        Configurator.DateTimeHumanizeStrategy = new InPrepositionDateTimeHumanizeStrategy();
 
         AvaloniaXamlLoader.Load(this);
     }

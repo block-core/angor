@@ -56,8 +56,8 @@
 
                         <!-- Investment Actions -->
                         <BalancedWrapGrid Grid.Row="2"
-                                          MinItemWidth="110"
-                                          MaxItemWidth="200"
+                                          MinItemWidth="180"
+                                          MaxItemWidth="300"
                                           VerticalSpacing="10"
                                           HorizontalSpacing="10"
                                           HorizontalAlignment="Center">

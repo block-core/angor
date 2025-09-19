@@ -27,10 +27,6 @@
     </UserControl.Styles>
 
     <Card Header="Nostr Integration" Subheader="Decentralized communication and verification">
-        <Card.HeaderStartContent>
-            <i:Icon FontSize="40" Value="fa-solid fa-broadcast-tower" />
-        </Card.HeaderStartContent>
-
         <StackPanel Classes="BigGap">
             <!-- Nostr Keys Section -->
             <HeaderedContainer Header="Public Keys">

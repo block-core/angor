@@ -158,6 +158,7 @@
         <StyleInclude Source="UI/Styles/Styles.axaml" />
         <StyleInclude Source="UI/Styles/Button.axaml" />
         <StyleInclude Source="UI/Styles/HeaderedContainer.axaml" />
+        <StyleInclude Source="UI/Styles/EdgePanel.axaml" />
         <StyleInclude Source="UI/Styles/Border.axaml" />
     </Application.Styles>
 
