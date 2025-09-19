@@ -128,14 +128,14 @@
 <div class="stats-container mt-4">
     <div class="card card-body">
         <div class="stats-content">
-            <div class="stats-icon">
-                <Icon IconName="balance" Height="32" Width="32" />
-            </div>
             @{
                 var cappedPercent = Math.Min(projectStats.FundingProgressPercent, 100);
             }
             <div class="stats-info">
-                <h3 class="stats-title text-muted">Target Amount</h3>
+                <h3 class="stats-title text-muted d-flex align-items-center">
+                    <Icon IconName="balance" Height="20" Width="20" Class="me-2" />
+                    Target Amount
+                </h3>
                 <p class="stats-value">@project.ProjectInfo.TargetAmount.ToUnitBtc() @network.CoinTicker</p>
                 <div class="stats-about d-flex align-items-center">
                     <div class="angor-progress rounded-pill flex-grow-1">
@@ -150,11 +150,11 @@
     </div>
     <div class="card card-body">
         <div class="stats-content">
-            <div class="stats-icon">
-                <Icon IconName="stages" Height="32" Width="32" />
-            </div>
             <div class="stats-info">
-                <h3 class="stats-title text-muted">Total Stages</h3>
+                <h3 class="stats-title text-muted d-flex align-items-center">
+                    <Icon IconName="stages" Height="20" Width="20" Class="me-2" />
+                    Total Stages
+                </h3>
                 <p class="stats-value">@project.ProjectInfo.Stages.Count()</p>
                 <p class="stats-about">Phased release</p>
             </div>
@@ -162,11 +162,11 @@
     </div>
     <div class="card card-body">
         <div class="stats-content">
-            <div class="stats-icon">
-                <Icon IconName="calendar" Height="32" Width="32" />
-            </div>
             <div class="stats-info">
-                <h3 class="stats-title text-muted">Investment Start Date</h3>
+                <h3 class="stats-title text-muted d-flex align-items-center">
+                    <Icon IconName="calendar" Height="20" Width="20" Class="me-2" />
+                    Investment Start Date
+                </h3>
                 <p class="stats-value">@project.ProjectInfo.StartDate.FormatDate()</p>
                 <p class="stats-about">
                     @{
@@ -179,11 +179,11 @@
     </div>
     <div class="card card-body">
         <div class="stats-content">
-            <div class="stats-icon">
-                <Icon IconName="calendar" Height="32" Width="32" />
-            </div>
             <div class="stats-info">
-                <h3 class="stats-title text-muted">Investment End Date</h3>
+                <h3 class="stats-title text-muted d-flex align-items-center">
+                    <Icon IconName="calendar" Height="20" Width="20" Class="me-2" />
+                    Investment End Date
+                </h3>
                 <p class="stats-value">
                     @{
                         var endDate = project?.ProjectInfo?.EndDate;
@@ -405,12 +405,12 @@
                             <div class="stage-card animate-fade-up">
                                 <div class="stage-header">
                                     <h6 class="mb-0">Stage @stage.StageNumber</h6>
-                                    <span class="badge bg-primary">@stage.AmountBtc @network.CoinTicker</span>
+                                    <span class="badge bg-primary">@stage.AmountBtc.ToString("0.00000000") @network.CoinTicker</span>
                                 </div>
                                 <div class="stage-body">
                                     <p class="mb-2">
                                         <Icon IconName="calendar" Height="16" Width="16" class="me-2" />
-                                        Release: @stage.StageDateTime.FormatDate()
+                                        @stage.StageDateTime.FormatDate()
                                     </p>
                                     <p class="mb-0">
                                         <Icon IconName="clock-square" Height="16" Width="16" class="me-2" />
@@ -513,7 +513,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="text-muted small mt-2">
-                                                    @stage.AmountToRelease% of investment - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after start
+                                                    @stage.AmountToRelease.ToString("F2")% of investment - @((stage.ReleaseDate - project.ProjectInfo.StartDate).Days) days after start
                                                 </div>
                                             </div>
 
