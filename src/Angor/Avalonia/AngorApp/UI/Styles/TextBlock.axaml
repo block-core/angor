@@ -46,14 +46,4 @@
             <Setter Property="Foreground" Value="Orange" />
         </ControlTheme>
     </Styles.Resources>
-    
-    <Design.PreviewWith>
-        <Border Padding="20">
-            <StackPanel>
-                <TextBlock Theme="{StaticResource PaneTitle}">Pane Title</TextBlock>
-                <TextBlock Theme="{StaticResource Regular}">Regular</TextBlock>
-                <TextBlock Theme="{StaticResource Highlighted}">Highlighted</TextBlock>
-            </StackPanel>
-        </Border>
-    </Design.PreviewWith>
 </Styles>
