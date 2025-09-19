@@ -13,15 +13,15 @@ public class ShellDesign : IShell
     {
         Sections =
         [
-            Section.Content("Home", Observable.Defer(() => Observable.Return<IHomeSectionViewModel>(new HomeSectionViewModelDesign())), new Icon("svg:/Assets/angor-icon.svg")),
-            Section.Separator(),
-            Section.Content("Wallet", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-wallet")),
-            Section.Content("Browse", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-magnifying-glass")),
-            Section.Content("Portfolio", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-hand-holding-dollar")),
-            Section.Content("Founder", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-money-bills")),
-            Section.Separator(),
-            Section.Content("Settings", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-gear")),
-            Section.Command("Angor Hub", ReactiveCommand.Create(() => { }), new Icon("fa-magnifying-glass"), false),
+            new ContentSection<IHomeSectionViewModel>("Home", Observable.Defer(() => Observable.Return<IHomeSectionViewModel>(new HomeSectionViewModelDesign())), new Icon("svg:/Assets/angor-icon.svg")),
+            new SectionSeparator(),
+            new ContentSection<object>("Wallet", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-wallet")),
+            new ContentSection<object>("Browse", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-magnifying-glass")),
+            new ContentSection<object>("Portfolio", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-hand-holding-dollar")),
+            new ContentSection<object>("Founder", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-money-bills")),
+            new SectionSeparator(),
+            new ContentSection<object>("Settings", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-gear")),
+            new CommandSection("Angor Hub", ReactiveCommand.Create(() => { }), new Icon("fa-magnifying-glass")) { IsPrimary = false },
         ];
     }
 

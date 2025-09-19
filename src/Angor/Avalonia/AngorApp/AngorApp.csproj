@@ -7,13 +7,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**"/>
+        <AvaloniaResource Include="Assets/**"/>
         <!-- Link theme-specific app icons located at the solution root to our Assets folder -->
-        <AvaloniaResource Include="..\angor-app-icon-light.png">
-            <Link>Assets\angor-app-icon-light.png</Link>
+        <AvaloniaResource Include="../angor-app-icon-light.png">
+            <Link>Assets/angor-app-icon-light.png</Link>
         </AvaloniaResource>
-        <AvaloniaResource Include="..\angor-app-icon-dark.png">
-            <Link>Assets\angor-app-icon-dark.png</Link>
+        <AvaloniaResource Include="../angor-app-icon-dark.png">
+            <Link>Assets/angor-app-icon-dark.png</Link>
         </AvaloniaResource>
     </ItemGroup>
 
@@ -30,23 +30,28 @@
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome"/>
         <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign"/>
         <PackageReference Include="QRCoder"/>
-        <PackageReference Include="ReactiveUI"/>
-        <PackageReference Include="ReactiveUI.SourceGenerators">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
         <PackageReference Include="Serilog.Extensions.Logging"/>
         <PackageReference Include="Serilog.Sinks.Console"/>
-        <PackageReference Include="Zafiro.Avalonia"/>
+        <!--        <PackageReference Include="Zafiro.Avalonia"/>-->
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Angor.Contexts.Integration.WalletFunding/Angor.Contexts.Integration.WalletFunding.csproj"/>
+        <ProjectReference Include="../Angor.UI.Model.Implementation/Angor.UI.Model.Implementation.csproj"/>
+        <ProjectReference Include="../Angor.UI.Model/Angor.UI.Model.csproj"/>
+        <ProjectReference Include="../Angor.Contexts.Wallet/Angor.Contexts.Wallet.csproj"/>
+        <ProjectReference Include="../Angor.Contexts.Funding/Angor.Contexts.Funding.csproj"/>
+        <ProjectReference Include="../../../../../../SuperJMN-Zafiro/Zafiro.Avalonia/src/Zafiro.Avalonia.Generators/Zafiro.Avalonia.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <PackageReference Include="Zafiro.Avalonia.Generators" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Angor.Contexts.Integration.WalletFunding\Angor.Contexts.Integration.WalletFunding.csproj"/>
-        <ProjectReference Include="..\Angor.UI.Model.Implementation\Angor.UI.Model.Implementation.csproj"/>
-        <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj"/>
-        <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj"/>
-        <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj"/>
+        <AdditionalFiles Include="**/*.axaml" />
     </ItemGroup>
+
+    <PropertyGroup>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)generated</CompilerGeneratedFilesOutputPath>
+    </PropertyGroup>
 
 </Project>
