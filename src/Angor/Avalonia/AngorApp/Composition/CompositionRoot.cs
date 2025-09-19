@@ -8,6 +8,7 @@ using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Shared;
 using Angor.Shared.Services;
 using AngorApp.Composition.Registrations;
+using AngorApp.Sections;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder;
 using AngorApp.Sections.Home;
@@ -76,6 +77,8 @@ public static class CompositionRoot
     {
         services.RegisterSections(builder => builder
                 .Add<IHomeSectionViewModel>("Home", new Icon { Source = "svg:/Assets/angor-icon.svg" })
+                .Add<Lightweight1>("Lightweight 1", new Icon { Source = "svg:/Assets/angor-icon.svg" })
+                .Add<Lightweight2>("Lightweight 2", new Icon { Source = "svg:/Assets/angor-icon.svg" })
                 .Separator()
                 .Add<IWalletSectionViewModel>("Wallet", new Icon { Source = "svg:/Assets/wallet.svg" })
                 .Add<IBrowseSectionViewModel>("Browse", new Icon { Source = "svg:/Assets/browse.svg" })
@@ -98,3 +101,4 @@ public static class CompositionRoot
         services.AddSingleton<ILogger>(logger);
     }
 }
+

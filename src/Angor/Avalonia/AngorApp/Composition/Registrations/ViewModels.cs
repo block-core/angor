@@ -1,3 +1,4 @@
+using AngorApp.Sections;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder;
 using AngorApp.Sections.Home;
@@ -22,6 +23,8 @@ public static class ViewModels
                 .AddTransient<IPortfolioSectionViewModel, PortfolioSectionViewModel>()
                 .AddTransient<IFounderSectionViewModel, FounderSectionViewModel>()
                 .AddTransient<ISettingsSectionViewModel, SettingsSectionViewModel>()
+                .AddTransient<Lightweight1>()
+                .AddTransient<Lightweight2>()
                 .AddScoped<IPenaltiesViewModel, PenaltiesViewModel>()
                 .AddScoped<IRecoverViewModel, RecoverViewModel>();
     }
