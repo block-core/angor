@@ -18,30 +18,6 @@
                 <MergeResourceInclude Source="UI/Resources/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <DataTemplate x:Key="SmallIcon" DataType="x:Object">
-                <ContentPresenter Content="{Binding}">
-                    <ContentPresenter.DataTemplates>
-                        <DataTemplate DataType="ui:Icon">
-                            <Viewbox Height="20" Width="20">
-                                <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
-                            </Viewbox>
-                        </DataTemplate>
-                    </ContentPresenter.DataTemplates>
-                </ContentPresenter>
-            </DataTemplate>
-
-            <DataTemplate x:Key="RegularIcon" DataType="x:Object">
-                <ContentPresenter Content="{Binding}">
-                    <ContentPresenter.DataTemplates>
-                        <DataTemplate DataType="ui:Icon">
-                            <Viewbox Height="30" Width="30">
-                                <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
-                            </Viewbox>
-                        </DataTemplate>
-                    </ContentPresenter.DataTemplates>
-                </ContentPresenter>
-            </DataTemplate>
-
             <DataTemplate x:Key="BigIcon" DataType="x:Object">
                 <ContentPresenter Content="{Binding}">
                     <ContentPresenter.DataTemplates>

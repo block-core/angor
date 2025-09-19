@@ -75,11 +75,11 @@
             <Card Header="Project Information" Subheader="Key project details and metrics">
                 <StackPanel Classes="BigGap" Margin="0 15">
                     <StackPanel Classes="BigGap">
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContentTemplate="{StaticResource RegularIcon}" StartContent="{Icon fa-bullseye}" Content="Target amount"
-                                   EndContent="{Binding Project.TargetAmount.DecimalString}" />
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContentTemplate="{StaticResource RegularIcon}" StartContent="{Icon fa-solid fa-clock}" Content="Penalty duration"
+                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}"  StartContent="{Icon fa-bullseye}" Content="Target amount"
+                                                                                                             EndContent="{Binding Project.TargetAmount.DecimalString}" />
+                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}"  StartContent="{Icon fa-solid fa-clock}" Content="Penalty duration"
                                    EndContent="{Binding Project.PenaltyDuration, Converter={x:Static controls:AngorConverters.HumanizeTimeSpan}}" />
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContentTemplate="{StaticResource RegularIcon}" StartContent="{Icon fa-solid fa-calendar-days}" Content="Project dates">
+                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}"  StartContent="{Icon fa-solid fa-calendar-days}" Content="Project dates">
                             <EdgePanel.EndContent>
                                 <StackPanel>
                                     <TextBlock HorizontalAlignment="Right" Text="{Binding Project.FundingStartDate, StringFormat=d}" />
@@ -87,9 +87,9 @@
                                 </StackPanel>
                             </EdgePanel.EndContent>
                         </EdgePanel>
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContentTemplate="{StaticResource RegularIcon}" StartContent="{Icon fa-solid fa-users}" Content="Total raised"
+                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}"  StartContent="{Icon fa-solid fa-users}" Content="Total raised"
                                    EndContent="{Binding Project.RaisedAmount.DecimalString}" />
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContentTemplate="{StaticResource RegularIcon}" StartContent="{Icon fa-solid fa-calculator}" Content="Total investors"
+                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}"  StartContent="{Icon fa-solid fa-calculator}" Content="Total investors"
                                    EndContent="{Binding Project.TotalInvestors, TargetNullValue='Unknown'}" /></StackPanel>
                     <Separator />
                     <HyperlinkButton HorizontalAlignment="Stretch">

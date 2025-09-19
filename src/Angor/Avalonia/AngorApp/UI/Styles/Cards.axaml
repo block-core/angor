@@ -153,7 +153,7 @@
         </ControlTheme>
 
         <ControlTheme x:Key="BigCard" TargetType="Card" BasedOn="{StaticResource InfoCard}">
-            <Setter Property="HeaderStartContentTemplate" Value="{StaticResource HugeIcon}" />
+            <Setter Property="IconOptions.Size" Value="{StaticResource IconSizeHuge}" />
             <Setter Property="HeaderTemplate">
                 <Setter.Value>
                     <DataTemplate DataType="x:Object">
@@ -227,25 +227,25 @@
 
     <Design.PreviewWith>
         <StackPanel Width="400" Spacing="20" Margin="20">
-            <Card HorizontalAlignment="Center" Theme="{StaticResource CompactLeftItemCard}" HeaderStartContentTemplate="{StaticResource RegularIcon}"
+            <Card HorizontalAlignment="Center" Theme="{StaticResource CompactLeftItemCard}" 
                   Header="Funded Projects" Subheader="123">
                 <Card.HeaderStartContent>
                     <ui:Icon Source="svg:/Assets/portfolio.svg" />
                 </Card.HeaderStartContent>
             </Card>
-            <Card HorizontalAlignment="Center" Theme="{StaticResource LeftItemCard}" HeaderStartContentTemplate="{StaticResource RegularIcon}"
+            <Card HorizontalAlignment="Center" Theme="{StaticResource LeftItemCard}" 
                   Header="Funded Projects" Subheader="123">
                 <Card.HeaderStartContent>
                     <ui:Icon Source="svg:/Assets/portfolio.svg" />
                 </Card.HeaderStartContent>
             </Card>
-            <Card HorizontalAlignment="Center" Theme="{StaticResource LeftItemCard}" HeaderStartContentTemplate="{StaticResource RegularIcon}"
+            <Card HorizontalAlignment="Center" Theme="{StaticResource LeftItemCard}" 
                   Header="Total Invested" Subheader="123">
                 <Card.HeaderStartContent>
                     <ui:Icon Source="svg:/Assets/portfolio.svg" />
                 </Card.HeaderStartContent>
             </Card>
-            <Card HorizontalAlignment="Center" Theme="{StaticResource LeftItemCard}" HeaderStartContentTemplate="{StaticResource RegularIcon}"
+            <Card HorizontalAlignment="Center" Theme="{StaticResource LeftItemCard}" 
                   Header="Recovered to penalty" Subheader="123">
                 <Card.HeaderStartContent>
                     <ui:Icon Source="svg:/Assets/portfolio.svg" />

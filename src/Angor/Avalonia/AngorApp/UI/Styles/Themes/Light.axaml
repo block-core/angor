@@ -9,6 +9,12 @@
         <x:Double x:Key="FontSizeBig">20</x:Double>
         <x:Double x:Key="FontSizeNormal">16</x:Double>
         <x:Double x:Key="FontSizeSmall">12</x:Double>
+        
+        <x:Double x:Key="IconSizeHuge">80</x:Double>
+        <x:Double x:Key="IconSizeLarge">60</x:Double>
+        <x:Double x:Key="IconSizeBig">40</x:Double>
+        <x:Double x:Key="IconSizeNormal">30</x:Double>
+        <x:Double x:Key="IconSizeSmall">20</x:Double>
 
         <x:Double x:Key="FlyoutThemeMaxWidth">700</x:Double>
 
@@ -47,7 +53,6 @@
 
     </Styles.Resources>
 
-
     <Style Selector="DialogControl">
         <Setter Property="MinWidth" Value="{OnFormFactor Desktop=400, Default=300, x:TypeArguments=x:Double}" />
         <Setter Property="MinHeight" Value="{OnFormFactor Desktop=300, Default=400, x:TypeArguments=x:Double}" />
@@ -76,6 +81,10 @@
 
     <Style Selector="Button.HorizontalStretch">
         <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+    
+    <Style Selector=":is(UserControl)">
+        <Setter Property="IconOptions.Size" Value="{StaticResource IconSizeSmall}" />
     </Style>
 
 </Styles>

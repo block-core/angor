@@ -65,18 +65,8 @@
                 <Card.HeaderEndContent>
                     <StackPanel Orientation="Horizontal" Classes="SmallGap">
                         <UniformGrid ColumnSpacing="10" Rows="1">
-                            <IconButton HorizontalAlignment="Stretch" Command="{Binding LoadWallet}">
-                                Refresh
-                                <IconButton.Icon>
-                                    <ui:Icon Source="fa-arrows-rotate" />
-                                </IconButton.Icon>
-                            </IconButton>
-                            <IconButton HorizontalAlignment="Stretch" Command="{Binding GoToPenalties}">
-                                Penalties
-                                <IconButton.Icon>
-                                    <ui:Icon Source="fa-unlock" />
-                                </IconButton.Icon>
-                            </IconButton>
+                            <IconButton HorizontalAlignment="Stretch" Command="{Binding LoadWallet}" Icon="{Icon fa-arrows-rotate}" Content="Refresh" />
+                            <IconButton HorizontalAlignment="Stretch" Command="{Binding GoToPenalties}" Icon="{Icon fa-unlock}" Content="Penalties" />
                         </UniformGrid>
                         <ToggleButton x:Name="GridView" Width="38" CornerRadius="10" Height="38" Padding="0">
                             <ToggleButton.Styles>

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.Sections.Browse.Details.InvestmentDashboard"
              x:DataType="dt:IProjectDetailsViewModel">
@@ -21,7 +22,7 @@
             <!-- Investment Opportunity Section -->
             <Panel MaxWidth="600" Margin="20 30">
                 <Border Classes="Alert CardAlt" IsVisible="{Binding !IsInsideInvestmentPeriod}" HorizontalAlignment="Center" Padding="20 20 0 20">
-                    <EdgePanel StartContentTemplate="{StaticResource BigIcon}" Spacing="20">
+                    <EdgePanel IconOptions.Size="{StaticResource IconSizeBig}" Spacing="20">
                         <EdgePanel.StartContent>
                            <Icon Source="fa-face-frown" />
                         </EdgePanel.StartContent>
@@ -40,7 +41,7 @@
                     <Grid RowDefinitions="Auto,*,Auto" Margin="20" RowSpacing="10">
                         <!-- Header -->
                         <StackPanel Grid.Row="0" Spacing="15">
-                            <i:Icon FontSize="50" Value="fa-solid fa-star" Foreground="White" />
+                            <ContentControl Content="{Icon fa-solid fa-star}" IconOptions.Size="{StaticResource IconSizeLarge}" />
                             <TextBlock Text="Investment Opportunity"
                                        TextWrapping="Wrap"
                                        HorizontalAlignment="Center"
@@ -60,22 +61,19 @@
                                           MaxItemWidth="300"
                                           VerticalSpacing="10"
                                           HorizontalSpacing="10"
-                                          HorizontalAlignment="Center">
-                            <ReactiveButton Command="{Binding Invest}"
-                                            FontSize="{StaticResource FontSizeNormal}"
-                                            Classes="Expand"
-                                            HorizontalContentAlignment="Center"
-                                            FontWeight="Bold">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <i:Icon FontSize="16" Value="fa-solid fa-coins" />
-                                    <TextBlock TextWrapping="Wrap" Text="Invest Now" />
-                                </StackPanel>
-                            </ReactiveButton>
-
-                            <IconButton Icon="{Icon fa-solid fa-info-circle}" TextBlock.TextWrapping="Wrap" Content="Learn more"
-                                        FontSize="16"
-                                        Classes="Expand"
-                                        FontWeight="Bold">
+                                          HorizontalAlignment="Center"
+                                          IconOptions.Size="{StaticResource IconSizeSmall}"
+                                          TextElement.FontSize="{StaticResource FontSizeBig}"
+                                          TextBlock.TextWrapping="Wrap">
+                            
+                            <ReactiveIconButton Command="{Binding Invest}"
+                                                Classes="Expand"
+                                                Content="Invest Now"
+                                                Icon="{Icon fa-solid fa-coins}"/>
+                            
+                            <IconButton Icon="{Icon fa-solid fa-info-circle}"  
+                                        Content="Learn More"
+                                        Classes="Expand">
                             </IconButton>
                         </BalancedWrapGrid>
                     </Grid>

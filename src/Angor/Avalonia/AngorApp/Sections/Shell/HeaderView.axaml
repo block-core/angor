@@ -3,16 +3,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:shell="clr-namespace:AngorApp.Sections.Shell"
-             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Shell.HeaderView" x:DataType="shell:HeaderViewModel">
     <DockPanel>
-        <IconButton IsVisible="{Binding $self.IsEffectivelyEnabled}"
-            DockPanel.Dock="Left" VerticalAlignment="Center" Command="{Binding Back}">
-            <IconButton.Icon>
-                <ui:Icon Source="fa-angle-left" />
-            </IconButton.Icon>
-        </IconButton>
+        <Button IsVisible="{Binding $self.IsEffectivelyEnabled}"
+                DockPanel.Dock="Left" VerticalAlignment="Center"
+                Command="{Binding Back}" Content="{Icon fa-angle-left}">
+        </Button>
         <ContentControl Content="{Binding Content}" />
     </DockPanel>
 </UserControl>
