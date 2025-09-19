@@ -16,12 +16,14 @@ using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Settings;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
+using Humanizer;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Core;
 using Zafiro.Avalonia.Services;
 using Zafiro.UI;
 using Zafiro.UI.Navigation;
+using Zafiro.UI.Navigation.Sections;
 
 namespace AngorApp.Composition;
 
@@ -47,7 +49,6 @@ public static class CompositionRoot
         services.AddKeyedSingleton<IStore>("file", store);
         services.AddSingleton<IStore>(provider => provider.GetKeyedService<IStore>("file"));
 
-        
         services.AddSingleton<Func<BitcoinNetwork>>(sp => () =>
         {
             var cfg = sp.GetRequiredService<INetworkConfiguration>();
@@ -58,6 +59,7 @@ public static class CompositionRoot
         ModelServices.Register(services);
         ViewModels.Register(services);
         UIServicesRegistration.Register(services, topLevelView);
+        services.AddNavigator();
         SecurityContext.Register(services);
         RegisterWalletServices(services, logger, network);
         FundingContextServices.Register(services, logger);
@@ -75,19 +77,33 @@ public static class CompositionRoot
 
     private static void RegisterSections(ServiceCollection services, Logger logger)
     {
-        services.RegisterSections(builder => builder
-                .Add<IHomeSectionViewModel>("Home", new Icon { Source = "svg:/Assets/angor-icon.svg" })
-                .Add<Lightweight1>("Lightweight 1", new Icon { Source = "svg:/Assets/angor-icon.svg" })
-                .Add<Lightweight2>("Lightweight 2", new Icon { Source = "svg:/Assets/angor-icon.svg" })
-                .Separator()
-                .Add<IWalletSectionViewModel>("Wallet", new Icon { Source = "svg:/Assets/wallet.svg" })
-                .Add<IBrowseSectionViewModel>("Browse", new Icon { Source = "svg:/Assets/browse.svg" })
-                .Add<IPortfolioSectionViewModel>("Portfolio",  new Icon { Source = "svg:/Assets/portfolio.svg" })
-                .Add<IFounderSectionViewModel>("Founder", new Icon { Source = "svg:/Assets/user.svg" })
-                .Separator()
-                .Add<ISettingsSectionViewModel>("Settings", new Icon { Source = "svg:/Assets/settings.svg" })
-                .Command("Angor Hub", provider => ReactiveCommand.CreateFromTask(() => provider.GetRequiredService<ILauncherService>().LaunchUri(new Uri("https://hub.angor.io"))), new Icon { Source = "svg:/Assets/browse.svg" } , false)
-            , logger);
+        services.AddSingleton<IEnumerable<ISection>>(provider =>
+        {
+            var homeSection = new ContentSection<IHomeSectionViewModel>("Home", Observable.Defer(() => Observable.Return(provider.GetRequiredService<IHomeSectionViewModel>())), new Icon("svg:/Assets/angor-icon.svg"));
+            
+            var sq = ((bool[])[true, false]).ToObservable().Select(b => Observable.Return(b).Delay(3.Seconds())).Concat();
+            sq.Subscribe(b => homeSection.IsVisible = b);
+            
+            return
+            [
+                homeSection,
+                new ContentSection<IBrowseSectionViewModel>("Browse", Observable.Defer(() => Observable.Return(provider.GetRequiredService<IBrowseSectionViewModel>())), new Icon("svg:/Assets/browse.svg"))
+            ];
+        });
+
+        // services.RegisterSections(builder => builder.Add(new Section())
+        //         .Add<IHomeSectionViewModel>("Home", new Icon { Source = "svg:/Assets/angor-icon.svg" })
+        //         .Add<Lightweight1>("Lightweight 1", new Icon { Source = "svg:/Assets/angor-icon.svg" })
+        //         .Add<Lightweight2>("Lightweight 2", new Icon { Source = "svg:/Assets/angor-icon.svg" })
+        //         .Separator()
+        //         .Add<IWalletSectionViewModel>("Wallet", new Icon { Source = "svg:/Assets/wallet.svg" })
+        //         .Add<IBrowseSectionViewModel>("Browse", new Icon { Source = "svg:/Assets/browse.svg" })
+        //         .Add<IPortfolioSectionViewModel>("Portfolio",  new Icon { Source = "svg:/Assets/portfolio.svg" })
+        //         .Add<IFounderSectionViewModel>("Founder", new Icon { Source = "svg:/Assets/user.svg" })
+        //         .Separator()
+        //         .Add<ISettingsSectionViewModel>("Settings", new Icon { Source = "svg:/Assets/settings.svg" })
+        //         .Command("Angor Hub", provider => ReactiveCommand.CreateFromTask(() => provider.GetRequiredService<ILauncherService>().LaunchUri(new Uri("https://hub.angor.io"))), new Icon { Source = "svg:/Assets/browse.svg" } , false)
+        //     , logger);
     }
 
     private static void RegisterWalletServices(ServiceCollection services, Logger logger, BitcoinNetwork network)
@@ -101,4 +117,3 @@ public static class CompositionRoot
         services.AddSingleton<ILogger>(logger);
     }
 }
-
