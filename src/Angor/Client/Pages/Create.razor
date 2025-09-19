@@ -2476,10 +2476,10 @@
 
         if (!ShouldSkipProductionValidations)
         {
-            if (targetAmountInBTC < 0.01m)
+            if (targetAmountInBTC < 0.001m)
             {
                 targetAmountError = true;
-                targetAmountErrorMessage = "Target amount must be at least 0.01 BTC.";
+                targetAmountErrorMessage = "Target amount must be at least 0.001 BTC.";
                 StateHasChanged();
                 return;
             }
