@@ -35,4 +35,20 @@
     <ItemGroup>
         <ProjectReference Include="..\AngorApp\AngorApp.csproj"/>
     </ItemGroup>
+
+    <!-- Copy app icons to output and publish so the AppImage packager can auto-discover them -->
+    <ItemGroup>
+        <!-- SVG icon from shared Avalonia assets -->
+        <None Include="..\AngorApp\Assets\angor-icon.svg">
+            <Link>icon.svg</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </None>
+        <!-- PNG icon reused from Android project as a raster fallback (for .DirIcon) -->
+        <None Include="..\AngorApp.Android\Resources\drawable\icon.png">
+            <Link>icon.png</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </None>
+    </ItemGroup>
 </Project>

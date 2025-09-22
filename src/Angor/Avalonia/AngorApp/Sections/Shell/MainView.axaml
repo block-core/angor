@@ -9,7 +9,7 @@
     <Design.DataContext>
         <shell:MainViewModelDesign />
     </Design.DataContext>
-    <ShellView OpenPaneLength="160" MobileColumns="5" Shell="{Binding Shell}">
+    <ShellView x:Name="Shell" OpenPaneLength="160" MobileColumns="5" Shell="{Binding Shell}">
         <ShellView.HeaderContentTemplate>
             <DataTemplate DataType="x:Object">
                 <ContentControl
