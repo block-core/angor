@@ -1046,7 +1046,8 @@ else
             }
         }
 
-        if (project.ProjectInfo.Stages.Sum(s => s.AmountToRelease) != 100)
+        var totalPercent = project.ProjectInfo.Stages.Sum(s => s.AmountToRelease);
+        if (Math.Abs(totalPercent - 100) > 0.01m) // Allow for small floating point differences
         {
             notificationComponent.ShowErrorMessage("The stages must sum to 100%");
             return;
