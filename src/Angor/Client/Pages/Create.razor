@@ -1941,20 +1941,22 @@
 
         project.ProjectInfo.Stages.Clear();
 
-        var stageDuration = totalDuration / numberOfStages;
-        var stagePercentage = 100m / numberOfStages;
+        var stageDurations = DivideStages(totalDuration,numberOfStages);
+        var stagePercentage = DivideStages(100,numberOfStages);
+        var cumulativeDuration = 0;
 
         for (int i = 0; i < numberOfStages; i++)
         {
             var stage = new Stage
             {
-                AmountToRelease = stagePercentage,
-                ReleaseDate = project.ProjectInfo.StartDate.AddDays(i * stageDuration)
+                AmountToRelease = stagePercentage[i],
+                ReleaseDate = project.ProjectInfo.StartDate.AddDays(cumulativeDuration)
             };
 
             project.ProjectInfo.Stages.Add(stage);
 
             stageDateErrors[stage] = "";
+            cumulativeDuration += stageDurations[i];
         }
 
         SaveProjectToStorage();
@@ -2543,5 +2545,60 @@
         {
             _Logger.LogError(ex, "Error saving project to storage");
         }
+    }
+    
+     private bool IsTerminating(int denominator)
+    {
+        int[] primeFactors = [2, 5];
+        
+        foreach (var factor in primeFactors)
+        {
+            while (denominator % factor == 0 && denominator > 1)
+            {
+                denominator /= factor;
+            }
+        }
+        return denominator == 1;
+    }
+    
+    private int[] SplitRound(int total, int stages)
+    {
+        var baseValue = total / stages;
+        var remainder = total % stages;
+        
+        var result = new int[stages];
+        
+        for (var i = 0; i < stages; i++)
+        {
+            result[i] = baseValue;
+        }
+        
+        // distribute remainder starting from the end (smaller first)
+        for (var i = 0; i < remainder; i++)
+        {
+            var index = stages - 1 - i;
+            result[index] += 1;
+        }
+        return result;
+    }
+
+    private int[] DivideStages(int total, int stages)
+    {
+        if (IsTerminating(stages))
+        {
+            // Terminating decimal - use equal division
+            var equalValue = total / stages;
+            var result = new int[stages];
+
+            for (var i = 0; i < stages; i++)
+            {
+                result[i] = equalValue;
+            }
+
+            return result;
+        }
+        
+        // Non-terminating - use split and round
+        return SplitRound(total, stages);
     }
 }
