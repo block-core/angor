@@ -2,7 +2,7 @@ using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Controls.Shell;
 using Zafiro.UI.Navigation.Sections;
 
-namespace AngorApp.Composition.Registrations;
+namespace AngorApp.Composition.Registrations.Sections;
 
 public partial class DynamicContentSection : ReactiveObject, IContentSection
 {
@@ -28,7 +28,7 @@ public partial class DynamicContentSection : ReactiveObject, IContentSection
 
     private void AdaptToShell(ShellView shell)
     {
-        if (shell.Bounds.Size.Width > 500)
+        if (shell.Bounds.Size.Width > Breakpoint)
         {
             IsVisible = WideVisibility; 
             SortOrder = WideSortOrder;
@@ -39,6 +39,8 @@ public partial class DynamicContentSection : ReactiveObject, IContentSection
             IsVisible = NarrowVisibility;
         }
     }
+
+    public double Breakpoint { get; set; } = 500;
 
     public int NarrowSortOrder { get; set; }
     public int WideSortOrder { get; set; }
@@ -51,8 +53,6 @@ public partial class DynamicContentSection : ReactiveObject, IContentSection
         get => section.IsPrimary;
         set => section.IsPrimary = value;
     }
-
-    
 
     public string Name => section.Name;
     public string FriendlyName => section.FriendlyName;

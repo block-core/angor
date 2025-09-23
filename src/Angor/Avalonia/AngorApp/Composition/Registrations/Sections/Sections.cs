@@ -1,20 +1,21 @@
 using AngorApp.Sections.Browse;
-using AngorApp.Sections.Home;
 using AngorApp.Sections.Founder;
+using AngorApp.Sections.Home;
 using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Settings;
 using AngorApp.Sections.Wallet;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Zafiro.Avalonia.Services;
 using Zafiro.UI;
 using Zafiro.UI.Navigation.Sections;
-using Zafiro.Avalonia.Services;
 
-namespace AngorApp.Composition.Registrations;
+namespace AngorApp.Composition.Registrations.Sections;
 
-public static class AppSections
+public static class Sections
 {
-    public static void Register(ServiceCollection services, ILogger logger)
+    // Registers application sections for the shell
+    public static IServiceCollection AddAppSections(this IServiceCollection services, ILogger logger)
      {
         services.AddSingleton<IEnumerable<ISection>>(provider =>
         {
@@ -39,5 +40,7 @@ public static class AppSections
                 new CommandSection("Angor Hub", ReactiveCommand.CreateFromTask(() => provider.GetRequiredService<ILauncherService>().LaunchUri(new Uri("https://hub.angor.io"))), new Icon("svg:/Assets/browse.svg")) { IsPrimary = false },
             ];
         });
+        
+        return services;
     }
 }
