@@ -5,7 +5,7 @@
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="800"
+             mc:Ignorable="d" d:DesignWidth="360"
              x:Class="AngorApp.Sections.Browse.Details.Stages" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
@@ -13,10 +13,6 @@
     </Design.DataContext>
 
     <Card Header="Project Stages" Subheader="Funding stages and release schedule">
-        <Card.HeaderStartContent>
-            <i:Icon FontSize="40" Value="fa-solid fa-timeline" />
-        </Card.HeaderStartContent>
-
         <DockPanel VerticalSpacing="20">
             <!-- Stage Overview -->
             <Card DockPanel.Dock="Top">
@@ -53,13 +49,28 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Classes="Card" Padding="10">
-                                        <HeaderedContainer Header="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}">
+                                    <Border Classes="Card" Padding="10" Container.Name="Root" Container.Sizing="Width">
+                                        <Border.Styles>
+                                            <Style Selector="EdgePanel /template/ ContentControl#StartContent">
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                            </Style>
+                                            <ContainerQuery Name="Root" Query="min-width:0 and max-width:299">
+                                                <Style Selector="EdgePanel">
+                                                    <Setter Property="Theme" Value="{StaticResource StackingEdgePanel}" />
+                                                </Style>
+                                            </ContainerQuery>    
+                                            <ContainerQuery Query="min-width:300">
+                                                <Style Selector="EdgePanel">
+                                                    <Setter Property="Theme" Value="{StaticResource PropertyEdgePanel}" />
+                                                </Style>
+                                            </ContainerQuery>
+                                        </Border.Styles>
+                                        <HeaderedContainer TextBlock.TextWrapping="Wrap" Padding="0" Margin="10" Header="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}">
                                             <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
-                                                <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Percentage" EndContent="{Binding RatioOfTotal, StringFormat='{}{0:P0}'}" />
-                                                <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Release date" EndContent="{Binding ReleaseDate, StringFormat=d}" />
-                                                <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Time until release" EndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.TimeLeftDateTime}}" />
-                                                <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Amount" EndContent="{Binding AmountUI.DecimalString}" />
+                                                <EdgePanel StartContent="Percentage" EndContent="{Binding RatioOfTotal, StringFormat='{}{0:P0}'}" />
+                                                <EdgePanel StartContent="Release date" EndContent="{Binding ReleaseDate, StringFormat=d}" />
+                                                <EdgePanel StartContent="Time until release" EndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.TimeLeftDateTime}}" />
+                                                <EdgePanel StartContent="Amount" EndContent="{Binding AmountUI.ShortDecimalString}" />
                                             </StackPanel>
                                         </HeaderedContainer>
                                     </Border>

@@ -6,7 +6,7 @@
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             mc:Ignorable="d" d:DesignWidth="400"
+             mc:Ignorable="d" d:DesignWidth="300"
              x:Class="AngorApp.Sections.Browse.Details.ProjectSummary" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
@@ -14,19 +14,11 @@
     </Design.DataContext>
 
     <Card Header="Project Summary" Subheader="Key metrics and progress tracking">
-        <Card.HeaderStartContent>
-            <i:Icon FontSize="40" Value="fa-solid fa-chart-line" />
-        </Card.HeaderStartContent>
-
         <StackPanel Spacing="25" Margin="0 10 0 0">
             <!-- Progress Overview Cards -->
-            <BalancedWrapGrid MinItemWidth="250" HorizontalSpacing="20" VerticalSpacing="20">
-                <Card Theme="{StaticResource TransparentCard}"
-                      Header="Timeline Progress"
+            <BalancedWrapGrid MinItemWidth="180" HorizontalSpacing="20" VerticalSpacing="20">
+                <Card Header="Timeline Progress"
                       Subheader="{Binding Project.TimeFromFundingStartingDate.TotalDays, StringFormat={}{0:0} days elapsed}">
-                    <Card.HeaderStartContent>
-                        <i:Icon FontSize="30" Value="fa-solid fa-calendar-check" />
-                    </Card.HeaderStartContent>
                     <Card.Content>
                         <StackPanel Spacing="15">
                             <Panel Height="100">
@@ -54,12 +46,8 @@
                     </Card.Content>
                 </Card>
 
-                <Card Theme="{StaticResource TransparentCard}"
-                      Header="Funding Progress"
+                <Card Header="Funding Progress"
                       Subheader="{Binding Project.RaisedAmount.DecimalString, StringFormat={}{0} raised}">
-                    <Card.HeaderStartContent>
-                        <i:Icon FontSize="30" Value="fa-solid fa-coins" />
-                    </Card.HeaderStartContent>
                     <Card.Content>
                         <StackPanel Spacing="15">
                             <Panel Height="100">
