@@ -32,7 +32,8 @@
         <PackageReference Include="QRCoder"/>
         <PackageReference Include="Serilog.Extensions.Logging"/>
         <PackageReference Include="Serilog.Sinks.Console"/>
-        <!--        <PackageReference Include="Zafiro.Avalonia"/>-->
+        <PackageReference Include="Zafiro.Avalonia"/>
+        <PackageReference Include="Zafiro.Avalonia.Generators"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -41,12 +42,10 @@
         <ProjectReference Include="../Angor.UI.Model/Angor.UI.Model.csproj"/>
         <ProjectReference Include="../Angor.Contexts.Wallet/Angor.Contexts.Wallet.csproj"/>
         <ProjectReference Include="../Angor.Contexts.Funding/Angor.Contexts.Funding.csproj"/>
-        <ProjectReference Include="../../../../../../SuperJMN-Zafiro/Zafiro.Avalonia/src/Zafiro.Avalonia.Generators/Zafiro.Avalonia.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-        <PackageReference Include="Zafiro.Avalonia.Generators" />
     </ItemGroup>
 
     <ItemGroup>
-        <AdditionalFiles Include="**/*.axaml" />
+        <AdditionalFiles Include="**/*.axaml"/>
     </ItemGroup>
 
     <PropertyGroup>
