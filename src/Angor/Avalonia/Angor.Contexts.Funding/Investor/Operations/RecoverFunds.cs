@@ -76,9 +76,9 @@ public static class RecoverFunds
             // add fee to the recovery trx
             var recoveryTransaction = walletOperations.AddFeeAndSignTransaction(changeAddress, unsignedRecoveryTransaction, words.Value.ToWalletWords(), accountInfo, selectedFeeEstimation.FeeRate);
             
-            var result = await indexerService.PublishTransactionAsync(recoveryTransaction.Transaction.ToHex());
+            var transactionId = await indexerService.PublishTransactionAsync(recoveryTransaction.Transaction.ToHex());
             
-            return Result.Success();
+            return Result.Success(transactionId);
         }
         
         private async Task<Result<SignatureInfo?>> LookupFounderSignatures(Guid walletId, Project project, DateTime createdAt, string eventId,
@@ -110,10 +110,10 @@ public static class RecoverFunds
                     var validSignatures =
                         investorTransactionActions.CheckInvestorRecoverySignatures(project.ToProjectInfo(),
                             investment, signatureInfo);
-                    
-                    //TODO do we need to store the signatures in the database at this point?
-                    
-                    tcs.SetResult(Result.Success(signatureInfo));
+
+                    tcs.SetResult(validSignatures
+                        ? Result.Success<SignatureInfo?>(signatureInfo)
+                        : Result.Failure<SignatureInfo?>("Invalid signatures"));
                 },
                 () => { if (!tcs.Task.IsCompleted) tcs.TrySetResult(result: Result.Success<SignatureInfo?>(null));});
 
