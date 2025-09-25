@@ -134,7 +134,12 @@ public static class GetInvestorProjectRecovery
 
         private async Task<Result<(QueryTransaction,IEnumerable<InvestorStageItemDto>)>> FindInvestments(Project project,string investorPubKey)
         {
-            var trx = await indexerService.GetInvestmentAsync(project.Id.Value, investorPubKey);
+            var trxResult = await Result.Try(() => indexerService.GetInvestmentAsync(project.Id.Value, investorPubKey));
+
+            if (trxResult.IsFailure)
+                return Result.Failure<(QueryTransaction, IEnumerable<InvestorStageItemDto>)>(trxResult.Error);
+            
+            var trx = trxResult.Value;
             
             if (trx == null || string.IsNullOrEmpty(trx.TransactionId) || trx.InvestorPublicKey != investorPubKey)
             {
