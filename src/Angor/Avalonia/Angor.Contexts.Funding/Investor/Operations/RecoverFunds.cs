@@ -53,7 +53,7 @@ public static class RecoverFunds
             var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(investment.InvestmentTransactionHex);
             
             var signatureLookup = await LookupFounderSignatures(request.WalletId, project.Value, investment.RequestEventTime.Value, investment.RequestEventId, 
-                investmentTransaction, investorPrivateKey.PubKey.ToHex());
+                investmentTransaction);
 
             if (signatureLookup.IsFailure || signatureLookup.Value is null)
                 return Result.Failure(signatureLookup.Error ?? "Could not retrieve founder signatures");
@@ -82,7 +82,7 @@ public static class RecoverFunds
         }
         
         private async Task<Result<SignatureInfo?>> LookupFounderSignatures(Guid walletId, Project project, DateTime createdAt, string eventId,
-            Transaction investment, string projectPubKey)
+            Transaction investment)
         {
             var sensitiveDataResult = await provider.GetSensitiveData(walletId);
             var pubKey =
@@ -97,6 +97,8 @@ public static class RecoverFunds
             var signatureInfo = new SignatureInfo();
             var tcs = new TaskCompletionSource<Result<SignatureInfo?>>();
 
+            var projectPubKey = project.NostrPubKey;
+            
             signService.LookupSignatureForInvestmentRequest(pubKey, projectPubKey, createdAt, eventId,
                 async content =>
                 {
