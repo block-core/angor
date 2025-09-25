@@ -9,5 +9,5 @@ public interface IInvestmentRepository
 {
     Task<Result<IEnumerable<InvestmentDto>>> GetByProjectId(ProjectId projectId);
     Task<Result<InvestmentRecords>> GetByWalletId(Guid walletId);
-    Task<Result> Add(Guid walletId, InvestorPositionRecord investment);
+    Task<Result> Add(Guid walletId, InvestmentRecord investment);
 }

@@ -4,5 +4,5 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public class InvestmentRecords
 {
-    public List<InvestorPositionRecord> ProjectIdentifiers { get; set; } = new();
+    public List<InvestmentRecord> ProjectIdentifiers { get; set; } = new();
 }

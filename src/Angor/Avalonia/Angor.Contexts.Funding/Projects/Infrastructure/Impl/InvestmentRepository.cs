@@ -33,7 +33,7 @@ public class InvestmentRepository(
         return await GetInvestmentRecordsFromRelayAsync(storageAccountKey, password);
     }
 
-    public async Task<Result> Add(Guid walletId, InvestorPositionRecord newInvestment)
+    public async Task<Result> Add(Guid walletId, InvestmentRecord newInvestment)
     {
         // Encrypt and send the investments
         var sensiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
