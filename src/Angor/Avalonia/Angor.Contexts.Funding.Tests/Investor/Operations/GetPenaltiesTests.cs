@@ -89,7 +89,7 @@ public class GetPenaltiesTests
 
         var investment = new InvestmentRecords
         {
-            ProjectIdentifiers = [new InvestorPositionRecord
+            ProjectIdentifiers = [new InvestmentRecord
             {
                 ProjectIdentifier = projectIdentifier,
                 InvestorPubKey = investorPubKey,

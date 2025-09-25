@@ -1,6 +1,6 @@
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
-public class InvestorPositionRecord
+public class InvestmentRecord
 {
     public string ProjectIdentifier { get; set; }
     public string InvestmentTransactionHash { get; set; }
