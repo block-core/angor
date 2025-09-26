@@ -1,23 +1,17 @@
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Collections.Generic;
-using System.Linq;
 using ReactiveUI.SourceGenerators;
-using ReactiveUI.Validation.Collections;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
-using Zafiro.Reactive;
 
 namespace AngorApp.Sections.Founder.CreateProject.FundingStructure;
 
-public partial class FundingStructureViewModel : ReactiveValidationObject, IFundingStructureViewModel
+public partial class FundingStructureViewModel : ReactiveValidationObject, IFundingStructureViewModel, IHaveErrors
 {
     [Reactive] private long? sats;
     [Reactive] private int? penaltyDays = 100;
     [Reactive] private DateTime? fundingEndDate;
     [Reactive] private DateTime? expiryDate;
     [ObservableAsProperty] private IAmountUI targetAmount;
-    [ObservableAsProperty] private IEnumerable<string>? errors;
 
     private readonly CompositeDisposable disposable = new();
 
@@ -36,11 +30,7 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
             .ToProperty(this, model => model.TargetAmount)
             .DisposeWith(disposable);
 
-        errorsHelper = this.ValidationContext.ValidationStatusChange
-            .Where(state => !state.IsValid)
-            .Select(state => state.Text.ToList())
-            .ToProperty(this, model => model.Errors)
-            .DisposeWith(disposable);
+        Errors = new ErrorSummarizer(ValidationContext).DisposeWith(disposable).Errors;
     }
 
     protected override void Dispose(bool disposing)
@@ -51,4 +41,10 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
 
     public IObservable<bool> IsValid => this.IsValid();
     public DateTime FundingStartDate { get; } = DateTime.Now;
+    public ICollection<string> Errors { get; }
+}
+
+public interface IHaveErrors
+{
+    ICollection<string> Errors { get; }
 }

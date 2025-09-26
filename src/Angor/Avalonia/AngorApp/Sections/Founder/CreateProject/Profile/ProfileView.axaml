@@ -21,7 +21,7 @@
         <Card.HeaderStartContent>
             <ui:Icon Source="fa-briefcase" />
         </Card.HeaderStartContent>
-        <StackPanel Spacing="20">
+        <StackPanel Classes="BigGap">
             <BalancedWrapGrid MinItemWidth="200">
                 <Card Header="Project Name" Classes="Transparent">
                     <TextBox Watermark="Enter the name of your project" Text="{Binding ProjectName}" />
@@ -49,6 +49,14 @@
                    </HeaderedContainer>
                </BalancedWrapGrid>
             </Card>
+            <Button IsVisible="{Binding !!Errors.Count}" Background="DarkRed" Content="{Binding Errors.Count, StringFormat='{}{0} error(s) found'}" HorizontalAlignment="Left" Padding="10 5" 
+                    Theme="{StaticResource ThinTransparentButton}">
+                <Button.Flyout>
+                    <Flyout>
+                        <BulletList Foreground="Yellow" ItemsSource="{Binding Errors}" />
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
         </StackPanel>
     </Card>
 </UserControl>

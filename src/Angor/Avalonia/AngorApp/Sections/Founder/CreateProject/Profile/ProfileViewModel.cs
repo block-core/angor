@@ -1,11 +1,12 @@
 using System.Reactive.Disposables;
+using AngorApp.Sections.Founder.CreateProject.FundingStructure;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 
 namespace AngorApp.Sections.Founder.CreateProject.Profile;
 
-public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewModel
+public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewModel, IHaveErrors
 {
     private readonly CompositeDisposable disposable = new();
     [Reactive] private string? avatarUri;
@@ -31,7 +32,11 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
         this.ValidationRule(x => x.WebsiteUri, x => string.IsNullOrWhiteSpace(x) || Uri.TryCreate(x, UriKind.Absolute, out _), "Invalid URL").DisposeWith(disposable);
         this.ValidationRule(x => x.BannerUri, x => string.IsNullOrWhiteSpace(x) || Uri.TryCreate(x, UriKind.Absolute, out _), "Invalid URL").DisposeWith(disposable);
         this.ValidationRule(x => x.AvatarUri, x => string.IsNullOrWhiteSpace(x) || Uri.TryCreate(x, UriKind.Absolute, out _), "Invalid URL").DisposeWith(disposable);
+
+        Errors = new ErrorSummarizer(ValidationContext).DisposeWith(disposable).Errors;
     }
+
+    public ICollection<string> Errors { get; set; }
 
     public IObservable<bool> IsValid => this.IsValid();
 

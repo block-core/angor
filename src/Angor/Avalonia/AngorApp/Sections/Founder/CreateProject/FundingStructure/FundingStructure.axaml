@@ -16,20 +16,20 @@
 
     <UserControl.Styles>
         <StyleInclude Source="../Common.axaml" />
-        
+
         <Style Selector="CalendarDatePicker">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
-    
+
         <Style Selector="BalancedWrapGrid">
             <Setter Property="HorizontalSpacing" Value="10" />
             <Setter Property="VerticalSpacing" Value="10" />
         </Style>
-    
+
         <Style Selector="Card">
             <Setter Property="Theme" Value="{StaticResource  WideCard}" />
         </Style>
-    
+
         <Style Selector="StackPanel Card">
             <Setter Property="Padding" Value="10" />
         </Style>
@@ -39,27 +39,34 @@
         <Card.HeaderStartContent>
             <ui:Icon Source="svg:/Assets/clock-square.svg" />
         </Card.HeaderStartContent>
-        <StackPanel Classes="SmallGap">
+        <StackPanel Classes="BigGap">
             <Card Classes="Transparent" Header="Target Amount" Subheader="Minimum BTC this project is trying to raise">
                 <c:AmountControl Satoshis="{Binding Sats, Mode=TwoWay}" />
             </Card>
-           <BalancedWrapGrid>
-               <Card Classes="Transparent" Header="Funding Start" Subheader="When the investment period begins (automatically set today)">
-                   <TextBox VerticalAlignment="Bottom" IsReadOnly="True" Text="{Binding FundingStartDate, StringFormat='d'}" />
-               </Card>
-               <Card Classes="Transparent" Header="Funding End" Subheader="When the investment period ends">
-                   <CalendarDatePicker VerticalAlignment="Bottom" SelectedDate="{Binding FundingEndDate}" />
-               </Card>
-           </BalancedWrapGrid>
-           <BalancedWrapGrid>
-               <Card Classes="Transparent" Header="Penalty Days" Subheader="Days to lock funds for departing investors">
-                   <TextBox TextInputOptions.ContentType="Number" Watermark="Enter the penalty days" Text="{Binding PenaltyDays}" />
-               </Card>
-               <Card Classes="Transparent" Header="Emergency Expiry" Subheader="Emergency date for fund release">
-                   <CalendarDatePicker IsEnabled="False" SelectedDate="{Binding ExpiryDate}" />
-               </Card>
-           </BalancedWrapGrid>
-            <ItemsControl ItemsSource="{Binding Errors}" />
+            <BalancedWrapGrid>
+                <Card Classes="Transparent" Header="Funding Start" Subheader="When the investment period begins (automatically set today)">
+                    <TextBox VerticalAlignment="Bottom" IsReadOnly="True" Text="{Binding FundingStartDate, StringFormat='d'}" />
+                </Card>
+                <Card Classes="Transparent" Header="Funding End" Subheader="When the investment period ends">
+                    <CalendarDatePicker VerticalAlignment="Bottom" SelectedDate="{Binding FundingEndDate}" />
+                </Card>
+            </BalancedWrapGrid>
+            <BalancedWrapGrid>
+                <Card Classes="Transparent" Header="Penalty Days" Subheader="Days to lock funds for departing investors">
+                    <TextBox TextInputOptions.ContentType="Number" Watermark="Enter the penalty days" Text="{Binding PenaltyDays}" />
+                </Card>
+                <Card Classes="Transparent" Header="Emergency Expiry" Subheader="Emergency date for fund release">
+                    <CalendarDatePicker IsEnabled="False" SelectedDate="{Binding ExpiryDate}" />
+                </Card>
+            </BalancedWrapGrid>
+            <Button IsVisible="{Binding !!Errors.Count}" Background="DarkRed" Content="{Binding Errors.Count, StringFormat='{}{0} error(s) found'}" HorizontalAlignment="Left" Padding="10 5" 
+                    Theme="{StaticResource ThinTransparentButton}">
+                <Button.Flyout>
+                    <Flyout>
+                        <BulletList Foreground="Yellow" ItemsSource="{Binding Errors}" />
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
         </StackPanel>
     </Card>
 

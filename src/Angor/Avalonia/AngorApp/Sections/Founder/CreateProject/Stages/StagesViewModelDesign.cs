@@ -10,4 +10,5 @@ public class StagesViewModelDesign : IStagesViewModel
     public IObservable<DateTime?> LastStageDate { get; } = Observable.Return<DateTime?>(DateTime.Now);
     public IStagesCreatorViewModel StagesCreator { get; }
     public IEnhancedCommand CreateStages { get; }
+    public ICollection<string> Errors { get; }
 }

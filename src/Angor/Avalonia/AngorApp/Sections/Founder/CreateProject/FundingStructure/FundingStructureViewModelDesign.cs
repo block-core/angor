@@ -9,7 +9,7 @@ namespace AngorApp.Sections.Founder.CreateProject.FundingStructure;
 public partial class FundingStructureViewModelDesign : ReactiveValidationObject, IFundingStructureViewModel
 {
     [ObservableAsProperty] private IAmountUI? targetAmount;
-    [ObservableAsProperty] private IEnumerable<string>? errors;
+    [ObservableAsProperty] private ICollection<string>? errors;
     [Reactive] private long? sats;
     private readonly CompositeDisposable disposable = new CompositeDisposable();
     public FundingStructureViewModelDesign()
@@ -26,20 +26,8 @@ public partial class FundingStructureViewModelDesign : ReactiveValidationObject,
             .ToProperty(this, model => model.TargetAmount);
 
         errorsHelper = this.ValidationContext.ValidationStatusChange
-            .Select(_ =>
-            {
-                var list = new List<string>();
-                foreach (var v in this.ValidationContext.Validations.Items)
-                {
-                    var text = v.Text?.ToString();
-                    if (!string.IsNullOrWhiteSpace(text))
-                    {
-                        list.Add(text!);
-                    }
-                }
-                return (IReadOnlyList<string>)list.Distinct().ToList();
-            })
-            .StartWith(new List<string>())
+            .Select(state => state.Text.ToList())
+            .StartWith(this.ValidationContext.Text.ToList())
             .ToProperty(this, model => model.Errors);
     }
 

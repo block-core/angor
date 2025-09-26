@@ -11,6 +11,12 @@
              xmlns:design="clr-namespace:AngorApp.Design"
              d:DesignHeight="800"
              x:DataType="p:IPortfolioSectionViewModel">
+    
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding LoadWallet}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
 
     <UserControl.Resources>
         <ControlTheme x:Key="Item" TargetType="HeaderedContainer">
@@ -68,16 +74,6 @@
                             <IconButton HorizontalAlignment="Stretch" Command="{Binding LoadWallet}" Icon="{Icon fa-arrows-rotate}" Content="Refresh" />
                             <IconButton HorizontalAlignment="Stretch" Command="{Binding GoToPenalties}" Icon="{Icon fa-unlock}" Content="Penalties" />
                         </UniformGrid>
-                        <ToggleButton x:Name="GridView" Width="38" CornerRadius="10" Height="38" Padding="0">
-                            <ToggleButton.Styles>
-                                <Style Selector="ToggleButton[IsChecked=True]">
-                                    <Setter Property="Content" Value="{Icon mdi-view-grid-outline}" />
-                                </Style>
-                                <Style Selector="ToggleButton[IsChecked=False]">
-                                    <Setter Property="Content" Value="{Icon mdi-dns-outline}" />
-                                </Style>
-                            </ToggleButton.Styles>
-                        </ToggleButton>
                     </StackPanel>
                 </Card.HeaderEndContent>
             </Card>
@@ -126,26 +122,14 @@
                             </Card>
                         </BalancedWrapGrid>
 
-                        <ItemsControl IsVisible="{Binding !#GridView.IsChecked}" Classes="ShowEmptyContent" ItemsSource="{Binding InvestedProjects}" Empty.Content="Nothing to show">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Classes="BigGap" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <items:PortfolioProjectView />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <CardGrid IsVisible="{Binding #GridView.IsChecked}" ItemsSource="{Binding InvestedProjects}" MinColumnWidth="300" MaxColumnWidth="500">
+                        <CardGrid ItemsSource="{Binding InvestedProjects}" MinColumnWidth="300" MaxColumnWidth="500">
                             <CardGrid.ItemTemplate>
                                 <DataTemplate>
                                     <items:PortfolioProjectView />
                                 </DataTemplate>
                             </CardGrid.ItemTemplate>
                         </CardGrid>
+                       
                     </StackPanel>
                 </ScrollViewer>
             </Loading>

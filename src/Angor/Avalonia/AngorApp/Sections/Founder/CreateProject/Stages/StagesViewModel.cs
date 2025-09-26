@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Reactive.Disposables;
+using AngorApp.Sections.Founder.CreateProject.FundingStructure;
 using DynamicData;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
@@ -70,7 +71,11 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
         CreateStages = ReactiveCommand.Create(CreateStagesFromCreator, StagesCreator.IsValid())
             .Enhance()
             .DisposeWith(disposable);
+        
+        Errors = new ErrorSummarizer(ValidationContext).DisposeWith(disposable).Errors;
     }
+
+    public ICollection<string> Errors { get; set; }
 
     private void CreateStagesFromCreator()
     {
