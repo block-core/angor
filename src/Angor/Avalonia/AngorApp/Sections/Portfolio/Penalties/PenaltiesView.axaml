@@ -49,7 +49,8 @@
                             </z:SlimDataGrid.Columns>
                         </z:SlimDataGrid>
                     </Card>
-                </Loading>            </DockPanel>
+                </Loading>
+            </DockPanel>
         </ScrollViewer>
     </a:PageContainer>
 </UserControl>

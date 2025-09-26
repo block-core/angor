@@ -8,6 +8,10 @@ using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Shared;
 using Angor.Shared.Services;
 using AngorApp.Composition.Registrations;
+using AngorApp.Composition.Registrations.Sections;
+using AngorApp.Composition.Registrations.Services;
+using AngorApp.Composition.Registrations.ViewModels;
+using AngorApp.Sections;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder;
 using AngorApp.Sections.Home;
@@ -15,12 +19,14 @@ using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Settings;
 using AngorApp.Sections.Shell;
 using AngorApp.Sections.Wallet;
+using Humanizer;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Core;
 using Zafiro.Avalonia.Services;
 using Zafiro.UI;
 using Zafiro.UI.Navigation;
+using Zafiro.UI.Navigation.Sections;
 
 namespace AngorApp.Composition;
 
@@ -46,7 +52,6 @@ public static class CompositionRoot
         services.AddKeyedSingleton<IStore>("file", store);
         services.AddSingleton<IStore>(provider => provider.GetKeyedService<IStore>("file"));
 
-        
         services.AddSingleton<Func<BitcoinNetwork>>(sp => () =>
         {
             var cfg = sp.GetRequiredService<INetworkConfiguration>();
@@ -54,17 +59,20 @@ public static class CompositionRoot
             return name == "Main" || name == "Mainnet" ? BitcoinNetwork.Mainnet : BitcoinNetwork.Testnet;
         });
 
-        ModelServices.Register(services);
-        ViewModels.Register(services);
-        UIServicesRegistration.Register(services, topLevelView);
-        SecurityContext.Register(services);
+        services
+            .AddModelServices()
+            .AddViewModels()
+            .AddUiServices(topLevelView);
+        
+        services.AddNavigator();
+        services.AddSecurityContext();
         RegisterWalletServices(services, logger, network);
         FundingContextServices.Register(services, logger);
 
         // Integration services
         services.AddSingleton<ISeedwordsProvider, SeedwordsProvider>();
 
-        RegisterSections(services, logger);
+        services.AddAppSections(logger);
 
         var serviceProvider = services.BuildServiceProvider();
         serviceProvider.GetRequiredService<INetworkService>().AddSettingsIfNotExist();
@@ -72,20 +80,6 @@ public static class CompositionRoot
         return serviceProvider.GetRequiredService<IMainViewModel>();
     }
 
-    private static void RegisterSections(ServiceCollection services, Logger logger)
-    {
-        services.RegisterSections(builder => builder
-                .Add<IHomeSectionViewModel>("Home", new Icon { Source = "svg:/Assets/angor-icon.svg" })
-                .Separator()
-                .Add<IWalletSectionViewModel>("Wallet", new Icon { Source = "svg:/Assets/wallet.svg" })
-                .Add<IBrowseSectionViewModel>("Browse", new Icon { Source = "svg:/Assets/browse.svg" })
-                .Add<IPortfolioSectionViewModel>("Portfolio",  new Icon { Source = "svg:/Assets/portfolio.svg" })
-                .Add<IFounderSectionViewModel>("Founder", new Icon { Source = "svg:/Assets/user.svg" })
-                .Separator()
-                .Add<ISettingsSectionViewModel>("Settings", new Icon { Source = "svg:/Assets/settings.svg" })
-                .Command("Angor Hub", provider => ReactiveCommand.CreateFromTask(() => provider.GetRequiredService<ILauncherService>().LaunchUri(new Uri("https://hub.angor.io"))), new Icon { Source = "svg:/Assets/browse.svg" } , false)
-            , logger);
-    }
 
     private static void RegisterWalletServices(ServiceCollection services, Logger logger, BitcoinNetwork network)
     {

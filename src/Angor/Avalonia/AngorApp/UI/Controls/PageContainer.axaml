@@ -18,12 +18,12 @@
 
             <ContainerQuery Name="Root" Query="min-width:0">
                 <Style Selector="ContentPresenter#ContentPresenter">
-                    <Setter Property="Margin" Value="8" />
+                    <Setter Property="Margin" Value="8 8 8 0" />
                 </Style>
             </ContainerQuery>
             <ContainerQuery Name="Root" Query="min-width:600">
                 <Style Selector="ContentPresenter#ContentPresenter">
-                    <Setter Property="Margin" Value="20" />
+                    <Setter Property="Margin" Value="20 20 20 0" />
                 </Style>
             </ContainerQuery>
         </ControlTheme>

@@ -2,7 +2,7 @@
   <!-- https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <AvaloniaVersion>11.3.4</AvaloniaVersion>
+    <AvaloniaVersion>11.3.6</AvaloniaVersion>
   </PropertyGroup>
   <ItemGroup>
     <!-- Avalonia packages -->
@@ -31,7 +31,7 @@
     <PackageVersion Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.6.2" />
     <PackageVersion Include="Projektanker.Icons.Avalonia.MaterialDesign" Version="9.6.2" />
     <PackageVersion Include="QRCoder" Version="1.6.0" />
-    <PackageVersion Include="ReactiveUI" Version="20.3.1" />
+    <PackageVersion Include="ReactiveUI" Version="20.1.63" />
     <PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.2.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -45,12 +45,12 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageVersion Include="Serilog.Sinks.XUnit" Version="3.0.19" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
-    <PackageVersion Include="Zafiro" Version="33.0.15" />
-    <PackageVersion Include="Zafiro.Avalonia" Version="36.0.20" />
-    <PackageVersion Include="Zafiro.Avalonia.Generators" Version="36.0.20" />
+    <PackageVersion Include="Zafiro" Version="34.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia" Version="37.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia.Generators" Version="37.0.1" />
     <PackageVersion Include="Zafiro.FileSystem" Version="31.0.0" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="36.0.20" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="37.0.1" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />
     <PackageVersion Include="FluentAssertions.Reactive" Version="0.2.0" />

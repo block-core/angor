@@ -4,7 +4,6 @@
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:f="clr-namespace:AngorApp.UI"
-             xmlns:navigation="clr-namespace:Zafiro.UI.Navigation;assembly=Zafiro.UI"
              x:Class="AngorApp.App"
              RequestedThemeVariant="Dark">
 
@@ -12,35 +11,12 @@
         <ResourceDictionary>
 
             <IconDataTemplate x:Key="IconDataTemplate" Converter="{x:Static f:AngorIconConverter.Instance}" />
+
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="UI/Controls/Header.axaml" />
                 <MergeResourceInclude Source="UI/Controls/SectionItem.axaml" />
                 <MergeResourceInclude Source="UI/Resources/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
-
-            <DataTemplate x:Key="SmallIcon" DataType="x:Object">
-                <ContentPresenter Content="{Binding}">
-                    <ContentPresenter.DataTemplates>
-                        <DataTemplate DataType="ui:Icon">
-                            <Viewbox Height="20" Width="20">
-                                <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
-                            </Viewbox>
-                        </DataTemplate>
-                    </ContentPresenter.DataTemplates>
-                </ContentPresenter>
-            </DataTemplate>
-
-            <DataTemplate x:Key="RegularIcon" DataType="x:Object">
-                <ContentPresenter Content="{Binding}">
-                    <ContentPresenter.DataTemplates>
-                        <DataTemplate DataType="ui:Icon">
-                            <Viewbox Height="30" Width="30">
-                                <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
-                            </Viewbox>
-                        </DataTemplate>
-                    </ContentPresenter.DataTemplates>
-                </ContentPresenter>
-            </DataTemplate>
 
             <DataTemplate x:Key="BigIcon" DataType="x:Object">
                 <ContentPresenter Content="{Binding}">
@@ -166,7 +142,9 @@
         <!-- TEMPLATE PRIORITY IS IMPORTANT! -->
         <!-- The first template that matches the type will be used, so first templates in this list are checked for a match before the others -->
         <DataTemplate DataType="ui:IIcon">
-            <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
+            <Viewbox Height="{Binding $self.(IconOptions.Size)}" Width="{Binding $self.Width}">
+                <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
+            </Viewbox>
         </DataTemplate>
         <DataTypeViewLocator />
         <DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />

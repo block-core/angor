@@ -8,7 +8,6 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Http" />
-      <PackageReference Include="Zafiro" />
     </ItemGroup>
 
     <ItemGroup>

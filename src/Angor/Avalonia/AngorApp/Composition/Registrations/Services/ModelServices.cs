@@ -1,18 +1,17 @@
-using Angor.UI.Model;
 using Angor.UI.Model.Implementation;
 using AngorApp.Design;
 using AngorApp.Features.Invest;
 using AngorApp.Sections.Wallet.CreateAndImport;
-using AngorApp.UI.Controls;
 using AngorApp.UI.Controls.Feerate;
 using AngorApp.UI.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AngorApp.Composition.Registrations;
+namespace AngorApp.Composition.Registrations.Services;
 
 public static class ModelServices
 {
-    public static IServiceCollection Register(this IServiceCollection services)
+    // Model-level services used by the UI layer
+    public static IServiceCollection AddModelServices(this IServiceCollection services)
     {
         return services
             .AddSingleton<IAmountFactory, AmountFactory>()

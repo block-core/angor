@@ -1,11 +1,9 @@
 using System.Diagnostics;
 using Angor.Shared;
 using AngorApp.Sections.Shell;
-using AngorApp.UI;
 using AngorApp.UI.Services;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
-using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Misc;
@@ -14,11 +12,12 @@ using Zafiro.UI;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Shell;
 
-namespace AngorApp.Composition.Registrations;
+namespace AngorApp.Composition.Registrations.Services;
 
-public static class UIServicesRegistration
+public static class UiServices
 {
-    public static IServiceCollection Register(this IServiceCollection services, Control parent)
+    // Registers UI-level services, dialogs, shell and notifications
+    public static IServiceCollection AddUiServices(this IServiceCollection services, Control parent)
     {
         var topLevel = TopLevel.GetTopLevel(parent);
         
@@ -41,7 +40,7 @@ public static class UIServicesRegistration
             .AddSingleton<INotificationService>(_ => notificationService)
             .AddSingleton<UIServices>();
     }
-
+    
     private static NotificationService NotificationService(TopLevel topLevel)
     {
         var managedNotificationManager = new WindowNotificationManager(topLevel)
