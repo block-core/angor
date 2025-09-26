@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="400"
              x:Class="AngorApp.Sections.Founder.CreateProject.Profile.ProfileView"
              x:DataType="profile:IProfileViewModel">
@@ -49,14 +50,7 @@
                    </HeaderedContainer>
                </BalancedWrapGrid>
             </Card>
-            <Button IsVisible="{Binding !!Errors.Count}" Background="DarkRed" Content="{Binding Errors.Count, StringFormat='{}{0} error(s) found'}" HorizontalAlignment="Left" Padding="10 5" 
-                    Theme="{StaticResource ThinTransparentButton}">
-                <Button.Flyout>
-                    <Flyout>
-                        <BulletList Foreground="Yellow" ItemsSource="{Binding Errors}" />
-                    </Flyout>
-                </Button.Flyout>
-            </Button>
+            <controls:ErrorSummary Errors="{Binding Errors}" />
         </StackPanel>
     </Card>
 </UserControl>

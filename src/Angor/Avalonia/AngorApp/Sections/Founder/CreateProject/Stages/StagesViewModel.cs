@@ -2,8 +2,10 @@ using System.Linq;
 using System.Reactive.Disposables;
 using AngorApp.Sections.Founder.CreateProject.FundingStructure;
 using DynamicData;
+using DynamicData.Aggregation;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
+using Zafiro.Reactive;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Founder.CreateProject.Stages;
@@ -32,8 +34,7 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
             .AutoRefresh(stage => stage.ReleaseDate)
             .ToCollection()
             .Select(list => list.Select(s => s.ReleaseDate).Where(d => d.HasValue).DefaultIfEmpty().Max())
-            .Replay(1)
-            .RefCount();
+            .ReplayLastActive();
 
         changes
             .Bind(out var stages)
@@ -49,21 +50,13 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
             })
             .Enhance()
             .DisposeWith(disposable);
-        
-        var allStagesValid = changes
-            .ToCollection()
-            .Select(stages => stages.Count > 0 ? stages.Select(stage => stage.IsValid()).CombineLatest(validities => validities.All(v => v)) : Observable.Return(false))
-            .Switch()
-            .StartWith(false)
-            .DistinctUntilChanged();
 
-        this.ValidationRule(allStagesValid, b => b, _ => "Stages are not valid").DisposeWith(disposable);
+        var stageCount = changes
+            .Count();
 
-        var totalPercent = changes
-            .AutoRefresh(stage => stage.Percent)
-            .ToCollection()
-            .Select(list => list.Sum(stage => stage.Percent ?? 0));
+        var totalPercent = changes.Sum(stage => stage.Percent);
 
+        this.ValidationRule(stageCount, b => b > 0, _ => "There must be at least one stage").DisposeWith(disposable);
         this.ValidationRule(totalPercent, percent => Math.Abs(percent - 100) < 1, _ => "Stage percentages should sum to 100%").DisposeWith(disposable);
 
         StagesCreator = new StagesCreatorViewModel().DisposeWith(disposable);
@@ -75,13 +68,13 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
         Errors = new ErrorSummarizer(ValidationContext).DisposeWith(disposable).Errors;
     }
 
-    public ICollection<string> Errors { get; set; }
+    public ICollection<string> Errors { get; }
 
     private void CreateStagesFromCreator()
     {
-        var stageCount = StagesCreator.NumberOfStages;
+        var stageCount = StagesCreator.NumberOfStages!.Value;
         var stagePercent = 100 / stageCount;
-        var initialDate = StagesCreator.SelectedInitialDate.Value;
+        var initialDate = StagesCreator.SelectedInitialDate!.Value;
         
         var timespan = StagesCreator.SelectedFrequency switch
         {
@@ -92,7 +85,7 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
             _ => TimeSpan.FromDays(7)
         };
         
-        var stages = Enumerable.Range(0, StagesCreator.NumberOfStages.Value).Select(i =>
+        var stages = Enumerable.Range(0, stageCount).Select(i =>
         {
             return new CreateProjectStage(stage =>
             {

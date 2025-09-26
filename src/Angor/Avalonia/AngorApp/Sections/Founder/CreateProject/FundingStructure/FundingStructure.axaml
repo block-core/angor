@@ -59,14 +59,7 @@
                     <CalendarDatePicker IsEnabled="False" SelectedDate="{Binding ExpiryDate}" />
                 </Card>
             </BalancedWrapGrid>
-            <Button IsVisible="{Binding !!Errors.Count}" Background="DarkRed" Content="{Binding Errors.Count, StringFormat='{}{0} error(s) found'}" HorizontalAlignment="Left" Padding="10 5" 
-                    Theme="{StaticResource ThinTransparentButton}">
-                <Button.Flyout>
-                    <Flyout>
-                        <BulletList Foreground="Yellow" ItemsSource="{Binding Errors}" />
-                    </Flyout>
-                </Button.Flyout>
-            </Button>
+            <c:ErrorSummary Errors="{Binding Errors}" />
         </StackPanel>
     </Card>
 
