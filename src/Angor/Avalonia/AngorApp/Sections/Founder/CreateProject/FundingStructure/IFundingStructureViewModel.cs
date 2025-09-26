@@ -15,5 +15,5 @@ public interface IFundingStructureViewModel
     DateTime? ExpiryDate { get; set; }
     
     IAmountUI TargetAmount { get; }
-    public string? Errors { get; }
+    IEnumerable<string> Errors { get; }
 }

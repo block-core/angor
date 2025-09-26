@@ -36,13 +36,6 @@
     </UserControl.Styles>
 
     <Card Header="Funding Structure">
-        <Card.HeaderEndContent>
-            <ContentControl IsVisible="{Binding IsValid^}" Foreground="LawnGreen">
-                <ContentControl.Content>
-                    <ItemsControl ItemsSource="{Binding Errors}" />
-                </ContentControl.Content>
-            </ContentControl>
-        </Card.HeaderEndContent>
         <Card.HeaderStartContent>
             <ui:Icon Source="svg:/Assets/clock-square.svg" />
         </Card.HeaderStartContent>
@@ -66,6 +59,7 @@
                    <CalendarDatePicker IsEnabled="False" SelectedDate="{Binding ExpiryDate}" />
                </Card>
            </BalancedWrapGrid>
+            <ItemsControl ItemsSource="{Binding Errors}" />
         </StackPanel>
     </Card>
 
