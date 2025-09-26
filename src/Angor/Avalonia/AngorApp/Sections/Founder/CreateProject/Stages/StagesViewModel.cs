@@ -1,10 +1,6 @@
-using System;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using DynamicData;
-using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.UI.Commands;
@@ -52,7 +48,7 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
             })
             .Enhance()
             .DisposeWith(disposable);
-
+        
         var allStagesValid = changes
             .ToCollection()
             .Select(stages => stages.Count > 0 ? stages.Select(stage => stage.IsValid()).CombineLatest(validities => validities.All(v => v)) : Observable.Return(false))
@@ -69,8 +65,42 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
 
         this.ValidationRule(totalPercent, percent => Math.Abs(percent - 100) < 1, _ => "Stage percentages should sum to 100%").DisposeWith(disposable);
 
-        stagesSource.AddOrUpdate(CreateStage());
-        RecalculatePercentages();
+        StagesCreator = new StagesCreatorViewModel().DisposeWith(disposable);
+        StagesCreator.SelectedInitialDate = DateTime.Today;
+        CreateStages = ReactiveCommand.Create(CreateStagesFromCreator, StagesCreator.IsValid())
+            .Enhance()
+            .DisposeWith(disposable);
+    }
+
+    private void CreateStagesFromCreator()
+    {
+        var stageCount = StagesCreator.NumberOfStages;
+        var stagePercent = 100 / stageCount;
+        var initialDate = StagesCreator.SelectedInitialDate.Value;
+        
+        var timespan = StagesCreator.SelectedFrequency switch
+        {
+            PaymentFrequency.Daily => TimeSpan.FromDays(1),
+            PaymentFrequency.Weekly => TimeSpan.FromDays(7),
+            PaymentFrequency.Monthly => TimeSpan.FromDays(30),
+            PaymentFrequency.Quarterly => TimeSpan.FromDays(90),
+            _ => TimeSpan.FromDays(7)
+        };
+        
+        var stages = Enumerable.Range(0, StagesCreator.NumberOfStages.Value).Select(i =>
+        {
+            return new CreateProjectStage(stage =>
+            {
+                stagesSource.Remove(stage);
+                RecalculatePercentages();
+            }, endDateChanges)
+            {
+                Percent = stagePercent,
+                ReleaseDate = initialDate.Add(timespan * i)
+            };
+        });
+
+        stagesSource.Edit(updater => updater.Load(stages));
     }
 
     public ICollection<ICreateProjectStage> Stages { get; }
@@ -111,4 +141,6 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
 
     public IObservable<bool> IsValid => this.IsValid();
     public IObservable<DateTime?> LastStageDate { get; }
+    public IStagesCreatorViewModel StagesCreator { get; }
+    public IEnhancedCommand CreateStages { get; }
 }

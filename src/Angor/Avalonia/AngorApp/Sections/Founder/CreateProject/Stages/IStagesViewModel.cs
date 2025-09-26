@@ -9,4 +9,6 @@ public interface IStagesViewModel
     ICollection<ICreateProjectStage> Stages { get; }
     IObservable<bool> IsValid { get; }
     IObservable<DateTime?> LastStageDate { get; }
+    public IStagesCreatorViewModel StagesCreator { get; }
+    public IEnhancedCommand CreateStages { get; }
 }

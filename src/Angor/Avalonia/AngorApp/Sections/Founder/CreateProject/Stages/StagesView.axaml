@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
+             xmlns:cp="clr-namespace:AngorApp.Sections.Founder.CreateProject"
              mc:Ignorable="d" d:DesignWidth="580"
              x:Class="AngorApp.Sections.Founder.CreateProject.Stages.StagesView"
              x:DataType="stages:IStagesViewModel">
@@ -45,56 +46,119 @@
         <Card.HeaderStartContent>
             <ui:Icon Source="svg:/Assets/stages.svg" />
         </Card.HeaderStartContent>
-        <DockPanel>
-            <IconButton Command="{Binding AddStage}" Margin="0 10 0 0" DockPanel.Dock="Bottom" Content="Add Stage">
-                <IconButton.Icon>
-                    <ui:Icon Source="fa-plus" />
-                </IconButton.Icon>
-            </IconButton>
-            <ItemsControl ItemsSource="{Binding Stages}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="stages:ICreateProjectStage">
-                        <Border Classes="CardAlt"  Padding="10" CornerRadius="10" Margin="0 0 0 10">
-                            <Grid ColumnDefinitions="Auto * Auto"  ColumnSpacing="15">
-                                <Grid.Styles>
-                                    <Style Selector="Button.Aligned">
-                                        <Setter Property="Height" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
-                                        <Setter Property="Width" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
-                                        <Setter Property="Margin" Value="1" />
+        <StackPanel Classes="BigGap">
+            <Border Classes="CardAlt">
+                <StackPanel Classes="BigGap">
+                    <TextBlock>Configure the stages of your project</TextBlock>
+                    <WrapPanel ItemSpacing="20" Classes="BigGap" HorizontalAlignment="Center">
+                        <RadioButton x:Name="Easy" IsChecked="True" Content="Easy" />
+                        <RadioButton x:Name="Advanced" Content="Advanced" />
+                    </WrapPanel>
+                    <Panel>
+                        <StackPanel x:Name="EasyWay" Classes="BigGap" IsVisible="{Binding #Easy.IsChecked}">
+                            <cp:StagesCreatorView DataContext="{Binding StagesCreator}" />
+                            <Button Command="{Binding CreateStages}" Classes.Update="{Binding !!Stages.Count}" HorizontalAlignment="Center">
+                                <Button.Styles>
+                                    <Style Selector="Button">
+                                        <Setter Property="Content" Value="Create Stages" />
                                     </Style>
-                                    <Style Selector="HeaderedContainer /template/ ContentControl#Header">
-                                        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
-                                        <Setter Property="FontWeight" Value="Normal" />
+                                    <Style Selector="Button.Update">
+                                        <Setter Property="Content" Value="Update Stages" />
                                     </Style>
-                                </Grid.Styles>
-                                <Button Classes="Aligned" Width="33" Height="33">
-                                    <TextBlock VerticalAlignment="Center" Text="{ItemIndex StartFromOne=True}" />
-                                </Button>
-                                <BalancedWrapGrid MinItemWidth="250" Grid.Column="1" HorizontalSpacing="20" VerticalSpacing="10" Grid.IsSharedSizeScope="True">
-                                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Stage %">
-                                        <EdgePanel.Content>
-                                            <TextBox TextAlignment="Center" Text="{Binding Percent, Mode=TwoWay, StringFormat=0.##}">
-                                                <TextBox.InnerRightContent>
-                                                    <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock>
-                                                </TextBox.InnerRightContent>
-                                            </TextBox>
-                                        </EdgePanel.Content>
-                                    </EdgePanel>
-                                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Release Date">
-                                        <EdgePanel.Content>
-                                            <CalendarDatePicker MinWidth="130" SelectedDate="{Binding ReleaseDate}" />
-                                        </EdgePanel.Content>
-                                    </EdgePanel>
-                                </BalancedWrapGrid>
-                                <Button Classes="Aligned" Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="2">
-                                    <ui:Icon Source="mdi-window-close" />
-                                </Button>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </DockPanel>
+                                </Button.Styles>
+                            </Button>
+                            <ItemsControl ItemsSource="{Binding Stages}" IsVisible="{Binding !!Stages.Count}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="stages:ICreateProjectStage">
+                                        <Border Classes="CardAlt" Padding="10" CornerRadius="10" Margin="0 0 0 10">
+                                            <Grid ColumnDefinitions="Auto * Auto" ColumnSpacing="15">
+                                                <Grid.Styles>
+                                                    <Style Selector="Button.Aligned">
+                                                        <Setter Property="Height" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
+                                                        <Setter Property="Width" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
+                                                        <Setter Property="Margin" Value="1" />
+                                                    </Style>
+                                                    <Style Selector="HeaderedContainer /template/ ContentControl#Header">
+                                                        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+                                                        <Setter Property="FontWeight" Value="Normal" />
+                                                    </Style>
+                                                </Grid.Styles>
+                                                <Button Classes="Aligned" Width="33" Height="33">
+                                                    <TextBlock VerticalAlignment="Center" Text="{ItemIndex StartFromOne=True}" />
+                                                </Button>
+                                                <BalancedWrapGrid MinItemWidth="250" Grid.Column="1" HorizontalSpacing="20" VerticalSpacing="10" Grid.IsSharedSizeScope="True">
+                                                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Stage %">
+                                                        <EdgePanel.EndContent>
+                                                            <TextBlock TextAlignment="Center" Text="{Binding Percent, Mode=TwoWay, StringFormat={}{0:0.##} %}" />
+                                                        </EdgePanel.EndContent>
+                                                    </EdgePanel>
+                                                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Release Date">
+                                                        <EdgePanel.EndContent>
+                                                            <TextBlock Text="{Binding ReleaseDate, StringFormat=d}" />
+                                                        </EdgePanel.EndContent>
+                                                    </EdgePanel>
+                                                </BalancedWrapGrid>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                        <DockPanel x:Name="AdvancedWay" IsVisible="{Binding !#Easy.IsChecked}">
+                            <IconButton Command="{Binding AddStage}" Margin="0 10 0 0" DockPanel.Dock="Bottom" Content="Add Stage">
+                                <IconButton.Icon>
+                                    <ui:Icon Source="fa-plus" />
+                                </IconButton.Icon>
+                            </IconButton>
+                            <ItemsControl ItemsSource="{Binding Stages}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="stages:ICreateProjectStage">
+                                        <Border Classes="CardAlt" Padding="10" CornerRadius="10" Margin="0 0 0 10">
+                                            <Grid ColumnDefinitions="Auto * Auto" ColumnSpacing="15">
+                                                <Grid.Styles>
+                                                    <Style Selector="Button.Aligned">
+                                                        <Setter Property="Height" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
+                                                        <Setter Property="Width" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
+                                                        <Setter Property="Margin" Value="1" />
+                                                    </Style>
+                                                    <Style Selector="HeaderedContainer /template/ ContentControl#Header">
+                                                        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+                                                        <Setter Property="FontWeight" Value="Normal" />
+                                                    </Style>
+                                                </Grid.Styles>
+                                                <Button Classes="Aligned" Width="33" Height="33">
+                                                    <TextBlock VerticalAlignment="Center" Text="{ItemIndex StartFromOne=True}" />
+                                                </Button>
+                                                <BalancedWrapGrid MinItemWidth="250" Grid.Column="1" HorizontalSpacing="20" VerticalSpacing="10" Grid.IsSharedSizeScope="True">
+                                                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Stage %">
+                                                        <EdgePanel.Content>
+                                                            <TextBox TextAlignment="Center" Text="{Binding Percent, Mode=TwoWay, StringFormat=0.##}">
+                                                                <TextBox.InnerRightContent>
+                                                                    <TextBlock VerticalAlignment="Center" Margin="0 0 10 0">%</TextBlock>
+                                                                </TextBox.InnerRightContent>
+                                                            </TextBox>
+                                                        </EdgePanel.Content>
+                                                    </EdgePanel>
+                                                    <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Release Date">
+                                                        <EdgePanel.Content>
+                                                            <CalendarDatePicker MinWidth="130" SelectedDate="{Binding ReleaseDate}" />
+                                                        </EdgePanel.Content>
+                                                    </EdgePanel>
+                                                </BalancedWrapGrid>
+                                                <Button Classes="Aligned" Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="2">
+                                                    <ui:Icon Source="mdi-window-close" />
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </DockPanel>
+
+                    </Panel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
     </Card>
 
 </UserControl>

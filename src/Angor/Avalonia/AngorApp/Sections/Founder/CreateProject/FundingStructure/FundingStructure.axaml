@@ -38,7 +38,9 @@
     <Card Header="Funding Structure">
         <Card.HeaderEndContent>
             <ContentControl IsVisible="{Binding IsValid^}" Foreground="LawnGreen">
-                <ui:Icon Source="fa-check" />
+                <ContentControl.Content>
+                    <ItemsControl ItemsSource="{Binding Errors}" />
+                </ContentControl.Content>
             </ContentControl>
         </Card.HeaderEndContent>
         <Card.HeaderStartContent>
@@ -61,7 +63,7 @@
                    <TextBox TextInputOptions.ContentType="Number" Watermark="Enter the penalty days" Text="{Binding PenaltyDays}" />
                </Card>
                <Card Classes="Transparent" Header="Emergency Expiry" Subheader="Emergency date for fund release">
-                   <CalendarDatePicker SelectedDate="{Binding ExpiryDate}" />
+                   <CalendarDatePicker IsEnabled="False" SelectedDate="{Binding ExpiryDate}" />
                </Card>
            </BalancedWrapGrid>
         </StackPanel>

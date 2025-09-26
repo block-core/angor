@@ -1,3 +1,5 @@
+using ReactiveUI.Validation.Collections;
+
 namespace AngorApp.Sections.Founder.CreateProject.FundingStructure;
 
 public interface IFundingStructureViewModel
@@ -13,4 +15,5 @@ public interface IFundingStructureViewModel
     DateTime? ExpiryDate { get; set; }
     
     IAmountUI TargetAmount { get; }
+    public string? Errors { get; }
 }

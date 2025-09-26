@@ -1,5 +1,6 @@
 using System.Reactive.Disposables;
 using ReactiveUI.SourceGenerators;
+using ReactiveUI.Validation.Collections;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 
@@ -30,7 +31,8 @@ public partial class FundingStructureViewModelDesign : ReactiveValidationObject,
     public int? PenaltyDays { get; set; }
     public DateTime? FundingEndDate { get; set; }
     public DateTime? ExpiryDate { get; set; }
-    
+    public IValidationText? Errors { get; }
+
     protected override void Dispose(bool disposing)
     {
         disposable.Dispose();
