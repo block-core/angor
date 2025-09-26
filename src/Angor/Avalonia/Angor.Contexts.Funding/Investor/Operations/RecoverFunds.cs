@@ -78,7 +78,7 @@ public static class RecoverFunds
             
             var transactionId = await indexerService.PublishTransactionAsync(recoveryTransaction.Transaction.ToHex());
             
-            return Result.Success(transactionId);
+            return string.IsNullOrEmpty(transactionId) ? Result.Success(transactionId) : Result.Failure("Failed to publish the transaction: " + transactionId);
         }
         
         private async Task<Result<SignatureInfo?>> LookupFounderSignatures(Guid walletId, Project project, DateTime createdAt, string eventId,
