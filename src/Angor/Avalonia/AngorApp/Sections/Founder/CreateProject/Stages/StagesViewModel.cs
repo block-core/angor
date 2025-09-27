@@ -51,12 +51,14 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
             .Enhance()
             .DisposeWith(disposable);
 
-        var stageCount = changes
-            .Count();
 
-        var totalPercent = changes.Sum(stage => stage.Percent);
+        var totalPercent = stagesSource
+            .Connect()
+            .AutoRefresh(stage => stage.Percent)
+            .ToCollection()
+            .Select(collection => collection.Sum(stage => stage.Percent ?? 0));
 
-        this.ValidationRule(stageCount, b => b > 0, _ => "There must be at least one stage").DisposeWith(disposable);
+        this.ValidationRule(stagesSource.CountChanged, b => b > 0, _ => "There must be at least one stage").DisposeWith(disposable);
         this.ValidationRule(totalPercent, percent => Math.Abs(percent - 100) < 1, _ => "Stage percentages should sum to 100%").DisposeWith(disposable);
 
         StagesCreator = new StagesCreatorViewModel().DisposeWith(disposable);
