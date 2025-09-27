@@ -14,6 +14,12 @@
         <browse:BrowseSectionViewModelDesign />
     </Design.DataContext>
 
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding LoadProjects}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
     <UserControl.Styles>
         <Style Selector="TextBox">
             <Setter Property="BorderThickness" Value="1" />

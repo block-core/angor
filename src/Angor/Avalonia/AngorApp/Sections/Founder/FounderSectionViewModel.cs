@@ -2,7 +2,6 @@ using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using AngorApp.Sections.Browse;
 using AngorApp.Sections.Founder.CreateProject;
 using AngorApp.UI.Controls.Common.Success;
 using AngorApp.UI.Services;
@@ -47,8 +46,6 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
         Create.HandleErrorsWith(uiServices.NotificationService, "Cannot create project").DisposeWith(disposable);
 
         ProjectsList = projectList;
-
-        LoadProjects.Execute().Subscribe().DisposeWith(disposable);
     }
 
     public void Dispose()

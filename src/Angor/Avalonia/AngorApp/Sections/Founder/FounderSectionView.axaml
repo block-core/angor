@@ -15,6 +15,12 @@
         <founder:FounderSectionViewModelDesign />
     </Design.DataContext>
 
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding LoadProjects}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
     <UserControl.DataTemplates>
 
         <DataTemplate DataType="founder:IFounderProjectViewModel">

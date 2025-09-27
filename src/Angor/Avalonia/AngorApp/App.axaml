@@ -134,6 +134,7 @@
         <StyleInclude Source="UI/Styles/FlyoutPresenter.axaml" />
         <StyleInclude Source="UI/Styles/Styles.axaml" />
         <StyleInclude Source="UI/Styles/Button.axaml" />
+        <StyleInclude Source="UI/Styles/SlimDataGrid.axaml" />
         <StyleInclude Source="UI/Styles/HeaderedContainer.axaml" />
         <StyleInclude Source="UI/Styles/EdgePanel.axaml" />
         <StyleInclude Source="UI/Styles/Border.axaml" />

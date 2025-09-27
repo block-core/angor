@@ -13,27 +13,27 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
 {
     [ObservableAsProperty] private IWalletViewModel? activeWallet;
     [ObservableAsProperty] private bool canCreateWallet;
-    
-    public WalletSectionViewModel(UIServices uiServices, WalletCreationWizard creationWizard,
+
+    public WalletSectionViewModel(UIServices uiServices,
+        WalletCreationWizard creationWizard,
         WalletImportWizard importWizard,
         IWalletAppService walletAppService)
     {
         Create = ReactiveCommand.CreateFromTask(creationWizard.Start);
         Import = ReactiveCommand.CreateFromTask(importWizard.Start);
-        
+
         LoadWallet = ReactiveCommand.CreateFromTask(() => uiServices.WalletRoot.GetDefaultWalletAndActivate());
         LoadWallet.HandleErrorsWith(uiServices.NotificationService, "Failed to load wallet");
-        
+
         activeWalletHelper = uiServices.ActiveWallet.CurrentChanged
             .Select(w => new WalletViewModel(w, walletAppService, uiServices))
             .ToProperty(this, x => x.ActiveWallet);
-            
+
         HasWallet = this.WhenAnyValue(x => x.ActiveWallet).NotNull();
         canCreateWalletHelper = uiServices.WalletRoot.HasDefault().Not().ToProperty(this, x => x.CanCreateWallet);
         IsBusy = LoadWallet.IsExecuting;
-        LoadWallet.Execute().Subscribe();
     }
-    
+
     public IObservable<bool> HasWallet { get; }
     public IObservable<bool> IsBusy { get; }
 
