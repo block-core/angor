@@ -42,7 +42,7 @@
             </Card>
             <ScrollViewer>
                 <StackPanel Classes="BigGap">
-                    <BalancedWrapGrid MinItemWidth="200">
+                    <BalancedWrapGrid MinItemWidth="200" HorizontalSpacing="20" VerticalSpacing="20">
                         <Card Header="Total Funds" Theme="{StaticResource LeftItemCard}" Subheader="{Binding Project.TotalFunds.DecimalString}" />
                         <Card Header="Expiry Date" Theme="{StaticResource LeftItemCard}" Subheader="{Binding Project.ExpiryDate, Converter={x:Static co:AngorConverters.HumanizeDateTime}}" />
                         <Card Header="Penalty Period" Theme="{StaticResource LeftItemCard}" Subheader="{Binding Project.PenaltyPeriod.TotalDays, StringFormat='{}{0} Days'}" />

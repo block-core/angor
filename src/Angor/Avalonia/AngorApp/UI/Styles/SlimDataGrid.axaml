@@ -7,9 +7,10 @@
     </Design.PreviewWith>
     
     <Styles.Resources>
+        <SolidColorBrush x:Key="SlimDataGridSeparatorBrush" Color="{DynamicResource SystemBaseLowColor}" />
         <ControlTheme x:Key="{x:Type SlimDataGrid}" TargetType="SlimDataGrid" BasedOn="{StaticResource {x:Type SlimDataGrid}}">
             <ControlTheme.Resources>
-                <SolidColorBrush x:Key="SlimDataGridSeparatorBrush" Color="{DynamicResource SystemBaseLowColor}" />
+                
             </ControlTheme.Resources>
             <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}" />
             <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
