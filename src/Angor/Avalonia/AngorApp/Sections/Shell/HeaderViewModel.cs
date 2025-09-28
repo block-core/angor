@@ -1,22 +1,25 @@
+using AngorApp.UI.Services;
 using Avalonia;
 using Avalonia.LogicalTree;
-using Avalonia.VisualTree;
+using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Controls.Wizards.Slim;
 using Zafiro.UI.Commands;
 using Zafiro.UI.Wizards.Slim;
 
 namespace AngorApp.Sections.Shell;
 
-public class HeaderViewModel : ReactiveObject
+public partial class HeaderViewModel : ReactiveObject
 {
     private readonly Blockcore.Networks.Network network;
     private readonly ObservableAsPropertyHelper<object?> currentHeader;
 
-    public HeaderViewModel(IEnhancedCommand back, object content, Blockcore.Networks.Network network)
+    public HeaderViewModel(IEnhancedCommand back, object content, Blockcore.Networks.Network network, UIServices uiServices)
     {
         this.network = network;
         Back = back;
         currentHeader = Header(content).ToProperty(this, vm => vm.Content);
+        this.WhenAnyValue(model => model.IsDarkThemeEnabled)
+            .BindTo(uiServices, services => services.IsDarkThemeEnabled);
     }
 
     public IEnhancedCommand Back { get; }
@@ -46,4 +49,6 @@ public class HeaderViewModel : ReactiveObject
                 .Map(h => h.Header)
                 .GetValueOrDefault());
     }
+
+    [Reactive] private bool isDarkThemeEnabled;
 }
