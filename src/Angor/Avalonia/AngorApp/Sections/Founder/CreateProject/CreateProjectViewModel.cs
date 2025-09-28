@@ -28,7 +28,7 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         this.projectAppService = projectAppService;
         FundingStructureViewModel = new FundingStructureViewModel().DisposeWith(disposable);
         var endDateChanges = FundingStructureViewModel.WhenAnyValue(x => x.FundingEndDate);
-        StagesViewModel = new StagesViewModel(() => FundingStructureViewModel.FundingEndDate, endDateChanges).DisposeWith(disposable);
+        StagesViewModel = new StagesViewModel(() => FundingStructureViewModel.FundingEndDate, endDateChanges, uiServices).DisposeWith(disposable);
         ProfileViewModel = new ProfileViewModel().DisposeWith(disposable);
 
         StagesViewModel.LastStageDate

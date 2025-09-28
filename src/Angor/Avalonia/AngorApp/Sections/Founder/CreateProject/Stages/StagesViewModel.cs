@@ -1,10 +1,14 @@
 using System.Linq;
 using System.Reactive.Disposables;
+using System.Threading.Tasks;
 using AngorApp.Sections.Founder.CreateProject.FundingStructure;
+using AngorApp.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
+using AngorApp.UI.Services;
 using DynamicData;
 using DynamicData.Aggregation;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
+using Zafiro.Avalonia.Dialogs;
 using Zafiro.Reactive;
 using Zafiro.UI.Commands;
 
@@ -20,7 +24,7 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
 
     private readonly SourceCache<ICreateProjectStage, long> stagesSource;
 
-    public StagesViewModel(Func<DateTime?> getEndDate, IObservable<DateTime?> endDateChanges)
+    public StagesViewModel(Func<DateTime?> getEndDate, IObservable<DateTime?> endDateChanges, UIServices uiServices)
     {
         this.getEndDate = getEndDate;
         this.endDateChanges = endDateChanges;
@@ -63,7 +67,16 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
 
         StagesCreator = new StagesCreatorViewModel().DisposeWith(disposable);
         StagesCreator.SelectedInitialDate = DateTime.Today;
-        CreateStages = ReactiveCommand.Create(CreateStagesFromCreator, StagesCreator.IsValid())
+        CreateStages = ReactiveCommand.CreateFromTask(async () =>
+            {
+                var create = Stages.Count == 0 || await uiServices.Dialog.ShowConfirmation("Create stages", "Do you want to replace existing stages?").GetValueOrDefault(() => false);
+                
+                if (create)
+                {
+                    CreateStagesFromCreator();
+                }
+                
+            }, StagesCreator.IsValid())
             .Enhance()
             .DisposeWith(disposable);
         
