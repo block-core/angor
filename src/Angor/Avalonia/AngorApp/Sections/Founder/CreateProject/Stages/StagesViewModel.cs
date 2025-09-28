@@ -69,7 +69,7 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
         StagesCreator.SelectedInitialDate = DateTime.Today;
         CreateStages = ReactiveCommand.CreateFromTask(async () =>
             {
-                var create = Stages.Count == 0 || await uiServices.Dialog.ShowConfirmation("Create stages", "Do you want to replace existing stages?").GetValueOrDefault(() => false);
+                var create = Stages.Count == 0 || await uiServices.Dialog.ShowConfirmation("Create stages", "Do you want to replace the current stages with new ones?\n\nThis action can't be undone.").GetValueOrDefault(() => false);
                 
                 if (create)
                 {
@@ -88,7 +88,7 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
     private void CreateStagesFromCreator()
     {
         var stageCount = StagesCreator.NumberOfStages!.Value;
-        var stagePercent = 100 / stageCount;
+        decimal stagePercent = 100 / new decimal(stageCount);
         var initialDate = StagesCreator.SelectedInitialDate!.Value;
         
         var timespan = StagesCreator.SelectedFrequency switch

@@ -3,14 +3,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:c="clr-namespace:AngorApp.Sections.Founder.CreateProject"
-             mc:Ignorable="d" d:DesignWidth="500" 
+             mc:Ignorable="d" d:DesignWidth="500"
              x:DataType="c:IStagesCreatorViewModel"
              x:Class="AngorApp.Sections.Founder.CreateProject.StagesCreatorView">
-    
+
     <Design.DataContext>
         <c:StagesCreatorViewModel />
     </Design.DataContext>
-    
+
     <UserControl.Styles>
         <Style Selector="CalendarDatePicker.Untouched /template/ TextBox#PART_TextBox /template/ Border#PART_BorderElement">
             <Setter Property="BorderBrush" Value="{DynamicResource CalendarDatePickerBorderBrush}" />
@@ -23,27 +23,32 @@
     </UserControl.Resources>
 
     <BalancedWrapGrid HorizontalSpacing="10" VerticalSpacing="10" MinItemWidth="200">
-        <CalendarDatePicker Classes="Untouched" x:Name="CalendarDatePicker" VerticalAlignment="Top" 
-                            SelectedDate="{Binding SelectedInitialDate, Mode=TwoWay}" Watermark="Initial date">
-            <Interaction.Behaviors>
-                <PropertyChangedTrigger  Binding="{Binding #CalendarDatePicker.SelectedDate}">
-                    <RemoveClassAction ClassName="Untouched" />
-                </PropertyChangedTrigger>
-            </Interaction.Behaviors>
-        </CalendarDatePicker>
-        <ComboBox HorizontalAlignment="Stretch"
-            x:DataType="EnumProvider"
-            x:Name="ComboBox"
-            ItemsSource="{Binding Enums, Source={StaticResource EnumProvider}}"
-            DisplayMemberBinding="{Binding Description, DataType=EnumItem}"
-            SelectedValueBinding="{Binding Value, DataType=EnumItem}"
-            SelectedValue="{Binding SelectedFrequency, DataType=c:IStagesCreatorViewModel}">
-        </ComboBox>
-        <NumericUpDown Minimum="1" FormatString="n0" Value="{Binding NumberOfStages}" VerticalContentAlignment="Center" Watermark="Number of stages">
-            <Interaction.Behaviors>
-                <UntouchedClassBehavior />
-            </Interaction.Behaviors>
-        </NumericUpDown>
+        <HeaderedContainer Header="Initial date">
+            <CalendarDatePicker Classes="Untouched" x:Name="CalendarDatePicker" VerticalAlignment="Top"
+                                SelectedDate="{Binding SelectedInitialDate, Mode=TwoWay}" Watermark="Initial date">
+                <Interaction.Behaviors>
+                    <PropertyChangedTrigger Binding="{Binding #CalendarDatePicker.SelectedDate}">
+                        <RemoveClassAction ClassName="Untouched" />
+                    </PropertyChangedTrigger>
+                </Interaction.Behaviors>
+            </CalendarDatePicker></HeaderedContainer>
+        <HeaderedContainer Header="Payment frequency">
+            <ComboBox HorizontalAlignment="Stretch"
+                      x:DataType="EnumProvider"
+                      x:Name="ComboBox"
+                      ItemsSource="{Binding Enums, Source={StaticResource EnumProvider}}"
+                      DisplayMemberBinding="{Binding Description, DataType=EnumItem}"
+                      SelectedValueBinding="{Binding Value, DataType=EnumItem}"
+                      SelectedValue="{Binding SelectedFrequency, DataType=c:IStagesCreatorViewModel}">
+            </ComboBox>
+        </HeaderedContainer>
+        <HeaderedContainer Header="Number of stages">
+            <NumericUpDown Minimum="1" FormatString="n0" Value="{Binding NumberOfStages}" VerticalContentAlignment="Center" Watermark="Number of stages">
+                <Interaction.Behaviors>
+                    <UntouchedClassBehavior />
+                </Interaction.Behaviors>
+            </NumericUpDown>
+        </HeaderedContainer>
     </BalancedWrapGrid>
 
 </UserControl>
