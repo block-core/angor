@@ -17,8 +17,11 @@
         <x:Double x:Key="SmallGap">10</x:Double>
         <x:Double x:Key="BigGap">20</x:Double>
         <x:Double x:Key="HugeGap">40</x:Double>
+        
+        <SolidColorBrush x:Key="SuccessBrush">Green</SolidColorBrush>
+        <SolidColorBrush x:Key="WarningBrush">Gold</SolidColorBrush>
+        <SolidColorBrush x:Key="FailureBrush">Red</SolidColorBrush>
     </Styles.Resources>
-    
     
     <Style Selector="ListBox.Rounded">
         <Setter Property="CornerRadius" Value="10" />

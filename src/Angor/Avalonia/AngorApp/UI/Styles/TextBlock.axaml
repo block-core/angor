@@ -37,6 +37,10 @@
         <Setter Property="Foreground" Value="Orange" />
     </Style>
     
+    <Style Selector=":is(Panel).CenterText TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+    
     <Styles.Resources>
         <ControlTheme x:Key="PaneTitle" TargetType="TextBlock" BasedOn="{StaticResource Regular}">
             <Setter Property="FontWeight" Value="Bold" />
