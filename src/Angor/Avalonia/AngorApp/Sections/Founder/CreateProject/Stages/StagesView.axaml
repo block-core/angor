@@ -6,6 +6,7 @@
              xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
              xmlns:cp="clr-namespace:AngorApp.Sections.Founder.CreateProject"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:ct="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages.Creator"
              mc:Ignorable="d" d:DesignWidth="580"
              x:Class="AngorApp.Sections.Founder.CreateProject.Stages.StagesView"
              x:DataType="stages:IStagesViewModel">
@@ -57,7 +58,7 @@
                     </WrapPanel>
                     <Panel>
                         <StackPanel x:Name="EasyWay" Classes="BigGap" IsVisible="{Binding #Easy.IsChecked}">
-                            <cp:StagesCreatorView DataContext="{Binding StagesCreator}" />
+                            <ct:StagesCreatorView DataContext="{Binding StagesCreator}" />
                             <Button Command="{Binding CreateStages}" Classes.Update="{Binding !!Stages.Count}" HorizontalAlignment="Center">
                                 <Button.Styles>
                                     <Style Selector="Button">

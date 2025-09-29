@@ -1,17 +1,9 @@
 using System.Reactive.Disposables;
 using ReactiveUI.SourceGenerators;
-using ReactiveUI.Validation.Abstractions;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 
-namespace AngorApp.Sections.Founder.CreateProject;
-
-public interface IStagesCreatorViewModel : IValidatableViewModel, IReactiveObject, IDisposable
-{
-    public int? NumberOfStages { get; set; }
-    public DateTime? SelectedInitialDate  { get; set; }
-    public PaymentFrequency? SelectedFrequency { get; set; }
-}
+namespace AngorApp.Sections.Founder.CreateProject.Stages.Creator;
 
 public partial class StagesCreatorViewModel : ReactiveValidationObject, IStagesCreatorViewModel
 {
@@ -32,12 +24,4 @@ public partial class StagesCreatorViewModel : ReactiveValidationObject, IStagesC
         disposable.Dispose();
         base.Dispose(disposing);
     }
-}
-
-public enum PaymentFrequency
-{
-    Daily,
-    Weekly,
-    Monthly,
-    Quarterly
 }

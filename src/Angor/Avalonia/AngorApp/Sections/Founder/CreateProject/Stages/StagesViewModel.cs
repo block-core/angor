@@ -2,6 +2,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using AngorApp.Sections.Founder.CreateProject.FundingStructure;
+using AngorApp.Sections.Founder.CreateProject.Stages.Creator;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
 using AngorApp.UI.Services;
 using DynamicData;
@@ -65,7 +66,7 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
         this.ValidationRule(stagesSource.CountChanged, b => b > 0, _ => "There must be at least one stage").DisposeWith(disposable);
         this.ValidationRule(totalPercent, percent => Math.Abs(percent - 100) < 1, _ => "Stage percentages should sum to 100%").DisposeWith(disposable);
 
-        StagesCreator = new StagesCreatorViewModel().DisposeWith(disposable);
+        StagesCreator = new Creator.StagesCreatorViewModel().DisposeWith(disposable);
         StagesCreator.SelectedInitialDate = DateTime.Today;
         CreateStages = ReactiveCommand.CreateFromTask(async () =>
             {

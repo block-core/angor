@@ -2,13 +2,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:c="clr-namespace:AngorApp.Sections.Founder.CreateProject"
+             xmlns:creator="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages.Creator"
              mc:Ignorable="d" d:DesignWidth="500"
-             x:DataType="c:IStagesCreatorViewModel"
-             x:Class="AngorApp.Sections.Founder.CreateProject.StagesCreatorView">
+             x:DataType="creator:IStagesCreatorViewModel"
+             x:Class="AngorApp.Sections.Founder.CreateProject.Stages.Creator.StagesCreatorView">
 
     <Design.DataContext>
-        <c:StagesCreatorViewModel />
+        <creator:StagesCreatorViewModel />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -19,7 +19,7 @@
     </UserControl.Styles>
 
     <UserControl.Resources>
-        <EnumProvider x:Key="EnumProvider" EnumType="{x:Type c:PaymentFrequency}" />
+        <EnumProvider x:Key="EnumProvider" EnumType="{x:Type creator:PaymentFrequency}" />
     </UserControl.Resources>
 
     <BalancedWrapGrid HorizontalSpacing="10" VerticalSpacing="10" MinItemWidth="200">
@@ -39,7 +39,7 @@
                       ItemsSource="{Binding Enums, Source={StaticResource EnumProvider}}"
                       DisplayMemberBinding="{Binding Description, DataType=EnumItem}"
                       SelectedValueBinding="{Binding Value, DataType=EnumItem}"
-                      SelectedValue="{Binding SelectedFrequency, DataType=c:IStagesCreatorViewModel}">
+                      SelectedValue="{Binding SelectedFrequency, DataType=creator:IStagesCreatorViewModel}">
             </ComboBox>
         </HeaderedContainer>
         <HeaderedContainer Header="Number of stages">

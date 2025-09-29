@@ -1,8 +1,4 @@
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-
-namespace AngorApp.Sections.Founder.CreateProject;
+namespace AngorApp.Sections.Founder.CreateProject.Stages.Creator;
 
 public partial class StagesCreatorView : UserControl
 {
