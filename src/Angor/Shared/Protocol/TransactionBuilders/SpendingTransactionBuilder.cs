@@ -61,6 +61,13 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
             .AddCoins(investmentTrxOutputs.Select(_ => _.ToCoin()))
             .EstimateFees(spendingTrx, feeRate);
 
+        var totalSize = spendingTrx.GetVirtualSize(); //Same transaction builder bug 
+        var minimumFee = new FeeRate(Money.Satoshis(feeRate.FeePerK))
+            .GetFee(totalSize);
+        
+        if (feeToReduce.Satoshi < minimumFee)
+            feeToReduce = minimumFee;
+        
         spendingTrx.Outputs.Single().Value -= feeToReduce;
         
         // Step 4 - sign the taproot inputs

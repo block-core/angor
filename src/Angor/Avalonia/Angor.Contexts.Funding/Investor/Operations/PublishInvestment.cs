@@ -1,5 +1,6 @@
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -147,7 +148,7 @@ public static class PublishInvestment
                     signatureInfo = serializer.Deserialize<SignatureInfo>(signatures);
 
                     var validSignatures =
-                        investorTransactionActions.CheckInvestorRecoverySignatures(MapToProjectInfo(project),
+                        investorTransactionActions.CheckInvestorRecoverySignatures(project.ToProjectInfo(),
                             investment.Transaction, signatureInfo);
 
                     //TODO do we need to store the signatures in the database at this point?
@@ -162,26 +163,26 @@ public static class PublishInvestment
             return tcs.Task.Result;
         }
 
-        private static ProjectInfo MapToProjectInfo(Project project)
-        {
-            return new ProjectInfo
-            {
-                FounderKey = project.FounderKey,
-                NostrPubKey = project.NostrPubKey,
-                ProjectIdentifier = project.Id.Value,
-                EndDate = project.EndDate,
-                ExpiryDate = project.ExpiryDate,
-                FounderRecoveryKey = project.FounderRecoveryKey,
-                PenaltyDays = project.PenaltyDuration.Days,
-                Stages = project.Stages.Select(x => new Stage
-                {
-                    AmountToRelease = x.RatioOfTotal * 100,
-                    ReleaseDate = x.ReleaseDate
-                }).ToList(),
-                StartDate = project.StartingDate,
-                TargetAmount = project.TargetAmount,
-            };
-        }
+        // private static ProjectInfo MapToProjectInfo(Project project)
+        // {
+        //     return new ProjectInfo
+        //     {
+        //         FounderKey = project.FounderKey,
+        //         NostrPubKey = project.NostrPubKey,
+        //         ProjectIdentifier = project.Id.Value,
+        //         EndDate = project.EndDate,
+        //         ExpiryDate = project.ExpiryDate,
+        //         FounderRecoveryKey = project.FounderRecoveryKey,
+        //         PenaltyDays = project.PenaltyDuration.Days,
+        //         Stages = project.Stages.Select(x => new Stage
+        //         {
+        //             AmountToRelease = x.RatioOfTotal * 100,
+        //             ReleaseDate = x.ReleaseDate
+        //         }).ToList(),
+        //         StartDate = project.StartingDate,
+        //         TargetAmount = project.TargetAmount,
+        //     };
+        // }
 
 
         private async Task<Result<string>> PublishSignedTransactionAsync(TransactionInfo signedTransaction)
