@@ -57,77 +57,6 @@ public static class GetInvestorProjectRecovery
                 return Result.Failure<InvestorProjectRecoveryDto>("No investment stages found for this project");
 
             return await CheckSpentFund(investmentDetails.Value.Item2.ToList(), investmentDetails.Value.Item1, project.Value);
-            
-            // // TODO: Implement real logic here
-            // var now = DateTime.UtcNow;
-            // var expiry = now.AddDays(60);
-            //
-            // var dto = new InvestorProjectRecoveryDto
-            // {
-            //     ProjectIdentifier = request.ProjectId.Value,
-            //     Name = "Manage Investment (Test Data)",
-            //     ExpiryDate = expiry,
-            //     PenaltyDays = 90,
-            //     CanRecover = true,
-            //     CanRelease = true,
-            //     EndOfProject = false,
-            // };
-            //
-            // // 1) Not spent (eligible for Recover)
-            // dto.Items.Add(new InvestorStageItemDto
-            // {
-            //     StageIndex = 0,
-            //     Amount = 198_0000,
-            //     IsSpent = false,
-            //     Status = "Not Spent",
-            //     ScriptType = ProjectScriptTypeEnum.Unknown,
-            // });
-            //
-            // // 2) In penalty (not expired)
-            // dto.Items.Add(new InvestorStageItemDto
-            // {
-            //     StageIndex = 1,
-            //     Amount = 594_0000,
-            //     IsSpent = true,
-            //     Status = "Penalty, released in 37.1 days",
-            //     ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty,
-            // });
-            //
-            // // 3) In penalty (expired)
-            // dto.Items.Add(new InvestorStageItemDto
-            // {
-            //     StageIndex = 2,
-            //     Amount = 1_188_0000,
-            //     IsSpent = true,
-            //     Status = "Penalty can be released",
-            //     ScriptType = ProjectScriptTypeEnum.InvestorWithPenalty,
-            // });
-            //
-            // // 4) Spent by founder
-            // dto.Items.Add(new InvestorStageItemDto
-            // {
-            //     StageIndex = 3,
-            //     Amount = 250_0000,
-            //     IsSpent = true,
-            //     Status = "Spent by founder",
-            //     ScriptType = ProjectScriptTypeEnum.Founder,
-            // });
-            //
-            // // 5) Spent by investor (unfunded release)
-            // dto.Items.Add(new InvestorStageItemDto
-            // {
-            //     StageIndex = 4,
-            //     Amount = 350_0000,
-            //     IsSpent = true,
-            //     Status = "Spent by investor",
-            //     ScriptType = ProjectScriptTypeEnum.InvestorNoPenalty,
-            // });
-            //
-            // dto.TotalSpendable = dto.Items.Where(i => !i.IsSpent).Sum(i => i.Amount);
-            // dto.TotalInPenalty = dto.Items.Where(i => i.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty)
-            //     .Sum(i => i.Amount);
-            //
-            // return Task.FromResult(Result.Success(dto));
         }
 
 
@@ -173,21 +102,7 @@ public static class GetInvestorProjectRecovery
 
         private async Task<Result<InvestorProjectRecoveryDto>> CheckSpentFund(IList<InvestorStageItemDto> stageItems, QueryTransaction transactionInfo, Project project)
         {
-            // var unconfirmedOutbound = _cacheStorage.GetUnconfirmedOutboundFunds();
-            // bool modified = false;
-            //
-            // foreach (var infoOutput in transactionInfo.Outputs)
-            // {
-            //     if (!string.IsNullOrEmpty(infoOutput.SpentInTransaction))
-            //     {
-            //         modified |= unconfirmedOutbound.TryRemoveOutpoint(new Outpoint(transactionInfo.TransactionId, infoOutput.Index));
-            //     }
-            // }
-            //
-            // if (modified)
-            // {
-            //     _cacheStorage.SetUnconfirmedOutboundFunds(unconfirmedOutbound);
-            // }
+            //TODO handle unconfirmed outbound transactions
 
             var projectInfo = project.ToProjectInfo();
 
@@ -239,14 +154,7 @@ public static class GetInvestorProjectRecovery
         private async Task<Result> CheckTransactionSpendingAsync(QueryTransaction transactionInfo, InvestorStageItemDto item, Result<InvestmentSpendingLookup> lookup,
             DateTimeOffset penaltyExpieryDate, Transaction? investmentTransaction, ProjectInfo projectInfo)
         {
-            // if (unconfirmedOutbound.ContainsOutpoint(new Outpoint(StageInfo.TransactionInfo.TransactionId, item.Outputindex)))
-            // {
-            //     item.IsSpent = true;
-            //     item.SpentTo = "pending confirmations";
-            //     item.ProjectScriptType = new ProjectScriptType { ScriptType = ProjectScriptTypeEnum.Unknown };
-            //
-            //     continue;
-            // }
+            //TODO handle unconfirmed outbound transactions
             
             var output = transactionInfo.Outputs.ElementAt(item.StageIndex + 2);
 

@@ -61,7 +61,10 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
             .AddCoins(investmentTrxOutputs.Select(_ => _.ToCoin()))
             .EstimateFees(spendingTrx, feeRate);
 
-        long minimumFee = spendingTrx.GetVirtualSize(); //Same transaction builder bug 
+        var totalSize = spendingTrx.GetVirtualSize(); //Same transaction builder bug 
+        var minimumFee = new FeeRate(Money.Satoshis(feeRate.FeePerK))
+            .GetFee(totalSize);
+        
         if (feeToReduce.Satoshi < minimumFee)
             feeToReduce = minimumFee;
         
