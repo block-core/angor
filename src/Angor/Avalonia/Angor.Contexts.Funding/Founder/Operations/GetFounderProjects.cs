@@ -51,14 +51,14 @@ public static class GetFounderProjects
                 .Map(projects => projects.Select(project =>  new ProjectDto()
                 {
                     Id = new ProjectId(project.ProjectId),
-                    Picture = Uri.TryCreate(project.NostrUser.Picture, UriKind.Absolute, out var pictureUri) ? pictureUri : null,
+                    Avatar = Uri.TryCreate(project.NostrUser.Picture, UriKind.Absolute, out var pictureUri) ? pictureUri : null,
                     Banner = Uri.TryCreate(project.NostrUser.Banner, UriKind.Absolute, out var bannerUri) ? bannerUri : null,
                     InformationUri = Uri.TryCreate(project.NostrUser.Website, UriKind.Absolute, out var infoUri) ? infoUri : null,
                     Name = project.NostrUser.DisplayName,
-                    NostrNpubKey = project.NostrPubKey,
+                    NostrNpubKeyHex = project.NostrPubKey,
                     PenaltyDuration = new TimeSpan(project.PenaltyDays),
                     ShortDescription = project.NostrUser.About,
-                    StartingDate = project.FundingStartDate,
+                    FundingStartDate = project.FundingStartDate,
                     TargetAmount = project.TargetAmount,
                     Stages = project.Stages.Select(s => new StageDto
                     {

@@ -1,10 +1,22 @@
+using Angor.Contests.CrossCutting;
+using Angor.Contexts.Data;
 using Angor.Contexts.Funding;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Integration.WalletFunding;
 using Angor.Contexts.Wallet;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
+using Angor.Shared;
+using Angor.Shared.Services;
+using AngorApp.Composition.Registrations.Sections;
+using AngorApp.Composition.Registrations.Services;
+using AngorApp.Composition.Registrations.ViewModels;
 using AngorApp.Sections.Shell;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Serilog;
+using Serilog.Core;
+using Zafiro.UI.Navigation;
 
 namespace AngorApp.Composition;
 
