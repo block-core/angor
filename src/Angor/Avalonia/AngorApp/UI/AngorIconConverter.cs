@@ -10,7 +10,7 @@ namespace AngorApp.UI;
 public class AngorIconConverter : IIconConverter
 {
     public static AngorIconConverter Instance { get; } = new();
-    
+
     public Control? Convert(Zafiro.UI.IIcon icon)
     {
         // 1. División en dos partes: esquema y resto
@@ -41,19 +41,47 @@ public class AngorIconConverter : IIconConverter
 
         var uri = new Uri($"avares://{assemblyName}");
 
-        var isLight = Application.Current?.ActualThemeVariant == ThemeVariant.Light;
-        var color = isLight ? "Black" : "White";
-        var svgContents = AssetLoader.Open(new Uri(uri, resourcePath)).ReadToEnd().Result;
-        var transformer = new AngorSvgTransformer(color);
-        var final = transformer.Transform(svgContents);
+        return new ThemeAwareSvgIcon(new Uri(uri, resourcePath));
+    }
 
-        return new global::Avalonia.Svg.Skia.Svg(uri) { Source = final };
+    private sealed class ThemeAwareSvgIcon(Uri uri) : global::Avalonia.Svg.Skia.Svg(uri)
+    {
+        private IDisposable? subscription;
+        private readonly Uri Uri = uri;
+
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            base.OnAttachedToVisualTree(e);
+
+            if (Application.Current != null)
+            {
+                UpdateSource(Application.Current.ActualThemeVariant);
+            }
+
+            subscription ??= this.GetObservable(ThemeVariantScope.ActualThemeVariantProperty)
+                .Subscribe(UpdateSource);
+        }
+
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            base.OnDetachedFromVisualTree(e);
+
+            subscription?.Dispose();
+            subscription = null;
+        }
+
+        private void UpdateSource(ThemeVariant themeVariant)
+        {
+            var contents = AssetLoader.Open(this.Uri).ReadToEnd().Result;
+            var color = themeVariant == ThemeVariant.Light ? "Black" : "White";
+            Source = AngorSvgTransformer.Transform(contents, color);
+        }
     }
 }
 
-public class AngorSvgTransformer(string color)
+public static class AngorSvgTransformer
 {
-    public string Transform(string svgContent)
+    public static string Transform(string svgContent, string color)
     {
         var svg = XElement.Parse(svgContent);
 

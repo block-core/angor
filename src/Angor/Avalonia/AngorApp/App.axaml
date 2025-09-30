@@ -5,7 +5,7 @@
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:f="clr-namespace:AngorApp.UI"
              x:Class="AngorApp.App"
-             RequestedThemeVariant="Dark">
+             RequestedThemeVariant="Default">
 
     <Application.Resources>
         <ResourceDictionary>
@@ -75,7 +75,7 @@
                                        ChromeWhite="White"
                                        ListLow="#FFEAF2F3"
                                        ListMedium="#FFE6F1F2"
-                                       RegionColor="#FFF9FCFD" />
+                                       RegionColor="#CBDDE1" />
 
                 <ColorPaletteResources x:Key="Dark"
                                        Accent="#85B9C4"

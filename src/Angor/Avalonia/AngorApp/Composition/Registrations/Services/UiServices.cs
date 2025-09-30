@@ -59,8 +59,9 @@ public static class UiServices
         {
             var config = sp.GetRequiredService<INetworkConfiguration>();
             var network = config.GetNetwork();
+            var uiServices = sp.GetRequiredService<UIServices>();
             
-            return navigator.Content.Select(content => new HeaderViewModel(navigator.Back, content, network));
+            return navigator.Content.Select(content => new HeaderViewModel(navigator.Back, content, network, uiServices));
         }
         
         return Observable.Return("");
