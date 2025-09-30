@@ -40,8 +40,6 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
         LoadPortfolio.HandleErrorsWith(uiServices.NotificationService, "Failed to load portfolio projects").DisposeWith(disposable);
         investedProjectsHelper = LoadPortfolio.Successes().ToProperty(this, x => x.InvestedProjects).DisposeWith(disposable);
         
-        LoadWallet.Execute().Subscribe().DisposeWith(disposable);
-
         LoadWallet.ToSignal().InvokeCommand(LoadPortfolio).DisposeWith(disposable);
 
         GoToPenalties = ReactiveCommand.Create(navigator.Go<IPenaltiesViewModel>);

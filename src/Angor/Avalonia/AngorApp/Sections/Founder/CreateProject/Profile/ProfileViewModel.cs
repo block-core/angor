@@ -1,11 +1,12 @@
 using System.Reactive.Disposables;
+using AngorApp.Sections.Founder.CreateProject.FundingStructure;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 
 namespace AngorApp.Sections.Founder.CreateProject.Profile;
 
-public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewModel
+public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewModel, IHaveErrors
 {
     private readonly CompositeDisposable disposable = new();
     [Reactive] private string? avatarUri;
@@ -23,15 +24,19 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
         WebsiteUri = "https://sample.com"; // Placeholder for website
 #endif
 
-        this.ValidationRule(x => x.ProjectName, x => !string.IsNullOrEmpty(x), "Cannot be empty").DisposeWith(disposable);
-        this.ValidationRule(x => x.Description, x => !string.IsNullOrEmpty(x), "Cannot be empty").DisposeWith(disposable);
-        this.ValidationRule(x => x.WebsiteUri, x => !string.IsNullOrEmpty(x) && !string.IsNullOrEmpty(x), "Cannot be empty").DisposeWith(disposable);
-        this.ValidationRule(x => x.BannerUri, x => !string.IsNullOrEmpty(x) && !string.IsNullOrEmpty(x), "Cannot be empty").DisposeWith(disposable);
-        this.ValidationRule(x => x.AvatarUri, x => !string.IsNullOrEmpty(x) && !string.IsNullOrEmpty(x), "Cannot be empty").DisposeWith(disposable);
-        this.ValidationRule(x => x.WebsiteUri, x => string.IsNullOrWhiteSpace(x) || Uri.TryCreate(x, UriKind.Absolute, out _), "Invalid URL").DisposeWith(disposable);
-        this.ValidationRule(x => x.BannerUri, x => string.IsNullOrWhiteSpace(x) || Uri.TryCreate(x, UriKind.Absolute, out _), "Invalid URL").DisposeWith(disposable);
-        this.ValidationRule(x => x.AvatarUri, x => string.IsNullOrWhiteSpace(x) || Uri.TryCreate(x, UriKind.Absolute, out _), "Invalid URL").DisposeWith(disposable);
+        this.ValidationRule(x => x.ProjectName, x => !string.IsNullOrEmpty(x), "Project name cannot be empty").DisposeWith(disposable);
+        this.ValidationRule(x => x.Description, x => !string.IsNullOrEmpty(x), "Description cannot be empty").DisposeWith(disposable);
+        this.ValidationRule(x => x.WebsiteUri, x => !string.IsNullOrEmpty(x) && !string.IsNullOrEmpty(x), "Website cannot be empty").DisposeWith(disposable);
+        this.ValidationRule(x => x.BannerUri, x => !string.IsNullOrEmpty(x) && !string.IsNullOrEmpty(x), "Banner cannot be empty").DisposeWith(disposable);
+        this.ValidationRule(x => x.AvatarUri, x => !string.IsNullOrEmpty(x) && !string.IsNullOrEmpty(x), "Avatar Cannot be empty").DisposeWith(disposable);
+        this.ValidationRule(x => x.WebsiteUri, x => string.IsNullOrWhiteSpace(x) || Uri.TryCreate(x, UriKind.Absolute, out _), "Invalid website URL").DisposeWith(disposable);
+        this.ValidationRule(x => x.BannerUri, x => string.IsNullOrWhiteSpace(x) || Uri.TryCreate(x, UriKind.Absolute, out _), "Invalid banner URL").DisposeWith(disposable);
+        this.ValidationRule(x => x.AvatarUri, x => string.IsNullOrWhiteSpace(x) || Uri.TryCreate(x, UriKind.Absolute, out _), "Invalid avatar URL").DisposeWith(disposable);
+
+        Errors = new ErrorSummarizer(ValidationContext).DisposeWith(disposable).Errors;
     }
+
+    public ICollection<string> Errors { get; set; }
 
     public IObservable<bool> IsValid => this.IsValid();
 

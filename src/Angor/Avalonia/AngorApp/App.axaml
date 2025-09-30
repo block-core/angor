@@ -121,6 +121,7 @@
         <StyleInclude Source="UI/Controls/ProjectCard.axaml" />
         <StyleInclude Source="UI/Controls/IconButton.axaml" />
         <StyleInclude Source="UI/Controls/Feerate/FeerateSelector.axaml" />
+        <StyleInclude Source="UI/Controls/ErrorSummary.axaml" />
         <StyleInclude Source="Sections/Wallet/CreateAndImport/Steps/SeedWordsGeneration/SeedWordList.axaml" />
         <StyleInclude Source="UI/Controls/PageContainer.axaml" />
         <StyleInclude Source="UI/Controls/Badge.axaml" />
@@ -133,6 +134,7 @@
         <StyleInclude Source="UI/Styles/FlyoutPresenter.axaml" />
         <StyleInclude Source="UI/Styles/Styles.axaml" />
         <StyleInclude Source="UI/Styles/Button.axaml" />
+        <StyleInclude Source="UI/Styles/SlimDataGrid.axaml" />
         <StyleInclude Source="UI/Styles/HeaderedContainer.axaml" />
         <StyleInclude Source="UI/Styles/EdgePanel.axaml" />
         <StyleInclude Source="UI/Styles/Border.axaml" />

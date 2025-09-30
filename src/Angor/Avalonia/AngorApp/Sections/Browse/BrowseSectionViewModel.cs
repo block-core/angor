@@ -14,12 +14,13 @@ namespace AngorApp.Sections.Browse;
 
 public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionViewModel, IDisposable
 {
-    [Reactive] private string? projectId;
     private readonly CompositeDisposable disposable = new();
+    [Reactive] private string? projectId;
 
     [ObservableAsProperty] private IEnumerable<IProjectViewModel>? projects;
 
-    public BrowseSectionViewModel(IProjectAppService projectService, INavigator navigator,
+    public BrowseSectionViewModel(IProjectAppService projectService,
+        INavigator navigator,
         InvestWizard investWizard,
         UIServices uiServices)
     {
@@ -36,17 +37,21 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
             .Select(models => MergeBusy(models.Select(model => model.GoToDetails.IsExecuting)))
             .Switch()
             .StartWith(false);
-        
+
         LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Could not load projects");
 
         projectsHelper = LoadProjects.Successes().ToProperty(this, x => x.Projects).DisposeWith(disposable);
-        LoadProjects.Execute().Subscribe().DisposeWith(disposable);
     }
 
     public IObservable<bool> IsBusy { get; }
     public IProjectLookupViewModel ProjectLookupViewModel { get; }
     public IEnhancedCommand<Result<List<IProjectViewModel>>> LoadProjects { get; }
-    
+
+    public void Dispose()
+    {
+        disposable.Dispose();
+    }
+
     // Merges a set of IObservable<bool> (true=start, false=end) into a single busy flag.
     private static IObservable<bool> MergeBusy(IEnumerable<IObservable<bool>> sources)
     {
@@ -61,10 +66,5 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
                 return next < 0 ? 0 : next; // clamp to zero
             })
             .Select(count => count > 0);
-    }
-
-    public void Dispose()
-    {
-        disposable.Dispose();
     }
 }

@@ -37,6 +37,10 @@
         <Setter Property="Foreground" Value="Orange" />
     </Style>
     
+    <Style Selector=":is(Panel).CenterText TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+    
     <Styles.Resources>
         <ControlTheme x:Key="PaneTitle" TargetType="TextBlock" BasedOn="{StaticResource Regular}">
             <Setter Property="FontWeight" Value="Bold" />
@@ -46,4 +50,13 @@
             <Setter Property="Foreground" Value="Orange" />
         </ControlTheme>
     </Styles.Resources>
+    
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <StackPanel>
+                <TextBlock Theme="{StaticResource PaneTitle}">Pane Title</TextBlock>
+                <TextBlock Theme="{StaticResource Highlighted}">Highlighted</TextBlock>
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
 </Styles>

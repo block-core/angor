@@ -7,7 +7,7 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:claim="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.MainView.Claim"
-             mc:Ignorable="d" d:DesignWidth="300"
+             mc:Ignorable="d" d:DesignWidth="600"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.MainView.Claim.ClaimFundsView" x:DataType="claim:IClaimFundsViewModel">
 
     <Design.DataContext>
@@ -86,7 +86,7 @@
                     <DataTemplate DataType="claim:IClaimableStage">
                         <Card HeaderStartContent="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}" Theme="{StaticResource WideCard}">
                             <Card.HeaderEndContent>
-                                <ToggleButton HorizontalAlignment="Stretch" Theme="{StaticResource ExpandingToggleButton}" Padding="10" x:Name="ToggleButton" />
+                                <ToggleButton HorizontalAlignment="Stretch" Theme="{StaticResource ExpandingToggleButton}" Padding="20 10" IsChecked="{Binding !!ClaimableTransactionsCount}" x:Name="ToggleButton" />
                             </Card.HeaderEndContent>
                             <Card.Header>
                                 <BalancedWrapGrid MinItemWidth="80" MaxItemWidth="120">

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="400"
              x:Class="AngorApp.Sections.Founder.CreateProject.Profile.ProfileView"
              x:DataType="profile:IProfileViewModel">
@@ -21,7 +22,7 @@
         <Card.HeaderStartContent>
             <ui:Icon Source="fa-briefcase" />
         </Card.HeaderStartContent>
-        <StackPanel Spacing="20">
+        <StackPanel Classes="BigGap">
             <BalancedWrapGrid MinItemWidth="200">
                 <Card Header="Project Name" Classes="Transparent">
                     <TextBox Watermark="Enter the name of your project" Text="{Binding ProjectName}" />
@@ -49,6 +50,7 @@
                    </HeaderedContainer>
                </BalancedWrapGrid>
             </Card>
+            <controls:ErrorSummary Errors="{Binding Errors}" />
         </StackPanel>
     </Card>
 </UserControl>

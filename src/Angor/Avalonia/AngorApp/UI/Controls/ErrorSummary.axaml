@@ -1,0 +1,38 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+        xmlns:controls="clr-namespace:AngorApp.UI.Controls">
+    <Design.PreviewWith>
+        <Panel Width="400" Height="400">
+            <controls:ErrorSummary HorizontalAlignment="Center">
+                <controls:ErrorSummary.Errors>
+                    <generic:List x:TypeArguments="x:String">
+                        <x:String>Error 1</x:String>
+                        <x:String>Error 2</x:String>
+                        <x:String>Error 3</x:String>
+                    </generic:List>
+                </controls:ErrorSummary.Errors>
+            </controls:ErrorSummary>
+        </Panel>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <ControlTheme TargetType="controls:ErrorSummary" x:Key="{x:Type controls:ErrorSummary}">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Button DataContext="{Binding $parent[controls:ErrorSummary]}"
+                            IsVisible="{Binding !!$parent[controls:ErrorSummary].Errors.Count}" Background="DarkRed"
+                            Content="{Binding $parent[controls:ErrorSummary].Errors.Count, FallbackValue='Error Summary', StringFormat='{}{0} error(s) found'}" HorizontalAlignment="Left" Padding="10 5"
+                            Theme="{StaticResource ThinTransparentButton}">
+                        <Button.Flyout>
+                            <Flyout Placement="BottomEdgeAlignedLeft">
+                                <BulletList ItemsSource="{Binding $parent[controls:ErrorSummary].Errors}" />
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </Styles.Resources>
+</Styles>

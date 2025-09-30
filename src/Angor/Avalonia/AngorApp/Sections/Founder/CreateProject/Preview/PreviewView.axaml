@@ -70,7 +70,7 @@
                             </OverlayBorder.Styles>
                             <EdgePanel Theme="{StaticResource PropertyEdgePanel}">
                                 <EdgePanel.Content>
-                                    <TextBlock Text="{Binding Percent, StringFormat='{}{0}% Release'}" />
+                                    <TextBlock Text="{Binding Percent, StringFormat='{}{0.##}% Release'}" />
                                 </EdgePanel.Content>
                                 <EdgePanel.EndContent>
                                     <TextBlock Classes="SizeSmall" Opacity="0.5" Text="{Binding ReleaseDate, StringFormat='Target: {0:d}'}" />

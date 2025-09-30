@@ -10,12 +10,22 @@
         </Border>
     </Design.PreviewWith>
 
+    <Style Selector="CalendarDatePicker.Untouched /template/ TextBox#PART_TextBox">
+        <Setter Property="BorderBrush" Value="{DynamicResource CalendarDatePickerBorderBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource CalendarDatePickerBorderThemeThickness}" />
+    </Style>
+
     <Styles.Resources>
         <ControlTheme x:Key="{x:Type CalendarDatePicker}" TargetType="CalendarDatePicker">
+            <Setter Property="BorderBrush" Value="{DynamicResource CalendarDatePickerBorderBrush}" />
+            <Setter Property="BorderThickness" Value="{DynamicResource CalendarDatePickerBorderThemeThickness}" />
             <Setter Property="Template">
                 <ControlTemplate>
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBox VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
+                                 Background="{TemplateBinding Background}"
+                                 BorderBrush="{TemplateBinding BorderBrush}"
+                                 BorderThickness="{TemplateBinding BorderThickness}"
                                  DataValidationErrors.Errors="{Binding $parent[CalendarDatePicker].(DataValidationErrors.Errors)}" VerticalContentAlignment="Center" x:Name="PART_TextBox" Watermark="{TemplateBinding Watermark}">
                             <TextBox.InnerRightContent>
                                 <Button Margin="2" Name="PART_Button"

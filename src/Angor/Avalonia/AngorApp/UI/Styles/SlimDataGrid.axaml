@@ -1,0 +1,21 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <SlimDataGrid />
+        </Border>
+    </Design.PreviewWith>
+    
+    <Styles.Resources>
+        <SolidColorBrush x:Key="SlimDataGridSeparatorBrush" Color="{DynamicResource SystemBaseLowColor}" />
+        <ControlTheme x:Key="{x:Type SlimDataGrid}" TargetType="SlimDataGrid" BasedOn="{StaticResource {x:Type SlimDataGrid}}">
+            <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemChromeMediumColor}" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="20" />
+            <Style Selector="^ /template/ Row">
+                <Setter Property="Padding" Value="10 10" />
+            </Style>
+        </ControlTheme>
+    </Styles.Resources>
+</Styles>

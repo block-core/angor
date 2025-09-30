@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:projectCreated="clr-namespace:AngorApp.Sections.Founder.CreateProject.ProjectCreated"
+             mc:Ignorable="d" 
+             x:Class="AngorApp.Sections.Founder.CreateProject.ProjectCreated.ProjectCreateView"
+             x:DataType="projectCreated:IProjectCreatedViewModel" d:DesignHeight="300" d:DesignWidth="600">
+    
+    <StackPanel VerticalAlignment="Center" Classes="BigGap CenterText">
+        <ContentControl Content="{Icon fa-check}" IconOptions.Size="{StaticResource IconSizeBig}" Foreground="{DynamicResource SuccessBrush}" />
+        <StackPanel Classes="SmallGap">
+            <TextBlock Classes="SizeLarge">The project transaction has been published</TextBlock>
+            <TextBlock>Your project will appear once it has been added to a block in the blockchain</TextBlock>
+        </StackPanel>
+        <Button HorizontalAlignment="Center" Command="{Binding OpenTransaction}">Check Transaction</Button>
+    </StackPanel>
+</UserControl>

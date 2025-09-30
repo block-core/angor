@@ -10,12 +10,15 @@
              x:Name="RootView"
              x:Class="AngorApp.Sections.Wallet.WalletSectionView" x:DataType="wallet:IWalletSectionViewModel">
 
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding LoadWallet}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
     <UserControl.Styles>
         <Style Selector="WrapPanel > :is(Control)">
-            <Setter Property="Margin" Value="10"></Setter>
-        </Style>
-        <Style Selector="StackPanel">
-            <Setter Property="Spacing" Value="10" />
+            <Setter Property="Margin" Value="10" />
         </Style>
     </UserControl.Styles>
 
@@ -27,7 +30,7 @@
                     <operate:WalletView DataContext="{Binding ActiveWallet}" />
                 </Panel>
             </Panel>
-            <StackPanel IsVisible="{Binding IsBusy^}" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel Classes="SmallGap" IsVisible="{Binding IsBusy^}" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock TextAlignment="Center">We are loading your wallet</TextBlock>
                 <TextBlock TextAlignment="Center">Please, wait</TextBlock>
                 <c:ProgressRing Foreground="{DynamicResource SystemAccentColor}" IsIndeterminate="True" Height="100" Width="100" />

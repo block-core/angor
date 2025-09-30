@@ -2,8 +2,9 @@ using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using AngorApp.Sections.Browse;
+using Angor.Shared;
 using AngorApp.Sections.Founder.CreateProject;
+using AngorApp.Sections.Founder.CreateProject.ProjectCreated;
 using AngorApp.UI.Controls.Common.Success;
 using AngorApp.UI.Services;
 using DynamicData;
@@ -22,11 +23,13 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
     private readonly CompositeDisposable disposable = new();
     private readonly IProjectAppService projectAppService;
     private readonly UIServices uiServices;
+    private readonly INetworkStorage networkStorage;
 
-    public FounderSectionViewModel(UIServices uiServices, IInvestmentAppService investmentAppService, IProjectAppService projectAppService, INavigator navigator)
+    public FounderSectionViewModel(UIServices uiServices, IInvestmentAppService investmentAppService, IProjectAppService projectAppService, INavigator navigator, INetworkStorage networkStorage)
     {
         this.uiServices = uiServices;
         this.projectAppService = projectAppService;
+        this.networkStorage = networkStorage;
 
         LoadProjects = ReactiveCommand.CreateFromObservable(() => Projects(uiServices, projectAppService)).Enhance().DisposeWith(disposable);
         LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Failed to get investments").DisposeWith(disposable);
@@ -47,8 +50,6 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
         Create.HandleErrorsWith(uiServices.NotificationService, "Cannot create project").DisposeWith(disposable);
 
         ProjectsList = projectList;
-
-        LoadProjects.Execute().Subscribe().DisposeWith(disposable);
     }
 
     public void Dispose()
@@ -65,7 +66,7 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
     {
         var wizard = WizardBuilder
             .StartWith(() => new CreateProjectViewModel(wallet, uiServices, projectAppService), "Create Project").ProceedWith(model => model.Create)
-            .Then(_ => new SuccessViewModel("Your project has been created successfully!"), "Success").ProceedWith((_, projectId) => ReactiveCommand.Create(() => Result.Success(projectId)).Enhance("Close"))
+            .Then(transactionId => new ProjectCreatedViewModel(transactionId, uiServices, networkStorage), "Success").ProceedWith((_, projectId) => ReactiveCommand.Create(() => Result.Success(projectId)).Enhance("Close"))
             .WithCompletionFinalStep();
 
         return wizard;

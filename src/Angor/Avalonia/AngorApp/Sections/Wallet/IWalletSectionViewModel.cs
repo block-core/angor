@@ -1,4 +1,3 @@
-using System.Windows.Input;
 using AngorApp.Sections.Wallet.Operate;
 
 namespace AngorApp.Sections.Wallet;
@@ -11,4 +10,5 @@ public interface IWalletSectionViewModel
     public IWalletViewModel? ActiveWallet { get; }
     public IObservable<bool> HasWallet { get; }
     public bool CanCreateWallet { get; }
+    ReactiveCommand<Unit, Result<Maybe<IWallet>>> LoadWallet { get; }
 }

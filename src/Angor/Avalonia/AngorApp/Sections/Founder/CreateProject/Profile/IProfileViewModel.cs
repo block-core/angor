@@ -1,6 +1,8 @@
+using AngorApp.Sections.Founder.CreateProject.FundingStructure;
+
 namespace AngorApp.Sections.Founder.CreateProject.Profile;
 
-public interface IProfileViewModel
+public interface IProfileViewModel : IHaveErrors
 {
     public IObservable<bool> IsValid { get; }
     public string? ProjectName { get; set; }
@@ -18,4 +20,5 @@ public class ProfileViewModelDesign : IProfileViewModel
     public string? Description { get; set; }
     public string? AvatarUri { get; set; }
     public string? BannerUri { get; set; }
+    public ICollection<string> Errors { get; }
 }

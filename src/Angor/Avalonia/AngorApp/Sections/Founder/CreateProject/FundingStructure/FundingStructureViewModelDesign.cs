@@ -1,4 +1,5 @@
 using System.Reactive.Disposables;
+using System.Linq;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
@@ -8,6 +9,7 @@ namespace AngorApp.Sections.Founder.CreateProject.FundingStructure;
 public partial class FundingStructureViewModelDesign : ReactiveValidationObject, IFundingStructureViewModel
 {
     [ObservableAsProperty] private IAmountUI? targetAmount;
+    [ObservableAsProperty] private ICollection<string>? errors;
     [Reactive] private long? sats;
     private readonly CompositeDisposable disposable = new CompositeDisposable();
     public FundingStructureViewModelDesign()
@@ -22,6 +24,11 @@ public partial class FundingStructureViewModelDesign : ReactiveValidationObject,
             .WhereNotNull()
             .Select(l => new AmountUI(l.Value))
             .ToProperty(this, model => model.TargetAmount);
+
+        errorsHelper = this.ValidationContext.ValidationStatusChange
+            .Select(state => state.Text.ToList())
+            .StartWith(this.ValidationContext.Text.ToList())
+            .ToProperty(this, model => model.Errors);
     }
 
     public IObservable<bool> IsValid { get; set; } = Observable.Return(true);
@@ -30,7 +37,7 @@ public partial class FundingStructureViewModelDesign : ReactiveValidationObject,
     public int? PenaltyDays { get; set; }
     public DateTime? FundingEndDate { get; set; }
     public DateTime? ExpiryDate { get; set; }
-    
+
     protected override void Dispose(bool disposing)
     {
         disposable.Dispose();
