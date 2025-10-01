@@ -1,3 +1,4 @@
+using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Investor.Dtos;
@@ -19,7 +20,7 @@ public static class GetInvestorProjectRecovery
 
     public class Handler(
         IProjectRepository projectRepository,
-        IInvestmentRepository investmentRepository,
+        IPortfolioRepository investmentRepository,
         IIndexerService indexerService,
         INetworkConfiguration networkConfiguration,
         IInvestorTransactionActions investorTransactionActions,
