@@ -21,7 +21,7 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
     [ObservableAsProperty]
     private IWallet wallet;
     
-    [ObservableAsProperty] private IEnumerable<IPortfolioProject> investedProjects;
+    [ObservableAsProperty] private IEnumerable<IPortfolioProjectViewModel> investedProjects;
     [ObservableAsProperty] private IInvestorStatsViewModel investorStats;
 
     public PortfolioSectionViewModel(IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator)
@@ -36,7 +36,7 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
             .WhereNotNull()
             .Select(IInvestorStatsViewModel (projects) => new InvestorStatsViewModel(projects.ToList())).ToProperty(this, x => x.InvestorStats).DisposeWith(disposable);
         
-        LoadPortfolio = ReactiveCommand.CreateFromTask(() => investmentAppService.GetInvestorProjects(Wallet.Id.Value).MapEach(IPortfolioProject (dto) => new PortfolioProjectViewModel(dto, investmentAppService, uiServices, navigator)), hasWallet).DisposeWith(disposable).Enhance();
+        LoadPortfolio = ReactiveCommand.CreateFromTask(() => investmentAppService.GetInvestorProjects(Wallet.Id.Value).MapEach(IPortfolioProjectViewModel (dto) => new PortfolioProjectViewModel(dto, investmentAppService, uiServices, navigator)), hasWallet).DisposeWith(disposable).Enhance();
         LoadPortfolio.HandleErrorsWith(uiServices.NotificationService, "Failed to load portfolio projects").DisposeWith(disposable);
         investedProjectsHelper = LoadPortfolio.Successes().ToProperty(this, x => x.InvestedProjects).DisposeWith(disposable);
         
@@ -47,7 +47,7 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
         IsLoading = LoadWallet.IsExecuting.CombineLatest(LoadPortfolio.IsExecuting).Select(tuple => tuple.AnyTrue());
     }
 
-    public IEnhancedCommand<Result<IEnumerable<IPortfolioProject>>> LoadPortfolio { get; }
+    public IEnhancedCommand<Result<IEnumerable<IPortfolioProjectViewModel>>> LoadPortfolio { get; }
     public IObservable<bool> IsLoading { get; }
 
 

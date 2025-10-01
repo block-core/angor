@@ -4,7 +4,7 @@ namespace AngorApp.Sections.Portfolio;
 
 public class InvestorStatsViewModel : IInvestorStatsViewModel
 {
-    public InvestorStatsViewModel(ICollection<IPortfolioProject> projects)
+    public InvestorStatsViewModel(ICollection<IPortfolioProjectViewModel> projects)
     {
         TotalInvested = new AmountUI(projects.Sum(project => project.Invested.Sats));
         RecoveredToPenalty = new AmountUI(projects.Sum(project => project.InRecovery.Sats));

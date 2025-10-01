@@ -5,7 +5,8 @@
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:av="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="500"
+             xmlns:fp="clr-namespace:AngorApp.UI.Controls.Common.FoundedProjectOptions"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="500"
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
@@ -28,7 +29,7 @@
                     </ContainerQuery>
                 </av:AdvancedImage.Styles>
             </av:AdvancedImage>
-            <controls:PageContainer ClipToBounds="False">
+            <controls:PageContainer>
                 <StackPanel Classes="BigGap" Margin="0 -50 0 0">
                     <Border Classes="Card" Padding="30">
                         <Border.Styles>
@@ -64,7 +65,7 @@
                             </StackPanel>
                         </DockPanel>
                     </Border>
-                    
+                    <fp:FoundedProjectOptionsView DataContext="{Binding FoundedProjectOptions}" />
                     <ResponsivePresenter Breakpoint="800">
                         <ResponsivePresenter.Narrow>
                             <WrapPanel LineSpacing="20">
@@ -79,7 +80,6 @@
                             </BalancedWrapGrid>
                         </ResponsivePresenter.Wide>
                     </ResponsivePresenter>
-
                     <dt:InvestmentDashboard />
                     <dt:NostProperties />
                 </StackPanel>

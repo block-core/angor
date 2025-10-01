@@ -8,7 +8,7 @@
              xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:design="clr-namespace:AngorApp.Design"
              mc:Ignorable="d" d:DesignWidth="500"
-             x:Class="AngorApp.Sections.Portfolio.Items.OfferAcceptedView" x:DataType="portfolio:IPortfolioProject">
+             x:Class="AngorApp.Sections.Portfolio.Items.OfferAcceptedView" x:DataType="portfolio:IPortfolioProjectViewModel">
 
     <UserControl.Styles>
         <Style Selector="pt|Icon">

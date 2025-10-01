@@ -1,5 +1,6 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.UI.Model.Implementation.Projects;
+using AngorApp.UI.Controls.Common.FoundedProjectOptions;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Browse.Details;
@@ -33,4 +34,5 @@ public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
     public bool IsInsideInvestmentPeriod { get; set; } = true;
     public TimeSpan? NextRelease { get; } = TimeSpan.FromDays(15);
     public IStage? CurrentStage { get; } = new StageDesign();
+    public IFoundedProjectOptionsViewModel FoundedProjectOptions { get; } = new FoundedProjectOptionsViewModelDesign();
 }

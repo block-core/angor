@@ -3,7 +3,7 @@ using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Portfolio;
 
-public class PortfolioProjectDesign : IPortfolioProject
+public class PortfolioProjectDesign : IPortfolioProjectViewModel
 {
     public string Name { get; set; }
     public string Description { get; set; }

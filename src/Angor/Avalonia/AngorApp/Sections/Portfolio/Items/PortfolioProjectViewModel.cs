@@ -13,7 +13,7 @@ using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Portfolio.Items;
 
-public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProject, IDisposable
+public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProjectViewModel, IDisposable
 {
     [Reactive] private bool isInvestmentCompleted;
     [Reactive] private InvestmentStatus investmentStatus;

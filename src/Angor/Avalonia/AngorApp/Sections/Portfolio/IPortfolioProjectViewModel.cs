@@ -4,7 +4,7 @@ using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Portfolio;
 
-public interface IPortfolioProject
+public interface IPortfolioProjectViewModel
 {
     public string Name { get; }
     public string Description { get; }

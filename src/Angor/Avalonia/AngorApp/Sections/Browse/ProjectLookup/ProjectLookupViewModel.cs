@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Windows.Input;
+using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.Core;
@@ -21,11 +22,11 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
     [Reactive] private string? projectId;
     [Reactive] private IProjectViewModel? selectedProject;
 
-    public ProjectLookupViewModel(
-        IProjectAppService projectAppService,
+    public ProjectLookupViewModel(IProjectAppService projectAppService,
         INavigator navigator,
         InvestWizard investWizard,
-        UIServices uiServices)
+        UIServices uiServices,
+        IInvestmentAppService investmentAppService)
     {
         lookupResults = new SafeMaybe<IList<IProjectViewModel>>(Maybe<IList<IProjectViewModel>>.None);
 
@@ -37,7 +38,7 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
 
                 return maybeProject.Map<IProject, IList<IProjectViewModel>>(project =>
                 {
-                    var vm = new ProjectViewModel(project, projectAppService, navigator, uiServices, investWizard);
+                    var vm = new ProjectViewModel(project, projectAppService, navigator, uiServices, investWizard, investmentAppService);
                     return new List<IProjectViewModel> { vm };
                 }).AsSafeMaybe();
             }

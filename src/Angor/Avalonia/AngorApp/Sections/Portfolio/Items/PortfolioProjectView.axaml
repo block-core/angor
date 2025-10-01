@@ -10,7 +10,7 @@
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              mc:Ignorable="d"
              d:DesignWidth="600"
-             x:Class="AngorApp.Sections.Portfolio.Items.PortfolioProjectView" x:DataType="p:IPortfolioProject">
+             x:Class="AngorApp.Sections.Portfolio.Items.PortfolioProjectView" x:DataType="p:IPortfolioProjectViewModel">
 
     <Design.DataContext>
         <p:PortfolioProjectDesign InvestmentStatus="PendingFounderSignatures"

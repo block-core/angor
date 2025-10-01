@@ -1,0 +1,101 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:foundedProjectOptions="clr-namespace:AngorApp.UI.Controls.Common.FoundedProjectOptions"
+             xmlns:portfolio="clr-namespace:AngorApp.Sections.Portfolio"
+             d:DesignWidth="500"
+             mc:Ignorable="d"
+             IconOptions.Size="{StaticResource IconSizeNormal}"
+             x:Class="AngorApp.UI.Controls.Common.FoundedProjectOptions.FoundedProjectOptionsView" x:DataType="foundedProjectOptions:IFoundedProjectOptionsViewModel">
+
+    <Design.DataContext>
+        <foundedProjectOptions:FoundedProjectOptionsViewModelDesign>
+            <foundedProjectOptions:FoundedProjectOptionsViewModelDesign.ProjectInvestment>
+                <Return>
+                    <Return.Value>
+                        <portfolio:PortfolioProjectDesign InvestmentStatus="FounderSignaturesReceived" />
+                    </Return.Value>
+                </Return>
+            </foundedProjectOptions:FoundedProjectOptionsViewModelDesign.ProjectInvestment>
+        </foundedProjectOptions:FoundedProjectOptionsViewModelDesign>
+    </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding LoadInvestment}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="PendingFounderSignatures">
+            <!-- NOTHING -->
+        </DataTemplate>
+        <DataTemplate x:Key="FounderSignaturesReceived" DataType="portfolio:IPortfolioProjectViewModel">
+            <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
+                <StackPanel Spacing="20" HorizontalAlignment="Center">
+                    <EdgePanel StartContent="{Icon fa-circle-info}" Spacing="20">
+                        <TextBlock TextWrapping="Wrap" Classes="SizeBig">
+                            <Bold>Good news!</Bold> The founder has accepted your investment request. Complete it to finalize the investment process.
+                        </TextBlock>
+                    </EdgePanel>
+                    <ReactiveButton ButtonTheme="{StaticResource {x:Type Button}}" Command="{Binding CompleteInvestment}" HorizontalAlignment="Center">Complete investment</ReactiveButton>
+                </StackPanel>
+            </OverlayBorder>
+        </DataTemplate>
+        <DataTemplate x:Key="Invested">
+            <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
+                <StackPanel Spacing="20" HorizontalAlignment="Center">
+                    <EdgePanel StartContent="{Icon fa-coins}" Spacing="20">
+                        <TextBlock TextWrapping="Wrap" Classes="SizeBig">
+                            <Bold>You invested in this project</Bold>
+                        </TextBlock>
+                    </EdgePanel>
+                </StackPanel>
+            </OverlayBorder>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ContentControl Content="{Binding}" DataContext="{Binding ProjectInvestment^}"
+                    Tag="{Binding InvestmentStatus}">
+        <ContentControl.Styles>
+            <Style Selector="ContentControl[Tag=PendingFounderSignatures]">
+                <Setter Property="ContentTemplate" Value="{StaticResource PendingFounderSignatures}" />
+            </Style>
+            <Style Selector="ContentControl[Tag=FounderSignaturesReceived]">
+                <Setter Property="ContentTemplate" Value="{StaticResource FounderSignaturesReceived}" />
+            </Style>
+            <Style Selector="ContentControl[Tag=Invested]">
+                <Setter Property="ContentTemplate" Value="{StaticResource Invested}" />
+            </Style>
+        </ContentControl.Styles>
+    </ContentControl>
+
+    <!-- <StackPanel DataContext="{Binding ProjectInvestment^}"  -->
+    <!--             Tag="{Binding InvestmentStatus}"> -->
+    <!--     <StackPanel.Styles> -->
+    <!--         <Style Selector="StackPanel[Tag=Invested] TextBlock#Invested"> -->
+    <!--             <Setter Property="IsVisible" Value="False" /> -->
+    <!--         </Style> -->
+    <!--     </StackPanel.Styles> -->
+    <!--     <TextBlock IsVisible="False" x:Name="Invested">hola tíos</TextBlock> -->
+    <!-- </StackPanel> -->
+    <!-- <StackPanel x:Name="CompleteInvestment" DataContext="{Binding ProjectInvestment^}"> -->
+    <!--     ~1~ <StackPanel.Styles> @1@ -->
+    <!--     ~1~     <Style Selector="StackPanel[Tag=Invested] TextBlock#Invested"> @1@ -->
+    <!--     ~1~         <Setter Property="IsVisible" Value="True" /> @1@ -->
+    <!--     ~1~     </Style> @1@ -->
+    <!--     ~1~ </StackPanel.Styles> @1@ -->
+    <!--     <TextBlock x:Name="Invested" IsVisible="True" /> -->
+    <!--     ~1~ <OverlayBorder Theme="{StaticResource CardOverlayBorder}" IsVisible="{Binding CompleteInvestment.CanExecute^, FallbackValue=False}"> @1@ -->
+    <!--     ~1~     <StackPanel Spacing="20" HorizontalAlignment="Center" > @1@ -->
+    <!--     ~1~         <EdgePanel StartContent="{Icon fa-circle-info}"> @1@ -->
+    <!--     ~1~             <TextBlock TextWrapping="Wrap"> @1@ -->
+    <!--     ~1~                 <Bold>Good news!</Bold> The founder has accepted your investment request. Complete it to finalize the investment process. @1@ -->
+    <!--     ~1~             </TextBlock> @1@ -->
+    <!--     ~1~         </EdgePanel> @1@ -->
+    <!--     ~1~         <ReactiveButton Command="{Binding CompleteInvestment}" HorizontalAlignment="Center">Complete investment</ReactiveButton> @1@ -->
+    <!--     ~1~     </StackPanel> @1@ -->
+    <!--     ~1~ </OverlayBorder> @1@ -->
+    <!-- </StackPanel> -->
+</UserControl>
