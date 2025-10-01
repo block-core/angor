@@ -22,7 +22,9 @@
             <Setter Property="Template">
                 <ControlTemplate>
                     <Button DataContext="{Binding $parent[controls:ErrorSummary]}"
-                            IsVisible="{Binding !!$parent[controls:ErrorSummary].Errors.Count}" Background="DarkRed"
+                            IsVisible="{Binding !!$parent[controls:ErrorSummary].Errors.Count}" 
+                            Background="{DynamicResource FailureBrush}"
+                            Foreground="{DynamicResource SystemChromeWhiteColor}"
                             Content="{Binding $parent[controls:ErrorSummary].Errors.Count, FallbackValue='Error Summary', StringFormat='{}{0} error(s) found'}" HorizontalAlignment="Left" Padding="10 5"
                             Theme="{StaticResource ThinTransparentButton}">
                         <Button.Flyout>

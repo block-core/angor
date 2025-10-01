@@ -21,13 +21,15 @@ public partial class UIServices : ReactiveObject
     
     public UIServices(ILauncherService launcherService, IDialog dialog, INotificationService notificationService,
         IActiveWallet activeWallet,
-        IWalletRoot walletRoot)
+        IWalletRoot walletRoot, 
+        Validations validations)
     {
         LauncherService = launcherService;
         Dialog = dialog;
         NotificationService = notificationService;
         ActiveWallet = activeWallet;
         WalletRoot = walletRoot;
+        Validations = validations;
         this.WhenAnyValue(services => services.IsDarkThemeEnabled)
             .Do(isDarkTheme => Application.Current.RequestedThemeVariant = isDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light)
             .Subscribe();
@@ -45,4 +47,6 @@ public partial class UIServices : ReactiveObject
             };
         }
     }
+
+    public Validations Validations { get; }
 }

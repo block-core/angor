@@ -13,43 +13,44 @@
         <StyleInclude Source="../Common.axaml" />
     </UserControl.Styles>
 
-    <Card Header="Project Profile">
-        <Card.HeaderEndContent>
-            <ContentControl IsVisible="{Binding IsValid^}" Foreground="LawnGreen">
-                <ui:Icon Source="fa-check" />
-            </ContentControl>
-        </Card.HeaderEndContent>
-        <Card.HeaderStartContent>
-            <ui:Icon Source="fa-briefcase" />
-        </Card.HeaderStartContent>
+    <Card Header="Project Profile" HeaderStartContent="{Icon fa-briefcase}">
         <StackPanel Classes="BigGap">
             <BalancedWrapGrid MinItemWidth="200">
-                <Card Header="Project Name" Classes="Transparent">
+                <HeaderedContainer Header="Project Name" Classes="Transparent">
                     <TextBox Watermark="Enter the name of your project" Text="{Binding ProjectName}" />
-                </Card>
-                <Card Header="Project Website" Classes="Transparent">
+                </HeaderedContainer>
+                <HeaderedContainer Header="Project Website" Classes="Transparent">
                     <TextBox TextInputOptions.ContentType="Url" Watermark="Enter the URL of project website" Text="{Binding WebsiteUri}" />
-                </Card>
+                </HeaderedContainer>
             </BalancedWrapGrid>
-            <Card Header="About Your Project" Classes="Transparent">
+            <HeaderedContainer Header="About Your Project" Classes="Transparent">
                 <TextBox MinLines="6" MaxLength="1000" TextInputOptions.Multiline="True" Watermark="Provide a brief description of the project" Text="{Binding Description}" />
-            </Card>
-            <Card Header="Visual Identity" Classes="Transparent">
-               <BalancedWrapGrid MinItemWidth="250">
-                   <HeaderedContainer Header="Banner Image URL">
-                       <StackPanel Spacing="5">
-                           <TextBox TextInputOptions.ContentType="Url" Watermark="Project banner image URL" Text="{Binding BannerUri}" />
-                           <TextBlock Classes="Dimmed">Recommended size: 820×312px</TextBlock>
-                       </StackPanel>
-                   </HeaderedContainer>
-                   <HeaderedContainer Header="Avatar Image URL">
-                       <StackPanel Spacing="5">
-                           <TextBox TextInputOptions.ContentType="Url" Watermark="Project logo or profile URL" Text="{Binding AvatarUri}" />
-                           <TextBlock Classes="Dimmed">Recommended size: 170×170px</TextBlock>
-                       </StackPanel>
-                   </HeaderedContainer>
-               </BalancedWrapGrid>
-            </Card>
+            </HeaderedContainer>
+            <HeaderedContainer Header="Visual Identity" Classes="Transparent">
+                <BalancedWrapGrid MinItemWidth="250">
+                    <HeaderedContainer Header="Banner Image URL">
+                        <StackPanel Spacing="5">
+                            <TextBox TextInputOptions.ContentType="Url" Watermark="Project banner image URL" Text="{Binding BannerUri}" />
+                            <TextBlock Classes="Dimmed">Recommended size: 820×312px</TextBlock>
+                        </StackPanel>
+                    </HeaderedContainer>
+                    <HeaderedContainer Header="Avatar Image URL">
+                        <StackPanel Spacing="5">
+                            <TextBox TextInputOptions.ContentType="Url" Watermark="Project logo or profile URL" Text="{Binding AvatarUri}" />
+                            <TextBlock Classes="Dimmed">Recommended size: 170×170px</TextBlock>
+                        </StackPanel>
+                    </HeaderedContainer>
+                </BalancedWrapGrid>
+            </HeaderedContainer>
+            <ToggleSwitch x:Name="AdvancedSwitch">Show advanced settings</ToggleSwitch>
+            <StackPanel Classes="BigGap">
+                <HeaderedContainer Header="Nostr Identifier Protocol 05" IsVisible="{Binding #AdvancedSwitch.IsChecked}">
+                    <TextBox Watermark="name@domain.com" Text="{Binding Nip05Username, Mode=TwoWay}" />
+                </HeaderedContainer>
+                <HeaderedContainer Header="Lightning URL" IsVisible="{Binding #AdvancedSwitch.IsChecked}">
+                    <TextBox Watermark="alice@wallet.com" />
+                </HeaderedContainer>
+            </StackPanel>
             <controls:ErrorSummary Errors="{Binding Errors}" />
         </StackPanel>
     </Card>

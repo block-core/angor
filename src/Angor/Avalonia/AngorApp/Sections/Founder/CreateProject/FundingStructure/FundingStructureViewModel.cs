@@ -42,8 +42,3 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
     public DateTime FundingStartDate { get; } = DateTime.Now;
     public ICollection<string> Errors { get; }
 }
-
-public interface IHaveErrors
-{
-    ICollection<string> Errors { get; }
-}
