@@ -5,6 +5,7 @@ using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Portfolio.Items;
 using AngorApp.UI.Services;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.Reactive;
 using Zafiro.UI.Commands;
 using Zafiro.UI.Navigation;
 
@@ -22,6 +23,12 @@ public class FoundedProjectOptionsViewModel : IFoundedProjectOptionsViewModel
 
         ProjectInvestment = LoadInvestment.Successes().Values()
             .Select(dto => new PortfolioProjectViewModel(dto, investmentAppService, uiServices, navigator));
+        
+        // This updates the investment info when the user completes an investment
+        ProjectInvestment.Select(model => model.CompleteInvestment)
+            .Switch()
+            .ToSignal()
+            .InvokeCommand(LoadInvestment);
     }
 
     public IObservable<IPortfolioProjectViewModel> ProjectInvestment { get; }
