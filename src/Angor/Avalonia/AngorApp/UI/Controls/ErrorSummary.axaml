@@ -3,7 +3,7 @@
         xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
         xmlns:controls="clr-namespace:AngorApp.UI.Controls">
     <Design.PreviewWith>
-        <Panel Width="400" Height="400">
+        <StackPanel Width="400" Height="400">
             <controls:ErrorSummary HorizontalAlignment="Center">
                 <controls:ErrorSummary.Errors>
                     <generic:List x:TypeArguments="x:String">
@@ -13,7 +13,8 @@
                     </generic:List>
                 </controls:ErrorSummary.Errors>
             </controls:ErrorSummary>
-        </Panel>
+            <controls:ErrorSummary HorizontalAlignment="Center" />
+        </StackPanel>
     </Design.PreviewWith>
 
     <Styles.Resources>
@@ -21,18 +22,22 @@
             <Setter Property="HorizontalAlignment" Value="Right" />
             <Setter Property="Template">
                 <ControlTemplate>
-                    <Button DataContext="{Binding $parent[controls:ErrorSummary]}"
-                            IsVisible="{Binding !!$parent[controls:ErrorSummary].Errors.Count}" 
-                            Background="{DynamicResource FailureBrush}"
-                            Foreground="{DynamicResource SystemChromeWhiteColor}"
-                            Content="{Binding $parent[controls:ErrorSummary].Errors.Count, FallbackValue='Error Summary', StringFormat='{}{0} error(s) found'}" HorizontalAlignment="Left" Padding="10 5"
-                            Theme="{StaticResource ThinTransparentButton}">
-                        <Button.Flyout>
-                            <Flyout Placement="BottomEdgeAlignedLeft">
-                                <BulletList ItemsSource="{Binding $parent[controls:ErrorSummary].Errors}" />
-                            </Flyout>
-                        </Button.Flyout>
-                    </Button>
+                    <Panel DataContext="{Binding $parent[controls:ErrorSummary]}">
+                        <Button IsVisible="{Binding !!$parent[controls:ErrorSummary].Errors.Count}"
+                                Foreground="{DynamicResource SystemChromeWhiteColor}"
+                                Content="{Binding $parent[controls:ErrorSummary].Errors.Count, StringFormat='{}{0} error(s) found'}" HorizontalAlignment="Left" Padding="10 5"
+                                Theme="{StaticResource ThinTransparentButton}">
+                            <Button.Background>
+                                <SolidColorBrush Color="{StaticResource ErrorColor}" Opacity="0.7" />
+                            </Button.Background>
+                            <Button.Flyout>
+                                <Flyout Placement="BottomEdgeAlignedLeft">
+                                    <BulletList ItemsSource="{Binding $parent[controls:ErrorSummary].Errors}" />
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                        <ContentControl Foreground="{DynamicResource SuccessColor}" IsVisible="{Binding !!!$parent[controls:ErrorSummary].Errors.Count}" Content="{Icon fa-check}" />
+                    </Panel>
                 </ControlTemplate>
             </Setter>
         </ControlTheme>

@@ -8,7 +8,7 @@
              x:DataType="projectCreated:IProjectCreatedViewModel" d:DesignHeight="300" d:DesignWidth="600">
     
     <StackPanel VerticalAlignment="Center" Classes="BigGap CenterText">
-        <ContentControl Content="{Icon fa-check}" IconOptions.Size="{StaticResource IconSizeBig}" Foreground="{DynamicResource SuccessBrush}" />
+        <ContentControl Content="{Icon fa-check}" IconOptions.Size="{StaticResource IconSizeBig}" Foreground="{DynamicResource SuccessColor}" />
         <StackPanel Classes="SmallGap">
             <TextBlock Classes="SizeLarge">The project transaction has been published</TextBlock>
             <TextBlock>Your project will appear once it has been added to a block in the blockchain</TextBlock>

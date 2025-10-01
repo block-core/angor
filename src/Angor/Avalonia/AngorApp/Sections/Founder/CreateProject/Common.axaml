@@ -14,8 +14,9 @@
         <Setter Property="Theme" Value="{StaticResource  WideCard}" />
     </Style>
     
-    <Style Selector="StackPanel Card">
-        <Setter Property="Padding" Value="10" />
+    <Style Selector="BalancedWrapGrid">
+        <Setter Property="HorizontalSpacing" Value="10" />
+        <Setter Property="VerticalSpacing" Value="10" />
     </Style>
     
     <Styles.Resources>

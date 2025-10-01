@@ -45,6 +45,7 @@
                       TargetType="Card"
                       BasedOn="{StaticResource WrapGridCard}">
             <Setter Property="HeaderStartContentTemplate" Value="{StaticResource BigIcon}" />
+            <Setter Property="Padding" Value="15" />
         </ControlTheme>
 
         <ControlTheme x:Key="ItemCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
@@ -102,8 +103,7 @@
                 </ControlTemplate>
             </Setter>
         </ControlTheme>
-
-
+        
         <ControlTheme x:Key="InfoCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />

@@ -2,7 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:profile="clr-namespace:AngorApp.Sections.Founder.CreateProject.Profile"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="400"
@@ -14,6 +13,9 @@
     </UserControl.Styles>
 
     <Card Header="Project Profile" HeaderStartContent="{Icon fa-briefcase}">
+        <Card.HeaderEndContent>
+            <controls:ErrorSummary Errors="{Binding Errors}" />
+        </Card.HeaderEndContent>
         <StackPanel Classes="BigGap">
             <BalancedWrapGrid MinItemWidth="200">
                 <HeaderedContainer Header="Project Name" Classes="Transparent">
@@ -51,7 +53,6 @@
                     <TextBox Watermark="alice@wallet.com" />
                 </HeaderedContainer>
             </StackPanel>
-            <controls:ErrorSummary Errors="{Binding Errors}" />
         </StackPanel>
     </Card>
 </UserControl>

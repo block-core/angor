@@ -18,9 +18,9 @@
         <x:Double x:Key="BigGap">20</x:Double>
         <x:Double x:Key="HugeGap">40</x:Double>
         
-        <SolidColorBrush x:Key="SuccessBrush">Green</SolidColorBrush>
-        <SolidColorBrush x:Key="WarningBrush">Gold</SolidColorBrush>
-        <SolidColorBrush x:Key="FailureBrush">Red</SolidColorBrush>
+        <Color x:Key="SuccessColor">Green</Color>
+        <Color x:Key="WarningColor">Gold</Color>
+        <Color x:Key="ErrorColor">Red</Color>
     </Styles.Resources>
     
     <Style Selector="ListBox.Rounded">
