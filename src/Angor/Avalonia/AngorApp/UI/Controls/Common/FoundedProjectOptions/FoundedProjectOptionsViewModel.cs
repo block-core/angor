@@ -33,5 +33,4 @@ public class FoundedProjectOptionsViewModel : IFoundedProjectOptionsViewModel
 
     public IObservable<IPortfolioProjectViewModel> ProjectInvestment { get; }
     public ReactiveCommand<Unit, Result<Maybe<InvestedProjectDto>>> LoadInvestment { get; set; }
-    public IEnhancedCommand CompleteInvestment { get; set; }
 }
