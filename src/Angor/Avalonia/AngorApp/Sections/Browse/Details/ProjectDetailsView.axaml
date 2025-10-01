@@ -29,7 +29,7 @@
                     </ContainerQuery>
                 </av:AdvancedImage.Styles>
             </av:AdvancedImage>
-            <controls:PageContainer>
+            <controls:PageContainer ClipToBounds="False">
                 <StackPanel Classes="BigGap" Margin="0 -50 0 0">
                     <Border Classes="Card" Padding="30">
                         <Border.Styles>
