@@ -1,4 +1,5 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
@@ -21,7 +22,7 @@ public static class ReleaseFunds
     // TODO: Placeholder handler
     public class ReleaseFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
         IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
-        IInvestmentRepository investmentRepository, INetworkConfiguration networkConfiguration,
+        IPortfolioRepository investmentRepository, INetworkConfiguration networkConfiguration,
         IWalletOperations walletOperations, IIndexerService indexerService, ISignService signService,
         IEncryptionService decrypter, ISerializer serializer) : IRequestHandler<ReleaseFundsRequest, Result>
     {

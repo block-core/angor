@@ -1,4 +1,5 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
@@ -24,7 +25,7 @@ public static class RequestInvestmentSignatures
         ISerializer serializer,
         IWalletOperations walletOperations,
         ISignService signService,
-        IInvestmentRepository investmentRepository) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
+        IPortfolioRepository investmentRepository) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
     {
         public async Task<Result<Guid>> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
         {

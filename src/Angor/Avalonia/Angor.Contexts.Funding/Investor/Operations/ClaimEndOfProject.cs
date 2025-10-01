@@ -1,4 +1,5 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
@@ -19,7 +20,7 @@ public static class ClaimEndOfProject
     // TODO: Placeholder handler
     public class ClaimEndOfProjectHandler(IWalletOperations walletOperations, IDerivationOperations derivationOperations,
         IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
-        IInvestmentRepository investmentRepository, IIndexerService indexerService, ISeedwordsProvider provider) : IRequestHandler<ClaimEndOfProjectRequest, Result>
+        IPortfolioRepository investmentRepository, IIndexerService indexerService, ISeedwordsProvider provider) : IRequestHandler<ClaimEndOfProjectRequest, Result>
     {
         public async Task<Result> Handle(ClaimEndOfProjectRequest request, CancellationToken cancellationToken)
         {

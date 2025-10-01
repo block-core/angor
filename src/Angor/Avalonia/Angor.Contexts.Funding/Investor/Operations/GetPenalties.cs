@@ -1,6 +1,7 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Shared;
@@ -20,7 +21,7 @@ public class GetPenalties
     public record GetPenaltiesRequest(Guid WalletId) : IRequest<Result<IEnumerable<PenaltiesDto>>>;
 
     public class GetPenaltiesHandler(
-        IInvestmentRepository investmentRepository,
+        IPortfolioRepository investmentRepository,
         IIndexerService indexerService,
         IInvestorTransactionActions investorTransactionActions,
         INetworkConfiguration networkConfiguration,

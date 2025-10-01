@@ -2,6 +2,7 @@ using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Founder;
+using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
@@ -21,7 +22,7 @@ public static class Investments
     
     public class InvestmentsPortfolioHandler(
         IIndexerService indexerService,
-        IInvestmentRepository investmentRepository,
+        IPortfolioRepository investmentRepository,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations,
         IProjectRepository projectRepository,
