@@ -1,49 +1,26 @@
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Net.Mail;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
-using Newtonsoft.Json.Linq;
-using Zafiro;
 
 namespace AngorApp.UI.Services;
 
-public class Validations
+public class Validations : IValidations
 {
-    private readonly IHttpClientFactory httpClientFactory;
+    private readonly Nip05Validator nip05Validator;
+    private readonly LightningAddressValidator lightningAddressValidator;
 
     public Validations(IHttpClientFactory httpClientFactory)
     {
-        this.httpClientFactory = httpClientFactory;
+        nip05Validator = new Nip05Validator(httpClientFactory);
+        lightningAddressValidator = new LightningAddressValidator(httpClientFactory);
     }
     
-    public async Task<Result> CheckNip05Username(string username, string nostrPubKey)
+    public Task<Result> CheckNip05Username(string username, string nostrPubKey)
     {
-        var valid = from address in GetAddress(username)
-            from serverNpub in GetServerNpub(address)
-            select serverNpub;
-
-        return await valid.Ensure(serverNpub => serverNpub == nostrPubKey, "Found Npub does not match your project's Nostr pubkey");
+        return nip05Validator.CheckNip05Username(username, nostrPubKey);
     }
 
-    private Result<MailAddress> GetAddress(string address)
+    public Task<Result> CheckLightningAddress(string lightningAddress)
     {
-        return MailAddress.TryCreate(address, out var result) ? Result.Success(result) : Result.Failure<MailAddress>("Cannot parse NIP-05 address");
-    }
-
-    private Task<Result<string>> GetServerNpub(MailAddress address)
-    {
-        return Result.Try(() => JsonFrom(new Uri($"https://{address.Host}/.well-known/nostr.json?name={address.User}")))
-            .Map(token => JToken.Parse(token).SelectToken($"$.names.{address.User}"))
-            .EnsureNotNull($"Cannot find Npub for username '{address.User}'")
-            .Map(token => token.Value<string>())
-            .EnsureNotNull($"Found Npub for {address.User}, but it is null");
-    }
-
-    private async Task<string> JsonFrom(Uri uri)
-    {
-        using var httpClient = httpClientFactory.CreateClient();
-        return await httpClient.GetStringAsync(uri);
+        return lightningAddressValidator.CheckLightningAddress(lightningAddress);
     }
 }

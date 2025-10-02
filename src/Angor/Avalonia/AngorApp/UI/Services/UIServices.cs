@@ -22,7 +22,7 @@ public partial class UIServices : ReactiveObject
     public UIServices(ILauncherService launcherService, IDialog dialog, INotificationService notificationService,
         IActiveWallet activeWallet,
         IWalletRoot walletRoot, 
-        Validations validations)
+        IValidations validations)
     {
         LauncherService = launcherService;
         Dialog = dialog;
@@ -48,5 +48,5 @@ public partial class UIServices : ReactiveObject
         }
     }
 
-    public Validations Validations { get; }
+    public IValidations Validations { get; }
 }

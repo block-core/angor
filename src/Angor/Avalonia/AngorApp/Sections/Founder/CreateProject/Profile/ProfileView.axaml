@@ -45,12 +45,12 @@
                 </BalancedWrapGrid>
             </HeaderedContainer>
             <ToggleSwitch x:Name="AdvancedSwitch">Show advanced settings</ToggleSwitch>
-            <StackPanel Classes="BigGap">
-                <HeaderedContainer Header="Nostr Identifier Protocol 05" IsVisible="{Binding #AdvancedSwitch.IsChecked}">
-                    <TextBox Watermark="name@domain.com" Text="{Binding Nip05Username, Mode=TwoWay}" />
+            <StackPanel Classes="BigGap" IsVisible="{Binding #AdvancedSwitch.IsChecked}">
+                <HeaderedContainer Header="Nostr Identifier Protocol 05" >
+                    <TextBox Watermark="name@domain.com" Text="{Binding Nip05Username}" />
                 </HeaderedContainer>
-                <HeaderedContainer Header="Lightning URL" IsVisible="{Binding #AdvancedSwitch.IsChecked}">
-                    <TextBox Watermark="alice@wallet.com" />
+                <HeaderedContainer Header="Lightning URL">
+                    <TextBox Watermark="alice@wallet.com" Text="{Binding LightningAddress}" />
                 </HeaderedContainer>
             </StackPanel>
         </StackPanel>

@@ -9,5 +9,6 @@ public class ProfileViewModelDesign : IProfileViewModel
     public string? AvatarUri { get; set; }
     public string? BannerUri { get; set; }
     public string? Nip05Username { get; set; }
-    public ICollection<string> Errors { get; }
+    public string? LightningAddress { get; set; }
+    public ICollection<string> Errors { get; set; }
 }

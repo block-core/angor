@@ -46,8 +46,14 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
             .Select(s => Observable.FromAsync(() => s == null ? Task.FromResult(Result.Success()) : uiServices.Validations.CheckNip05Username(s, projectSeed.NostrPubKey)))
             .Switch();
         
+        var isValidLightningAddress = this.WhenAnyValue(model => model.LightningAddress)
+            .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
+            .Select(s => Observable.FromAsync(() => s == null ? Task.FromResult(Result.Success()) : uiServices.Validations.CheckLightningAddress(s)))
+            .Switch();
+        
         this.ValidationRule(x => x.Nip05Username, isValidNip05Username, x => x.IsSuccess, error => error.Error).DisposeWith(disposable);
-        //this.ValidationRule(x => x.LightningAddress, x => x is null || IsValidLightningAddress(x), "Invalid Lighting address").DisposeWith(disposable);
+        
+        this.ValidationRule(x => x.LightningAddress, isValidLightningAddress, x => x.IsSuccess, error => error.Error).DisposeWith(disposable);
 
         Errors = new ErrorSummarizer(ValidationContext).DisposeWith(disposable).Errors;
     }

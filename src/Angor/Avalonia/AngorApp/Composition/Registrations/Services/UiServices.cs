@@ -37,7 +37,7 @@ public static class UiServices
             .AddSingleton<IShell, Shell>()
             .AddSingleton<ISectionActions, SectionActions>()
             .AddSingleton<IWalletRoot, WalletRoot>()
-            .AddSingleton<Validations>()
+            .AddSingleton<IValidations, Validations>()
             .AddSingleton<INotificationService>(_ => notificationService)
             .AddSingleton<UIServices>();
     }

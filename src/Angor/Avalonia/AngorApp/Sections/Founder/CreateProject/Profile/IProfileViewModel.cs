@@ -11,4 +11,5 @@ public interface IProfileViewModel : IHaveErrors
     string? AvatarUri { get; set; }
     string? BannerUri { get; set; }
     public string? Nip05Username { get; set; }
+    public string? LightningAddress { get; set; }
 }
