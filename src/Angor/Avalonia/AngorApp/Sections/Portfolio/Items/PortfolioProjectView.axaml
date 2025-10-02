@@ -32,6 +32,14 @@
                 <TextBlock Text="{Binding Name}" Classes="SizeBig Center" />
                 <av:AdvancedImage Height="150" Stretch="UniformToFill" CornerRadius="10" Source="{Binding LogoUri}" />
                 <items:ProgressView />
+                <items:OfferAcceptedView>
+                    <items:OfferAcceptedView.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                            <Binding Path="CompleteInvestment.CanExecute^" />
+                            <Binding Path="CompleteInvestment.IsExecuting^" />
+                        </MultiBinding>
+                    </items:OfferAcceptedView.IsVisible>
+                </items:OfferAcceptedView>
             </StackPanel>
             <BalancedWrapGrid MinItemWidth="230" DockPanel.Dock="Top">
                 <Border Classes="CardAlt" Padding="10">
