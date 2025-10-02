@@ -2,6 +2,7 @@ using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Shared;
 using Angor.UI.Model.Implementation.Projects;
 using AngorApp.Sections.Founder.ProjectDetails.MainView;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.Approve;

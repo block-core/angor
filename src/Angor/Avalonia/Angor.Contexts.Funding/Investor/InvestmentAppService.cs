@@ -3,6 +3,7 @@ using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 using MediatR;
@@ -12,12 +13,12 @@ namespace Angor.Contexts.Funding.Investor;
 
 public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
 {
-    public Task<Result<CreateInvestment.Draft>> CreateInvestmentDraft(Guid sourceWalletId, ProjectId projectId, Amount amount, DomainFeerate feerate)
+    public Task<Result<CreateInvestment.InvestmentDraft>> CreateInvestmentDraft(Guid sourceWalletId, ProjectId projectId, Amount amount, DomainFeerate feerate)
     {
         return mediator.Send(new CreateInvestment.CreateInvestmentTransactionRequest(sourceWalletId, projectId, amount, feerate));
     }
 
-    public Task<Result<Guid>> Invest(Guid sourceWalletId, ProjectId projectId, CreateInvestment.Draft draft)
+    public Task<Result<Guid>> Invest(Guid sourceWalletId, ProjectId projectId, CreateInvestment.InvestmentDraft draft)
     {
         return mediator.Send(new RequestInvestmentSignatures.RequestFounderSignaturesRequest(sourceWalletId, projectId, draft));
     }

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Shared;
 using AngorApp.UI.Controls.Common;
 using AngorApp.UI.Services;
 using Avalonia.Controls.Selection;

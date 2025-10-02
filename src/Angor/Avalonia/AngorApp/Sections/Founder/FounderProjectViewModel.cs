@@ -3,6 +3,7 @@ using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Shared;
 using AngorApp.Sections.Founder.ProjectDetails;
 using AngorApp.UI.Services;
 using Zafiro.UI.Commands;

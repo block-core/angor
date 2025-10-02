@@ -7,6 +7,7 @@ using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using Angor.Contexts.Funding.Shared;
 using Angor.Shared.Protocol;
 using Stage = Angor.Shared.Models.Stage;
 

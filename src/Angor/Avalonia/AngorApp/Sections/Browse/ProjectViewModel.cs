@@ -1,6 +1,7 @@
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Shared;
 using Angor.UI.Model.Implementation.Projects;
 using AngorApp.Features.Invest;
 using AngorApp.Sections.Browse.Details;

@@ -4,6 +4,7 @@ using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Projects.Operations;
+using Angor.Contexts.Funding.Shared;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Zafiro.CSharpFunctionalExtensions;

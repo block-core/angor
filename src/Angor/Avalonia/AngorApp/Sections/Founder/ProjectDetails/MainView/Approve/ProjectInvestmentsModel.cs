@@ -8,7 +8,7 @@ using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
-using ProjectId = Angor.Contexts.Funding.Projects.Domain.ProjectId;
+using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
 
 namespace AngorApp.Sections.Founder.ProjectDetails.MainView.Approve;
 
