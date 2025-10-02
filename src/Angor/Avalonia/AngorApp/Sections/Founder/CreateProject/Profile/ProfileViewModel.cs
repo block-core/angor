@@ -1,5 +1,6 @@
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
+using AngorApp.Flows;
 using AngorApp.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
@@ -21,7 +22,7 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
     [Reactive] private string? nip05Username;
     [Reactive] private string? lightningAddress;
 
-    public ProfileViewModel(UIServices uiServices)
+    public ProfileViewModel(CreateProjectFlow.ProjectSeed projectSeed, UIServices uiServices)
     {
         this.uiServices = uiServices;
 #if DEBUG
@@ -41,25 +42,14 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
         this.ValidationRule(x => x.AvatarUri, x => string.IsNullOrWhiteSpace(x) || Uri.TryCreate(x, UriKind.Absolute, out _), "Invalid avatar URL").DisposeWith(disposable);
 
         var isValidNip05Username = this.WhenAnyValue(model => model.Nip05Username)
-            .WhereNotNull()
             .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
-            .Select(s => Observable.FromAsync(() => uiServices.Validations.IsValidNip05Username(s, "abar")))
+            .Select(s => Observable.FromAsync(() => s == null ? Task.FromResult(Result.Success()) : uiServices.Validations.CheckNip05Username(s, projectSeed.NostrPubKey)))
             .Switch();
         
-        this.ValidationRule(isValidNip05Username, x => x.IsSuccess && x.Value, error => error.IsSuccess ? $"Invalid NIP-05 username" : $"Could not validate NIP-05 username: {error.Error}").DisposeWith(disposable);
+        this.ValidationRule(x => x.Nip05Username, isValidNip05Username, x => x.IsSuccess, error => error.Error).DisposeWith(disposable);
         //this.ValidationRule(x => x.LightningAddress, x => x is null || IsValidLightningAddress(x), "Invalid Lighting address").DisposeWith(disposable);
 
         Errors = new ErrorSummarizer(ValidationContext).DisposeWith(disposable).Errors;
-    }
-
-    private Task<Result<bool>> IsValidLightningAddress(string address)
-    {
-        return uiServices.Validations.IsValidLightningAddress(address);
-    }
-
-    private Task<Result<bool>> IsValidNip05Username(string username, string nostrPubKey)
-    {
-        return uiServices.Validations.IsValidNip05Username(username, nostrPubKey);
     }
 
     public ICollection<string> Errors { get; }

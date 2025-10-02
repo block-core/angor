@@ -7,9 +7,9 @@ namespace AngorApp.Sections.Founder.CreateProject.ProjectCreated;
 
 internal class ProjectCreatedViewModel : IProjectCreatedViewModel
 {
-    public ProjectCreatedViewModel(string transactionId, UIServices uiServices, INetworkStorage networkConfiguration)
+    public ProjectCreatedViewModel(string transactionId, UIServices uiServices, INetworkStorage networkStorage)
     {
-        var settings = networkConfiguration.GetSettings();
+        var settings = networkStorage.GetSettings();
         OpenTransaction = ReactiveCommand.CreateFromTask(async () =>
         {
             Result tapTry = await settings.Explorers.TryFirst(setting => setting.IsPrimary)

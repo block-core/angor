@@ -4,6 +4,7 @@ using System.Net.Mail;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Newtonsoft.Json.Linq;
 using Zafiro;
 
 namespace AngorApp.UI.Services;
@@ -17,60 +18,32 @@ public class Validations
         this.httpClientFactory = httpClientFactory;
     }
     
-    public Task<Result<bool>> IsValidNip05Username(string username, string nostrPubKey)
+    public async Task<Result> CheckNip05Username(string username, string nostrPubKey)
     {
-        var isValidNip05Username = Result.Success()
-            .Map(() => MailAddress.TryCreate(username, out var mailAddress) ? mailAddress : null)
-            .Bind(address => Result
-                .Try(() => JsonFrom(new Uri($"https://{address!.Host}/.well-known/nostr.json?name={address.User}")))
-                .Map(document => (document, address)))
-            .Bind(x =>
-            {
-                Result<(JsonElement, MailAddress)> success;
-                if (x.document.RootElement.TryGetProperty("names", out var names))
-                {
-                    success = Result.Success<(JsonElement element, MailAddress address)>((names, x.address));
-                }
-                else
-                {
-                    success = Result.Failure<(JsonElement, MailAddress)>("Names not found");
-                }
+        var valid = from address in GetAddress(username)
+            from serverNpub in GetServerNpub(address)
+            select serverNpub;
 
-                return success;
-            })
-            .Bind(x =>
-            {
-                Result<(JsonElement, MailAddress)> success;
-                if (x.Item1.TryGetProperty(x.Item2.User, out var user))
-                {
-                    success = Result.Success<(JsonElement element, MailAddress address)>((user, x.Item2));
-                }
-                else
-                {
-                    success = Result.Failure<(JsonElement, MailAddress)>("User not found");
-                }
-
-                return success;
-            })
-            .Map(tuple => tuple.Item1.GetString() == nostrPubKey);
-            
-        
-        return isValidNip05Username;
+        return await valid.Ensure(serverNpub => serverNpub == nostrPubKey, "Found Npub does not match your project's Nostr pubkey");
     }
 
-    private async Task<JsonDocument> JsonFrom(Uri uri)
+    private Result<MailAddress> GetAddress(string address)
     {
-        using (var httpClient = httpClientFactory.CreateClient())
-        {
-            await using (var stream = await httpClient.GetStreamAsync(uri))
-            {
-                return await JsonDocument.ParseAsync(stream);
-            }
-        }
+        return MailAddress.TryCreate(address, out var result) ? Result.Success(result) : Result.Failure<MailAddress>("Cannot parse NIP-05 address");
     }
 
-    public Task<Result<bool>> IsValidLightningAddress(string address)
+    private Task<Result<string>> GetServerNpub(MailAddress address)
     {
-        throw new NotImplementedException();
+        return Result.Try(() => JsonFrom(new Uri($"https://{address.Host}/.well-known/nostr.json?name={address.User}")))
+            .Map(token => JToken.Parse(token).SelectToken($"$.names.{address.User}"))
+            .EnsureNotNull($"Cannot find Npub for username '{address.User}'")
+            .Map(token => token.Value<string>())
+            .EnsureNotNull($"Found Npub for {address.User}, but it is null");
+    }
+
+    private async Task<string> JsonFrom(Uri uri)
+    {
+        using var httpClient = httpClientFactory.CreateClient();
+        return await httpClient.GetStringAsync(uri);
     }
 }

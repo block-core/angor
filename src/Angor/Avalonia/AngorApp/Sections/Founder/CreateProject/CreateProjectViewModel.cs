@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using AngorApp.Flows;
 using AngorApp.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.Sections.Founder.CreateProject.Preview;
 using AngorApp.Sections.Founder.CreateProject.Profile;
@@ -24,13 +25,13 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
     private readonly IProjectAppService projectAppService;
     private readonly CompositeDisposable disposable = new();
 
-    public CreateProjectViewModel(IWallet wallet, UIServices uiServices, IProjectAppService projectAppService)
+    public CreateProjectViewModel(IWallet wallet, CreateProjectFlow.ProjectSeed projectSeed, UIServices uiServices, IProjectAppService projectAppService)
     {
         this.projectAppService = projectAppService;
         FundingStructureViewModel = new FundingStructureViewModel().DisposeWith(disposable);
         var endDateChanges = FundingStructureViewModel.WhenAnyValue(x => x.FundingEndDate);
         StagesViewModel = new StagesViewModel(() => FundingStructureViewModel.FundingEndDate, endDateChanges, uiServices).DisposeWith(disposable);
-        ProfileViewModel = new ProfileViewModel(uiServices).DisposeWith(disposable);
+        ProfileViewModel = new ProfileViewModel(projectSeed, uiServices).DisposeWith(disposable);
 
         StagesViewModel.LastStageDate
             .Select(date => date?.AddDays(60))
