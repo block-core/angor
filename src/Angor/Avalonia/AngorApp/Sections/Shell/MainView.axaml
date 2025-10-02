@@ -13,8 +13,6 @@
         <ShellView.HeaderContentTemplate>
             <DataTemplate DataType="x:Object">
                 <ContentControl
-                    TextElement.FontWeight="Bold"
-                    TextElement.FontSize="18"
                     TextBlock.TextAlignment="Center"
                     TextBlock.TextTrimming="CharacterEllipsis"
                     VerticalContentAlignment="Center"

@@ -7,6 +7,26 @@
             <ReactiveButton Content="Reactive Button" />
         </StackPanel>
     </Design.PreviewWith>
+    
+    <Style Selector="Button">
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    
+    <Style Selector="ListBoxItem">
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    
+    <Style Selector="ToggleButton">
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    
+    <Style Selector="ToggleSwitch">
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    
+    <Style Selector="CheckBox">
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
 
     <Styles.Resources>
         <ControlTheme x:Key="ThinTransparentButton" TargetType="Button" BasedOn="{StaticResource TransparentButton}">
@@ -18,6 +38,7 @@
     </Styles.Resources>
     
     <Style Selector="ReactiveButton.CardButton">
+        <Setter Property="Cursor" Value="Hand" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="VerticalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />

@@ -23,7 +23,7 @@ public partial class CreateProjectStage : ReactiveValidationObject, ICreateProje
         var isAfterEndDate = this.WhenAnyValue(stage => stage.ReleaseDate)
             .CombineLatest(fundingEndDate, (release, end) => release != null && end != null && release > end);
 
-        this.ValidationRule(isAfterEndDate, b => b, _ => "Release date must be after funding end date");
+        this.ValidationRule(x => x.ReleaseDate, isAfterEndDate, b => b, _ => "Release date must be after funding end date");
     }
 
     public IEnhancedCommand Remove { get; }

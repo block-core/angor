@@ -5,12 +5,18 @@
              xmlns:shell="clr-namespace:AngorApp.Sections.Shell"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Shell.HeaderView" x:DataType="shell:HeaderViewModel">
-    <DockPanel>
-        <Button IsVisible="{Binding $self.IsEffectivelyEnabled}"
-                Theme="{StaticResource TransparentButton}"
-                DockPanel.Dock="Left" VerticalAlignment="Center"
-                Command="{Binding Back}" Content="{Icon fa-angle-left}">
-        </Button>
+
+    <DockPanel Height="42">
+        <Viewbox>
+            <IconButton Margin="0 2"
+                        IsVisible="{Binding $self.IsEffectivelyEnabled}"
+                        ButtonTheme="{StaticResource TransparentButton}"
+                        VerticalAlignment="Center"
+                        Command="{Binding Back}"
+                        Icon="{Icon fa-angle-left}"
+                        Content="Back">
+            </IconButton>
+        </Viewbox>
         <ToggleButton VerticalAlignment="Center" Margin="5 0" ToolTip.Tip="Switch theme" Theme="{StaticResource TransparentToggleButton}" DockPanel.Dock="Right" IsChecked="{Binding IsDarkThemeEnabled}">
             <ToggleButton.Styles>
                 <Style Selector="ToggleButton:checked">

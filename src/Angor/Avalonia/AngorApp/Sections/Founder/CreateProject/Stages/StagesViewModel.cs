@@ -63,10 +63,15 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
             .ToCollection()
             .Select(collection => collection.Sum(stage => stage.Percent ?? 0));
 
+        var allStagesAreValid = stagesSource.Connect()
+            .FilterOnObservable(stage => stage.IsValid().Not())
+            .Count().Select(i => i == 0);
+        
+        this.ValidationRule(allStagesAreValid, b => b, x => "All stages must be valid").DisposeWith(disposable);
         this.ValidationRule(stagesSource.CountChanged, b => b > 0, _ => "There must be at least one stage").DisposeWith(disposable);
         this.ValidationRule(totalPercent, percent => Math.Abs(percent - 100) < 1, _ => "Stage percentages should sum to 100%").DisposeWith(disposable);
-
-        StagesCreator = new Creator.StagesCreatorViewModel().DisposeWith(disposable);
+        
+        StagesCreator = new StagesCreatorViewModel().DisposeWith(disposable);
         StagesCreator.SelectedInitialDate = DateTime.Today;
         CreateStages = ReactiveCommand.CreateFromTask(async () =>
             {
