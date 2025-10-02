@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Reactive.Disposables;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using AngorApp.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.Sections.Founder.CreateProject.Stages.Creator;
@@ -18,17 +19,16 @@ namespace AngorApp.Sections.Founder.CreateProject.Stages;
 public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
 {
     private readonly CompositeDisposable disposable = new();
-    private readonly Func<DateTime?> getEndDate;
-    private readonly IObservable<DateTime?> endDateChanges;
+    private readonly BehaviorSubject<DateTime?> endDateSubject;
 
     public IEnhancedCommand AddStage { get; }
 
     private readonly SourceCache<ICreateProjectStage, long> stagesSource;
 
-    public StagesViewModel(Func<DateTime?> getEndDate, IObservable<DateTime?> endDateChanges, UIServices uiServices)
+    public StagesViewModel(IObservable<DateTime?> endDateChanges, UIServices uiServices)
     {
-        this.getEndDate = getEndDate;
-        this.endDateChanges = endDateChanges;
+        endDateSubject = new BehaviorSubject<DateTime?>(null);
+        endDateChanges.Subscribe(endDateSubject); 
 
         stagesSource = new SourceCache<ICreateProjectStage, long>(stage => stage.GetHashCode())
             .DisposeWith(disposable);
@@ -72,7 +72,6 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
         this.ValidationRule(totalPercent, percent => Math.Abs(percent - 100) < 1, _ => "Stage percentages should sum to 100%").DisposeWith(disposable);
         
         StagesCreator = new StagesCreatorViewModel().DisposeWith(disposable);
-        StagesCreator.SelectedInitialDate = DateTime.Today;
         CreateStages = ReactiveCommand.CreateFromTask(async () =>
             {
                 var create = Stages.Count == 0 || await uiServices.Dialog.ShowConfirmation("Create stages", "Do you want to replace the current stages with new ones?\n\nThis action can't be undone.").GetValueOrDefault(() => false);
@@ -85,8 +84,18 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
             }, StagesCreator.IsValid())
             .Enhance()
             .DisposeWith(disposable);
+
+        ChangeCreatorStartDateOnEndDateChanges(endDateChanges).DisposeWith(disposable);
         
         Errors = new ErrorSummarizer(ValidationContext).DisposeWith(disposable).Errors;
+    }
+
+    private IDisposable ChangeCreatorStartDateOnEndDateChanges(IObservable<DateTime?> endDateChanges)
+    {
+        return endDateChanges
+            .Where(time => time.HasValue)
+            .Do(time => StagesCreator.SelectedInitialDate = time.Value.AddDays(1))
+            .Subscribe();
     }
 
     public ICollection<string> Errors { get; }
@@ -112,7 +121,7 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
             {
                 stagesSource.Remove(stage);
                 RecalculatePercentages();
-            }, endDateChanges)
+            }, endDateSubject)
             {
                 Percent = stagePercent,
                 ReleaseDate = initialDate.Add(timespan * i)
@@ -130,10 +139,10 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
         {
             stagesSource.Remove(stage);
             RecalculatePercentages();
-        }, endDateChanges)
+        }, endDateSubject)
         {
             Percent = 100,
-            ReleaseDate = (getEndDate() ?? DateTime.Now).AddDays(7)
+            ReleaseDate = (endDateSubject.Value ?? DateTime.Now).AddDays(7)
         };
     }
 
