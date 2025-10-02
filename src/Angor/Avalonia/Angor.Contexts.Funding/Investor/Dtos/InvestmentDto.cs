@@ -1,4 +1,5 @@
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Shared;
 
 namespace Angor.Contexts.Funding.Investor.Dtos;
 

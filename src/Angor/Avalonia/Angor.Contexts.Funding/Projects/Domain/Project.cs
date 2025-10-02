@@ -1,3 +1,5 @@
+using Angor.Contexts.Funding.Shared;
+
 namespace Angor.Contexts.Funding.Projects.Domain;
 
 public class Project

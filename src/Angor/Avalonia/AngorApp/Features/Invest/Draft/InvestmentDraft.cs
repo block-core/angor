@@ -6,9 +6,9 @@ using Angor.UI.Model.Implementation.Projects;
 
 namespace AngorApp.Features.Invest.Draft;
 
-public class InvestmentDraft(IInvestmentAppService investmentAppService, IWallet wallet, FullProject project,  CreateInvestment.Draft draftModel) : IInvestmentDraft
+public class InvestmentDraft(IInvestmentAppService investmentAppService, IWallet wallet, FullProject project,  CreateInvestment.InvestmentDraft draftModel) : IInvestmentDraft
 {
-    public CreateInvestment.Draft DraftModel { get; } = draftModel;
+    public CreateInvestment.InvestmentDraft DraftModel { get; } = draftModel;
 
     public IAmountUI TransactionFee => new AmountUI(DraftModel.TransactionFee.Sats);
     public IAmountUI MinerFee => new AmountUI(DraftModel.MinerFee.Sats);

@@ -18,5 +18,9 @@
     <ProjectReference Include="..\..\Shared\Angor.Shared.csproj" />
     <ProjectReference Include="..\Angor.Contexts.CrossCutting\Angor.Contexts.CrossCutting.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Shared\TransactionDrafts\" />
+  </ItemGroup>
   
 </Project>

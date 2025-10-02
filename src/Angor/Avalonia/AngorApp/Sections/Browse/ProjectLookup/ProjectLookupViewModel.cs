@@ -2,6 +2,7 @@ using System.Linq;
 using System.Windows.Input;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Shared;
 using AngorApp.Core;
 using AngorApp.Features.Invest;
 using AngorApp.UI.Services;
