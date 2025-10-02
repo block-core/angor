@@ -46,15 +46,7 @@
                                         DockPanel.Dock="Bottom"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center">
-                                <TextBlock Text="Target Amount"
-                                           Classes="SizeBig"
-                                           Opacity="0.7"
-                                           HorizontalAlignment="Center" />
-                                <TextBlock Text="{Binding Project.TargetAmount.DecimalString}"
-                                           Classes="SizeLarge"
-                                           HorizontalAlignment="Center"
-                                           Foreground="{DynamicResource SystemAccentColor}"
-                                           FontWeight="Bold" />
+                                
                             </StackPanel>
                             <StackPanel Spacing="20">
                                 <TextBlock Classes="SizeHuge" FontWeight="Bold" TextWrapping="Wrap" Text="{Binding Project.Name}"

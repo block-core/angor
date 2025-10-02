@@ -6,7 +6,7 @@
              xmlns:dt="clr-namespace:AngorApp.Sections.Browse.Details"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             mc:Ignorable="d" d:DesignWidth="300"
+             mc:Ignorable="d" d:DesignWidth="700"
              x:Class="AngorApp.Sections.Browse.Details.ProjectSummary" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
@@ -15,6 +15,16 @@
 
     <Card Header="Project Summary" Subheader="Key metrics and progress tracking">
         <StackPanel Spacing="25" Margin="0 10 0 0">
+            <StackPanel>
+                <TextBlock Text="Target Amount"
+                           Classes="SizeBig"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding Project.TargetAmount.DecimalString}"
+                           Classes="SizeLarge"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource SystemAccentColor}"
+                           FontWeight="Bold" />
+            </StackPanel>
             <!-- Progress Overview Cards -->
             <BalancedWrapGrid MinItemWidth="180" HorizontalSpacing="20" VerticalSpacing="20">
                 <Card Header="Timeline Progress"
@@ -75,11 +85,9 @@
             <Card Header="Project Information" Subheader="Key project details and metrics">
                 <StackPanel Classes="BigGap" Margin="0 15">
                     <StackPanel Classes="BigGap">
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}"  StartContent="{Icon fa-bullseye}" Content="Target amount"
-                                                                                                             EndContent="{Binding Project.TargetAmount.DecimalString}" />
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}"  StartContent="{Icon fa-solid fa-clock}" Content="Penalty duration"
+                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="{Icon fa-solid fa-clock}" Content="Penalty duration"
                                    EndContent="{Binding Project.PenaltyDuration, Converter={x:Static controls:AngorConverters.HumanizeTimeSpan}}" />
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}"  StartContent="{Icon fa-solid fa-calendar-days}" Content="Project dates">
+                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="{Icon fa-solid fa-calendar-days}" Content="Project dates">
                             <EdgePanel.EndContent>
                                 <StackPanel>
                                     <TextBlock HorizontalAlignment="Right" Text="{Binding Project.FundingStartDate, StringFormat=d}" />
@@ -87,10 +95,11 @@
                                 </StackPanel>
                             </EdgePanel.EndContent>
                         </EdgePanel>
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}"  StartContent="{Icon fa-solid fa-users}" Content="Total raised"
+                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="{Icon fa-solid fa-users}" Content="Total raised"
                                    EndContent="{Binding Project.RaisedAmount.DecimalString}" />
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}"  StartContent="{Icon fa-solid fa-calculator}" Content="Total investors"
-                                   EndContent="{Binding Project.TotalInvestors, TargetNullValue='Unknown'}" /></StackPanel>
+                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="{Icon fa-solid fa-calculator}" Content="Total investors"
+                                   EndContent="{Binding Project.TotalInvestors, TargetNullValue='Unknown'}" />
+                    </StackPanel>
                     <Separator />
                     <HyperlinkButton HorizontalAlignment="Stretch">
                         <DockPanel HorizontalSpacing="15">
