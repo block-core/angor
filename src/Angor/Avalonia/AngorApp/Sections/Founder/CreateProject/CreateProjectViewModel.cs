@@ -1,5 +1,4 @@
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
@@ -8,11 +7,9 @@ using AngorApp.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.Sections.Founder.CreateProject.Preview;
 using AngorApp.Sections.Founder.CreateProject.Profile;
 using AngorApp.Sections.Founder.CreateProject.Stages;
-using AngorApp.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
 using AngorApp.Sections.Shell;
 using AngorApp.UI.Controls.Common;
 using AngorApp.UI.Services;
-using ReactiveUI;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.Avalonia.Dialogs;
@@ -30,7 +27,7 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         this.projectAppService = projectAppService;
         FundingStructureViewModel = new FundingStructureViewModel().DisposeWith(disposable);
         var endDateChanges = FundingStructureViewModel.WhenAnyValue(x => x.FundingEndDate);
-        StagesViewModel = new StagesViewModel(() => FundingStructureViewModel.FundingEndDate, endDateChanges, uiServices).DisposeWith(disposable);
+        StagesViewModel = new StagesViewModel(endDateChanges, uiServices).DisposeWith(disposable);
         ProfileViewModel = new ProfileViewModel(projectSeed, uiServices).DisposeWith(disposable);
 
         StagesViewModel.LastStageDate
