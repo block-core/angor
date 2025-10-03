@@ -27,5 +27,5 @@ steps:
   - pwsh: dotnet tool install --global DotnetDeployer.Tool
     displayName: Install DotnetDeployer.Tool
 
-  - pwsh: dotnetdeployer release --solution src/Angor/Avalonia/Angor.Avalonia.sln --token $(GitHubApiKey) --prefix AngorApp --android-keystore-base64 $(AndroidBase64Keystore) --android-key-alias $(AndroidSigningKeyAlias) --android-key-pass $(AndroidSigningKeyPass) --android-store-pass $(AndroidSigningStorePass) --release-name AngorApp
+  - pwsh: dotnetdeployer github release --solution src/Angor/Avalonia/Angor.Avalonia.sln --github-token $(GitHubApiKey) --prefix AngorApp --android-keystore-base64 $(AndroidBase64Keystore) --android-key-alias $(AndroidSigningKeyAlias) --android-key-pass $(AndroidSigningKeyPass) --android-store-pass $(AndroidSigningStorePass) --release-name AngorApp
     displayName: Release AngorApp
