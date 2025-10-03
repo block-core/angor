@@ -1,11 +1,14 @@
 using System.Threading.Tasks;
+using Angor.Contexts.Funding.Investor;
 using Angor.UI.Model.Implementation.Projects;
 using AngorApp.Features.Invest;
+using AngorApp.UI.Controls.Common.FoundedProjectOptions;
 using AngorApp.UI.Services;
 using Avalonia.Threading;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
+using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Browse.Details;
 
@@ -15,7 +18,7 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
     private readonly InvestWizard investWizard;
     private readonly UIServices uiServices;
 
-    public ProjectDetailsViewModel(FullProject project, InvestWizard investWizard, UIServices uiServices)
+    public ProjectDetailsViewModel(FullProject project, InvestWizard investWizard, UIServices uiServices, IInvestmentAppService investmentAppService, INavigator navigator)
     {
         this.project = project;
         this.investWizard = investWizard;
@@ -24,11 +27,13 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
         IsInsideInvestmentPeriod = DateTime.Now <= project.FundingEndDate;
         Invest = ReactiveCommand.CreateFromTask(DoInvest, Observable.Return(IsInsideInvestmentPeriod)).Enhance();
         Invest.HandleErrorsWith(uiServices.NotificationService, "Investment failed");
+        FoundedProjectOptions = new FoundedProjectOptionsViewModel(project.ProjectId, investmentAppService, uiServices, navigator);
     }
 
     public bool IsInsideInvestmentPeriod { get; }
     public TimeSpan? NextRelease { get; }
     public IStage? CurrentStage { get; }
+    public IFoundedProjectOptionsViewModel FoundedProjectOptions { get; }
 
     public IEnhancedCommand<Result> Invest { get; }
 

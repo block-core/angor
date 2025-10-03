@@ -1,3 +1,4 @@
+using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.UI.Model.Implementation.Projects;
@@ -16,14 +17,15 @@ public class ProjectViewModel : ReactiveObject, IProjectViewModel
         IProjectAppService projectAppService,
         INavigator navigator,
         UIServices uiServices,
-        InvestWizard investWizard)
+        InvestWizard investWizard,
+        IInvestmentAppService investmentAppService)
     {
         Project = project;
 
         GoToDetails = ReactiveCommand.CreateFromTask(async () =>
         {
             var fullProject = await projectAppService.GetFullProject(new ProjectId(project.Id))
-                .Map(fullProject => new ProjectDetailsViewModel(fullProject, investWizard, uiServices));
+                .Map(fullProject => new ProjectDetailsViewModel(fullProject, investWizard, uiServices, investmentAppService, navigator));
 
             var result = await fullProject.Bind(details => navigator.Go(() => details));
             return result;

@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Reactive.Disposables;
+using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.Features.Invest;
 using AngorApp.Sections.Browse.ProjectLookup;
@@ -22,13 +23,14 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
     public BrowseSectionViewModel(IProjectAppService projectService,
         INavigator navigator,
         InvestWizard investWizard,
-        UIServices uiServices)
+        UIServices uiServices,
+        IInvestmentAppService investmentAppService)
     {
-        ProjectLookupViewModel = new ProjectLookupViewModel(projectService, navigator, investWizard, uiServices).DisposeWith(disposable);
+        ProjectLookupViewModel = new ProjectLookupViewModel(projectService, navigator, investWizard, uiServices, investmentAppService).DisposeWith(disposable);
 
         LoadProjects = ReactiveCommand.CreateFromObservable(() => Observable.FromAsync(projectService.Latest)
                 .Map(list => list.Select(dto => dto.ToProject()))
-                .Map(list => list.Select(IProjectViewModel (project) => new ProjectViewModel(project, projectService, navigator, uiServices, investWizard)).ToList()))
+                .Map(list => list.Select(IProjectViewModel (project) => new ProjectViewModel(project, projectService, navigator, uiServices, investWizard, investmentAppService)).ToList()))
             .Enhance()
             .DisposeWith(disposable);
 
