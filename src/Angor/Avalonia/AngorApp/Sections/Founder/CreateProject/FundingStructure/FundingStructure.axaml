@@ -16,26 +16,12 @@
 
     <UserControl.Styles>
         <StyleInclude Source="../Common.axaml" />
-
-        <Style Selector="CalendarDatePicker">
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-        </Style>
-
-        <Style Selector="BalancedWrapGrid">
-            <Setter Property="HorizontalSpacing" Value="10" />
-            <Setter Property="VerticalSpacing" Value="10" />
-        </Style>
-
-        <Style Selector="Card">
-            <Setter Property="Theme" Value="{StaticResource  WideCard}" />
-        </Style>
-
-        <Style Selector="StackPanel Card">
-            <Setter Property="Padding" Value="10" />
-        </Style>
     </UserControl.Styles>
 
     <Card Header="Funding Structure">
+        <Card.HeaderEndContent>
+            <c:ErrorSummary Errors="{Binding Errors}" />
+        </Card.HeaderEndContent>
         <Card.HeaderStartContent>
             <ui:Icon Source="svg:/Assets/clock-square.svg" />
         </Card.HeaderStartContent>
@@ -59,7 +45,6 @@
                     <CalendarDatePicker IsEnabled="False" SelectedDate="{Binding ExpiryDate}" />
                 </Card>
             </BalancedWrapGrid>
-            <c:ErrorSummary Errors="{Binding Errors}" />
         </StackPanel>
     </Card>
 

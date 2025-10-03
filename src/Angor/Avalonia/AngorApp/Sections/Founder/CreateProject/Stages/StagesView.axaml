@@ -39,11 +39,9 @@
         </stages:StagesViewModelDesign>
     </Design.DataContext>
 
-    <Card Header="Stages">
+    <Card Header="Stages" >
         <Card.HeaderEndContent>
-            <ContentControl IsVisible="{Binding IsValid^}" Foreground="LawnGreen">
-                <ui:Icon Source="fa-check" />
-            </ContentControl>
+            <controls:ErrorSummary Errors="{Binding Errors}" />
         </Card.HeaderEndContent>
         <Card.HeaderStartContent>
             <ui:Icon Source="svg:/Assets/stages.svg" />
@@ -160,7 +158,6 @@
                     </Panel>
                 </StackPanel>
             </Border>
-            <controls:ErrorSummary Errors="{Binding Errors}" />
         </StackPanel>
     </Card>
 

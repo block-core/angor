@@ -7,6 +7,7 @@
              xmlns:fundingStructure="clr-namespace:AngorApp.Sections.Founder.CreateProject.FundingStructure"
              xmlns:stages="clr-namespace:AngorApp.Sections.Founder.CreateProject.Stages"
              xmlns:p="clr-namespace:AngorApp.Sections.Founder.CreateProject.Preview"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="800"
              Container.Name="Root" Container.Sizing="Width"
              x:Class="AngorApp.Sections.Founder.CreateProject.CreateProjectView"

@@ -1,6 +1,7 @@
 using Angor.UI.Model.Implementation;
 using AngorApp.Design;
 using AngorApp.Features.Invest;
+using AngorApp.Flows;
 using AngorApp.Sections.Wallet.CreateAndImport;
 using AngorApp.UI.Controls.Feerate;
 using AngorApp.UI.Services;
@@ -16,6 +17,7 @@ public static class ModelServices
         return services
             .AddSingleton<IAmountFactory, AmountFactory>()
             .AddSingleton<IWalletBuilder, WalletProvider>()
+            .AddScoped<ICreateProjectFlow, CreateProjectFlow>()
             .AddSingleton<InvestWizard>()
             .AddSingleton<WalletCreationWizard>()
             .AddSingleton<IFeeCalculator, FeeCalculatorDesignTime>()
