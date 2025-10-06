@@ -18,6 +18,9 @@ public partial class HeaderViewModel : ReactiveObject
         this.network = network;
         Back = back;
         currentHeader = Header(content).ToProperty(this, vm => vm.Content);
+
+        IsDarkThemeEnabled = uiServices.IsDarkThemeEnabled;
+        
         this.WhenAnyValue(model => model.IsDarkThemeEnabled)
             .BindTo(uiServices, services => services.IsDarkThemeEnabled);
     }

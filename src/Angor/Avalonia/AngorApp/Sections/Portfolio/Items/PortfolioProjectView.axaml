@@ -32,7 +32,7 @@
                 <TextBlock Text="{Binding Name}" Classes="SizeBig Center" />
                 <av:AdvancedImage Height="150" Stretch="UniformToFill" CornerRadius="10" Source="{Binding LogoUri}" />
                 <items:ProgressView />
-                <items:OfferAcceptedView>
+                <items:OfferAcceptedView x:Name="OfferAcceptedView">
                     <items:OfferAcceptedView.IsVisible>
                         <MultiBinding Converter="{x:Static BoolConverters.Or}">
                             <Binding Path="CompleteInvestment.CanExecute^" />
@@ -41,7 +41,7 @@
                     </items:OfferAcceptedView.IsVisible>
                 </items:OfferAcceptedView>
             </StackPanel>
-            <BalancedWrapGrid MinItemWidth="230" DockPanel.Dock="Top">
+            <BalancedWrapGrid MinItemWidth="230" DockPanel.Dock="Top" IsVisible="{Binding !#OfferAcceptedView.IsVisible}">
                 <Border Classes="CardAlt" Padding="10">
                     <UniformGrid Grid.IsSharedSizeScope="True" Columns="1" VerticalAlignment="Center" RowSpacing="10">
                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="My Investment" EndContent="{Binding Invested.DecimalString}" />
