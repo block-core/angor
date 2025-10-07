@@ -3,6 +3,7 @@ using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
+using Angor.Contexts.Funding.Shared.TransactionDrafts;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
@@ -16,6 +17,13 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class RequestInvestmentSignatures
 {
+    public class RequestFounderSignaturesRequest(Guid walletId, ProjectId projectId, InvestmentDraft draft) : IRequest<Result<Guid>>
+    {
+        public ProjectId ProjectId { get; } = projectId;
+        public InvestmentDraft Draft { get; } = draft;
+        public Guid WalletId { get; } = walletId;
+    }
+    
     public class RequestFounderSignaturesHandler(
         IProjectRepository projectRepository,
         ISeedwordsProvider seedwordsProvider,
@@ -25,7 +33,7 @@ public static class RequestInvestmentSignatures
         ISerializer serializer,
         IWalletOperations walletOperations,
         ISignService signService,
-        IPortfolioRepository investmentRepository) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
+        IPortfolioRepository portfolioRepository) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
     {
         public async Task<Result<Guid>> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
         {
@@ -59,7 +67,7 @@ public static class RequestInvestmentSignatures
                 return Result.Failure<Guid>(sendSignatureResult.Error);
             }
             
-            await investmentRepository.Add(request.WalletId, new InvestmentRecord
+            await portfolioRepository.Add(request.WalletId, new InvestmentRecord
             {
                 InvestmentTransactionHash = transactionId,
                 InvestmentTransactionHex = request.Draft.SignedTxHex,
@@ -124,12 +132,5 @@ public static class RequestInvestmentSignatures
                 return accountInfo.GetNextReceiveAddress();
             }).EnsureNotNull("Could not get the unfunded release address");
         }
-    }
-    
-    public class RequestFounderSignaturesRequest(Guid walletId, ProjectId projectId, CreateInvestment.InvestmentDraft draft) : IRequest<Result<Guid>>
-    {
-        public ProjectId ProjectId { get; } = projectId;
-        public CreateInvestment.InvestmentDraft Draft { get; } = draft;
-        public Guid WalletId { get; } = walletId;
     }
 }

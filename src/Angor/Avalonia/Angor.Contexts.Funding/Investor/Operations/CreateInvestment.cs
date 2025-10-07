@@ -2,6 +2,7 @@ using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
+using Angor.Contexts.Funding.Shared.TransactionDrafts;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -15,19 +16,7 @@ public static class CreateInvestment
 {
     public record CreateInvestmentTransactionRequest(Guid WalletId, ProjectId ProjectId, Amount Amount, DomainFeerate FeeRate) 
         : IRequest<Result<InvestmentDraft>> { }
-
-    public record InvestmentDraft(string InvestorKey, Amount TransactionFee) : TransactionDraft
-    {
-        public InvestmentDraft(string investorKey, string signedTxHex, string transactionId, Amount transactionFee) : this(investorKey, transactionFee)
-        {
-            TransactionFeeSatsPerByte = (int)transactionFee.Sats;
-            SignedTxHex = signedTxHex;
-            TransactionId = transactionId;
-        }
-        public Amount MinerFee { get; set; } = new Amount(-1);
-        public Amount AngorFee { get; set; } = new Amount(-1);
-    }
-
+    
     public class CreateInvestmentTransactionHandler(
         IProjectRepository projectRepository,
         IInvestorTransactionActions investorTransactionActions,
@@ -75,9 +64,16 @@ public static class CreateInvestment
                 var minorFee = signedTxResult.Value.TransactionFee;
                 var angorFee = signedTxResult.Value.Transaction.Outputs.AsIndexedOutputs().FirstOrDefault()?.TxOut.Value.Satoshi ?? 0;
                     
-                return new InvestmentDraft(investorKey, signedTxHex, signedTxResult.Value.Transaction.GetHash().ToString(),
-                        new Amount(minorFee + angorFee))
-                    { MinerFee = new Amount(minorFee), AngorFee = new Amount(angorFee), };
+                var trxId = signedTxResult.Value.Transaction.GetHash().ToString();
+                
+                return new InvestmentDraft(investorKey)
+                {
+                    TransactionFee = new Amount(minorFee + angorFee),
+                    MinerFee = new Amount(minorFee),
+                    AngorFee = new Amount(angorFee),
+                    SignedTxHex = signedTxHex,
+                    TransactionId = trxId,
+                };
             }
             catch (Exception ex)
             {

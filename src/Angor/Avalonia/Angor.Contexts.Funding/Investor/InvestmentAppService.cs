@@ -1,36 +1,23 @@
-using Angor.Contexts.Funding.Founder.Dtos;
-using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
-using Angor.Shared.Models;
+using Angor.Contexts.Funding.Shared.TransactionDrafts;
 using CSharpFunctionalExtensions;
 using MediatR;
-using Investment = Angor.Contexts.Funding.Founder.Operations.Investment;
 
 namespace Angor.Contexts.Funding.Investor;
 
 public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
 {
-    public Task<Result<CreateInvestment.InvestmentDraft>> CreateInvestmentDraft(Guid sourceWalletId, ProjectId projectId, Amount amount, DomainFeerate feerate)
+    public Task<Result<InvestmentDraft>> CreateInvestmentDraft(Guid sourceWalletId, ProjectId projectId, Amount amount, DomainFeerate feerate)
     {
         return mediator.Send(new CreateInvestment.CreateInvestmentTransactionRequest(sourceWalletId, projectId, amount, feerate));
     }
 
-    public Task<Result<Guid>> Invest(Guid sourceWalletId, ProjectId projectId, CreateInvestment.InvestmentDraft draft)
+    public Task<Result<Guid>> Invest(Guid sourceWalletId, ProjectId projectId, InvestmentDraft draft)
     {
         return mediator.Send(new RequestInvestmentSignatures.RequestFounderSignaturesRequest(sourceWalletId, projectId, draft));
-    }
-
-    public Task<Result<IEnumerable<Investment>>> GetInvestments(Guid walletId, ProjectId projectId)
-    {
-        return mediator.Send(new GetInvestments.GetInvestmentsRequest(walletId, projectId));
-    }
-
-    public Task<Result> ApproveInvestment(Guid walletId, ProjectId projectId, Investment investment)
-    {
-        return mediator.Send(new ApproveInvestment.ApproveInvestmentRequest(walletId, projectId, investment));
     }
 
     public Task<Result<IEnumerable<InvestedProjectDto>>> GetInvestorProjects(Guid walletId)
@@ -48,53 +35,30 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
         return mediator.Send(new GetPenalties.GetPenaltiesRequest(walletId));
     }
 
-    public Task<Result> Spend(Guid walletId, DomainFeerate fee, ProjectId projectId, IEnumerable<SpendTransactionDto> toSpend)
-    {
-        return mediator.Send(new SpendInvestorTransaction.SpendInvestorTransactionRequest(walletId, projectId,
-                new FeeEstimation { FeeRate = fee.SatsPerVByte }, toSpend));
-    }
-
-    public Task<Result<IEnumerable<ClaimableTransactionDto>>> GetClaimableTransactions(Guid walletId, ProjectId projectId)
-    {
-        return mediator.Send(new GetClaimableTransactions.GetClaimableTransactionsRequest(walletId, projectId));
-    }
-    
-    // Gets a list of all the transactions than can be released for a given project
-    public Task<Result<IEnumerable<ReleaseableTransactionDto>>> GetReleaseableTransactions(Guid walletId, ProjectId projectId)
-    {
-        return mediator.Send(new GetReleaseableTransactions.GetReleaseableTransactionsRequest(walletId, projectId));
-    }
-
-    // Note: you can release multiple investors at once, hence the list
-    public Task<Result> ReleaseInvestorTransactions(Guid walletId, ProjectId projectId, IEnumerable<string> investorAddresses)
-    {
-        return mediator.Send(new ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest(walletId, projectId, investorAddresses));
-    }
-
     #region Methods for Investor/Manage funds. Remove this region ASAP. It's only for clarity.
     
     // Investor/Manage Funds: Retrieve recovery info for an investment. Also contains a list of InvestorStageItemDtos 
     public Task<Result<InvestorProjectRecoveryDto>> GetInvestorProjectRecovery(Guid walletId, ProjectId projectId)
     {
-        return mediator.Send(new Operations.GetInvestorProjectRecovery.GetInvestorProjectRecoveryRequest(walletId, projectId));
+        return mediator.Send(new GetInvestorProjectRecovery.GetInvestorProjectRecoveryRequest(walletId, projectId));
     }
 
     // Investor/Manage Funds
-    public Task<Result> RecoverInvestorFunds(Guid walletId, ProjectId projectId, int stageIndex)
+    public Task<Result<TransactionDraft>> RecoverInvestorFunds(Guid walletId, ProjectId projectId, int stageIndex)
     {
-        return mediator.Send(new Operations.RecoverFunds.RecoverFundsRequest(walletId, projectId, stageIndex));
+        return mediator.Send(new RecoverFunds.RecoverFundsRequest(walletId, projectId, stageIndex));
     }
 
     // Investor/Manage Funds
-    public Task<Result> ReleaseInvestorFunds(Guid walletId, ProjectId projectId, int stageIndex)
+    public Task<Result<TransactionDraft>> ReleaseInvestorFunds(Guid walletId, ProjectId projectId, int stageIndex)
     {
-        return mediator.Send(new Operations.ReleaseFunds.ReleaseFundsRequest(walletId, projectId, stageIndex));
+        return mediator.Send(new ReleaseFunds.ReleaseFundsRequest(walletId, projectId, stageIndex));
     }
 
     // Investor/Manage Funds
-    public Task<Result> ClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, int stageIndex)
+    public Task<Result<TransactionDraft>> ClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, int stageIndex)
     {
-        return mediator.Send(new Operations.ClaimEndOfProject.ClaimEndOfProjectRequest(walletId, projectId, stageIndex));
+        return mediator.Send(new ClaimEndOfProject.ClaimEndOfProjectRequest(walletId, projectId, stageIndex));
     }
     
     #endregion

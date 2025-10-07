@@ -1,4 +1,5 @@
 using System.Reactive.Disposables;
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
@@ -23,10 +24,10 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
     
     private readonly CompositeDisposable disposable = new();
 
-    public FounderProjectDetailsViewModel(ProjectId projectId, IProjectAppService projectAppService, IInvestmentAppService investmentAppService, UIServices uiServices)
+    public FounderProjectDetailsViewModel(ProjectId projectId, IProjectAppService projectAppService, IFounderAppService founderAppService, UIServices uiServices)
     {
         this.projectAppService = projectAppService;
-        Load = ReactiveCommand.CreateFromTask(() => projectAppService.GetFullProject(projectId).Map(IProjectMainViewModel (project) => new ProjectMainViewModel(project, investmentAppService, uiServices))).Enhance();
+        Load = ReactiveCommand.CreateFromTask(() => projectAppService.GetFullProject(projectId).Map(IProjectMainViewModel (project) => new ProjectMainViewModel(project, founderAppService, uiServices))).Enhance();
         Load.HandleErrorsWith(uiServices.NotificationService);
 
         projectMainHelper = Load.Successes().ToProperty(this, x => x.ProjectMain).DisposeWith(disposable);

@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -11,7 +12,7 @@ using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Founder;
 
-public class FounderProjectViewModel(INavigator navigation, ProjectDto dto, IInvestmentAppService investmentAppService, IProjectAppService projectAppService, UIServices uiServices) : IFounderProjectViewModel, IDisposable
+public class FounderProjectViewModel(INavigator navigation, ProjectDto dto, IFounderAppService founderAppService, IProjectAppService projectAppService, UIServices uiServices) : IFounderProjectViewModel, IDisposable
 {
     public ProjectId Id { get; } = dto.Id;
     public string Name { get; } = dto.Name;
@@ -21,7 +22,7 @@ public class FounderProjectViewModel(INavigator navigation, ProjectDto dto, IInv
     public long TargetAmount { get; } = dto.TargetAmount;
     public IEnhancedCommand GoToDetails => ReactiveCommand.CreateFromTask(() =>
     {
-        return navigation.Go(() => new FounderProjectDetailsViewModel(dto.Id, projectAppService, investmentAppService, uiServices));
+        return navigation.Go(() => new FounderProjectDetailsViewModel(dto.Id, projectAppService, founderAppService, uiServices));
     }).Enhance();
 
 

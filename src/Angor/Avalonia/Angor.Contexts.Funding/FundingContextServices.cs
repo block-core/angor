@@ -1,4 +1,5 @@
 ﻿using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Investor.Domain.Impl;
@@ -54,10 +55,11 @@ public static class FundingContextServices
         services.TryAddSingleton<IWalletOperations, WalletOperations>();
         services.TryAddSingleton<IProjectInvestmentsRepository, ProjectInvestmentsRepository>();
         
-        services.AddHttpClient();
+        //services.AddHttpClient();
         
         services.AddSingleton<IProjectAppService, ProjectAppService>();
         services.AddSingleton<IInvestmentAppService, InvestmentAppService>();
+        services.AddSingleton<IFounderAppService, FounderAppService>();
         
         return services;
     }

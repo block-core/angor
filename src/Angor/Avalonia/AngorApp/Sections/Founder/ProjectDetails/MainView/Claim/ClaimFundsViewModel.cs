@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -16,15 +17,15 @@ namespace AngorApp.Sections.Founder.ProjectDetails.MainView.Claim;
 
 public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel, IDisposable
 {
-    private readonly IInvestmentAppService investmentAppService;
+    private readonly IFounderAppService founderAppService;
     private readonly ProjectId projectId;
     private readonly UIServices uiServices;
     [ObservableAsProperty] private IEnumerable<IClaimableStage>? claimableStages;
 
     private readonly CompositeDisposable disposable = new();
-    public ClaimFundsViewModel(ProjectId projectId, IInvestmentAppService investmentAppService, UIServices uiServices)
+    public ClaimFundsViewModel(ProjectId projectId, IFounderAppService founderAppService, UIServices uiServices)
     {
-        this.investmentAppService = investmentAppService;
+        this.founderAppService = founderAppService;
         this.projectId = projectId;
         this.uiServices = uiServices;
         LoadClaimableStages = WalletCommand.Create(GetClaimableStages, uiServices.WalletRoot)
@@ -50,7 +51,7 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
 
     private Task<Result<IEnumerable<IClaimableStage>>> GetClaimableStages(IWallet wallet)
     {
-        return investmentAppService
+        return founderAppService
             .GetClaimableTransactions(wallet.Id.Value, projectId)
             .Map(CreateStage);
     }
@@ -61,7 +62,7 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
             .Select(IClaimableStage (group) =>
             {
                 var claimableTransactions = group.Select(IClaimableTransaction (dto) => new ClaimableTransaction(dto)).ToList();
-                return new ClaimableStage(projectId, group.Key, claimableTransactions.ToList(), investmentAppService, uiServices);
+                return new ClaimableStage(projectId, group.Key, claimableTransactions.ToList(), founderAppService, uiServices);
             }).ToList();
         return stages;
     }

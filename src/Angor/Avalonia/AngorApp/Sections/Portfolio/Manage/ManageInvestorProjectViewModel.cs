@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Angor.Contexts.Funding.Founder;
 using CSharpFunctionalExtensions;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.Dtos;
@@ -71,11 +72,15 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
         Items = dto.Items
             .Select(x =>
             {
-                Func<Task<Result>> recover = () => investmentAppService.RecoverInvestorFunds(currentWallet.Id.Value, projectId, x.StageIndex);
-                Func<Task<Result>> release = () => investmentAppService.ReleaseInvestorFunds(currentWallet.Id.Value, projectId, x.StageIndex);
-                Func<Task<Result>> claim = () => investmentAppService.ClaimInvestorEndOfProjectFunds(currentWallet.Id.Value, projectId, x.StageIndex);
+                Func<Task<Result<TransactionDraft>>> recover = () =>
+                    investmentAppService.RecoverInvestorFunds(currentWallet.Id.Value, projectId, x.StageIndex);
+                Func<Task<Result<TransactionDraft>>> release = () =>
+                    investmentAppService.ReleaseInvestorFunds(currentWallet.Id.Value, projectId, x.StageIndex);
+                Func<Task<Result<TransactionDraft>>> claim = () =>
+                    investmentAppService.ClaimInvestorEndOfProjectFunds(currentWallet.Id.Value, projectId,
+                        x.StageIndex);
 
-                return (IInvestorProjectItem)new InvestorProjectItem(
+                return new InvestorProjectItem(
                     stage: x.StageIndex + 1,
                     amount: new AmountUI(x.Amount),
                     status: x.Status,
@@ -87,6 +92,7 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
                     claimAction: claim,
                     notificationService: uiServices.NotificationService);
             })
+            .Cast<IInvestorProjectItem>()
             .ToList();
         this.RaisePropertyChanged(nameof(Project));
         this.RaisePropertyChanged(nameof(Items));
@@ -114,6 +120,7 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
     {
         return this.WhenAnyValue(vm => vm.Items)
             .WhereNotNull()
+            .Select(items => items.Cast<InvestorProjectItem>())
             .Select(items =>
                 Observable.Merge(
                     items.Select(i => i.Recover.Successes().ToSignal()).Merge(),
@@ -131,7 +138,7 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
 
     private class InvestorProjectItem : ReactiveObject, IInvestorProjectItem
     {
-        public InvestorProjectItem(int stage, IAmountUI amount, string status, bool canRecover, bool canRelease, bool canClaimEnd, Func<Task<Result>> recoverAction, Func<Task<Result>> releaseAction, Func<Task<Result>> claimAction, INotificationService notificationService)
+        public InvestorProjectItem(int stage, IAmountUI amount, string status, bool canRecover, bool canRelease, bool canClaimEnd, Func<Task<Result<TransactionDraft>>> recoverAction, Func<Task<Result<TransactionDraft>>> releaseAction, Func<Task<Result<TransactionDraft>>> claimAction, INotificationService notificationService)
         {
             Stage = stage;
             Amount = amount;
@@ -149,13 +156,13 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
             ClaimEndOfProject.HandleErrorsWith(notificationService, "Failed to claim funds");
 
             Recover.Successes()
-                .SelectMany(_ => Observable.FromAsync(() => notificationService.Show("Recovery requested", Maybe<string>.From("Success"))))
+                .SelectMany(_ => Observable.FromAsync(() => notificationService.Show("Recovery transaction published", Maybe<string>.From("Success"))))
                 .Subscribe();
             Release.Successes()
-                .SelectMany(_ => Observable.FromAsync(() => notificationService.Show("Release requested", Maybe<string>.From("Success"))))
+                .SelectMany(_ => Observable.FromAsync(() => notificationService.Show("Release transaction published", Maybe<string>.From("Success"))))
                 .Subscribe();
             ClaimEndOfProject.Successes()
-                .SelectMany(_ => Observable.FromAsync(() => notificationService.Show("Claim requested", Maybe<string>.From("Success"))))
+                .SelectMany(_ => Observable.FromAsync(() => notificationService.Show("Claim transaction published", Maybe<string>.From("Success"))))
                 .Subscribe();
         }
 
@@ -163,9 +170,9 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
         public IAmountUI Amount { get; }
         public string Status { get; }
 
-        public IEnhancedCommand<Result> Recover { get; }
-        public IEnhancedCommand<Result> Release { get; }
-        public IEnhancedCommand<Result> ClaimEndOfProject { get; }
+        public IEnhancedCommand<Result<TransactionDraft>> Recover { get; }
+        public IEnhancedCommand<Result<TransactionDraft>> Release { get; }
+        public IEnhancedCommand<Result<TransactionDraft>> ClaimEndOfProject { get; }
 
         public bool ShowRecover { get; }
         public bool ShowRelease { get; }

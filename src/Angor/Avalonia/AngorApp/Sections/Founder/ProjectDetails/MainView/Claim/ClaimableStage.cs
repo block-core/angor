@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -21,13 +22,13 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
 {
     private readonly ProjectId projectId;
     private readonly int stageId;
-    private readonly IInvestmentAppService investmentAppService;
+    private readonly IFounderAppService founderAppService;
 
-    public ClaimableStage(ProjectId projectId, int stageId, ICollection<IClaimableTransaction> transactions, IInvestmentAppService investmentAppService, UIServices uiServices)
+    public ClaimableStage(ProjectId projectId, int stageId, ICollection<IClaimableTransaction> transactions, IFounderAppService founderAppService, UIServices uiServices)
     {
         this.projectId = projectId;
         this.stageId = stageId;
-        this.investmentAppService = investmentAppService;
+        this.founderAppService = founderAppService;
 
         ReactiveSelection = new ReactiveSelection<IClaimableTransaction, string>(new SelectionModel<IClaimableTransaction>
         {
@@ -63,7 +64,7 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
             StageId = stageId
         });
 
-        return investmentAppService.Spend(walletId,new DomainFeerate(feerate),projectId, toSpend); //TODO: Jose handle the fee rate properly
+        return founderAppService.Spend(walletId,new DomainFeerate(feerate),projectId, toSpend); //TODO: Jose handle the fee rate properly
     }
 
     public ReactiveSelection<IClaimableTransaction, string> ReactiveSelection { get; }

@@ -235,6 +235,10 @@ public static class GetInvestorProjectRecovery
                     }
                 }
             }
+            else
+            {
+                item.Status = string.Empty;
+            }
             
             return Result.Success();
         }

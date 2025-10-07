@@ -12,20 +12,20 @@
         <manage:ManageInvestorProjectViewModelDesign />
     </Design.DataContext>
 
-    <UserControl.Resources>
-        <DataTemplate x:Key="ActionsTemplate" DataType="manage:IInvestorProjectItem">
-            <Panel>
-                <Panel.Styles>
-                    <Style Selector="Button">
-                        <Setter Property="Width" Value="120" />
-                    </Style>
-                </Panel.Styles>
-                <Button Content="Recover" Command="{Binding Recover}" Opacity="{Binding ShowRecover, Converter={x:Static  OpacityConverters.BoolToOpacity}}" />
-                <Button Content="Release" Command="{Binding Release}" IsVisible="{Binding ShowRelease, Converter={x:Static  OpacityConverters.BoolToOpacity}}" />
-                <Button Content="End" Command="{Binding ClaimEndOfProject}" IsVisible="{Binding ShowClaimEndOfProject, Converter={x:Static  OpacityConverters.BoolToOpacity}}" />
-            </Panel>
-        </DataTemplate>
-    </UserControl.Resources>
+    <!-- <UserControl.Resources> -->
+    <!--     <DataTemplate x:Key="ActionsTemplate" DataType="manage:IInvestorProjectItem"> -->
+    <!--         <Panel> -->
+    <!--             <Panel.Styles> -->
+    <!--                 <Style Selector="Button"> -->
+    <!--                     <Setter Property="Width" Value="120" /> -->
+    <!--                 </Style> -->
+    <!--             </Panel.Styles> -->
+    <!--             <Button Content="Recover" Command="{Binding Recover}" Opacity="{Binding ShowRecover, Converter={x:Static  OpacityConverters.BoolToOpacity}}" /> -->
+    <!--             <Button Content="Release" Command="{Binding Release}" IsVisible="{Binding ShowRelease, Converter={x:Static  OpacityConverters.BoolToOpacity}}" /> -->
+    <!--             <Button Content="End" Command="{Binding ClaimEndOfProject}" IsVisible="{Binding ShowClaimEndOfProject, Converter={x:Static  OpacityConverters.BoolToOpacity}}" /> -->
+    <!--         </Panel> -->
+    <!--     </DataTemplate> -->
+    <!-- </UserControl.Resources> -->
 
     <co:PageContainer>
         <DockPanel VerticalSpacing="20">
@@ -80,7 +80,7 @@
                                     <Column Header="Stage" Binding="{Binding Stage}" />
                                     <Column Header="Amount" Binding="{Binding Amount.DecimalString}" />
                                     <Column Header="Status" Binding="{Binding Status}" />
-                                    <Column Header="Actions" Binding="{Binding}" CellTemplate="{StaticResource ActionsTemplate}" />
+                                    <!-- <Column Header="Actions" Binding="{Binding}" CellTemplate="{StaticResource ActionsTemplate}" /> -->
                                 </SlimDataGrid.Columns>
                             </SlimDataGrid>
                         </ResponsivePresenter.Wide>
