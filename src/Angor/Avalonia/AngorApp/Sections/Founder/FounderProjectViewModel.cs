@@ -1,36 +1,47 @@
-using System.Threading.Tasks;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Investor;
+using System;
+using System.Collections.Generic;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
-using Angor.Contexts.Funding.Projects.Domain;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.Contexts.Funding.Shared;
+using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
 using AngorApp.Sections.Founder.ProjectDetails;
-using AngorApp.UI.Services;
-using Zafiro.UI.Commands;
+using ReactiveUI;
+using Zafiro.Reactive;
 using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Founder;
 
-public class FounderProjectViewModel(INavigator navigation, ProjectDto dto, IFounderAppService founderAppService, IProjectAppService projectAppService, UIServices uiServices) : IFounderProjectViewModel, IDisposable
+public class FounderProjectViewModel : IFounderProjectViewModel, IDisposable
 {
-    public ProjectId Id { get; } = dto.Id;
-    public string Name { get; } = dto.Name;
-    public string ShortDescription { get; } = dto.ShortDescription;
-    public Uri? Picture { get; } = dto.Avatar;
-    public Uri? Banner { get; } = dto.Banner;
-    public long TargetAmount { get; } = dto.TargetAmount;
-    public IEnhancedCommand GoToDetails => ReactiveCommand.CreateFromTask(() =>
+    public FounderProjectViewModel(ProjectDto dto, INavigator navigator, IFounderProjectDetailsViewModelFactory detailsFactory)
     {
-        return navigation.Go(() => new FounderProjectDetailsViewModel(dto.Id, projectAppService, founderAppService, uiServices));
-    }).Enhance();
+        Id = dto.Id;
+        Name = dto.Name;
+        ShortDescription = dto.ShortDescription;
+        Picture = dto.Avatar;
+        Banner = dto.Banner;
+        TargetAmount = dto.TargetAmount;
+        StartingDate = dto.FundingStartDate;
+        PenaltyDuration = dto.PenaltyDuration;
+        NostrNpubKey = dto.NostrNpubKeyHex;
+        InformationUri = dto.InformationUri;
+        Stages = dto.Stages;
 
+        GoToDetails = ReactiveCommand.CreateFromTask(() =>
+            navigator.Go(() => detailsFactory.Create(dto.Id))).Enhance();
 
-    public DateTime StartingDate { get; } = dto.FundingStartDate;
-    public TimeSpan PenaltyDuration { get; } = dto.PenaltyDuration;
-    public string NostrNpubKey { get; } = dto.NostrNpubKeyHex;
-    public Uri? InformationUri { get; } = dto.InformationUri;
-    public List<StageDto> Stages { get; } = dto.Stages;
+    }
+
+    public ProjectId Id { get; }
+    public string Name { get; }
+    public string ShortDescription { get; }
+    public Uri? Picture { get; }
+    public Uri? Banner { get; }
+    public long TargetAmount { get; }
+    public DateTime StartingDate { get; }
+    public TimeSpan PenaltyDuration { get; }
+    public string NostrNpubKey { get; }
+    public Uri? InformationUri { get; }
+    public List<StageDto> Stages { get; }
+    public IEnhancedCommand GoToDetails { get; }
 
     public void Dispose()
     {

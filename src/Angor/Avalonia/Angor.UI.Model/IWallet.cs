@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Angor.Contexts.Wallet.Domain;
 using CSharpFunctionalExtensions;
+using Zafiro.UI.Commands;
 
 namespace Angor.UI.Model;
 
@@ -10,5 +11,7 @@ public interface IWallet
     IAmountUI Balance { get; }
     Result IsAddressValid(string address);
     WalletId Id { get; }
+    IEnhancedCommand Send { get; }
+    public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
     public Task<Result<string>> GenerateReceiveAddress();
 }

@@ -1,9 +1,5 @@
 using System.Linq;
 using AngorApp.Sections.Browse.ProjectLookup;
-using AngorApp.Sections.Shell;
-using AngorApp.Sections.Wallet;
-using CSharpFunctionalExtensions;
-using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Browse;
 
@@ -14,8 +10,7 @@ public class BrowseSectionViewModelDesign : IBrowseSectionViewModel
         Projects = SampleData.GetProjects().Select(IProjectViewModel (project) => new ProjectViewModelDesign(project)).ToList();
     }
 
-    public IEnumerable<IProjectViewModel> Projects { get; }
+    public ICollection<IProjectViewModel> Projects { get; }
     public IProjectLookupViewModel ProjectLookupViewModel { get; }
-    public IEnhancedCommand<Result<List<IProjectViewModel>>> LoadProjects { get; }
-    public IObservable<bool> IsBusy { get; } = Observable.Return(false);
+    public IEnhancedCommand<Result<IEnumerable<IProjectViewModel>>> LoadProjects { get; }
 }

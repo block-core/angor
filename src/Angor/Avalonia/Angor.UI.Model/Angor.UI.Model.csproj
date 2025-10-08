@@ -15,4 +15,8 @@
         <ProjectReference Include="..\Angor.Contexts.Wallet\Angor.Contexts.Wallet.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Zafiro.UI" />
+    </ItemGroup>
+
 </Project>

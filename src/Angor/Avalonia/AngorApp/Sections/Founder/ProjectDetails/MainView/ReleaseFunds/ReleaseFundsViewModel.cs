@@ -1,11 +1,12 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
-using AngorApp.Extensions;
+using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
+using AngorApp.Core;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
@@ -18,23 +19,23 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
 {
     private readonly CompositeDisposable disposable = new();
 
-    private readonly IFounderAppService FoundingAppService;
+    private readonly IFounderAppService founderAppService;
 
     private readonly ProjectId projectId;
 
     private readonly UIServices uiServices;
+    private readonly IWalletContext walletContext;
 
     [ObservableAsProperty] private IEnumerable<IUnfundedProjectTransaction> transactions;
 
-    public ReleaseFundsViewModel(ProjectId projectId, IFounderAppService foundingAppService, UIServices uiServices)
+    public ReleaseFundsViewModel(ProjectId projectId, IFounderAppService founderAppService, IWalletContext walletContext, UIServices uiServices)
     {
         this.projectId = projectId;
-        this.FoundingAppService = foundingAppService;
+        this.founderAppService = founderAppService;
         this.uiServices = uiServices;
+        this.walletContext = walletContext;
 
-        RefreshTransactions = WalletCommand.Create(wallet => foundingAppService.GetReleasableTransactions(wallet.Id.Value, projectId)
-                .MapEach(IUnfundedProjectTransaction (dto) => new UnfundedProjectTransaction(wallet.Id.Value, projectId, dto, foundingAppService, uiServices))
-                .Map(enumerable => enumerable.ToList()), uiServices.WalletRoot)
+        RefreshTransactions = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => GetTransactions(wallet)))
             .DisposeWith(disposable);
 
         transactionsHelper = RefreshTransactions
@@ -42,7 +43,7 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
             .ToProperty(this, model => model.Transactions)
             .DisposeWith(disposable);
 
-        ReleaseAll = WalletCommand.Create(DoReleaseAll, uiServices.WalletRoot, this.WhenAnyValue(model => model.Transactions).NotNull())
+        ReleaseAll = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => DoReleaseAll(wallet)).ToMaybeResult(), this.WhenAnyValue(model => model.Transactions).NotNull())
             .Enhance()
             .DisposeWith(disposable);
         
@@ -58,6 +59,13 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
     }
 
     public IEnhancedCommand<Maybe<Result>> ReleaseAll { get; }
+
+    private Task<Result<List<IUnfundedProjectTransaction>>> GetTransactions(IWallet wallet)
+    {
+        return founderAppService.GetReleasableTransactions(wallet.Id.Value, projectId)
+            .MapEach(IUnfundedProjectTransaction (dto) => new UnfundedProjectTransaction(wallet.Id.Value, projectId, dto, founderAppService, uiServices))
+            .Map(enumerable => enumerable.ToList());
+    }
 
     private IDisposable RefreshWhenAnyCommandExecutes()
     {
@@ -86,7 +94,7 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
         var addresses = Transactions.Select(transaction => transaction.InvestmentEventId);
         
         return UserFlow.PromptAndNotify(
-            () => FoundingAppService.ReleaseInvestorTransactions(wallet.Id.Value, projectId, addresses), uiServices,
+            () => founderAppService.ReleaseInvestorTransactions(wallet.Id.Value, projectId, addresses), uiServices,
             "Are you sure you want to release all the funds?",
             "Confirm Release All",
             "Successfully released all",

@@ -1,5 +1,4 @@
 using Angor.Contexts.Funding.Investor.Dtos;
-using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Portfolio.Manage;
 
@@ -20,5 +19,5 @@ public class ManageInvestorProjectViewModelDesign : IManageInvestorProjectViewMo
 
     public IInvestedProject Project { get; } = new InvestedProjectDesign();
 
-    public IEnhancedCommand<Result<InvestorProjectRecoveryDto>> Load { get; } = ReactiveCommand.Create(() => Result.Success(new InvestorProjectRecoveryDto())).Enhance();
+    public IEnhancedCommand Load { get; } = ReactiveCommand.Create(() => Result.Success(new InvestorProjectRecoveryDto())).Enhance();
 }

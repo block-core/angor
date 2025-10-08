@@ -24,7 +24,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Core;
 using Zafiro.Avalonia.Services;
-using Zafiro.UI;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Navigation.Sections;
 
@@ -64,7 +63,7 @@ public static class CompositionRoot
             .AddViewModels()
             .AddUiServices(topLevelView, profileName);
         
-        services.AddNavigator();
+        services.AddNavigator(logger);
         services.AddSecurityContext();
         RegisterWalletServices(services, logger, network);
         FundingContextServices.Register(services, logger);

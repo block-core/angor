@@ -14,7 +14,7 @@
     
     <Interaction.Behaviors>
         <LoadedTrigger>
-            <InvokeCommandAction Command="{Binding LoadWallet}" />
+            <InvokeCommandAction IsEnabled="{Binding !!!InvestedProjects.Count}" Command="{Binding LoadPortfolio}" />
         </LoadedTrigger>
     </Interaction.Behaviors>
 
@@ -69,15 +69,12 @@
         <DockPanel HorizontalSpacing="20" VerticalSpacing="20">
             <Card Theme="{StaticResource WideCard}" DockPanel.Dock="Top" Header="Portfolio" Subheader="Check your project investments">
                 <Card.HeaderEndContent>
-                    <StackPanel Orientation="Horizontal" Classes="SmallGap">
-                        <UniformGrid ColumnSpacing="10" Rows="1">
-                            <IconButton HorizontalAlignment="Stretch" Command="{Binding LoadWallet}" Icon="{Icon fa-arrows-rotate}" Content="Refresh" />
-                            <IconButton HorizontalAlignment="Stretch" Command="{Binding GoToPenalties}" Icon="{Icon fa-unlock}" Content="Penalties" />
-                        </UniformGrid>
-                    </StackPanel>
+                    <Grid ColumnSpacing="10" ColumnDefinitions="Auto *">
+                        <Button HorizontalAlignment="Stretch" Command="{Binding LoadPortfolio}" Content="{Icon fa-arrows-rotate}" />
+                        <IconButton Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding GoToPenalties}" Icon="{Icon fa-unlock}" Content="Penalties" />
+                    </Grid>
                 </Card.HeaderEndContent>
             </Card>
-
             <Loading IsLoading="{Binding IsLoading^}" LoadingText="Your portfolio is loading. Please wait.">
                 <ScrollViewer>
                     <StackPanel Classes="BigGap">
@@ -121,7 +118,6 @@
                                 </Card.HeaderStartContent>
                             </Card>
                         </BalancedWrapGrid>
-
                         <CardGrid ItemsSource="{Binding InvestedProjects}" MinColumnWidth="300" MaxColumnWidth="500">
                             <CardGrid.ItemTemplate>
                                 <DataTemplate>
@@ -129,7 +125,6 @@
                                 </DataTemplate>
                             </CardGrid.ItemTemplate>
                         </CardGrid>
-                       
                     </StackPanel>
                 </ScrollViewer>
             </Loading>

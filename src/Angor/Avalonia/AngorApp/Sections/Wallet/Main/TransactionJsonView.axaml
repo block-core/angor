@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:operate="clr-namespace:AngorApp.Sections.Wallet.Main"
+             xmlns:main="clr-namespace:AngorApp.Sections.Wallet.Main"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Wallet.Main.TransactionJsonView"
+             x:DataType="main:TransactionJsonViewModel">
+    <ScrollViewer>
+        <TextBlock TextWrapping="NoWrap" Text="{Binding Json}" />
+    </ScrollViewer>
+</UserControl>

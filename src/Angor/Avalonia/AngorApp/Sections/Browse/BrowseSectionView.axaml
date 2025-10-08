@@ -16,7 +16,7 @@
 
     <Interaction.Behaviors>
         <LoadedTrigger>
-            <InvokeCommandAction Command="{Binding LoadProjects}" />
+            <InvokeCommandAction IsEnabled="{Binding !!!Projects.Count}" Command="{Binding LoadProjects}" />
         </LoadedTrigger>
     </Interaction.Behaviors>
 
@@ -27,18 +27,13 @@
         </Style>
     </UserControl.Styles>
 
-    <a:PageContainer IsEnabled="{Binding !IsBusy^}">
+    <a:PageContainer>
         <ScrollViewer>
             <DockPanel VerticalSpacing="20">
 
                 <Card Header="Browse" Theme="{StaticResource WideCard}" Subheader="Browse Projects" DockPanel.Dock="Top">
                     <Card.HeaderEndContent>
-                        <IconButton Classes="Expand CenterContent" Command="{Binding LoadProjects}">
-                            Refresh
-                            <IconButton.Icon>
-                                <ui:Icon Source="fa-arrows-rotate" />
-                            </IconButton.Icon>
-                        </IconButton>
+                        <Button Command="{Binding LoadProjects}" Content="{Icon fa-arrows-rotate}" />
                     </Card.HeaderEndContent>
                     <Card.HeaderStartContent>
                         <ui:Icon Source="svg:/Assets/browse.svg" />
@@ -56,9 +51,9 @@
                     <CardGrid ItemsSource="{Binding Projects}" Classes="Listing">
                         <CardGrid.ItemTemplate>
                             <DataTemplate DataType="browse:IProjectViewModel">
-                                <ReactiveButton Classes="CardButton" Command="{Binding GoToDetails}">
+                                <Button Classes="Card" Command="{Binding GoToDetails}">
                                     <browse:ProjectItemView />
-                                </ReactiveButton>
+                                </Button>
                             </DataTemplate>
                         </CardGrid.ItemTemplate>
                     </CardGrid>

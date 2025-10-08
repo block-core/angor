@@ -1,40 +1,48 @@
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
 using System.Windows.Input;
 using Angor.Contexts.Funding.Investor;
+using Angor.UI.Model.Implementation.Common;
 using AngorApp.Sections.Portfolio.Recover;
-using AngorApp.UI.Services;
 using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.UI.Commands;
+using Zafiro.Reactive;
+using Zafiro.UI;
 using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Portfolio.Penalties;
 
-public class PenaltiesViewModel : ReactiveObject, IPenaltiesViewModel
+public class PenaltiesViewModel : ReactiveObject, IPenaltiesViewModel, IDisposable
 {
-    public PenaltiesViewModel(IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator)
+    private readonly CompositeDisposable disposable = new();
+    private readonly RefreshableCollection<IPenaltyViewModel, string> penaltiesCollection;
+
+    public PenaltiesViewModel(IInvestmentAppService investmentAppService, INavigator navigator, IWalletContext walletContext, UIServices uiServices)
     {
         GoToRecovery = ReactiveCommand.Create(() => navigator.Go<IRecoverViewModel>());
-        Load = ReactiveCommand.CreateFromTask(() =>
-        {
-            return uiServices.WalletRoot.GetDefaultWalletAndActivate()
-                .Bind(maybe => maybe.ToResult("You need to create a wallet first."))
-                .Bind(wallet => investmentAppService.GetPenalties(wallet.Id.Value))
-                .MapEach(IPenaltyViewModel (dto) => new PenaltyViewModel(dto));
-        }).Enhance();
 
-        Load.Successes()
-            .EditDiff(model => model.InvestorPubKey)
-            .Bind(out var penalties)
-            .Subscribe();
-        
-        Penalties = penalties;
+        penaltiesCollection = RefreshableCollection.Create(
+                () => walletContext.RequiresWallet(wallet => investmentAppService.GetPenalties(wallet.Id.Value)
+                    .MapEach(IPenaltyViewModel (dto) => new PenaltyViewModel(dto))),
+                model => model.InvestorPubKey)
+            .DisposeWith(disposable);
 
-        // Automatically load penalties when the view model is created
-        Load.Execute().Subscribe();
+        Load = penaltiesCollection.Refresh;
+        Load.HandleErrorsWith(uiServices.NotificationService, "Failed to load penalties").DisposeWith(disposable);
+
+        Penalties = penaltiesCollection.Items;
+
+        Load.Execute().Subscribe().DisposeWith(disposable);
     }
 
-    public EnhancedCommand<Result<IEnumerable<IPenaltyViewModel>>> Load { get; set; }
+    public IEnhancedCommand<Result<IEnumerable<IPenaltyViewModel>>> Load { get; }
 
     public ICommand GoToRecovery { get; }
-    public IEnumerable<IPenaltyViewModel> Penalties { get; }
+    public IReadOnlyCollection<IPenaltyViewModel> Penalties { get; }
+
+    public void Dispose()
+    {
+        disposable.Dispose();
+    }
 }

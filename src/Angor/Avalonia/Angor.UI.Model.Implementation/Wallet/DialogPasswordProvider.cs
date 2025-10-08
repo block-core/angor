@@ -1,7 +1,6 @@
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using Angor.UI.Model.Implementation.Wallet.Password;
-using Avalonia.Threading;
 using CSharpFunctionalExtensions;
 using ReactiveUI.Validation.Extensions;
 using Zafiro.Avalonia.Dialogs;
@@ -12,9 +11,6 @@ public class DialogPasswordProvider(IDialog dialog, string text, string title, o
 {
     public Task<Maybe<string>> Get(WalletId walletId)
     {
-        return Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            return dialog.ShowAndGetResult<PasswordViewModel, string>(new PasswordViewModel(text, icon), title, x => x.IsValid(), x => x.Password!);
-        });
+        return dialog.ShowAndGetResult<PasswordViewModel, string>(new PasswordViewModel(text, icon), title, x => x.IsValid(), x => x.Password!);
     }
 }

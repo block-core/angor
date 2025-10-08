@@ -1,7 +1,6 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.UI.Model.Implementation.Projects;
 using AngorApp.UI.Controls.Common.FoundedProjectOptions;
-using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Browse.Details;
 
@@ -16,7 +15,7 @@ public class ProjectDetailsViewModelDesign : IProjectDetailsViewModel
     public object Icon { get; }
     public object Picture { get; }
 
-    public IEnhancedCommand<Result> Invest { get; }
+    public IEnhancedCommand<Result<Maybe<Unit>>> Invest { get; }
 
     public IEnumerable<INostrRelay> Relays { get; } =
     [

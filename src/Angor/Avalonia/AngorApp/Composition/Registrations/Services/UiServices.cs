@@ -1,14 +1,12 @@
 using System.Diagnostics;
 using Angor.Shared;
 using AngorApp.Sections.Shell;
-using AngorApp.UI.Services;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Microsoft.Extensions.DependencyInjection;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Misc;
 using Zafiro.Avalonia.Services;
-using Zafiro.UI;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Shell;
 
@@ -32,21 +30,13 @@ public static class UiServices
                 var adornerLayer = AdornerLayer.GetAdornerLayer(parent);
                 return adornerLayer!;
             }))
-            .AddSingleton<IActiveWallet, ActiveWallet>()
             .AddSingleton(sp => new ShellProperties("Angor", content => GetHeader(content, sp)))
             .AddSingleton<IShell, Shell>()
             .AddSingleton<ISectionActions, SectionActions>()
-            .AddSingleton<IWalletRoot, WalletRoot>()
+            .AddSingleton<IWalletContext, WalletContext>()
             .AddSingleton<IValidations, Validations>()
             .AddSingleton<INotificationService>(_ => notificationService)
-            .AddSingleton(sp => new UIServices(
-                sp.GetRequiredService<ILauncherService>(),
-                sp.GetRequiredService<IDialog>(),
-                sp.GetRequiredService<INotificationService>(),
-                sp.GetRequiredService<IActiveWallet>(),
-                sp.GetRequiredService<IWalletRoot>(),
-                sp.GetRequiredService<IValidations>(),
-                profileName));
+            .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileName));
     }
     
     private static NotificationService NotificationService(TopLevel topLevel)

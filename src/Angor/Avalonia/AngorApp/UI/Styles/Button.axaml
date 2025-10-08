@@ -37,15 +37,6 @@
         </ControlTheme>
     </Styles.Resources>
     
-    <Style Selector="ReactiveButton.CardButton">
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="HorizontalAlignment" Value="Stretch" />
-        <Setter Property="VerticalAlignment" Value="Stretch" />
-        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="Theme" Value="{StaticResource FullLoadingReactiveButton}" />
-        <Setter Property="ButtonTheme" Value="{StaticResource ThinTransparentButton}" />
-    </Style>
-    
     <Style Selector="Button.Card">
         <Setter Property="Theme" Value="{StaticResource TransparentButton}" />
         <Setter Property="Padding" Value="5" />
@@ -53,6 +44,7 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="CornerRadius" Value="10" />
         <Setter Property="FontWeight" Value="Regular" />
     </Style>
     
