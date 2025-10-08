@@ -1,6 +1,8 @@
 using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
+using Polly.Simmy;
+using System.Collections.Generic;
 
 namespace Angor.Shared.Protocol.Scripts;
 
@@ -33,28 +35,41 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         });
     }
 
-    public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
-        uint256? hashOfSecret)
+    public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex, uint256? hashOfSecret, bool disablePenalty)
     {
-        // regular investor pre-co-sign with founder to gets funds with penalty
-        var recoveryOps = new List<Op>
-        {
-            Op.GetPushOp(new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey().ToBytes()),
-            OpcodeType.OP_CHECKSIGVERIFY,
-            Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
-        };
+        List<Op> recoveryOps;
 
-        var secretHashOps = hashOfSecret == null
-            ? new List<Op> { OpcodeType.OP_CHECKSIG }
-            : new List<Op>
+        if (disablePenalty)
+        {
+            // regular investor without penalty no co-sign needed
+            recoveryOps = new List<Op>
             {
-                OpcodeType.OP_CHECKSIGVERIFY,
-                OpcodeType.OP_HASH256,
-                Op.GetPushOp(new uint256(hashOfSecret).ToBytes()),
-                OpcodeType.OP_EQUAL
+                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+                OpcodeType.OP_CHECKSIG
             };
-        
-        recoveryOps.AddRange(secretHashOps);
+        }
+        else
+        {
+            // regular investor pre-co-sign with founder to gets funds with penalty
+            recoveryOps = new List<Op>
+            {
+                Op.GetPushOp(new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey().ToBytes()),
+                OpcodeType.OP_CHECKSIGVERIFY,
+                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+            };
+
+            var secretHashOps = hashOfSecret == null
+                ? new List<Op> { OpcodeType.OP_CHECKSIG }
+                : new List<Op>
+                {
+                    OpcodeType.OP_CHECKSIGVERIFY,
+                    OpcodeType.OP_HASH256,
+                    Op.GetPushOp(new uint256(hashOfSecret).ToBytes()),
+                    OpcodeType.OP_EQUAL
+                };
+
+            recoveryOps.AddRange(secretHashOps);
+        }
 
         var seeders = hashOfSecret == null && projectInfo.ProjectSeeders.SecretHashes.Any()
             ? _seederScriptTreeBuilder.BuildSeederScriptTree(investorKey,

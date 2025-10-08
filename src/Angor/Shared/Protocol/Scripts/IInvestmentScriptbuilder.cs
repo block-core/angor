@@ -8,6 +8,5 @@ public interface IInvestmentScriptBuilder
 {
     Script GetInvestorPenaltyTransactionScript(string investorKey, int punishmentLockDays);
 
-    ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
-        uint256? hashOfSecret = null);
+    ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex, uint256? hashOfSecret = null, bool disablePenalty = false);
 }

@@ -83,7 +83,7 @@ public class SeederTransactionActionsTest : AngorTestData
             .ToList();
 
         _investmentScriptBuilder.Setup(_ => _.BuildProjectScriptsForStage(projectInvestmentInfo, investorKey,
-            It.Is<int>(_ => _ < projectInvestmentInfo.Stages.Count), investorSecret
+            It.Is<int>(_ => _ < projectInvestmentInfo.Stages.Count), investorSecret, false
         )).Returns(expectedProjectScripts);
         
         var expectedTransaction = new Transaction { Inputs = { new TxIn(new Key().ScriptPubKey) } };
