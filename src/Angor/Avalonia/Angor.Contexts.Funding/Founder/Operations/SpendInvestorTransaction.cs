@@ -19,17 +19,17 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class SpendInvestorTransaction
 {
-    public record SpendInvestorTransactionRequest(Guid WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result>;
+    public record SpendInvestorTransactionRequest(Guid WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<TransactionDraft>>;
 
     public class SpendInvestorTransactionHandler(IWalletOperations walletOperations, IFounderTransactionActions founderTransactionActions,
         INetworkConfiguration networkConfiguration, IIndexerService indexerService, IProjectRepository projectRepository,
-        IDerivationOperations derivationOperations, ISeedwordsProvider seedwordsProvider) : IRequestHandler<SpendInvestorTransactionRequest, Result>
+        IDerivationOperations derivationOperations, ISeedwordsProvider seedwordsProvider) : IRequestHandler<SpendInvestorTransactionRequest, Result<TransactionDraft>>
     {
-        public async Task<Result> Handle(SpendInvestorTransactionRequest request, CancellationToken cancellationToken)
+        public async Task<Result<TransactionDraft>> Handle(SpendInvestorTransactionRequest request, CancellationToken cancellationToken)
         {
             var groupedByStage = request.ToSpend.GroupBy(x => x.StageId).ToList();
             if (groupedByStage.Count > 1)
-                return Result.Failure("You can only spend one stage at a time.");
+                return Result.Failure<TransactionDraft>("You can only spend one stage at a time.");
             
             var selectedStageId = groupedByStage.First().Key;
             var network = networkConfiguration.GetNetwork();
@@ -37,7 +37,7 @@ public static class SpendInvestorTransaction
             var project = await projectRepository.Get(request.ProjectId);
             if (project.IsFailure)
             {
-                return Result.Failure(project.Error);
+                return Result.Failure<TransactionDraft>(project.Error);
             }
             
             var founderKey = await GetProjectFounderKeyAsync(request.WalletId, request.ProjectId.Value);
@@ -55,16 +55,22 @@ public static class SpendInvestorTransaction
             
             var addressResult = await GetUnfundedReleaseAddress((await seedwordsProvider.GetSensitiveData(request.WalletId)).Value.ToWalletWords());
             if (addressResult.IsFailure) 
-                return Result.Failure("Could not get an unfunded release address");
+                return Result.Failure<TransactionDraft>("Could not get an unfunded release address");
             
-            var addressScript = BitcoinWitPubKeyAddress.Create(addressResult.Value, network).ScriptPubKey;
+            var addressScript = BitcoinAddress.Create(addressResult.Value, network).ScriptPubKey;
             
             var signedTransaction = founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo,
                 founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript,
                 founderKey, request.SelectedFee); 
             
-            var response = await walletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
+            //var response = await walletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
 
+            return Result.Success(new TransactionDraft
+            {
+                SignedTxHex = signedTransaction.Transaction.ToHex(),
+                TransactionFee = new Amount(signedTransaction.TransactionFee),
+                TransactionId = signedTransaction.Transaction.GetHash().ToString()
+            });
 
             //TODO handle the caching of pending transactions properly
             // // add all outptus to the pending list
@@ -84,8 +90,6 @@ public static class SpendInvestorTransaction
             //     if (signedTransaction.Transaction.Inputs.Any(a => _.Trxid == a.PrevOut.Hash.ToString() && _.Outputindex == a.PrevOut.N))
             //         _.IsSpent = true;
             // });
-            
-            return !response.Success ? Result.Failure(response.Message) : Result.Success();
         }
 
         private IObservable<(string InvestorAddress, int StageId, string transactionHex)> GetInvestmentByInvestorKey(string projectId,

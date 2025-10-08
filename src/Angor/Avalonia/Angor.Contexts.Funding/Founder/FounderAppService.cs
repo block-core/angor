@@ -19,7 +19,7 @@ public class FounderAppService(IMediator mediator) : IFounderAppService
         return mediator.Send(new ApproveInvestment.ApproveInvestmentRequest(walletId, projectId, investment));
     }
     
-    public Task<Result> Spend(Guid walletId, DomainFeerate fee, ProjectId projectId, IEnumerable<SpendTransactionDto> toSpend)
+    public Task<Result<TransactionDraft>> Spend(Guid walletId, DomainFeerate fee, ProjectId projectId, IEnumerable<SpendTransactionDto> toSpend)
     {
         return mediator.Send(new SpendInvestorTransaction.SpendInvestorTransactionRequest(walletId, projectId,
             new FeeEstimation { FeeRate = fee.SatsPerVByte }, toSpend));

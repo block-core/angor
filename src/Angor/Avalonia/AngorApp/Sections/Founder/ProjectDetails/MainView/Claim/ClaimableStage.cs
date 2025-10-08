@@ -56,7 +56,7 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
                 .Tap(() => uiServices.Dialog.ShowMessage("Claim successful", "The funds have been successfully claimed.", "Close")));
     }
 
-    private Task<Result> DoClaim(IEnumerable<IClaimableTransaction> selected, Guid walletId, long feerate)
+    private async Task<Result> DoClaim(IEnumerable<IClaimableTransaction> selected, Guid walletId, long feerate)
     {
         var toSpend = selected.Select(claimable => new SpendTransactionDto
         {
@@ -64,7 +64,8 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
             StageId = stageId
         });
 
-        return founderAppService.Spend(walletId,new DomainFeerate(feerate),projectId, toSpend); //TODO: Jose handle the fee rate properly
+        var result = await founderAppService.Spend(walletId,new DomainFeerate(feerate),projectId, toSpend); //TODO: Jose need to change this when the UI is updated with transaction drafts
+        return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
     }
 
     public ReactiveSelection<IClaimableTransaction, string> ReactiveSelection { get; }

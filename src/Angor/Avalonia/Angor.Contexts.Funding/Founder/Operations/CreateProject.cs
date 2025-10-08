@@ -1,5 +1,6 @@
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
+using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -19,7 +20,7 @@ internal static class CreateProjectConstants
     public static class CreateProject
     {
         public record CreateProjectRequest(Guid WalletId, long SelectedFeeRate, CreateProjectDto Project)
-            : IRequest<Result<string>>;
+            : IRequest<Result<TransactionDraft>>;
 
         public class CreateProjectHandler(
             ISeedwordsProvider seedwordsProvider,
@@ -28,9 +29,9 @@ internal static class CreateProjectConstants
             IFounderTransactionActions founderTransactionActions,
             IWalletOperations walletOperations,
             IIndexerService indexerService,
-            INetworkConfiguration networkConfiguration) : IRequestHandler<CreateProjectRequest, Result<string>>
+            INetworkConfiguration networkConfiguration) : IRequestHandler<CreateProjectRequest, Result<TransactionDraft>>
         {
-            public async Task<Result<string>> Handle(CreateProjectRequest request, CancellationToken cancellationToken)
+            public async Task<Result<TransactionDraft>> Handle(CreateProjectRequest request, CancellationToken cancellationToken)
             {
 
                 var wallet = await seedwordsProvider.GetSensitiveData(request.WalletId);
@@ -52,7 +53,7 @@ internal static class CreateProjectConstants
 
                 if (newProjectKeys == null)
                 {
-                    return Result.Failure<string>("Failed to derive project keys");
+                    return Result.Failure<TransactionDraft>("Failed to derive project keys");
                 }
 
                 var nostrPrivateKey =
@@ -65,7 +66,7 @@ internal static class CreateProjectConstants
 
                 if (profileCreateEvent.IsFailure)
                 {
-                    return Result.Failure<string>(profileCreateEvent.Error);
+                    return Result.Failure<TransactionDraft>(profileCreateEvent.Error);
                 }
 
                 var projectInfo =
@@ -76,7 +77,7 @@ internal static class CreateProjectConstants
                     // await relayService.DeleteProjectAsync(resultId,
                     //     nostrKeyHex); //TODO need to check if relays support the delete operation
                     
-                    return Result.Failure<string>(projectInfo.Error);
+                    return Result.Failure<TransactionDraft>(projectInfo.Error);
                 }
 
                 var transactionInfo = await CreatProjectTransaction(wallet.Value.ToWalletWords(),
@@ -85,7 +86,7 @@ internal static class CreateProjectConstants
 
                 if (transactionInfo.IsFailure)
                 {
-                    return Result.Failure<string>(transactionInfo.Error);
+                    return Result.Failure<TransactionDraft>(transactionInfo.Error);
                 }
                 
                 
@@ -93,17 +94,21 @@ internal static class CreateProjectConstants
 
                 if (!response.Success)
                 {
-                    return Result.Failure<string>(response.Message);
+                    return Result.Failure<TransactionDraft>(response.Message);
                 }
 
                 var transactionId = transactionInfo.Value.Transaction.GetHash().ToString();
-                
+
+                return Result.Success(new TransactionDraft
+                {
+                    SignedTxHex = transactionInfo.Value.Transaction.ToHex(),
+                    TransactionId = transactionId,
+                    TransactionFee = new Amount(transactionInfo.Value.TransactionFee)
+                });
 
                 // TODO
                 // project.CreationTransactionId = transactionId;
                 // storage.UpdateFounderProject(project);
-                
-                return Result.Success(transactionId);
             }
 
 
