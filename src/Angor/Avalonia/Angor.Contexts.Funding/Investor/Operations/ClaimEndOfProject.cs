@@ -16,7 +16,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class ClaimEndOfProject
 {
-    public record ClaimEndOfProjectRequest(Guid WalletId, ProjectId ProjectId, int StageIndex) : IRequest<Result<TransactionDraft>>;
+    public record ClaimEndOfProjectRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<TransactionDraft>>;
     
     public class ClaimEndOfProjectHandler(IWalletOperations walletOperations, IDerivationOperations derivationOperations,
         IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
@@ -60,7 +60,17 @@ public static class ClaimEndOfProject
             if (changeAddress == null)
                 return Result.Failure<TransactionDraft>("Could not get a change address");
             
-            var endOfProjectTransaction = investorTransactionActions.RecoverEndOfProjectFunds(investment.InvestmentTransactionHex, project.Value.ToProjectInfo(), request.StageIndex,
+            var transactionInfo = await indexerService.GetTransactionInfoByIdAsync(investment.InvestmentTransactionHash);
+
+            if (transactionInfo is null)
+                return Result.Failure<TransactionDraft>("Could not find transaction info");
+            
+            var stageIndex = transactionInfo.Outputs
+                .Select((x, i) => i < 2 ? -1 // Skip the first two outputs (fee and op_return)
+                    : string.IsNullOrEmpty(x.SpentInTransaction) ? i : -1)
+                .First(x => x > 0);
+            
+            var endOfProjectTransaction = investorTransactionActions.RecoverEndOfProjectFunds(investment.InvestmentTransactionHex, project.Value.ToProjectInfo(), stageIndex,
                 changeAddress, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), selectedFeeEstimation);
             
            // var transactionId = await indexerService.PublishTransactionAsync(endOfProjectTransaction.Transaction.ToHex());

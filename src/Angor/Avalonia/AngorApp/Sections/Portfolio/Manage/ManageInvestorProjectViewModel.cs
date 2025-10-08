@@ -1,23 +1,16 @@
-using System;
 using System.Linq;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
-using Angor.Contexts.Funding.Founder;
-using CSharpFunctionalExtensions;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.Dtos;
-using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using AngorApp.UI.Services;
-using ReactiveUI;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
 using Zafiro.Reactive;
 using Angor.Shared.Models;
-using Angor.UI.Model;
 
 namespace AngorApp.Sections.Portfolio.Manage;
 
@@ -73,12 +66,11 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
             .Select(x =>
             {
                 Func<Task<Result<TransactionDraft>>> recover = () =>
-                    investmentAppService.RecoverInvestorFunds(currentWallet.Id.Value, projectId, x.StageIndex);
+                    investmentAppService.RecoverInvestorFunds(currentWallet.Id.Value, projectId);
                 Func<Task<Result<TransactionDraft>>> release = () =>
-                    investmentAppService.ReleaseInvestorFunds(currentWallet.Id.Value, projectId, x.StageIndex);
+                    investmentAppService.ReleaseInvestorFunds(currentWallet.Id.Value, projectId);
                 Func<Task<Result<TransactionDraft>>> claim = () =>
-                    investmentAppService.ClaimInvestorEndOfProjectFunds(currentWallet.Id.Value, projectId,
-                        x.StageIndex);
+                    investmentAppService.ClaimInvestorEndOfProjectFunds(currentWallet.Id.Value, projectId);
 
                 return new InvestorProjectItem(
                     stage: x.StageIndex + 1,

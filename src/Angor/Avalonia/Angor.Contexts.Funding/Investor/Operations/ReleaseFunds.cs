@@ -13,12 +13,13 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
+using MoreLinq.Extensions;
 
 namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class ReleaseFunds
 {
-    public record ReleaseFundsRequest(Guid WalletId, ProjectId ProjectId, int StageIndex) : IRequest<Result<TransactionDraft>>;
+    public record ReleaseFundsRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<TransactionDraft>>;
     
     public class ReleaseFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
         IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
@@ -74,14 +75,19 @@ public static class ReleaseFunds
             if (!sigCheckResult)
                 throw new Exception("Failed to validate signatures");
 
-            // keep only the input and output for the selected stage TODO should we only handle 1 stage at a time?
-            var selectedInput = unsignedReleaseTransaction.Inputs[request.StageIndex];
-            var selectedOutput = unsignedReleaseTransaction.Outputs[request.StageIndex];
-            
-            unsignedReleaseTransaction.Inputs.Clear();
-            unsignedReleaseTransaction.Outputs.Clear();
-            unsignedReleaseTransaction.Inputs.Add(selectedInput);
-            unsignedReleaseTransaction.Outputs.Add(selectedOutput);
+            var transactionInfo = await indexerService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
+
+            if (transactionInfo is null)
+                return Result.Failure<TransactionDraft>("Could not find transaction info");
+
+            transactionInfo.Outputs.ForEach((output, i) =>
+            {
+                if (i < 2 || string.IsNullOrEmpty(output.SpentInTransaction))
+                    return;
+
+                unsignedReleaseTransaction.Inputs.RemoveAt(i - 2);
+                unsignedReleaseTransaction.Outputs.RemoveAt(i - 2);
+            });
             
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();
             if (changeAddress == null)

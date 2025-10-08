@@ -13,12 +13,13 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
+using MoreLinq;
 
 namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class RecoverFunds
 {
-    public record RecoverFundsRequest(Guid WalletId, ProjectId ProjectId, int StageIndex) : IRequest<Result<TransactionDraft>>;
+    public record RecoverFundsRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<TransactionDraft>>;
 
     // TODO: Placeholder handler
     public class RecoverFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
@@ -65,14 +66,20 @@ public static class RecoverFunds
             
             var unsignedRecoveryTransaction = investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project.Value.ToProjectInfo(), investmentTransaction, signatureLookup.Value, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
-            // keep only the input and output for the selected stage TODO should we only handle 1 stage at a time?
-            var selectedInput = unsignedRecoveryTransaction.Inputs[request.StageIndex];
-            var selectedOutput = unsignedRecoveryTransaction.Outputs[request.StageIndex];
             
-            unsignedRecoveryTransaction.Inputs.Clear();
-            unsignedRecoveryTransaction.Outputs.Clear();
-            unsignedRecoveryTransaction.Inputs.Add(selectedInput);
-            unsignedRecoveryTransaction.Outputs.Add(selectedOutput);
+            var transactionInfo = await indexerService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
+
+            if (transactionInfo is null)
+                return Result.Failure<TransactionDraft>("Could not find transaction info");
+
+            transactionInfo.Outputs.ForEach((output, i) =>
+            {
+                if (i < 2 || string.IsNullOrEmpty(output.SpentInTransaction))
+                    return;
+
+                unsignedRecoveryTransaction.Inputs.RemoveAt(i - 2);
+                unsignedRecoveryTransaction.Outputs.RemoveAt(i - 2);
+            });
             
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();
             if (changeAddress == null)
