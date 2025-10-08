@@ -1,12 +1,11 @@
 using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Shared;
 using AngorApp.Extensions;
 using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Portfolio.Items;
 using AngorApp.UI.Services;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
-using Zafiro.UI.Commands;
 using Zafiro.UI.Navigation;
 
 namespace AngorApp.UI.Controls.Common.FoundedProjectOptions;
