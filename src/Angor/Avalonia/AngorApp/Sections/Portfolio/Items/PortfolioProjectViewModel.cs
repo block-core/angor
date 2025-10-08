@@ -44,6 +44,8 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
             .Subscribe()
             .DisposeWith(disposable);
 
+        Invested = new AmountUI(projectDto.Investment.Sats);
+
         InvestmentStatus = projectDto.InvestmentStatus;
         GoToManageFunds = ReactiveCommand.CreateFromTask(() => navigator.Go(() => new ManageInvestorProjectViewModel(new ProjectId(projectDto.Id), investmentAppService, uiServices))).Enhance().DisposeWith(disposable);
     }
@@ -56,7 +58,7 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
     public FounderStatus FounderStatus => FounderStatus.Approved;
     public Uri LogoUri => projectDto.LogoUri;
     public IEnhancedCommand<Result> CompleteInvestment { get; }
-    public IAmountUI Invested { get; } = new AmountUI(1234000);
+    public IAmountUI Invested { get; }
     public IEnhancedCommand GoToManageFunds { get; }
 
     public void Dispose()
