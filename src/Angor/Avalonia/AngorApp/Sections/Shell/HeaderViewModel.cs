@@ -23,7 +23,10 @@ public partial class HeaderViewModel : ReactiveObject
         
         this.WhenAnyValue(model => model.IsDarkThemeEnabled)
             .BindTo(uiServices, services => services.IsDarkThemeEnabled);
+        ProfileName = !string.Equals(uiServices.ProfileName, "Default", StringComparison.OrdinalIgnoreCase) ? uiServices.ProfileName : string.Empty;
     }
+
+    public string ProfileName { get; set; }
 
     public IEnhancedCommand Back { get; }
     public object? Content => currentHeader.Value;

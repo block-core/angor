@@ -32,7 +32,7 @@ namespace AngorApp.Composition;
 
 public static class CompositionRoot
 {
-    public static IMainViewModel CreateMainViewModel(Control topLevelView)
+    public static IMainViewModel CreateMainViewModel(Control topLevelView, string profileName)
     {
         var services = new ServiceCollection();
 
@@ -40,7 +40,7 @@ public static class CompositionRoot
             .WriteTo.Console()
             .MinimumLevel.Debug().CreateLogger();
 
-        var store = new FileStore("Angor");
+        var store = new FileStore("Angor", profileName);
         var networkStorage = new NetworkStorage(store);
         var network = networkStorage.GetNetwork() switch
         {
@@ -62,7 +62,7 @@ public static class CompositionRoot
         services
             .AddModelServices()
             .AddViewModels()
-            .AddUiServices(topLevelView);
+            .AddUiServices(topLevelView, profileName);
         
         services.AddNavigator();
         services.AddSecurityContext();
