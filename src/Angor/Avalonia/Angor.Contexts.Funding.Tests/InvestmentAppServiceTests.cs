@@ -49,7 +49,7 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
         { SignedTxHex = txHex, TransactionId = txId, TransactionFee = new Amount(0), };
 
         // Act
-        var result = await sut.Invest(Guid.Empty, projectId, draft);
+        var result = await sut.SubmitInvestment(Guid.Empty, projectId, draft);
 
         // Assert
         Assert.True(result.IsSuccess, result.IsFailure ? result.Error : string.Empty);

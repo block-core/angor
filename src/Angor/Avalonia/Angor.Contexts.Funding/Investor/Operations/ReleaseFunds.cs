@@ -19,8 +19,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 public static class ReleaseFunds
 {
     public record ReleaseFundsRequest(Guid WalletId, ProjectId ProjectId, int StageIndex) : IRequest<Result<TransactionDraft>>;
-
-    // TODO: Placeholder handler
+    
     public class ReleaseFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
         IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
         IPortfolioRepository investmentRepository, INetworkConfiguration networkConfiguration,

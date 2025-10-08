@@ -15,7 +15,7 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
         return mediator.Send(new CreateInvestment.CreateInvestmentTransactionRequest(sourceWalletId, projectId, amount, feerate));
     }
 
-    public Task<Result<Guid>> Invest(Guid sourceWalletId, ProjectId projectId, InvestmentDraft draft)
+    public Task<Result<Guid>> SubmitInvestment(Guid sourceWalletId, ProjectId projectId, InvestmentDraft draft)
     {
         return mediator.Send(new RequestInvestmentSignatures.RequestFounderSignaturesRequest(sourceWalletId, projectId, draft));
     }
@@ -60,6 +60,11 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     {
         return mediator.Send(new ClaimEndOfProject.ClaimEndOfProjectRequest(walletId, projectId, stageIndex));
     }
-    
+
+    public Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, TransactionDraft draft)
+    {
+        return mediator.Send(new PublishTransaction.PublishTransactionRequest(draft));
+    }
+
     #endregion
 }

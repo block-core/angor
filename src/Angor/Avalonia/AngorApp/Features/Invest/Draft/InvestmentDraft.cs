@@ -15,6 +15,6 @@ public class InvestmentDraft(IInvestmentAppService investmentAppService, IWallet
 
     public Task<Result<Guid>> Confirm()
     {
-        return investmentAppService.Invest(wallet.Id.Value, project.Info.Id, DraftModel);
+        return investmentAppService.SubmitInvestment(wallet.Id.Value, project.Info.Id, DraftModel);
     }
 }
