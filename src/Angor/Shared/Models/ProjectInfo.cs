@@ -19,5 +19,4 @@ public class ProjectInfo
     public bool? EnforceTargetAmount { get; set; }
     public List<Stage> Stages { get; set; } = new();
     public ProjectSeeders ProjectSeeders { get; set; } = new();
-
 }

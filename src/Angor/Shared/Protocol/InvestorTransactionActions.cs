@@ -34,15 +34,28 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         _networkConfiguration = networkConfiguration;
     }
 
-    public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey,
-        long totalInvestmentAmount)
+    private bool IsPenaltyDisabled(ProjectInfo projectInfo, Transaction investmentTransaction)
+    {
+        var totalInvestmentAmount = investmentTransaction.Outputs.Skip(2).Take(projectInfo.Stages.Count).Sum(o => o.Value);
+        return IsPenaltyDisabled(projectInfo, totalInvestmentAmount);
+    }
+
+    private bool IsPenaltyDisabled(ProjectInfo projectInfo, long totalInvestmentAmount)
+    {
+        bool disablePenalty = projectInfo.PenaltyThreshold != null && projectInfo.PenaltyThreshold > totalInvestmentAmount;
+        return disablePenalty;
+    }
+
+    public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey, long totalInvestmentAmount)
     {
         // create the output and script of the investor pubkey script opreturn
         var opreturnScript = _projectScriptsBuilder.BuildInvestorInfoScript(investorKey);
 
+        bool disablePenalty = IsPenaltyDisabled(projectInfo, totalInvestmentAmount);
+
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
-        var stagesScript = Enumerable.Range(0,projectInfo.Stages.Count)
-            .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, index));
+        var stagesScript = Enumerable.Range(0, projectInfo.Stages.Count)
+            .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, index, null, disablePenalty));
 
         return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript, totalInvestmentAmount);
     }
@@ -51,7 +64,9 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
-        var scripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex);
+        bool disablePenalty = IsPenaltyDisabled(projectInfo, investmentTransaction);
+
+        var scripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, null, disablePenalty);
 
         var witScriptInfo = new Blockcore.Consensus.TransactionInfo.WitScript(Blockcore.Consensus.ScriptInfo.Script.FromHex(witScript));
         var executeScript = new Blockcore.Consensus.ScriptInfo.Script(witScriptInfo[witScriptInfo.PushCount - 2]);
@@ -78,6 +93,13 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
     public Transaction BuildRecoverInvestorFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction)
     {
+        bool disablePenalty = IsPenaltyDisabled(projectInfo, investmentTransaction);
+
+        if (disablePenalty)
+        {
+            throw new InvalidOperationException("Trx amount is bellow the penalty threshold.");
+        }
+
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
         return _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDays, investorKey);

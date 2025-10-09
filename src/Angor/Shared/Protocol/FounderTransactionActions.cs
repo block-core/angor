@@ -180,6 +180,19 @@ public class FounderTransactionActions : IFounderTransactionActions
         return projectStartTransaction;
     }
 
+    // this is a duplicate but I was not sure where to put this
+    private bool IsPenaltyDisabled(ProjectInfo projectInfo, NBitcoin.Transaction investmentTransaction)
+    {
+        var totalInvestmentAmount = investmentTransaction.Outputs.Skip(2).Take(projectInfo.Stages.Count).Sum(o => o.Value);
+        return IsPenaltyDisabled(projectInfo, totalInvestmentAmount);
+    }
+    // this is a duplicate but I was not sure where to put this
+    private bool IsPenaltyDisabled(ProjectInfo projectInfo, long totalInvestmentAmount)
+    {
+        bool disablePenalty = projectInfo.PenaltyThreshold != null && projectInfo.PenaltyThreshold > totalInvestmentAmount;
+        return disablePenalty;
+    }
+
     private IndexedTxOut AddInputToSpendingTransaction(ProjectInfo projectInfo, int stageNumber, NBitcoin.Transaction trx,
          NBitcoin.Transaction spendingTransaction)
      {
@@ -192,8 +205,10 @@ public class FounderTransactionActions : IFounderTransactionActions
 
          var (investorKey, secretHash) = GetProjectDetailsFromOpReturn(trx);
 
-         var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
-             stageNumber - 1, secretHash);
+         bool disablePenalty = IsPenaltyDisabled(projectInfo, trx);
+
+        var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
+             stageNumber - 1, secretHash, disablePenalty);
 
          var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Founder);
          

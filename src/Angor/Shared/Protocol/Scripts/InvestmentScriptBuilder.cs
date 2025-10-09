@@ -1,8 +1,6 @@
 using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
-using Polly.Simmy;
-using System.Collections.Generic;
 
 namespace Angor.Shared.Protocol.Scripts;
 
@@ -33,6 +31,11 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
             Op.GetPushOp((uint)sequence),
             OpcodeType.OP_CHECKSEQUENCEVERIFY
         });
+    }
+
+    public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex, uint256? hashOfSecret)
+    {
+        return BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, hashOfSecret, false);
     }
 
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex, uint256? hashOfSecret, bool disablePenalty)
