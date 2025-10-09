@@ -50,6 +50,13 @@ public class PortfolioRepository(
         if (investments.IsFailure)
             return Result.Failure(investments.Error);
         
+        var existingInvestment =
+            investments.Value.ProjectIdentifiers.FirstOrDefault(p =>
+                p.ProjectIdentifier == newInvestment.ProjectIdentifier);
+        
+        if (existingInvestment != null)
+            investments.Value.ProjectIdentifiers.Remove(existingInvestment);
+        
         investments.Value.ProjectIdentifiers.Add(newInvestment);
         
         var encrypted = await encryptionService.EncryptData(serializer.Serialize(investments.Value), password);

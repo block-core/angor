@@ -49,8 +49,11 @@ public static class PublishInvestment
                 .FirstOrDefault(x => x.ProjectIdentifier == request.ProjectId.Value);
             
             if (investmentRecord?.InvestmentTransactionHex == null || investmentRecord.RequestEventId == null || investmentRecord.RequestEventTime == null)
-                return Result.Failure("The investment transaction was not found in storage for the given investment ID");
+                return Result.Failure("The investment transaction was not found in storage");
 
+            if (investmentRecord.InvestmentTransactionHash != request.InvestmentId)
+                return Result.Failure("Failed to find the investment transaction with the given ID");
+            
             var transactionInfo = new TransactionInfo()
             {
                 Transaction = networkConfiguration.GetNetwork()
