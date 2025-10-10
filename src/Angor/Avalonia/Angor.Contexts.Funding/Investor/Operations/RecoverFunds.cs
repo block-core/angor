@@ -19,7 +19,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class RecoverFunds
 {
-    public record RecoverFundsRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<TransactionDraft>>;
+    public record RecoverFundsRequest(Guid WalletId, ProjectId ProjectId,DomainFeerate SelectedFeeRate) : IRequest<Result<TransactionDraft>>;
 
     // TODO: Placeholder handler
     public class RecoverFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
@@ -30,9 +30,6 @@ public static class RecoverFunds
     {
         public async Task<Result<TransactionDraft>> Handle(RecoverFundsRequest request, CancellationToken cancellationToken)
         {
-            var fetchFees = await walletOperations.GetFeeEstimationAsync();
-            var selectedFeeEstimation = fetchFees.OrderBy(x => x.FeeRate).First();
-            
             var words = await provider.GetSensitiveData(request.WalletId);
             if (words.IsFailure)
                 return Result.Failure<TransactionDraft>(words.Error);
@@ -86,7 +83,7 @@ public static class RecoverFunds
                 return Result.Failure<TransactionDraft>("Could not get a change address");
             
             // add fee to the recovery trx
-            var recoveryTransaction = walletOperations.AddFeeAndSignTransaction(changeAddress, unsignedRecoveryTransaction, words.Value.ToWalletWords(), accountInfo, selectedFeeEstimation.FeeRate);
+            var recoveryTransaction = walletOperations.AddFeeAndSignTransaction(changeAddress, unsignedRecoveryTransaction, words.Value.ToWalletWords(), accountInfo, request.SelectedFeeRate.SatsPerKilobyte);
 
             return Result.Success(new TransactionDraft
             {

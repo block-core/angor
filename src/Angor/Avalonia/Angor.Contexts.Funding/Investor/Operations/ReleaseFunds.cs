@@ -3,7 +3,6 @@ using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Shared.TransactionDrafts;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -19,7 +18,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class ReleaseFunds
 {
-    public record ReleaseFundsRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<TransactionDraft>>;
+    public record ReleaseFundsRequest(Guid WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<TransactionDraft>>;
     
     public class ReleaseFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
         IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
@@ -40,9 +39,6 @@ public static class ReleaseFunds
             var investment = investments.Value.ProjectIdentifiers.FirstOrDefault(p => p.ProjectIdentifier == request.ProjectId.Value);
             if (investment is null) //TODO we need to make sure we always have this data
                 return Result.Failure<TransactionDraft>("No investment found for this project");
-            
-            var fetchFees = await walletOperations.GetFeeEstimationAsync();
-            var selectedFeeEstimation = fetchFees.OrderBy(x => x.FeeRate).First();
 
             var words = await provider.GetSensitiveData(request.WalletId);
             if (words.IsFailure)
@@ -94,7 +90,7 @@ public static class ReleaseFunds
                 return Result.Failure<TransactionDraft>("Could not get a change address");
             
             // add fee to the recovery trx
-            var releaseTransaction = walletOperations.AddFeeAndSignTransaction(changeAddress, unsignedReleaseTransaction, words.Value.ToWalletWords(), accountInfo, selectedFeeEstimation.FeeRate);
+            var releaseTransaction = walletOperations.AddFeeAndSignTransaction(changeAddress, unsignedReleaseTransaction, words.Value.ToWalletWords(), accountInfo, request.SelectedFeeRate.SatsPerKilobyte);
             
             //var transactionId = await indexerService.PublishTransactionAsync(releaseTransaction.Transaction.ToHex());
 

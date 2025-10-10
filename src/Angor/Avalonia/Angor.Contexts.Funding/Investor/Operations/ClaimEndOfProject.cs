@@ -16,7 +16,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class ClaimEndOfProject
 {
-    public record ClaimEndOfProjectRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<TransactionDraft>>;
+    public record ClaimEndOfProjectRequest(Guid WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<TransactionDraft>>;
     
     public class ClaimEndOfProjectHandler(IWalletOperations walletOperations, IDerivationOperations derivationOperations,
         IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
@@ -24,9 +24,6 @@ public static class ClaimEndOfProject
     {
         public async Task<Result<TransactionDraft>> Handle(ClaimEndOfProjectRequest request, CancellationToken cancellationToken)
         {
-            var fetchFees = await walletOperations.GetFeeEstimationAsync();
-            var selectedFeeEstimation = fetchFees.OrderBy(x => x.FeeRate).First();
-            
             var words = await provider.GetSensitiveData(request.WalletId);
             if (words.IsFailure)
                 return Result.Failure<TransactionDraft>(words.Error);
@@ -71,7 +68,7 @@ public static class ClaimEndOfProject
                 .First(x => x > 0);
             
             var endOfProjectTransaction = investorTransactionActions.RecoverEndOfProjectFunds(investment.InvestmentTransactionHex, project.Value.ToProjectInfo(), stageIndex,
-                changeAddress, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), selectedFeeEstimation);
+                changeAddress, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), new FeeEstimation(){FeeRate = request.SelectedFeeRate.SatsPerKilobyte});
             
            // var transactionId = await indexerService.PublishTransactionAsync(endOfProjectTransaction.Transaction.ToHex());
 

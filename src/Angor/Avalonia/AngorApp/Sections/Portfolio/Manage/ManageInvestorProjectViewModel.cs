@@ -66,11 +66,11 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
             .Select(x =>
             {
                 Func<Task<Result<TransactionDraft>>> recover = () =>
-                    investmentAppService.RecoverInvestorFunds(currentWallet.Id.Value, projectId);
+                    investmentAppService.BuildRecoverInvestorFunds(currentWallet.Id.Value, projectId, new DomainFeerate(1)); //TODO Jose get the fee rate from the UI (in satoshis per byte)
                 Func<Task<Result<TransactionDraft>>> release = () =>
-                    investmentAppService.ReleaseInvestorFunds(currentWallet.Id.Value, projectId);
+                    investmentAppService.BuildReleaseInvestorFunds(currentWallet.Id.Value, projectId,new DomainFeerate(1)); //TODO Jose get the fee rate from the UI (in satoshis per byte)
                 Func<Task<Result<TransactionDraft>>> claim = () =>
-                    investmentAppService.ClaimInvestorEndOfProjectFunds(currentWallet.Id.Value, projectId);
+                    investmentAppService.BuilodClaimInvestorEndOfProjectFunds(currentWallet.Id.Value, projectId, new DomainFeerate(1)); //TODO Jose get the fee rate from the UI (in satoshis per byte)
 
                 return new InvestorProjectItem(
                     stage: x.StageIndex + 1,

@@ -16,9 +16,9 @@ public interface IInvestmentAppService
     
     // Methods for Investor - Manage funds
     Task<Result<InvestorProjectRecoveryDto>> GetInvestorProjectRecovery(Guid walletId, ProjectId projectId);
-    Task<Result<TransactionDraft>> RecoverInvestorFunds(Guid walletId, ProjectId projectId);
-    Task<Result<TransactionDraft>> ReleaseInvestorFunds(Guid walletId, ProjectId projectId);
-    Task<Result<TransactionDraft>> ClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId);
+    Task<Result<TransactionDraft>> BuildRecoverInvestorFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate);
+    Task<Result<TransactionDraft>> BuildReleaseInvestorFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate);
+    Task<Result<TransactionDraft>> BuilodClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate);
     
     Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, TransactionDraft draft);
 }

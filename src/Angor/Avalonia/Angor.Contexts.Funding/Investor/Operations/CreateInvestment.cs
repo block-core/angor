@@ -54,7 +54,7 @@ public static class CreateInvestment
                 if (transactionResult.IsFailure)
                     return Result.Failure<InvestmentDraft>(transactionResult.Error);
 
-                var signedTxResult = await SignTransaction(walletWords, transactionResult.Value, transactionRequest.FeeRate.SatsPerVByte);
+                var signedTxResult = await SignTransaction(walletWords, transactionResult.Value, transactionRequest.FeeRate.SatsPerKilobyte);
                 if (signedTxResult.IsFailure)
                 {
                     return Result.Failure<InvestmentDraft>(signedTxResult.Error);

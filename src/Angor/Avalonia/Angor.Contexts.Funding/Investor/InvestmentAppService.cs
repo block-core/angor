@@ -44,21 +44,21 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     }
 
     // Investor/Manage Funds
-    public Task<Result<TransactionDraft>> RecoverInvestorFunds(Guid walletId, ProjectId projectId)
+    public Task<Result<TransactionDraft>> BuildRecoverInvestorFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate)
     {
-        return mediator.Send(new RecoverFunds.RecoverFundsRequest(walletId, projectId));
+        return mediator.Send(new RecoverFunds.RecoverFundsRequest(walletId, projectId, feerate));
     }
 
     // Investor/Manage Funds
-    public Task<Result<TransactionDraft>> ReleaseInvestorFunds(Guid walletId, ProjectId projectId)
+    public Task<Result<TransactionDraft>> BuildReleaseInvestorFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate)
     {
-        return mediator.Send(new ReleaseFunds.ReleaseFundsRequest(walletId, projectId));
+        return mediator.Send(new ReleaseFunds.ReleaseFundsRequest(walletId, projectId, feerate));
     }
 
     // Investor/Manage Funds
-    public Task<Result<TransactionDraft>> ClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId)
+    public Task<Result<TransactionDraft>> BuilodClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate)
     {
-        return mediator.Send(new ClaimEndOfProject.ClaimEndOfProjectRequest(walletId, projectId));
+        return mediator.Send(new ClaimEndOfProject.ClaimEndOfProjectRequest(walletId, projectId, feerate));
     }
 
     public Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, TransactionDraft draft)
