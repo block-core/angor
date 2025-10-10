@@ -2,6 +2,7 @@ using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
+using Angor.Contexts.Funding.Shared.TransactionDrafts;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -14,22 +15,16 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 public static class CreateInvestment
 {
     public record CreateInvestmentTransactionRequest(Guid WalletId, ProjectId ProjectId, Amount Amount, DomainFeerate FeeRate) 
-        : IRequest<Result<Draft>> { }
-
-    public record Draft(string InvestorKey, string SignedTxHex, string TransactionId, Amount TransactionFee)
-    {
-        public Amount MinerFee { get; set; } = new Amount(-1);
-        public Amount AngorFee { get; set; } = new Amount(-1);
-    }
-
+        : IRequest<Result<InvestmentDraft>> { }
+    
     public class CreateInvestmentTransactionHandler(
         IProjectRepository projectRepository,
         IInvestorTransactionActions investorTransactionActions,
         ISeedwordsProvider seedwordsProvider,
         IWalletOperations walletOperations,
-        IDerivationOperations derivationOperations) : IRequestHandler<CreateInvestmentTransactionRequest, Result<Draft>>
+        IDerivationOperations derivationOperations) : IRequestHandler<CreateInvestmentTransactionRequest, Result<InvestmentDraft>>
     {
-        public async Task<Result<Draft>> Handle(CreateInvestmentTransactionRequest transactionRequest, CancellationToken cancellationToken)
+        public async Task<Result<InvestmentDraft>> Handle(CreateInvestmentTransactionRequest transactionRequest, CancellationToken cancellationToken)
         {
             try
             {
@@ -37,7 +32,7 @@ public static class CreateInvestment
                 var projectResult = await projectRepository.Get(transactionRequest.ProjectId);
                 if (projectResult.IsFailure)
                 {
-                    return Result.Failure<Draft>(projectResult.Error);
+                    return Result.Failure<InvestmentDraft>(projectResult.Error);
                 }
 
                 var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(transactionRequest.WalletId);
@@ -48,7 +43,7 @@ public static class CreateInvestment
 
                 if (sensitiveDataResult.IsFailure)
                 {
-                    return Result.Failure<Draft>(sensitiveDataResult.Error);
+                    return Result.Failure<InvestmentDraft>(sensitiveDataResult.Error);
                 }
 
                 var transactionResult = Result.Try(() => investorTransactionActions.CreateInvestmentTransaction(
@@ -57,25 +52,32 @@ public static class CreateInvestment
                     transactionRequest.Amount.Sats));
 
                 if (transactionResult.IsFailure)
-                    return Result.Failure<Draft>(transactionResult.Error);
+                    return Result.Failure<InvestmentDraft>(transactionResult.Error);
 
-                var signedTxResult = await SignTransaction(walletWords, transactionResult.Value, transactionRequest.FeeRate.SatsPerVByte);
+                var signedTxResult = await SignTransaction(walletWords, transactionResult.Value, transactionRequest.FeeRate.SatsPerKilobyte);
                 if (signedTxResult.IsFailure)
                 {
-                    return Result.Failure<Draft>(signedTxResult.Error);
+                    return Result.Failure<InvestmentDraft>(signedTxResult.Error);
                 }
 
                 var signedTxHex = signedTxResult.Value.Transaction.ToHex();
                 var minorFee = signedTxResult.Value.TransactionFee;
                 var angorFee = signedTxResult.Value.Transaction.Outputs.AsIndexedOutputs().FirstOrDefault()?.TxOut.Value.Satoshi ?? 0;
                     
-                return new Draft(investorKey, signedTxHex, signedTxResult.Value.Transaction.GetHash().ToString(),
-                        new Amount(minorFee + angorFee))
-                    { MinerFee = new Amount(minorFee), AngorFee = new Amount(angorFee), };
+                var trxId = signedTxResult.Value.Transaction.GetHash().ToString();
+                
+                return new InvestmentDraft(investorKey)
+                {
+                    TransactionFee = new Amount(minorFee + angorFee),
+                    MinerFee = new Amount(minorFee),
+                    AngorFee = new Amount(angorFee),
+                    SignedTxHex = signedTxHex,
+                    TransactionId = trxId,
+                };
             }
             catch (Exception ex)
             {
-                return Result.Failure<Draft>($"Error creating investment transaction: {ex.Message}");
+                return Result.Failure<InvestmentDraft>($"Error creating investment transaction: {ex.Message}");
             }
         }
 

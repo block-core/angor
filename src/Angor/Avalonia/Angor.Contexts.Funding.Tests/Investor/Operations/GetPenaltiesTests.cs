@@ -1,3 +1,4 @@
+using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -12,7 +13,7 @@ namespace Angor.Contexts.Funding.Tests.Investor.Operations;
 
 public class GetPenaltiesTests
 {
-    private readonly Mock<IInvestmentRepository> _mockInvestmentRepository;
+    private readonly Mock<IPortfolioRepository> _mockInvestmentRepository;
     private readonly Mock<IIndexerService> _mockIndexerService;
     private readonly Mock<IInvestorTransactionActions> _mockInvestorTransactionActions;
     private readonly Mock<INetworkConfiguration> _mockNetworkConfiguration;
@@ -21,7 +22,7 @@ public class GetPenaltiesTests
 
     public GetPenaltiesTests()
     {
-        _mockInvestmentRepository = new Mock<IInvestmentRepository>();
+        _mockInvestmentRepository = new Mock<IPortfolioRepository>();
         _mockIndexerService = new Mock<IIndexerService>();
         _mockInvestorTransactionActions = new Mock<IInvestorTransactionActions>();
         _mockNetworkConfiguration = new Mock<INetworkConfiguration>();

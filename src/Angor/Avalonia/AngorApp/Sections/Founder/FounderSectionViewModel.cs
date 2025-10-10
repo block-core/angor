@@ -1,5 +1,6 @@
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
@@ -18,13 +19,13 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
 {
     private readonly CompositeDisposable disposable = new();
 
-    public FounderSectionViewModel(UIServices uiServices, IInvestmentAppService investmentAppService, IProjectAppService projectAppService, INavigator navigator, INetworkStorage networkStorage, ICreateProjectFlow createProjectFlow)
+    public FounderSectionViewModel(UIServices uiServices, IFounderAppService founderAppService, IProjectAppService projectAppService, INavigator navigator, INetworkStorage networkStorage, ICreateProjectFlow createProjectFlow)
     {
         LoadProjects = ReactiveCommand.CreateFromObservable(() => Projects(uiServices, projectAppService)).Enhance().DisposeWith(disposable);
         LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Failed to get investments").DisposeWith(disposable);
         LoadProjects.Successes()
             .EditDiff(dto => dto.Id)
-            .Transform(dto => new FounderProjectViewModel(navigator, dto, investmentAppService, projectAppService, uiServices))
+            .Transform(dto => new FounderProjectViewModel(navigator, dto, founderAppService, projectAppService, uiServices))
             .Bind(out var projectList)
             .Subscribe()
             .DisposeWith(disposable);

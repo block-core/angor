@@ -1,7 +1,6 @@
 using Angor.Contests.CrossCutting;
-using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Investor.Operations;
-using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Services;
@@ -9,15 +8,14 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+namespace Angor.Contexts.Funding.Investor.Domain.Impl;
 
-public class InvestmentRepository(
-    IIndexerService indexerService,
+public class PortfolioRepository(
     IEncryptionService encryptionService,
     IDerivationOperations derivationOperations,
     ISerializer serializer,
     ISeedwordsProvider seedwordsProvider,
-    IRelayService relayService) : IInvestmentRepository
+    IRelayService relayService) : IPortfolioRepository
 {
     public async Task<Result<InvestmentRecords>> GetByWalletId(Guid walletId)
     {
@@ -52,6 +50,13 @@ public class InvestmentRepository(
         if (investments.IsFailure)
             return Result.Failure(investments.Error);
         
+        var existingInvestment =
+            investments.Value.ProjectIdentifiers.FirstOrDefault(p =>
+                p.ProjectIdentifier == newInvestment.ProjectIdentifier);
+        
+        if (existingInvestment != null)
+            investments.Value.ProjectIdentifiers.Remove(existingInvestment);
+        
         investments.Value.ProjectIdentifiers.Add(newInvestment);
         
         var encrypted = await encryptionService.EncryptData(serializer.Serialize(investments.Value), password);
@@ -61,23 +66,6 @@ public class InvestmentRepository(
 
         var success = await tcs.Task;
         return success ? Result.Success() : Result.Failure("Error adding investment");
-    }
-
-    public Task<Result<IEnumerable<InvestmentDto>>> GetByProjectId(ProjectId projectId)
-    {
-        return GetProjectInvestments(projectId).Map(enumerable => enumerable.Select(inv => new InvestmentDto
-        {
-            ProjectId = projectId,
-            InvestorKey = inv.InvestorPubKey,
-            AmountInSats = inv.Amount.Sats,
-            TransactionId = inv.TransactionId
-        }));
-    }
-
-    private Task<Result<IEnumerable<Domain.Investment>>> GetProjectInvestments(ProjectId projectId)
-    {
-        return Result.Try(() => indexerService.GetInvestmentsAsync(projectId.Value))
-            .Map(investments => investments.Select(inv => Domain.Investment.Create(projectId, inv.InvestorPublicKey, new Amount(inv.TotalAmount), inv.TransactionId)));
     }
     
     private async Task<Result<InvestmentRecords>> GetInvestmentRecordsFromRelayAsync(string storageAccountKey,

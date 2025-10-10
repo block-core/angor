@@ -43,6 +43,7 @@ public class FileStore : IStore
         return Result.Try(() => Path.Combine(appDataPath, key))
             .TapTry(CreateFile)
             .MapTry(s => File.ReadAllTextAsync(s))
+            .Ensure(x => !string.IsNullOrWhiteSpace(x), $"Could not read file {key}")
             .Bind(json => Result.Try(() => JsonSerializer.Deserialize<T>(json))
                 .Ensure(x => x != null, $"Could not deserialize {json} as {typeof(T)}")
                 .Map(x => x!)

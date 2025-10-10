@@ -2,6 +2,7 @@ using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Shared;
 using AngorApp.Sections.Portfolio.Manage;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;

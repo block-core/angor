@@ -1,5 +1,8 @@
 ﻿using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
+using Angor.Contexts.Funding.Investor.Domain;
+using Angor.Contexts.Funding.Investor.Domain.Impl;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -23,7 +26,7 @@ public static class FundingContextServices
         var networkConfiguration = new NetworkConfiguration();
 
         
-        services.AddSingleton<IInvestmentRepository, InvestmentRepository>();
+        services.AddSingleton<IPortfolioRepository, PortfolioRepository>();
         services.AddSingleton<IProjectRepository, ProjectRepository>();
         services.AddSingleton<INostrDecrypter, NostrDecrypter>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateInvestment.CreateInvestmentTransactionHandler).Assembly));
@@ -52,10 +55,11 @@ public static class FundingContextServices
         services.TryAddSingleton<IWalletOperations, WalletOperations>();
         services.TryAddSingleton<IProjectInvestmentsRepository, ProjectInvestmentsRepository>();
         
-        services.AddHttpClient();
+        //services.AddHttpClient();
         
         services.AddSingleton<IProjectAppService, ProjectAppService>();
         services.AddSingleton<IInvestmentAppService, InvestmentAppService>();
+        services.AddSingleton<IFounderAppService, FounderAppService>();
         
         return services;
     }

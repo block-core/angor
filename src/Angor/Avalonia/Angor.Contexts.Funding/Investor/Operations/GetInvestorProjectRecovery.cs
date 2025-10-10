@@ -1,7 +1,9 @@
+using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -19,7 +21,7 @@ public static class GetInvestorProjectRecovery
 
     public class Handler(
         IProjectRepository projectRepository,
-        IInvestmentRepository investmentRepository,
+        IPortfolioRepository investmentRepository,
         IIndexerService indexerService,
         INetworkConfiguration networkConfiguration,
         IInvestorTransactionActions investorTransactionActions,
@@ -232,6 +234,10 @@ public static class GetInvestorProjectRecovery
                         }
                     }
                 }
+            }
+            else
+            {
+                item.Status = string.Empty;
             }
             
             return Result.Success();

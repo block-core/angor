@@ -1,3 +1,4 @@
+using Angor.Contexts.Funding.Shared;
 using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Funding.Projects.Domain;

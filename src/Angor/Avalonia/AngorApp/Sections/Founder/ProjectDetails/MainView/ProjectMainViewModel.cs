@@ -1,3 +1,4 @@
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
 using Angor.UI.Model.Implementation.Projects;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.Approve;
@@ -13,13 +14,13 @@ public class ProjectMainViewModel : IProjectMainViewModel
 {
     private readonly FullProject project;
 
-    public ProjectMainViewModel(FullProject project, IInvestmentAppService investmentAppService, UIServices uiServices)
+    public ProjectMainViewModel(FullProject project, IFounderAppService founderAppService, UIServices uiServices)
     {
         this.project = project;
         Status = project.Status;
-        ReleaseFundsViewModel = new ReleaseFundsViewModel(project.Info.Id, investmentAppService, uiServices);
-        ClaimFundsViewModel = new ClaimFundsViewModel(project.Info.Id, investmentAppService, uiServices);
-        ApproveInvestmentsViewModel = new ApproveInvestmentsViewModel(project.Info.Id, investmentAppService, uiServices);
+        ReleaseFundsViewModel = new ReleaseFundsViewModel(project.Info.Id, founderAppService, uiServices);
+        ClaimFundsViewModel = new ClaimFundsViewModel(project.Info.Id, founderAppService, uiServices);
+        ApproveInvestmentsViewModel = new ApproveInvestmentsViewModel(project.Info.Id, founderAppService, uiServices);
         ProjectStatisticsViewModel = new ProjectStatisticsViewModel(project);
     }
 

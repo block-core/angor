@@ -1,4 +1,5 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
@@ -29,7 +30,7 @@ public static class PublishInvestment
         ISeedwordsProvider seedwordsProvider,
         IProjectRepository projectRepository,
         IWalletOperations walletOperations,
-        IInvestmentRepository  investmentRepository,
+        IPortfolioRepository  investmentRepository,
         ILogger logger) : IRequestHandler<PublishInvestmentRequest, Result>
     {
         public async Task<Result> Handle(PublishInvestmentRequest request, CancellationToken cancellationToken)
@@ -48,8 +49,11 @@ public static class PublishInvestment
                 .FirstOrDefault(x => x.ProjectIdentifier == request.ProjectId.Value);
             
             if (investmentRecord?.InvestmentTransactionHex == null || investmentRecord.RequestEventId == null || investmentRecord.RequestEventTime == null)
-                return Result.Failure("The investment transaction was not found in storage for the given investment ID");
+                return Result.Failure("The investment transaction was not found in storage");
 
+            if (investmentRecord.InvestmentTransactionHash != request.InvestmentId)
+                return Result.Failure("Failed to find the investment transaction with the given ID");
+            
             var transactionInfo = new TransactionInfo()
             {
                 Transaction = networkConfiguration.GetNetwork()
