@@ -10,12 +10,14 @@ namespace AngorApp.UI.Services;
 
 public sealed class WalletContext : IWalletContext, IDisposable
 {
+    private readonly IWalletAppService walletAppService;
     private readonly CompositeDisposable disposable = new();
     private readonly SourceCache<IWallet, WalletId> sourceCache = new(wallet => wallet.Id);
     private readonly BehaviorSubject<Maybe<IWallet>> current = new(Maybe<IWallet>.None);
 
     public WalletContext(IWalletAppService walletAppService, IWalletProvider walletProvider)
     {
+        this.walletAppService = walletAppService;
         LoadInitialWallets(walletAppService, walletProvider, sourceCache).DisposeWith(disposable);
 
         WalletChanges = sourceCache.Connect();
@@ -36,6 +38,29 @@ public sealed class WalletContext : IWalletContext, IDisposable
     {
         get => current.Value;
         set => current.OnNext(value);
+    }
+
+    public async Task<Result> DeleteWallet(WalletId walletId)
+    {
+        var deleteResult = await walletAppService.DeleteWallet(walletId);
+        if (deleteResult.IsFailure)
+        {
+            return deleteResult;
+        }
+
+        var existing = sourceCache.Lookup(walletId);
+        if (existing.HasValue)
+        {
+            if (existing.Value is IDisposable disposableWallet)
+            {
+                disposableWallet.Dispose();
+            }
+
+            sourceCache.Remove(existing.Value);
+        }
+
+        CurrentWallet = sourceCache.Items.TryFirst();
+        return Result.Success();
     }
 
     public void Dispose()

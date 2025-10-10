@@ -36,7 +36,7 @@
     </UserControl.Styles>
 
     <controls:PageContainer>
-        <ScrollViewer>
+        <ScrollViewer IconOptions.Size="{StaticResource IconSizeSmall}">
             <StackPanel Classes="BigGap">
                 <Card HeaderStartContent="{Icon fa-network-wired}" Header="Network">
                     <StackPanel Classes="BigGap">
@@ -117,6 +117,9 @@
                             </SlimDataGrid.Columns>
                         </SlimDataGrid>
                     </StackPanel>
+                </Card>
+                <Card BorderBrush="{StaticResource DangerColor}" BorderThickness="3" HeaderStartContent="{Icon mdi alert-outline}" Header="Danger Zone">
+                    <Button HorizontalAlignment="Right" Classes="Danger" Content="Delete wallet" Command="{Binding DeleteWallet}" />
                 </Card>
             </StackPanel>
         </ScrollViewer>

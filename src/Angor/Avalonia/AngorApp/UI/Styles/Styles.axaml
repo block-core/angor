@@ -21,6 +21,7 @@
         <Color x:Key="SuccessColor">Green</Color>
         <Color x:Key="WarningColor">Gold</Color>
         <Color x:Key="ErrorColor">Red</Color>
+        <Color x:Key="DangerColor">Red</Color>
     </Styles.Resources>
     
     <Style Selector="ListBox.Rounded">

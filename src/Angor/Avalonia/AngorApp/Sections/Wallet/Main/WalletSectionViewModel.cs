@@ -26,7 +26,7 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
         Create = ReactiveCommand.CreateFromTask(creationWizard.Start).Enhance().DisposeWith(disposable);
         
         CurrentWallet = walletContext.CurrentWallet.GetValueOrDefault();
-        walletContext.CurrentWalletChanges.Values().BindTo(this, x => x.CurrentWallet).DisposeWith(disposable);
+        walletContext.CurrentWalletChanges.Select(maybe => maybe.GetValueOrDefault()).BindTo(this, x => x.CurrentWallet).DisposeWith(disposable);
         this.WhenAnyValue(model => model.CurrentWallet).Select(wallet => wallet.AsMaybe()).BindTo(walletContext, context2 => context2.CurrentWallet)
             .DisposeWith(disposable);
     }

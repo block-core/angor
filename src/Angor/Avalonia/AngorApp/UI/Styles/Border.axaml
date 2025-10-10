@@ -31,4 +31,13 @@
         <Setter Property="CornerRadius" Value="10" />
         <Setter Property="Padding" Value="20" />
     </Style>
+    
+    <Style Selector="Button.Danger">
+        <Setter Property="Background">
+            <Setter.Value>
+                <SolidColorBrush Opacity="0.7" Color="{StaticResource DangerColor}" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
 </Styles>

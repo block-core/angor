@@ -21,7 +21,8 @@ public static class WalletContextServices
     public static ServiceCollection Register(ServiceCollection services, ILogger logger, BitcoinNetwork bitcoinNetwork)
     {
         RegisterLogger(services, logger);
-        services.AddKeyedSingleton<IStore,InMemoryStore>("memory");
+        services.AddKeyedSingleton<IStore, InMemoryStore>("memory");
+        services.TryAddSingleton<IStore>(sp => sp.GetRequiredKeyedService<IStore>("memory"));
         services.AddSingleton<IWalletAppService, WalletAppService>();
         services.AddSingleton<IHdOperations, HdOperations>();
         var networkConfiguration = new NetworkConfiguration();
