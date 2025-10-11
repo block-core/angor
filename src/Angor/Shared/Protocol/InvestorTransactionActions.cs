@@ -4,12 +4,15 @@ using Angor.Shared.Protocol.TransactionBuilders;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+
 //using Angor.Shared.Protocol;
 using Key = Blockcore.NBitcoin.Key;
-using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
-using WitScript = NBitcoin.WitScript;
 using Money = Blockcore.NBitcoin.Money;
 using SigHash = Blockcore.Consensus.ScriptInfo.SigHash;
+using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
+using TxIn = Blockcore.Consensus.TransactionInfo.TxIn;
+using TxOut = Blockcore.Consensus.TransactionInfo.TxOut;
+using WitScript = NBitcoin.WitScript;
 
 namespace Angor.Shared.Protocol;
 
@@ -167,6 +170,84 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         }
 
         return new TransactionInfo { Transaction = transaction, TransactionFee = fee };
+    }
+
+    public Transaction BuildAndSignDisabledPenaltyReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
+       string investorReceiveAddress, FeeEstimation feeEstimation, string investorPrivateKey)
+    {
+        bool disablePenalty = IsPenaltyDisabled(projectInfo, investmentTransaction);
+
+        if (!disablePenalty)
+        {
+            throw new InvalidOperationException("Trx amount is above the penalty threshold.");
+        }
+
+        var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
+
+        var network = _networkConfiguration.GetNetwork();
+        var releaseFundsTransaction = network.CreateTransaction();
+
+        // add the output address
+        releaseFundsTransaction.Outputs.Add(new Blockcore.Consensus.TransactionInfo.TxOut(Money.Zero, Blockcore.NBitcoin.BitcoinAddress.Create(investorReceiveAddress, network)));
+
+        // we just need the recover script to get the size for fee estimation,
+        // so the actual stage doesn't matter here
+        var scriptStagesMock = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 1, secretHash, disablePenalty);
+
+        // add all the outputs that are in a penalty
+        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2).Take(projectInfo.Stages.Count))
+        {
+            var txIn = new Blockcore.Consensus.TransactionInfo.TxIn(output.ToOutPoint());
+            releaseFundsTransaction.Inputs.Add(txIn);
+
+            // Set a fake WitScript (placeholder) for fee estimation
+            txIn.WitScript = new Blockcore.Consensus.TransactionInfo.WitScript(
+                Blockcore.Consensus.ScriptInfo.Op.GetPushOp(new byte[64]),
+                Blockcore.Consensus.ScriptInfo.Op.GetPushOp(new byte[scriptStagesMock.Recover.ToBytes().Length]));
+
+            releaseFundsTransaction.Outputs[0].Value += output.TxOut.Value;
+        }
+
+        // reduce the network fee form the first output
+        var virtualSize = releaseFundsTransaction.GetVirtualSize(4);
+        var fee = new Blockcore.NBitcoin.FeeRate(Blockcore.NBitcoin.Money.Satoshis(feeEstimation.FeeRate)).GetFee(virtualSize);
+        releaseFundsTransaction.Outputs[0].Value -= new Blockcore.NBitcoin.Money(fee);
+
+        var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
+        var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
+        var nbitcoinReleaseFundsTransaction = NBitcoin.Transaction.Parse(releaseFundsTransaction.ToHex(), nbitcoinNetwork);
+
+        var key = new NBitcoin.Key(Encoders.Hex.DecodeData(investorPrivateKey));
+        var sigHash = TaprootSigHash.All; // TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
+
+        var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
+            .Skip(2).Take(projectInfo.Stages.Count)
+            .Select(_ => _.TxOut)
+            .ToArray();
+
+        // todo: david change to Enumerable.Range 
+        for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
+        {
+            var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash, disablePenalty);
+            var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Recover);
+
+            var tapScript = new NBitcoin.Script(scriptStages.Recover.ToBytes()).ToTapScript(TapLeafVersion.C0);
+            var execData = new TaprootExecutionData(stageIndex, tapScript.LeafHash) { SigHash = sigHash };
+
+            var hash = nbitcoinReleaseFundsTransaction.GetSignatureHashTaproot(outputs, execData);
+
+            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; investor-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}");
+
+            var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
+
+            releaseFundsTransaction.Inputs[stageIndex].WitScript = new Blockcore.Consensus.TransactionInfo.WitScript(
+                new WitScript(
+                    Op.GetPushOp(investorSignature.ToBytes()),
+                    Op.GetPushOp(scriptStages.Recover.ToBytes()),
+                    Op.GetPushOp(controlBlock.ToBytes())).ToBytes());
+        }
+
+        return releaseFundsTransaction;
     }
 
     public TransactionInfo RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex,
