@@ -162,6 +162,8 @@ internal static class CreateProjectConstants
                     PenaltyDays = project.PenaltyDays,
                     ProjectIdentifier = founderKeys.ProjectIdentifier,
                     TargetAmount = project.TargetAmount.Sats,
+                    EnforceTargetAmount = project.EnforceTargetAmount,
+                    PenaltyThreshold = project.PenaltyThreshold,
                     Stages = project.Stages.Select(stage => new Stage()
                     {
                         AmountToRelease = stage.PercentageOfTotal * 100,

@@ -45,6 +45,11 @@
                     <CalendarDatePicker IsEnabled="False" SelectedDate="{Binding ExpiryDate}" />
                 </Card>
             </BalancedWrapGrid>
+            <BalancedWrapGrid>
+                <Card Classes="Transparent" Header="Penalty Threshold" Subheader="Bellow this amount there will be no penalty requirement, funders will be able to take their funds whenever they want">
+                    <c:AmountControl Satoshis="{Binding PenaltyThresholdSats, Mode=TwoWay}" />
+                </Card>
+            </BalancedWrapGrid>
         </StackPanel>
     </Card>
 

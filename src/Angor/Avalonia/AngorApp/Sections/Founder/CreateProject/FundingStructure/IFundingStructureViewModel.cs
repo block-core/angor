@@ -15,5 +15,12 @@ public interface IFundingStructureViewModel
     DateTime? ExpiryDate { get; set; }
     
     IAmountUI TargetAmount { get; }
+
+    IAmountUI PenaltyThreshold { get; }
+
+    long? PenaltyThresholdSats { get; set; }
+
+    bool? EnforceTargetAmount { get; set; }
+
     ICollection<string> Errors { get; }
 }

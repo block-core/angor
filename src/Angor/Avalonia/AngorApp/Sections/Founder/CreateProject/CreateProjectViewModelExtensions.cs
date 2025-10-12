@@ -27,6 +27,8 @@ public static class CreateProjectViewModelExtensions
             EndDate = createProjectViewModel.FundingStructureViewModel.FundingEndDate,
             PenaltyDays = createProjectViewModel.FundingStructureViewModel.PenaltyDays!.Value,
             TargetAmount = new Amount(createProjectViewModel.FundingStructureViewModel.Sats!.Value),
+            EnforceTargetAmount = createProjectViewModel.FundingStructureViewModel.EnforceTargetAmount,
+            PenaltyThreshold = createProjectViewModel.FundingStructureViewModel.PenaltyThreshold?.Sats,
             Stages = createProjectViewModel.StagesViewModel.Stages.Select(stage => new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent!.Value))
         };
     }
