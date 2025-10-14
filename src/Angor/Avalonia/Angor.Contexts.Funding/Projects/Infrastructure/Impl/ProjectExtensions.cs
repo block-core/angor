@@ -45,6 +45,7 @@ public static class ProjectExtensions
             FounderKey = project.FounderKey,
             FounderRecoveryKey = project.FounderRecoveryKey,
             PenaltyDays = project.PenaltyDuration.Days,
+            PenaltyThreshold = project.PenaltyThreshold,
             ProjectIdentifier = project.Id.Value,
             StartDate = project.StartingDate,
             ExpiryDate = project.ExpiryDate,

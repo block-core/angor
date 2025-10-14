@@ -8,6 +8,7 @@ using Angor.Shared.Protocol;
 using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Serilog;
 
 namespace Angor.Contexts.Funding.Investor.Operations;
 
@@ -20,14 +21,18 @@ public static class CreateInvestment
     {
         public Amount MinerFee { get; set; } = new Amount(-1);
         public Amount AngorFee { get; set; } = new Amount(-1);
+        public bool PenaltyDisabled { get; set; } = false;
     }
 
     public class CreateInvestmentTransactionHandler(
+        INetworkConfiguration networkConfiguration,
         IProjectRepository projectRepository,
         IInvestorTransactionActions investorTransactionActions,
         ISeedwordsProvider seedwordsProvider,
         IWalletOperations walletOperations,
-        IDerivationOperations derivationOperations) : IRequestHandler<CreateInvestmentTransactionRequest, Result<Draft>>
+        IDerivationOperations derivationOperations,
+        IInvestmentRepository investmentRepository,
+        ILogger logger) : IRequestHandler<CreateInvestmentTransactionRequest, Result<Draft>>
     {
         public async Task<Result<Draft>> Handle(CreateInvestmentTransactionRequest transactionRequest, CancellationToken cancellationToken)
         {
@@ -68,10 +73,29 @@ public static class CreateInvestment
                 var signedTxHex = signedTxResult.Value.Transaction.ToHex();
                 var minorFee = signedTxResult.Value.TransactionFee;
                 var angorFee = signedTxResult.Value.Transaction.Outputs.AsIndexedOutputs().FirstOrDefault()?.TxOut.Value.Satoshi ?? 0;
+
+                bool penaltyDisabled = false;
+                if (projectResult.Value.ToProjectInfo().IsPenaltyDisabled(transactionRequest.Amount.Sats))
+                {
+                    await investmentRepository.Add(transactionRequest.WalletId, new InvestmentRecord
+                    {
+                        InvestmentTransactionHash = signedTxResult.Value.Transaction.GetHash().ToString(),
+                        InvestmentTransactionHex = signedTxHex,
+                        InvestorPubKey = investorKey,
+                        ProjectIdentifier = transactionRequest.ProjectId.Value,
+                    });
+
+                    var published = await PublishSignedTransactionAsync(signedTxResult.Value);
                     
+                    if (published.IsFailure)
+                        return Result.Failure<Draft>(published.Error);
+
+                    penaltyDisabled = true;
+                }
+
                 return new Draft(investorKey, signedTxHex, signedTxResult.Value.Transaction.GetHash().ToString(),
                         new Amount(minorFee + angorFee))
-                    { MinerFee = new Amount(minorFee), AngorFee = new Amount(angorFee), };
+                    { MinerFee = new Amount(minorFee), AngorFee = new Amount(angorFee), PenaltyDisabled = penaltyDisabled };
             }
             catch (Exception ex)
             {
@@ -103,6 +127,27 @@ public static class CreateInvestment
                 feerate));
 
             return signedTransactionResult;
+        }
+
+        private async Task<Result<string>> PublishSignedTransactionAsync(TransactionInfo signedTransaction)
+        {
+            try
+            {
+                var response = await walletOperations.PublishTransactionAsync(networkConfiguration.GetNetwork(),
+                    signedTransaction.Transaction);
+
+                if (response.Success)
+                    return Result.Success(signedTransaction.Transaction.GetHash().ToString());
+
+                logger.Error(response.Message);
+
+                return Result.Failure<string>("Failed to publish the transaction to the blockchain");
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Error publishing signed transaction");
+                return Result.Failure<string>("An error occurred while publishing the transaction");
+            }
         }
     }
 }
