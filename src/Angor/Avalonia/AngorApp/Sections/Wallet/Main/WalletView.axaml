@@ -28,6 +28,7 @@
                                 </Flyout>
                             </Button.Flyout>
                         </Button>
+                        <Button Command="{Binding GetTestCoins}" Content="Get Test Coins" />
                     </WrapGrid>
                 </Card.HeaderEndContent>
                 <Card.HeaderStartContent>

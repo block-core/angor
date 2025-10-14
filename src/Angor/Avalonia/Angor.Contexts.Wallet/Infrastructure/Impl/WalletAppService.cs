@@ -7,6 +7,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Blockcore.NBitcoin.BIP39;
 using CSharpFunctionalExtensions;
+using System.Net.Http;
 
 namespace Angor.Contexts.Wallet.Infrastructure.Impl;
 
@@ -16,7 +17,8 @@ public class WalletAppService(
     IWalletOperations walletOperations,
     IWalletStore walletStore,
     IPsbtOperations psbtOperations,
-    ITransactionHistory transactionHistory)
+    ITransactionHistory transactionHistory,
+    IHttpClientFactory httpClientFactory)
     : IWalletAppService
 {
     public static readonly WalletId SingleWalletId = new(new Guid("8E3C5250-4E26-4A13-8075-0A189AEAF793"));
@@ -197,6 +199,44 @@ public class WalletAppService(
     {
         var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
         return mnemonic.ToString();
+    }
+
+    public async Task<Result> GetTestCoins(WalletId walletId)
+    {
+        try
+        {
+            var balanceResult = await GetBalance(walletId);
+            if (balanceResult.IsFailure)
+            {
+                return Result.Failure("Cannot get wallet balance");
+            }
+
+            // Check if balance is already too high (more than 100 BTC in testnet)
+            if (balanceResult.Value.Sats > 100_00000000)
+            {
+                return Result.Failure("You already have too much test coins!");
+            }
+
+            var addressResult = await GetNextReceiveAddress(walletId);
+            if (addressResult.IsFailure)
+            {
+                return addressResult.ConvertFailure();
+            }
+
+            var httpClient = httpClientFactory.CreateClient();
+            var response = await httpClient.GetAsync($"https://faucettmp.angor.io/api/faucet/send/{addressResult.Value.Value}");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                return Result.Failure($"Faucet request failed: {response.ReasonPhrase}");
+            }
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Error getting test coins: {ex.Message}");
+        }
     }
 
     private Task<Result<(long Fee, long VirtualSize)>> CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, WalletWords walletWords, DomainFeeRate feeRate)
