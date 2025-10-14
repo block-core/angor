@@ -11,6 +11,7 @@ public class Project
     public IEnumerable<Stage> Stages { get; set; }
     public string NostrPubKey { get; set; }
     public TimeSpan PenaltyDuration { get; set; }
+    public long? PenaltyThreshold { get; set; }
     public Uri? InformationUri { get; set; }
     public string FounderKey { get; set; }
     public string FounderRecoveryKey { get; set; }

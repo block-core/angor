@@ -18,9 +18,11 @@ public interface IFundingStructureViewModel
 
     IAmountUI PenaltyThreshold { get; }
 
+    IAmountUI MinTargetAmount { get; }
+
     long? PenaltyThresholdSats { get; set; }
 
-    bool? EnforceTargetAmount { get; set; }
+    long? MinTargetAmountSats { get; set; }
 
     ICollection<string> Errors { get; }
 }

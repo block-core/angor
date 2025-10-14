@@ -22,6 +22,7 @@ public static class ProjectExtensions
             FundingEndDate = project.EndDate,
             InformationUri = project.InformationUri,
             TargetAmount = project.TargetAmount,
+            PenaltyThreshold = project.PenaltyThreshold,
             Stages = project.Stages.Select(stage => new StageDto
             {
                 Index = stage.Index,

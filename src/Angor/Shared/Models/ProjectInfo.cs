@@ -16,7 +16,7 @@ public class ProjectInfo
     public int PenaltyDays { get; set; }
     public long? PenaltyThreshold { get; set; }
     public long TargetAmount { get; set; }
-    public bool? EnforceTargetAmount { get; set; }
+    public long? MinTargetAmount { get; set; }
     public List<Stage> Stages { get; set; } = new();
     public ProjectSeeders ProjectSeeders { get; set; } = new();
 }

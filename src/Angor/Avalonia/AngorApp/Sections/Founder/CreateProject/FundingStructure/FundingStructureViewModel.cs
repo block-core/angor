@@ -12,9 +12,10 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
     [Reactive] private DateTime? fundingEndDate;
     [Reactive] private DateTime? expiryDate;
     [Reactive] private long? penaltyThresholdSats;
-    [Reactive] private bool? enforceTargetAmount;
+    [Reactive] private long? minTargetAmountSats;
     [ObservableAsProperty] private IAmountUI targetAmount;
     [ObservableAsProperty] private IAmountUI penaltyThreshold;
+    [ObservableAsProperty] private IAmountUI minTargetAmount;
 
     private readonly CompositeDisposable disposable = new();
 
@@ -25,7 +26,6 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
         this.ValidationRule(x => x.FundingEndDate, x => x != null, "Funding date needs to be specified").DisposeWith(disposable);
         this.ValidationRule(x => x.PenaltyDays, x => x >= 0, "Penalty Days should be greater than 0").DisposeWith(disposable);
         this.ValidationRule(x => x.FundingEndDate, time => time >= FundingStartDate, "Funding end date should be after the funding start date").DisposeWith(disposable);
-        this.ValidationRule(x => x.PenaltyThresholdSats, x => x is null or > 0, _ => "Penalty threshold must be greater than zero").DisposeWith(disposable);
 
         targetAmountHelper = this.WhenAnyValue(x => x.Sats)
             .WhereNotNull()
@@ -38,6 +38,11 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
             .Select(l => new AmountUI(l.Value))
             .ToProperty(this, model => model.PenaltyThreshold)
             .DisposeWith(disposable);
+
+        minTargetAmountHelper = this.WhenAnyValue(model => model.MinTargetAmountSats)
+            .WhereNotNull()
+            .Select(l => new AmountUI(l.Value))
+            .ToProperty(this, model => model.MinTargetAmount);
 
         Errors = new ErrorSummarizer(ValidationContext).DisposeWith(disposable).Errors;
     }

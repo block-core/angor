@@ -22,6 +22,7 @@ public class FullProject(ProjectDto info, ProjectStatisticsDto stats) : IFullPro
     public string Name => Info.Name;
     public TimeSpan PenaltyDuration => Info.PenaltyDuration;
     public IAmountUI RaisedAmount => new AmountUI(Stats.TotalInvested);
+    public IAmountUI? PenaltyThreshold => Info.PenaltyThreshold.HasValue ? new AmountUI(Info.PenaltyThreshold.Value) : null;
     public int? TotalInvestors => Stats.TotalInvestors;
     public DateTime FundingStartDate => Info.FundingStartDate;
     public DateTime FundingEndDate => Info.FundingEndDate;

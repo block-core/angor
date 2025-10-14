@@ -29,27 +29,28 @@
             <Card Classes="Transparent" Header="Target Amount" Subheader="Minimum BTC this project is trying to raise">
                 <c:AmountControl Satoshis="{Binding Sats, Mode=TwoWay}" />
             </Card>
-            <BalancedWrapGrid>
-                <Card Classes="Transparent" Header="Funding Start" Subheader="When the investment period begins (automatically set today)">
-                    <TextBox VerticalAlignment="Bottom" IsReadOnly="True" Text="{Binding FundingStartDate, StringFormat='d'}" />
-                </Card>
-                <Card Classes="Transparent" Header="Funding End" Subheader="When the investment period ends">
-                    <CalendarDatePicker VerticalAlignment="Bottom" SelectedDate="{Binding FundingEndDate}" />
-                </Card>
-            </BalancedWrapGrid>
-            <BalancedWrapGrid>
-                <Card Classes="Transparent" Header="Penalty Days" Subheader="Days to lock funds for departing investors">
-                    <TextBox TextInputOptions.ContentType="Number" Watermark="Enter the penalty days" Text="{Binding PenaltyDays}" />
-                </Card>
-                <Card Classes="Transparent" Header="Emergency Expiry" Subheader="Emergency date for fund release">
-                    <CalendarDatePicker IsEnabled="False" SelectedDate="{Binding ExpiryDate}" />
-                </Card>
-            </BalancedWrapGrid>
-            <BalancedWrapGrid>
-                <Card Classes="Transparent" Header="Penalty Threshold" Subheader="Bellow this amount there will be no penalty requirement, funders will be able to take their funds whenever they want">
-                    <c:AmountControl Satoshis="{Binding PenaltyThresholdSats, Mode=TwoWay}" />
-                </Card>
-            </BalancedWrapGrid>
+            <Card Classes="Transparent" Header="Minimum Target Amount" Subheader="The minimum amount that allows the founder to continue the project (this is an application rule not protocol)">
+                <c:AmountControl Satoshis="{Binding MinTargetAmountSats, Mode=TwoWay}" />
+            </Card>
+			<BalancedWrapGrid>
+				<Card Classes="Transparent" Header="Funding Start" Subheader="When the investment period begins (automatically set today)">
+					<TextBox VerticalAlignment="Bottom" IsReadOnly="True" Text="{Binding FundingStartDate, StringFormat='d'}" />
+				</Card>
+				<Card Classes="Transparent" Header="Funding End" Subheader="When the investment period ends">
+					<CalendarDatePicker VerticalAlignment="Bottom" SelectedDate="{Binding FundingEndDate}" />
+				</Card>
+			</BalancedWrapGrid>
+			<BalancedWrapGrid>
+				<Card Classes="Transparent" Header="Penalty Days" Subheader="Days to lock funds for departing investors">
+					<TextBox TextInputOptions.ContentType="Number" Watermark="Enter the penalty days" Text="{Binding PenaltyDays}" />
+				</Card>
+				<Card Classes="Transparent" Header="Emergency Expiry" Subheader="Emergency date for fund release">
+					<CalendarDatePicker IsEnabled="False" SelectedDate="{Binding ExpiryDate}" />
+				</Card>
+			</BalancedWrapGrid>
+			<Card Classes="Transparent" Header="Penalty Threshold" Subheader="Bellow this amount there will be no penalty requirement, funders will be able to take their funds whenever they want">
+				<c:AmountControl Satoshis="{Binding PenaltyThresholdSats, Mode=TwoWay}" />
+			</Card>
         </StackPanel>
     </Card>
 

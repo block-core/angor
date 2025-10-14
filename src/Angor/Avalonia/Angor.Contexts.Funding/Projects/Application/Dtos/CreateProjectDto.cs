@@ -19,8 +19,8 @@ public class CreateProjectDto
     public required DateTime StartDate { get; init;}
     public DateTime? EndDate { get; init; }
     public DateTime? ExpiryDate { get; init; }
-    public bool? EnforceTargetAmount { get; set; }
-    public long? PenaltyThreshold { get; set; }
+    public Amount? MinTargetAmount { get; set; }
+    public Amount? PenaltyThreshold { get; set; }
     public required Amount TargetAmount { get; init; }
     public required int PenaltyDays { get; set; }
     public required IEnumerable<CreateProjectStageDto> Stages { get; init; }
