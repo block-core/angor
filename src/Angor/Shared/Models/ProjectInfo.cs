@@ -19,4 +19,10 @@ public class ProjectInfo
     public long? MinTargetAmount { get; set; }
     public List<Stage> Stages { get; set; } = new();
     public ProjectSeeders ProjectSeeders { get; set; } = new();
+
+    public bool IsPenaltyDisabled(long totalInvestmentAmount)
+    {
+        bool disablePenalty = this.PenaltyThreshold != null && this.PenaltyThreshold > totalInvestmentAmount;
+        return disablePenalty;
+    }
 }

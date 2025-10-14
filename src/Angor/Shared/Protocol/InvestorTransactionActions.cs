@@ -1,6 +1,7 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
+using Angor.Shared.Utilities;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -37,24 +38,12 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         _networkConfiguration = networkConfiguration;
     }
 
-    private bool IsPenaltyDisabled(ProjectInfo projectInfo, Transaction investmentTransaction)
-    {
-        var totalInvestmentAmount = investmentTransaction.Outputs.Skip(2).Take(projectInfo.Stages.Count).Sum(o => o.Value);
-        return IsPenaltyDisabled(projectInfo, totalInvestmentAmount);
-    }
-
-    private bool IsPenaltyDisabled(ProjectInfo projectInfo, long totalInvestmentAmount)
-    {
-        bool disablePenalty = projectInfo.PenaltyThreshold != null && projectInfo.PenaltyThreshold > totalInvestmentAmount;
-        return disablePenalty;
-    }
-
     public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey, long totalInvestmentAmount)
     {
         // create the output and script of the investor pubkey script opreturn
         var opreturnScript = _projectScriptsBuilder.BuildInvestorInfoScript(investorKey);
 
-        bool disablePenalty = IsPenaltyDisabled(projectInfo, totalInvestmentAmount);
+        bool disablePenalty = projectInfo.IsPenaltyDisabled(totalInvestmentAmount);
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
         var stagesScript = Enumerable.Range(0, projectInfo.Stages.Count)
@@ -67,7 +56,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
-        bool disablePenalty = IsPenaltyDisabled(projectInfo, investmentTransaction);
+        bool disablePenalty = projectInfo.IsPenaltyDisabled(investmentTransaction.SumAngorAmount(projectInfo));
 
         var scripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, null, disablePenalty);
 
@@ -96,7 +85,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
     public Transaction BuildRecoverInvestorFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction)
     {
-        bool disablePenalty = IsPenaltyDisabled(projectInfo, investmentTransaction);
+        bool disablePenalty = projectInfo.IsPenaltyDisabled(investmentTransaction.SumAngorAmount(projectInfo));
 
         if (disablePenalty)
         {
@@ -175,7 +164,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     public Transaction BuildAndSignDisabledPenaltyReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
        string investorReceiveAddress, FeeEstimation feeEstimation, string investorPrivateKey)
     {
-        bool disablePenalty = IsPenaltyDisabled(projectInfo, investmentTransaction);
+        bool disablePenalty = projectInfo.IsPenaltyDisabled(investmentTransaction.SumAngorAmount(projectInfo));
 
         if (!disablePenalty)
         {

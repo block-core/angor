@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
+using Angor.Shared.Utilities;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -180,19 +181,6 @@ public class FounderTransactionActions : IFounderTransactionActions
         return projectStartTransaction;
     }
 
-    // this is a duplicate but I was not sure where to put this
-    private bool IsPenaltyDisabled(ProjectInfo projectInfo, NBitcoin.Transaction investmentTransaction)
-    {
-        var totalInvestmentAmount = investmentTransaction.Outputs.Skip(2).Take(projectInfo.Stages.Count).Sum(o => o.Value);
-        return IsPenaltyDisabled(projectInfo, totalInvestmentAmount);
-    }
-    // this is a duplicate but I was not sure where to put this
-    private bool IsPenaltyDisabled(ProjectInfo projectInfo, long totalInvestmentAmount)
-    {
-        bool disablePenalty = projectInfo.PenaltyThreshold != null && projectInfo.PenaltyThreshold > totalInvestmentAmount;
-        return disablePenalty;
-    }
-
     private IndexedTxOut AddInputToSpendingTransaction(ProjectInfo projectInfo, int stageNumber, NBitcoin.Transaction trx,
          NBitcoin.Transaction spendingTransaction)
      {
@@ -205,7 +193,7 @@ public class FounderTransactionActions : IFounderTransactionActions
 
          var (investorKey, secretHash) = GetProjectDetailsFromOpReturn(trx);
 
-         bool disablePenalty = IsPenaltyDisabled(projectInfo, trx);
+         bool disablePenalty = projectInfo.IsPenaltyDisabled(trx.SumAngorAmount(projectInfo));
 
         var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
              stageNumber - 1, secretHash, disablePenalty);
