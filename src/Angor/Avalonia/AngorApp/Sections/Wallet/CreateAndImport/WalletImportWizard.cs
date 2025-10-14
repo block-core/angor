@@ -21,10 +21,10 @@ public class WalletImportWizard(UIServices uiServices, IWalletProvider walletPro
         string encryptionKey = null!;
 
         var wizard = WizardBuilder
-            .StartWith(() => new ImportWelcomeViewModel(), _ => ReactiveCommand.Create(() => Result.Success(Unit.Default)).Enhance("Next"), "Wallet Recovery")
-            .Then(_ => new RecoverySeedWordsViewModel(), model => ReactiveCommand.Create(() => Result.Success(model.SeedWords).Tap(x => seedWords = x), model.IsValid).Enhance("Next"), "Seed Words")
-            .Then(_ => new PassphraseCreateViewModel(), model => ReactiveCommand.Create<Result<string>>(() => Result.Success<string>(model.Passphrase).Tap(x => passphrase = x), model.IsValid()).Enhance("Next"), "Passphrase")
-            .Then(_ => new EncryptionPasswordViewModel(), model => ReactiveCommand.Create<Result<string>>(() => Result.Success<string>(model.EncryptionKey!).Tap(x => encryptionKey = x), model.IsValid()).Enhance("Next"), "Encryption Key")
+            .StartWith(() => new ImportWelcomeViewModel(), "Wallet Recovery").NextAlways()
+            .Then(_ => new RecoverySeedWordsViewModel(), "Seed Words").NextWhenValid(model => Result.Success(model.SeedWords).Tap(x => seedWords = x))
+            .Then(_ => new PassphraseCreateViewModel(), "Passphrase").NextWhenValid(model => Result.Success(model.Passphrase!).Tap(x => passphrase = x))
+            .Then(_ => new EncryptionPasswordViewModel(), "Encryption Key").NextWhenValid(model => Result.Success(model.EncryptionKey!).Tap(x => encryptionKey = x))
             .Then(_ => new SummaryViewModel(walletAppService,
                 walletProvider, uiServices, walletContext,
                 new WalletImportOptions(
@@ -33,8 +33,8 @@ public class WalletImportWizard(UIServices uiServices, IWalletProvider walletPro
                     encryptionKey), getNetwork)
             {
                 IsRecovery = true
-            }, model => model.CreateWallet.Enhance("Import Wallet"), "Summary")
-            .Then(_ => new SuccessViewModel("Wallet imported successfully"), model => ReactiveCommand.Create(() => Result.Success(Unit.Default)).Enhance("Close"), "Wallet Recovery")
+            }, "Summary").NextWith(model => model.CreateWallet.Enhance("Import Wallet"))
+            .Then(_ => new SuccessViewModel("Wallet imported successfully"), "Wallet Recovery").NextAlways("Close")
             .WithCompletionFinalStep();
 
         return await uiServices.Dialog.ShowWizard(wizard, "Recover wallet").Map(_ => Unit.Default);

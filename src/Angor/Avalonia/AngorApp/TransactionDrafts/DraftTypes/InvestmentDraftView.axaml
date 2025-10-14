@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
+             xmlns:draftTypes="clr-namespace:AngorApp.TransactionDrafts.DraftTypes"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.TransactionDrafts.InvestmentDraftView" x:DataType="draftTypes:InvestmentTransactionDraftViewModel">
+    
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="model:IAmountUI">
+            <TextBlock FontWeight="SemiBold" Text="{Binding ShortDecimalString}" />
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
+        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Angor fee" EndContent="{Binding AngorFee}" />
+        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Miner Fee" EndContent="{Binding MinerFee}" />
+        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Transaction Fee" EndContent="{Binding TransactionFee}" />
+        <Button Content="View Transaction" HorizontalAlignment="Center" Command="{Binding ShowTransaction}" />
+    </StackPanel>
+</UserControl>

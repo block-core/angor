@@ -4,7 +4,7 @@ using ReactiveUI.Validation.Helpers;
 
 namespace AngorApp.Sections.Wallet.CreateAndImport.Steps.CreateWelcome;
 
-public partial class WelcomeViewModel : ReactiveValidationObject
+public partial class WelcomeViewModel : ReactiveValidationObject, IValidatable
 {
     [Reactive] private bool isUserAware;
     

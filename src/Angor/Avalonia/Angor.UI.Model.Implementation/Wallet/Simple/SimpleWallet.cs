@@ -1,17 +1,20 @@
 using Angor.Contexts.Wallet.Application;
+using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Shared;
 using Angor.UI.Model.Flows;
 using Angor.UI.Model.Implementation.Common;
 using Blockcore.Networks;
 using CSharpFunctionalExtensions;
-using DynamicData;
 using DynamicData.Aggregation;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using Serilog;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
@@ -21,19 +24,21 @@ namespace Angor.UI.Model.Implementation.Wallet.Simple;
 public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
 {
     private readonly IWalletAppService walletAppService;
-    private readonly INotificationService notificationService;
-    [ObservableAsProperty] private IAmountUI balance;
+    [ObservableAsProperty] private IAmountUI balance = new AmountUI(0);
     private readonly CompositeDisposable disposable = new();
 
-    public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, INotificationService notificationService, INetworkConfiguration networkConfiguration)
+    public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, INotificationService notificationService, INetworkConfiguration networkConfiguration, ILogger logger)
     {
         this.walletAppService = walletAppService;
-        this.notificationService = notificationService;
         Id = id;
         var transactionCollection = CreateTransactions(id, walletAppService)
             .DisposeWith(disposable);
 
         Load = transactionCollection.Refresh;
+        Load.IsExecuting.Do(b => logger.Information("Refreshing wallet {WalletId}, IsExecuting: {IsExecuting}", id, b))
+            .Subscribe()
+            .DisposeWith(disposable);
+        
         Load.HandleErrorsWith(notificationService, "Cannot load wallet info");
 
         balanceHelper = transactionCollection.Changes
