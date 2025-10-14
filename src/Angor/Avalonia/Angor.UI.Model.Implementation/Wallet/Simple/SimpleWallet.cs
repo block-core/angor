@@ -30,27 +30,32 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     {
         this.walletAppService = walletAppService;
         Id = id;
-        var transactionsCollection1 = RefreshableCollection.Create(
-                () => walletAppService.GetTransactions(id)
-                    .Map(transactions => transactions.Select<BroadcastedTransaction, IBroadcastedTransaction>(transaction => new HistoryTransaction(transaction))),
-                transaction => transaction.Id)
+        var transactionCollection = CreateTransactions(id, walletAppService)
             .DisposeWith(disposable);
 
-        Load = transactionsCollection1.Refresh;
+        Load = transactionCollection.Refresh;
         Load.HandleErrorsWith(notificationService, "Cannot load wallet info");
 
-        balanceHelper = transactionsCollection1.Changes
+        balanceHelper = transactionCollection.Changes
             .Sum(transaction => transaction.Balance.Sats)
             .Select(sats => new AmountUI(sats))
             .ToProperty(this, x => x.Balance)
             .DisposeWith(disposable);
 
-        History = transactionsCollection1.Items;
+        History = transactionCollection.Items;
 
         Send = ReactiveCommand.CreateFromTask(() => sendMoneyFlow.SendMoney(this)).Enhance().DisposeWith(disposable);
         
         GetReceiveAddress = ReactiveCommand.CreateFromTask(GenerateReceiveAddress).Enhance().DisposeWith(disposable);
         ReceiveAddress = GetReceiveAddress.Successes().Publish().RefCount();
+    }
+
+    private static RefreshableCollection<IBroadcastedTransaction, string> CreateTransactions(WalletId id, IWalletAppService walletAppService)
+    {
+        return RefreshableCollection.Create(
+            () => walletAppService.GetTransactions(id)
+                .Map(transactions => transactions.Select(IBroadcastedTransaction (transaction) => new HistoryTransaction(transaction))),
+            getKey: transaction => transaction.Id);
     }
 
     public IObservable<string> ReceiveAddress { get; }
