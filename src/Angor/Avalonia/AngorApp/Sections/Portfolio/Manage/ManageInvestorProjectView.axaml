@@ -35,7 +35,7 @@
                 </Card.HeaderStartContent>
                 <Card.HeaderEndContent>
                     <UniformGrid Rows="1" HorizontalAlignment="Stretch">
-                        <Button Content="Refresh" Command="{Binding Load}" />
+                        <Button Content="{Icon fa-arrows-rotate}" Command="{Binding Load}" />
                         <Button Content="Message" />
                     </UniformGrid>
                 </Card.HeaderEndContent>

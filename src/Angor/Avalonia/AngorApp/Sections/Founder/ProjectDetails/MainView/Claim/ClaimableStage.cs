@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using AngorApp.UI.Controls.Common;
 using AngorApp.UI.Services;
@@ -23,12 +22,14 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
     private readonly ProjectId projectId;
     private readonly int stageId;
     private readonly IFounderAppService founderAppService;
+    private readonly IWalletContext walletContext;
 
-    public ClaimableStage(ProjectId projectId, int stageId, ICollection<IClaimableTransaction> transactions, IFounderAppService founderAppService, UIServices uiServices)
+    public ClaimableStage(ProjectId projectId, int stageId, ICollection<IClaimableTransaction> transactions, IFounderAppService founderAppService, UIServices uiServices, IWalletContext walletContext)
     {
         this.projectId = projectId;
         this.stageId = stageId;
         this.founderAppService = founderAppService;
+        this.walletContext = walletContext;
 
         ReactiveSelection = new ReactiveSelection<IClaimableTransaction, string>(new SelectionModel<IClaimableTransaction>
         {
@@ -51,9 +52,10 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
     private Task<Maybe<Result>> ClaimSelectedTransactions(UIServices uiServices)
     {
         var feerate = uiServices.Dialog.ShowAndGetResult(new FeerateSelectionViewModel(uiServices), "Select your feerate", model => model.IsValid, model => model.Feerate.Value);
+
         return feerate
-            .Map(fr => DoClaim(ReactiveSelection.SelectedItems,uiServices.ActiveWallet.Current.Value.Id.Value, fr)
-                .Tap(() => uiServices.Dialog.ShowMessage("Claim successful", "The funds have been successfully claimed.", "Close")));
+            .Map(fr => walletContext.RequiresWallet(wallet => DoClaim(ReactiveSelection.SelectedItems, wallet.Id.Value, fr)
+                .Tap(() => uiServices.Dialog.ShowMessage("Claim successful", "The funds have been successfully claimed.", "Close"))));
     }
 
     private async Task<Result> DoClaim(IEnumerable<IClaimableTransaction> selected, Guid walletId, long feerate)
@@ -64,7 +66,7 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
             StageId = stageId
         });
 
-        var result = await founderAppService.Spend(walletId,new DomainFeerate(feerate),projectId, toSpend); //TODO: Jose need to change this when the UI is updated with transaction drafts
+        var result = await founderAppService.Spend(walletId, new DomainFeerate(feerate), projectId, toSpend);
         return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
     }
 

@@ -76,13 +76,13 @@
                         </Interaction.Behaviors>
                     </Card>
                 </BalancedWrapGrid>
-                <HeaderedContainer Header="The Angor Flow">
-                    <HeaderedContainer.HeaderTheme>
+                <Card Header="The Angor Flow">
+                    <Card.HeaderTheme>
                         <ControlTheme TargetType="TemplatedControl">
                             <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
                         </ControlTheme>
-                    </HeaderedContainer.HeaderTheme>
-                    <HeaderedContainer.Resources>
+                    </Card.HeaderTheme>
+                    <Card.Resources>
                         <ControlTemplate x:Key="Mobile">
                             <StackPanel Classes="SmallGap">
                                 <Image RenderOptions.BitmapInterpolationMode="None" Source="/Assets/flow.png" />
@@ -101,9 +101,9 @@
                         <ControlTemplate x:Key="Desktop">
                             <Svg MaxWidth="800" Path="/Assets/flow.svg" />
                         </ControlTemplate>
-                    </HeaderedContainer.Resources>
+                    </Card.Resources>
                     <ContentControl Template="{OnFormFactor Mobile={StaticResource Mobile}, Default={StaticResource Desktop}}" />
-                </HeaderedContainer>
+                </Card>
             </StackPanel>
         </ScrollViewer>
     </a:PageContainer>

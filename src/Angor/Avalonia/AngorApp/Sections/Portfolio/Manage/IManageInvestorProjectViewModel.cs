@@ -1,5 +1,4 @@
 using Angor.Contexts.Funding.Investor.Dtos;
-using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Portfolio.Manage;
 
@@ -12,5 +11,5 @@ public interface IManageInvestorProjectViewModel
     IEnumerable<IInvestorProjectItem> Items { get; }
     IInvestedProject Project { get; }
 
-    IEnhancedCommand<Result<InvestorProjectRecoveryDto>> Load { get; }
+    IEnhancedCommand Load { get; }
 }

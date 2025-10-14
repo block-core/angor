@@ -17,14 +17,14 @@
 
     <Interaction.Behaviors>
         <LoadedTrigger>
-            <InvokeCommandAction Command="{Binding LoadProjects}" />
+            <InvokeCommandAction IsEnabled="{Binding !!!ProjectsList.Count}" Command="{Binding LoadProjects}" />
         </LoadedTrigger>
     </Interaction.Behaviors>
 
     <UserControl.DataTemplates>
 
         <DataTemplate DataType="founder:IFounderProjectViewModel">
-            <ReactiveButton Classes="CardButton" Command="{Binding GoToDetails}">
+            <Button Classes="Card" Command="{Binding GoToDetails}">
                 <OverlayBorder Padding="0" Theme="{StaticResource CardOverlayBorder}">
                     <Grid RowDefinitions="180 Auto Auto *">
                         <Panel>
@@ -43,7 +43,7 @@
                         </StackPanel>
                     </Grid>
                 </OverlayBorder>
-            </ReactiveButton>
+            </Button>
         </DataTemplate>
     </UserControl.DataTemplates>
 
@@ -52,20 +52,14 @@
             <DockPanel VerticalSpacing="20">
                 <Card Theme="{StaticResource WideCard}" Header="Founder" DockPanel.Dock="Top">
                     <Card.HeaderEndContent>
-                        <UniformGrid Rows="1" ColumnSpacing="10">
-                            <IconButton Classes="Expand CenterContent" Command="{Binding LoadProjects}">
-                                Refresh
-                                <IconButton.Icon>
-                                    <ui:Icon Source="fa-arrows-rotate" />
-                                </IconButton.Icon>
-                            </IconButton>
-                            <ReactiveIconButton Classes="Expand CenterContent" Command="{Binding Create}">
-                                New Project
+                        <Grid ColumnDefinitions="Auto *" ColumnSpacing="10">
+                            <Button Command="{Binding LoadProjects}" Content="{Icon fa-arrows-rotate}" />
+                            <ReactiveIconButton Grid.Column="1" Classes="Expand CenterContent" Command="{Binding Create}" Content="New Project">
                                 <ReactiveIconButton.Icon>
                                     <ui:Icon Source="fa-plus" />
                                 </ReactiveIconButton.Icon>
                             </ReactiveIconButton>
-                        </UniformGrid>
+                        </Grid>
                     </Card.HeaderEndContent>
                     <Card.HeaderStartContent>
                         <i:Icon FontSize="40" Value="mdi-shield-account-outline" />

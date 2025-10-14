@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:simple="clr-namespace:Angor.UI.Model.Implementation.Wallet.Simple;assembly=Angor.UI.Model.Implementation"
+             xmlns:main="clr-namespace:AngorApp.Sections.Wallet.Main"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.Sections.Wallet.Main.WalletView" x:DataType="simple:SimpleWallet">
+    
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction IsEnabled="{Binding !!!History.Count}" Command="{Binding Load}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+    
+    <DockPanel>
+        <DockPanel VerticalSpacing="20">
+            <Card Theme="{StaticResource WideCard}" Header="Wallet" Subheader="Wallet and balances" DockPanel.Dock="Top">
+                <Card.HeaderEndContent>
+                    <WrapGrid ColumnSpacing="10">
+                        <Button Command="{Binding Load}" Content="{Icon fa-arrows-rotate}" />
+                        <Button Command="{Binding Send}" Content="Send" />
+                        <Button Content="Receive">
+                            <Button.Flyout>
+                                <Flyout>
+                                    <main:Receive />
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                    </WrapGrid>
+                </Card.HeaderEndContent>
+                <Card.HeaderStartContent>
+                    <ui:Icon Source="fa-wallet" />
+                </Card.HeaderStartContent>
+            </Card>
+            <main:Balance DockPanel.Dock="Top" />
+            <main:HistoryView />
+        </DockPanel>
+
+    </DockPanel>
+
+</UserControl>

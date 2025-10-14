@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
+             xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:c="clr-namespace:AngorApp.Flows.Invest.Amount"
+             mc:Ignorable="d"
+             d:DesignWidth="500"
+             x:Class="AngorApp.Flows.Invest.Amount.AmountView" x:DataType="c:IAmountViewModel">
+
+    <Design.DataContext>
+        <c:AmountViewModelDesign />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <StackPanel Spacing="10" Grid.IsSharedSizeScope="True">
+            <HeaderedContainer>
+                <HeaderedContainer.Header>
+                    <TextBlock Padding="10 0">
+                        Enter the amount you want to invest
+                    </TextBlock>
+                </HeaderedContainer.Header>
+                <controls:AmountControl Satoshis="{Binding Amount}">
+                    <Interaction.Behaviors>
+                        <behaviors:UntouchedClassBehavior />
+                    </Interaction.Behaviors>
+                </controls:AmountControl>
+            </HeaderedContainer>
+            <HeaderedContainer IsVisible="{Binding IsValid^}" >
+                <HeaderedContainer.Header>
+                    <TextBlock Padding="10 0">
+                        Stage breakdown
+                    </TextBlock>
+                </HeaderedContainer.Header>
+                <c:StagesBreakdown />
+            </HeaderedContainer>
+        </StackPanel>
+    </Panel>
+</UserControl>

@@ -1,10 +1,12 @@
+using Angor.UI.Model.Flows;
 using Angor.UI.Model.Implementation;
+using Angor.UI.Model.Implementation.Wallet.Simple;
 using AngorApp.Design;
-using AngorApp.Features.Invest;
-using AngorApp.Flows;
+using AngorApp.Flows.CreateProyect;
+using AngorApp.Flows.Invest;
+using AngorApp.Flows.SendWalletMoney;
 using AngorApp.Sections.Wallet.CreateAndImport;
 using AngorApp.UI.Controls.Feerate;
-using AngorApp.UI.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AngorApp.Composition.Registrations.Services;
@@ -16,9 +18,10 @@ public static class ModelServices
     {
         return services
             .AddSingleton<IAmountFactory, AmountFactory>()
-            .AddSingleton<IWalletBuilder, WalletProvider>()
+            .AddSingleton<IWalletProvider, SimpleWalletProvider>()
             .AddScoped<ICreateProjectFlow, CreateProjectFlow>()
-            .AddSingleton<InvestWizard>()
+            .AddScoped<ISendMoneyFlow, SendMoneyFlow>()
+            .AddSingleton<InvestFlow>()
             .AddSingleton<WalletCreationWizard>()
             .AddSingleton<IFeeCalculator, FeeCalculatorDesignTime>()
             .AddSingleton<WalletImportWizard>();

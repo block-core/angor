@@ -1,9 +1,6 @@
 using System.Linq;
-using System.Reactive.Linq;
 using System.Windows.Input;
 using AngorApp.Core;
-using CSharpFunctionalExtensions;
-using ReactiveUI.SourceGenerators;
 
 namespace AngorApp.Sections.Browse.ProjectLookup;
 
@@ -30,4 +27,9 @@ public partial class ProjectLookupViewModelDesign : ReactiveObject, IProjectLook
 
     public string? ProjectId { get; set; }
     public IProjectViewModel SelectedProject { get; set; }
+
+    public void Dispose()
+    {
+        Lookup.Dispose();
+    }
 }

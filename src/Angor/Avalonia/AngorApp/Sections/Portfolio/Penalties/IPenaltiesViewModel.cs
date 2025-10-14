@@ -1,11 +1,12 @@
+using System.Collections.Generic;
 using System.Windows.Input;
-using Zafiro.UI.Commands;
+using Zafiro.UI;
 
 namespace AngorApp.Sections.Portfolio.Penalties;
 
 public interface IPenaltiesViewModel
 {
     ICommand GoToRecovery { get; }
-    public IEnumerable<IPenaltyViewModel> Penalties { get; }
-    public EnhancedCommand<Result<IEnumerable<IPenaltyViewModel>>> Load { get; }
+    IReadOnlyCollection<IPenaltyViewModel> Penalties { get; }
+    IEnhancedCommand<Result<IEnumerable<IPenaltyViewModel>>> Load { get; }
 }

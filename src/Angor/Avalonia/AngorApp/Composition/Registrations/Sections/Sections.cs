@@ -4,6 +4,7 @@ using AngorApp.Sections.Home;
 using AngorApp.Sections.Portfolio;
 using AngorApp.Sections.Settings;
 using AngorApp.Sections.Wallet;
+using AngorApp.Sections.Wallet.Main;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Zafiro.Avalonia.Services;

@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 using Angor.Contexts.Wallet.Domain;
 using AngorApp.Sections.Browse;
-using AngorApp.Sections.Wallet.Operate;
+using AngorApp.Sections.Wallet.Main;
+using AngorApp.Sections.Wallet.Main;
 
 namespace AngorApp.Sections.Wallet;
 
@@ -38,6 +38,8 @@ public class WalletDesign : IWallet
     }
 
     public WalletId Id { get; }
+    public IEnhancedCommand Send { get; }
+    public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
     public IObservable<bool> HasTransactions { get; } = Observable.Return(false);
     public IObservable<bool> HasBalance { get; } = Observable.Return(false);
 

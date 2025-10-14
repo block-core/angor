@@ -1,16 +1,11 @@
 using System.Linq;
 using System.Reactive.Disposables;
-using System.Threading.Tasks;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Shared;
-using AngorApp.UI.Services;
-using ReactiveUI.SourceGenerators;
-using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.UI;
-using Zafiro.UI.Commands;
-using Zafiro.Reactive;
 using Angor.Shared.Models;
+using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.Reactive;
 
 namespace AngorApp.Sections.Portfolio.Manage;
 
@@ -22,10 +17,7 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
     private readonly IInvestmentAppService investmentAppService;
     private readonly UIServices uiServices;
 
-    [ObservableAsProperty]
-    private IWallet wallet;
-
-    public ManageInvestorProjectViewModel(ProjectId projectId, IInvestmentAppService investmentAppService, UIServices uiServices)
+    public ManageInvestorProjectViewModel(ProjectId projectId, IInvestmentAppService investmentAppService, UIServices uiServices, IWalletContext walletContext)
     {
         this.projectId = projectId;
         this.investmentAppService = investmentAppService;
@@ -33,46 +25,32 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
 
         ViewTransaction = ReactiveCommand.Create(() => { }).Enhance();
 
-        // Load wallet once and expose it as a property
-        LoadWallet = ReactiveCommand.CreateFromTask(() => uiServices.WalletRoot.TryDefaultWalletAndActivate("You need to create a wallet first.")).Enhance().DisposeWith(disposables);
-        LoadWallet.HandleErrorsWith(uiServices.NotificationService, "Failed to load wallet").DisposeWith(disposables);
-        walletHelper = LoadWallet.Successes().ToProperty(this, x => x.Wallet).DisposeWith(disposables);
+        var enhancedCommand = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetRecoveryData)).Enhance().DisposeWith(disposables);
+        Load = enhancedCommand;
 
-        var hasWallet = this.WhenAnyValue(x => x.Wallet).NotNull();
+        enhancedCommand.HandleErrorsWith(uiServices.NotificationService, "Failed to load recovery info").DisposeWith(disposables);
 
-        // Load recovery info using the current wallet
-        Load = ReactiveCommand.CreateFromTask(
-            () => investmentAppService
-                .GetInvestorProjectRecovery(Wallet.Id.Value, projectId)
-                .Tap(Apply),
-            hasWallet).Enhance().DisposeWith(disposables);
-
-        Load.HandleErrorsWith(uiServices.NotificationService, "Failed to load recovery info").DisposeWith(disposables);
-
-        // Auto-load on create
-        LoadWallet.Execute().Subscribe().DisposeWith(disposables);
-        LoadWallet.ToSignal().InvokeCommand(Load).DisposeWith(disposables);
-
-        // Refresh when any command executes (row commands)
         RefreshWhenAnyCommandExecutes().DisposeWith(disposables);
     }
 
-    private void Apply(InvestorProjectRecoveryDto dto)
+    private Task<Result<InvestorProjectRecoveryDto>> GetRecoveryData(IWallet wallet)
     {
-        var currentWallet = Wallet; // Wallet is guaranteed by hasWallet
+        return investmentAppService
+            .GetInvestorProjectRecovery(wallet.Id.Value, projectId)
+            .Tap(dto => Apply(wallet, dto));
+    }
 
+    private void Apply(IWallet wallet, InvestorProjectRecoveryDto dto)
+    {
         Project = new InvestedProject(dto);
         Items = dto.Items
             .Select(x =>
             {
-                Func<Task<Result<TransactionDraft>>> recover = () =>
-                    investmentAppService.BuildRecoverInvestorFunds(currentWallet.Id.Value, projectId, new DomainFeerate(1)); //TODO Jose get the fee rate from the UI (in satoshis per byte)
-                Func<Task<Result<TransactionDraft>>> release = () =>
-                    investmentAppService.BuildReleaseInvestorFunds(currentWallet.Id.Value, projectId,new DomainFeerate(1)); //TODO Jose get the fee rate from the UI (in satoshis per byte)
-                Func<Task<Result<TransactionDraft>>> claim = () =>
-                    investmentAppService.BuilodClaimInvestorEndOfProjectFunds(currentWallet.Id.Value, projectId, new DomainFeerate(1)); //TODO Jose get the fee rate from the UI (in satoshis per byte)
+                Func<Task<Result>> recover = () => ExecuteDraft(() => investmentAppService.BuildRecoverInvestorFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value); // TODO fee from UI
+                Func<Task<Result>> release = () => ExecuteDraft(() => investmentAppService.BuildReleaseInvestorFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value);
+                Func<Task<Result>> claim = () => ExecuteDraft(() => investmentAppService.BuilodClaimInvestorEndOfProjectFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value);
 
-                return new InvestorProjectItem(
+                return (IInvestorProjectItem)new InvestorProjectItem(
                     stage: x.StageIndex + 1,
                     amount: new AmountUI(x.Amount),
                     status: x.Status,
@@ -84,24 +62,30 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
                     claimAction: claim,
                     notificationService: uiServices.NotificationService);
             })
-            .Cast<IInvestorProjectItem>()
             .ToList();
         this.RaisePropertyChanged(nameof(Project));
         this.RaisePropertyChanged(nameof(Items));
+    }
+
+    private async Task<Result> ExecuteDraft(Func<Task<Result<TransactionDraft>>> buildDraft, Guid walletId)
+    {
+        var draftResult = await buildDraft();
+        if (draftResult.IsFailure)
+        {
+            return Result.Failure(draftResult.Error);
+        }
+
+        var submitResult = await investmentAppService.SubmitTransactionFromDraft(walletId, draftResult.Value);
+        return submitResult.IsSuccess ? Result.Success() : Result.Failure(submitResult.Error);
     }
 
     public IAmountUI TotalFunds => Project.TotalFunds;
     public IEnhancedCommand ViewTransaction { get; }
     public DateTime ExpiryDate => Project.ExpiryDate;
     public TimeSpan PenaltyPeriod => Project.PenaltyPeriod;
-
     public IEnumerable<IInvestorProjectItem> Items { get; private set; } = Array.Empty<IInvestorProjectItem>();
-
     public IInvestedProject Project { get; private set; } = new InvestedProjectDesign();
-
-    public IEnhancedCommand<Result<InvestorProjectRecoveryDto>> Load { get; }
-
-    public IEnhancedCommand<Result<IWallet>> LoadWallet { get; }
+    public IEnhancedCommand Load { get; }
 
     private IDisposable RefreshWhenAnyCommandExecutes()
     {
@@ -112,7 +96,6 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
     {
         return this.WhenAnyValue(vm => vm.Items)
             .WhereNotNull()
-            .Select(items => items.Cast<InvestorProjectItem>())
             .Select(items =>
                 Observable.Merge(
                     items.Select(i => i.Recover.Successes().ToSignal()).Merge(),
@@ -130,7 +113,7 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
 
     private class InvestorProjectItem : ReactiveObject, IInvestorProjectItem
     {
-        public InvestorProjectItem(int stage, IAmountUI amount, string status, bool canRecover, bool canRelease, bool canClaimEnd, Func<Task<Result<TransactionDraft>>> recoverAction, Func<Task<Result<TransactionDraft>>> releaseAction, Func<Task<Result<TransactionDraft>>> claimAction, INotificationService notificationService)
+        public InvestorProjectItem(int stage, IAmountUI amount, string status, bool canRecover, bool canRelease, bool canClaimEnd, Func<Task<Result>> recoverAction, Func<Task<Result>> releaseAction, Func<Task<Result>> claimAction, INotificationService notificationService)
         {
             Stage = stage;
             Amount = amount;
@@ -162,9 +145,9 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
         public IAmountUI Amount { get; }
         public string Status { get; }
 
-        public IEnhancedCommand<Result<TransactionDraft>> Recover { get; }
-        public IEnhancedCommand<Result<TransactionDraft>> Release { get; }
-        public IEnhancedCommand<Result<TransactionDraft>> ClaimEndOfProject { get; }
+        public IEnhancedCommand<Result> Recover { get; }
+        public IEnhancedCommand<Result> Release { get; }
+        public IEnhancedCommand<Result> ClaimEndOfProject { get; }
 
         public bool ShowRecover { get; }
         public bool ShowRelease { get; }

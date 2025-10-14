@@ -1,15 +1,10 @@
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using AngorApp.Sections.Portfolio.Manage;
-using AngorApp.UI.Services;
-using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.UI;
-using Zafiro.UI.Commands;
 using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Portfolio.Items;
@@ -21,13 +16,13 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
     private readonly InvestedProjectDto projectDto;
     private readonly CompositeDisposable disposable = new();
 
-    public PortfolioProjectViewModel(InvestedProjectDto projectDto, IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator)
+    public PortfolioProjectViewModel(InvestedProjectDto projectDto, IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator, IWalletContext walletContext)
     {
         this.projectDto = projectDto;
 
         var canCompleteInvestment = this.WhenAnyValue(x => x.InvestmentStatus).Select(x => x == InvestmentStatus.FounderSignaturesReceived);
-
-        CompleteInvestment = ReactiveCommand.CreateFromTask(() => investmentAppService.ConfirmInvestment(projectDto.InvestmentId, uiServices.ActiveWallet.Current.Value.Id.Value, new ProjectId(projectDto.Id)), canCompleteInvestment)
+        
+        CompleteInvestment = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => investmentAppService.ConfirmInvestment(projectDto.InvestmentId, wallet.Id.Value, new ProjectId(projectDto.Id))), canCompleteInvestment)
             .Enhance()
             .DisposeWith(disposable);
 
@@ -48,7 +43,7 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
         Invested = new AmountUI(projectDto.Investment.Sats);
 
         InvestmentStatus = projectDto.InvestmentStatus;
-        GoToManageFunds = ReactiveCommand.CreateFromTask(() => navigator.Go(() => new ManageInvestorProjectViewModel(new ProjectId(projectDto.Id), investmentAppService, uiServices))).Enhance().DisposeWith(disposable);
+        GoToManageFunds = ReactiveCommand.CreateFromTask(() => navigator.Go(() => new ManageInvestorProjectViewModel(new ProjectId(projectDto.Id), investmentAppService, uiServices, walletContext))).Enhance().DisposeWith(disposable);
     }
 
     public string Name => projectDto.Name;
