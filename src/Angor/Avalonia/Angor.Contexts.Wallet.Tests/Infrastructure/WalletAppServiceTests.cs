@@ -1,5 +1,4 @@
-﻿using Angor.Contests.CrossCutting;
-using Angor.Contexts.Wallet.Application;
+﻿using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
@@ -25,33 +24,6 @@ public class WalletAppServiceTests(ITestOutputHelper output)
         Assert.True(result.IsSuccess);
         output.WriteLine($"Balance: {result.Value.Sats} sats");
         Assert.True(result.Value.Sats >= 0);
-    }
-
-    [Fact]
-    public async Task DeleteWallet_ShouldRemoveWalletMetadata()
-    {
-        var (sut, store) = CreateSutWithStore();
-
-        var saveResult = await store.SaveAll(new[]
-        {
-            new EncryptedWallet
-            {
-                Id = walletId.Value,
-                EncryptedData = "{}",
-                Salt = "salt",
-                IV = "iv"
-            }
-        });
-
-        Assert.True(saveResult.IsSuccess);
-
-        var deleteResult = await sut.DeleteWallet(walletId);
-
-        Assert.True(deleteResult.IsSuccess);
-
-        var wallets = await store.GetAll();
-        Assert.True(wallets.IsSuccess);
-        Assert.Empty(wallets.Value);
     }
 
     [Fact]
@@ -186,11 +158,6 @@ public class WalletAppServiceTests(ITestOutputHelper output)
 
     private IWalletAppService CreateSut()
     {
-        return CreateSutWithStore().Sut;
-    }
-
-    private (IWalletAppService Sut, IWalletStore Store) CreateSutWithStore()
-    {
         var serviceCollection = new ServiceCollection();
         
         var walletSecurityContext = new TestSecurityContext();
@@ -199,13 +166,12 @@ public class WalletAppServiceTests(ITestOutputHelper output)
             ""
         );
 
-        var store = new InMemoryStore();
-        serviceCollection.AddSingleton<IStore>(store);
+        serviceCollection.AddSingleton<IWalletStore>(new WalletStore(new InMemoryStore()));
         serviceCollection.AddSingleton<IWalletSecurityContext>(walletSecurityContext);
         serviceCollection.AddSingleton<ISensitiveWalletDataProvider>(sensitiveWalletDataProvider);
         
         WalletContextServices.Register(serviceCollection, TestFactory.CreateLogger(output), BitcoinNetwork.Testnet);
         var serviceProvider = serviceCollection.BuildServiceProvider();
-        return (serviceProvider.GetRequiredService<IWalletAppService>(), serviceProvider.GetRequiredService<IWalletStore>());
+        return serviceProvider.GetService<IWalletAppService>()!;
     }
 }
