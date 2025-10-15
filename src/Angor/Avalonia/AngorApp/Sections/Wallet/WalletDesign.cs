@@ -40,6 +40,7 @@ public class WalletDesign : IWallet
     public WalletId Id { get; }
     public IEnhancedCommand Send { get; }
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
+    public IEnhancedCommand GetTestCoins { get; }
     public IObservable<bool> HasTransactions { get; } = Observable.Return(false);
     public IObservable<bool> HasBalance { get; } = Observable.Return(false);
 
