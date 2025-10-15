@@ -1,20 +1,18 @@
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
+using Angor.Shared;
 using Angor.UI.Model.Flows;
 using Angor.UI.Model.Implementation.Common;
+using Blockcore.Networks;
 using CSharpFunctionalExtensions;
 using DynamicData;
 using DynamicData.Aggregation;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
-using Zafiro.Avalonia.Dialogs;
+using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.Reactive;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
 
@@ -27,7 +25,7 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     [ObservableAsProperty] private IAmountUI balance;
     private readonly CompositeDisposable disposable = new();
 
-    public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, INotificationService notificationService)
+    public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, INotificationService notificationService, INetworkConfiguration networkConfiguration)
     {
         this.walletAppService = walletAppService;
         this.notificationService = notificationService;
@@ -52,6 +50,8 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
         ReceiveAddress = GetReceiveAddress.Successes().Publish().RefCount();
         
         GetTestCoins = ReactiveCommand.CreateFromTask(RequestTestCoins).Enhance().DisposeWith(disposable);
+        
+        CanGetTestCoins = networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet;
     }
 
     private static RefreshableCollection<IBroadcastedTransaction, string> CreateTransactions(WalletId id, IWalletAppService walletAppService)
@@ -75,6 +75,8 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     }
 
     public WalletId Id { get; }
+
+    public bool CanGetTestCoins { get; }
 
     public Task<Result<string>> GenerateReceiveAddress()
     {
