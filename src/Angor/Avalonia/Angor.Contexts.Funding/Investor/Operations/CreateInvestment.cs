@@ -1,4 +1,5 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
@@ -9,6 +10,7 @@ using Angor.Shared.Protocol;
 using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Serilog;
 
 namespace Angor.Contexts.Funding.Investor.Operations;
 
@@ -18,11 +20,14 @@ public static class CreateInvestment
         : IRequest<Result<InvestmentDraft>> { }
     
     public class CreateInvestmentTransactionHandler(
+        INetworkConfiguration networkConfiguration,
         IProjectRepository projectRepository,
         IInvestorTransactionActions investorTransactionActions,
         ISeedwordsProvider seedwordsProvider,
         IWalletOperations walletOperations,
-        IDerivationOperations derivationOperations) : IRequestHandler<CreateInvestmentTransactionRequest, Result<InvestmentDraft>>
+        IDerivationOperations derivationOperations,
+        IPortfolioRepository investmentRepository,
+        ILogger logger) : IRequestHandler<CreateInvestmentTransactionRequest, Result<InvestmentDraft>>
     {
         public async Task<Result<InvestmentDraft>> Handle(CreateInvestmentTransactionRequest transactionRequest, CancellationToken cancellationToken)
         {
@@ -65,7 +70,26 @@ public static class CreateInvestment
                 var angorFee = signedTxResult.Value.Transaction.Outputs.AsIndexedOutputs().FirstOrDefault()?.TxOut.Value.Satoshi ?? 0;
                     
                 var trxId = signedTxResult.Value.Transaction.GetHash().ToString();
-                
+
+                bool penaltyDisabled = false;
+                if (projectResult.Value.ToProjectInfo().IsPenaltyDisabled(transactionRequest.Amount.Sats))
+                {
+                    await investmentRepository.Add(transactionRequest.WalletId, new InvestmentRecord
+                    {
+                        InvestmentTransactionHash = signedTxResult.Value.Transaction.GetHash().ToString(),
+                        InvestmentTransactionHex = signedTxHex,
+                        InvestorPubKey = investorKey,
+                        ProjectIdentifier = transactionRequest.ProjectId.Value,
+                    });
+
+                    var published = await PublishSignedTransactionAsync(signedTxResult.Value);
+
+                    if (published.IsFailure)
+                        return Result.Failure<InvestmentDraft>(published.Error);
+
+                    penaltyDisabled = true;
+                }
+
                 return new InvestmentDraft(investorKey)
                 {
                     TransactionFee = new Amount(minorFee + angorFee),
@@ -73,6 +97,7 @@ public static class CreateInvestment
                     AngorFee = new Amount(angorFee),
                     SignedTxHex = signedTxHex,
                     TransactionId = trxId,
+                    PenaltyDisabled = penaltyDisabled
                 };
             }
             catch (Exception ex)
@@ -105,6 +130,27 @@ public static class CreateInvestment
                 feerate));
 
             return signedTransactionResult;
+        }
+
+        private async Task<Result<string>> PublishSignedTransactionAsync(TransactionInfo signedTransaction)
+        {
+            try
+            {
+                var response = await walletOperations.PublishTransactionAsync(networkConfiguration.GetNetwork(),
+                    signedTransaction.Transaction);
+
+                if (response.Success)
+                    return Result.Success(signedTransaction.Transaction.GetHash().ToString());
+
+                logger.Error(response.Message);
+
+                return Result.Failure<string>("Failed to publish the transaction to the blockchain");
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Error publishing signed transaction");
+                return Result.Failure<string>("An error occurred while publishing the transaction");
+            }
         }
     }
 }
