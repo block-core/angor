@@ -1,20 +1,18 @@
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
+using Angor.Shared;
 using Angor.UI.Model.Flows;
 using Angor.UI.Model.Implementation.Common;
+using Blockcore.Networks;
 using CSharpFunctionalExtensions;
 using DynamicData;
 using DynamicData.Aggregation;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
-using Zafiro.Avalonia.Dialogs;
+using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.Reactive;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
 
@@ -23,12 +21,14 @@ namespace Angor.UI.Model.Implementation.Wallet.Simple;
 public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
 {
     private readonly IWalletAppService walletAppService;
+    private readonly INotificationService notificationService;
     [ObservableAsProperty] private IAmountUI balance;
     private readonly CompositeDisposable disposable = new();
 
-    public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, INotificationService notificationService)
+    public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, INotificationService notificationService, INetworkConfiguration networkConfiguration)
     {
         this.walletAppService = walletAppService;
+        this.notificationService = notificationService;
         Id = id;
         var transactionCollection = CreateTransactions(id, walletAppService)
             .DisposeWith(disposable);
@@ -48,6 +48,10 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
         
         GetReceiveAddress = ReactiveCommand.CreateFromTask(GenerateReceiveAddress).Enhance().DisposeWith(disposable);
         ReceiveAddress = GetReceiveAddress.Successes().Publish().RefCount();
+        
+        GetTestCoins = ReactiveCommand.CreateFromTask(RequestTestCoins).Enhance().DisposeWith(disposable);
+        
+        CanGetTestCoins = networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet;
     }
 
     private static RefreshableCollection<IBroadcastedTransaction, string> CreateTransactions(WalletId id, IWalletAppService walletAppService)
@@ -63,6 +67,7 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
     public IEnhancedCommand<Result<IEnumerable<IBroadcastedTransaction>>> Load { get; }
     public ReadOnlyObservableCollection<IBroadcastedTransaction> History { get; }
+    public IEnhancedCommand GetTestCoins { get; }
 
     public Result IsAddressValid(string address)
     {
@@ -71,9 +76,24 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
 
     public WalletId Id { get; }
 
+    public bool CanGetTestCoins { get; }
+
     public Task<Result<string>> GenerateReceiveAddress()
     {
         return walletAppService.GetNextReceiveAddress(Id).Map(address => address.Value);
+    }
+
+    private async Task<Result> RequestTestCoins()
+    {
+        var result = await walletAppService.GetTestCoins(Id);
+        
+        if (result.IsSuccess)
+        {
+            // Reload the transactions after getting test coins
+            await Load.Execute();
+        }
+        
+        return result;
     }
 
     protected bool Equals(SimpleWallet other)

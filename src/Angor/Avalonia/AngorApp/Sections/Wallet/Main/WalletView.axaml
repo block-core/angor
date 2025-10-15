@@ -28,6 +28,9 @@
                                 </Flyout>
                             </Button.Flyout>
                         </Button>
+                        <Button Command="{Binding GetTestCoins}" 
+                                Content="Get Test Coins" 
+                                IsVisible="{Binding CanGetTestCoins}" />
                     </WrapGrid>
                 </Card.HeaderEndContent>
                 <Card.HeaderStartContent>
