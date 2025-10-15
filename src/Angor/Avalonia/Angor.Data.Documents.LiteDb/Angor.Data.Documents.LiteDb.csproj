@@ -6,4 +6,12 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="LiteDB" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Angor.Data.Documents\Angor.Data.Documents.csproj" />
+    </ItemGroup>
+
 </Project>
