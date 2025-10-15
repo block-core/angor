@@ -1,15 +1,9 @@
-using System.Linq;
 using System.Reactive.Disposables;
-using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using AngorApp.Features.Invest;
+using Angor.UI.Model.Implementation.Common;
+using AngorApp.Core.Factories;
 using AngorApp.Sections.Browse.ProjectLookup;
-using AngorApp.UI.Services;
-using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.UI;
-using Zafiro.UI.Commands;
-using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Browse;
 
@@ -17,56 +11,36 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
 {
     private readonly CompositeDisposable disposable = new();
     [Reactive] private string? projectId;
-
-    [ObservableAsProperty] private IEnumerable<IProjectViewModel>? projects;
-
-    public BrowseSectionViewModel(IProjectAppService projectService,
-        INavigator navigator,
-        InvestWizard investWizard,
-        UIServices uiServices,
-        IInvestmentAppService investmentAppService)
+    
+    public BrowseSectionViewModel(
+        IProjectAppService projectService,
+        IProjectViewModelFactory projectViewModelFactory,
+        IProjectLookupViewModelFactory projectLookupViewModelFactory,
+        UIServices uiServices)
     {
-        ProjectLookupViewModel = new ProjectLookupViewModel(projectService, navigator, investWizard, uiServices, investmentAppService).DisposeWith(disposable);
+        ProjectLookupViewModel = projectLookupViewModelFactory.Create().DisposeWith(disposable);
 
-        LoadProjects = ReactiveCommand.CreateFromObservable(() => Observable.FromAsync(projectService.Latest)
-                .Map(list => list.Select(dto => dto.ToProject()))
-                .Map(list => list.Select(IProjectViewModel (project) => new ProjectViewModel(project, projectService, navigator, uiServices, investWizard, investmentAppService)).ToList()))
-            .Enhance()
+        var refresher = RefreshableCollection.Create(GetProjects(projectService, projectViewModelFactory), model => model.Project.Id)
             .DisposeWith(disposable);
 
-        IsBusy = this.WhenAnyValue(model => model.Projects)
-            .WhereNotNull()
-            .Select(models => MergeBusy(models.Select(model => model.GoToDetails.IsExecuting)))
-            .Switch()
-            .StartWith(false);
-
+        LoadProjects = refresher.Refresh;
         LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Could not load projects");
-
-        projectsHelper = LoadProjects.Successes().ToProperty(this, x => x.Projects).DisposeWith(disposable);
+        Projects = refresher.Items;
     }
 
-    public IObservable<bool> IsBusy { get; }
+    public ICollection<IProjectViewModel> Projects { get; }
     public IProjectLookupViewModel ProjectLookupViewModel { get; }
-    public IEnhancedCommand<Result<List<IProjectViewModel>>> LoadProjects { get; }
+    public IEnhancedCommand<Result<IEnumerable<IProjectViewModel>>> LoadProjects { get; }
 
     public void Dispose()
     {
         disposable.Dispose();
     }
 
-    // Merges a set of IObservable<bool> (true=start, false=end) into a single busy flag.
-    private static IObservable<bool> MergeBusy(IEnumerable<IObservable<bool>> sources)
+    private static Func<Task<Result<IEnumerable<IProjectViewModel>>>> GetProjects(IProjectAppService projectService, IProjectViewModelFactory projectViewModelFactory)
     {
-        // Empty -> never busy
-        var normalized = sources.Select(s => s.Select(b => b ? 1 : -1));
-
-        return normalized
-            .Merge()
-            .Scan(0, (acc, delta) =>
-            {
-                var next = acc + delta;
-                return next < 0 ? 0 : next; // clamp to zero
-            })
-            .Select(count => count > 0);
+        return () => projectService.Latest()
+            .MapEach(dto => dto.ToProject())
+            .MapEach(projectViewModelFactory.Create);
     }
 }

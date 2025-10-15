@@ -27,6 +27,9 @@
                 </Style>
             </ToggleButton.Styles>
         </ToggleButton>
+        <EdgePanel IsVisible="{Binding ProfileName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" StartContent="{Icon fa-user}" DockPanel.Dock="Right" IconOptions.Size="{StaticResource IconSizeSmall}">
+            <TextBlock Text="{Binding ProfileName}" Margin="4" Classes="SizeSmall" />
+        </EdgePanel>
         <ContentControl Content="{Binding Content}" />
     </DockPanel>
 </UserControl>

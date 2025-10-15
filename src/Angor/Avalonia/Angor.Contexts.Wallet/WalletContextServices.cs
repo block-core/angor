@@ -40,8 +40,7 @@ public static class WalletContextServices
         services.AddSingleton<IWalletStore, WalletStore>();
         services.AddSingleton<ITransactionHistory, TransactionHistory>();
         services.AddHttpClient();
-        services.AddSingleton<ITransactionWatcher, TransactionWatcher>();
-        
+
         return services;
     }
     
@@ -53,4 +52,3 @@ public static class WalletContextServices
         services.TryAddSingleton(logger);
     }
 }
-

@@ -4,6 +4,7 @@ using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Projects.Operations;
+using Angor.Contexts.Funding.Shared;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Zafiro.CSharpFunctionalExtensions;
@@ -34,7 +35,7 @@ public class ProjectAppService(
         return mediator.Send(new GetFounderProjects.GetFounderProjectsRequest(walletId));
     }
     
-    public Task<Result<string>> CreateProject(Guid walletId, long selectedFee, CreateProjectDto project)
+    public Task<Result<TransactionDraft>> CreateProject(Guid walletId, long selectedFee, CreateProjectDto project)
     {
         return mediator.Send(new CreateProjectConstants.CreateProject.CreateProjectRequest(walletId, selectedFee, project)); // WalletId and SelectedFeeRate are placeholders
     }

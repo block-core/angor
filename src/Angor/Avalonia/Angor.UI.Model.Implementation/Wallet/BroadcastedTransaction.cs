@@ -2,7 +2,7 @@ using Angor.Contexts.Wallet.Domain;
 
 namespace Angor.UI.Model.Implementation.Wallet;
 
-public class BroadcastedTransactionImpl(BroadcastedTransaction transaction) : IBroadcastedTransaction
+public class HistoryTransaction(BroadcastedTransaction transaction) : IBroadcastedTransaction
 {
     public IEnumerable<TransactionOutput> AllOutputs { get; } = transaction.AllOutputs;
 

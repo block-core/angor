@@ -1,10 +1,9 @@
 using System.Windows.Input;
 using AngorApp.Core;
-using CSharpFunctionalExtensions;
 
 namespace AngorApp.Sections.Browse.ProjectLookup;
 
-public interface IProjectLookupViewModel
+public interface IProjectLookupViewModel : IDisposable
 {
     public string? ProjectId { get; set; }
     public IProjectViewModel SelectedProject { get; set; }

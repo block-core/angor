@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using Angor.Contests.CrossCutting;
 using CSharpFunctionalExtensions;
@@ -8,11 +9,22 @@ public class FileStore : IStore
 {
     private readonly string appDataPath;
 
-    public FileStore(string appName)
+    public FileStore(string appName, string profileName)
     {
+        if (string.IsNullOrWhiteSpace(appName))
+        {
+            throw new ArgumentException("App name cannot be null or whitespace.", nameof(appName));
+        }
+
+        if (string.IsNullOrWhiteSpace(profileName))
+        {
+            throw new ArgumentException("Profile name cannot be null or whitespace.", nameof(profileName));
+        }
+
         appDataPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            appName
+            appName,
+            profileName
         );
 
         Directory.CreateDirectory(appDataPath);
@@ -31,6 +43,7 @@ public class FileStore : IStore
         return Result.Try(() => Path.Combine(appDataPath, key))
             .TapTry(CreateFile)
             .MapTry(s => File.ReadAllTextAsync(s))
+            .Ensure(x => !string.IsNullOrWhiteSpace(x), $"Could not read file {key}")
             .Bind(json => Result.Try(() => JsonSerializer.Deserialize<T>(json))
                 .Ensure(x => x != null, $"Could not deserialize {json} as {typeof(T)}")
                 .Map(x => x!)

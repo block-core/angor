@@ -1,11 +1,8 @@
-using Angor.Contexts.Funding.Projects.Application.Dtos;
-using Zafiro.UI.Commands;
-
 namespace AngorApp.Sections.Founder;
 
 public interface IFounderSectionViewModel
 {
-    IEnhancedCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; }
-    public IEnumerable<IFounderProjectViewModel> ProjectsList { get; }
-    public IEnhancedCommand<Unit, Result<Maybe<string>>> Create { get; }
+    IEnhancedCommand<Result<IEnumerable<IFounderProjectViewModel>>> LoadProjects { get; }
+    IReadOnlyCollection<IFounderProjectViewModel> ProjectsList { get; }
+    IEnhancedCommand<Unit, Result<Maybe<string>>> Create { get; }
 }

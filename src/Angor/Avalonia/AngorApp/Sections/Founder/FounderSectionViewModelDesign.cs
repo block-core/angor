@@ -1,40 +1,51 @@
-using System.Linq;
-using Angor.Contexts.Funding.Projects.Application.Dtos;
-using Zafiro.UI.Commands;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using ReactiveUI;
+using Zafiro.CSharpFunctionalExtensions;
 
 namespace AngorApp.Sections.Founder;
 
 public class FounderSectionViewModelDesign : IFounderSectionViewModel
 {
-    public IEnhancedCommand<Unit, Result<IEnumerable<ProjectDto>>> LoadProjects { get; } = ReactiveCommand.Create(() => Result.Success(Enumerable.Empty<ProjectDto>())).Enhance();
-
-    public IEnumerable<IFounderProjectViewModel> ProjectsList { get; } = new List<IFounderProjectViewModel>()
+    public FounderSectionViewModelDesign()
     {
-        new FounderProjectViewModelDesign()
+        var projects = new ObservableCollection<IFounderProjectViewModel>
         {
-            Name = "First project",
-            Picture = new Uri("https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"),
-            Banner = new Uri("https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg"),
-            ShortDescription = "Sample project with long description bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah",
-            TargetAmount = 1234,
-        },
-        new FounderProjectViewModelDesign()
-        {
-            Name = "Second project",
-            Picture = new Uri("https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"),
-            Banner = new Uri("https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg"),
-            ShortDescription = "Sample project",
-            TargetAmount = 1234,
-        },
-        new FounderProjectViewModelDesign()
-        {
-            Name = "Third project",
-            Picture = new Uri("https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"),
-            Banner = new Uri("https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg"),
-            ShortDescription = "Sample project",
-            TargetAmount = 1234,
-        }
-    };
+            new FounderProjectViewModelDesign
+            {
+                Name = "First project",
+                Picture = new Uri("https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"),
+                Banner = new Uri("https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg"),
+                ShortDescription = "Sample project with long description bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah bla bla blah blah bla blah",
+                TargetAmount = 1234,
+            },
+            new FounderProjectViewModelDesign
+            {
+                Name = "Second project",
+                Picture = new Uri("https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"),
+                Banner = new Uri("https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg"),
+                ShortDescription = "Sample project",
+                TargetAmount = 1234,
+            },
+            new FounderProjectViewModelDesign
+            {
+                Name = "Third project",
+                Picture = new Uri("https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"),
+                Banner = new Uri("https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg"),
+                ShortDescription = "Sample project",
+                TargetAmount = 1234,
+            }
+        };
+
+        ProjectsList = new ReadOnlyObservableCollection<IFounderProjectViewModel>(projects);
+        LoadProjects = ReactiveCommand.Create(() => Result.Success<IEnumerable<IFounderProjectViewModel>>(ProjectsList)).Enhance();
+        Create = ReactiveCommand.Create(() => Result.Success(Maybe<string>.None)).Enhance();
+    }
+
+    public IEnhancedCommand<Result<IEnumerable<IFounderProjectViewModel>>> LoadProjects { get; }
+
+    public IReadOnlyCollection<IFounderProjectViewModel> ProjectsList { get; }
 
     public IEnhancedCommand<Unit, Result<Maybe<string>>> Create { get; }
 }

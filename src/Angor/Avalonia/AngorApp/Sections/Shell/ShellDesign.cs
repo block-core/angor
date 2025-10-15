@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-using Angor.UI.Model.Implementation.Wallet.Password;
 using AngorApp.Sections.Home;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Navigation.Sections;

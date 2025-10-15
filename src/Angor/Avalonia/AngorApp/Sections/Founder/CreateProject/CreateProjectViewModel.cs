@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.Flows;
+using AngorApp.Flows.CreateProyect;
 using AngorApp.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.Sections.Founder.CreateProject.Preview;
 using AngorApp.Sections.Founder.CreateProject.Profile;
@@ -51,9 +52,12 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
 
     public IEnhancedCommand<Result<string>> Create { get; }
 
-    private Task<Result<string>> DoCreateProject(IWallet wallet, CreateProjectDto dto, long feeRate)
+    private async Task<Result<string>> DoCreateProject(IWallet wallet, CreateProjectDto dto, long feeRate)
     {
-        return projectAppService.CreateProject(wallet.Id.Value, feeRate, dto);
+        var result = await projectAppService.CreateProject(wallet.Id.Value, feeRate, dto);
+        if(result.IsSuccess)
+            return Result.Success(result.Value.TransactionId); //TODO Jose, need to fix this when the changes are implemented in the UI
+        return Result.Failure<string>(result.Error);
     }
     
     public IObservable<bool> IsValid => this.IsValid();

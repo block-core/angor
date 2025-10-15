@@ -1,10 +1,10 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Projects.Domain;
-using AngorApp.Extensions;
+using Angor.Contexts.Funding.Shared;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;
@@ -15,18 +15,21 @@ namespace AngorApp.Sections.Founder.ProjectDetails.MainView.Claim;
 
 public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel, IDisposable
 {
-    private readonly IInvestmentAppService investmentAppService;
+    private readonly IFounderAppService founderAppService;
     private readonly ProjectId projectId;
     private readonly UIServices uiServices;
+    private readonly IWalletContext walletContext;
     [ObservableAsProperty] private IEnumerable<IClaimableStage>? claimableStages;
 
     private readonly CompositeDisposable disposable = new();
-    public ClaimFundsViewModel(ProjectId projectId, IInvestmentAppService investmentAppService, UIServices uiServices)
+
+    public ClaimFundsViewModel(ProjectId projectId, IFounderAppService founderAppService, UIServices uiServices, IWalletContext walletContext)
     {
-        this.investmentAppService = investmentAppService;
+        this.founderAppService = founderAppService;
         this.projectId = projectId;
         this.uiServices = uiServices;
-        LoadClaimableStages = WalletCommand.Create(GetClaimableStages, uiServices.WalletRoot)
+        this.walletContext = walletContext;
+        LoadClaimableStages = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetClaimableStages))
             .Enhance()
             .DisposeWith(disposable);
         
@@ -35,7 +38,6 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
         
         claimableStagesHelper = LoadClaimableStages.Successes().ToProperty(this, x => x.ClaimableStages).DisposeWith(disposable);
 
-        // Reload the claimable stages after any Claim command executes in the latest set of stages
         LoadClaimableStages.Successes()
             .Select(stages => stages.Select(stage => stage.Claim.Values()).Merge())
             .Switch()
@@ -49,20 +51,20 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
 
     private Task<Result<IEnumerable<IClaimableStage>>> GetClaimableStages(IWallet wallet)
     {
-        return investmentAppService
+        return founderAppService
             .GetClaimableTransactions(wallet.Id.Value, projectId)
             .Map(CreateStage);
     }
 
     private IEnumerable<IClaimableStage> CreateStage(IEnumerable<ClaimableTransactionDto> claimableTransactionDto)
     {
-        var stages = claimableTransactionDto.GroupBy(dto => dto.StageId)
+        return claimableTransactionDto.GroupBy(dto => dto.StageId)
             .Select(IClaimableStage (group) =>
             {
                 var claimableTransactions = group.Select(IClaimableTransaction (dto) => new ClaimableTransaction(dto)).ToList();
-                return new ClaimableStage(projectId, group.Key, claimableTransactions.ToList(), investmentAppService, uiServices);
-            }).ToList();
-        return stages;
+                return new ClaimableStage(projectId, group.Key, claimableTransactions.ToList(), founderAppService, uiServices, walletContext);
+            })
+            .ToList();
     }
 
     public IEnhancedCommand<Result<IEnumerable<IClaimableStage>>> LoadClaimableStages { get; }

@@ -1,19 +1,15 @@
 using System.Linq;
 using System.Windows.Input;
-using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Shared;
 using AngorApp.Core;
-using AngorApp.Features.Invest;
-using AngorApp.UI.Services;
-using ReactiveUI.SourceGenerators;
+using AngorApp.Core.Factories;
 using Serilog;
 using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Browse.ProjectLookup;
 
-public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupViewModel ,IDisposable
+public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupViewModel
 {
     [ObservableAsProperty] private ICommand? goToSelectedProject;
 
@@ -22,23 +18,18 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
     [Reactive] private string? projectId;
     [Reactive] private IProjectViewModel? selectedProject;
 
-    public ProjectLookupViewModel(IProjectAppService projectAppService,
-        INavigator navigator,
-        InvestWizard investWizard,
-        UIServices uiServices,
-        IInvestmentAppService investmentAppService)
+    public ProjectLookupViewModel(IProjectAppService projectAppService, IProjectViewModelFactory projectViewModelFactory)
     {
         lookupResults = new SafeMaybe<IList<IProjectViewModel>>(Maybe<IList<IProjectViewModel>>.None);
 
-        Lookup = ReactiveCommand.CreateFromTask<string, SafeMaybe<IList<IProjectViewModel>>>(
-            async pid =>
+        Lookup = ReactiveCommand.CreateFromTask<string, SafeMaybe<IList<IProjectViewModel>>>(async pid =>
             {
                 var maybeProject = await projectAppService.FindById(new ProjectId(pid)).Map(dto => dto.ToProject());
                 Log.Debug("Got project {ProjectId}", pid);
 
                 return maybeProject.Map<IProject, IList<IProjectViewModel>>(project =>
                 {
-                    var vm = new ProjectViewModel(project, projectAppService, navigator, uiServices, investWizard, investmentAppService);
+                    var vm = projectViewModelFactory.Create(project);
                     return new List<IProjectViewModel> { vm };
                 }).AsSafeMaybe();
             }

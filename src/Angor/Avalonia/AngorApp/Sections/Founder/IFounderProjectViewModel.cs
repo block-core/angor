@@ -1,9 +1,10 @@
-using Zafiro.UI.Commands;
+using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
 
 namespace AngorApp.Sections.Founder;
 
 public interface IFounderProjectViewModel
 {
+    ProjectId Id { get; }
     public string Name { get; }
     public string ShortDescription { get; }
     public Uri? Picture { get; }

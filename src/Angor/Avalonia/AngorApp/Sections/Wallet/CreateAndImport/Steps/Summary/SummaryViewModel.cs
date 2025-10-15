@@ -1,8 +1,5 @@
-using System.Threading.Tasks;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
-using AngorApp.UI.Services;
-using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
@@ -12,17 +9,19 @@ namespace AngorApp.Sections.Wallet.CreateAndImport.Steps.Summary;
 public partial class SummaryViewModel : ReactiveValidationObject, ISummaryViewModel
 {
     private readonly IWalletAppService walletAppService;
-    private readonly IWalletBuilder walletBuilder;
+    private readonly IWalletProvider walletProvider;
     private readonly UIServices uiServices;
+    private readonly IWalletContext walletContext;
     private readonly WalletImportOptions options;
     private readonly Func<BitcoinNetwork> getNetwork;
     [ObservableAsProperty] private IWallet? wallet;
 
-    public SummaryViewModel(IWalletAppService walletAppService, IWalletBuilder walletBuilder, UIServices uiServices, WalletImportOptions options, Func<BitcoinNetwork> getNetwork)
+    public SummaryViewModel(IWalletAppService walletAppService, IWalletProvider walletProvider, UIServices uiServices, IWalletContext walletContext, WalletImportOptions options, Func<BitcoinNetwork> getNetwork)
     {
         this.walletAppService = walletAppService;
-        this.walletBuilder = walletBuilder;
+        this.walletProvider = walletProvider;
         this.uiServices = uiServices;
+        this.walletContext = walletContext;
         this.options = options;
         this.getNetwork = getNetwork;
         Passphrase = options.Passphrase;
@@ -33,8 +32,8 @@ public partial class SummaryViewModel : ReactiveValidationObject, ISummaryViewMo
     private Task<Result<IWallet>> CreateAndActivate()
     {
         return walletAppService.CreateWallet("<default>", options.Seedwords.ToString(), options.Passphrase, options.EncryptionKey, getNetwork())
-            .Bind(id => walletBuilder.Get(id))
-            .Tap(w => uiServices.ActiveWallet.SetCurrent(w));
+            .Bind(id => walletProvider.Get(id))
+            .Tap(w => walletContext.CurrentWallet = w.AsMaybe());
     }
 
     public string CreateWalletText => IsRecovery ? "Import Wallet" : "Create Wallet";

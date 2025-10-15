@@ -1,7 +1,6 @@
 using System.Windows.Input;
 using Angor.Contexts.Funding.Founder.Dtos;
 using AngorApp.Sections.Portfolio.Items;
-using Zafiro.UI.Commands;
 
 namespace AngorApp.Sections.Portfolio;
 
@@ -19,7 +18,7 @@ public class PortfolioSectionViewModelDesign : IPortfolioSectionViewModel
     }
 
     public IReadOnlyCollection<PortfolioItem> Items { get; }
-    public IEnumerable<IPortfolioProjectViewModel> InvestedProjects { get; } = new List<IPortfolioProjectViewModel>();
+    public ICollection<IPortfolioProjectViewModel> InvestedProjects { get; } = new List<IPortfolioProjectViewModel>();
     public IInvestorStatsViewModel InvestorStats { get; } = new InvestorStatsViewModelDesign
     {
         FundedProjects = 1,
@@ -30,7 +29,7 @@ public class PortfolioSectionViewModelDesign : IPortfolioSectionViewModel
 
     public ICommand GoToPenalties { get; }
     public IEnhancedCommand<Result<IWallet>> LoadWallet { get; }
-    public IEnhancedCommand<Result<IEnumerable<IPortfolioProjectViewModel>>> LoadPortfolio { get; }
+    public IEnhancedCommand<Result<ICollection<IPortfolioProjectViewModel>>> LoadPortfolio { get; }
     public IObservable<bool> IsLoading => Observable.Return(false);
 }
 
