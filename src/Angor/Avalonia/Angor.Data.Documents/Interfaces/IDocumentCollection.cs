@@ -1,8 +1,9 @@
 using System.Linq.Expressions;
+using Angor.Data.Documents.Models;
 
 namespace Angor.Data.Documents.Interfaces;
 
-public interface IDocumentCollection<T> where T : class
+public interface IDocumentCollection<T> where T : BaseDocument
 {
     Task<T?> FindByIdAsync(string id);
     Task<IEnumerable<T>> FindAllAsync();
