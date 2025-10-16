@@ -22,7 +22,7 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
         
         // Ensure indexes on common fields
         _collection.EnsureIndex(x => x.Id);
-        _collection.EnsureIndex(x => x.CreatedAt);
+        _collection.EnsureIndex(x => x.CreatedAt); //TODO check if needed
         _collection.EnsureIndex(x => x.UpdatedAt);
     }
 
@@ -237,13 +237,13 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
         }
     }
 
-    public async Task<Result<long>> CountAsync(Expression<Func<T, bool>>? predicate = null)
+    public async Task<Result<int>> CountAsync(Expression<Func<T, bool>>? predicate = null)
     {
         try
         {
             var count = predicate != null 
                 ? _collection.Count(predicate) 
-                : _collection.LongCount();
+                : _collection.Count();
                 
             _logger.LogDebug("Count of documents {Type} with predicate: {Count}", typeof(T).Name, count);
             
@@ -252,7 +252,7 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to count documents of type {Type} with predicate", typeof(T).Name);
-            return Result.Failure<long>($"Failed to count documents: {ex.Message}");
+            return Result.Failure<int>($"Failed to count documents: {ex.Message}");
         }
     }
 }

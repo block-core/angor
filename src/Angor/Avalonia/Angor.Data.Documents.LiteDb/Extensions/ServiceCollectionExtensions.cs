@@ -22,6 +22,9 @@ public static class ServiceCollectionExtensions
             return factory.CreateDatabase(profileName);
         });
         
+        services.AddScoped(typeof(IGenericDocumentCollection<>), typeof(LiteDbGenericDocumentCollection<>));
+
+        
         return services;
     }
 }

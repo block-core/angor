@@ -1,9 +1,9 @@
 using Angor.Contexts.Funding.Shared;
-using Angor.Data.Documents.Models;
+using Angor.Data.Documents.Interfaces;
 
 namespace Angor.Contexts.Funding.Projects.Domain;
 
-public class Project : BaseDocument
+public class Project : IDocumentEntity
 {
     public new ProjectId Id { get; set; }
     public string Name { get; set; }
@@ -25,4 +25,6 @@ public class Project : BaseDocument
     {
         return Name;
     }
+
+    public string GetDocumentId() => Id.Value;
 }

@@ -42,6 +42,7 @@
         <ProjectReference Include="../Angor.UI.Model/Angor.UI.Model.csproj"/>
         <ProjectReference Include="../Angor.Contexts.Wallet/Angor.Contexts.Wallet.csproj"/>
         <ProjectReference Include="../Angor.Contexts.Funding/Angor.Contexts.Funding.csproj"/>
+        <ProjectReference Include="..\Angor.Data.Documents.LiteDb\Angor.Data.Documents.LiteDb.csproj" />
     </ItemGroup>
 
     <ItemGroup>
