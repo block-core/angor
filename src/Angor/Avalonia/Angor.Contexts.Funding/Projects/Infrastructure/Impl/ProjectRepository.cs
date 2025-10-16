@@ -149,37 +149,37 @@ public class ProjectRepository(
 
     private static class Wrapper
     {
-        public static Task<Result<IEnumerable<ProjectInfo>>> ProjectInfos(IRelayService relayService, IEnumerable<string> eventIds)
-        {
-            var projectInfos = Observable.Create<ProjectInfo>(observer =>
+            public static Task<Result<IEnumerable<ProjectInfo>>> ProjectInfos(IRelayService relayService, IEnumerable<string> eventIds)
+            {
+                var projectInfos = Observable.Create<ProjectInfo>(observer =>
+                    {
+                        relayService.LookupProjectsInfoByEventIds<ProjectInfo>(
+                            observer.OnNext,
+                            observer.OnCompleted,
+                            eventIds.ToArray()
+                        );
+
+                        return Disposable.Empty;
+                    })
+                    .Timeout(TimeSpan.FromSeconds(30));
+
+                return Result.Try(async () => await projectInfos.ToList()).Map(list => list.AsEnumerable());
+            }
+
+            public static Task<Result<IEnumerable<ProjectMetadataWithNpub>>> ProjectMetadatas(IRelayService relayService, IEnumerable<string> projectIds)
+            {
+                var projectMetadatas = Observable.Create<ProjectMetadataWithNpub>(observer =>
                 {
-                    relayService.LookupProjectsInfoByEventIds<ProjectInfo>(
-                        observer.OnNext,
+                    relayService.LookupNostrProfileForNPub(
+                        (npub, nostrMetadata) => observer.OnNext(new ProjectMetadataWithNpub(npub, nostrMetadata)),
                         observer.OnCompleted,
-                        eventIds.ToArray()
-                    );
+                        projectIds.Where(x => x != null).ToArray());
 
                     return Disposable.Empty;
-                })
-                .Timeout(TimeSpan.FromSeconds(30));
+                }).Timeout(TimeSpan.FromSeconds(30));
 
-            return Result.Try(async () => await projectInfos.ToList()).Map(list => list.AsEnumerable());
-        }
-
-        public static Task<Result<IEnumerable<ProjectMetadataWithNpub>>> ProjectMetadatas(IRelayService relayService, IEnumerable<string> projectIds)
-        {
-            var projectMetadatas = Observable.Create<ProjectMetadataWithNpub>(observer =>
-            {
-                relayService.LookupNostrProfileForNPub(
-                    (npub, nostrMetadata) => observer.OnNext(new ProjectMetadataWithNpub(npub, nostrMetadata)),
-                    observer.OnCompleted,
-                    projectIds.Where(x => x != null).ToArray());
-
-                return Disposable.Empty;
-            }).Timeout(TimeSpan.FromSeconds(30));
-
-            return Result.Try(async () => await projectMetadatas.ToList()).Map(list => list.AsEnumerable());
-        }
+                return Result.Try(async () => await projectMetadatas.ToList()).Map(list => list.AsEnumerable());
+            }
     }
 
     private record ProjectMetadataWithNpub(string Npub, ProjectMetadata NostrMetadata);
