@@ -5,6 +5,7 @@ using Angor.Contexts.Integration.WalletFunding;
 using Angor.Contexts.Wallet;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
+using Angor.Data.Documents.LiteDb.Extensions;
 using Angor.Shared;
 using Angor.Shared.Services;
 using AngorApp.Composition.Registrations;
@@ -47,9 +48,11 @@ public static class CompositionRoot
             _ => BitcoinNetwork.Testnet
         };
 
+        services.AddLiteDbDocumentStorage(profileName);
+        
         RegisterLogger(services, logger);
         services.AddKeyedSingleton<IStore>("file", store);
-        services.AddSingleton<IStore>(provider => provider.GetKeyedService<IStore>("file"));
+        services.AddSingleton<IStore>(provider => provider.GetKeyedService<IStore>("file")!);
 
         services.AddSingleton<Func<BitcoinNetwork>>(sp => () =>
         {

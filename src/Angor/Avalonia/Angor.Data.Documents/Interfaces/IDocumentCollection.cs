@@ -13,7 +13,7 @@ public interface IDocumentCollection<T> where T : BaseDocument
     Task<Result<bool>> ExistsAsync(string id);
     Task<Result<IEnumerable<T>>> GetAllAsync();
     Task<Result<int>> CountAsync();
-    Task<Result<long>> CountAsync(Expression<Func<T, bool>>? predicate = null);
+    Task<Result<int>> CountAsync(Expression<Func<T, bool>>? predicate = null);
     
     // Write operations
     Task<Result<int>> InsertAsync(params T[] document);

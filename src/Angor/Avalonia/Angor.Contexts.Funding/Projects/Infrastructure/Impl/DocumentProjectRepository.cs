@@ -7,12 +7,11 @@ using Angor.Data.Documents.Interfaces;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
-using Zafiro.Mixins;
 using Stage = Angor.Contexts.Funding.Projects.Domain.Stage;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
-public class DocumentProjectRepository(IDocumentCollection<Project> collection, IRelayService relayService,
+public class DocumentProjectRepository(IGenericDocumentCollection<Project> collection, IRelayService relayService,
     IIndexerService indexerService) : IProjectRepository
 {
 
