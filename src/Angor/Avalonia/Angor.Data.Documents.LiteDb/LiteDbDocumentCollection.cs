@@ -26,27 +26,37 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
         _collection.EnsureIndex(x => x.UpdatedAt);
     }
 
-    public async Task<Result<string>> InsertAsync(T document)
+    public async Task<Result<int>> InsertAsync(params T[] documents)
     {
         try
         {
-            if (document == null)
-                return Result.Failure<string>("Document cannot be null");
+            if (documents.Length == 0)
+                return Result.Failure<int>("Document cannot be null");
 
-            document.CreatedAt = DateTime.UtcNow;
-            document.UpdatedAt = DateTime.UtcNow;
+            foreach (var document in documents)
+            {
+                document.CreatedAt = DateTime.UtcNow;
+                document.UpdatedAt = DateTime.UtcNow;
+            }
+
+            var result = _collection.Insert(documents);
+
+            if (result != documents.Length)
+            {
+                _logger.LogWarning("Expected to insert {expected} documents but only inserted {actual}", 
+                    documents.Length, result);
+                
+                return Result.Success(result);
+            }
             
-            var result = _collection.Insert(document);
-            var idString = result.ToString();
+            _logger.LogDebug("Inserted {total} document {Type}}",result, typeof(T).Name);
             
-            _logger.LogDebug("Inserted document {Type} with ID: {Id}", typeof(T).Name, idString);
-            
-            return await Task.FromResult(Result.Success(idString));
+            return await Task.FromResult(Result.Success(result));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to insert document {Type}", typeof(T).Name);
-            return Result.Failure<string>($"Failed to insert document: {ex.Message}");
+            return Result.Failure<int>($"Failed to insert document: {ex.Message}");
         }
     }
 

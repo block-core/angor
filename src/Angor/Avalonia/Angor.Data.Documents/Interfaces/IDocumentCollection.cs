@@ -16,7 +16,7 @@ public interface IDocumentCollection<T> where T : BaseDocument
     Task<Result<long>> CountAsync(Expression<Func<T, bool>>? predicate = null);
     
     // Write operations
-    Task<Result<string>> InsertAsync(T document);
+    Task<Result<int>> InsertAsync(params T[] document);
     Task<Result<bool>> UpdateAsync(T document);
     Task<Result<bool>> UpsertAsync(T document);
     Task<Result<bool>> DeleteAsync(string id);
