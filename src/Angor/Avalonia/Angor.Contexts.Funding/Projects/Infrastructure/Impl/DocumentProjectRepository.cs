@@ -7,6 +7,7 @@ using Angor.Data.Documents.Interfaces;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
+using Zafiro.Mixins;
 using Stage = Angor.Contexts.Funding.Projects.Domain.Stage;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -15,67 +16,10 @@ public class DocumentProjectRepository(IDocumentCollection<Project> collection, 
     IIndexerService indexerService) : IProjectRepository
 {
 
-    public async Task<Result<Project>> Get(ProjectId id)
+    public Task<Result<Project>> Get(ProjectId id)
     {
-        if (id == null)
-            return Result.Failure<Project>("ProjectId cannot be null");
-
-        try
-        {
-            var projectResult = await collection.FindByIdAsync(id.Value);
-
-            if (projectResult.IsSuccess && projectResult.Value != null)
-                return Result.Success(projectResult.Value);
-
-            var result = await Result.Try(() => indexerService.GetProjectByIdAsync(id.Value));
-            if (result.IsFailure)
-                return Result.Failure<Project>(
-                    $"Project with ID '{id.Value}' not found in indexer: {result.Error}");
-
-            var projectInfo = await ProjectInfos(new[] { result.Value.NostrEventId });
-            if (projectInfo.IsFailure || !projectInfo.Value.Any())
-                return Result.Failure<Project>("Project info not found in relay");
-
-            var metadataResult = await ProjectMetadatas(new[] { projectInfo.Value.First().NostrPubKey });
-            if (metadataResult.IsFailure || !metadataResult.Value.Any())
-                return Result.Failure<Project>("Project metadata not found in relay");
-
-            var info = projectInfo.Value.First();
-            var metadata = metadataResult.Value.First().NostrMetadata;
-
-            var project = new Project
-            {
-                Id = new ProjectId(info.ProjectIdentifier),
-                FounderKey = info.FounderKey,
-                ExpiryDate = info.ExpiryDate,
-                FounderRecoveryKey = info.FounderRecoveryKey,
-                NostrPubKey = info.NostrPubKey,
-                PenaltyDuration = TimeSpan.FromDays(info.PenaltyDays),
-                TargetAmount = info.TargetAmount,
-                Stages = info.Stages.Select((stage, i) => new Stage
-                {
-                    Index = i,
-                    ReleaseDate = stage.ReleaseDate,
-                    RatioOfTotal = stage.AmountToRelease / 100m
-                }),
-                StartingDate = info.StartDate,
-                EndDate = info.EndDate,
-                Banner = TryGetUri(metadata.Banner),
-                InformationUri = TryGetUri(metadata.Website),
-                Picture = TryGetUri(metadata.Picture),
-                Name = metadata.Name,
-                ShortDescription = metadata.About
-            };
-
-            var insertResult = await collection.InsertAsync(project);
-            return insertResult.IsFailure
-                ? Result.Failure<Project>($"Failed to cache project locally: {insertResult.Error}")
-                : Result.Success(project);
-        }
-        catch (Exception ex)
-        {
-            return Result.Failure<Project>($"Error retrieving project {id.Value}: {ex.Message}");
-        }
+        return GetAll( id )
+            .Map(x =>x.First());
     }
 
 
@@ -150,7 +94,7 @@ public class DocumentProjectRepository(IDocumentCollection<Project> collection, 
             var response = lookupList.Where(p => p != null).Select(p => p!).ToList();
 
             if (!response.Any())
-                return Result.Success(Array.Empty<Project>().AsEnumerable());
+                return Result.Failure<IEnumerable<Project>>("No projects found");
 
             var insertResult = await collection.InsertAsync(response.ToArray());
 
