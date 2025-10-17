@@ -36,7 +36,7 @@ public class WalletCreationWizard(UIServices uiServices, IWalletProvider walletP
             {
                 IsRecovery = false
             }, "Summary").NextCommand(model => model.CreateWallet.Enhance("Create Wallet"))
-            .Then(_ => new SuccessViewModel("Wallet created successfully"), "Wallet Creation").Next(_ => Unit.Default, "Close").Always()
+            .Then(_ => new SuccessViewModel("Wallet created successfully"), "Wallet Creation").NextUnit("Close").Always()
             .WithCompletionFinalStep();
 
         return await uiServices.Dialog.ShowWizard(wizard, "Create wallet").Map(_ => Unit.Default);

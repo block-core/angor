@@ -27,7 +27,7 @@ public class CreateProjectFlow(UIServices uiServices, INavigator navigator, IPro
     {
         var wizard = WizardBuilder
             .StartWith(() => new CreateProjectViewModel(wallet,  projectSeed, uiServices, projectAppService), "Create Project").NextWith(model => model.Create)
-            .Then(transactionId => new ProjectCreatedViewModel(transactionId, uiServices, networkConfiguration), "Success").NextWith((_, projectId) => ReactiveCommand.Create(() => Result.Success(projectId)).Enhance("Close"))
+            .Then(transactionId => new ProjectCreatedViewModel(transactionId, uiServices, networkConfiguration), "Success").Next((_, projectId) => projectId, "Close").Always()
             .WithCompletionFinalStep();
 
         return wizard;

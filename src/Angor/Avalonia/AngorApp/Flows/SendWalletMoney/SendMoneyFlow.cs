@@ -15,7 +15,7 @@ public class SendMoneyFlow(IWalletAppService walletAppService, UIServices uiServ
         var wizard = WizardBuilder
             .StartWith(() => new AddressAndAmountViewModel(sourceWallet), "Amount and address").Next(model => (model.Amount, model.Address)).WhenValid<AddressAndAmountViewModel>()
             .Then(sendData => new TransactionDraftViewModel(sourceWallet.Id, walletAppService, new SendAmount("Test", sendData.Amount.Value, sendData.Address), uiServices), "Summary").NextCommand(model => model.Confirm.Enhance("Confirm"))
-            .Then(_ => new SuccessViewModel("Transaction sent!"), "Transaction sent").Next(_ => Unit.Default, "Close").Always()
+            .Then(_ => new SuccessViewModel("Transaction sent!"), "Transaction sent").NextUnit("Close").Always()
             .WithCompletionFinalStep();
 
         await uiServices.Dialog.ShowWizard(wizard, "Send");
