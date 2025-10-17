@@ -4,19 +4,21 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
              xmlns:draftTypes="clr-namespace:AngorApp.TransactionDrafts.DraftTypes"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="400"
              x:Class="AngorApp.TransactionDrafts.InvestmentDraftView" x:DataType="draftTypes:InvestmentTransactionDraftViewModel">
-    
+
     <UserControl.DataTemplates>
         <DataTemplate DataType="model:IAmountUI">
             <TextBlock FontWeight="SemiBold" Text="{Binding ShortDecimalString}" />
         </DataTemplate>
     </UserControl.DataTemplates>
 
-    <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
-        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Angor fee" EndContent="{Binding AngorFee}" />
-        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Miner Fee" EndContent="{Binding MinerFee}" />
-        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Transaction Fee" EndContent="{Binding TransactionFee}" />
-        <Button Content="View Transaction" HorizontalAlignment="Center" Command="{Binding ShowTransaction}" />
-    </StackPanel>
+    <DockPanel>
+        <Button Margin="20" DockPanel.Dock="Bottom" Content="View Transaction" HorizontalAlignment="Center" Command="{Binding ShowTransaction}" />
+        <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
+            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Angor fee" EndContent="{Binding AngorFee}" />
+            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Miner Fee" EndContent="{Binding MinerFee}" />
+            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Transaction Fee" EndContent="{Binding TransactionFee}" />
+        </StackPanel>
+    </DockPanel>
 </UserControl>
