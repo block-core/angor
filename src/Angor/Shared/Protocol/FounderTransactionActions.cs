@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
+using Angor.Shared.Utilities;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -192,8 +193,10 @@ public class FounderTransactionActions : IFounderTransactionActions
 
          var (investorKey, secretHash) = GetProjectDetailsFromOpReturn(trx);
 
-         var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
-             stageNumber - 1, secretHash);
+         bool disablePenalty = projectInfo.IsPenaltyDisabled(trx.SumAngorAmount(projectInfo));
+
+        var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
+             stageNumber - 1, secretHash, disablePenalty);
 
          var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Founder);
          

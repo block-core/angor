@@ -27,6 +27,8 @@ namespace Angor.Test.Protocol
         private SeederTransactionActions _seederTransactionActions;
         private InvestorTransactionActions _investorTransactionActions;
         private FounderTransactionActions _founderTransactionActions;
+        private IInvestmentScriptBuilder _investmentScriptBuilder;
+        private ITaprootScriptBuilder _taprootScriptBuilder;
 
         private string angorRootKey =
             "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
@@ -65,30 +67,34 @@ namespace Angor.Test.Protocol
                 .Returns(Networks.Bitcoin.Testnet());
 
             _derivationOperations = new DerivationOperations(new HdOperations(), new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            
+            _investmentScriptBuilder = new InvestmentScriptBuilder(new SeederScriptTreeBuilder());
+            _taprootScriptBuilder = new TaprootScriptBuilder();
+            
             _seederTransactionActions = new SeederTransactionActions(new NullLogger<SeederTransactionActions>(),
-                new InvestmentScriptBuilder(new SeederScriptTreeBuilder()),
+                _investmentScriptBuilder,
                 new ProjectScriptsBuilder(_derivationOperations),
                 new SpendingTransactionBuilder(_networkConfiguration.Object,
                     new ProjectScriptsBuilder(_derivationOperations),
-                    new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+                    _investmentScriptBuilder),
                 new InvestmentTransactionBuilder(_networkConfiguration.Object,
-                    new ProjectScriptsBuilder(_derivationOperations), new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder()),
-                new TaprootScriptBuilder(), _networkConfiguration.Object);
+                    new ProjectScriptsBuilder(_derivationOperations), _investmentScriptBuilder, _taprootScriptBuilder),
+                _taprootScriptBuilder, _networkConfiguration.Object);
 
             _investorTransactionActions = new InvestorTransactionActions(new NullLogger<InvestorTransactionActions>(),
-                new InvestmentScriptBuilder(new SeederScriptTreeBuilder()),
+                _investmentScriptBuilder,
                 new ProjectScriptsBuilder(_derivationOperations),
                 new SpendingTransactionBuilder(_networkConfiguration.Object,
                     new ProjectScriptsBuilder(_derivationOperations),
-                    new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
+                    _investmentScriptBuilder),
                 new InvestmentTransactionBuilder(_networkConfiguration.Object,
                     new ProjectScriptsBuilder(_derivationOperations),
-                    new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder()),
-                new TaprootScriptBuilder(), _networkConfiguration.Object);
+                    _investmentScriptBuilder, _taprootScriptBuilder),
+                _taprootScriptBuilder, _networkConfiguration.Object);
 
             _founderTransactionActions = new FounderTransactionActions(new NullLogger<FounderTransactionActions>(), _networkConfiguration.Object,
                 new ProjectScriptsBuilder(_derivationOperations),
-                new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), new TaprootScriptBuilder());
+                _investmentScriptBuilder, _taprootScriptBuilder);
         }
 
         [Fact]
@@ -567,10 +573,10 @@ namespace Angor.Test.Protocol
             var seeder1Key = new Key();
             var seeder2Key = new Key();
             var seeder3Key = new Key();
-            
+
             var projectInvestmentInfo = new ProjectInfo
             {
-                TargetAmount  = Money.Coins(3).Satoshi,
+                TargetAmount = Money.Coins(3).Satoshi,
                 StartDate = DateTime.UtcNow,
                 ExpiryDate = DateTime.UtcNow.AddDays(5),
                 Stages = new List<Stage>
@@ -592,7 +598,7 @@ namespace Angor.Test.Protocol
                     }
                 }
             };
-            
+
             projectInvestmentInfo.ProjectIdentifier =
                 _derivationOperations.DeriveAngorKey(angorRootKey, projectInvestmentInfo.FounderKey);
 
@@ -601,7 +607,7 @@ namespace Angor.Test.Protocol
             var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,
                 Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
                 projectInvestmentInfo.TargetAmount);
-            
+
             var secrets = new List<byte[]>
             {
                 seeder1Key.ToBytes(),
@@ -617,11 +623,11 @@ namespace Angor.Test.Protocol
                 var investorRecoverFundsNoPenalty = _investorTransactionActions.RecoverRemainingFundsWithOutPenalty(
                     investorInvTrx.ToHex(), projectInvestmentInfo, stageIndex,
                     investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
-                    Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation,partSecrets
+                    Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation, partSecrets
                 );
 
                 Assert.NotNull(investorRecoverFundsNoPenalty);
-            
+
                 TransactionValidation.ThanTheTransactionHasNoErrors(investorRecoverFundsNoPenalty.Transaction,
                     investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
             }
@@ -701,6 +707,65 @@ namespace Angor.Test.Protocol
 
             signedReleaseTransaction.Inputs.Add(new Blockcore.Consensus.TransactionInfo.TxIn(
                 new Blockcore.Consensus.TransactionInfo.OutPoint(Blockcore.NBitcoin.uint256.Zero, 0), null)); // Add fee to the transaction
+
+            TransactionValidation.ThanTheTransactionHasNoErrors(signedReleaseTransaction, coins);
+        }
+
+        [Fact]
+        public void SpendInvestorDisabledPenaltyRecoveryTest()
+        {
+            var network = Networks.Bitcoin.Testnet();
+
+            var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
+
+            // Create the investor params
+            var investorKey = new Key();
+            var investorChangeKey = new Key();
+
+            var funderKey = _derivationOperations.DeriveFounderKey(words, 1);
+            var angorKey = _derivationOperations.DeriveAngorKey(angorRootKey, funderKey);
+            var founderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, funderKey);
+
+            // Set penalty threshold higher than investment amount to disable penalty
+            var smallInvestmentAmount = Money.Coins(1).Satoshi; // Smaller investment
+            var penaltyThreshold = Money.Coins(2).Satoshi;      // Higher threshold
+
+            var projectInfo = new ProjectInfo
+            {
+                TargetAmount = Money.Coins(3).Satoshi,
+                StartDate = DateTime.UtcNow,
+                ExpiryDate = DateTime.UtcNow.AddDays(5),
+                PenaltyDays = 5,
+                PenaltyThreshold = penaltyThreshold, // This should disable penalty for the small investment
+                Stages = new List<Stage>
+                {
+                    new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                    new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                    new() { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+                },
+                FounderKey = funderKey,
+                FounderRecoveryKey = founderRecoveryKey,
+                ProjectIdentifier = angorKey,
+                ProjectSeeders = new ProjectSeeders()
+            };
+
+            var investorPubKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes());
+
+            // Create the investment transaction with penalty disabled due to threshold
+            var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investorPubKey, smallInvestmentAmount);
+
+            var changeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString();
+
+            var signedReleaseTransaction = _investorTransactionActions.BuildAndSignDisabledPenaltyReleaseFundsTransaction(projectInfo, investmentTransaction,
+                changeAddress, _expectedFeeEstimation, Encoders.Hex.EncodeData(investorKey.ToBytes()));
+
+            List<Coin> coins = new();
+            foreach (var indexedTxOut in investmentTransaction.Outputs.AsIndexedOutputs().Where(w => !w.TxOut.ScriptPubKey.IsUnspendable))
+            {
+                coins.Add(new Blockcore.NBitcoin.Coin(indexedTxOut));
+                coins.Add(new Blockcore.NBitcoin.Coin(Blockcore.NBitcoin.uint256.Zero, 0, new Blockcore.NBitcoin.Money(1000),
+                    new Script("4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); // Adding fee inputs
+            }
 
             TransactionValidation.ThanTheTransactionHasNoErrors(signedReleaseTransaction, coins);
         }

@@ -16,6 +16,12 @@ public class InvestmentDraft(IInvestmentAppService investmentAppService, IWallet
 
     public Task<Result<Guid>> Confirm()
     {
+        if (draftModel.PenaltyDisabled)
+        {
+            // already published do nothing
+            return Task.FromResult(Result.Success(Guid.Empty));
+        }
+
         return investmentAppService.SubmitInvestment(wallet.Id.Value, project.Info.Id, DraftModel);
     }
 }

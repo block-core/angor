@@ -12,6 +12,7 @@ public interface IFullProject
     string Name { get; }
     TimeSpan PenaltyDuration { get; }
     IAmountUI RaisedAmount { get; }
+    IAmountUI? PenaltyThreshold { get; }
     int? TotalInvestors { get; }
     DateTime FundingStartDate { get; }
     DateTime FundingEndDate { get; }

@@ -22,6 +22,7 @@ public static class ProjectExtensions
             FundingEndDate = project.EndDate,
             InformationUri = project.InformationUri,
             TargetAmount = project.TargetAmount,
+            PenaltyThreshold = project.PenaltyThreshold,
             Stages = project.Stages.Select(stage => new StageDto
             {
                 Index = stage.Index,
@@ -44,6 +45,7 @@ public static class ProjectExtensions
             FounderKey = project.FounderKey,
             FounderRecoveryKey = project.FounderRecoveryKey,
             PenaltyDays = project.PenaltyDuration.Days,
+            PenaltyThreshold = project.PenaltyThreshold,
             ProjectIdentifier = project.Id.Value,
             StartDate = project.StartingDate,
             ExpiryDate = project.ExpiryDate,

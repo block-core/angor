@@ -10,6 +10,7 @@ public class Project : IProject
     public string ShortDescription { get; set; }
     public string BitcoinAddress { get; set; }
     public IAmountUI TargetAmount { get; set; }
+    public IAmountUI? PenaltyThreshold { get; set; }
     public DateTime StartDate { get; set; }
     public IEnumerable<IStage> Stages { get; set; }
     public string NpubKey { get; set; }
