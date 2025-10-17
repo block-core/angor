@@ -5,7 +5,7 @@ using ReactiveUI.Validation.Extensions;
 
 namespace AngorApp.Sections.Wallet.CreateAndImport.Steps.SeedWordsConfirmation;
 
-public class SeedWordsConfirmationViewModel : ISeedWordsConfirmationViewModel
+public class SeedWordsConfirmationViewModel : ISeedWordsConfirmationViewModel, IValidatable
 {
     public SeedWordsConfirmationViewModel(SeedWords seedWords)
     {

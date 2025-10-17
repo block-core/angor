@@ -6,7 +6,6 @@ using AngorApp.Sections.Wallet.CreateAndImport.Steps.Passphrase.Create;
 using AngorApp.Sections.Wallet.CreateAndImport.Steps.RecoverySeedWords;
 using AngorApp.Sections.Wallet.CreateAndImport.Steps.Summary;
 using AngorApp.UI.Controls.Common.Success;
-using ReactiveUI.Validation.Extensions;
 using Zafiro.Avalonia.Dialogs.Wizards.Slim;
 using Zafiro.UI.Wizards.Slim.Builder;
 

@@ -16,21 +16,21 @@ public class WalletCreationWizard(UIServices uiServices, IWalletProvider walletP
 {
     public async Task<Maybe<Unit>> Start()
     {
-        SeedWords seedWords = null!;
+        SeedWords seedwords = null!;
         Maybe<string> passphrase = null;
         string encryptionKey = null!;
 
         var wizard = WizardBuilder
-            .StartWith(() => new WelcomeViewModel(), "Create New Wallet").NextWhenValid(_ => Unit.Default, text: "Close")
-            .Then(_ => new SeedWordsViewModel(walletAppService, uiServices), "Seed Words").NextWhenValid(model => Result.Success(model.Words.Value!).Tap(x => seedWords = x))
-            .Then(seedwords => new SeedWordsConfirmationViewModel(seedwords), "Confirm Seed Words").NextAlways()
+            .StartWith(() => new WelcomeViewModel(), "Create New Wallet").NextAlways()
+            .Then(_ => new SeedWordsViewModel(walletAppService, uiServices), "Seed Words").NextWhenValid(model => Result.Success(model.Words.Value!).Tap(x => seedwords = x))
+            .Then(_ => new SeedWordsConfirmationViewModel(seedwords), "Confirm Seed Words").NextValueWhenValid(model => model.SeedWords)
             .Then(_ => new PassphraseCreateViewModel(), "Passphrase").NextWhenValid(model => Result.Success(model.Passphrase!).Tap(x => passphrase = x))
             .Then(_ => new EncryptionPasswordViewModel(), "Encryption Key").NextWhenValid(model => Result.Success(model.EncryptionKey!).Tap(x => encryptionKey = x))
             .Then(_ => new SummaryViewModel(walletAppService,
                 walletProvider, uiServices,
                 walletContext,
                 new WalletImportOptions(
-                    seedWords,
+                    seedwords,
                     passphrase,
                     encryptionKey), getNetwork)
             {

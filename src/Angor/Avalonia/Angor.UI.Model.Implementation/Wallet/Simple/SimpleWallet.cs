@@ -11,10 +11,6 @@ using CSharpFunctionalExtensions;
 using DynamicData.Aggregation;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
-using System.Collections.ObjectModel;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using Serilog;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
@@ -27,7 +23,7 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     [ObservableAsProperty] private IAmountUI balance = new AmountUI(0);
     private readonly CompositeDisposable disposable = new();
 
-    public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, INotificationService notificationService, INetworkConfiguration networkConfiguration, ILogger logger)
+    public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, INotificationService notificationService, INetworkConfiguration networkConfiguration)
     {
         this.walletAppService = walletAppService;
         Id = id;
@@ -35,10 +31,6 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
             .DisposeWith(disposable);
 
         Load = transactionCollection.Refresh;
-        Load.IsExecuting.Do(b => logger.Information("Refreshing wallet {WalletId}, IsExecuting: {IsExecuting}", id, b))
-            .Subscribe()
-            .DisposeWith(disposable);
-        
         Load.HandleErrorsWith(notificationService, "Cannot load wallet info");
 
         balanceHelper = transactionCollection.Changes
