@@ -18,9 +18,9 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
     public Task<Maybe<Unit>> Invest(IWallet wallet, FullProject fullProject)
     {
         var wizard = WizardBuilder
-            .StartWith(() => new AmountViewModel(wallet, fullProject), "Enter the amount to invest").NextWith(model => model.Amount)
-            .Then(amount => CreateDraft(wallet.Id, fullProject.ProjectId, amount!.Value), "Transaction Preview").NextWith(model => model.CommitDraft.Enhance("Invest"))
-            .Then(_ => new SuccessViewModel(SuccessMessage()), "Investment Successful").NextAlways("Close")
+            .StartWith(() => new AmountViewModel(wallet, fullProject), "Enter the amount to invest").Next(model => model.Amount).Always()
+            .Then(amount => CreateDraft(wallet.Id, fullProject.ProjectId, amount!.Value), "Transaction Preview").NextCommand(model => model.CommitDraft.Enhance("Invest"))
+            .Then(_ => new SuccessViewModel(SuccessMessage()), "Investment Successful").Next(_ => Unit.Default, "Close").Always()
             .WithCompletionFinalStep();
 
         return uiServices.Dialog.ShowWizard(wizard, @$"Invest in ""{fullProject.Info.Name}""");

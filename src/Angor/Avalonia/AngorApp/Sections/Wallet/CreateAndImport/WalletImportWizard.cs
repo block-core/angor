@@ -20,10 +20,10 @@ public class WalletImportWizard(UIServices uiServices, IWalletProvider walletPro
         string encryptionKey = null!;
 
         var wizard = WizardBuilder
-            .StartWith(() => new ImportWelcomeViewModel(), "Wallet Recovery").NextAlways()
-            .Then(_ => new RecoverySeedWordsViewModel(), "Seed Words").NextWhenValid(model => Result.Success(model.SeedWords).Tap(x => seedWords = x))
-            .Then(_ => new PassphraseCreateViewModel(), "Passphrase").NextWhenValid(model => Result.Success(model.Passphrase!).Tap(x => passphrase = x))
-            .Then(_ => new EncryptionPasswordViewModel(), "Encryption Key").NextWhenValid(model => Result.Success(model.EncryptionKey!).Tap(x => encryptionKey = x))
+            .StartWith(() => new ImportWelcomeViewModel(), "Wallet Recovery").Next(_ => Unit.Default).Always()
+            .Then(_ => new RecoverySeedWordsViewModel(), "Seed Words").NextResult(model => Result.Success(model.SeedWords).Tap(x => seedWords = x)).WhenValid<RecoverySeedWordsViewModel>()
+            .Then(_ => new PassphraseCreateViewModel(), "Passphrase").NextResult(model => Result.Success(model.Passphrase!).Tap(x => passphrase = x)).WhenValid<PassphraseCreateViewModel>()
+            .Then(_ => new EncryptionPasswordViewModel(), "Encryption Key").NextResult(model => Result.Success(model.EncryptionKey!).Tap(x => encryptionKey = x)).WhenValid<EncryptionPasswordViewModel>()
             .Then(_ => new SummaryViewModel(walletAppService,
                 walletProvider, uiServices, walletContext,
                 new WalletImportOptions(
@@ -32,8 +32,8 @@ public class WalletImportWizard(UIServices uiServices, IWalletProvider walletPro
                     encryptionKey), getNetwork)
             {
                 IsRecovery = true
-            }, "Summary").NextWith(model => model.CreateWallet.Enhance("Import Wallet"))
-            .Then(_ => new SuccessViewModel("Wallet imported successfully"), "Wallet Recovery").NextAlways("Close")
+            }, "Summary").NextCommand(model => model.CreateWallet.Enhance("Import Wallet"))
+            .Then(_ => new SuccessViewModel("Wallet imported successfully"), "Wallet Recovery").Next(_ => Unit.Default, "Close").Always()
             .WithCompletionFinalStep();
 
         return await uiServices.Dialog.ShowWizard(wizard, "Recover wallet").Map(_ => Unit.Default);

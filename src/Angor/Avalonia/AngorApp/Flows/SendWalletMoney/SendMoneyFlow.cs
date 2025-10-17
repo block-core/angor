@@ -12,9 +12,10 @@ public class SendMoneyFlow(IWalletAppService walletAppService, UIServices uiServ
 {
     public async Task SendMoney(IWallet sourceWallet)
     {
-        var wizard = WizardBuilder.StartWith(() => new AddressAndAmountViewModel(sourceWallet), "Amount and address").NextValueWhenValid(model => (model.Amount, model.Address))
-            .Then(sendData => new TransactionDraftViewModel(sourceWallet.Id, walletAppService, new SendAmount("Test", sendData.Amount.Value, sendData.Address), uiServices), "Summary").NextWith(model => model.Confirm.Enhance("Confirm"))
-            .Then(_ => new SuccessViewModel("Transaction sent!"), "Transaction sent").NextAlways("Close")
+        var wizard = WizardBuilder
+            .StartWith(() => new AddressAndAmountViewModel(sourceWallet), "Amount and address").Next(model => (model.Amount, model.Address)).WhenValid<AddressAndAmountViewModel>()
+            .Then(sendData => new TransactionDraftViewModel(sourceWallet.Id, walletAppService, new SendAmount("Test", sendData.Amount.Value, sendData.Address), uiServices), "Summary").NextCommand(model => model.Confirm.Enhance("Confirm"))
+            .Then(_ => new SuccessViewModel("Transaction sent!"), "Transaction sent").Next(_ => Unit.Default, "Close").Always()
             .WithCompletionFinalStep();
 
         await uiServices.Dialog.ShowWizard(wizard, "Send");

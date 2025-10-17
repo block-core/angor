@@ -21,11 +21,11 @@ public class WalletCreationWizard(UIServices uiServices, IWalletProvider walletP
         string encryptionKey = null!;
 
         var wizard = WizardBuilder
-            .StartWith(() => new WelcomeViewModel(), "Create New Wallet").NextAlways()
-            .Then(_ => new SeedWordsViewModel(walletAppService, uiServices), "Seed Words").NextWhenValid(model => Result.Success(model.Words.Value!).Tap(x => seedwords = x))
-            .Then(_ => new SeedWordsConfirmationViewModel(seedwords), "Confirm Seed Words").NextValueWhenValid(model => model.SeedWords)
-            .Then(_ => new PassphraseCreateViewModel(), "Passphrase").NextWhenValid(model => Result.Success(model.Passphrase!).Tap(x => passphrase = x))
-            .Then(_ => new EncryptionPasswordViewModel(), "Encryption Key").NextWhenValid(model => Result.Success(model.EncryptionKey!).Tap(x => encryptionKey = x))
+            .StartWith(() => new WelcomeViewModel(), "Create New Wallet").Next(_ => Unit.Default).Always()
+            .Then(_ => new SeedWordsViewModel(walletAppService, uiServices), "Seed Words").NextResult(model => Result.Success(model.Words.Value!).Tap(x => seedwords = x)).WhenValid<SeedWordsViewModel>()
+            .Then(_ => new SeedWordsConfirmationViewModel(seedwords), "Confirm Seed Words").Next(model => model.SeedWords).WhenValid<SeedWordsConfirmationViewModel>()
+            .Then(_ => new PassphraseCreateViewModel(), "Passphrase").NextResult(model => Result.Success(model.Passphrase!).Tap(x => passphrase = x)).WhenValid<PassphraseCreateViewModel>()
+            .Then(_ => new EncryptionPasswordViewModel(), "Encryption Key").NextResult(model => Result.Success(model.EncryptionKey!).Tap(x => encryptionKey = x)).WhenValid<EncryptionPasswordViewModel>()
             .Then(_ => new SummaryViewModel(walletAppService,
                 walletProvider, uiServices,
                 walletContext,
@@ -35,8 +35,8 @@ public class WalletCreationWizard(UIServices uiServices, IWalletProvider walletP
                     encryptionKey), getNetwork)
             {
                 IsRecovery = false
-            }, "Summary").NextWith(model => model.CreateWallet.Enhance("Create Wallet"))
-            .Then(_ => new SuccessViewModel("Wallet created successfully"), "Wallet Creation").NextAlways("Close")
+            }, "Summary").NextCommand(model => model.CreateWallet.Enhance("Create Wallet"))
+            .Then(_ => new SuccessViewModel("Wallet created successfully"), "Wallet Creation").Next(_ => Unit.Default, "Close").Always()
             .WithCompletionFinalStep();
 
         return await uiServices.Dialog.ShowWizard(wizard, "Create wallet").Map(_ => Unit.Default);
