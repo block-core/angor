@@ -49,5 +49,5 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
 
     public IEnhancedCommand<Result<IEnumerable<IFounderProjectViewModel>>> LoadProjects { get; }
 
-    public IEnhancedCommand<Unit, Result<Maybe<string>>> Create { get; }
+    public IEnhancedCommand<Result<Maybe<string>>> Create { get; }
 }

@@ -47,5 +47,5 @@ public class FounderSectionViewModelDesign : IFounderSectionViewModel
 
     public IReadOnlyCollection<IFounderProjectViewModel> ProjectsList { get; }
 
-    public IEnhancedCommand<Unit, Result<Maybe<string>>> Create { get; }
+    public IEnhancedCommand<Result<Maybe<string>>> Create { get; }
 }

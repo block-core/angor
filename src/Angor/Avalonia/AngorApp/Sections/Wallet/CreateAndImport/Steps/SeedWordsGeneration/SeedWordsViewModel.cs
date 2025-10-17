@@ -8,7 +8,7 @@ using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.Sections.Wallet.CreateAndImport.Steps.SeedWordsGeneration;
 
-public partial class SeedWordsViewModel : ReactiveValidationObject, ISeedWordsViewModel
+public partial class SeedWordsViewModel : ReactiveValidationObject, ISeedWordsViewModel, IValidatable
 {
     private readonly IWalletAppService walletAppService;
 

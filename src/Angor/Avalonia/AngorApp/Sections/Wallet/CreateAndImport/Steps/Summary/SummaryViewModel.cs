@@ -6,7 +6,7 @@ using Zafiro.Reactive;
 
 namespace AngorApp.Sections.Wallet.CreateAndImport.Steps.Summary;
 
-public partial class SummaryViewModel : ReactiveValidationObject, ISummaryViewModel
+public partial class SummaryViewModel : ReactiveValidationObject, ISummaryViewModel, IValidatable
 {
     private readonly IWalletAppService walletAppService;
     private readonly IWalletProvider walletProvider;

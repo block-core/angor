@@ -5,7 +5,7 @@ using ReactiveUI.Validation.Helpers;
 
 namespace AngorApp.Flows.Invest.Amount;
 
-public partial class AmountViewModel : ReactiveValidationObject, IAmountViewModel
+public partial class AmountViewModel : ReactiveValidationObject, IAmountViewModel, IValidatable
 {
     [Reactive] private long? amount;
     [ObservableAsProperty] private IEnumerable<Breakdown> stageBreakdowns;
@@ -19,7 +19,7 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
             .WhenAnyValue(x => x.Amount)
             .WithLatestFrom(wallet.WhenAnyValue(x => x.Balance), (amount, walletBalance) => amount is null || amount <= walletBalance.Sats);
         
-        this.ValidationRule(x => x.Amount, isValidAmount, "Amount exceeds balance");
+        //this.ValidationRule(x => x.Amount, isValidAmount, "Amount exceeds balance");
 
         stageBreakdownsHelper = this.WhenAnyValue(model => model.Amount)
             .WhereNotNull()

@@ -7,37 +7,36 @@ using AngorApp.Sections.Wallet.CreateAndImport.Steps.SeedWordsConfirmation;
 using AngorApp.Sections.Wallet.CreateAndImport.Steps.SeedWordsGeneration;
 using AngorApp.Sections.Wallet.CreateAndImport.Steps.Summary;
 using AngorApp.UI.Controls.Common.Success;
-using ReactiveUI.Validation.Extensions;
 using Zafiro.Avalonia.Dialogs.Wizards.Slim;
 using Zafiro.UI.Wizards.Slim.Builder;
 
 namespace AngorApp.Sections.Wallet.CreateAndImport;
 
-public class WalletCreationWizard(UI.Services.UIServices uiServices, IWalletProvider walletProvider, IWalletAppService walletAppService, Func<BitcoinNetwork> getNetwork, IWalletContext walletContext)
+public class WalletCreationWizard(UIServices uiServices, IWalletProvider walletProvider, IWalletAppService walletAppService, Func<BitcoinNetwork> getNetwork, IWalletContext walletContext)
 {
     public async Task<Maybe<Unit>> Start()
     {
-        SeedWords seedWords = null!;
+        SeedWords seedwords = null!;
         Maybe<string> passphrase = null;
         string encryptionKey = null!;
 
         var wizard = WizardBuilder
-            .StartWith(() => new WelcomeViewModel(), model => ReactiveCommand.Create(() => Result.Success(Unit.Default), model.IsValid).Enhance("Next"), "Create New Wallet")
-            .Then(_ => new SeedWordsViewModel(walletAppService, uiServices), model => ReactiveCommand.Create(() => Result.Success(model.Words.Value!).Tap(x => seedWords = x), model.IsValid).Enhance("Next"), "Seed Words")
-            .Then(seedwords => new SeedWordsConfirmationViewModel(seedwords), model => ReactiveCommand.Create(() => Result.Success(Unit.Default), model.IsValid).Enhance("Next"), "Confirm Seed Words")
-            .Then(_ => new PassphraseCreateViewModel(), model => ReactiveCommand.Create(() => Result.Success<string>(model.Passphrase).Tap(x => passphrase = x), model.IsValid()).Enhance("Next"), "Passphrase")
-            .Then(_ => new EncryptionPasswordViewModel(), model => ReactiveCommand.Create(() => Result.Success(model.EncryptionKey!).Tap(x => encryptionKey = x), model.IsValid()).Enhance("Next"), "Encryption Key")
+            .StartWith(() => new WelcomeViewModel(), "Create New Wallet").Next(_ => Unit.Default).Always()
+            .Then(_ => new SeedWordsViewModel(walletAppService, uiServices), "Seed Words").NextResult(model => Result.Success(model.Words.Value!).Tap(x => seedwords = x)).WhenValid<SeedWordsViewModel>()
+            .Then(_ => new SeedWordsConfirmationViewModel(seedwords), "Confirm Seed Words").Next(model => model.SeedWords).WhenValid<SeedWordsConfirmationViewModel>()
+            .Then(_ => new PassphraseCreateViewModel(), "Passphrase").NextResult(model => Result.Success(model.Passphrase!).Tap(x => passphrase = x)).WhenValid<PassphraseCreateViewModel>()
+            .Then(_ => new EncryptionPasswordViewModel(), "Encryption Key").NextResult(model => Result.Success(model.EncryptionKey!).Tap(x => encryptionKey = x)).WhenValid<EncryptionPasswordViewModel>()
             .Then(_ => new SummaryViewModel(walletAppService,
-                walletProvider, uiServices, 
+                walletProvider, uiServices,
                 walletContext,
                 new WalletImportOptions(
-                    seedWords,
+                    seedwords,
                     passphrase,
                     encryptionKey), getNetwork)
             {
                 IsRecovery = false
-            }, model => model.CreateWallet.Enhance("Create Wallet"), "Summary")
-            .Then(_ => new SuccessViewModel("Wallet created successfully"), model => ReactiveCommand.Create(() => Result.Success(Unit.Default)).Enhance("Close"), "Wallet Creation")
+            }, "Summary").NextCommand(model => model.CreateWallet.Enhance("Create Wallet"))
+            .Then(_ => new SuccessViewModel("Wallet created successfully"), "Wallet Creation").NextUnit("Close").Always()
             .WithCompletionFinalStep();
 
         return await uiServices.Dialog.ShowWizard(wizard, "Create wallet").Map(_ => Unit.Default);
