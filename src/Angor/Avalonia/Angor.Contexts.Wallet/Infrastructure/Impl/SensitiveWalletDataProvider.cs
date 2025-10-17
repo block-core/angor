@@ -31,6 +31,11 @@ public class SensitiveWalletDataProvider(IWalletStore walletStore, IWalletSecuri
         cachedSensitiveData[id] = data;
     }
 
+    public void RemoveSensitiveData(WalletId id)
+    {
+        cachedSensitiveData.Remove(id);
+    }
+
     private async Task<Result<EncryptedWallet>> GetEncryptedWallet(WalletId id)
     {
         return await walletStore.GetAll()

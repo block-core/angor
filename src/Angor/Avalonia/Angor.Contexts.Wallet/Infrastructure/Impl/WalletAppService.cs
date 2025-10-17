@@ -1,3 +1,4 @@
+using System.Linq;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
@@ -193,6 +194,33 @@ public class WalletAppService(
     {
         return walletFactory.CreateWallet(SingleWalletName, seedWords, passphrase, encryptionKey, network)
             .Map(_ => SingleWalletId);
+    }
+    
+    public async Task<Result> DeleteWallet(WalletId walletId)
+    {
+        if (walletId != SingleWalletId)
+        {
+            return Result.Failure("Invalid wallet ID");
+        }
+
+        var walletsResult = await walletStore.GetAll();
+        if (walletsResult.IsFailure)
+        {
+            return Result.Failure(walletsResult.Error);
+        }
+
+        var wallets = walletsResult.Value.ToList();
+        wallets.RemoveAll(wallet => wallet.Id == walletId.Value);
+
+        var saveResult = await walletStore.SaveAll(wallets);
+        if (saveResult.IsFailure)
+        {
+            return Result.Failure(saveResult.Error);
+        }
+
+        sensitiveWalletDataProvider.RemoveSensitiveData(walletId);
+
+        return Result.Success();
     }
 
     public string GenerateRandomSeedwords()

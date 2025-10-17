@@ -30,4 +30,8 @@ public class TestSensitiveWalletDataProvider : ISensitiveWalletDataProvider
     {
         throw new NotImplementedException();
     }
+
+    public void RemoveSensitiveData(WalletId id)
+    {
+    }
 }

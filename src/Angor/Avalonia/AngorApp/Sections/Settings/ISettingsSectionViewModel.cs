@@ -19,6 +19,7 @@ internal interface ISettingsSectionViewModel : IDisposable
     ReactiveCommand<Unit, Unit> AddExplorer { get; }
     ReactiveCommand<Unit, Unit> AddIndexer { get; }
     ReactiveCommand<Unit, Unit> AddRelay { get; }
+    ReactiveCommand<Unit, Unit> DeleteWallet { get; }
 }
 
 internal class SettingsSectionViewModelDesign : ISettingsSectionViewModel
@@ -50,5 +51,6 @@ internal class SettingsSectionViewModelDesign : ISettingsSectionViewModel
     public ReactiveCommand<Unit, Unit> AddExplorer { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> AddIndexer { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> AddRelay { get; } = ReactiveCommand.Create(() => { });
+    public ReactiveCommand<Unit, Unit> DeleteWallet { get; } = ReactiveCommand.Create(() => { });
     public void Dispose() { }
 }

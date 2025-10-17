@@ -11,12 +11,16 @@ using System.Reactive.Disposables;
 using AngorApp.UI.Services;
 using ReactiveUI;
 using Zafiro.Avalonia.Dialogs;
+using Zafiro.CSharpFunctionalExtensions;
 
 namespace AngorApp.Sections.Settings;
 
 public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSectionViewModel
 {
     private readonly INetworkStorage networkStorage;
+    private readonly IWalletStore walletStore;
+    private readonly UIServices uiServices;
+    private readonly IWalletContext walletContext;
 
     private string network;
     private string newExplorer;
@@ -27,9 +31,12 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private readonly CompositeDisposable disposable = new();
     
-    public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, INetworkService networkService, INetworkConfiguration networkConfiguration)
+    public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, INetworkService networkService, INetworkConfiguration networkConfiguration, IWalletContext walletContext)
     {
         this.networkStorage = networkStorage;
+        this.walletStore = walletStore;
+        this.uiServices = uiServices;
+        this.walletContext = walletContext;
 
         networkService.AddSettingsIfNotExist();
 
@@ -46,10 +53,16 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         AddIndexer = ReactiveCommand.Create(DoAddIndexer, this.WhenAnyValue(x => x.NewIndexer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);;
         AddRelay = ReactiveCommand.Create(DoAddRelay, this.WhenAnyValue(x => x.NewRelay, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
 
+        var canDeleteWallet = walletContext.CurrentWalletChanges
+            .Select(maybe => maybe.HasValue)
+            .StartWith(walletContext.CurrentWallet.HasValue)
+            .ObserveOn(RxApp.MainThreadScheduler);
+        DeleteWallet = ReactiveCommand.CreateFromTask(DeleteWalletAsync, canDeleteWallet).DisposeWith(disposable);
+
         this.WhenAnyValue(x => x.Network)
             .Skip(1)
             .Where(_ => !restoringNetwork)
-            .SelectMany(async n => (n, await uiServices.Dialog.ShowConfirmation("Change network?", "Changing network will delete the current wallet")))
+            .SelectMany(async n => (n, await this.uiServices.Dialog.ShowConfirmation("Change network?", "Changing network will delete the current wallet")))
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(t => t.Item2.Match(
                 confirmed =>
@@ -64,7 +77,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
                         Reset(Explorers, s.Explorers.Select(CreateExplorer));
                         Reset(Indexers, s.Indexers.Select(CreateIndexer));
                         Reset(Relays, s.Relays.Select(CreateRelay));
-                        walletStore.SaveAll([]);
+                        this.walletStore.SaveAll([]);
                         currentNetwork = t.n;
                     }
                     else
@@ -91,6 +104,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     public ReactiveCommand<Unit, Unit> AddExplorer { get; }
     public ReactiveCommand<Unit, Unit> AddIndexer { get; }
     public ReactiveCommand<Unit, Unit> AddRelay { get; }
+    public ReactiveCommand<Unit, Unit> DeleteWallet { get; }
 
     public string Network
     {
@@ -195,6 +209,32 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Relays.Remove(url);
         Refresh(Relays);
         SaveSettings();
+    }
+
+    private async Task DeleteWalletAsync()
+    {
+        var confirmation = await uiServices.Dialog.ShowConfirmation("Delete wallet?", "Deleting the current wallet will remove all local wallet data. This action cannot be undone.");
+        var shouldDelete = confirmation.GetValueOrDefault(() => false);
+
+        if (!shouldDelete)
+        {
+            return;
+        }
+
+        var wallet = walletContext.CurrentWallet.GetValueOrDefault();
+        if (wallet is null)
+        {
+            return;
+        }
+
+        var deleteResult = await walletContext.DeleteWallet(wallet.Id);
+        if (deleteResult.IsFailure)
+        {
+            await uiServices.Dialog.ShowMessage("Delete wallet failed", deleteResult.Error);
+            return;
+        }
+
+        await uiServices.Dialog.ShowMessage("Wallet deleted", "The current wallet has been removed.");
     }
 
     private static void Refresh(ObservableCollection<SettingsUrlViewModel> collection)
