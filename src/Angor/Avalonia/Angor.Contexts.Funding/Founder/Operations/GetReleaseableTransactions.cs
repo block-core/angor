@@ -19,7 +19,7 @@ public static class GetReleaseableTransactions
         public async Task<Result<IEnumerable<ReleaseableTransactionDto>>> Handle(GetReleaseableTransactionsRequest request, CancellationToken cancellationToken)
         {
             
-            var projectResult = await projectRepository.Get(request.ProjectId);
+            var projectResult = await projectRepository.GetAsync(request.ProjectId);
             if (projectResult.IsFailure)
                 return Result.Failure<IEnumerable<ReleaseableTransactionDto>>(projectResult.Error);
             

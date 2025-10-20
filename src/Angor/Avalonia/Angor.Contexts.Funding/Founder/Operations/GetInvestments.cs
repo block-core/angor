@@ -35,7 +35,7 @@ public static class GetInvestments
 
         private async Task<Result<IEnumerable<Investment>>> GetInvestments(GetInvestmentsRequest request)
         {
-            var projectResult = await projectRepository.Get(request.ProjectId);
+            var projectResult = await projectRepository.GetAsync(request.ProjectId);
             if (projectResult.IsFailure)
             {
                 return Result.Failure<IEnumerable<Investment>>(projectResult.Error);

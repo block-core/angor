@@ -1,5 +1,8 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Json;
+using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Text.Json;
 using Angor.Shared.Models;
 using Blockcore.Consensus.TransactionInfo;
@@ -14,6 +17,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
     private readonly IHttpClientFactory _clientFactory;
     private readonly INetworkService _networkService;
+    
+    private ConcurrentDictionary<string, HttpClient> _clients = new();
 
     private const string AngorApiRoute = "/api/v1/query/Angor";
     private const string MempoolApiRoute = "/api/v1";
@@ -113,8 +118,16 @@ public class MempoolSpaceIndexerApi : IIndexerService
     private HttpClient GetIndexerClient()
     {
         var indexer = _networkService.GetPrimaryIndexer();
-        var client = _clientFactory.CreateClient();
+        var key = string.IsNullOrEmpty(indexer.Name) ? indexer.Name : indexer.Url;
+        if (_clients.TryGetValue(key, out var indexerClient))
+            return indexerClient;
+        
+        var client = _clientFactory.CreateClient(key);
         client.BaseAddress = new Uri(indexer.Url);
+        client.Timeout = TimeSpan.FromSeconds(10);
+        
+        _clients.TryAdd(key, client);
+        
         return client;
     }
     

@@ -13,7 +13,7 @@ public class NostrDecrypter(IDerivationOperations derivationOperations, IEncrypt
     public Task<Result<string>> Decrypt(Guid walletId, ProjectId projectId, DirectMessage nostrMessage)
     {
         return from sensitiveData in provider.GetSensitiveData(walletId)
-            from project in projectRepository.Get(projectId)
+            from project in projectRepository.GetAsync(projectId)
             from nostrPrivateKey in Result.Try(() => derivationOperations.DeriveProjectNostrPrivateKeyAsync(sensitiveData.ToWalletWords(), project.FounderKey))
             from decrypted in Result.Try(() =>
             {

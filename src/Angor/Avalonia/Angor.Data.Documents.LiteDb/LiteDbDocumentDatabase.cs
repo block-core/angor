@@ -34,19 +34,14 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase, IDisposable
         return new LiteDbDocumentCollection<T>(_database, _logger);
     }
 
-    public IDocumentCollection<T> GetCollection<T>(string? collectionName = null) where T : BaseDocument
+    public IDocumentCollection<T> GetCollection<T>(string collectionName) where T : BaseDocument
     {
         // If no custom name provided, use the standard approach
-        if (string.IsNullOrEmpty(collectionName))
-        {
-            return GetCollection<T>();
-        }
-        
-        // Only create custom-named collection if explicitly requested
-        return new LiteDbDocumentCollection<T>(_database, _logger, collectionName);
+        return string.IsNullOrEmpty(collectionName) 
+            ? GetCollection<T>() 
+            : new LiteDbDocumentCollection<T>(_database, _logger, collectionName);
     }
 
-    // ... rest of the methods remain the same
     public async Task<bool> BeginTransactionAsync()
     {
         try

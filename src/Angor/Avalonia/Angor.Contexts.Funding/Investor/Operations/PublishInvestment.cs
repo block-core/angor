@@ -35,7 +35,7 @@ public static class PublishInvestment
     {
         public async Task<Result> Handle(PublishInvestmentRequest request, CancellationToken cancellationToken)
         {
-            var projectResult = await projectRepository.Get(request.ProjectId);
+            var projectResult = await projectRepository.GetAsync(request.ProjectId);
 
             if (projectResult.IsFailure)
                 return projectResult;

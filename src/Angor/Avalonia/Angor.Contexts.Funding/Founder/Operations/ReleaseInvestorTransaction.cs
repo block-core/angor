@@ -27,7 +27,7 @@ public static class ReleaseInvestorTransaction
     {
         public async Task<Result> Handle(ReleaseInvestorTransactionRequest request, CancellationToken cancellationToken)
         {
-            var projectResult = await projectRepository.Get(request.ProjectId);
+            var projectResult = await projectRepository.GetAsync(request.ProjectId);
             if (projectResult.IsFailure)
                 return Result.Failure(projectResult.Error);
             

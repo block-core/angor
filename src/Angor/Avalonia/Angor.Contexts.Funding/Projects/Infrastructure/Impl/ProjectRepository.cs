@@ -127,17 +127,17 @@ public class ProjectRepository(
             .Map(maybes => maybes.Values());
     }
 
-    public Task<Result<Project>> Get(ProjectId id)
+    public Task<Result<Project>> GetAsync(ProjectId id)
     {
         return GetSingle(id).ToResult($"Project not found: {id.Value}");
     }
 
-    public Task<Result<IEnumerable<Project>>> GetAll(params ProjectId[] ids)
+    public Task<Result<IEnumerable<Project>>> GetAllAsync(params ProjectId[] ids)
     {
         return Get(ids);
     }
 
-    public Task<Result<IEnumerable<Project>>> Latest()
+    public Task<Result<IEnumerable<Project>>> LatestAsync()
     {
         return GetProjects(() => Result.Try(() => indexerService.GetProjectsAsync(null, 20)).Map(list => list.AsEnumerable()));
     }

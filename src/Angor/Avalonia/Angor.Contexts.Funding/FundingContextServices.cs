@@ -28,7 +28,7 @@ public static class FundingContextServices
         
         services.AddSingleton<IPortfolioRepository, PortfolioRepository>();
         //services.AddSingleton<IProjectRepository, ProjectRepository>();
-        services.AddSingleton<IProjectRepository, DocumentProjectRepository>();
+        services.AddScoped<IProjectRepository, DocumentProjectRepository>();
         services.AddSingleton<INostrDecrypter, NostrDecrypter>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateInvestment.CreateInvestmentTransactionHandler).Assembly));
         services.TryAddSingleton<ISerializer, Serializer>();

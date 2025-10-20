@@ -18,7 +18,7 @@ public class ProjectInvestmentsRepository(IProjectRepository projectRepository, 
 {
     public async Task<Result<IEnumerable<StageData>>> ScanFullInvestments(string projectId)
     {
-        var project = await projectRepository.Get(new ProjectId(projectId));
+        var project = await projectRepository.GetAsync(new ProjectId(projectId));
 
             if (project.IsFailure)
                 return Result.Failure<IEnumerable<StageData>>("Failed to retrieve project data.");

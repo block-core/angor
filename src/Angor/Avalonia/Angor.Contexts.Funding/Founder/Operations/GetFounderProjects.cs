@@ -22,7 +22,7 @@ public static class GetFounderProjects
         public Task<Result<IEnumerable<ProjectDto>>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
         {
             return GetProjectIds(request)
-                .Bind(ids => projectRepository.GetAll(ids.ToArray()))
+                .Bind(ids => projectRepository.GetAllAsync(ids.ToArray()))
                 .MapEach(project => project.ToDto())
                 .WithTimeout(TimeSpan.FromSeconds(10));
         }

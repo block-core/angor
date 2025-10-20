@@ -50,7 +50,7 @@ public static class CompositionRoot
 
         services.AddLiteDbDocumentStorage(profileName);
         
-        RegisterLogger(services, logger);
+       // RegisterLogger(services, logger);
         services.AddKeyedSingleton<IStore>("file", store);
         services.AddSingleton<IStore>(provider => provider.GetKeyedService<IStore>("file")!);
 
