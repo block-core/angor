@@ -3,7 +3,7 @@ using ReactiveUI.Validation.Helpers;
 
 namespace AngorApp.Flows.SendWalletMoney.AddressAndAmount;
 
-public partial class AddressAndAmountViewModel : ReactiveValidationObject, IAddressAndAmountViewModel
+public partial class AddressAndAmountViewModel : ReactiveValidationObject, IAddressAndAmountViewModel, IValidatable
 {
     [Reactive] private string? address;
     [Reactive] private long? amount;

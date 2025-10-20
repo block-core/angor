@@ -4,7 +4,7 @@ using ReactiveUI.Validation.Helpers;
 
 namespace AngorApp.Sections.Wallet.CreateAndImport.Steps.RecoverySeedWords;
 
-public partial class RecoverySeedWordsViewModel : ReactiveValidationObject, IRecoverySeedWordsViewModel
+public partial class RecoverySeedWordsViewModel : ReactiveValidationObject, IRecoverySeedWordsViewModel, IValidatable
 {
     [Reactive] private string? rawWordList;
 

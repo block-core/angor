@@ -6,7 +6,6 @@ using AngorApp.Sections.Wallet.CreateAndImport.Steps.Passphrase.Create;
 using AngorApp.Sections.Wallet.CreateAndImport.Steps.RecoverySeedWords;
 using AngorApp.Sections.Wallet.CreateAndImport.Steps.Summary;
 using AngorApp.UI.Controls.Common.Success;
-using ReactiveUI.Validation.Extensions;
 using Zafiro.Avalonia.Dialogs.Wizards.Slim;
 using Zafiro.UI.Wizards.Slim.Builder;
 
@@ -21,10 +20,10 @@ public class WalletImportWizard(UIServices uiServices, IWalletProvider walletPro
         string encryptionKey = null!;
 
         var wizard = WizardBuilder
-            .StartWith(() => new ImportWelcomeViewModel(), _ => ReactiveCommand.Create(() => Result.Success(Unit.Default)).Enhance("Next"), "Wallet Recovery")
-            .Then(_ => new RecoverySeedWordsViewModel(), model => ReactiveCommand.Create(() => Result.Success(model.SeedWords).Tap(x => seedWords = x), model.IsValid).Enhance("Next"), "Seed Words")
-            .Then(_ => new PassphraseCreateViewModel(), model => ReactiveCommand.Create<Result<string>>(() => Result.Success<string>(model.Passphrase).Tap(x => passphrase = x), model.IsValid()).Enhance("Next"), "Passphrase")
-            .Then(_ => new EncryptionPasswordViewModel(), model => ReactiveCommand.Create<Result<string>>(() => Result.Success<string>(model.EncryptionKey!).Tap(x => encryptionKey = x), model.IsValid()).Enhance("Next"), "Encryption Key")
+            .StartWith(() => new ImportWelcomeViewModel(), "Wallet Recovery").Next(_ => Unit.Default).Always()
+            .Then(_ => new RecoverySeedWordsViewModel(), "Seed Words").NextResult(model => Result.Success(model.SeedWords).Tap(x => seedWords = x)).WhenValid<RecoverySeedWordsViewModel>()
+            .Then(_ => new PassphraseCreateViewModel(), "Passphrase").NextResult(model => Result.Success(model.Passphrase!).Tap(x => passphrase = x)).WhenValid<PassphraseCreateViewModel>()
+            .Then(_ => new EncryptionPasswordViewModel(), "Encryption Key").NextResult(model => Result.Success(model.EncryptionKey!).Tap(x => encryptionKey = x)).WhenValid<EncryptionPasswordViewModel>()
             .Then(_ => new SummaryViewModel(walletAppService,
                 walletProvider, uiServices, walletContext,
                 new WalletImportOptions(
@@ -33,8 +32,8 @@ public class WalletImportWizard(UIServices uiServices, IWalletProvider walletPro
                     encryptionKey), getNetwork)
             {
                 IsRecovery = true
-            }, model => model.CreateWallet.Enhance("Import Wallet"), "Summary")
-            .Then(_ => new SuccessViewModel("Wallet imported successfully"), model => ReactiveCommand.Create(() => Result.Success(Unit.Default)).Enhance("Close"), "Wallet Recovery")
+            }, "Summary").NextCommand(model => model.CreateWallet.Enhance("Import Wallet"))
+            .Then(_ => new SuccessViewModel("Wallet imported successfully"), "Wallet Recovery").Next(_ => Unit.Default, "Close").Always()
             .WithCompletionFinalStep();
 
         return await uiServices.Dialog.ShowWizard(wizard, "Recover wallet").Map(_ => Unit.Default);

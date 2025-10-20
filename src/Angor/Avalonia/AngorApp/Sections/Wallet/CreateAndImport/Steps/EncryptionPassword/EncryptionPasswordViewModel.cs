@@ -4,7 +4,7 @@ using ReactiveUI.Validation.Helpers;
 
 namespace AngorApp.Sections.Wallet.CreateAndImport.Steps.EncryptionPassword;
 
-public partial class EncryptionPasswordViewModel : ReactiveValidationObject, IEncryptionPasswordViewModel
+public partial class EncryptionPasswordViewModel : ReactiveValidationObject, IEncryptionPasswordViewModel, IValidatable
 {
     [Reactive] private string? encryptionKey;
     [Reactive] private string? passwordConfirm;
@@ -15,4 +15,6 @@ public partial class EncryptionPasswordViewModel : ReactiveValidationObject, IEn
         this.ValidationRule<EncryptionPasswordViewModel, string>(x => x.PasswordConfirm!, this.WhenAnyValue<EncryptionPasswordViewModel, bool, string, string>(x => x.EncryptionKey!, x => x.PasswordConfirm!, Object.Equals),
             "Passwords do not match");
     }
+
+    public IObservable<bool> IsValid => this.IsValid();
 }
