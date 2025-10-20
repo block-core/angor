@@ -14,4 +14,5 @@ public interface IWalletAppService
     Task<Result<WalletId>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network);
     public string GenerateRandomSeedwords();
     Task<Result> GetTestCoins(WalletId walletId);
+    Task<Result> DeleteWallet(WalletId walletId);
 }
