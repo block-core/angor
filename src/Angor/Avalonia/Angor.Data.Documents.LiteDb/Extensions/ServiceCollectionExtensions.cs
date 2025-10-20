@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Angor.Data.Documents.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace Angor.Data.Documents.LiteDb.Extensions;
 
@@ -13,7 +14,9 @@ public static class ServiceCollectionExtensions
         }
 
         // Register the factory
-        services.AddScoped<IAngorDocumentDatabaseFactory, LiteDbDocumentDatabaseFactory>();
+        services.AddScoped<IAngorDocumentDatabaseFactory>(provider => new LiteDbDocumentDatabaseFactory(
+            provider.GetRequiredService<ILogger<LiteDbDocumentDatabase>>(),
+            profileName));
 
         // Register the database with profile-specific configuration
         services.AddScoped<IAngorDocumentDatabase>(provider => 

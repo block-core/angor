@@ -23,23 +23,6 @@ public class DocumentProjectRepository(IGenericDocumentCollection<Project> colle
 
     public async Task<Result<IEnumerable<Project>>> GetAllAsync(params ProjectId[] ids)
     {
-        var stringIds = ids.Select(id => id.Value).ToArray();
-    
-        var list = new List<Project>();
-        foreach (var id in stringIds)
-        {
-            var projectResult = await collection.FindByIdAsync(id);
-            if (projectResult.IsSuccess && projectResult.Value != null)
-            {
-                list.Add(projectResult.Value);
-            }
-        }
-    
-        return list;
-    }
-
-    public async Task<Result<IEnumerable<Project>>> GetAllOld(params ProjectId[] ids)
-    {
         if (ids == null || ids.Length == 0)
             return Result.Failure<IEnumerable<Project>>("ProjectId cannot be null");
 
@@ -114,7 +97,7 @@ public class DocumentProjectRepository(IGenericDocumentCollection<Project> colle
             if (!response.Any())
                 return Result.Failure<IEnumerable<Project>>("No projects found");
 
-            var insertResult = await collection.InsertAsync(response.ToArray());
+            var insertResult = await collection.InsertAsync(response.ToArray()); //TODO log the result?
 
             return Result.Success(response.Concat(localLookup));
         }

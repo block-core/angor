@@ -8,13 +8,15 @@ public class LiteDbDocumentDatabaseFactory : IAngorDocumentDatabaseFactory
     private readonly ILogger<LiteDbDocumentDatabase> _logger;
     private readonly string _basePath;
 
-    public LiteDbDocumentDatabaseFactory(ILogger<LiteDbDocumentDatabase> logger)
+    public LiteDbDocumentDatabaseFactory(ILogger<LiteDbDocumentDatabase> logger, string profileName, string appName = "Angor")
     {
         _logger = logger;
         
-        // Use the same pattern as your existing FileStore
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        _basePath = Path.Combine(appDataPath, "Angor");
+        _basePath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            appName,
+            profileName
+        );
         
         // Ensure directory exists
         Directory.CreateDirectory(_basePath);
@@ -31,6 +33,10 @@ public class LiteDbDocumentDatabaseFactory : IAngorDocumentDatabaseFactory
         var filePath = Path.Combine(_basePath, fileName);
         var connectionString = $"Filename={filePath}";
 
+        //TODO generate a password and encrypt it with the DPAPI for the user profile
+        // var password = GenerateSecurePasswordForProfile(profileName);
+        // connectionString += $";Password={password}"; 
+        
         _logger.LogInformation("Creating LiteDB database for profile '{Profile}' at: {Path}", 
             profileName, filePath);
 
