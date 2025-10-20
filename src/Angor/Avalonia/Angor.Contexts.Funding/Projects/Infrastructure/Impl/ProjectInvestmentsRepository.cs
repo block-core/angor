@@ -71,21 +71,20 @@ public class ProjectInvestmentsRepository(IProjectRepository projectRepository, 
             }
     }
 
-    private Task<Result<IList<(Transaction trx, QueryTransaction? trxInfo)>>> GetProjectInvestments(List<ProjectInvestment> projectInvestments)
+    private async Task<Result<IList<(Transaction trx, QueryTransaction? trxInfo)>>> GetProjectInvestments(List<ProjectInvestment> projectInvestments)
     {
         var network = networkConfiguration.GetNetwork();
 
-        return Result.Try(() => projectInvestments
-            .ToObservable()
-            .Select(x => indexerService.GetTransactionHexByIdAsync(x.TransactionId)) // get the hex of the transaction
-            .Select(hex => network.CreateTransaction(hex.Result)) // parse the transaction
-            .Select(trx => indexerService
-                .GetTransactionInfoByIdAsync(trx.GetHash().ToString()) // get the transaction info
-                .ToObservable()
-                .Select(trxInfo => (trx, trxInfo))) // return both
-            .Merge()
-            .ToList()
-            .ToTask());
+        var tasks = projectInvestments.Select(async investment =>
+        {
+            var hex = await indexerService.GetTransactionHexByIdAsync(investment.TransactionId);
+            var trx = network.CreateTransaction(hex);
+            var trxInfo = await indexerService.GetTransactionInfoByIdAsync(trx.GetHash().ToString());
+            return (trx, trxInfo);
+        });
+
+        var results = await Task.WhenAll(tasks);
+        return Result.Success<IList<(Transaction trx, QueryTransaction? trxInfo)>>(results.ToList());
     }
 
     public async Task<Result<StageDataTrx>> CheckSpentFund(QueryTransactionOutput? output,

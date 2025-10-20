@@ -1,6 +1,5 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
@@ -34,6 +33,9 @@ public class DocumentProjectRepository(IGenericDocumentCollection<Project> colle
             
             var localLookup = projectResult.IsSuccess && projectResult.Value.Any() //check the results from the local database
                 ? projectResult.Value.Select(item => item).ToList() : [];
+
+            if (ids.Length == localLookup.Count)
+                return Result.Success(localLookup.AsEnumerable()); //all ids are in the local database, return them
             
             var tasks = stringIds
                 .Except(localLookup.Select(p => p.Id.Value)) //ids that are not in the local database
