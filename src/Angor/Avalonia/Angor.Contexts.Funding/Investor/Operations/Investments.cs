@@ -60,14 +60,14 @@ public static class Investments
                     var investorKey = derivationOperations.DeriveInvestorKey(sensitiveDataResult.Value.ToWalletWords(),
                         project.FounderKey);
 
-                    var investmentTask = indexerService.GetInvestmentAsync(project.Id.Value, investorKey);
-                    var statsTask =
-                        indexerService.GetProjectStatsAsync(project.Id.Value); // Get project stats for the project ID
+                    var investmentTask = Result.Try(() => indexerService.GetInvestmentAsync(project.Id.Value, investorKey));
+                    var statsTask = Result.Try(() => 
+                        indexerService.GetProjectStatsAsync(project.Id.Value)); // Get project stats for the project ID
 
                     await Task.WhenAll(investmentTask, statsTask);
 
-                    var investment = investmentTask.Result;
-                    var stats = statsTask.Result;
+                    var investment = investmentTask.Result.IsSuccess ? investmentTask.Result.Value : null;
+                    var stats = statsTask.Result.IsSuccess ? statsTask.Result.Value : (project.Id.Value, null);
 
                     var dto = new InvestedProjectDto
                     {
