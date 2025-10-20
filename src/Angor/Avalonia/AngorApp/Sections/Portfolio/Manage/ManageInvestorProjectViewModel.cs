@@ -75,7 +75,7 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
             return Result.Failure(draftResult.Error);
         }
 
-        var submitResult = await investmentAppService.SubmitTransactionFromDraft(walletId, draftResult.Value);
+        var submitResult = await investmentAppService.SubmitTransactionFromDraft(walletId, projectId, draftResult.Value);
         return submitResult.IsSuccess ? Result.Success() : Result.Failure(submitResult.Error);
     }
 

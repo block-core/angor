@@ -71,24 +71,7 @@ public static class CreateInvestment
                     
                 var trxId = signedTxResult.Value.Transaction.GetHash().ToString();
 
-                bool penaltyDisabled = false;
-                if (projectResult.Value.ToProjectInfo().IsPenaltyDisabled(transactionRequest.Amount.Sats))
-                {
-                    await investmentRepository.Add(transactionRequest.WalletId, new InvestmentRecord
-                    {
-                        InvestmentTransactionHash = signedTxResult.Value.Transaction.GetHash().ToString(),
-                        InvestmentTransactionHex = signedTxHex,
-                        InvestorPubKey = investorKey,
-                        ProjectIdentifier = transactionRequest.ProjectId.Value,
-                    });
-
-                    var published = await PublishSignedTransactionAsync(signedTxResult.Value);
-
-                    if (published.IsFailure)
-                        return Result.Failure<InvestmentDraft>(published.Error);
-
-                    penaltyDisabled = true;
-                }
+                bool penaltyDisabled = projectResult.Value.ToProjectInfo().IsPenaltyDisabled(transactionRequest.Amount.Sats);
 
                 return new InvestmentDraft(investorKey)
                 {

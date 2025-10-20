@@ -22,7 +22,7 @@ public class ProjectInfo
 
     public bool IsPenaltyDisabled(long totalInvestmentAmount)
     {
-        bool disablePenalty = this.PenaltyThreshold != null && this.PenaltyThreshold > totalInvestmentAmount;
+        bool disablePenalty = this.PenaltyThreshold != null && this.PenaltyThreshold >= totalInvestmentAmount;
         return disablePenalty;
     }
 }

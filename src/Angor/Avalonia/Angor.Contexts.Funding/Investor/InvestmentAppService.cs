@@ -29,7 +29,7 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     {
         return mediator.Send(new PublishInvestment.PublishInvestmentRequest(investmentId, walletId, projectId));
     }
-    
+
     public Task<Result<IEnumerable<PenaltiesDto>>> GetPenalties(Guid walletId)
     {
         return mediator.Send(new GetPenalties.GetPenaltiesRequest(walletId));
@@ -61,9 +61,9 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
         return mediator.Send(new ClaimEndOfProject.ClaimEndOfProjectRequest(walletId, projectId, feerate));
     }
 
-    public Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, TransactionDraft draft)
+    public Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, ProjectId projectId, TransactionDraft draft)
     {
-        return mediator.Send(new PublishTransaction.PublishTransactionRequest(draft));
+        return mediator.Send(new PublishTransaction.PublishTransactionRequest(draft, walletId, projectId));
     }
 
     #endregion

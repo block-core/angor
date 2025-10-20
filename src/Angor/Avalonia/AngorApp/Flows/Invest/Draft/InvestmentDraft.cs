@@ -14,14 +14,14 @@ public class InvestmentDraft(IInvestmentAppService investmentAppService, IWallet
     public IAmountUI MinerFee => new AmountUI(DraftModel.MinerFee.Sats);
     public IAmountUI AngorFee => new AmountUI(DraftModel.AngorFee.Sats);
 
-    public Task<Result<Guid>> Confirm()
+    public async Task<Result<Guid>> Confirm()
     {
         if (draftModel.PenaltyDisabled)
         {
-            // already published do nothing
-            return Task.FromResult(Result.Success(Guid.Empty));
+             var res = await investmentAppService.SubmitTransactionFromDraft(wallet.Id.Value, project.Info.Id, DraftModel);
+             return res.IsSuccess ? Result.Success<Guid>(Guid.Empty) : Result.Failure<Guid>(res.Error);
         }
 
-        return investmentAppService.SubmitInvestment(wallet.Id.Value, project.Info.Id, DraftModel);
+        return await investmentAppService.SubmitInvestment(wallet.Id.Value, project.Info.Id, DraftModel);
     }
 }
