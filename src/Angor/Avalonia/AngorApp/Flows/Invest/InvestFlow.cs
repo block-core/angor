@@ -17,32 +17,109 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
 {
     public Task<Maybe<Unit>> Invest(IWallet wallet, FullProject fullProject)
     {
+        // Store the investment amount to check threshold later
+        long investmentAmount = 0;
+        
         var wizard = WizardBuilder
-            .StartWith(() => new AmountViewModel(wallet, fullProject), "Enter the amount to invest").Next(model => model.Amount).Always()
-            .Then(amount => CreateDraft(wallet.Id, fullProject.ProjectId, amount!.Value), "Transaction Preview").NextCommand(model => model.CommitDraft.Enhance("Invest"))
-            .Then(_ => new SuccessViewModel(SuccessMessage()), "Investment Successful").Next(_ => Unit.Default, "Close").Always()
+            .StartWith(() => new AmountViewModel(wallet, fullProject), "Enter the amount to invest")
+                .Next(model => 
+                {
+                    investmentAmount = model.Amount ?? 0;
+                    return model.Amount;
+                }).Always()
+            .Then(amount => CreateDraft(wallet.Id, fullProject, amount!.Value), "Transaction Preview")
+                .NextCommand(model => model.CommitDraft.Enhance(GetSubmitButtonText(fullProject.ProjectId, investmentAmount)))
+            .Then(investmentId => HandleInvestmentResult(fullProject.ProjectId, investmentAmount, investmentId), "Investment Successful")
+                .Next(_ => Unit.Default, "Close").Always()
             .WithCompletionFinalStep();
 
         return uiServices.Dialog.ShowWizard(wizard, @$"Invest in ""{fullProject.Name}""");
     }
 
-    private string SuccessMessage()
+    private string GetSubmitButtonText(ProjectId projectId, long investmentAmount)
     {
-        return "The investment offer has been sent. The project founder will review your investment offer soon and either accept it or reject it";
+        // Use the centralized threshold check from the service
+        var isAboveThresholdResult = investmentAppService.IsInvestmentAbovePenaltyThreshold(
+            projectId, 
+            new Angor.Contexts.Funding.Projects.Domain.Amount(investmentAmount)).Result;
+        
+        var isAboveThreshold = isAboveThresholdResult.IsSuccess && isAboveThresholdResult.Value;
+        
+        return isAboveThreshold ? "Request Approval" : "Invest Now";
     }
 
-    private TransactionDraftPreviewerViewModel CreateDraft(WalletId walletId, ProjectId projectId, long satsToInvest)
+    private async Task<Result<SuccessViewModel>> HandleInvestmentResult(ProjectId projectId, long investmentAmount, Guid investmentIdOrTxId)
     {
-        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(feerate =>
+        // Use the centralized threshold check from the service
+        var isAboveThresholdResult = await investmentAppService.IsInvestmentAbovePenaltyThreshold(
+            projectId, 
+            new Angor.Contexts.Funding.Projects.Domain.Amount(investmentAmount));
+
+        if (isAboveThresholdResult.IsFailure)
         {
-            var amount = new Angor.Contexts.Funding.Projects.Domain.Amount(satsToInvest);
-            var investmentDraft = investmentAppService.CreateInvestmentDraft(walletId.Value, projectId, amount, new DomainFeerate(feerate));
-            var viewModel = investmentDraft.Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel(draft, uiServices));
-            return viewModel;
-        }, draft => investmentAppService.SubmitInvestment(walletId.Value, projectId, (InvestmentDraft)draft.Model), uiServices)
+            return Result.Failure<SuccessViewModel>(isAboveThresholdResult.Error);
+        }
+
+        var isAboveThreshold = isAboveThresholdResult.Value;
+
+        string message;
+        if (!isAboveThreshold)
+        {
+            // Below threshold
+            message = "Your investment has been successfully broadcast to the network. You can now recover your funds immediately without any penalty period.";
+        }
+        else
+        {
+            // Above threshold
+            message = "The investment offer has been sent. The project founder will review your investment offer soon and either accept it or reject it. Note: This investment will be subject to a penalty period if you choose to recover funds early.";
+        }
+
+        return Result.Success(new SuccessViewModel(message));
+    }
+
+    private TransactionDraftPreviewerViewModel CreateDraft(WalletId walletId, FullProject fullProject, long satsToInvest)
+    {
+        // Use the centralized threshold check from the service
+        var isAboveThresholdResult = investmentAppService.IsInvestmentAbovePenaltyThreshold(
+            fullProject.ProjectId, 
+            new Angor.Contexts.Funding.Projects.Domain.Amount(satsToInvest)).Result;
+        
+        var isAboveThreshold = isAboveThresholdResult.IsSuccess && isAboveThresholdResult.Value;
+
+        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
+            feerate =>
+            {
+                var amount = new Angor.Contexts.Funding.Projects.Domain.Amount(satsToInvest);
+                var investmentDraft = investmentAppService.CreateInvestmentDraft(walletId.Value, fullProject.ProjectId, amount, new DomainFeerate(feerate));
+                var viewModel = investmentDraft.Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel(draft, uiServices));
+                return viewModel;
+            }, 
+            async draft =>
+            {
+                // Get the actual draft model from the view model
+                var investmentDraft = (InvestmentDraft)draft.Model;
+                
+                if (!isAboveThreshold)
+                {
+                    // Below threshold: directly publish the transaction (no founder approval needed)
+                    var publishResult = await investmentAppService.SubmitTransactionFromDraft(walletId.Value, investmentDraft);
+                    
+                    // Return a GUID representing the transaction (use a hash or placeholder)
+                    return publishResult.IsSuccess 
+                        ? Result.Success(Guid.NewGuid()) // Transaction was published directly
+                        : Result.Failure<Guid>(publishResult.Error);
+                }
+                else
+                {
+                    // Above/at threshold: request founder signatures (penalty path)
+                    return await investmentAppService.SubmitInvestment(walletId.Value, fullProject.ProjectId, investmentDraft);
+                }
+            }, 
+            uiServices)
         {
             Amount = new AmountUI(satsToInvest)
         };
+        
         return transactionDraftPreviewerViewModel;
     }
 }

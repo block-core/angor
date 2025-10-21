@@ -35,6 +35,11 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
         return mediator.Send(new GetPenalties.GetPenaltiesRequest(walletId));
     }
 
+    public Task<Result<bool>> IsInvestmentAbovePenaltyThreshold(ProjectId projectId, Amount amount)
+    {
+        return mediator.Send(new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(projectId, amount));
+    }
+
     #region Methods for Investor/Manage funds. Remove this region ASAP. It's only for clarity.
     
     // Investor/Manage Funds: Retrieve recovery info for an investment. Also contains a list of InvestorStageItemDtos 
