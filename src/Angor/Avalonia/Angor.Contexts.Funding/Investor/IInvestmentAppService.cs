@@ -22,5 +22,10 @@ public interface IInvestmentAppService
     
     Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, TransactionDraft draft);
     
+    /// <summary>
+    /// Checks if an investment amount is above the penalty threshold for a given project.
+    /// Returns true if the investment requires penalty path (founder approval needed).
+    /// Returns false if the investment is below threshold (no penalty, direct investment).
+    /// </summary>
     Task<Result<bool>> IsInvestmentAbovePenaltyThreshold(ProjectId projectId, Amount amount);
 }
