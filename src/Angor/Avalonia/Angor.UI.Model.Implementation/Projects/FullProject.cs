@@ -20,6 +20,15 @@ public class FullProject(ProjectDto info, ProjectStatisticsDto stats) : IFullPro
         RatioOfTotal = dto.RatioOfTotal
     });
 
+    public IAmountUI AvailableBalance => new AmountUI(Stats.AvailableBalance);
+    public int AvailableTransactions => Stats.AvailableTransactions;
+    public IAmountUI SpentAmount => new AmountUI(Stats.SpentAmount);
+    public int TotalTransactions => Stats.TotalTransactions;
+    public IAmountUI TotalInvested => new AmountUI(Stats.TotalInvested);
+    public IAmountUI WithdrawableAmount => new AmountUI(Stats.WithdrawableAmount);
+    public NextStageDto? NextStage { get; set; }
+    public int SpentTransactions { get; set; }
+
     public string Name => Info.Name;
     public TimeSpan PenaltyDuration => Info.PenaltyDuration;
     public IAmountUI RaisedAmount => new AmountUI(Stats.TotalInvested);

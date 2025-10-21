@@ -1,4 +1,4 @@
-using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Shared;
 
 namespace Angor.UI.Model;
@@ -22,4 +22,12 @@ public interface IFullProject
     public Uri? Avatar { get; }
     public string ShortDescription { get; }
     public Uri? Banner { get; }
+    IAmountUI AvailableBalance { get; }
+    int AvailableTransactions { get; }
+    IAmountUI SpentAmount { get; }
+    int TotalTransactions { get; }
+    IAmountUI TotalInvested { get; }
+    IAmountUI WithdrawableAmount { get; }
+    NextStageDto? NextStage { get; }
+    int SpentTransactions { get; set; }
 }

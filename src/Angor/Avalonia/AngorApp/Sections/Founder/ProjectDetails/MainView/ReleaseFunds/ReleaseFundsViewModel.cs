@@ -19,25 +19,21 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
 {
     private readonly CompositeDisposable disposable = new();
 
-    private readonly IFounderAppService founderAppService;
-
     private readonly ProjectId projectId;
-
+    private readonly IFounderAppService founderAppService;
     private readonly UIServices uiServices;
-    private readonly IWalletContext walletContext;
 
-    [ObservableAsProperty] private IEnumerable<IUnfundedProjectTransaction> transactions;
+    [ObservableAsProperty] private IEnumerable<IUnfundedProjectTransaction>? transactions;
 
     public ReleaseFundsViewModel(ProjectId projectId, IFounderAppService founderAppService, IWalletContext walletContext, UIServices uiServices)
     {
         this.projectId = projectId;
         this.founderAppService = founderAppService;
         this.uiServices = uiServices;
-        this.walletContext = walletContext;
 
-        RefreshTransactions = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => GetTransactions(wallet)))
+        RefreshTransactions = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetTransactions))
             .DisposeWith(disposable);
-
+        
         transactionsHelper = RefreshTransactions
             .Successes()
             .ToProperty(this, model => model.Transactions)

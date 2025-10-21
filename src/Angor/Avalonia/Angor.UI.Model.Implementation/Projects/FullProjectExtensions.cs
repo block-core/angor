@@ -7,11 +7,11 @@ namespace Angor.UI.Model.Implementation.Projects;
 
 public static class FullProjectExtensions
 {
-    public static Task<Result<FullProject>> GetFullProject(this IProjectAppService projectAppService, ProjectId projectId)
+    public static Task<Result<IFullProject>> GetFullProject(this IProjectAppService projectAppService, ProjectId projectId)
     {
         return from project in projectAppService.Get(projectId)
             from stats in projectAppService.GetProjectStatistics(projectId)
-            select new FullProject(project, stats);
+            select (IFullProject) new FullProject(project, stats);
     }
     
     public static long Raised(this FullProject project)

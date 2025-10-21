@@ -33,7 +33,7 @@ public class ProjectViewModelFactory : IProjectViewModelFactory
         var goToDetails = ReactiveCommand.CreateFromTask(async () =>
             {
                 var fullProject = await projectAppService.GetFullProject(new ProjectId(project.Id))
-                    .Map(projectDetailsViewModelFactory.Create);
+                    .Map(p => projectDetailsViewModelFactory.Create((FullProject)p));
 
                 var result = await fullProject.Bind(details => navigator.Go(() => details));
                 return result;

@@ -26,6 +26,7 @@ public static class ViewModels
                 .AddScoped<IProjectLookupViewModelFactory, ProjectLookupViewModelFactory>()
                 .AddScoped<IProjectInvestCommandFactory, ProjectInvestCommandFactory>()
                 .AddScoped<IFoundedProjectOptionsViewModelFactory, FoundedProjectOptionsViewModelFactory>()
+                .AddScoped<IProjectContentFactory, ProjectContentFactory>()
                 .AddScoped<IFounderProjectDetailsViewModelFactory, FounderProjectDetailsViewModelFactory>()
                 .AddScoped<IFounderProjectViewModelFactory, FounderProjectViewModelFactory>()
                 .AddTransient<IHomeSectionViewModel, HomeSectionViewModel>()
