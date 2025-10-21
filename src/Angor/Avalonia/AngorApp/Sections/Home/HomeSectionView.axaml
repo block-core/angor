@@ -30,8 +30,8 @@
                         <ui:Icon Source="svg:/Assets/angor-icon.svg" />
                     </Card.HeaderStartContent>
                     <UniformGrid Rows="1" HorizontalAlignment="Center" ColumnSpacing="20">
-                        <Button Command="{Binding GoToSection}" CommandParameter="Wallet">Get Started</Button>
-                        <Button Command="{Binding OpenHub}">Learn More</Button>
+                        <EnhancedButton Command="{Binding GoToSection}" CommandParameter="Wallet">Get Started</EnhancedButton>
+                        <EnhancedButton Command="{Binding OpenHub}">Learn More</EnhancedButton>
                     </UniformGrid>
                 </Card>
                 <BalancedWrapGrid MinItemWidth="200" HorizontalSpacing="20" VerticalSpacing="20">

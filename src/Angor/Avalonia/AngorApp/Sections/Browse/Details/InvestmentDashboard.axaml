@@ -66,15 +66,15 @@
                                           TextElement.FontSize="{StaticResource FontSizeBig}"
                                           TextBlock.TextWrapping="Wrap">
                             
-                            <ReactiveIconButton Command="{Binding Invest}"
+                            <EnhancedButton Command="{Binding Invest}"
                                                 Classes="Expand"
                                                 Content="Invest Now"
                                                 Icon="{Icon fa-solid fa-coins}"/>
                             
-                            <IconButton Icon="{Icon fa-solid fa-info-circle}"  
+                            <EnhancedButton Icon="{Icon fa-solid fa-info-circle}"  
                                         Content="Learn More"
                                         Classes="Expand">
-                            </IconButton>
+                            </EnhancedButton>
                         </BalancedWrapGrid>
                     </Grid>
 
@@ -147,33 +147,33 @@
                 <StackPanel Spacing="20">
                     <!-- Founder Actions -->
                     <UniformGrid Columns="2" ColumnSpacing="15" RowSpacing="15">
-                        <Button Padding="15,12" CornerRadius="8">
+                        <EnhancedButton Padding="15,12" CornerRadius="8">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <i:Icon FontSize="16" Value="fa-solid fa-wallet" />
                                 <TextBlock Text="Manage Funds" />
                             </StackPanel>
-                        </Button>
+                        </EnhancedButton>
 
-                        <Button Classes="Secondary" Padding="15,12" CornerRadius="8">
+                        <EnhancedButton Classes="Secondary" Padding="15,12" CornerRadius="8">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <i:Icon FontSize="16" Value="fa-solid fa-pen" />
                                 <TextBlock Text="Edit Project" />
                             </StackPanel>
-                        </Button>
+                        </EnhancedButton>
 
-                        <Button Classes="Secondary" Padding="15,12" CornerRadius="8">
+                        <EnhancedButton Classes="Secondary" Padding="15,12" CornerRadius="8">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <i:Icon FontSize="16" Value="fa-solid fa-users" />
                                 <TextBlock Text="View Investors" />
                             </StackPanel>
-                        </Button>
+                        </EnhancedButton>
 
-                        <Button Classes="Secondary" Padding="15,12" CornerRadius="8">
+                        <EnhancedButton Classes="Secondary" Padding="15,12" CornerRadius="8">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <i:Icon FontSize="16" Value="fa-solid fa-chart-pie" />
                                 <TextBlock Text="Analytics" />
                             </StackPanel>
-                        </Button>
+                        </EnhancedButton>
                     </UniformGrid>
                 </StackPanel>
             </Card>

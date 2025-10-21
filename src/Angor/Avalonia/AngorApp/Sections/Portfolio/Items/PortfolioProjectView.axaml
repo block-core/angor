@@ -79,11 +79,11 @@
                     </UniformGrid>
                 </Border>
             </BalancedWrapGrid>
-            <ReactiveIconButton HorizontalAlignment="Right" Command="{Binding GoToManageFunds}" Content="Manage funds">
-                <ReactiveIconButton.Icon>
+            <EnhancedButton HorizontalAlignment="Right" Command="{Binding GoToManageFunds}" Content="Manage funds">
+                <EnhancedButton.Icon>
                     <ui:Icon Source="mdi-cog" />
-                </ReactiveIconButton.Icon>
-            </ReactiveIconButton>
+                </EnhancedButton.Icon>
+            </EnhancedButton>
         </StackPanel>
     </Border>
 

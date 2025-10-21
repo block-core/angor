@@ -2,13 +2,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.PreviewWith>
         <StackPanel Spacing="10" IconOptions.Size="{StaticResource IconSizeSmall}">
-            <Button Content="Standard Button" />
-            <IconButton HorizontalAlignment="Stretch" Content="Penalties"  />
-            <ReactiveButton Content="Reactive Button" />
+            <EnhancedButton Content="Standard Button" />
+            <EnhancedButton HorizontalAlignment="Stretch" Content="Penalties"  />
+            <EnhancedButton Content="Reactive Button" />
         </StackPanel>
     </Design.PreviewWith>
     
-    <Style Selector="Button">
+    <Style Selector="EnhancedButton">
         <Setter Property="Cursor" Value="Hand" />
     </Style>
     
@@ -29,7 +29,7 @@
     </Style>
 
     <Styles.Resources>
-        <ControlTheme x:Key="ThinTransparentButton" TargetType="Button" BasedOn="{StaticResource TransparentButton}">
+        <ControlTheme x:Key="ThinTransparentButton" TargetType="EnhancedButton" BasedOn="{StaticResource TransparentButton}">
             <Setter Property="Padding" Value="2" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -37,7 +37,7 @@
         </ControlTheme>
     </Styles.Resources>
     
-    <Style Selector="Button.Card">
+    <Style Selector="EnhancedButton.Card">
         <Setter Property="Theme" Value="{StaticResource TransparentButton}" />
         <Setter Property="Padding" Value="5" />
         <Setter Property="VerticalAlignment" Value="Stretch" />

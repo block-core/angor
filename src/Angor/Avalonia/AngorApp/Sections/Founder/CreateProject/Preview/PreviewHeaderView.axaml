@@ -9,13 +9,13 @@
     
     <UserControl.Styles>
         <ContainerQuery Name="Root" Query="min-width:800">
-            <Style Selector="Button#PreviewButton">
+            <Style Selector="EnhancedButton#PreviewButton">
                 <Setter Property="IsVisible" Value="False" />
             </Style>
         </ContainerQuery>
     </UserControl.Styles>
     
-    <Button Margin="5" Padding="10 5" x:Name="PreviewButton" FontSize="13" FontWeight="Regular" Content="Show Preview"
+    <EnhancedButton Margin="5" Padding="10 5" x:Name="PreviewButton" FontSize="13" FontWeight="Regular" Content="Show Preview"
             HorizontalAlignment="Center">
         <Button.Flyout>
             <Flyout>
@@ -34,7 +34,7 @@
                             </ContentControl>
                             <TextBlock FontSize="{StaticResource FontSizeNormal}" VerticalAlignment="Center">Preview</TextBlock>
                         </StackPanel>
-                        <Button x:Name="HideButton" Content="{Icon fa-xmark}" HorizontalAlignment="Right" VerticalAlignment="Top" />
+                        <EnhancedButton x:Name="HideButton" Icon="{Icon fa-xmark}" HorizontalAlignment="Right" VerticalAlignment="Top" />
                     </Panel>
                     <ScrollViewer>
                         <preview:PreviewView DataContext="{Binding CreateProject}" />
@@ -48,5 +48,5 @@
                 <HideFlyoutAction TargetControl="PreviewButton" Flyout="{Binding #PreviewButton.Flyout}" />
             </EventTriggerBehavior>
         </Interaction.Behaviors>
-    </Button>
+    </EnhancedButton>
 </UserControl>

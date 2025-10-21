@@ -24,7 +24,7 @@
     <UserControl.DataTemplates>
 
         <DataTemplate DataType="founder:IFounderProjectViewModel">
-            <Button Classes="Card" Command="{Binding GoToDetails}">
+            <EnhancedButton Classes="Card" Command="{Binding GoToDetails}">
                 <OverlayBorder Padding="0" Theme="{StaticResource CardOverlayBorder}">
                     <Grid RowDefinitions="180 Auto Auto *">
                         <Panel>
@@ -43,7 +43,7 @@
                         </StackPanel>
                     </Grid>
                 </OverlayBorder>
-            </Button>
+            </EnhancedButton>
         </DataTemplate>
     </UserControl.DataTemplates>
 
@@ -53,12 +53,12 @@
                 <Card Theme="{StaticResource WideCard}" Header="Founder" DockPanel.Dock="Top">
                     <Card.HeaderEndContent>
                         <Grid ColumnDefinitions="Auto *" ColumnSpacing="10">
-                            <Button Command="{Binding LoadProjects}" Content="{Icon fa-arrows-rotate}" />
-                            <ReactiveIconButton Grid.Column="1" Classes="Expand CenterContent" Command="{Binding Create}" Content="New Project">
-                                <ReactiveIconButton.Icon>
+                            <EnhancedButton Command="{Binding LoadProjects}" Icon="{Icon fa-arrows-rotate}" />
+                            <EnhancedButton Grid.Column="1" Classes="Expand CenterContent" Command="{Binding Create}" Content="New Project">
+                                <EnhancedButton.Icon>
                                     <ui:Icon Source="fa-plus" />
-                                </ReactiveIconButton.Icon>
-                            </ReactiveIconButton>
+                                </EnhancedButton.Icon>
+                            </EnhancedButton>
                         </Grid>
                     </Card.HeaderEndContent>
                     <Card.HeaderStartContent>

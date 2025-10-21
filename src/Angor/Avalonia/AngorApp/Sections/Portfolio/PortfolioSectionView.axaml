@@ -70,8 +70,8 @@
             <Card Theme="{StaticResource WideCard}" DockPanel.Dock="Top" Header="Portfolio" Subheader="Check your project investments">
                 <Card.HeaderEndContent>
                     <Grid ColumnSpacing="10" ColumnDefinitions="Auto *">
-                        <Button HorizontalAlignment="Stretch" Command="{Binding LoadPortfolio}" Content="{Icon fa-arrows-rotate}" />
-                        <IconButton Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding GoToPenalties}" Icon="{Icon fa-unlock}" Content="Penalties" />
+                        <EnhancedButton HorizontalAlignment="Stretch" Command="{Binding LoadPortfolio}" Icon="{Icon fa-arrows-rotate}" />
+                        <EnhancedButton Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding GoToPenalties}" Icon="{Icon fa-unlock}" Content="Penalties" />
                     </Grid>
                 </Card.HeaderEndContent>
             </Card>

@@ -40,7 +40,7 @@
                     </Column.HeaderTemplate>
                     <Column.CellTemplate>
                         <DataTemplate>
-                            <Button Command="{Binding ShowJson}"
+                            <EnhancedButton Command="{Binding ShowJson}"
                                     i:Attached.Icon="fa-solid fa-ellipsis" />
                         </DataTemplate>
                     </Column.CellTemplate>

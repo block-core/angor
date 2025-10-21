@@ -9,7 +9,7 @@
              x:Class="AngorApp.Sections.Wallet.WalletSetupView" x:DataType="main:IWalletSetupViewModel">
 
     <UserControl.Styles>
-        <Style Selector="Button">
+        <Style Selector="EnhancedButton">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="VerticalAlignment" Value="Stretch" />
             <Setter Property="Padding" Value="15" />
@@ -55,7 +55,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemsSource>
                     <collections:ArrayList>
-                        <Button Command="{Binding Create}">
+                        <EnhancedButton Command="{Binding Create}">
                             <Button.Content>
                                 <StackPanel Classes="SmallGap">
                                     <ContentControl ContentTemplate="{StaticResource BigIcon}">
@@ -64,8 +64,8 @@
                                     <TextBlock>New Wallet</TextBlock>
                                 </StackPanel>
                             </Button.Content>
-                        </Button>
-                        <Button Command="{Binding Import}">
+                        </EnhancedButton>
+                        <EnhancedButton Command="{Binding Import}">
                             <Button.Content>
                                 <StackPanel Classes="SmallGap">
                                     <ContentControl ContentTemplate="{StaticResource BigIcon}">
@@ -74,7 +74,7 @@
                                     <TextBlock>Import Wallet</TextBlock>
                                 </StackPanel>
                             </Button.Content>
-                        </Button>
+                        </EnhancedButton>
                     </collections:ArrayList>
                 </ItemsControl.ItemsSource>
             </ItemsControl>

@@ -123,7 +123,7 @@
                                         <TextBlock Classes="Status" Tag="{Binding MostRecentInvestment.Status}" />
                                     </EdgePanel.Content>
                                 </EdgePanel>
-                                <Button Command="{Binding Approve}" Content="Approve" IsVisible="{Binding $self.IsEffectivelyEnabled}" />
+                                <EnhancedButton Command="{Binding Approve}" Content="Approve" IsVisible="{Binding $self.IsEffectivelyEnabled}" />
                             </StackPanel>
                         </Card>
                     </DataTemplate>
@@ -164,7 +164,7 @@
                     <Column Header="" Width="Auto" Binding="{Binding}">
                         <Column.CellTemplate>
                             <DataTemplate>
-                                <Button Command="{Binding Approve}"
+                                <EnhancedButton Command="{Binding Approve}"
                                         IsVisible="{Binding $self.IsEffectivelyEnabled}"
                                         Content="Approve" />
                             </DataTemplate>

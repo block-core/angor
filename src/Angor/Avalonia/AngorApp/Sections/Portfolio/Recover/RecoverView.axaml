@@ -27,18 +27,18 @@
                     </Card.HeaderStartContent>
                     <Card.HeaderEndContent>
                         <UniformGrid ColumnSpacing="20" Rows="1">
-                            <IconButton HorizontalAlignment="Stretch">
+                            <EnhancedButton HorizontalAlignment="Stretch">
                                 Refresh
-                                <IconButton.Icon>
+                                <EnhancedButton.Icon>
                                     <ui:Icon Source="fa-arrows-rotate" />
-                                </IconButton.Icon>
-                            </IconButton>
-                            <IconButton HorizontalAlignment="Stretch">
+                                </EnhancedButton.Icon>
+                            </EnhancedButton>
+                            <EnhancedButton HorizontalAlignment="Stretch">
                                 Pending Message
-                                <IconButton.Icon>
+                                <EnhancedButton.Icon>
                                     <ui:Icon Source="fa-message" />
-                                </IconButton.Icon>
-                            </IconButton>
+                                </EnhancedButton.Icon>
+                            </EnhancedButton>
                         </UniformGrid>
                     </Card.HeaderEndContent>
                 </Card>
@@ -54,7 +54,7 @@
                             <Card Theme="{StaticResource AngorHighlightedContentCard}" Header="Expiry Date" Content="05/09/2025" />
                             <Card Theme="{StaticResource AngorHighlightedContentCard}" Header="Penalty Period" Content="90 days" />
                             <Card Theme="{StaticResource AngorHighlightedContentCard}" Header="Transaction">
-                                <Button Content="View" Width="80" Height="36" />
+                                <EnhancedButton Content="View" Width="80" Height="36" />
                             </Card>
                         </UniformGrid>
 
@@ -72,32 +72,32 @@
                                 <Grid ColumnDefinitions="1.5*,2*,2*" Margin="0,10,0,10" HorizontalAlignment="Stretch">
                                     <TextBlock Text="1" VerticalAlignment="Center" />
                                     <TextBlock Text="0.1 TBTC" Grid.Column="1" VerticalAlignment="Center" />
-                                    <Button Grid.Column="2"
+                                    <EnhancedButton Grid.Column="2"
                                             Padding="10,2"
                                             CornerRadius="6"
                                             BorderThickness="0">
                                         Penalty, released in 89.9 days
-                                    </Button>
+                                    </EnhancedButton>
                                 </Grid>
                                 <Grid ColumnDefinitions="1.5*,2*,2*" Margin="0,0,0,10" HorizontalAlignment="Stretch">
                                     <TextBlock Text="2" VerticalAlignment="Center" />
                                     <TextBlock Text="0.3 TBTC" Grid.Column="1" VerticalAlignment="Center" />
-                                    <Button Grid.Column="2"
+                                    <EnhancedButton Grid.Column="2"
                                             Padding="10,2"
                                             CornerRadius="6"
                                             BorderThickness="0">
                                         Penalty, released in 89.9 days
-                                    </Button>
+                                    </EnhancedButton>
                                 </Grid>
                                 <Grid ColumnDefinitions="1.5*,2*,2*" Margin="0,0,0,0" HorizontalAlignment="Stretch">
                                     <TextBlock Text="3" VerticalAlignment="Center" />
                                     <TextBlock Text="0.6 TBTC" Grid.Column="1" VerticalAlignment="Center" />
-                                    <Button Grid.Column="2"
+                                    <EnhancedButton Grid.Column="2"
                                             Padding="10,2"
                                             CornerRadius="6"
                                             BorderThickness="0">
                                         Penalty, released in 89.9 days
-                                    </Button>
+                                    </EnhancedButton>
                                 </Grid>
                             </StackPanel>
                         </Card>

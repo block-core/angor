@@ -14,7 +14,7 @@
     
     <Card Header="Investments">
         <Card.HeaderEndContent>
-            <Button ToolTip.Tip="Reload" avalonia:Attached.Icon="fa-rotate-right" Command="{Binding LoadInvestments}" />
+            <EnhancedButton ToolTip.Tip="Reload" avalonia:Attached.Icon="fa-rotate-right" Command="{Binding LoadInvestments}" />
         </Card.HeaderEndContent>
         <Loading IsLoading="{Binding LoadInvestments.IsExecuting^}">
             <ScrollViewer HorizontalScrollBarVisibility="Auto">
