@@ -19,23 +19,19 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
 {
     private readonly CompositeDisposable disposable = new();
 
+    private readonly IFullProject project;
     private readonly IFounderAppService founderAppService;
-
-    private readonly ProjectId projectId;
-
     private readonly UIServices uiServices;
-    private readonly IWalletContext walletContext;
 
     [ObservableAsProperty] private IEnumerable<IUnfundedProjectTransaction> transactions;
 
-    public ReleaseFundsViewModel(ProjectId projectId, IFounderAppService founderAppService, IWalletContext walletContext, UIServices uiServices)
+    public ReleaseFundsViewModel(IFullProject project, IFounderAppService founderAppService, IWalletContext walletContext, UIServices uiServices)
     {
-        this.projectId = projectId;
+        this.project = project;
         this.founderAppService = founderAppService;
         this.uiServices = uiServices;
-        this.walletContext = walletContext;
 
-        RefreshTransactions = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => GetTransactions(wallet)))
+        RefreshTransactions = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetTransactions), Observable.Return(project.Status == ProjectStatus.Failed))
             .DisposeWith(disposable);
 
         transactionsHelper = RefreshTransactions
@@ -62,8 +58,8 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
 
     private Task<Result<List<IUnfundedProjectTransaction>>> GetTransactions(IWallet wallet)
     {
-        return founderAppService.GetReleasableTransactions(wallet.Id.Value, projectId)
-            .MapEach(IUnfundedProjectTransaction (dto) => new UnfundedProjectTransaction(wallet.Id.Value, projectId, dto, founderAppService, uiServices))
+        return founderAppService.GetReleasableTransactions(wallet.Id.Value, project.ProjectId)
+            .MapEach(IUnfundedProjectTransaction (dto) => new UnfundedProjectTransaction(wallet.Id.Value, project.ProjectId, dto, founderAppService, uiServices))
             .Map(enumerable => enumerable.ToList());
     }
 
@@ -94,7 +90,7 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
         var addresses = Transactions.Select(transaction => transaction.InvestmentEventId);
         
         return UserFlow.PromptAndNotify(
-            () => founderAppService.ReleaseInvestorTransactions(wallet.Id.Value, projectId, addresses), uiServices,
+            () => founderAppService.ReleaseInvestorTransactions(wallet.Id.Value, project.ProjectId, addresses), uiServices,
             "Are you sure you want to release all the funds?",
             "Confirm Release All",
             "Successfully released all",

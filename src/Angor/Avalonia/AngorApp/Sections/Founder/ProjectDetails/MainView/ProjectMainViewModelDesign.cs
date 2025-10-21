@@ -1,3 +1,4 @@
+using AngorApp.Sections.Browse.Details;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.Approve;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.Claim;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
@@ -15,6 +16,6 @@ public class ProjectMainViewModelDesign : IProjectMainViewModel
     public IReleaseFundsViewModel ReleaseFundsViewModel { get; } = new ReleaseFundsViewModelDesign();
     public IClaimFundsViewModel ClaimFundsViewModel { get; } = new ClaimFundsViewModelDesign();
     public IApproveInvestmentsViewModel ApproveInvestmentsViewModel { get; } = new ApproveInvestmentsViewModelDesign();
-    public IProjectStatisticsViewModel ProjectStatisticsViewModel { get; set; } = new ProjectStatisticsViewModelDesign();
+    public IFullProject ProjectStatisticsViewModel { get; set; } = new FullProjectDesign();
     public ProjectStatus Status { get; set; } = ProjectStatus.Started;
 }

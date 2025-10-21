@@ -16,20 +16,20 @@ namespace AngorApp.Sections.Founder.ProjectDetails.MainView.Claim;
 public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel, IDisposable
 {
     private readonly IFounderAppService founderAppService;
-    private readonly ProjectId projectId;
+    private readonly IFullProject project;
     private readonly UIServices uiServices;
     private readonly IWalletContext walletContext;
     [ObservableAsProperty] private IEnumerable<IClaimableStage>? claimableStages;
 
     private readonly CompositeDisposable disposable = new();
 
-    public ClaimFundsViewModel(ProjectId projectId, IFounderAppService founderAppService, UIServices uiServices, IWalletContext walletContext)
+    public ClaimFundsViewModel(IFullProject project, IFounderAppService founderAppService, UIServices uiServices, IWalletContext walletContext)
     {
         this.founderAppService = founderAppService;
-        this.projectId = projectId;
+        this.project = project;
         this.uiServices = uiServices;
         this.walletContext = walletContext;
-        LoadClaimableStages = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetClaimableStages))
+        LoadClaimableStages = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetClaimableStages), Observable.Return(project.Status == ProjectStatus.Succeeded))
             .Enhance()
             .DisposeWith(disposable);
         
@@ -52,7 +52,7 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
     private Task<Result<IEnumerable<IClaimableStage>>> GetClaimableStages(IWallet wallet)
     {
         return founderAppService
-            .GetClaimableTransactions(wallet.Id.Value, projectId)
+            .GetClaimableTransactions(wallet.Id.Value, project.ProjectId)
             .Map(CreateStage);
     }
 
@@ -62,7 +62,7 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
             .Select(IClaimableStage (group) =>
             {
                 var claimableTransactions = group.Select(IClaimableTransaction (dto) => new ClaimableTransaction(dto)).ToList();
-                return new ClaimableStage(projectId, group.Key, claimableTransactions.ToList(), founderAppService, uiServices, walletContext);
+                return new ClaimableStage(project, group.Key, claimableTransactions.ToList(), founderAppService, uiServices, walletContext);
             })
             .ToList();
     }

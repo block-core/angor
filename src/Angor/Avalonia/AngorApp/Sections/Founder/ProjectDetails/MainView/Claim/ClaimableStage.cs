@@ -19,14 +19,14 @@ namespace AngorApp.Sections.Founder.ProjectDetails.MainView.Claim;
 
 public class ClaimableStage : ReactiveObject, IClaimableStage
 {
-    private readonly ProjectId projectId;
+    private readonly IFullProject project;
     private readonly int stageId;
     private readonly IFounderAppService founderAppService;
     private readonly IWalletContext walletContext;
 
-    public ClaimableStage(ProjectId projectId, int stageId, ICollection<IClaimableTransaction> transactions, IFounderAppService founderAppService, UIServices uiServices, IWalletContext walletContext)
+    public ClaimableStage(IFullProject project, int stageId, ICollection<IClaimableTransaction> transactions, IFounderAppService founderAppService, UIServices uiServices, IWalletContext walletContext)
     {
-        this.projectId = projectId;
+        this.project = project;
         this.stageId = stageId;
         this.founderAppService = founderAppService;
         this.walletContext = walletContext;
@@ -66,7 +66,7 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
             StageId = stageId
         });
 
-        var result = await founderAppService.Spend(walletId, new DomainFeerate(feerate), projectId, toSpend);
+        var result = await founderAppService.Spend(walletId, new DomainFeerate(feerate), project.ProjectId, toSpend);
         return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
     }
 

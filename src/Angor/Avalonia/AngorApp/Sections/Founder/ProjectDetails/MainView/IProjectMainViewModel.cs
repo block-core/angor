@@ -11,6 +11,6 @@ public interface IProjectMainViewModel : IProjectViewModel
     IReleaseFundsViewModel ReleaseFundsViewModel { get; }
     IClaimFundsViewModel ClaimFundsViewModel { get; }
     IApproveInvestmentsViewModel ApproveInvestmentsViewModel { get; }
-    IProjectStatisticsViewModel ProjectStatisticsViewModel { get; }
+    IFullProject ProjectStatisticsViewModel { get; }
     ProjectStatus Status { get; }
 }
