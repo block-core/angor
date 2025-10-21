@@ -31,7 +31,7 @@ public class DocumentProjectRepository(IGenericDocumentCollection<Project> colle
 
             var projectResult = await collection.FindAsync(p => stringIds.Any(id => id == p.Id.Value));
             
-            var localLookup = projectResult.IsSuccess && projectResult.Value.Any() //check the results from the local database
+            var localLookup = projectResult.IsSuccess && projectResult.Value.Any()//check the results from the local database
                 ? projectResult.Value.Select(item => item).ToList() : [];
 
             if (ids.Length == localLookup.Count)
@@ -82,7 +82,7 @@ public class DocumentProjectRepository(IGenericDocumentCollection<Project> colle
                     {
                         Index = i,
                         ReleaseDate = stage.ReleaseDate,
-                        RatioOfTotal = stage.AmountToRelease / 100m
+                        RatioOfTotal = stage.AmountToRelease
                     }),
                     StartingDate = info.StartDate,
                     EndDate = info.EndDate,
