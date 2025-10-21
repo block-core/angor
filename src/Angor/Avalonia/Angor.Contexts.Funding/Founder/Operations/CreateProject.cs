@@ -165,6 +165,7 @@ internal static class CreateProjectConstants
                     FounderRecoveryKey = founderKeys.FounderRecoveryKey,
                     NostrPubKey = founderKeys.NostrPubKey,
                     PenaltyDays = project.PenaltyDays,
+                    PenaltyThreshold = project.PenaltyThreshold,
                     ProjectIdentifier = founderKeys.ProjectIdentifier,
                     TargetAmount = project.TargetAmount.Sats,
                     Stages = project.Stages.Select(stage => new Stage()

@@ -258,6 +258,25 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         return CheckRecoverySignatures(projectInfo, investmentTransaction, unsignedUnfundedReleaseFundsTransaction, founderSignatures);
     }
 
+    public bool IsInvestmentAbovePenaltyThreshold(ProjectInfo projectInfo, Transaction investmentTransaction)
+    {
+        // If no penalty threshold is set, return false (not above threshold)
+        if (!projectInfo.PenaltyThreshold.HasValue)
+        {
+            return false;
+        }
+
+        // Calculate the total investment amount from the transaction outputs
+        // Skip first 2 outputs (Angor fee and OP_RETURN) and sum the stage outputs
+        var totalInvestmentAmount = investmentTransaction.Outputs.AsIndexedOutputs()
+            .Skip(2)
+            .Take(projectInfo.Stages.Count)
+            .Sum(output => output.TxOut.Value.Satoshi);
+
+        // Return true if investment is above or equal to the threshold
+        return totalInvestmentAmount >= projectInfo.PenaltyThreshold.Value;
+    }
+
     private Transaction AddSignaturesToRecoveryPathTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, Transaction recoveryTransaction, SignatureInfo founderSignatures, string investorPrivateKey)
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
