@@ -19,6 +19,7 @@ public class FullProjectDesign : IFullProject
     ];
     public string Name { get; } = "Cruzada21 - VEINTIUNO.LAT";
     public TimeSpan PenaltyDuration { get; } = TimeSpan.FromDays(90);
+    public IAmountUI? PenaltyThreshold { get; } = new AmountUI(50000000); // 0.5 BTC in satoshis
     public IAmountUI RaisedAmount { get; } = new AmountUI(100);
     public int? TotalInvestors { get; } = 42;
     public DateTime FundingStartDate { get; } = DateTime.Now.AddDays(-10);
