@@ -30,4 +30,5 @@ public interface IFullProject
     IAmountUI WithdrawableAmount { get; }
     NextStageDto? NextStage { get; }
     int SpentTransactions { get; set; }
+    public string FounderPubKey { get; }
 }
