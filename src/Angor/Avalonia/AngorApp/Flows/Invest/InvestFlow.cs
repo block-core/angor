@@ -45,7 +45,7 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
         
         var isAboveThreshold = isAboveThresholdResult.IsSuccess && isAboveThresholdResult.Value;
         
-        return isAboveThreshold ? "Request Approval" : "Invest Now";
+        return isAboveThreshold ? "Submit Offer" : "Invest Now";
     }
 
     private async Task<Result<SuccessViewModel>> HandleInvestmentResult(ProjectId projectId, long investmentAmount, Guid investmentIdOrTxId)
