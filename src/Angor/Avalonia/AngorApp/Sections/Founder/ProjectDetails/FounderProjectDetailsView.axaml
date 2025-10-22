@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:pr="clr-namespace:AngorApp.Sections.Founder.ProjectDetails"
-             xmlns:mainView="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.MainView"
+             xmlns:statistics="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Statistics"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.FounderProjectDetailsView" x:DataType="pr:IFounderProjectDetailsViewModel">
 
@@ -15,8 +15,8 @@
     <controls:PageContainer>
         <ScrollViewer>
             <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading Project Details...">
-                <StackPanel Classes="BigGap" DataContext="{Binding ProjectMain}">
-                    <Panel>
+                <StackPanel Classes="BigGap">
+                    <Panel DataContext="{Binding Project}">
                         <controls:ProjectCard Banner="{Binding Banner}" Avatar="{Binding Avatar}" ProjectName="{Binding Name}" ShortDescription="{Binding ShortDescription}" />
                         <Badge VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="20" Tag="{Binding Status}">
                             <Badge.Styles>
@@ -39,7 +39,8 @@
                             </Badge.Styles>
                         </Badge>
                     </Panel>
-                    <mainView:ProjectMainView />
+                    <ContentControl Content="{Binding ContentViewModel}" />
+                    <statistics:ProjectStatisticsView DataContext="{Binding Project}" />
                 </StackPanel>
             </Loading>
         </ScrollViewer>

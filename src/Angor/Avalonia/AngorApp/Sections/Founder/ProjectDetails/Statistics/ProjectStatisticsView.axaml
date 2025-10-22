@@ -4,8 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:design="clr-namespace:AngorApp.Design"
              xmlns:statistics="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Statistics"
+             xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
              mc:Ignorable="d" d:DesignWidth="400"
-             x:Class="AngorApp.Sections.Founder.ProjectDetails.Statistics.ProjectStatisticsView" x:DataType="statistics:IProjectStatisticsViewModel">
+             x:Class="AngorApp.Sections.Founder.ProjectDetails.Statistics.ProjectStatisticsView" x:DataType="model:IFullProject">
     
     <UserControl.Styles>
         <Style Selector="BalancedWrapGrid">
@@ -38,8 +39,8 @@
             <BalancedWrapGrid MinItemWidth="120">
                 <Card Header="Total Investment" Subheader="{Binding TotalInvested.DecimalString}" />
                 <Card Header="Available Balance" Subheader="{Binding AvailableBalance.DecimalString}" />
-                <Card Header="Withdrawable" Subheader="{Binding Withdrawable.DecimalString}" />
-                <Card Header="Total Stages" Subheader="{Binding TotalStages}" />
+                <Card Header="Withdrawable" Subheader="{Binding WithdrawableAmount.DecimalString}" />
+                <Card Header="Total Stages" Subheader="{Binding Stages, Converter={x:Static Enumerable.Count}}" />
             </BalancedWrapGrid>
             <BalancedWrapGrid MinItemWidth="200">
                 <Card Header="Transaction statistics">

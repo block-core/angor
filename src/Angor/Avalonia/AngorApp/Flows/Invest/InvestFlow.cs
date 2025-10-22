@@ -23,7 +23,7 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
             .Then(_ => new SuccessViewModel(SuccessMessage()), "Investment Successful").Next(_ => Unit.Default, "Close").Always()
             .WithCompletionFinalStep();
 
-        return uiServices.Dialog.ShowWizard(wizard, @$"Invest in ""{fullProject.Info.Name}""");
+        return uiServices.Dialog.ShowWizard(wizard, @$"Invest in ""{fullProject.Name}""");
     }
 
     private string SuccessMessage()
