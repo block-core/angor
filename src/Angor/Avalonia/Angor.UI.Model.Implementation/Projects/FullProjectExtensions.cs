@@ -1,4 +1,3 @@
-using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
 using CSharpFunctionalExtensions;
@@ -14,32 +13,32 @@ public static class FullProjectExtensions
             select (IFullProject) new FullProject(project, stats);
     }
     
-    public static long Raised(this FullProject project)
+    public static IAmountUI Raised(this IFullProject project)
     {
-        return project.Stats.TotalInvested;
+        return project.TotalInvested;
     }
     
-    public static bool HasStartedFunding(this FullProject project)
+    public static bool HasStartedFunding(this IFullProject project)
     {
-        return DateTime.UtcNow.Date >= project.Info.FundingStartDate.Date;
+        return DateTime.UtcNow.Date >= project.FundingStartDate.Date;
     }
     
-    public static bool FundingHasFinished(this FullProject project)
+    public static bool FundingHasFinished(this IFullProject project)
     {
-        return DateTime.UtcNow.Date >= project.Info.FundingEndDate.Date;
+        return DateTime.UtcNow.Date >= project.FundingEndDate.Date;
     }
     
-    public static bool HasReachedTarget(this FullProject project)
+    public static bool HasReachedTarget(this IFullProject project)
     {
-        return  project.Raised() >= project.Info.TargetAmount;
+        return  project.TotalInvested.Sats >= project.TargetAmount.Sats;
     }
     
-    public static bool IsFailed(this FullProject project)
+    public static bool IsFailed(this IFullProject project)
     {
         return project.FundingHasFinished() && !project.HasReachedTarget();
     }
 
-    public static ProjectStatus Status(this FullProject project)
+    public static ProjectStatus Status(this IFullProject project)
     {
         if (project.HasStartedFunding())
         {
