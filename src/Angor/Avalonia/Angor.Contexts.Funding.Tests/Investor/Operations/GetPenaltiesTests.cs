@@ -2,9 +2,8 @@ using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
-using Angor.Shared;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Shared.Models;
-using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using Moq;
@@ -15,25 +14,25 @@ public class GetPenaltiesTests
 {
     private readonly Mock<IPortfolioRepository> _mockInvestmentRepository;
     private readonly Mock<IIndexerService> _mockIndexerService;
-    private readonly Mock<IInvestorTransactionActions> _mockInvestorTransactionActions;
-    private readonly Mock<INetworkConfiguration> _mockNetworkConfiguration;
     private readonly Mock<IRelayService> _mockRelayService;
+    private readonly Mock<ITransactionRepository> _mockTransactionRepository;
+    private readonly Mock<IProjectInvestmentsService> _mockProjectInvestmentsService;
     private readonly GetPenalties.GetPenaltiesHandler _handler;
 
     public GetPenaltiesTests()
     {
         _mockInvestmentRepository = new Mock<IPortfolioRepository>();
         _mockIndexerService = new Mock<IIndexerService>();
-        _mockInvestorTransactionActions = new Mock<IInvestorTransactionActions>();
-        _mockNetworkConfiguration = new Mock<INetworkConfiguration>();
         _mockRelayService = new Mock<IRelayService>();
-
+        _mockTransactionRepository = new Mock<ITransactionRepository>();
+        _mockProjectInvestmentsService = new Mock<IProjectInvestmentsService>();
+        
         _handler = new GetPenalties.GetPenaltiesHandler(
             _mockInvestmentRepository.Object,
             _mockIndexerService.Object,
-            _mockInvestorTransactionActions.Object,
-            _mockNetworkConfiguration.Object,
-            _mockRelayService.Object);
+            _mockRelayService.Object,
+            _mockTransactionRepository.Object,
+            _mockProjectInvestmentsService.Object);
     }
 
     [Fact]
@@ -117,8 +116,22 @@ public class GetPenaltiesTests
             .Setup(x => x.GetProjectByIdAsync(projectIdentifier))
             .ReturnsAsync(new ProjectIndexerData { TrxId = transactionId, NostrEventId = nostrEventId });
 
+        _mockProjectInvestmentsService.Setup(x =>
+                x.ScanInvestmentSpends(It.Is<ProjectInfo>(p => p.ProjectIdentifier == projectIdentifier),
+                    transactionId))
+            .ReturnsAsync(Result.Success(new InvestmentSpendingLookup
+            {
+                AmountInRecovery = 500000,
+                RecoveryTransactionId = "recovery-tx-id",
+                EndOfProjectTransactionId = "end-of-project-tx-id",
+                RecoveryReleaseTransactionId = "recovery-release-tx-id",
+                UnfundedReleaseTransactionId = "unfunded-release-tx-id",
+                TransactionId = projectInvestment.TransactionId,
+                ProjectIdentifier = projectIdentifier
+            }));
+        
         _mockRelayService
-            .Setup(x => x.LookupProjectsInfoByEventIds<ProjectInfo>(
+            .Setup(x => x.LookupProjectsInfoByEventIds(
                 It.IsAny<Action<ProjectInfo>>(),
                 It.IsAny<Action>(),
                 It.IsAny<string[]>()))
@@ -204,7 +217,7 @@ public class GetPenaltiesTests
             }
         };
 
-        _mockIndexerService
+        _mockTransactionRepository
             .Setup(x => x.GetTransactionInfoByIdAsync("recovery-tx-id"))
             .ReturnsAsync(transactionInfo);
 
@@ -241,7 +254,7 @@ public class GetPenaltiesTests
             }
         };
 
-        _mockIndexerService
+        _mockTransactionRepository
             .Setup(x => x.GetTransactionInfoByIdAsync("recovery-tx-id"))
             .ReturnsAsync(transactionInfo);
 
@@ -268,7 +281,7 @@ public class GetPenaltiesTests
             ProjectInfo = new ProjectInfo { PenaltyDays = 30 }
         };
 
-        _mockIndexerService
+        _mockTransactionRepository
             .Setup(x => x.GetTransactionInfoByIdAsync("recovery-tx-id"))
             .ThrowsAsync(new Exception("Test exception"));
 

@@ -2,7 +2,7 @@ using Angor.Contexts.Funding.Shared;
 
 namespace Angor.Contexts.Funding.Projects.Domain;
 
-public class Project : IDocumentEntity
+public class Project
 {
     public ProjectId Id { get; set; }
     public string Name { get; set; }

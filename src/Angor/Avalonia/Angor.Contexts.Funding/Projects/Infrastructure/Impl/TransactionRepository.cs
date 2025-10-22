@@ -6,7 +6,7 @@ using Angor.Shared.Services;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
-public class TransactionRepository(IGenericDocumentCollection<QueryTransactionDocument> queryTransactionCollection,
+public class TransactionRepository(IGenericDocumentCollection<QueryTransaction> queryTransactionCollection,
     IGenericDocumentCollection<TransactionHexDocument> trxHexCollection,
     IIndexerService indexerService) : ITransactionRepository
 {
@@ -24,12 +24,14 @@ public class TransactionRepository(IGenericDocumentCollection<QueryTransactionDo
         if (hexDocumentResult.Value is null && !string.IsNullOrEmpty(transactionHex))
         {
             // store the hex for future use
-            var insertResult = await trxHexCollection.InsertAsync(new TransactionHexDocument
-            {
-                Id = transactionId,
-                Hex = transactionHex
-            });
-                
+            var insertResult = await trxHexCollection.InsertAsync(
+                x => x.Id
+                , new TransactionHexDocument
+                {
+                    Id = transactionId,
+                    Hex = transactionHex
+                });
+
             //TODO log the insert result?
         }
 
@@ -40,31 +42,26 @@ public class TransactionRepository(IGenericDocumentCollection<QueryTransactionDo
     {
         if (string.IsNullOrEmpty(transactionId) || string.IsNullOrEmpty(transactionHex))
             return Task.CompletedTask;
-        
-        return trxHexCollection.InsertAsync(new TransactionHexDocument
-        {
-            Id = transactionId,
-            Hex = transactionHex
-        });
+
+        return trxHexCollection.InsertAsync(x => x.Id,
+            new TransactionHexDocument { Id = transactionId, Hex = transactionHex });
     }
 
     public async Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId)
     {
         var trxInfoResult = await queryTransactionCollection.FindByIdAsync(transactionId);
             
-        var trxInfo = trxInfoResult.Value?.QueryTransaction;
+        var trxInfo = trxInfoResult.Value;
 
-        if (trxInfoResult.IsFailure || trxInfoResult.Value?.QueryTransaction is null)
+        if (trxInfoResult.IsFailure || trxInfoResult.Value is null)
         {
             trxInfo = await indexerService.GetTransactionInfoByIdAsync(transactionId);
-        } 
+        }
 
         if (trxInfoResult.Value is null && trxInfo != null)
         {
-            var insertResult = await queryTransactionCollection.InsertAsync(new QueryTransactionDocument
-            {
-                QueryTransaction = trxInfo
-            });
+            var insertResult = await queryTransactionCollection.InsertAsync(x => x.TransactionId, trxInfo);
+
             //TODO log the insert result?
         }
 
@@ -73,9 +70,6 @@ public class TransactionRepository(IGenericDocumentCollection<QueryTransactionDo
 
     public Task SaveQueryTransactionAsync(QueryTransaction document)
     {
-        return queryTransactionCollection.InsertAsync(new QueryTransactionDocument
-        {
-            QueryTransaction = document
-        });
+        return queryTransactionCollection.InsertAsync(x => x.TransactionId, document);
     }
 }

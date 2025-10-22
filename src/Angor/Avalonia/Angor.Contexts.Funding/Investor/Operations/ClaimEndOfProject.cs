@@ -43,10 +43,9 @@ public static class ClaimEndOfProject
 
             if (investment.InvestmentTransactionHex is null)
             {
-                var lookupResult =  await Result.Try(() => transactionRepository.GetTransactionHexByIdAsync(investment.InvestmentTransactionHash));
-                if (lookupResult.IsFailure)
-                    return Result.Failure<TransactionDraft>("Could not find investment transaction in indexer: " + lookupResult.Error);
-                investment.InvestmentTransactionHex = lookupResult.Value;
+                investment.InvestmentTransactionHex =  await transactionRepository.GetTransactionHexByIdAsync(investment.InvestmentTransactionHash);
+                if (investment.InvestmentTransactionHex is null)
+                    return Result.Failure<TransactionDraft>("Could not find investment transaction in indexer: " + investment.InvestmentTransactionHash);
             }
             
             var project = await projectRepository.GetAsync(request.ProjectId);
