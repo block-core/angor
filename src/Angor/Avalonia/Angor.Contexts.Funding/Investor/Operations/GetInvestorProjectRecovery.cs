@@ -25,7 +25,7 @@ public static class GetInvestorProjectRecovery
         IIndexerService indexerService,
         INetworkConfiguration networkConfiguration,
         IInvestorTransactionActions investorTransactionActions,
-        IProjectInvestmentsRepository projectInvestmentsRepository
+        IProjectInvestmentsService projectInvestmentsRepository
     ) : IRequestHandler<GetInvestorProjectRecoveryRequest, Result<InvestorProjectRecoveryDto>>
     {
         public async Task<Result<InvestorProjectRecoveryDto>> Handle(GetInvestorProjectRecoveryRequest request,

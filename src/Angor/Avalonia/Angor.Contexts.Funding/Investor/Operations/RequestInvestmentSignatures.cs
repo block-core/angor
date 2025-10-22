@@ -6,6 +6,7 @@ using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.TransactionDrafts;
 using Angor.Shared;
 using Angor.Shared.Models;
+using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Services;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
@@ -33,7 +34,9 @@ public static class RequestInvestmentSignatures
         ISerializer serializer,
         IWalletOperations walletOperations,
         ISignService signService,
-        IPortfolioRepository portfolioRepository) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
+        IPortfolioRepository portfolioRepository,
+        IProjectScriptsBuilder projectScriptsBuilder,
+        IIndexerService indexerService) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
     {
         public async Task<Result<Guid>> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
         {
@@ -50,6 +53,13 @@ public static class RequestInvestmentSignatures
                 return Result.Failure<Guid>(projectResult.Error);
             }
 
+            var (investorKey,_) = projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(strippedInvestmentTransaction.Outputs[1].ScriptPubKey);
+            
+            var existingInvestment = await indexerService.GetInvestmentAsync(request.ProjectId.Value,investorKey);
+
+            if (existingInvestment != null)
+                return Result.Failure<Guid>("An investment with the same key already exists on the blockchain.");
+            
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId);
 
             if (sensitiveDataResult.IsFailure)

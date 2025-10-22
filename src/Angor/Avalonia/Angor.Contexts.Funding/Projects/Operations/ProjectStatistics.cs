@@ -11,7 +11,7 @@ public static class ProjectStatistics
 {
     public record ProjectStatsRequest(ProjectId ProjectId) : IRequest<Result<ProjectStatisticsDto>>;
     
-    public class ProjectStatsHandler(IProjectInvestmentsRepository projectInvestmentsRepository) : IRequestHandler<ProjectStatsRequest, Result<ProjectStatisticsDto>>
+    public class ProjectStatsHandler(IProjectInvestmentsService projectInvestmentsRepository) : IRequestHandler<ProjectStatsRequest, Result<ProjectStatisticsDto>>
     {
         public async Task<Result<ProjectStatisticsDto>> Handle(ProjectStatsRequest request, CancellationToken cancellationToken)
         {

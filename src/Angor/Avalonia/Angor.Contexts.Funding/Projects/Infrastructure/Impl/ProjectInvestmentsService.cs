@@ -13,8 +13,9 @@ using Stage = Angor.Shared.Models.Stage;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
-public class ProjectInvestmentsRepository(IProjectRepository projectRepository, INetworkConfiguration networkConfiguration,
-    IIndexerService indexerService, IInvestorTransactionActions investorTransactionActions) : IProjectInvestmentsRepository
+public class ProjectInvestmentsService(IProjectRepository projectRepository, INetworkConfiguration networkConfiguration,
+    IIndexerService indexerService, IInvestorTransactionActions investorTransactionActions,
+    ITransactionRepository transactionRepository) : IProjectInvestmentsService
 {
     public async Task<Result<IEnumerable<StageData>>> ScanFullInvestments(string projectId)
     {
@@ -25,44 +26,53 @@ public class ProjectInvestmentsRepository(IProjectRepository projectRepository, 
             
             try
             {
-                var projectInvestments = await indexerService.GetInvestmentsAsync(projectId);
-                
-                var (_, isFailure, investments, error) = await GetProjectInvestments(projectInvestments);
-                if (isFailure)
-                    return Result.Failure<IEnumerable<StageData>>("Failed to retrieve investment transactions: " + error);
-
-                var stageDataList = await project.Value.Stages
-                    .Select(async x => new StageData
+                var stageDataList = project.Value.Stages
+                    .Select(x => new StageData
                     {
                         Stage = new Stage() { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal },
                         StageIndex = x.Index,
-                        Items = await investments.Select(tuple => CheckSpentFund(tuple.trxInfo?.Outputs.First(outp
-                                        => outp.Index == x.Index + 2) ?? null,
-                                    // +2 because the first two outputs are the Angor fee and Op return output but the stages start from index 1
-                                    tuple.trx, project.Value.ToProjectInfo(), x.Index)
-                                .ToObservable()
-                            )
-                            .Merge()
-                            .Where(result => result.IsSuccess)
-                            .Select(x => x.Value)
-                            .ToList()
-                            .ToTask()
-                    })
-                    .ToObservable()
-                    .Merge()
-                    .Select(stageDataTrx => //We need to add the investor public key to the result
-                    {
-                        foreach (var item in stageDataTrx.Items)
-                            item.InvestorPublicKey = projectInvestments
-                                .First(p => p.TransactionId == item.Trxid)
-                                .InvestorPublicKey;
-
-                        return stageDataTrx;
-                    })
-                    .ToList()
-                    .Select(x => x.AsEnumerable());
+                        Items = []
+                    }).ToList();
                 
-                return Result.Success(stageDataList);
+                var projectInvestments = await indexerService.GetInvestmentsAsync(projectId);
+
+                if (projectInvestments.Count == 0)
+                    return Result.Success(stageDataList.AsEnumerable());
+                
+                var (_, isFailure, investments, error) = await GetProjectInvestmentsTransactionsAsync(projectInvestments);
+                
+                if (isFailure)
+                    return Result.Failure<IEnumerable<StageData>>("Failed to retrieve investment transactions: " + error);
+                
+                foreach (var stage in stageDataList)
+                {
+
+                    var tasks = investments.Select(tuple =>
+                            (output: tuple.trxInfo?.Outputs.First(outp => outp.Index == stage.StageIndex + 2)
+                                     ?? null,
+                                // +2 because the first two outputs are the Angor fee and Op return output but the stages start from index 1
+                                transaction: tuple.trx, index: stage.StageIndex))
+                        .Select(x => CheckSpentFund(x.output, x.transaction, project.Value.ToProjectInfo(), x.index));
+                    
+                    var results = await Task.WhenAll(tasks);
+
+                    var combinedResult = results.Combine();
+
+                    if (combinedResult.IsFailure)
+                        return Result.Failure<IEnumerable<StageData>>("Failed to process investment transactions: " +
+                                                                      combinedResult.Error);
+
+                    stage.Items = combinedResult.Value.ToList();
+
+                    foreach (var item in stage.Items)
+                    {
+                        item.InvestorPublicKey = projectInvestments
+                            .First(p => p.TransactionId == item.Trxid)
+                            .InvestorPublicKey;
+                    }
+                }
+                
+                return Result.Success(stageDataList.AsEnumerable());
             }
             catch (Exception e)
             {
@@ -71,15 +81,16 @@ public class ProjectInvestmentsRepository(IProjectRepository projectRepository, 
             }
     }
 
-    private async Task<Result<IList<(Transaction trx, QueryTransaction? trxInfo)>>> GetProjectInvestments(List<ProjectInvestment> projectInvestments)
+    private async Task<Result<IList<(Transaction trx, QueryTransaction? trxInfo)>>> GetProjectInvestmentsTransactionsAsync(
+        List<ProjectInvestment> projectInvestments)
     {
         var network = networkConfiguration.GetNetwork();
 
         var tasks = projectInvestments.Select(async investment =>
         {
-            var hex = await indexerService.GetTransactionHexByIdAsync(investment.TransactionId);
-            var trx = network.CreateTransaction(hex);
-            var trxInfo = await indexerService.GetTransactionInfoByIdAsync(trx.GetHash().ToString());
+            var hex = await transactionRepository.GetTransactionHexByIdAsync(investment.TransactionId);
+            var trxInfo = await transactionRepository.GetTransactionInfoByIdAsync(investment.TransactionId);
+            var trx = network.CreateTransaction(hex); //TODO handle null or invalid hex
             return (trx, trxInfo);
         });
 
@@ -118,7 +129,7 @@ public class ProjectInvestmentsRepository(IProjectRepository projectRepository, 
 
             // try to resolve the destination
             var spentInTransaction =
-                await indexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+                await transactionRepository.GetTransactionInfoByIdAsync(output.SpentInTransaction);
 
             var input = spentInTransaction?.Inputs.FirstOrDefault(input =>
                 input.InputTransactionId == item.Trxid && input.InputIndex == item.Outputindex);
@@ -145,7 +156,7 @@ public class ProjectInvestmentsRepository(IProjectRepository projectRepository, 
                 }
             }
 
-            return item;
+            return Result.Success(item);
         }
 
         // item.IsSpent = unconfirmedOutbound.ContainsOutpoint(new Outpoint(item.Trxid, item.Outputindex));
@@ -156,17 +167,17 @@ public class ProjectInvestmentsRepository(IProjectRepository projectRepository, 
             item.SpentType = "pending";
         }
 
-        return item;
+        return Result.Success(item);
     }
     
     public async Task<Result<InvestmentSpendingLookup>> ScanInvestmentSpends(ProjectInfo project, string transactionId)
         {
-            var trxInfo = await indexerService.GetTransactionInfoByIdAsync(transactionId);
+            var trxInfo = await transactionRepository.GetTransactionInfoByIdAsync(transactionId);
 
             if (trxInfo == null)
                 return Result.Failure<InvestmentSpendingLookup>("Transaction not found");
 
-            var trxHex = await indexerService.GetTransactionHexByIdAsync(transactionId);
+            var trxHex = await transactionRepository.GetTransactionHexByIdAsync(transactionId);
             var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(trxHex);
 
             var response = new InvestmentSpendingLookup
@@ -181,7 +192,7 @@ public class ProjectInvestmentsRepository(IProjectRepository projectRepository, 
 
                 if (!string.IsNullOrEmpty(output.SpentInTransaction))
                 {
-                    var spentInfo = await indexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+                    var spentInfo = await transactionRepository.GetTransactionInfoByIdAsync(output.SpentInTransaction);
 
                     if (spentInfo == null)
                         continue;
@@ -216,8 +227,7 @@ public class ProjectInvestmentsRepository(IProjectRepository projectRepository, 
                                 response.AmountInRecovery = totalsats;
 
                                 var spentRecoveryInfo =
-                                    await indexerService.GetTransactionInfoByIdAsync(response
-                                        .RecoveryTransactionId);
+                                    await transactionRepository.GetTransactionInfoByIdAsync(response.RecoveryTransactionId);
 
                                 if (spentRecoveryInfo == null) 
                                     return response;
