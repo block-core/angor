@@ -1,21 +1,65 @@
+using System.Text.Json;
 using Angor.Contexts.Wallet.Domain;
+using Angor.UI.Model.Implementation.Common;
+using ReactiveUI;
+using Zafiro.Avalonia.Dialogs;
+using Zafiro.UI.Commands;
 
 namespace Angor.UI.Model.Implementation.Wallet;
 
-public class HistoryTransaction(BroadcastedTransaction transaction) : IBroadcastedTransaction
+public class HistoryTransaction : IBroadcastedTransaction
 {
-    public IEnumerable<TransactionOutput> AllOutputs { get; } = transaction.AllOutputs;
+    public HistoryTransaction(BroadcastedTransaction transaction, IDialog dialog)
+    {
+        AllOutputs = transaction.AllOutputs;
+        AllInputs = transaction.AllInputs;
+        WalletOutputs = transaction.WalletInputs;
+        WalletInputs = transaction.WalletInputs;
+        Id = transaction.Id;
+        TotalFee = transaction.Fee;
+        Balance = new AmountUI(transaction.GetBalance().Sats);
+        BlockTime = transaction.BlockTime;
+        RawJson = transaction.RawJson;
 
-    public IEnumerable<TransactionInput> AllInputs { get; } = transaction.AllInputs;
+        ShowJson = ReactiveCommand.CreateFromTask(() => dialog.Show(new LongTextViewModel()
+        {
+            Text = FormatJson(RawJson),
+        }, "Transaction JSON", System.Reactive.Linq.Observable.Return(true))).Enhance();
+    }
 
-    public IEnumerable<TransactionInput> WalletOutputs { get; } = transaction.WalletInputs;
+    public IEnumerable<TransactionOutput> AllOutputs { get; }
 
-    public IEnumerable<TransactionInput> WalletInputs { get; } = transaction.WalletInputs;
+    public IEnumerable<TransactionInput> AllInputs { get; }
+
+    public IEnumerable<TransactionInput> WalletOutputs { get; }
+
+    public IEnumerable<TransactionInput> WalletInputs { get; }
     
-    public string Id { get; } = transaction.Id;
+    public string Id { get; }
     
-    public long TotalFee { get; } = transaction.Fee;
-    public IAmountUI Balance { get; } = new AmountUI(transaction.GetBalance().Sats);
-    public DateTimeOffset? BlockTime { get; } = transaction.BlockTime;
-    public string RawJson { get; } = transaction.RawJson;
+    public long TotalFee { get; }
+    public IAmountUI Balance { get; }
+    public DateTimeOffset? BlockTime { get; }
+    public IEnhancedCommand ShowJson { get; }
+    public string RawJson { get; }
+    
+    private string FormatJson(string json)
+    {
+        try
+        {
+            var jsonDocument = JsonDocument.Parse(json);
+            
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+            
+            var element = jsonDocument.RootElement;
+            return JsonSerializer.Serialize(element.Clone(), options);
+        }
+        catch (JsonException)
+        {
+            return "Invalid JSON: " + json;
+        }
+    }
 }

@@ -19,4 +19,11 @@
         <ProjectReference Include="..\Angor.UI.Model\Angor.UI.Model.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Common\LongTextView.axaml.cs">
+        <DependentUpon>LongTextView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
+
 </Project>
