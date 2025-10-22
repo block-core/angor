@@ -14,8 +14,14 @@ public class InvestmentDraft(IInvestmentAppService investmentAppService, IWallet
     public IAmountUI MinerFee => new AmountUI(DraftModel.MinerFee.Sats);
     public IAmountUI AngorFee => new AmountUI(DraftModel.AngorFee.Sats);
 
-    public Task<Result<Guid>> Confirm()
+    public async Task<Result<Guid>> Confirm()
     {
-        return investmentAppService.SubmitInvestment(wallet.Id.Value, project.Info.Id, DraftModel);
+        if (draftModel.PenaltyDisabled)
+        {
+             var res = await investmentAppService.SubmitTransactionFromDraft(wallet.Id.Value, project.Info.Id, DraftModel);
+             return res.IsSuccess ? Result.Success<Guid>(Guid.Empty) : Result.Failure<Guid>(res.Error);
+        }
+
+        return await investmentAppService.SubmitInvestment(wallet.Id.Value, project.Info.Id, DraftModel);
     }
 }

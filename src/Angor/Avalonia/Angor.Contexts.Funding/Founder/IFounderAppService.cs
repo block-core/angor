@@ -15,5 +15,5 @@ public interface IFounderAppService
     Task<Result<IEnumerable<ReleaseableTransactionDto>>> GetReleasableTransactions(Guid walletId, ProjectId projectId);
     Task<Result> ReleaseInvestorTransactions(Guid walletId, ProjectId projectId, IEnumerable<string> investorAddresses);
     
-    Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, TransactionDraft draft);
+    Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, ProjectId projectId, TransactionDraft draft);
 }

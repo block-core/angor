@@ -28,6 +28,7 @@ public static class ProjectExtensions
                 .Cast<IStage>()
                 .ToList(),
             PenaltyDuration = dto.PenaltyDuration,
+            PenaltyThreshold = dto.PenaltyThreshold.HasValue ?  new AmountUI(dto.PenaltyThreshold.Value) : null,
             TargetAmount = new AmountUI(dto.TargetAmount),
             StartDate = dto.FundingStartDate
         };

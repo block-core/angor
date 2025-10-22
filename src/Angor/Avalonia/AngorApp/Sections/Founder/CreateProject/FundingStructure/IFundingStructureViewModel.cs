@@ -15,5 +15,14 @@ public interface IFundingStructureViewModel
     DateTime? ExpiryDate { get; set; }
     
     IAmountUI TargetAmount { get; }
+
+    IAmountUI PenaltyThreshold { get; }
+
+    IAmountUI MinTargetAmount { get; }
+
+    long? PenaltyThresholdSats { get; set; }
+
+    long? MinTargetAmountSats { get; set; }
+
     ICollection<string> Errors { get; }
 }
