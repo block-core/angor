@@ -63,8 +63,8 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
             {
                 Func<Task<Result>> recover = () => ExecuteDraft(() => investmentAppService.BuildRecoverInvestorFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value); // TODO fee from UI
                 Func<Task<Result>> release = () => ExecuteDraft(() => investmentAppService.BuildReleaseInvestorFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value);
-                Func<Task<Result>> claim = () => ExecuteDraft(() => investmentAppService.BuilodClaimInvestorEndOfProjectFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value);
-                Func<Task<Result>> claimImmediate = () => ExecuteDraft(() => investmentAppService.BuilodClaimInvestorEndOfProjectFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value);
+                Func<Task<Result>> claim = () => ExecuteDraft(() => investmentAppService.BuildClaimInvestorEndOfProjectFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value);
+                Func<Task<Result>> claimImmediate = () => ExecuteDraft(() => investmentAppService.BuildClaimInvestorEndOfProjectFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value);
 
                 // Determine status text based on threshold
                 var statusText = x.Status;

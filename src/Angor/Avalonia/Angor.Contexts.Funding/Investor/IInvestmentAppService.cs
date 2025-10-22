@@ -18,7 +18,7 @@ public interface IInvestmentAppService
     Task<Result<InvestorProjectRecoveryDto>> GetInvestorProjectRecovery(Guid walletId, ProjectId projectId);
     Task<Result<TransactionDraft>> BuildRecoverInvestorFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate);
     Task<Result<TransactionDraft>> BuildReleaseInvestorFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate);
-    Task<Result<TransactionDraft>> BuilodClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate);
+    Task<Result<TransactionDraft>> BuildClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate);
     
     Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, TransactionDraft draft);
     Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, ProjectId projectId, TransactionDraft draft);

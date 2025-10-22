@@ -61,7 +61,7 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     }
 
     // Investor/Manage Funds
-    public Task<Result<TransactionDraft>> BuilodClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate)
+    public Task<Result<TransactionDraft>> BuildClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate)
     {
         return mediator.Send(new ClaimEndOfProject.ClaimEndOfProjectRequest(walletId, projectId, feerate));
     }

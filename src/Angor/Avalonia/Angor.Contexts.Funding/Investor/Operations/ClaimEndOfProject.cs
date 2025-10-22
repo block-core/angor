@@ -66,7 +66,9 @@ public static class ClaimEndOfProject
                 .Select((x, i) => i < 2 ? -1 // Skip the first two outputs (fee and op_return)
                     : string.IsNullOrEmpty(x.SpentInTransaction) ? i : -1)
                 .First(x => x > 0);
-            
+
+            stageIndex -= 2; // Adjust for skipped outputs
+
             var endOfProjectTransaction = investorTransactionActions.RecoverEndOfProjectFunds(investment.InvestmentTransactionHex, project.Value.ToProjectInfo(), stageIndex,
                 changeAddress, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), new FeeEstimation(){FeeRate = request.SelectedFeeRate.SatsPerKilobyte});
             
