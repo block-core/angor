@@ -21,6 +21,7 @@ public interface IInvestmentAppService
     Task<Result<TransactionDraft>> BuilodClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate);
     
     Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, TransactionDraft draft);
+    Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, ProjectId projectId, TransactionDraft draft);
     
     Task<Result<bool>> IsInvestmentAbovePenaltyThreshold(ProjectId projectId, Amount amount);
 }

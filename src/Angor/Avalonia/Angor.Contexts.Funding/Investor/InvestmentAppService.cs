@@ -68,7 +68,12 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
 
     public Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, TransactionDraft draft)
     {
-        return mediator.Send(new PublishTransaction.PublishTransactionRequest(draft));
+        return mediator.Send(new PublishTransaction.PublishTransactionRequest(null, null, draft));
+    }
+
+    public Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, ProjectId projectId, TransactionDraft draft)
+    {
+        return mediator.Send(new PublishTransaction.PublishTransactionRequest(walletId, projectId, draft));
     }
 
     #endregion

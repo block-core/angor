@@ -101,8 +101,8 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
                 
                 if (!isAboveThreshold)
                 {
-                    // Below threshold: directly publish the transaction (no founder approval needed)
-                    var publishResult = await investmentAppService.SubmitTransactionFromDraft(walletId.Value, investmentDraft);
+                    // Below threshold: directly publish the transaction and store in portfolio (no founder approval needed)
+                    var publishResult = await investmentAppService.SubmitTransactionFromDraft(walletId.Value, fullProject.ProjectId, investmentDraft);
                     
                     // Return a GUID representing the transaction (use a hash or placeholder)
                     return publishResult.IsSuccess 
