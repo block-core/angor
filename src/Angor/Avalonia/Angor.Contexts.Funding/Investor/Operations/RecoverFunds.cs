@@ -37,7 +37,7 @@ public static class RecoverFunds
             var accountInfo = walletOperations.BuildAccountInfoForWalletWords(words.Value.ToWalletWords());
             await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
             
-            var project = await projectRepository.Get(request.ProjectId);
+            var project = await projectRepository.GetAsync(request.ProjectId);
             if (project.IsFailure)
                 return Result.Failure<TransactionDraft>(project.Error);
             var investments = await investmentRepository.GetByWalletId(request.WalletId);

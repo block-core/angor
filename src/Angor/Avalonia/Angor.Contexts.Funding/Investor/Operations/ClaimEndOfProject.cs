@@ -47,7 +47,7 @@ public static class ClaimEndOfProject
                 investment.InvestmentTransactionHex = lookupResult.Value;
             }
             
-            var project = await projectRepository.Get(request.ProjectId);
+            var project = await projectRepository.GetAsync(request.ProjectId);
             if (project.IsFailure)
                 return Result.Failure<TransactionDraft>(project.Error);
             

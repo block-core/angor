@@ -43,7 +43,7 @@ public static class RequestInvestmentSignatures
             var transactionId = strippedInvestmentTransaction.GetHash().ToString();
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = WitScript.Empty);
 
-            var projectResult = await projectRepository.Get(request.ProjectId);
+            var projectResult = await projectRepository.GetAsync(request.ProjectId);
 
             if (projectResult.IsFailure)
             {

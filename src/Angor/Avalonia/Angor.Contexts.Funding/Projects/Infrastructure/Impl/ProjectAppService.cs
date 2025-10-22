@@ -17,17 +17,17 @@ public class ProjectAppService(
 {
     public async Task<Result<IEnumerable<ProjectDto>>> Latest()
     {
-        return await projectRepository.Latest().Map(t => t.AsEnumerable()).MapEach(project => project.ToDto());
+        return await projectRepository.LatestAsync().Map(t => t.AsEnumerable()).MapEach(project => project.ToDto());
     }
 
     public Task<Maybe<ProjectDto>> FindById(ProjectId projectId)
     {
-        return projectRepository.Get(projectId).Map(p => p.ToDto()).AsMaybe();
+        return projectRepository.GetAsync(projectId).Map(p => p.ToDto()).AsMaybe();
     }
 
     public Task<Result<ProjectDto>> Get(ProjectId projectId)
     {
-        return projectRepository.Get(projectId).Map(project => project.ToDto());
+        return projectRepository.GetAsync(projectId).Map(project => project.ToDto());
     }
 
     public Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(Guid walletId)

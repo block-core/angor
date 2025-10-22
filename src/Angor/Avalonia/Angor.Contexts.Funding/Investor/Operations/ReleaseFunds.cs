@@ -28,7 +28,7 @@ public static class ReleaseFunds
     {
         public async Task<Result<TransactionDraft>> Handle(ReleaseFundsRequest request, CancellationToken cancellationToken)
         {
-            var project = await projectRepository.Get(request.ProjectId);
+            var project = await projectRepository.GetAsync(request.ProjectId);
             if (project.IsFailure)
                 return Result.Failure<TransactionDraft>(project.Error);
             

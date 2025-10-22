@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using Blockcore.EventBus;
 using Microsoft.Extensions.Logging;
@@ -9,11 +10,11 @@ namespace Angor.Shared.Services;
 public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandling
 {
     private ILogger<RelaySubscriptionsHandling> _logger;
-    protected Dictionary<string, IDisposable> relaySubscriptions;
-    protected Dictionary<string, Action> userEoseActions;
-    protected Dictionary<string, Action<NostrOkResponse>> OkVerificationActions;
+    protected ConcurrentDictionary<string, IDisposable> relaySubscriptions;
+    protected ConcurrentDictionary<string, Action> userEoseActions;
+    protected ConcurrentDictionary<string, Action<NostrOkResponse>> OkVerificationActions;
 
-    protected Dictionary<string, string> relaySubscriptionsKeepActive;
+    protected ConcurrentDictionary<string, string> relaySubscriptionsKeepActive;
 
     private INostrCommunicationFactory _communicationFactory;
     private INetworkService _networkService;
@@ -73,7 +74,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         if (!_communicationFactory.OkEventReceivedOnAllRelays(okResponse.EventId)) 
             return;
         
-        OkVerificationActions.Remove(okResponse.EventId ?? string.Empty);
+        OkVerificationActions.Remove(okResponse.EventId ?? string.Empty, out _);
         _communicationFactory.ClearOkReceivedOnSubscriptionMonitoring(okResponse.EventId);
     }
 
@@ -108,7 +109,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
                 _logger.LogError(e, "Failed to invoke end of events event action");
             }
 
-            userEoseActions.Remove(_.Subscription);
+            userEoseActions.Remove(_.Subscription, out var _);
             _logger.LogDebug($"Removed action on EOSE for subscription - {_.Subscription}");
         }
 
@@ -133,8 +134,8 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
             .Send(new NostrCloseRequest(subscriptionKey));
        
         relaySubscriptions[subscriptionKey].Dispose();
-        relaySubscriptions.Remove(subscriptionKey);
-        relaySubscriptionsKeepActive.Remove(subscriptionKey);
+        relaySubscriptions.Remove(subscriptionKey, out _);
+        relaySubscriptionsKeepActive.Remove(subscriptionKey, out _);
 
         _logger.LogDebug($"subscription disposed - {subscriptionKey}");
     }

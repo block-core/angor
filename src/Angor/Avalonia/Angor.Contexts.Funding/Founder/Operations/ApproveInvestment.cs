@@ -41,7 +41,7 @@ public static class ApproveInvestment
             };
             
             var approvalResult = await from walletWords in seedwordsProvider.GetSensitiveData(request.WalletId)
-                from project in projectRepository.Get(request.ProjectId)
+                from project in projectRepository.GetAsync(request.ProjectId)
                 select PerformSignatureApproval(signatureItem, walletWords.ToWalletWords(), project.ToProjectInfo());
             
             return approvalResult;

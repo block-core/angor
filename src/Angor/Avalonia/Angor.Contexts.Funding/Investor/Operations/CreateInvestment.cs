@@ -29,7 +29,7 @@ public static class CreateInvestment
             try
             {
                 // Get the project and investor key
-                var projectResult = await projectRepository.Get(transactionRequest.ProjectId);
+                var projectResult = await projectRepository.GetAsync(transactionRequest.ProjectId);
                 if (projectResult.IsFailure)
                 {
                     return Result.Failure<InvestmentDraft>(projectResult.Error);

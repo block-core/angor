@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using System.Reactive.Linq;
+using ConcurrentCollections;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Client;
 using Nostr.Client.Communicator;
@@ -14,8 +16,8 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     private NostrMultiWebsocketClient? _nostrMultiWebsocketClientDiscovery;
     private readonly List<IDisposable> _serviceSubscriptions;
 
-    private Dictionary<string, List<string>> _eoseCalledOnSubscriptionClients;
-    private Dictionary<string, List<string>> _okCalledOnSubscriptionClients;
+    private ConcurrentDictionary<string, ConcurrentHashSet<string>> _eoseCalledOnSubscriptionClients;
+    private ConcurrentDictionary<string, ConcurrentHashSet<string>> _okCalledOnSubscriptionClients;
 
     public NostrCommunicationFactory(ILogger<NostrWebsocketClient> clientLogger, ILogger<NostrCommunicationFactory> logger)
     {
@@ -26,6 +28,30 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         _okCalledOnSubscriptionClients = new();
     }
 
+    private ConcurrentHashSet<string> GetAllConnectedRelayNames()
+    {
+        var allRelays = new ConcurrentHashSet<string>();
+
+        if (_nostrMultiWebsocketClient != null)
+        {
+            foreach (var client in _nostrMultiWebsocketClient.Clients)
+            {
+                allRelays.Add(client.Communicator.Name);
+            }
+        }
+
+        // if (_nostrMultiWebsocketClientDiscovery != null)
+        // {
+        //     foreach (var client in _nostrMultiWebsocketClientDiscovery.Clients)
+        //     {
+        //         allRelays.Add(client.Communicator.Name);
+        //     }
+        // }
+
+        return allRelays;
+    }
+    
+    
     public INostrClient GetOrCreateDiscoveryClients(INetworkService networkService)
     {
         if (_nostrMultiWebsocketClientDiscovery == null)
@@ -42,12 +68,13 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             _serviceSubscriptions.Add(client.Streams.EoseStream.Subscribe(x =>
             {
                 _logger.LogDebug($"{x.CommunicatorName} EOSE {x.Subscription}");
-                if (_eoseCalledOnSubscriptionClients.TryGetValue(x.Subscription ?? string.Empty,
-                        out var clientsReceivedList))
-                {
-                    _logger.LogDebug($"EOSE {x.Subscription} adding {x.CommunicatorName}");
-                    clientsReceivedList.Add(x.CommunicatorName);
-                }
+                if (!_eoseCalledOnSubscriptionClients.TryGetValue(x.Subscription ?? string.Empty,
+                        out var clientsReceivedList)) return;
+                
+                var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName);
+                    
+                _logger.LogWarning("EOSE {x.Subscription} removed {x.CommunicatorName} - {tryRemove}",
+                    x.Subscription, x.CommunicatorName, tryRemove);
             }));
 
             _serviceSubscriptions.Add(client.Streams.OkStream.Subscribe(x =>
@@ -55,8 +82,8 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
                 _logger.LogDebug($"{x.CommunicatorName} OK {x.EventId} {x.Accepted}");
                 if (_okCalledOnSubscriptionClients.TryGetValue(x.EventId ?? string.Empty, out var clientsReceivedList))
                 {
-                    _logger.LogDebug($"OK {x.EventId} adding {x.CommunicatorName}");
-                    clientsReceivedList.Add(x.CommunicatorName);
+                    var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName);
+                    _logger.LogWarning($"OK {x.EventId} accepted: {x.Accepted} removed ok {x.CommunicatorName} - {tryRemove}");
                 }
             }));
 
@@ -112,12 +139,14 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             _serviceSubscriptions.Add(client.Streams.EoseStream.Subscribe(x =>
             {
                 _logger.LogDebug($"{x.CommunicatorName} EOSE {x.Subscription}");
-                if (_eoseCalledOnSubscriptionClients.TryGetValue(x.Subscription ?? string.Empty,
-                        out var clientsReceivedList))
-                {
-                    _logger.LogDebug($"EOSE {x.Subscription} adding {x.CommunicatorName}");
-                    clientsReceivedList.Add(x.CommunicatorName);
-                }
+                if (!_eoseCalledOnSubscriptionClients.TryGetValue(x.Subscription ?? string.Empty,
+                        out var clientsReceivedList)) return;
+                _logger.LogDebug($"EOSE {x.Subscription} adding {x.CommunicatorName}");
+                     
+                var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName);
+                    
+                _logger.LogWarning("EOSE {x.Subscription} removed {x.CommunicatorName} - {tryRemove}",
+                    x.Subscription, x.CommunicatorName, tryRemove);
             }));
             
             _serviceSubscriptions.Add(client.Streams.OkStream.Subscribe(x =>
@@ -125,8 +154,8 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
                 _logger.LogDebug($"{x.CommunicatorName} OK {x.EventId} {x.Accepted}");
                 if (_okCalledOnSubscriptionClients.TryGetValue(x.EventId ?? string.Empty, out var clientsReceivedList))
                 {
-                    _logger.LogDebug($"OK {x.EventId} adding {x.CommunicatorName}");
-                    clientsReceivedList.Add(x.CommunicatorName);
+                    var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName);
+                    _logger.LogWarning($"OK {x.EventId} accepted: {x.Accepted} removed ok {x.CommunicatorName} - {tryRemove}");
                 } 
             }));
             
@@ -147,30 +176,24 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             return true; //If not monitoring than no need to block
 
         _logger.LogDebug($"Checking for all Eose on monitored subscription {subscription}");
-        
-        bool response = _nostrMultiWebsocketClient?.Clients
-            .All(x =>
-                _eoseCalledOnSubscriptionClients[subscription].Contains(x.Communicator.Name)) ?? false; 
-        
-        response = response | _nostrMultiWebsocketClientDiscovery?.Clients
-            .All(x =>
-                _eoseCalledOnSubscriptionClients[subscription].Contains(x.Communicator.Name)) ?? false; 
+
+        var response = _eoseCalledOnSubscriptionClients[subscription].IsEmpty;
         
         _logger.LogDebug($"Eose on monitored subscription {subscription} received from all clients - {response}");
-
+        
         return response;
     }
     
     public bool MonitoringEoseReceivedOnSubscription(string subscription)
     {
         _logger.LogDebug($"Started monitoring subscription {subscription}");
-        return _eoseCalledOnSubscriptionClients.TryAdd(subscription, new List<string>());
+        return _eoseCalledOnSubscriptionClients.TryAdd(subscription, GetAllConnectedRelayNames());
     }
     
     public void ClearEoseReceivedOnSubscriptionMonitoring(string subscription)
     {
         _logger.LogDebug($"Stopped monitoring subscription {subscription}");
-        _eoseCalledOnSubscriptionClients.Remove(subscription);
+        _eoseCalledOnSubscriptionClients.Remove(subscription, out _);
     }
     
     public bool OkEventReceivedOnAllRelays(string eventId)
@@ -180,13 +203,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
 
         _logger.LogDebug($"Checking for all Ok on monitored subscription {eventId}");
         
-        bool response = _nostrMultiWebsocketClient?.Clients
-            .All(x =>
-                _okCalledOnSubscriptionClients[eventId].Contains(x.Communicator.Name)) ?? false;
-
-        response = response | _nostrMultiWebsocketClientDiscovery?.Clients
-            .All(x =>
-                _okCalledOnSubscriptionClients[eventId].Contains(x.Communicator.Name)) ?? false; 
+        bool response = _okCalledOnSubscriptionClients[eventId].IsEmpty;
         
         _logger.LogDebug($"Eose on monitored subscription {eventId} received from all clients - {response}");
 
@@ -196,13 +213,13 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     public void MonitoringOkReceivedOnSubscription(string eventId)
     {
         _logger.LogDebug($"Started monitoring event id {eventId}");
-        _okCalledOnSubscriptionClients.Add(eventId, new List<string>());
+        _okCalledOnSubscriptionClients.TryAdd(eventId, GetAllConnectedRelayNames());
     }
     
     public void ClearOkReceivedOnSubscriptionMonitoring(string eventId)
     {
         _logger.LogDebug($"Started monitoring event id {eventId}");
-        _okCalledOnSubscriptionClients.Remove(eventId);
+        _okCalledOnSubscriptionClients.Remove(eventId, out _);
     }
     
     public int GetNumberOfRelaysConnected()

@@ -1,17 +1,14 @@
-using Angor.Contexts.Funding.Shared;
-using Angor.Data.Documents.Interfaces;
+namespace Angor.Data.Documents.Models;
 
-namespace Angor.Contexts.Funding.Projects.Domain;
-
-public class Project : IDocumentEntity
+public class ProjectDocument : BaseDocument
 {
-    public new ProjectId Id { get; set; }
+    public new string Id { get; set; }
     public string Name { get; set; }
     public Uri? Picture { get; set; }
     public string ShortDescription { get; set; }
     public long TargetAmount { get; set; }
     public DateTime StartingDate { get; set; }
-    public IEnumerable<Stage> Stages { get; set; }
+    public IEnumerable<StageDocument> Stages { get; set; }
     public string NostrPubKey { get; set; }
     public TimeSpan PenaltyDuration { get; set; }
     public Uri? InformationUri { get; set; }
@@ -20,11 +17,4 @@ public class Project : IDocumentEntity
     public DateTime ExpiryDate { get; set; }
     public Uri? Banner { get; set; }
     public DateTime EndDate { get; set; }
-
-    public override string ToString()
-    {
-        return Name;
-    }
-
-    public string GetDocumentId() => Id.Value;
 }

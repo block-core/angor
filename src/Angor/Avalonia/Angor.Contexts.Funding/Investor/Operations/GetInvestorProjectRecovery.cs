@@ -31,7 +31,7 @@ public static class GetInvestorProjectRecovery
         public async Task<Result<InvestorProjectRecoveryDto>> Handle(GetInvestorProjectRecoveryRequest request,
             CancellationToken cancellationToken)
         {
-            var project = await projectRepository.Get(request.ProjectId);
+            var project = await projectRepository.GetAsync(request.ProjectId);
 
             if (project.IsFailure)
                 return Result.Failure<InvestorProjectRecoveryDto>(project.Error);

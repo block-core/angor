@@ -72,37 +72,47 @@ public class PortfolioRepository(
         string password)
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        var tcs = new TaskCompletionSource<Result<InvestmentRecords>>();
+        var tcs = new TaskCompletionSource<Result>();
             
         cts.Token.Register(() => tcs.TrySetCanceled());
 
-        relayService.LookupDirectMessagesForPubKey(storageAccountKey, null, 1, async (nostrEvent) =>
+        var encryptedContent = string.Empty;
+        
+        relayService.LookupDirectMessagesForPubKey(storageAccountKey, null, 1, nostrEvent =>
             {
                 try
                 {
-                    var decrypted = await encryptionService.DecryptData(nostrEvent.Content, password);
-                    var investmentRecords = serializer.Deserialize<InvestmentRecords>(decrypted);
-                    tcs.TrySetResult(investmentRecords);
+                    encryptedContent = nostrEvent.Content;
+                    tcs.TrySetResult( Result.Success());
                 }
                 catch (Exception e)
                 {
                     tcs.TrySetException(e);
                 }
 
+                return tcs.Task;
             }, new[] { storageAccountKey }, false,
             () =>
             {
-                tcs.TrySetResult(Result.Success(new InvestmentRecords(){ProjectIdentifiers = [] }));
+                tcs.TrySetResult(Result.Success());
             });
 
         
         try
         {
-            return await tcs.Task;
+            var lookupResult = await tcs.Task;
+            
+            if (!lookupResult.IsSuccess) 
+                return Result.Failure<InvestmentRecords>(lookupResult.Error);
+            
+            var decrypted = await encryptionService.DecryptData(encryptedContent, password);
+            var investmentRecords = serializer.Deserialize<InvestmentRecords>(decrypted);
+            return Result.Success(investmentRecords!);
+
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException e)
         {
-            return Result.Failure<InvestmentRecords>("Operation timed out");
+            return Result.Failure<InvestmentRecords>(e.Message);
         }
 
     }
