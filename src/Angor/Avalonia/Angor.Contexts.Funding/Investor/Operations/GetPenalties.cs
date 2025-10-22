@@ -4,6 +4,7 @@ using System.Reactive.Threading.Tasks;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -25,7 +26,8 @@ public class GetPenalties
         IIndexerService indexerService,
         IInvestorTransactionActions investorTransactionActions,
         INetworkConfiguration networkConfiguration,
-        IRelayService relayService)
+        IRelayService relayService,
+        ITransactionRepository transactionRepository)
         : IRequestHandler<GetPenaltiesRequest, Result<IEnumerable<PenaltiesDto>>>
     {
 
@@ -138,7 +140,7 @@ public class GetPenalties
             {
                 foreach (var penaltyProject in penaltyProjects)
                 {
-                    var recoveryTransaction = await indexerService.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
+                    var recoveryTransaction = await transactionRepository.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
 
                     var totalsats = recoveryTransaction.Outputs
                         .Where(s => Script.FromHex(s.ScriptPubKey).IsScriptType(ScriptType.P2WSH)).Sum(s => s.Balance);
@@ -168,12 +170,12 @@ public class GetPenalties
 
         public async Task<Result<LookupInvestment>> ScanInvestmentSpends(LookupInvestment investorProject)
         {
-            var trxInfo = await indexerService.GetTransactionInfoByIdAsync(investorProject.TransactionId);
+            var trxInfo = await transactionRepository.GetTransactionInfoByIdAsync(investorProject.TransactionId);
 
             if (trxInfo == null)
                 return investorProject;
 
-            var trxHex = await indexerService.GetTransactionHexByIdAsync(investorProject.TransactionId);
+            var trxHex = await transactionRepository.GetTransactionHexByIdAsync(investorProject.TransactionId);
             var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(trxHex);
 
             for (int stageIndex = 0; stageIndex < investorProject.ProjectInfo.Stages.Count; stageIndex++)
@@ -182,7 +184,7 @@ public class GetPenalties
 
                 if (!string.IsNullOrEmpty(output.SpentInTransaction))
                 {
-                    var spentInfo = await indexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+                    var spentInfo = await transactionRepository.GetTransactionInfoByIdAsync(output.SpentInTransaction);
 
                     if (spentInfo == null)
                         continue;
@@ -217,7 +219,7 @@ public class GetPenalties
                                 investorProject.AmountInRecovery = totalsats;
 
                                 var spentRecoveryInfo =
-                                    await indexerService.GetTransactionInfoByIdAsync(investorProject
+                                    await transactionRepository.GetTransactionInfoByIdAsync(investorProject
                                         .RecoveryTransactionId);
 
                                 if (spentRecoveryInfo == null) 

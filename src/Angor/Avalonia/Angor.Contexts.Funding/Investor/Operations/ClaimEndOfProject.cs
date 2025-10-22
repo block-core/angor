@@ -2,6 +2,7 @@ using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -20,7 +21,8 @@ public static class ClaimEndOfProject
     
     public class ClaimEndOfProjectHandler(IWalletOperations walletOperations, IDerivationOperations derivationOperations,
         IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
-        IPortfolioRepository investmentRepository, IIndexerService indexerService, ISeedwordsProvider provider) : IRequestHandler<ClaimEndOfProjectRequest, Result<TransactionDraft>>
+        IPortfolioRepository investmentRepository, IIndexerService indexerService, ISeedwordsProvider provider,
+        ITransactionRepository transactionRepository) : IRequestHandler<ClaimEndOfProjectRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(ClaimEndOfProjectRequest request, CancellationToken cancellationToken)
         {
@@ -41,7 +43,7 @@ public static class ClaimEndOfProject
 
             if (investment.InvestmentTransactionHex is null)
             {
-                var lookupResult =  await Result.Try(() => indexerService.GetTransactionHexByIdAsync(investment.InvestmentTransactionHash));
+                var lookupResult =  await Result.Try(() => transactionRepository.GetTransactionHexByIdAsync(investment.InvestmentTransactionHash));
                 if (lookupResult.IsFailure)
                     return Result.Failure<TransactionDraft>("Could not find investment transaction in indexer: " + lookupResult.Error);
                 investment.InvestmentTransactionHex = lookupResult.Value;
@@ -57,7 +59,7 @@ public static class ClaimEndOfProject
             if (changeAddress == null)
                 return Result.Failure<TransactionDraft>("Could not get a change address");
             
-            var transactionInfo = await indexerService.GetTransactionInfoByIdAsync(investment.InvestmentTransactionHash);
+            var transactionInfo = await transactionRepository.GetTransactionInfoByIdAsync(investment.InvestmentTransactionHash);
 
             if (transactionInfo is null)
                 return Result.Failure<TransactionDraft>("Could not find transaction info");

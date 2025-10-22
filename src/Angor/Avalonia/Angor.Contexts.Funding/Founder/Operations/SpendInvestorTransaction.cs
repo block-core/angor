@@ -4,6 +4,7 @@ using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -23,7 +24,8 @@ public static class SpendInvestorTransaction
 
     public class SpendInvestorTransactionHandler(IWalletOperations walletOperations, IFounderTransactionActions founderTransactionActions,
         INetworkConfiguration networkConfiguration, IIndexerService indexerService, IProjectRepository projectRepository,
-        IDerivationOperations derivationOperations, ISeedwordsProvider seedwordsProvider) : IRequestHandler<SpendInvestorTransactionRequest, Result<TransactionDraft>>
+        IDerivationOperations derivationOperations, ISeedwordsProvider seedwordsProvider,
+        ITransactionRepository transactionRepository) : IRequestHandler<SpendInvestorTransactionRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(SpendInvestorTransactionRequest request, CancellationToken cancellationToken)
         {
@@ -44,14 +46,10 @@ public static class SpendInvestorTransaction
             
             var founderContext = new FounderContext { ProjectInfo = project.Value.ToProjectInfo(), ProjectSeeders = new ProjectSeeders() };
 
-            var tasks = request.ToSpend.Select(x =>
-                    GetInvestmentByInvestorKey(request.ProjectId.Value, x, network))
-                .Merge();
+            var tasks = request.ToSpend.Select(x => GetInvestmentByInvestorKey(request.ProjectId.Value, x));
             
-            var investmentTransactions = await tasks.ToList();
-            founderContext.InvestmentTrasnactionsHex = investmentTransactions
-                .Select(t => t.transactionHex)
-                .ToList();
+            var investmentTransactions = await Task.WhenAll(tasks);
+            founderContext.InvestmentTrasnactionsHex = investmentTransactions.Where(hex => hex != string.Empty).ToList();
             
             var addressResult = await GetUnfundedReleaseAddress((await seedwordsProvider.GetSensitiveData(request.WalletId)).Value.ToWalletWords());
             if (addressResult.IsFailure) 
@@ -92,15 +90,12 @@ public static class SpendInvestorTransaction
             // });
         }
 
-        private IObservable<(string InvestorAddress, int StageId, string transactionHex)> GetInvestmentByInvestorKey(string projectId,
-            SpendTransactionDto x, Network network)
+        private async Task<string> GetInvestmentByInvestorKey(string projectId, SpendTransactionDto x)
         {
-            return indexerService.GetInvestmentAsync(projectId, x.InvestorAddress)
-                .ToObservable()
-                .Select(t => t?.TransactionId)
-                .Where(t => t != null)
-                .SelectMany(t => indexerService.GetTransactionHexByIdAsync(t!).ToObservable())
-                .Select(transaction => (x.InvestorAddress, x.StageId, transaction));
+            var investment = await indexerService.GetInvestmentAsync(projectId, x.InvestorAddress);
+            if (investment == null)
+                return string.Empty;
+            return await transactionRepository.GetTransactionHexByIdAsync(investment.TransactionId) ?? string.Empty;
         }
 
         private async Task<string> GetProjectFounderKeyAsync(Guid walletId, string projectId)

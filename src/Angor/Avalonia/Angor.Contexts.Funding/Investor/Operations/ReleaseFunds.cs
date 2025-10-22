@@ -2,6 +2,7 @@ using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -24,7 +25,8 @@ public static class ReleaseFunds
         IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
         IPortfolioRepository investmentRepository, INetworkConfiguration networkConfiguration,
         IWalletOperations walletOperations, IIndexerService indexerService, ISignService signService,
-        IEncryptionService decrypter, ISerializer serializer) : IRequestHandler<ReleaseFundsRequest, Result<TransactionDraft>>
+        IEncryptionService decrypter, ISerializer serializer,
+        ITransactionRepository transactionRepository) : IRequestHandler<ReleaseFundsRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(ReleaseFundsRequest request, CancellationToken cancellationToken)
         {
@@ -71,7 +73,7 @@ public static class ReleaseFunds
             if (!sigCheckResult)
                 throw new Exception("Failed to validate signatures");
 
-            var transactionInfo = await indexerService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
+            var transactionInfo = await transactionRepository.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
 
             if (transactionInfo is null)
                 return Result.Failure<TransactionDraft>("Could not find transaction info");
