@@ -299,7 +299,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
         // Return true if investment is at or above the threshold (requires penalty + founder approval)
         // Return false if investment is below threshold (no penalty, no approval needed)
-        return investmentAmount >= projectInfo.PenaltyThreshold.Value;
+        return investmentAmount > projectInfo.PenaltyThreshold.Value;
     }
 
     /// <summary>

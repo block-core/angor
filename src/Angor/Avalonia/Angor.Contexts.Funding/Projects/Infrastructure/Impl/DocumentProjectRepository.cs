@@ -77,6 +77,7 @@ public class DocumentProjectRepository(IGenericDocumentCollection<Project> colle
                     FounderRecoveryKey = info.FounderRecoveryKey,
                     NostrPubKey = info.NostrPubKey,
                     PenaltyDuration = TimeSpan.FromDays(info.PenaltyDays),
+                    PenaltyThreshold = info.PenaltyThreshold,
                     TargetAmount = info.TargetAmount,
                     Stages = info.Stages.Select((stage, i) => new Stage
                     {

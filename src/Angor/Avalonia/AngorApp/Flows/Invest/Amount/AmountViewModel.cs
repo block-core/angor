@@ -35,7 +35,7 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
                 
                 // Requires approval if investment is AT OR ABOVE the threshold
                 // Below threshold = no penalty, no approval needed
-                return investAmount.Value >= project.PenaltyThreshold.Sats;
+                return investAmount.Value > project.PenaltyThreshold.Sats;
             })
             .ToProperty(this, x => x.RequiresFounderApproval);
     }

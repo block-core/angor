@@ -21,7 +21,7 @@ public static class CheckPenaltyThreshold
             try
             {
                 // Get the project to access its info
-                var projectResult = await projectRepository.Get(request.ProjectId);
+                var projectResult = await projectRepository.GetAsync(request.ProjectId);
                 if (projectResult.IsFailure)
                 {
                     return Result.Failure<bool>(projectResult.Error);
