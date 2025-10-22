@@ -15,9 +15,9 @@ public class Project : IProject
     public string NpubKey { get; set; }
     public TimeSpan PenaltyDuration { get; set; }
     public Uri InformationUri { get; set; }
-    public DateTime EndDate { get; }
-    public int TotalInvestors { get; }
-    public IAmountUI TotalRaised { get; }
+    public DateTime EndDate { get; set; }
+    public int TotalInvestors { get; set; }
+    public IAmountUI TotalRaised { get; set; }
 
     public override string ToString()
     {

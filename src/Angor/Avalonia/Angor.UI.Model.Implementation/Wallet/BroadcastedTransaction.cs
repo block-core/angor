@@ -13,7 +13,7 @@ public class HistoryTransaction : IBroadcastedTransaction
     {
         AllOutputs = transaction.AllOutputs;
         AllInputs = transaction.AllInputs;
-        WalletOutputs = transaction.WalletInputs;
+        WalletOutputs = transaction.WalletOutputs;
         WalletInputs = transaction.WalletInputs;
         Id = transaction.Id;
         TotalFee = transaction.Fee;
@@ -31,7 +31,7 @@ public class HistoryTransaction : IBroadcastedTransaction
 
     public IEnumerable<TransactionInput> AllInputs { get; }
 
-    public IEnumerable<TransactionInput> WalletOutputs { get; }
+    public IEnumerable<TransactionOutput> WalletOutputs { get; }
 
     public IEnumerable<TransactionInput> WalletInputs { get; }
     
