@@ -122,10 +122,10 @@ public static class GetInvestorProjectRecovery
 
             if (!string.IsNullOrEmpty(lookup.Value.RecoveryTransactionId))
             {
-                var recoveryTansaction =
+                var recoveryTransaction =
                     await transactionRepository.GetTransactionInfoByIdAsync(lookup.Value.RecoveryTransactionId);
-                if (recoveryTansaction != null)
-                    penaltyExpieryDate = Utils.UnixTimeToDateTime(recoveryTansaction.Timestamp)
+                if (recoveryTransaction != null)
+                    penaltyExpieryDate = Utils.UnixTimeToDateTime(recoveryTransaction.Timestamp)
                         .AddDays(projectInfo.PenaltyDays);
             }
 
