@@ -17,6 +17,8 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
     private readonly IInvestmentAppService investmentAppService;
     private readonly UIServices uiServices;
 
+    [Reactive] private bool canClaimImmediately;
+
     public ManageInvestorProjectViewModel(ProjectId projectId, IInvestmentAppService investmentAppService, UIServices uiServices, IWalletContext walletContext)
     {
         this.projectId = projectId;
@@ -40,31 +42,55 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
             .Tap(dto => Apply(wallet, dto));
     }
 
-    private void Apply(IWallet wallet, InvestorProjectRecoveryDto dto)
+    private async void Apply(IWallet wallet, InvestorProjectRecoveryDto dto)
     {
         Project = new InvestedProject(dto);
+        
+        // Check if investment is below penalty threshold
+        var totalInvestment = dto.Items.Sum(x => x.Amount);
+        var thresholdCheckResult = await investmentAppService.IsInvestmentAbovePenaltyThreshold(
+            projectId, 
+            new Angor.Contexts.Funding.Projects.Domain.Amount(totalInvestment));
+        
+        // Can claim immediately if below threshold and project hasn't ended
+        CanClaimImmediately = thresholdCheckResult.IsSuccess && 
+                              !thresholdCheckResult.Value && 
+                              !dto.EndOfProject &&
+                              dto.Items.Any(x => !x.IsSpent);
+
         Items = dto.Items
             .Select(x =>
             {
                 Func<Task<Result>> recover = () => ExecuteDraft(() => investmentAppService.BuildRecoverInvestorFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value); // TODO fee from UI
                 Func<Task<Result>> release = () => ExecuteDraft(() => investmentAppService.BuildReleaseInvestorFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value);
                 Func<Task<Result>> claim = () => ExecuteDraft(() => investmentAppService.BuilodClaimInvestorEndOfProjectFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value);
+                Func<Task<Result>> claimImmediate = () => ExecuteDraft(() => investmentAppService.BuilodClaimInvestorEndOfProjectFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value);
+
+                // Determine status text based on threshold
+                var statusText = x.Status;
+                if (CanClaimImmediately && !x.IsSpent)
+                {
+                    statusText = "Can claim immediately (no penalty)";
+                }
 
                 return (IInvestorProjectItem)new InvestorProjectItem(
                     stage: x.StageIndex + 1,
                     amount: new AmountUI(x.Amount),
-                    status: x.Status,
-                    canRecover: !x.IsSpent && !dto.EndOfProject && dto.CanRecover,
+                    status: statusText,
+                    canRecover: !x.IsSpent && !dto.EndOfProject && dto.CanRecover && !CanClaimImmediately,
                     canRelease: x.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty && dto.CanRelease,
                     canClaimEnd: dto.EndOfProject && !x.IsSpent,
+                    canClaimImmediate: CanClaimImmediately && !x.IsSpent,
                     recoverAction: recover,
                     releaseAction: release,
                     claimAction: claim,
+                    claimImmediateAction: claimImmediate,
                     notificationService: uiServices.NotificationService);
             })
             .ToList();
         this.RaisePropertyChanged(nameof(Project));
         this.RaisePropertyChanged(nameof(Items));
+        this.RaisePropertyChanged(nameof(CanClaimImmediately));
     }
 
     private async Task<Result> ExecuteDraft(Func<Task<Result<TransactionDraft>>> buildDraft, Guid walletId)
@@ -100,7 +126,8 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
                 Observable.Merge(
                     items.Select(i => i.Recover.Successes().ToSignal()).Merge(),
                     items.Select(i => i.Release.Successes().ToSignal()).Merge(),
-                    items.Select(i => i.ClaimEndOfProject.Successes().ToSignal()).Merge()
+                    items.Select(i => i.ClaimEndOfProject.Successes().ToSignal()).Merge(),
+                    items.Select(i => i.ClaimImmediate.Successes().ToSignal()).Merge()
                 )
             )
             .Switch();
@@ -113,7 +140,7 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
 
     private class InvestorProjectItem : ReactiveObject, IInvestorProjectItem
     {
-        public InvestorProjectItem(int stage, IAmountUI amount, string status, bool canRecover, bool canRelease, bool canClaimEnd, Func<Task<Result>> recoverAction, Func<Task<Result>> releaseAction, Func<Task<Result>> claimAction, INotificationService notificationService)
+        public InvestorProjectItem(int stage, IAmountUI amount, string status, bool canRecover, bool canRelease, bool canClaimEnd, bool canClaimImmediate, Func<Task<Result>> recoverAction, Func<Task<Result>> releaseAction, Func<Task<Result>> claimAction, Func<Task<Result>> claimImmediateAction, INotificationService notificationService)
         {
             Stage = stage;
             Amount = amount;
@@ -121,14 +148,17 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
             ShowRecover = canRecover;
             ShowRelease = canRelease;
             ShowClaimEndOfProject = canClaimEnd;
+            ShowClaimImmediate = canClaimImmediate;
 
             Recover = ReactiveCommand.CreateFromTask(recoverAction, Observable.Return(canRecover)).Enhance();
             Release = ReactiveCommand.CreateFromTask(releaseAction, Observable.Return(canRelease)).Enhance();
             ClaimEndOfProject = ReactiveCommand.CreateFromTask(claimAction, Observable.Return(canClaimEnd)).Enhance();
+            ClaimImmediate = ReactiveCommand.CreateFromTask(claimImmediateAction, Observable.Return(canClaimImmediate)).Enhance();
 
             Recover.HandleErrorsWith(notificationService, "Failed to recover funds");
             Release.HandleErrorsWith(notificationService, "Failed to release funds");
             ClaimEndOfProject.HandleErrorsWith(notificationService, "Failed to claim funds");
+            ClaimImmediate.HandleErrorsWith(notificationService, "Failed to claim funds");
 
             Recover.Successes()
                 .SelectMany(_ => Observable.FromAsync(() => notificationService.Show("Recovery transaction published", Maybe<string>.From("Success"))))
@@ -139,6 +169,9 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
             ClaimEndOfProject.Successes()
                 .SelectMany(_ => Observable.FromAsync(() => notificationService.Show("Claim transaction published", Maybe<string>.From("Success"))))
                 .Subscribe();
+            ClaimImmediate.Successes()
+                .SelectMany(_ => Observable.FromAsync(() => notificationService.Show("Funds claimed immediately - no penalty applied!", Maybe<string>.From("Success"))))
+                .Subscribe();
         }
 
         public int Stage { get; }
@@ -148,10 +181,12 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
         public IEnhancedCommand<Result> Recover { get; }
         public IEnhancedCommand<Result> Release { get; }
         public IEnhancedCommand<Result> ClaimEndOfProject { get; }
+        public IEnhancedCommand<Result> ClaimImmediate { get; }
 
         public bool ShowRecover { get; }
         public bool ShowRelease { get; }
         public bool ShowClaimEndOfProject { get; }
+        public bool ShowClaimImmediate { get; }
     }
 
     private class InvestedProject : IInvestedProject

@@ -42,6 +42,13 @@
             </Card>
             <ScrollViewer>
                 <StackPanel Classes="BigGap">
+                    <!-- Info card for immediate claim -->
+                    <Card IsVisible="{Binding CanClaimImmediately}" Classes="Success" Header="? No Penalty - Immediate Claim Available">
+                        <TextBlock TextWrapping="Wrap">
+                            Your investment is below the penalty threshold. You can claim your funds immediately without any penalty period or waiting for founder approval. Use the "Claim Now" buttons below to recover your funds instantly.
+                        </TextBlock>
+                    </Card>
+                    
                     <BalancedWrapGrid MinItemWidth="200" HorizontalSpacing="20" VerticalSpacing="20">
                         <Card Header="Total Funds" Theme="{StaticResource LeftItemCard}" Subheader="{Binding Project.TotalFunds.DecimalString}" />
                         <Card Header="Expiry Date" Theme="{StaticResource LeftItemCard}" Subheader="{Binding Project.ExpiryDate, Converter={x:Static co:AngorConverters.HumanizeDateTime}}" />
@@ -62,12 +69,17 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Card Theme="{StaticResource WideCard}" Header="{ItemIndex StartFromOne=True, StringFormat='Investment {0}'}">
+                                        <Card Theme="{StaticResource WideCard}" Header="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}">
                                             <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
                                                 <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Stage:" Content="{Binding  Stage}" />
                                                 <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Amount:" Content="{Binding Amount.DecimalString}" />
                                                 <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Status:" Content="{Binding Status}" />
-                                                <ContentControl HorizontalAlignment="Center" Content="{Binding}" ContentTemplate="{StaticResource ActionsTemplate}" />
+                                                <UniformGrid Rows="1" HorizontalAlignment="Center">
+                                                    <Button Content="Recover" Command="{Binding Recover}" IsVisible="{Binding ShowRecover}" />
+                                                    <Button Content="Release" Command="{Binding Release}" IsVisible="{Binding ShowRelease}" />
+                                                    <Button Content="Claim End" Command="{Binding ClaimEndOfProject}" IsVisible="{Binding ShowClaimEndOfProject}" />
+                                                    <Button Content="Claim Now" Command="{Binding ClaimImmediate}" IsVisible="{Binding ShowClaimImmediate}" Classes="Success" />
+                                                </UniformGrid>
                                             </StackPanel>
                                         </Card>
                                     </DataTemplate>
@@ -80,7 +92,18 @@
                                     <Column Header="Stage" Binding="{Binding Stage}" />
                                     <Column Header="Amount" Binding="{Binding Amount.DecimalString}" />
                                     <Column Header="Status" Binding="{Binding Status}" />
-                                    <!-- <Column Header="Actions" Binding="{Binding}" CellTemplate="{StaticResource ActionsTemplate}" /> -->
+                                    <Column Header="Actions">
+                                        <Column.CellTemplate>
+                                            <DataTemplate>
+                                                <UniformGrid Rows="1">
+                                                    <Button Content="Recover" Command="{Binding Recover}" IsVisible="{Binding ShowRecover}" />
+                                                    <Button Content="Release" Command="{Binding Release}" IsVisible="{Binding ShowRelease}" />
+                                                    <Button Content="Claim End" Command="{Binding ClaimEndOfProject}" IsVisible="{Binding ShowClaimEndOfProject}" />
+                                                    <Button Content="Claim Now" Command="{Binding ClaimImmediate}" IsVisible="{Binding ShowClaimImmediate}" Classes="Success" />
+                                                </UniformGrid>
+                                            </DataTemplate>
+                                        </Column.CellTemplate>
+                                    </Column>
                                 </SlimDataGrid.Columns>
                             </SlimDataGrid>
                         </ResponsivePresenter.Wide>

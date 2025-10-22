@@ -8,6 +8,7 @@ public class ManageInvestorProjectViewModelDesign : IManageInvestorProjectViewMo
     public IEnhancedCommand ViewTransaction { get; } = ReactiveCommand.Create(() => { }).Enhance();
     public DateTime ExpiryDate { get; } = DateTime.Now.AddMonths(1);
     public TimeSpan PenaltyPeriod { get; } = TimeSpan.FromDays(90);
+    public bool CanClaimImmediately { get; } = true; // Show immediate claim option in design mode
 
     public IEnumerable<IInvestorProjectItem> Items { get; } = new[]
     {
