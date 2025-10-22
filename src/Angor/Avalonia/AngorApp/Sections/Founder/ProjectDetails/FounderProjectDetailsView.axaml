@@ -15,8 +15,8 @@
     <controls:PageContainer>
         <ScrollViewer>
             <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading Project Details...">
-                <StackPanel Classes="BigGap" DataContext="{Binding Project}">
-                    <Panel>
+                <StackPanel Classes="BigGap">
+                    <Panel DataContext="{Binding Project}">
                         <controls:ProjectCard Banner="{Binding Banner}" Avatar="{Binding Avatar}" ProjectName="{Binding Name}" ShortDescription="{Binding ShortDescription}" />
                         <Badge VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="20" Tag="{Binding Status}">
                             <Badge.Styles>
@@ -39,8 +39,8 @@
                             </Badge.Styles>
                         </Badge>
                     </Panel>
-                    <ContentControl Content="{Binding $parent[UserControl].((pr:IFounderProjectDetailsViewModel)DataContext).ContentViewModel}" />
-                    <statistics:ProjectStatisticsView />
+                    <ContentControl Content="{Binding ContentViewModel}" />
+                    <statistics:ProjectStatisticsView DataContext="{Binding Project}" />
                 </StackPanel>
             </Loading>
         </ScrollViewer>
