@@ -49,7 +49,7 @@ public class TransactionRepository(IGenericDocumentCollection<QueryTransaction> 
 
     public async Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId)
     {
-         var trxInfoResult = await queryTransactionCollection.FindByIdAsync(transactionId));
+         var trxInfoResult = await queryTransactionCollection.FindByIdAsync(transactionId);
             
         var trxInfo = trxInfoResult.Value;
         
