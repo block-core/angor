@@ -49,6 +49,7 @@ public class GetPenalties
                 TotalAmountSats = p.TotalAmountSats,
                 IsExpired = p.IsExpired,
                 DaysLeftForPenalty = p.DaysLeftForPenalty,
+                ProjectName = "TODO" // TODO: Populate project name for the UI
                 
                 //TODO do we want to send the ids so the user can view on explorers?
                 // TransactionId = p.TransactionId,

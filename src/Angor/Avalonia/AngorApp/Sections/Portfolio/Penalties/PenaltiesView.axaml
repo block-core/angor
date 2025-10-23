@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:penalties="clr-namespace:AngorApp.Sections.Portfolio.Penalties"
-             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:a="clr-namespace:AngorApp.UI.Controls"
              xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1600" d:DesignHeight="600"
@@ -33,7 +32,7 @@
                         <z:SlimDataGrid HeaderPadding="0 0 0 5"
                                         ItemsSource="{Binding Penalties}">
                             <z:SlimDataGrid.Columns>
-                                <z:Column Header="PROJECT ID" Binding="{Binding ProjectIdentifier}" />
+                                <z:Column Header="PROJECT NAME" Binding="{Binding ProjectName}" />
                                 <z:Column Header="AMOUNT IN PENALTY" Binding="{Binding AmountInRecovery.DecimalString}" />
                                 <z:Column Header="DAYS LEFT" Binding="{Binding DaysLeftForPenalty}" />
                             </z:SlimDataGrid.Columns>
