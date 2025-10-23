@@ -49,24 +49,40 @@ public class TransactionRepository(IGenericDocumentCollection<QueryTransaction> 
 
     public async Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId)
     {
-        var trxInfoResult = await queryTransactionCollection.FindByIdAsync(transactionId);
+         var trxInfoResult = await queryTransactionCollection.FindByIdAsync(transactionId));
             
         var trxInfo = trxInfoResult.Value;
-
-        if (trxInfoResult.IsFailure || trxInfoResult.Value is null)
+        
+        if (trxInfo is null)
         {
             trxInfo = await indexerService.GetTransactionInfoByIdAsync(transactionId);
+            if (trxInfo is not null)
+            {
+                var insertResult = await queryTransactionCollection
+                    .InsertAsync(x => x.TransactionId, trxInfo);    
+            }
         }
-
-        if (trxInfoResult.Value is null && trxInfo != null)
+        else if(trxInfo.Outputs.Any(IsUnspent)) //If we have unspent outputs, check if they are still unspent
         {
-            var insertResult = await queryTransactionCollection.InsertAsync(x => x.TransactionId, trxInfo);
-
-            //TODO log the insert result?
+            var spent = await indexerService.GetIsSpentOutputsOnTransactionAsync(transactionId);
+            var outputs = trxInfo.Outputs.ToList();
+            
+            if (!spent.Any(info => info.spent && IsUnspent(outputs[info.index]))) 
+                return trxInfo;
+            
+            trxInfo = await indexerService.GetTransactionInfoByIdAsync(transactionId);
+            if (trxInfo is not null)
+            {
+                var insertResult = await queryTransactionCollection
+                    .UpdateAsync(x => x.TransactionId, trxInfo);
+            }
         }
-
+        
         return trxInfo;
     }
+
+    private static bool IsUnspent(QueryTransactionOutput output) => 
+        string.IsNullOrEmpty(output.SpentInTransaction) && output.OutputType != "op_return";
 
     public Task SaveQueryTransactionAsync(QueryTransaction document)
     {

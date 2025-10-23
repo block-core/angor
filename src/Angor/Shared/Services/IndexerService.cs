@@ -201,7 +201,12 @@ namespace Angor.Shared.Services
             return info;
         }
 
-        
+        public Task<IEnumerable<(int, bool)>> GetIsSpentOutputsOnTransactionAsync(string transactionId)
+        {
+            throw new NotImplementedException();
+        }
+
+
         public async Task<(bool IsOnline, string? GenesisHash)> CheckIndexerNetwork(string indexerUrl)
         {
             try

@@ -20,6 +20,7 @@ public interface IIndexerService
     Task<string> GetTransactionHexByIdAsync(string transactionId);
 
     Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId);
+    Task<IEnumerable<(int index, bool spent)>> GetIsSpentOutputsOnTransactionAsync(string transactionId);
     Task<(bool IsOnline, string? GenesisHash)> CheckIndexerNetwork(string indexerUrl);
     bool ValidateGenesisBlockHash(string fetchedHash, string expectedHash);
 }

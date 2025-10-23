@@ -30,6 +30,8 @@ public class MempoolSpaceIndexerApi : IIndexerService
         _networkService = networkService;
     }
 
+    #region Mempool.space API Models
+    
     private class AddressStats
     {
         public int FundedTxCount { get; set; }
@@ -114,6 +116,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         public int Vin { get; set; }
         public UtxoStatus Status { get; set; }
     }
+    #endregion
     
     private HttpClient GetIndexerClient()
     {
@@ -429,6 +432,20 @@ public class MempoolSpaceIndexerApi : IIndexerService
         await PopulateSpentMissingData(spends, trx);
 
         return MapToQueryTransaction(trx, spends);
+    }
+
+    public async Task<IEnumerable<(int,bool)>> GetIsSpentOutputsOnTransactionAsync(string transactionId)
+    {
+        var urlSpent = $"{MempoolApiRoute}/tx/{transactionId}/outspends";
+
+        var responseSpent = await GetIndexerClient()
+            .GetAsync(urlSpent);
+        _networkService.CheckAndHandleError(responseSpent);
+        
+        var options = new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
+        var spends = await responseSpent.Content.ReadFromJsonAsync<List<Outspent>>(options);
+        
+        return spends!.Select((s,i) => (i,s.Spent));
     }
 
     private static QueryTransaction MapToQueryTransaction(MempoolTransaction x, List<Outspent>? spends = null)
