@@ -1,10 +1,11 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.Repositories;
+using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -25,9 +26,10 @@ public static class ReleaseFunds
     public class ReleaseFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
         IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
         IPortfolioRepository investmentRepository, INetworkConfiguration networkConfiguration,
-        IWalletOperations walletOperations, IIndexerService indexerService, ISignService signService,
+        IWalletOperations walletOperations, ISignService signService,
         IEncryptionService decrypter, ISerializer serializer,
-        ITransactionRepository transactionRepository) : IRequestHandler<ReleaseFundsRequest, Result<TransactionDraft>>
+        ITransactionRepository transactionRepository,
+        IGenericDocumentCollection<WalletAccountBalanceInfo> walletAccountBalanceCollection) : IRequestHandler<ReleaseFundsRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(ReleaseFundsRequest request, CancellationToken cancellationToken)
         {
@@ -47,8 +49,12 @@ public static class ReleaseFunds
             if (words.IsFailure)
                 return Result.Failure<TransactionDraft>(words.Error);
             
-            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(words.Value.ToWalletWords());
-            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            // Get account info from database
+            var accountBalanceResult = await walletAccountBalanceCollection.FindByIdAsync(request.WalletId.ToString());
+            if (accountBalanceResult.IsFailure || accountBalanceResult.Value is null)
+                return Result.Failure<TransactionDraft>("Account balance information not found in database. Please refresh your wallet first.");
+            
+            var accountInfo = accountBalanceResult.Value.AccountBalanceInfo.AccountInfo;
 
             var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey);
 
@@ -148,4 +154,3 @@ public static class ReleaseFunds
         }
     }
 }
-

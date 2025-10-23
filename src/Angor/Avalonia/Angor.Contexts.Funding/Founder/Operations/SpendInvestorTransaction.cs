@@ -1,19 +1,17 @@
-using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.Repositories;
+using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
-using Blockcore.Networks;
 using CSharpFunctionalExtensions;
 using MediatR;
 
@@ -23,10 +21,17 @@ public static class SpendInvestorTransaction
 {
     public record SpendInvestorTransactionRequest(Guid WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<TransactionDraft>>;
 
-    public class SpendInvestorTransactionHandler(IWalletOperations walletOperations, IFounderTransactionActions founderTransactionActions,
-        INetworkConfiguration networkConfiguration, IIndexerService indexerService, IProjectRepository projectRepository,
-        IDerivationOperations derivationOperations, ISeedwordsProvider seedwordsProvider,
-        ITransactionRepository transactionRepository) : IRequestHandler<SpendInvestorTransactionRequest, Result<TransactionDraft>>
+    public class SpendInvestorTransactionHandler(
+        IWalletOperations walletOperations,
+        IFounderTransactionActions founderTransactionActions,
+        INetworkConfiguration networkConfiguration,
+        IIndexerService indexerService,
+        IProjectRepository projectRepository,
+        IDerivationOperations derivationOperations,
+        ISeedwordsProvider seedwordsProvider,
+        ITransactionRepository transactionRepository,
+        IGenericDocumentCollection<WalletAccountBalanceInfo> walletAccountBalanceCollection // Injected here
+    ) : IRequestHandler<SpendInvestorTransactionRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(SpendInvestorTransactionRequest request, CancellationToken cancellationToken)
         {
@@ -52,7 +57,7 @@ public static class SpendInvestorTransaction
             var investmentTransactions = await Task.WhenAll(tasks);
             founderContext.InvestmentTrasnactionsHex = investmentTransactions.Where(hex => hex != string.Empty).ToList();
             
-            var addressResult = await GetUnfundedReleaseAddress((await seedwordsProvider.GetSensitiveData(request.WalletId)).Value.ToWalletWords());
+            var addressResult = await GetUnfundedReleaseAddress(request.WalletId);
             if (addressResult.IsFailure) 
                 return Result.Failure<TransactionDraft>("Could not get an unfunded release address");
             
@@ -113,15 +118,21 @@ public static class SpendInvestorTransaction
             return Encoders.Hex.EncodeData(key.ToBytes());
         }
         
-        private Task<Result<string>> GetUnfundedReleaseAddress(WalletWords wallet)
+        private async Task<Result<string>> GetUnfundedReleaseAddress(Guid walletId)
         {
-            return Result.Try(async () =>
-            {
-                var accountInfo = walletOperations.BuildAccountInfoForWalletWords(wallet);
+                var walletaccountBalanceInfoResult = await walletAccountBalanceCollection
+                    .FindByIdAsync(walletId.ToString());
+                if (walletaccountBalanceInfoResult.IsFailure || walletaccountBalanceInfoResult.Value == null)
+                    return Result.Failure<string>("Could not get the wallet account balance info");
+
+                var accountInfo = walletaccountBalanceInfoResult.Value.AccountBalanceInfo.AccountInfo;
                 await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
-                return accountInfo.GetNextReceiveAddress();
-            }).EnsureNotNull("Could not get the unfunded release address");
+                var nextChangeAddress = accountInfo.GetNextChangeReceiveAddress();
+                
+                return string.IsNullOrEmpty(nextChangeAddress) 
+                    ? Result.Failure<string>("Could not get the next change address") 
+                    : Result.Success(nextChangeAddress);
         }
     }
 }

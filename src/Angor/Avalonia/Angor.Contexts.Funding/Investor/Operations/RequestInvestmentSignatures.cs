@@ -1,9 +1,10 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
-using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.TransactionDrafts;
+using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
@@ -32,11 +33,11 @@ public static class RequestInvestmentSignatures
         IEncryptionService encryptionService,
         INetworkConfiguration networkConfiguration,
         ISerializer serializer,
-        IWalletOperations walletOperations,
         ISignService signService,
         IPortfolioRepository portfolioRepository,
         IProjectScriptsBuilder projectScriptsBuilder,
-        IIndexerService indexerService) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
+        IIndexerService indexerService,
+        IGenericDocumentCollection<WalletAccountBalanceInfo> walletAccountBalanceCollection) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
     {
         public async Task<Result<Guid>> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
         {
@@ -70,7 +71,7 @@ public static class RequestInvestmentSignatures
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
             var project = projectResult.Value;
 
-            var sendSignatureResult = await SendSignatureRequest(walletWords, project, strippedInvestmentTransaction.ToHex());
+            var sendSignatureResult = await SendSignatureRequest(request.WalletId, walletWords, project, strippedInvestmentTransaction.ToHex());
 
             if (sendSignatureResult.IsFailure)
             {
@@ -91,7 +92,7 @@ public static class RequestInvestmentSignatures
             return Result.Success(Guid.Empty);
         }
 
-        private async Task<Result<(DateTime createdTime,string eventId)>> SendSignatureRequest(WalletWords walletWords, Project project, string signedTransactionHex)
+        private async Task<Result<(DateTime createdTime,string eventId)>> SendSignatureRequest(Guid walletId, WalletWords walletWords, Project project, string signedTransactionHex)
         {
             try
             {
@@ -99,7 +100,7 @@ public static class RequestInvestmentSignatures
 
                 var investorNostrPrivateKey = await derivationOperations.DeriveProjectNostrPrivateKeyAsync(walletWords, project.FounderKey);
                 var investorNostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
-                var releaseAddressResult = await GetUnfundedReleaseAddress(walletWords);
+                var releaseAddressResult = await GetUnfundedReleaseAddress(walletId);
 
                 if (releaseAddressResult.IsFailure)
                 {
@@ -132,15 +133,20 @@ public static class RequestInvestmentSignatures
             }
         }
 
-        private Task<Result<string>> GetUnfundedReleaseAddress(WalletWords wallet)
+        private async Task<Result<string>> GetUnfundedReleaseAddress(Guid walletId)
         {
-            return Result.Try(async () =>
-            {
-                var accountInfo = walletOperations.BuildAccountInfoForWalletWords(wallet);
-                await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            // Get account info from database
+            var accountBalanceResult = await walletAccountBalanceCollection.FindByIdAsync(walletId.ToString());
+            if (accountBalanceResult.IsFailure || accountBalanceResult.Value is null)
+                return Result.Failure<string>("Account balance information not found in database. Please refresh your wallet first.");
+            
+            var accountInfo = accountBalanceResult.Value.AccountBalanceInfo.AccountInfo;
 
-                return accountInfo.GetNextReceiveAddress();
-            }).EnsureNotNull("Could not get the unfunded release address");
+            var address = accountInfo.GetNextReceiveAddress();
+            if (string.IsNullOrEmpty(address))
+                return Result.Failure<string>("Could not get the unfunded release address");
+
+            return Result.Success(address);
         }
     }
 }

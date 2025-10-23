@@ -1,9 +1,11 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.Repositories;
+using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -22,7 +24,8 @@ public static class ClaimEndOfProject
     public class ClaimEndOfProjectHandler(IWalletOperations walletOperations, IDerivationOperations derivationOperations,
         IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
         IPortfolioRepository investmentRepository, IIndexerService indexerService, ISeedwordsProvider provider,
-        ITransactionRepository transactionRepository) : IRequestHandler<ClaimEndOfProjectRequest, Result<TransactionDraft>>
+        ITransactionRepository transactionRepository,
+        IGenericDocumentCollection<WalletAccountBalanceInfo> walletAccountBalanceCollection) : IRequestHandler<ClaimEndOfProjectRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(ClaimEndOfProjectRequest request, CancellationToken cancellationToken)
         {
@@ -30,8 +33,12 @@ public static class ClaimEndOfProject
             if (words.IsFailure)
                 return Result.Failure<TransactionDraft>(words.Error);
             
-            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(words.Value.ToWalletWords());
-            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            // Get account info from database
+            var accountBalanceResult = await walletAccountBalanceCollection.FindByIdAsync(request.WalletId.ToString());
+            if (accountBalanceResult.IsFailure || accountBalanceResult.Value is null)
+                return Result.Failure<TransactionDraft>("Account balance information not found in database. Please refresh your wallet first.");
+            
+            var accountInfo = accountBalanceResult.Value.AccountBalanceInfo.AccountInfo;
 
             var investments = await investmentRepository.GetByWalletId(request.WalletId);
             if (investments.IsFailure)
@@ -82,4 +89,3 @@ public static class ClaimEndOfProject
         }
     }
 }
-

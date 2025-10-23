@@ -1,4 +1,5 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
@@ -10,8 +11,10 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Nostr.Client.Messages.Metadata;
 using Stage = Angor.Shared.Models.Stage;
+using Angor.Data.Documents.Interfaces; // Add this using
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
@@ -29,7 +32,10 @@ internal static class CreateProjectConstants
             IFounderTransactionActions founderTransactionActions,
             IWalletOperations walletOperations,
             IIndexerService indexerService,
-            INetworkConfiguration networkConfiguration) : IRequestHandler<CreateProjectRequest, Result<TransactionDraft>>
+            INetworkConfiguration networkConfiguration,
+            IGenericDocumentCollection<WalletAccountBalanceInfo> walletAccountBalanceCollection,
+            ILogger<CreateProjectHandler> logger // Inject logger
+        ) : IRequestHandler<CreateProjectRequest, Result<TransactionDraft>>
         {
             public async Task<Result<TransactionDraft>> Handle(CreateProjectRequest request, CancellationToken cancellationToken)
             {
@@ -80,7 +86,7 @@ internal static class CreateProjectConstants
                     return Result.Failure<TransactionDraft>(projectInfo.Error);
                 }
 
-                var transactionInfo = await CreatProjectTransaction(wallet.Value.ToWalletWords(),
+                var transactionInfo = await CreatProjectTransaction(request.WalletId, wallet.Value.ToWalletWords(),
                     request.SelectedFeeRate,
                     newProjectKeys.FounderKey, newProjectKeys.ProjectIdentifier, projectInfo.Value);
 
@@ -194,11 +200,12 @@ internal static class CreateProjectConstants
             }
 
 
-            private async Task<Result<TransactionInfo>> CreatProjectTransaction(WalletWords words, long selectedFee,
+            private async Task<Result<TransactionInfo>> CreatProjectTransaction(Guid walletId, WalletWords words,
+                long selectedFee,
                 string founderKey,
                 string projectIdentifier, string projectInfoEventId)
             {
-                var accountBalanceInfo = await RefreshWalletBalance(words);
+                var accountBalanceInfo = await RefreshWalletBalance(walletId, words);
                 if (accountBalanceInfo.IsFailure)
                 {
                     throw new InvalidOperationException("Failed to get account balance information");
@@ -219,23 +226,38 @@ internal static class CreateProjectConstants
 
             }
 
-            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(WalletWords walletWords)
+            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(Guid walletId, WalletWords words)
             {
                 try
                 {
-                    var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
+                    // Try to get WalletAccountBalanceInfo from DB using walletId
+                    var dbResult = await walletAccountBalanceCollection.FindByIdAsync(walletId.ToString());
 
-                    await walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
-                    await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+                    AccountBalanceInfo accountBalanceInfo;
+                    if (dbResult.IsSuccess && dbResult.Value != null)
+                    {
+                        accountBalanceInfo = dbResult.Value.AccountBalanceInfo;
+                    }
+                    else
+                    {
+                        var accountInfo = walletOperations.BuildAccountInfoForWalletWords(words);
+                        await walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
+                        await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
-                    var accountBalanceInfo = new AccountBalanceInfo();
+                        accountBalanceInfo = new AccountBalanceInfo();
+                        accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, []);
 
-                    accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, []);
+                        var walletAccountBalanceInfo = new WalletAccountBalanceInfo
+                            { WalletId = walletId.ToString(), AccountBalanceInfo = accountBalanceInfo };
+                        
+                        await walletAccountBalanceCollection.UpsertAsync(x => x.WalletId, walletAccountBalanceInfo);
+                    }
 
-                    return Result.Success<AccountBalanceInfo>(accountBalanceInfo);
+                    return Result.Success(accountBalanceInfo);
                 }
                 catch (Exception e)
                 {
+                    logger.LogError(e, "Error refreshing balance for wallet {WalletId}", walletId);
                     return Result.Failure<AccountBalanceInfo>($"Error refreshing balance: {e.Message}");
                 }
             }
