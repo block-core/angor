@@ -1,5 +1,4 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
-using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using Angor.UI.Model.Implementation.Projects;
 
@@ -38,4 +37,5 @@ public class FullProjectDesign : IFullProject
     public IAmountUI WithdrawableAmount { get; }
     public NextStageDto? NextStage { get; }
     public int SpentTransactions { get; set; }
+    public string FounderPubKey { get; } = "some npub key";
 }

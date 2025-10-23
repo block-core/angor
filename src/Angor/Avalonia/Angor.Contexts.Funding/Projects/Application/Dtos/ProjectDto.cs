@@ -17,4 +17,5 @@ public record ProjectDto
     public string NostrNpubKeyHex { get; set; }
     public Uri? InformationUri { get; set; }
     public List<StageDto> Stages { get; set; }
+    public string FounderPubKey { get; set; }   // TODO: Populate FounderPubKey property
 }

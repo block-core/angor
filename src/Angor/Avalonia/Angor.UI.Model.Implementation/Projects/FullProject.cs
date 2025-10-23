@@ -40,4 +40,5 @@ public class FullProject(ProjectDto info, ProjectStatisticsDto stats) : IFullPro
     public Uri? Avatar => info.Avatar;
     public string ShortDescription => info.ShortDescription;
     public Uri? Banner => info.Banner;
+    public string FounderPubKey => info.FounderPubKey;
 }
