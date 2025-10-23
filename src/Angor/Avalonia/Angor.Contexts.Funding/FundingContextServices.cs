@@ -2,12 +2,12 @@
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.Domain;
-using Angor.Contexts.Funding.Investor.Domain.Impl;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
+using Angor.Contexts.Funding.Shared.Repositories;
 using Angor.Shared;
 using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;

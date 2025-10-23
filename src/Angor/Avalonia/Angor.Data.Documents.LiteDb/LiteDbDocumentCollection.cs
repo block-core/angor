@@ -93,26 +93,26 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
                 return Result.Failure<bool>("Document cannot be null");
 
             document.UpdatedAt = DateTime.UtcNow;
-            
-            if (string.IsNullOrEmpty(document.Id))
+
+            var existsResult = await ExistsAsync(document.Id);
+            if (existsResult.IsFailure)
+                return Result.Failure<bool>($"Failed to check document existence: {existsResult.Error}");
+
+            // LiteDB: upserts returns false for updates, true for inserts so we handle manually
+            if (existsResult.Value)
             {
-                document.CreatedAt = DateTime.UtcNow;
+                var result = _collection.Update(document);
+                _logger.LogDebug("Updated document {Type} with ID: {Id}, Success: {Success}", 
+                    typeof(T).Name, document.Id, result);
+                return Result.Success(result);
             }
             else
             {
-                var existsResult = await ExistsAsync(document.Id);
-                if (existsResult.IsFailure)
-                    return Result.Failure<bool>($"Failed to check document existence: {existsResult.Error}");
-                
-                if (!existsResult.Value)
-                    document.CreatedAt = DateTime.UtcNow;
+                var result = _collection.Insert(document);
+                _logger.LogDebug("Inserted document {Type} with ID: {Id}, Success: {Success}", 
+                    typeof(T).Name, document.Id, result != null);
+                return Result.Success(result != null);
             }
-            
-            var result = _collection.Upsert(document);
-            _logger.LogDebug("Upserted document {Type} with ID: {Id}, Success: {Success}", 
-                typeof(T).Name, document.Id, result);
-            
-            return await Task.FromResult(Result.Success(result));
         }
         catch (Exception ex)
         {
