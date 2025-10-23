@@ -105,9 +105,9 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
                 }))
             .DisposeWith(disposable);
 
-        IsBitcoinPreferred = uiServices.PreferBitcoin;
+        IsBitcoinPreferred = uiServices.IsBitcoinPreferred;
         this.WhenAnyValue(model => model.IsBitcoinPreferred)
-            .BindTo(uiServices, services => services.PreferBitcoin)
+            .BindTo(uiServices, services => services.IsBitcoinPreferred)
             .DisposeWith(disposable);
     }
 
