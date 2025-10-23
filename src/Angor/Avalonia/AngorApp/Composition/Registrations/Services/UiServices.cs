@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using Angor.Shared;
 using AngorApp.Sections.Shell;
 using Avalonia.Controls.Notifications;
@@ -7,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Misc;
 using Zafiro.Avalonia.Services;
+using Zafiro.Settings;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Shell;
 
@@ -24,6 +27,11 @@ public static class UiServices
         var notificationService = NotificationService(topLevel);
         
         return services
+            .AddSettings(
+                company: "Angor",
+                product: "AngorApp",
+                fileName: CreateSettingsFilePath(profileName),
+                createDefault: UIPreferences.CreateDefault)
             .AddSingleton<ILauncherService>(_ => new LauncherService(topLevel!.Launcher))
             .AddSingleton<IDialog>(new AdornerDialog(() =>
             {
@@ -36,7 +44,7 @@ public static class UiServices
             .AddSingleton<IWalletContext, WalletContext>()
             .AddSingleton<IValidations, Validations>()
             .AddSingleton<INotificationService>(_ => notificationService)
-            .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileName));
+            .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileName, topLevel));
     }
     
     private static NotificationService NotificationService(TopLevel topLevel)
@@ -63,5 +71,27 @@ public static class UiServices
         }
         
         return Observable.Return("");
+    }
+
+    private static string CreateSettingsFilePath(string profileName)
+    {
+        var safeProfile = SanitizeProfileName(profileName);
+        return Path.Combine("profiles", safeProfile, "ui-settings.json");
+    }
+
+    private static string SanitizeProfileName(string profileName)
+    {
+        if (string.IsNullOrWhiteSpace(profileName))
+        {
+            return "Default";
+        }
+
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var trimmed = profileName.Trim();
+        var sanitized = new string(trimmed
+            .Select(ch => Array.IndexOf(invalidChars, ch) >= 0 ? '_' : ch)
+            .ToArray());
+
+        return string.IsNullOrWhiteSpace(sanitized) ? "Default" : sanitized;
     }
 }
