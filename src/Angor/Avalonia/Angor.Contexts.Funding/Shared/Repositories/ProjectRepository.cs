@@ -12,6 +12,7 @@ using Stage = Angor.Contexts.Funding.Projects.Domain.Stage;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
+[Obsolete("Use DocumentProjectRepository instead")]
 public class ProjectRepository(
     IRelayService relayService,
     IIndexerService indexerService,

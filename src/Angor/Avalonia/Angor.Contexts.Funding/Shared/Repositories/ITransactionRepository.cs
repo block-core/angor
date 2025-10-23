@@ -1,6 +1,6 @@
 using Angor.Shared.Models;
 
-namespace Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+namespace Angor.Contexts.Funding.Shared.Repositories;
 
 public interface ITransactionRepository
 {

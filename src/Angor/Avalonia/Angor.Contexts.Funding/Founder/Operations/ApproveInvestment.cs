@@ -10,6 +10,7 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Investment = Angor.Contexts.Funding.Founder.Domain.Investment;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 

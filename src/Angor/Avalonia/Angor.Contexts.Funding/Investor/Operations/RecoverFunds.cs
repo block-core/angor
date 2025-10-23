@@ -4,6 +4,7 @@ using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
+using Angor.Contexts.Funding.Shared.Repositories;
 using Angor.Contexts.Funding.Shared.TransactionDrafts;
 using Angor.Shared;
 using Angor.Shared.Models;

@@ -1,3 +1,4 @@
+using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Founder.Operations;
 
 namespace AngorApp.Sections.Founder.ProjectDetails.MainView.Approve;

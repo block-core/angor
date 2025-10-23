@@ -55,9 +55,9 @@ public static class RequestInvestmentSignatures
 
             var (investorKey,_) = projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(strippedInvestmentTransaction.Outputs[1].ScriptPubKey);
             
-            var existingInvestment = await indexerService.GetInvestmentAsync(request.ProjectId.Value,investorKey);
+            var existingInvestment = await Result.Try(() => indexerService.GetInvestmentAsync(request.ProjectId.Value,investorKey));
 
-            if (existingInvestment != null)
+            if (existingInvestment is { IsSuccess: true, Value: not null })
                 return Result.Failure<Guid>("An investment with the same key already exists on the blockchain.");
             
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId);
