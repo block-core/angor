@@ -6,4 +6,5 @@ public class BroadcastedTransactionDesign : IBroadcastedTransaction
     public string RawJson { get; init; }
     public IAmountUI Balance { get; set; }
     public DateTimeOffset? BlockTime { get; set; }
+    public IEnhancedCommand ShowJson { get; set; }
 }

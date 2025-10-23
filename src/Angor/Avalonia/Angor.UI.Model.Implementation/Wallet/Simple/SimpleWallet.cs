@@ -11,6 +11,7 @@ using CSharpFunctionalExtensions;
 using DynamicData.Aggregation;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
+using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
@@ -20,14 +21,16 @@ namespace Angor.UI.Model.Implementation.Wallet.Simple;
 public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
 {
     private readonly IWalletAppService walletAppService;
+    private readonly IDialog dialog;
     [ObservableAsProperty] private IAmountUI balance = new AmountUI(0);
     private readonly CompositeDisposable disposable = new();
 
-    public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, INotificationService notificationService, INetworkConfiguration networkConfiguration)
+    public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, IDialog dialog, INotificationService notificationService, INetworkConfiguration networkConfiguration)
     {
         this.walletAppService = walletAppService;
+        this.dialog = dialog;
         Id = id;
-        var transactionCollection = CreateTransactions(id, walletAppService)
+        var transactionCollection = CreateTransactions(id)
             .DisposeWith(disposable);
 
         Load = transactionCollection.Refresh;
@@ -51,11 +54,11 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
         CanGetTestCoins = networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet;
     }
 
-    private static RefreshableCollection<IBroadcastedTransaction, string> CreateTransactions(WalletId id, IWalletAppService walletAppService)
+    private RefreshableCollection<IBroadcastedTransaction, string> CreateTransactions(WalletId id)
     {
         return RefreshableCollection.Create(
             () => walletAppService.GetTransactions(id)
-                .Map(transactions => transactions.Select(IBroadcastedTransaction (transaction) => new HistoryTransaction(transaction))),
+                .Map(transactions => transactions.Select(IBroadcastedTransaction (transaction) => new HistoryTransaction(transaction, dialog))),
             getKey: transaction => transaction.Id);
     }
 

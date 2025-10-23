@@ -1,5 +1,6 @@
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.TransactionDrafts;
+using Angor.UI.Model.Implementation.Common;
 using AngorApp.UI.Controls.Common;
 using Zafiro.Avalonia.Dialogs;
 

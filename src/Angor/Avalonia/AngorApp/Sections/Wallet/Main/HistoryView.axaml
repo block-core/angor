@@ -32,7 +32,7 @@
                 </Column>
                 <Column Header="Amount" Width="Auto" Binding="{Binding Balance.BtcString}" />
                 <Column Header="Date" Width="*" Binding="{Binding BlockTime, Converter={x:Static controls:AngorConverters.HumanizeDateTimeOffset}}" />
-                <Column Header="TXN" Width="Auto" Binding="{Binding RawJson}">
+                <Column Header="TXN" Width="Auto">
                     <Column.HeaderTemplate>
                         <DataTemplate>
                             <TextBlock x:DataType="x:Object" TextAlignment="Center" Text="{Binding}" />
@@ -40,7 +40,7 @@
                     </Column.HeaderTemplate>
                     <Column.CellTemplate>
                         <DataTemplate>
-                            <Button Command="{Binding}"
+                            <Button Command="{Binding ShowJson}"
                                     i:Attached.Icon="fa-solid fa-ellipsis" />
                         </DataTemplate>
                     </Column.CellTemplate>
