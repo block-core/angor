@@ -55,10 +55,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
         // Calculate the investment amount from the transaction
-        var totalInvestmentAmount = investmentTransaction.Outputs.AsIndexedOutputs()
-            .Skip(2)
-            .Take(projectInfo.Stages.Count)
-            .Sum(output => output.TxOut.Value.Satoshi);
+        var totalInvestmentAmount = GetTotalInvestmentAmount(projectInfo, investmentTransaction);
 
         // Determine expiry date override based on investment amount using centralized logic
         var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
@@ -163,6 +160,16 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     public TransactionInfo RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex,
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation)
     {
+        // Parse the investment transaction to calculate the total investment amount
+        var network = _networkConfiguration.GetNetwork();
+        var investmentTransaction = network.Consensus.ConsensusFactory.CreateTransaction(transactionHex);
+
+        // Calculate the investment amount from the transaction
+        var totalInvestmentAmount = GetTotalInvestmentAmount(projectInfo, investmentTransaction);
+
+        // Determine the effective expiry date based on penalty threshold
+        var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
+        
         return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, stageIndex,
             investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             projectScripts =>
@@ -180,7 +187,8 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
                 return new NBitcoin.WitScript(NBitcoin.Op.GetPushOp(sig.ToBytes()),
                     NBitcoin.Op.GetPushOp(scriptToExecute), NBitcoin.Op.GetPushOp(controlBlock));
-            });
+            },
+            expiryDateOverride);
     }
 
     public TransactionInfo RecoverRemainingFundsWithOutPenalty(string transactionHex, ProjectInfo projectInfo, int stageIndex,
@@ -271,14 +279,21 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         return CheckRecoverySignatures(projectInfo, investmentTransaction, unsignedUnfundedReleaseFundsTransaction, founderSignatures);
     }
 
-    public bool IsInvestmentAbovePenaltyThreshold(ProjectInfo projectInfo, Transaction investmentTransaction)
+    private long GetTotalInvestmentAmount(ProjectInfo projectInfo, Transaction investmentTransaction)
     {
-        // Calculate the total investment amount from the transaction outputs
-        // Skip first 2 outputs (Angor fee and OP_RETURN) and sum the stage outputs
         var totalInvestmentAmount = investmentTransaction.Outputs.AsIndexedOutputs()
             .Skip(2)
             .Take(projectInfo.Stages.Count)
             .Sum(output => output.TxOut.Value.Satoshi);
+
+        return totalInvestmentAmount;
+    }
+
+    public bool IsInvestmentAbovePenaltyThreshold(ProjectInfo projectInfo, Transaction investmentTransaction)
+    {
+        // Calculate the total investment amount from the transaction outputs
+        // Skip first 2 outputs (Angor fee and OP_RETURN) and sum the stage outputs
+        var totalInvestmentAmount = GetTotalInvestmentAmount(projectInfo, investmentTransaction);
 
         // Use the overload that takes the amount directly
         return IsInvestmentAbovePenaltyThreshold(projectInfo, totalInvestmentAmount);
