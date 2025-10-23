@@ -44,6 +44,9 @@
                         <ComboBox HorizontalAlignment="Center" MinWidth="200" ItemsSource="{Binding Networks}" SelectedItem="{Binding Network}" />
                     </StackPanel>
                 </Card>
+                <Card Header="Appearance">
+                    <ToggleSwitch IsChecked="{Binding IsBitcoinPreferred}" Content="Unit for amount entry" OnContent="BTC" OffContent="sats" />
+                </Card>
                 <Card HeaderStartContent="{Icon fa-sitemap}" Header="Explorer">
                     <StackPanel Classes="BigGap">
                         <DockPanel Margin="0 0 20 0">

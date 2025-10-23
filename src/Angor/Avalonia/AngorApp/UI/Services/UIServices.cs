@@ -1,6 +1,7 @@
 using System;
 using AngorApp.UI.Controls;
 using AngorApp.UI.Controls.Feerate;
+using Avalonia.Controls;
 using Avalonia.Styling;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Services;
@@ -11,6 +12,7 @@ namespace AngorApp.UI.Services;
 public partial class UIServices : ReactiveObject
 {
     [Reactive] private bool isDarkThemeEnabled;
+    [Reactive] private bool isBitcoinPreferred = true;
     public ILauncherService LauncherService { get; }
     public IDialog Dialog { get; }
     public INotificationService NotificationService { get; }
@@ -18,7 +20,8 @@ public partial class UIServices : ReactiveObject
     
     public UIServices(ILauncherService launcherService, IDialog dialog, INotificationService notificationService,
         IValidations validations,
-        string profileName)
+        string profileName,
+        TopLevel topLevel)
     {
         if (string.IsNullOrWhiteSpace(profileName))
         {
@@ -32,6 +35,11 @@ public partial class UIServices : ReactiveObject
         ProfileName = profileName;
         this.WhenAnyValue(services => services.IsDarkThemeEnabled)
             .Do(isDarkTheme => Application.Current.RequestedThemeVariant = isDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light)
+            .Subscribe();
+        
+        // Propagate preferred unit globally via inheritable attached property
+        this.WhenAnyValue(services => services.IsBitcoinPreferred)
+            .Do(isBtc => AmountOptions.SetIsBitcoinPreferred(topLevel, isBtc))
             .Subscribe();
     }
 

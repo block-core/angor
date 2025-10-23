@@ -36,7 +36,7 @@ public static class UiServices
             .AddSingleton<IWalletContext, WalletContext>()
             .AddSingleton<IValidations, Validations>()
             .AddSingleton<INotificationService>(_ => notificationService)
-            .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileName));
+            .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileName, topLevel));
     }
     
     private static NotificationService NotificationService(TopLevel topLevel)

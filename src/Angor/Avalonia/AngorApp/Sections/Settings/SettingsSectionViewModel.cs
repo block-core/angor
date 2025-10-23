@@ -8,6 +8,7 @@ using Angor.Shared.Networks;
 using Angor.Shared.Services;
 using System.Linq;
 using System.Reactive.Disposables;
+using AngorApp.UI.Controls;
 using AngorApp.UI.Services;
 using ReactiveUI;
 using Zafiro.Avalonia.Dialogs;
@@ -17,20 +18,31 @@ namespace AngorApp.Sections.Settings;
 
 public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSectionViewModel
 {
+    [Reactive]
+    private bool isBitcoinPreferred;
+
     private readonly INetworkStorage networkStorage;
+
     private readonly IWalletStore walletStore;
+
     private readonly UIServices uiServices;
+
     private readonly IWalletContext walletContext;
 
     private string network;
+
     private string newExplorer;
+
     private string newIndexer;
+
     private string newRelay;
+
     private bool restoringNetwork;
+
     private string currentNetwork;
 
     private readonly CompositeDisposable disposable = new();
-    
+
     public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, INetworkService networkService, INetworkConfiguration networkConfiguration, IWalletContext walletContext)
     {
         this.networkStorage = networkStorage;
@@ -49,8 +61,8 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         networkConfiguration.SetNetwork(currentNetwork == "Mainnet" ? new BitcoinMain() : new Angornet());
         Network = currentNetwork;
 
-        AddExplorer = ReactiveCommand.Create(DoAddExplorer, this.WhenAnyValue(x => x.NewExplorer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);;
-        AddIndexer = ReactiveCommand.Create(DoAddIndexer, this.WhenAnyValue(x => x.NewIndexer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);;
+        AddExplorer = ReactiveCommand.Create(DoAddExplorer, this.WhenAnyValue(x => x.NewExplorer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
+        AddIndexer = ReactiveCommand.Create(DoAddIndexer, this.WhenAnyValue(x => x.NewIndexer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
         AddRelay = ReactiveCommand.Create(DoAddRelay, this.WhenAnyValue(x => x.NewRelay, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
 
         var canDeleteWallet = walletContext.CurrentWalletChanges
@@ -93,6 +105,10 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
                 }))
             .DisposeWith(disposable);
 
+        IsBitcoinPreferred = uiServices.PreferBitcoin;
+        this.WhenAnyValue(model => model.IsBitcoinPreferred)
+            .BindTo(uiServices, services => services.PreferBitcoin)
+            .DisposeWith(disposable);
     }
 
     public ObservableCollection<SettingsUrlViewModel> Explorers { get; }

@@ -10,6 +10,7 @@
 
     <Styles.Resources>
         <ControlTheme TargetType="controls:AmountControl" x:Key="{x:Type controls:AmountControl}">
+            <Setter Property="IsBitcoin" Value="{Binding $self.(controls:AmountOptions.IsBitcoinPreferred)}" />
             <Setter Property="Template">
                 <ControlTemplate>
                     <Border Padding="{TemplateBinding Padding}">
