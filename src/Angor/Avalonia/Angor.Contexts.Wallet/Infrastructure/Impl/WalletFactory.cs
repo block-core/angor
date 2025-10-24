@@ -1,11 +1,19 @@
 using System.Text.Json;
+using Angor.Contests.CrossCutting;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
+using Angor.Shared;
+using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Wallet.Infrastructure.Impl;
 
-public class WalletFactory(IWalletStore walletStore, ISensitiveWalletDataProvider sensitiveWalletDataProvider, IWalletSecurityContext securityContext)
+public class WalletFactory(
+    IWalletStore walletStore, 
+    ISensitiveWalletDataProvider sensitiveWalletDataProvider, 
+    IWalletSecurityContext securityContext,
+    IWalletOperations walletOperations,
+    IWalletAccountBalanceService accountBalanceService)
     : IWalletFactory
 {
     public async Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
@@ -26,9 +34,27 @@ public class WalletFactory(IWalletStore walletStore, ISensitiveWalletDataProvide
         var encryptedWallet = await securityContext.WalletEncryption
             .Encrypt(walletData, encryptionKey, name, walletId.Value);
 
-        return await walletStore.GetAll()
+        var saveResult = await walletStore.GetAll()
             .Map(existing => existing.Append(encryptedWallet))
-            .Bind(wallets => walletStore.SaveAll(wallets))
-            .Map(() => wallet);
+            .Bind(wallets => walletStore.SaveAll(wallets));
+
+        if (saveResult.IsFailure)
+            return Result.Failure<Domain.Wallet>(saveResult.Error);
+
+        // Create initial account balance info
+        var walletWords = new WalletWords { Words = seedwords, Passphrase = passphrase.GetValueOrDefault() };
+        var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
+        
+        var accountBalanceInfo = new AccountBalanceInfo();
+        accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, []);
+
+        var resultingBalance = await accountBalanceService.RefreshAccountBalanceAsync(walletId.Value);
+
+        if (!resultingBalance.IsSuccess)
+            return Result.Failure<Domain.Wallet>(resultingBalance.Error);
+        
+        var savedResult = await accountBalanceService.SaveAccountBalanceAsync(walletId.Value, accountBalanceInfo);
+        
+        return !savedResult.IsSuccess ? Result.Failure<Domain.Wallet>(savedResult.Error) : Result.Success(wallet);
     }
 }
