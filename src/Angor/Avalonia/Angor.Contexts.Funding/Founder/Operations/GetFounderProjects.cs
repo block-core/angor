@@ -4,62 +4,41 @@ using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
-using Angor.Shared;
 using CSharpFunctionalExtensions;
 using MediatR;
-using Zafiro.CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class GetFounderProjects
 {
     public class GetFounderProjectsHandler(
-        IProjectService projectService,
         ISeedwordsProvider seedwordsProvider,
-        IDerivationOperations derivationOperations, 
-        INetworkConfiguration networkConfiguration,
+        IProjectService projectService,
         IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection) : IRequestHandler<GetFounderProjectsRequest, Result<IEnumerable<ProjectDto>>>
     {
-        public Task<Result<IEnumerable<ProjectDto>>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
+        public async Task<Result<IEnumerable<ProjectDto>>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
         {
-            return GetProjectIds(request)
-                .Bind(ids => projectService.GetAllAsync(ids.ToArray()))
-                .MapEach(project => project.ToDto())
-                .WithTimeout(TimeSpan.FromSeconds(10));
-        }
+            var result = await seedwordsProvider.GetSensitiveData(request.WalletId); // Ensure wallet is unlocked
 
-        private async Task<Result<IEnumerable<ProjectId>>> GetProjectIds(GetFounderProjectsRequest request)
-        {
-            // Try to get from storage first
+            if (result.IsFailure)
+                return Result.Failure<IEnumerable<ProjectDto>>(result.Error);
+            
             var storageResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.ToString());
+
+            if (storageResult.IsFailure || storageResult.Value == null)
+                Result.Failure<IEnumerable<ProjectDto>>(storageResult.IsFailure ? storageResult.Error
+                    : "No projects found for the given wallet.");
             
-            if (storageResult.IsSuccess && storageResult.Value != null)
-            {
-                // Return cached project identifiers from stored keys
-                return Result.Success(storageResult.Value.Keys.Select(k => new ProjectId(k.ProjectIdentifier)));
-            }
-
-            // If not in storage, derive the keys (expensive operation)
-            var keysResult = await seedwordsProvider.GetSensitiveData(request.WalletId)
-                .Map(p => p.ToWalletWords())
-                .Map(words => derivationOperations.DeriveProjectKeys(words, networkConfiguration.GetAngorKey()));
+            var keys = storageResult.Value!.Keys.Select(k => new ProjectId(k.ProjectIdentifier));
             
-            if (keysResult.IsFailure)
-                return Result.Failure<IEnumerable<ProjectId>>(keysResult.Error);
-
-            // Store complete key sets in storage for future use
-            var founderKeys = keysResult.Value.Keys.ToList();
-
-            var derivedKeys = new DerivedProjectKeys
-            {
-                WalletId = request.WalletId.ToString(),
-                Keys = founderKeys
-            };
+            var projects = await projectService.GetAllAsync(keys.ToArray());
             
-            await derivedProjectKeysCollection.UpsertAsync(x => x.WalletId, derivedKeys);
+            if (projects.IsFailure)
+                return Result.Failure<IEnumerable<ProjectDto>>(projects.Error);
 
-            // Return project identifiers
-            return Result.Success(founderKeys.Select(k => new ProjectId(k.ProjectIdentifier)));
+            var dtoList = projects.Value.Select(p => p.ToDto());
+            
+            return Result.Success(dtoList);
         }
     }
 
