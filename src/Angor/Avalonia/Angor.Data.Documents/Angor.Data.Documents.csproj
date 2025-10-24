@@ -7,10 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="LiteDB" />
-    </ItemGroup>
-
-    <ItemGroup>
       <PackageReference Include="CSharpFunctionalExtensions" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     </ItemGroup>
