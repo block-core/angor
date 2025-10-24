@@ -31,7 +31,8 @@ public static class SpendInvestorTransaction
         IDerivationOperations derivationOperations,
         ISeedwordsProvider seedwordsProvider,
         ITransactionService transactionService,
-        IWalletAccountBalanceService walletAccountBalanceService
+        IWalletAccountBalanceService walletAccountBalanceService,
+        IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection
     ) : IRequestHandler<SpendInvestorTransactionRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(SpendInvestorTransactionRequest request, CancellationToken cancellationToken)
@@ -50,6 +51,8 @@ public static class SpendInvestorTransaction
             }
             
             var founderKey = await GetProjectFounderKeyAsync(request.WalletId, request.ProjectId.Value);
+            if (founderKey == null)
+                return Result.Failure<TransactionDraft>("Project keys not found in storage. Please load founder projects first.");
             
             var founderContext = new FounderContext { ProjectInfo = project.Value.ToProjectInfo(), ProjectSeeders = new ProjectSeeders() };
 
@@ -105,17 +108,22 @@ public static class SpendInvestorTransaction
             return await transactionService.GetTransactionHexByIdAsync(investment.TransactionId) ?? string.Empty;
         }
 
-        private async Task<string> GetProjectFounderKeyAsync(Guid walletId, string projectId)
+        private async Task<string?> GetProjectFounderKeyAsync(Guid walletId, string projectId)
         {
+            // Try to get from storage first
+            var storedKeysResult = await derivedProjectKeysCollection.FindByIdAsync(walletId.ToString());
+
+            if (!storedKeysResult.IsSuccess || storedKeysResult.Value == null) 
+                return null;
+            
+            var storedKey = storedKeysResult.Value.Keys.FirstOrDefault(k => k.ProjectIdentifier == projectId);
+            
+            if (storedKey == null) 
+                return null;
+            
+            // Use the stored index to derive the founder private key
             var words = await seedwordsProvider.GetSensitiveData(walletId);
-            var network = networkConfiguration.GetNetwork();
-                            
-            var founderKeys = derivationOperations.DeriveProjectKeys(words.Value.ToWalletWords(), networkConfiguration.GetAngorKey());
-                            
-            var keys = founderKeys.Keys.First(k => k.ProjectIdentifier == projectId);
-                            
-            var key = derivationOperations.DeriveFounderPrivateKey(words.Value.ToWalletWords(), keys.Index);
-                            
+            var key = derivationOperations.DeriveFounderPrivateKey(words.Value.ToWalletWords(), storedKey.Index);
             return Encoders.Hex.EncodeData(key.ToBytes());
         }
         

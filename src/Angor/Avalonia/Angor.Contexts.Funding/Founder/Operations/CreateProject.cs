@@ -2,6 +2,7 @@ using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
+using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -34,20 +35,28 @@ internal static class CreateProjectConstants
             IIndexerService indexerService,
             INetworkConfiguration networkConfiguration,
             IWalletAccountBalanceService walletAccountBalanceService,
-            ILogger<CreateProjectHandler> logger // Inject logger
+            IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
+            ILogger<CreateProjectHandler> logger
         ) : IRequestHandler<CreateProjectRequest, Result<TransactionDraft>>
         {
             public async Task<Result<TransactionDraft>> Handle(CreateProjectRequest request, CancellationToken cancellationToken)
             {
-
                 var wallet = await seedwordsProvider.GetSensitiveData(request.WalletId);
 
-                var keys = derivationOperations.DeriveProjectKeys(wallet.Value.ToWalletWords(),
-                    NetworkConfiguration.AngorTestKey); //TODO we need to get the key based on the selected network
+                // Try to get from storage (read-only, no fallback derivation)
+                var storedKeysResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.ToString());
+                
+                if (storedKeysResult.IsFailure || storedKeysResult.Value == null)
+                {
+                    return Result.Failure<TransactionDraft>("Project keys not found in storage. Please load founder projects first.");
+                }
+
+                // Use stored keys directly
+                var founderKeysList = storedKeysResult.Value.Keys;
 
                 FounderKeys? newProjectKeys = null;
 
-                foreach (var founderKeys in keys.Keys)
+                foreach (var founderKeys in founderKeysList)
                 {
                     var project = await indexerService.GetProjectByIdAsync(founderKeys.ProjectIdentifier);
 
@@ -58,22 +67,19 @@ internal static class CreateProjectConstants
                 }
 
                 if (newProjectKeys == null)
-                {
-                    return Result.Failure<TransactionDraft>("Failed to derive project keys");
-                }
+                    return Result.Failure<TransactionDraft>("Failed to find available project slot. All project keys are already in use.");
 
                 var nostrPrivateKey =
                     await derivationOperations.DeriveProjectNostrPrivateKeyAsync(wallet.Value.ToWalletWords(),
                         newProjectKeys.FounderKey);
+                
                 var nostrKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
                 var profileCreateEvent = await CreatNostrProfileAsync(nostrKeyHex, request.Project);
 
 
                 if (profileCreateEvent.IsFailure)
-                {
                     return Result.Failure<TransactionDraft>(profileCreateEvent.Error);
-                }
 
                 var projectInfo =
                     await CreatProjectInfoOnNostr(nostrKeyHex, request.Project, newProjectKeys);
@@ -91,9 +97,7 @@ internal static class CreateProjectConstants
                     newProjectKeys.FounderKey, newProjectKeys.ProjectIdentifier, projectInfo.Value);
 
                 if (transactionInfo.IsFailure)
-                {
                     return Result.Failure<TransactionDraft>(transactionInfo.Error);
-                }
                 
                 
                 var response = await walletOperations.PublishTransactionAsync(networkConfiguration.GetNetwork(), transactionInfo.Value.Transaction);
