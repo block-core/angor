@@ -1,26 +1,49 @@
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Services;
 using Angor.Shared;
-using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
+using Nostr.Client.Keys;
+using Nostr.Client.Messages;
+using Nostr.Client.Messages.Direct;
 
 namespace Angor.Contexts.Funding.Shared;
 
-public class NostrDecrypter(IDerivationOperations derivationOperations, IEncryptionService encryptionService, ISeedwordsProvider provider, IProjectRepository projectRepository) : INostrDecrypter
+public class NostrDecrypter(IDerivationOperations derivationOperations, ISeedwordsProvider provider, IProjectService projectService) : INostrDecrypter
 {
-    public Task<Result<string>> Decrypt(Guid walletId, ProjectId projectId, DirectMessage nostrMessage)
+    public async Task<Result<string>> Decrypt(Guid walletId, ProjectId projectId, DirectMessage nostrMessage)
     {
-        return from sensitiveData in provider.GetSensitiveData(walletId)
-            from project in projectRepository.GetAsync(projectId)
-            from nostrPrivateKey in Result.Try(() => derivationOperations.DeriveProjectNostrPrivateKeyAsync(sensitiveData.ToWalletWords(), project.FounderKey))
-            from decrypted in Result.Try(() =>
+        var sensitiveDataResult = await provider.GetSensitiveData(walletId);
+        if (sensitiveDataResult.IsFailure)
+            return Result.Failure<string>(sensitiveDataResult.Error);
+
+        var projectResult = await projectService.GetAsync(projectId);
+        if (projectResult.IsFailure)
+            return Result.Failure<string>(projectResult.Error);
+
+        var nostrPrivateKey = derivationOperations.DeriveProjectNostrPrivateKey(
+                sensitiveDataResult.Value.ToWalletWords(), 
+                projectResult.Value.FounderKey);
+            
+
+        var decryptResult = Result.Try(() =>
+        {
+            var bytes = nostrPrivateKey.ToBytes();
+            var hex = Encoders.Hex.EncodeData(bytes);
+
+            var nostrClientPrivateKey = NostrPrivateKey.FromHex(hex);
+            
+            var encryptedEvent = new NostrEncryptedEvent(nostrMessage.Content,
+                new NostrEventTags(NostrEventTag.Profile(nostrClientPrivateKey.DerivePublicKey().Hex)))
             {
-                var bytes = nostrPrivateKey.ToBytes();
-                var hex = Encoders.Hex.EncodeData(bytes);
-                return encryptionService.DecryptNostrContentAsync(hex, nostrMessage.InvestorNostrPubKey, nostrMessage.Content);
-            })
-            select decrypted;
+                Pubkey = nostrMessage.InvestorNostrPubKey,
+            };
+
+            return encryptedEvent.DecryptContent(nostrClientPrivateKey);
+        });
+
+        return decryptResult;
     }
 }

@@ -1,4 +1,4 @@
-using Angor.Contexts.Funding.Shared;
+using Angor.Contests.CrossCutting;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;

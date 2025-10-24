@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Founder;
+using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Founder.Operations;
 using AngorApp.UI.Services;
 using ReactiveUI;

@@ -2,11 +2,11 @@
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.Domain;
-using Angor.Contexts.Funding.Investor.Domain.Impl;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Protocol;
@@ -26,9 +26,9 @@ public static class FundingContextServices
         var networkConfiguration = new NetworkConfiguration();
 
         
-        services.AddSingleton<IPortfolioRepository, PortfolioRepository>();
+        services.AddSingleton<IPortfolioService, PortfolioService>();
         //services.AddSingleton<IProjectRepository, ProjectRepository>();
-        services.AddScoped<IProjectRepository, DocumentProjectRepository>();
+        services.AddScoped<IProjectService, DocumentProjectService>();
         services.AddSingleton<INostrDecrypter, NostrDecrypter>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateInvestment.CreateInvestmentTransactionHandler).Assembly));
         services.TryAddSingleton<ISerializer, Serializer>();
@@ -55,7 +55,8 @@ public static class FundingContextServices
         services.TryAddSingleton<ITaprootScriptBuilder, TaprootScriptBuilder>();
         services.TryAddSingleton<IWalletOperations, WalletOperations>();
         services.TryAddSingleton<IProjectInvestmentsService, ProjectInvestmentsService>();
-        services.TryAddSingleton<ITransactionRepository,TransactionRepository>();
+        services.TryAddSingleton<ITransactionService,TransactionService>();
+        services.TryAddSingleton<IWalletAccountBalanceService, WalletAccountBalanceService>();
         
         //services.AddHttpClient();
         

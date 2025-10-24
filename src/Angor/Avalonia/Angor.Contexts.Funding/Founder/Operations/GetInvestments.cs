@@ -1,6 +1,8 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -9,6 +11,7 @@ using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Zafiro.CSharpFunctionalExtensions;
+using Investment = Angor.Contexts.Funding.Founder.Domain.Investment;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
@@ -22,7 +25,7 @@ public static class GetInvestments
 
     public class GetInvestmentsHandler(
         IIndexerService indexerService,
-        IProjectRepository projectRepository,
+        IProjectService projectService,
         ISignService signService,
         INostrDecrypter nostrDecrypter,
         INetworkConfiguration networkConfiguration,
@@ -35,7 +38,7 @@ public static class GetInvestments
 
         private async Task<Result<IEnumerable<Investment>>> GetInvestments(GetInvestmentsRequest request)
         {
-            var projectResult = await projectRepository.GetAsync(request.ProjectId);
+            var projectResult = await projectService.GetAsync(request.ProjectId);
             if (projectResult.IsFailure)
             {
                 return Result.Failure<IEnumerable<Investment>>(projectResult.Error);

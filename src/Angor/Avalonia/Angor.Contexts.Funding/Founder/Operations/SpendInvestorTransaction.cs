@@ -1,18 +1,18 @@
-using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
+using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
+using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
-using Blockcore.Networks;
 using CSharpFunctionalExtensions;
 using MediatR;
 
@@ -22,10 +22,17 @@ public static class SpendInvestorTransaction
 {
     public record SpendInvestorTransactionRequest(Guid WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<TransactionDraft>>;
 
-    public class SpendInvestorTransactionHandler(IWalletOperations walletOperations, IFounderTransactionActions founderTransactionActions,
-        INetworkConfiguration networkConfiguration, IIndexerService indexerService, IProjectRepository projectRepository,
-        IDerivationOperations derivationOperations, ISeedwordsProvider seedwordsProvider,
-        ITransactionRepository transactionRepository) : IRequestHandler<SpendInvestorTransactionRequest, Result<TransactionDraft>>
+    public class SpendInvestorTransactionHandler(
+        IWalletOperations walletOperations,
+        IFounderTransactionActions founderTransactionActions,
+        INetworkConfiguration networkConfiguration,
+        IIndexerService indexerService,
+        IProjectService projectService,
+        IDerivationOperations derivationOperations,
+        ISeedwordsProvider seedwordsProvider,
+        ITransactionService transactionService,
+        IWalletAccountBalanceService walletAccountBalanceService
+    ) : IRequestHandler<SpendInvestorTransactionRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(SpendInvestorTransactionRequest request, CancellationToken cancellationToken)
         {
@@ -36,7 +43,7 @@ public static class SpendInvestorTransaction
             var selectedStageId = groupedByStage.First().Key;
             var network = networkConfiguration.GetNetwork();
 
-            var project = await projectRepository.GetAsync(request.ProjectId);
+            var project = await projectService.GetAsync(request.ProjectId);
             if (project.IsFailure)
             {
                 return Result.Failure<TransactionDraft>(project.Error);
@@ -51,7 +58,7 @@ public static class SpendInvestorTransaction
             var investmentTransactions = await Task.WhenAll(tasks);
             founderContext.InvestmentTrasnactionsHex = investmentTransactions.Where(hex => hex != string.Empty).ToList();
             
-            var addressResult = await GetUnfundedReleaseAddress((await seedwordsProvider.GetSensitiveData(request.WalletId)).Value.ToWalletWords());
+            var addressResult = await GetUnfundedReleaseAddress(request.WalletId);
             if (addressResult.IsFailure) 
                 return Result.Failure<TransactionDraft>("Could not get an unfunded release address");
             
@@ -95,7 +102,7 @@ public static class SpendInvestorTransaction
             var investment = await indexerService.GetInvestmentAsync(projectId, x.InvestorAddress);
             if (investment == null)
                 return string.Empty;
-            return await transactionRepository.GetTransactionHexByIdAsync(investment.TransactionId) ?? string.Empty;
+            return await transactionService.GetTransactionHexByIdAsync(investment.TransactionId) ?? string.Empty;
         }
 
         private async Task<string> GetProjectFounderKeyAsync(Guid walletId, string projectId)
@@ -112,15 +119,20 @@ public static class SpendInvestorTransaction
             return Encoders.Hex.EncodeData(key.ToBytes());
         }
         
-        private Task<Result<string>> GetUnfundedReleaseAddress(WalletWords wallet)
+        private async Task<Result<string>> GetUnfundedReleaseAddress(Guid walletId)
         {
-            return Result.Try(async () =>
-            {
-                var accountInfo = walletOperations.BuildAccountInfoForWalletWords(wallet);
-                await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
+            if (accountBalanceResult.IsFailure)
+                return Result.Failure<string>(accountBalanceResult.Error);
 
-                return accountInfo.GetNextReceiveAddress();
-            }).EnsureNotNull("Could not get the unfunded release address");
+            var accountInfo = accountBalanceResult.Value.AccountInfo;
+            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+
+            var nextChangeAddress = accountInfo.GetNextChangeReceiveAddress();
+            
+            return string.IsNullOrEmpty(nextChangeAddress) 
+                ? Result.Failure<string>("Could not get the next change address") 
+                : Result.Success(nextChangeAddress);
         }
     }
 }

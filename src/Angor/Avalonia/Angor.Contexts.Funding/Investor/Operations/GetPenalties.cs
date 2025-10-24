@@ -5,6 +5,7 @@ using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Services;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -22,10 +23,10 @@ public class GetPenalties
     public record GetPenaltiesRequest(Guid WalletId) : IRequest<Result<IEnumerable<PenaltiesDto>>>;
 
     public class GetPenaltiesHandler(
-        IPortfolioRepository investmentRepository,
+        IPortfolioService investmentService,
         IIndexerService indexerService,
         IRelayService relayService,
-        ITransactionRepository transactionRepository,
+        ITransactionService transactionService,
         IProjectInvestmentsService investmentsService)
         : IRequestHandler<GetPenaltiesRequest, Result<IEnumerable<PenaltiesDto>>>
     {
@@ -63,7 +64,7 @@ public class GetPenalties
 
         public async Task<Result<IEnumerable<LookupInvestment>>> FetchInvestedProjects(Guid walletId)
         {
-            var investments = await investmentRepository.GetByWalletId(walletId);
+            var investments = await investmentService.GetByWalletId(walletId);
 
             if (investments.IsFailure)
                 return Result.Failure<IEnumerable<LookupInvestment>>(investments.Error);
@@ -149,7 +150,7 @@ public class GetPenalties
             {
                 foreach (var penaltyProject in penaltyProjects)
                 {
-                    var recoveryTransaction = await transactionRepository.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
+                    var recoveryTransaction = await transactionService.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
 
                     var totalsats = recoveryTransaction.Outputs
                         .Where(s => Script.FromHex(s.ScriptPubKey).IsScriptType(ScriptType.P2WSH)).Sum(s => s.Balance);

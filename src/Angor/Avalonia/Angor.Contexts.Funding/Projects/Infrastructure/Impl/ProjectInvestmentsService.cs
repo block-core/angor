@@ -7,19 +7,20 @@ using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared.Protocol;
 using Stage = Angor.Shared.Models.Stage;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
-public class ProjectInvestmentsService(IProjectRepository projectRepository, INetworkConfiguration networkConfiguration,
+public class ProjectInvestmentsService(IProjectService projectService, INetworkConfiguration networkConfiguration,
     IIndexerService indexerService, IInvestorTransactionActions investorTransactionActions,
-    ITransactionRepository transactionRepository) : IProjectInvestmentsService
+    ITransactionService transactionService) : IProjectInvestmentsService
 {
     public async Task<Result<IEnumerable<StageData>>> ScanFullInvestments(string projectId)
     {
-        var project = await projectRepository.GetAsync(new ProjectId(projectId));
+        var project = await projectService.GetAsync(new ProjectId(projectId));
 
             if (project.IsFailure)
                 return Result.Failure<IEnumerable<StageData>>("Failed to retrieve project data.");
@@ -88,8 +89,8 @@ public class ProjectInvestmentsService(IProjectRepository projectRepository, INe
 
         var tasks = projectInvestments.Select(async investment =>
         {
-            var hex = await transactionRepository.GetTransactionHexByIdAsync(investment.TransactionId);
-            var trxInfo = await transactionRepository.GetTransactionInfoByIdAsync(investment.TransactionId);
+            var hex = await transactionService.GetTransactionHexByIdAsync(investment.TransactionId);
+            var trxInfo = await transactionService.GetTransactionInfoByIdAsync(investment.TransactionId);
             var trx = network.CreateTransaction(hex); //TODO handle null or invalid hex
             return (trx, trxInfo);
         });
@@ -129,7 +130,7 @@ public class ProjectInvestmentsService(IProjectRepository projectRepository, INe
 
             // try to resolve the destination
             var spentInTransaction =
-                await transactionRepository.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+                await transactionService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
 
             var input = spentInTransaction?.Inputs.FirstOrDefault(input =>
                 input.InputTransactionId == item.Trxid && input.InputIndex == item.Outputindex);
@@ -172,12 +173,12 @@ public class ProjectInvestmentsService(IProjectRepository projectRepository, INe
     
     public async Task<Result<InvestmentSpendingLookup>> ScanInvestmentSpends(ProjectInfo project, string transactionId)
         {
-            var trxInfo = await transactionRepository.GetTransactionInfoByIdAsync(transactionId);
+            var trxInfo = await transactionService.GetTransactionInfoByIdAsync(transactionId);
 
             if (trxInfo == null)
                 return Result.Failure<InvestmentSpendingLookup>("Transaction not found");
 
-            var trxHex = await transactionRepository.GetTransactionHexByIdAsync(transactionId);
+            var trxHex = await transactionService.GetTransactionHexByIdAsync(transactionId);
             var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(trxHex);
 
             var response = new InvestmentSpendingLookup
@@ -192,7 +193,7 @@ public class ProjectInvestmentsService(IProjectRepository projectRepository, INe
 
                 if (!string.IsNullOrEmpty(output.SpentInTransaction))
                 {
-                    var spentInfo = await transactionRepository.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+                    var spentInfo = await transactionService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
 
                     if (spentInfo == null)
                         continue;
@@ -227,7 +228,7 @@ public class ProjectInvestmentsService(IProjectRepository projectRepository, INe
                                 response.AmountInRecovery = totalsats;
 
                                 var spentRecoveryInfo =
-                                    await transactionRepository.GetTransactionInfoByIdAsync(response.RecoveryTransactionId);
+                                    await transactionService.GetTransactionInfoByIdAsync(response.RecoveryTransactionId);
 
                                 if (spentRecoveryInfo == null) 
                                     return response;

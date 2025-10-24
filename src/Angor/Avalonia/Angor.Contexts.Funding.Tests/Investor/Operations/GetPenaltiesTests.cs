@@ -3,6 +3,7 @@ using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Services;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
@@ -12,26 +13,26 @@ namespace Angor.Contexts.Funding.Tests.Investor.Operations;
 
 public class GetPenaltiesTests
 {
-    private readonly Mock<IPortfolioRepository> _mockInvestmentRepository;
+    private readonly Mock<IPortfolioService> _mockInvestmentService;
     private readonly Mock<IIndexerService> _mockIndexerService;
     private readonly Mock<IRelayService> _mockRelayService;
-    private readonly Mock<ITransactionRepository> _mockTransactionRepository;
+    private readonly Mock<ITransactionService> _mockTransactionService;
     private readonly Mock<IProjectInvestmentsService> _mockProjectInvestmentsService;
     private readonly GetPenalties.GetPenaltiesHandler _handler;
 
     public GetPenaltiesTests()
     {
-        _mockInvestmentRepository = new Mock<IPortfolioRepository>();
+        _mockInvestmentService = new Mock<IPortfolioService>();
         _mockIndexerService = new Mock<IIndexerService>();
         _mockRelayService = new Mock<IRelayService>();
-        _mockTransactionRepository = new Mock<ITransactionRepository>();
+        _mockTransactionService = new Mock<ITransactionService>();
         _mockProjectInvestmentsService = new Mock<IProjectInvestmentsService>();
         
         _handler = new GetPenalties.GetPenaltiesHandler(
-            _mockInvestmentRepository.Object,
+            _mockInvestmentService.Object,
             _mockIndexerService.Object,
             _mockRelayService.Object,
-            _mockTransactionRepository.Object,
+            _mockTransactionService.Object,
             _mockProjectInvestmentsService.Object);
     }
 
@@ -43,7 +44,7 @@ public class GetPenaltiesTests
         var request = new GetPenalties.GetPenaltiesRequest(walletId);
         var expectedError = "Repository error";
 
-        _mockInvestmentRepository
+        _mockInvestmentService
             .Setup(x => x.GetByWalletId(walletId))
             .ReturnsAsync(Result.Failure<InvestmentRecords>(expectedError));
 
@@ -63,7 +64,7 @@ public class GetPenaltiesTests
         var request = new GetPenalties.GetPenaltiesRequest(walletId);
         var investment = new InvestmentRecords();
 
-        _mockInvestmentRepository
+        _mockInvestmentService
             .Setup(x => x.GetByWalletId(walletId))
             .ReturnsAsync(Result.Success(investment));
 
@@ -104,7 +105,7 @@ public class GetPenaltiesTests
             TotalAmount = 1000000
         };
 
-        _mockInvestmentRepository
+        _mockInvestmentService
             .Setup(x => x.GetByWalletId(walletId))
             .ReturnsAsync(Result.Success(investment));
 
@@ -164,7 +165,7 @@ public class GetPenaltiesTests
         var walletId = Guid.NewGuid();
         var expectedError = "Repository error";
 
-        _mockInvestmentRepository
+        _mockInvestmentService
             .Setup(x => x.GetByWalletId(walletId))
             .ReturnsAsync(Result.Failure<InvestmentRecords>(expectedError));
 
@@ -183,7 +184,7 @@ public class GetPenaltiesTests
         var walletId = Guid.NewGuid();
         var investment = new InvestmentRecords();
 
-        _mockInvestmentRepository
+        _mockInvestmentService
             .Setup(x => x.GetByWalletId(walletId))
             .ReturnsAsync(Result.Success(investment));
 
@@ -217,7 +218,7 @@ public class GetPenaltiesTests
             }
         };
 
-        _mockTransactionRepository
+        _mockTransactionService
             .Setup(x => x.GetTransactionInfoByIdAsync("recovery-tx-id"))
             .ReturnsAsync(transactionInfo);
 
@@ -254,7 +255,7 @@ public class GetPenaltiesTests
             }
         };
 
-        _mockTransactionRepository
+        _mockTransactionService
             .Setup(x => x.GetTransactionInfoByIdAsync("recovery-tx-id"))
             .ReturnsAsync(transactionInfo);
 
@@ -281,7 +282,7 @@ public class GetPenaltiesTests
             ProjectInfo = new ProjectInfo { PenaltyDays = 30 }
         };
 
-        _mockTransactionRepository
+        _mockTransactionService
             .Setup(x => x.GetTransactionInfoByIdAsync("recovery-tx-id"))
             .ThrowsAsync(new Exception("Test exception"));
 

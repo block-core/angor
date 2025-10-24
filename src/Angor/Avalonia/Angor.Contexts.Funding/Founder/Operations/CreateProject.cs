@@ -10,8 +10,11 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Nostr.Client.Messages.Metadata;
 using Stage = Angor.Shared.Models.Stage;
+
+// Add this using
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
@@ -29,7 +32,10 @@ internal static class CreateProjectConstants
             IFounderTransactionActions founderTransactionActions,
             IWalletOperations walletOperations,
             IIndexerService indexerService,
-            INetworkConfiguration networkConfiguration) : IRequestHandler<CreateProjectRequest, Result<TransactionDraft>>
+            INetworkConfiguration networkConfiguration,
+            IWalletAccountBalanceService walletAccountBalanceService,
+            ILogger<CreateProjectHandler> logger // Inject logger
+        ) : IRequestHandler<CreateProjectRequest, Result<TransactionDraft>>
         {
             public async Task<Result<TransactionDraft>> Handle(CreateProjectRequest request, CancellationToken cancellationToken)
             {
@@ -80,7 +86,7 @@ internal static class CreateProjectConstants
                     return Result.Failure<TransactionDraft>(projectInfo.Error);
                 }
 
-                var transactionInfo = await CreatProjectTransaction(wallet.Value.ToWalletWords(),
+                var transactionInfo = await CreatProjectTransaction(request.WalletId, wallet.Value.ToWalletWords(),
                     request.SelectedFeeRate,
                     newProjectKeys.FounderKey, newProjectKeys.ProjectIdentifier, projectInfo.Value);
 
@@ -194,11 +200,12 @@ internal static class CreateProjectConstants
             }
 
 
-            private async Task<Result<TransactionInfo>> CreatProjectTransaction(WalletWords words, long selectedFee,
+            private async Task<Result<TransactionInfo>> CreatProjectTransaction(Guid walletId, WalletWords words,
+                long selectedFee,
                 string founderKey,
                 string projectIdentifier, string projectInfoEventId)
             {
-                var accountBalanceInfo = await RefreshWalletBalance(words);
+                var accountBalanceInfo = await RefreshWalletBalance(walletId);
                 if (accountBalanceInfo.IsFailure)
                 {
                     throw new InvalidOperationException("Failed to get account balance information");
@@ -219,23 +226,26 @@ internal static class CreateProjectConstants
 
             }
 
-            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(WalletWords walletWords)
+            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(Guid walletId)
             {
                 try
                 {
-                    var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
+                    // Try to get from service first
+                    var dbResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
 
-                    await walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
-                    await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+                    if (dbResult.IsFailure)
+                        return Result.Failure<AccountBalanceInfo>(dbResult.Error);
 
-                    var accountBalanceInfo = new AccountBalanceInfo();
+                    // Refresh the existing balance
+                    var refreshResult = await walletAccountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
 
-                    accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, []);
-
-                    return Result.Success<AccountBalanceInfo>(accountBalanceInfo);
+                    return refreshResult.IsFailure 
+                        ? Result.Failure<AccountBalanceInfo>(refreshResult.Error) 
+                        : Result.Success(refreshResult.Value);
                 }
                 catch (Exception e)
                 {
+                    logger.LogError(e, "Error refreshing balance for wallet {WalletId}", walletId);
                     return Result.Failure<AccountBalanceInfo>($"Error refreshing balance: {e.Message}");
                 }
             }

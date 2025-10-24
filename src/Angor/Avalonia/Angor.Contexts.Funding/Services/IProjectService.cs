@@ -1,9 +1,10 @@
+using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Funding.Projects.Domain;
+namespace Angor.Contexts.Funding.Services;
 
-public interface IProjectRepository
+public interface IProjectService
 {
     Task<Result<Project>> GetAsync(ProjectId id);
     Task<Result<IEnumerable<Project>>> GetAllAsync(params ProjectId[] ids);

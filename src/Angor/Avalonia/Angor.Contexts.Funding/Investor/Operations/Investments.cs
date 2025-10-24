@@ -2,6 +2,7 @@ using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -19,10 +20,10 @@ public static class Investments
     
     public class InvestmentsPortfolioHandler(
         IIndexerService indexerService,
-        IPortfolioRepository investmentRepository,
+        IPortfolioService investmentService,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations,
-        IProjectRepository projectRepository,
+        IProjectService projectService,
         ISignService signService,
         INetworkConfiguration networkConfiguration,
         ISerializer serializer ,
@@ -32,7 +33,7 @@ public static class Investments
 
         public async Task<Result<IEnumerable<InvestedProjectDto>>> Handle(InvestmentsPortfolioRequest request, CancellationToken cancellationToken)
         {
-            var investmentRecordsLookup = await investmentRepository.GetByWalletId(request.WalletId);
+            var investmentRecordsLookup = await investmentService.GetByWalletId(request.WalletId);
 
             if (investmentRecordsLookup.IsFailure)
                 return Result.Failure<IEnumerable<InvestedProjectDto>>("Failed to retrieve investment records: " + investmentRecordsLookup.Error);
@@ -43,7 +44,7 @@ public static class Investments
             var ids = investmentRecordsLookup.Value.ProjectIdentifiers
                 .Select(id => new ProjectId(id.ProjectIdentifier)).ToArray();
 
-            var lookup = await projectRepository.GetAllAsync(ids);
+            var lookup = await projectService.GetAllAsync(ids);
             
             if (lookup.IsFailure)
                 return Result.Failure<IEnumerable<InvestedProjectDto>>("Failed to retrieve projects: " + lookup.Error);

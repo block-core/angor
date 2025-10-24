@@ -1,6 +1,7 @@
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -10,6 +11,7 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Investment = Angor.Contexts.Funding.Founder.Domain.Investment;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
@@ -18,7 +20,7 @@ public static class ApproveInvestment
     public record ApproveInvestmentRequest(Guid WalletId, ProjectId ProjectId, Investment InvestmentRequest) : IRequest<Result>;
 
     public class ApproveInvestmentHandler(
-        IProjectRepository projectRepository,
+        IProjectService projectService,
         ISeedwordsProvider seedwordsProvider, 
         IDerivationOperations derivationOperations,
         IEncryptionService encryption,
@@ -41,7 +43,7 @@ public static class ApproveInvestment
             };
             
             var approvalResult = await from walletWords in seedwordsProvider.GetSensitiveData(request.WalletId)
-                from project in projectRepository.GetAsync(request.ProjectId)
+                from project in projectService.GetAsync(request.ProjectId)
                 select PerformSignatureApproval(signatureItem, walletWords.ToWalletWords(), project.ToProjectInfo());
             
             return approvalResult;

@@ -1,14 +1,13 @@
 using Angor.Contexts.Funding.Projects.Domain;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 
-namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+namespace Angor.Contexts.Funding.Services;
 
-public class TransactionRepository(IGenericDocumentCollection<QueryTransaction> queryTransactionCollection,
+public class TransactionService(IGenericDocumentCollection<QueryTransaction> queryTransactionCollection,
     IGenericDocumentCollection<TransactionHexDocument> trxHexCollection,
-    IIndexerService indexerService) : ITransactionRepository
+    IIndexerService indexerService) : ITransactionService
 {
     public async Task<string?> GetTransactionHexByIdAsync(string transactionId)
     {
