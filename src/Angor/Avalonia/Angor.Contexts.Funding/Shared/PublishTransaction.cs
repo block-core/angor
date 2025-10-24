@@ -8,6 +8,7 @@ public static class PublishTransaction
 {
     public record PublishTransactionRequest(TransactionDraft TransactionDraft) : IRequest<Result<string>>;
     
+    //TODO refresh the account info after publishing the transaction after the merge of penalty threshold is in
     public class Handler(IIndexerService indexerService) : IRequestHandler<PublishTransactionRequest, Result<string>>
     {
         public async Task<Result<string>> Handle(PublishTransactionRequest request, CancellationToken cancellationToken)

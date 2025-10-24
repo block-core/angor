@@ -48,6 +48,9 @@ public class WalletFactory(
         var accountBalanceInfo = new AccountBalanceInfo();
         accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, []);
 
+        var saveToDbResult = await accountBalanceService.SaveAccountBalanceInfoAsync(walletId.Value, accountBalanceInfo);
+        if (saveToDbResult.IsFailure)
+            return Result.Failure<Domain.Wallet>(saveToDbResult.Error);
         var resultingBalance = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId.Value);
 
         return !resultingBalance.IsSuccess 

@@ -1,6 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Funding.Shared;
+namespace Angor.Contests.CrossCutting;
 
 public interface ISeedwordsProvider
 {

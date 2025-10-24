@@ -9,10 +9,12 @@ namespace Angor.Contests.CrossCutting;
 
 public class WalletAccountBalanceService(IWalletOperations walletOperations,
     IGenericDocumentCollection<WalletAccountBalanceInfo> collection,
-    ILogger<WalletAccountBalanceService> logger) : IWalletAccountBalanceService
+    ILogger<WalletAccountBalanceService> logger,
+    ISeedwordsProvider seedwordsProvider) : IWalletAccountBalanceService
 {
     public async Task<Result<AccountBalanceInfo>> GetAccountBalanceInfoAsync(Guid walletId)
     {
+        await seedwordsProvider.GetSensitiveData(walletId); // Ensure wallet is unlocked
         var result = await collection.FindByIdAsync(walletId.ToString());
         if (result.IsFailure || result.Value is null)
             return Result.Failure<AccountBalanceInfo>("Account balance not found. Please refresh your wallet.");
@@ -22,6 +24,7 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
 
     public async Task<Result> SaveAccountBalanceInfoAsync(Guid walletId, AccountBalanceInfo accountBalanceInfo)
     {
+        await seedwordsProvider.GetSensitiveData(walletId); // Ensure wallet is unlocked
         var upsertResult = await collection.UpsertAsync(x => x.WalletId,
             new WalletAccountBalanceInfo { WalletId = walletId.ToString(), AccountBalanceInfo = accountBalanceInfo });
 
