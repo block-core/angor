@@ -48,6 +48,9 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
         
         accountBalanceInfo.UpdateAccountBalanceInfo(accountBalanceInfo.AccountInfo, []);
         
-        return Result.Success(accountBalanceInfo);
+        var upsertResult = await collection.UpsertAsync(x => x.WalletId,
+            new WalletAccountBalanceInfo { WalletId = walletId.ToString(), AccountBalanceInfo = accountBalanceInfo });
+
+        return !upsertResult.IsFailure ? Result.Success(accountBalanceInfo) : Result.Failure<AccountBalanceInfo>(upsertResult.Error);
     }
 }

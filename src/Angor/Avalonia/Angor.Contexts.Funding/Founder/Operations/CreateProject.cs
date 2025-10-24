@@ -1,5 +1,4 @@
 using Angor.Contests.CrossCutting;
-using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
@@ -14,7 +13,8 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Messages.Metadata;
 using Stage = Angor.Shared.Models.Stage;
-using Angor.Data.Documents.Interfaces; // Add this using
+
+// Add this using
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
@@ -205,7 +205,7 @@ internal static class CreateProjectConstants
                 string founderKey,
                 string projectIdentifier, string projectInfoEventId)
             {
-                var accountBalanceInfo = await RefreshWalletBalance(walletId, words);
+                var accountBalanceInfo = await RefreshWalletBalance(walletId);
                 if (accountBalanceInfo.IsFailure)
                 {
                     throw new InvalidOperationException("Failed to get account balance information");
@@ -226,29 +226,22 @@ internal static class CreateProjectConstants
 
             }
 
-            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(Guid walletId, WalletWords words)
+            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(Guid walletId)
             {
                 try
                 {
                     // Try to get from service first
                     var dbResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
 
-                    if (dbResult.IsSuccess)
-                    {
-                        // Refresh the existing balance
-                        var refreshResult = await walletAccountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
-                        return refreshResult;
-                    }
-                    
-                    // If not found, create new one
-                    var accountInfo = walletOperations.BuildAccountInfoForWalletWords(words);
-                    
-                    var accountBalanceInfo = new AccountBalanceInfo();
-                    accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, []);
+                    if (dbResult.IsFailure)
+                        return Result.Failure<AccountBalanceInfo>(dbResult.Error);
 
-                    await walletAccountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo);
+                    // Refresh the existing balance
+                    var refreshResult = await walletAccountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
 
-                    return Result.Success(accountBalanceInfo);
+                    return refreshResult.IsFailure 
+                        ? Result.Failure<AccountBalanceInfo>(refreshResult.Error) 
+                        : Result.Success(refreshResult.Value);
                 }
                 catch (Exception e)
                 {
