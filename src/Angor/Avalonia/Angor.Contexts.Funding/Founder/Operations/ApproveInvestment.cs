@@ -20,7 +20,7 @@ public static class ApproveInvestment
     public record ApproveInvestmentRequest(Guid WalletId, ProjectId ProjectId, Investment InvestmentRequest) : IRequest<Result>;
 
     public class ApproveInvestmentHandler(
-        IProjectService projectRepository,
+        IProjectService projectService,
         ISeedwordsProvider seedwordsProvider, 
         IDerivationOperations derivationOperations,
         IEncryptionService encryption,
@@ -43,7 +43,7 @@ public static class ApproveInvestment
             };
             
             var approvalResult = await from walletWords in seedwordsProvider.GetSensitiveData(request.WalletId)
-                from project in projectRepository.GetAsync(request.ProjectId)
+                from project in projectService.GetAsync(request.ProjectId)
                 select PerformSignatureApproval(signatureItem, walletWords.ToWalletWords(), project.ToProjectInfo());
             
             return approvalResult;

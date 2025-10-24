@@ -21,7 +21,7 @@ public static class CreateInvestment
         : IRequest<Result<InvestmentDraft>> { }
     
     public class CreateInvestmentTransactionHandler(
-        IProjectService projectRepository,
+        IProjectService projectService,
         IInvestorTransactionActions investorTransactionActions,
         ISeedwordsProvider seedwordsProvider,
         IWalletOperations walletOperations,
@@ -33,7 +33,7 @@ public static class CreateInvestment
             try
             {
                 // Get the project and investor key
-                var projectResult = await projectRepository.GetAsync(transactionRequest.ProjectId);
+                var projectResult = await projectService.GetAsync(transactionRequest.ProjectId);
                 if (projectResult.IsFailure)
                 {
                     return Result.Failure<InvestmentDraft>(projectResult.Error);

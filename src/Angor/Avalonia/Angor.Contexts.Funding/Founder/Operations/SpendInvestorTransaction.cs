@@ -27,10 +27,10 @@ public static class SpendInvestorTransaction
         IFounderTransactionActions founderTransactionActions,
         INetworkConfiguration networkConfiguration,
         IIndexerService indexerService,
-        IProjectService projectRepository,
+        IProjectService projectService,
         IDerivationOperations derivationOperations,
         ISeedwordsProvider seedwordsProvider,
-        ITransactionService transactionRepository,
+        ITransactionService transactionService,
         IWalletAccountBalanceService walletAccountBalanceService
     ) : IRequestHandler<SpendInvestorTransactionRequest, Result<TransactionDraft>>
     {
@@ -43,7 +43,7 @@ public static class SpendInvestorTransaction
             var selectedStageId = groupedByStage.First().Key;
             var network = networkConfiguration.GetNetwork();
 
-            var project = await projectRepository.GetAsync(request.ProjectId);
+            var project = await projectService.GetAsync(request.ProjectId);
             if (project.IsFailure)
             {
                 return Result.Failure<TransactionDraft>(project.Error);
@@ -102,7 +102,7 @@ public static class SpendInvestorTransaction
             var investment = await indexerService.GetInvestmentAsync(projectId, x.InvestorAddress);
             if (investment == null)
                 return string.Empty;
-            return await transactionRepository.GetTransactionHexByIdAsync(investment.TransactionId) ?? string.Empty;
+            return await transactionService.GetTransactionHexByIdAsync(investment.TransactionId) ?? string.Empty;
         }
 
         private async Task<string> GetProjectFounderKeyAsync(Guid walletId, string projectId)

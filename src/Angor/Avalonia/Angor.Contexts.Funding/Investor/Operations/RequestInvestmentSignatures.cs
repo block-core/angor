@@ -28,14 +28,14 @@ public static class RequestInvestmentSignatures
     }
     
     public class RequestFounderSignaturesHandler(
-        IProjectService projectRepository,
+        IProjectService projectService,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations,
         IEncryptionService encryptionService,
         INetworkConfiguration networkConfiguration,
         ISerializer serializer,
         ISignService signService,
-        IPortfolioRepository portfolioRepository,
+        IPortfolioService portfolioService,
         IProjectScriptsBuilder projectScriptsBuilder,
         IIndexerService indexerService,
         IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
@@ -48,7 +48,7 @@ public static class RequestInvestmentSignatures
             var transactionId = strippedInvestmentTransaction.GetHash().ToString();
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = WitScript.Empty);
 
-            var projectResult = await projectRepository.GetAsync(request.ProjectId);
+            var projectResult = await projectService.GetAsync(request.ProjectId);
 
             if (projectResult.IsFailure)
             {
@@ -79,7 +79,7 @@ public static class RequestInvestmentSignatures
                 return Result.Failure<Guid>(sendSignatureResult.Error);
             }
             
-            await portfolioRepository.Add(request.WalletId, new InvestmentRecord
+            await portfolioService.Add(request.WalletId, new InvestmentRecord
             {
                 InvestmentTransactionHash = transactionId,
                 InvestmentTransactionHex = request.Draft.SignedTxHex,

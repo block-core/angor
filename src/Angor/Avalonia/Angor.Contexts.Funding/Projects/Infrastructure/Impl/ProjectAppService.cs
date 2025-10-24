@@ -13,22 +13,22 @@ using Zafiro.CSharpFunctionalExtensions;
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
 public class ProjectAppService(
-    IProjectService projectRepository, IMediator mediator)
+    IProjectService projectService, IMediator mediator)
     : IProjectAppService
 {
     public async Task<Result<IEnumerable<ProjectDto>>> Latest()
     {
-        return await projectRepository.LatestAsync().Map(t => t.AsEnumerable()).MapEach(project => project.ToDto());
+        return await projectService.LatestAsync().Map(t => t.AsEnumerable()).MapEach(project => project.ToDto());
     }
 
     public Task<Maybe<ProjectDto>> FindById(ProjectId projectId)
     {
-        return projectRepository.GetAsync(projectId).Map(p => p.ToDto()).AsMaybe();
+        return projectService.GetAsync(projectId).Map(p => p.ToDto()).AsMaybe();
     }
 
     public Task<Result<ProjectDto>> Get(ProjectId projectId)
     {
-        return projectRepository.GetAsync(projectId).Map(project => project.ToDto());
+        return projectService.GetAsync(projectId).Map(project => project.ToDto());
     }
 
     public Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(Guid walletId)

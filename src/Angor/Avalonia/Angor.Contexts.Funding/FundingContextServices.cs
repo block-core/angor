@@ -26,7 +26,7 @@ public static class FundingContextServices
         var networkConfiguration = new NetworkConfiguration();
 
         
-        services.AddSingleton<IPortfolioRepository, PortfolioRepository>();
+        services.AddSingleton<IPortfolioService, PortfolioService>();
         //services.AddSingleton<IProjectRepository, ProjectRepository>();
         services.AddScoped<IProjectService, DocumentProjectService>();
         services.AddSingleton<INostrDecrypter, NostrDecrypter>();

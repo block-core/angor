@@ -14,7 +14,7 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 public static class GetFounderProjects
 {
     public class GetFounderProjectsHandler(
-        IProjectService projectRepository,
+        IProjectService projectService,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations, 
         INetworkConfiguration networkConfiguration,
@@ -23,7 +23,7 @@ public static class GetFounderProjects
         public Task<Result<IEnumerable<ProjectDto>>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
         {
             return GetProjectIds(request)
-                .Bind(ids => projectRepository.GetAllAsync(ids.ToArray()))
+                .Bind(ids => projectService.GetAllAsync(ids.ToArray()))
                 .MapEach(project => project.ToDto())
                 .WithTimeout(TimeSpan.FromSeconds(10));
         }

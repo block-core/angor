@@ -11,11 +11,11 @@ public static class GetClaimableTransactions
 {
     public record GetClaimableTransactionsRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ClaimableTransactionDto>>>;
 
-    public class GetClaimableTransactionsHandler(IProjectInvestmentsService projectInvestmentsRepository) : IRequestHandler<GetClaimableTransactionsRequest, Result<IEnumerable<ClaimableTransactionDto>>>
+    public class GetClaimableTransactionsHandler(IProjectInvestmentsService projectInvestmentsService) : IRequestHandler<GetClaimableTransactionsRequest, Result<IEnumerable<ClaimableTransactionDto>>>
     {
         public async Task<Result<IEnumerable<ClaimableTransactionDto>>> Handle(GetClaimableTransactionsRequest request, CancellationToken cancellationToken)
         {
-            var resultList = await projectInvestmentsRepository.ScanFullInvestments(request.ProjectId.Value);
+            var resultList = await projectInvestmentsService.ScanFullInvestments(request.ProjectId.Value);
 
             if (resultList.IsFailure)
             {

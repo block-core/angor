@@ -1,5 +1,3 @@
-// Angor.Contexts.CrossCutting/Repositories/IWalletAccountBalanceRepository.cs
-
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 

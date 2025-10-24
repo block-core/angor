@@ -20,7 +20,7 @@ public static class ReleaseInvestorTransaction
 {
     public record ReleaseInvestorTransactionRequest(Guid WalletId, ProjectId ProjectId, IEnumerable<string> InvestmentsEventIds) : IRequest<Result>;
 
-    public class ReleaseInvestorTransactionHandler(ISignService signService, IProjectService projectRepository,
+    public class ReleaseInvestorTransactionHandler(ISignService signService, IProjectService projectService,
         INostrDecrypter nostrDecrypter, ISerializer serializer, IDerivationOperations derivationOperations,
         IInvestorTransactionActions investorTransactionActions, INetworkConfiguration networkConfiguration,
         IFounderTransactionActions founderTransactionActions, IEncryptionService encryptionService,
@@ -28,7 +28,7 @@ public static class ReleaseInvestorTransaction
     {
         public async Task<Result> Handle(ReleaseInvestorTransactionRequest request, CancellationToken cancellationToken)
         {
-            var projectResult = await projectRepository.GetAsync(request.ProjectId);
+            var projectResult = await projectService.GetAsync(request.ProjectId);
             if (projectResult.IsFailure)
                 return Result.Failure(projectResult.Error);
             

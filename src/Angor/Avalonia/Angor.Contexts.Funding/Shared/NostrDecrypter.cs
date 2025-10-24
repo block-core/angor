@@ -11,7 +11,7 @@ using Nostr.Client.Messages.Direct;
 
 namespace Angor.Contexts.Funding.Shared;
 
-public class NostrDecrypter(IDerivationOperations derivationOperations, ISeedwordsProvider provider, IProjectService projectRepository) : INostrDecrypter
+public class NostrDecrypter(IDerivationOperations derivationOperations, ISeedwordsProvider provider, IProjectService projectService) : INostrDecrypter
 {
     public async Task<Result<string>> Decrypt(Guid walletId, ProjectId projectId, DirectMessage nostrMessage)
     {
@@ -19,7 +19,7 @@ public class NostrDecrypter(IDerivationOperations derivationOperations, ISeedwor
         if (sensitiveDataResult.IsFailure)
             return Result.Failure<string>(sensitiveDataResult.Error);
 
-        var projectResult = await projectRepository.GetAsync(projectId);
+        var projectResult = await projectService.GetAsync(projectId);
         if (projectResult.IsFailure)
             return Result.Failure<string>(projectResult.Error);
 

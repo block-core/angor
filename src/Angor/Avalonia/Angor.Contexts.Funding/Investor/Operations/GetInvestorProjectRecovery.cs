@@ -21,24 +21,24 @@ public static class GetInvestorProjectRecovery
     public record GetInvestorProjectRecoveryRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<InvestorProjectRecoveryDto>>;
 
     public class Handler(
-        IProjectService projectRepository,
-        IPortfolioRepository investmentRepository,
+        IProjectService projectService,
+        IPortfolioService investmentService,
         IIndexerService indexerService,
         INetworkConfiguration networkConfiguration,
         IInvestorTransactionActions investorTransactionActions,
-        IProjectInvestmentsService projectInvestmentsRepository,
-        ITransactionService transactionRepository
+        IProjectInvestmentsService projectInvestmentsService,
+        ITransactionService transactionService
     ) : IRequestHandler<GetInvestorProjectRecoveryRequest, Result<InvestorProjectRecoveryDto>>
     {
         public async Task<Result<InvestorProjectRecoveryDto>> Handle(GetInvestorProjectRecoveryRequest request,
             CancellationToken cancellationToken)
         {
-            var project = await projectRepository.GetAsync(request.ProjectId);
+            var project = await projectService.GetAsync(request.ProjectId);
 
             if (project.IsFailure)
                 return Result.Failure<InvestorProjectRecoveryDto>(project.Error);
             
-            var investments = await investmentRepository.GetByWalletId(request.WalletId);
+            var investments = await investmentService.GetByWalletId(request.WalletId);
 
             if (investments.IsFailure)
                 return Result.Failure<InvestorProjectRecoveryDto>(investments.Error);
@@ -79,7 +79,7 @@ public static class GetInvestorProjectRecovery
                 return Result.Failure<(QueryTransaction,IEnumerable<InvestorStageItemDto>)>("Investment transaction not found");
             }
 
-            var trxInfo = await transactionRepository.GetTransactionInfoByIdAsync(trx.TransactionId);
+            var trxInfo = await transactionService.GetTransactionInfoByIdAsync(trx.TransactionId);
             if (trxInfo == null)
             {
                 return Result.Failure<(QueryTransaction,IEnumerable<InvestorStageItemDto>)>("Investment transaction info not found");
@@ -110,10 +110,10 @@ public static class GetInvestorProjectRecovery
 
             var projectInfo = project.ToProjectInfo();
 
-            var trxHex = await transactionRepository.GetTransactionHexByIdAsync(transactionInfo.TransactionId);
+            var trxHex = await transactionService.GetTransactionHexByIdAsync(transactionInfo.TransactionId);
             var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(trxHex);
 
-            var lookup = await projectInvestmentsRepository.ScanInvestmentSpends(projectInfo, transactionInfo.TransactionId);
+            var lookup = await projectInvestmentsService.ScanInvestmentSpends(projectInfo, transactionInfo.TransactionId);
 
             if (lookup.IsFailure)
                 return Result.Failure<InvestorProjectRecoveryDto>(lookup.Error);
@@ -124,7 +124,7 @@ public static class GetInvestorProjectRecovery
             if (!string.IsNullOrEmpty(lookup.Value.RecoveryTransactionId))
             {
                 var recoveryTransaction =
-                    await transactionRepository.GetTransactionInfoByIdAsync(lookup.Value.RecoveryTransactionId);
+                    await transactionService.GetTransactionInfoByIdAsync(lookup.Value.RecoveryTransactionId);
                 if (recoveryTransaction != null)
                     penaltyExpieryDate = Utils.UnixTimeToDateTime(recoveryTransaction.Timestamp)
                         .AddDays(projectInfo.PenaltyDays);
@@ -193,7 +193,7 @@ public static class GetInvestorProjectRecovery
                     {
                         // try to resolve the destination
                         var spentInTransaction =
-                            await transactionRepository.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+                            await transactionService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
 
                         var input = spentInTransaction?.Inputs.FirstOrDefault(input =>
                             input.InputTransactionId == transactionInfo.TransactionId &&

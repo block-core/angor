@@ -14,13 +14,13 @@ public static class GetReleaseableTransactions
 {
     public record GetReleaseableTransactionsRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ReleaseableTransactionDto>>>;
 
-    public class GetClaimableTransactionsHandler(ISignService signService, IProjectService projectRepository,
+    public class GetClaimableTransactionsHandler(ISignService signService, IProjectService projectService,
         INostrDecrypter nostrDecrypter, ISerializer serializer) : IRequestHandler<GetReleaseableTransactionsRequest, Result<IEnumerable<ReleaseableTransactionDto>>>
     {
         public async Task<Result<IEnumerable<ReleaseableTransactionDto>>> Handle(GetReleaseableTransactionsRequest request, CancellationToken cancellationToken)
         {
             
-            var projectResult = await projectRepository.GetAsync(request.ProjectId);
+            var projectResult = await projectService.GetAsync(request.ProjectId);
             if (projectResult.IsFailure)
                 return Result.Failure<IEnumerable<ReleaseableTransactionDto>>(projectResult.Error);
             

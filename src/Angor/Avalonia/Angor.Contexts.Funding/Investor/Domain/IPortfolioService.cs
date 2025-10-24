@@ -4,7 +4,7 @@ using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Funding.Investor.Domain;
 
-public interface IPortfolioRepository
+public interface IPortfolioService
 {
     Task<Result<InvestmentRecords>> GetByWalletId(Guid walletId);
     Task<Result> Add(Guid walletId, InvestmentRecord investment);

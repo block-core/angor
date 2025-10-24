@@ -29,19 +29,19 @@ public static class PublishInvestment
         IInvestorTransactionActions investorTransactionActions,
         IDerivationOperations derivationOperations,
         ISeedwordsProvider seedwordsProvider,
-        IProjectService projectRepository,
+        IProjectService projectService,
         IWalletOperations walletOperations,
-        IPortfolioRepository  investmentRepository,
+        IPortfolioService  investmentService,
         ILogger logger) : IRequestHandler<PublishInvestmentRequest, Result>
     {
         public async Task<Result> Handle(PublishInvestmentRequest request, CancellationToken cancellationToken)
         {
-            var projectResult = await projectRepository.GetAsync(request.ProjectId);
+            var projectResult = await projectService.GetAsync(request.ProjectId);
 
             if (projectResult.IsFailure)
                 return projectResult;
 
-            var portfolio = await investmentRepository.GetByWalletId(request.WalletId);
+            var portfolio = await investmentService.GetByWalletId(request.WalletId);
             
             if (portfolio.IsFailure)
                 return Result.Failure(portfolio.Error);

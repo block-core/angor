@@ -24,10 +24,10 @@ public static class RecoverFunds
     public record RecoverFundsRequest(Guid WalletId, ProjectId ProjectId,DomainFeerate SelectedFeeRate) : IRequest<Result<TransactionDraft>>;
     
     public class RecoverFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
-        IProjectService projectRepository, IInvestorTransactionActions investorTransactionActions,
-        IPortfolioRepository investmentRepository, INetworkConfiguration networkConfiguration,
+        IProjectService projectService, IInvestorTransactionActions investorTransactionActions,
+        IPortfolioService investmentService, INetworkConfiguration networkConfiguration,
         IWalletOperations walletOperations, ISignService signService,
-        IEncryptionService decrypter, ISerializer serializer, ITransactionService transactionRepository,
+        IEncryptionService decrypter, ISerializer serializer, ITransactionService transactionService,
         IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<RecoverFundsRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(RecoverFundsRequest request, CancellationToken cancellationToken)
@@ -43,10 +43,10 @@ public static class RecoverFunds
             
             var accountInfo = accountBalanceResult.Value.AccountInfo;
             
-            var project = await projectRepository.GetAsync(request.ProjectId);
+            var project = await projectService.GetAsync(request.ProjectId);
             if (project.IsFailure)
                 return Result.Failure<TransactionDraft>(project.Error);
-            var investments = await investmentRepository.GetByWalletId(request.WalletId);
+            var investments = await investmentService.GetByWalletId(request.WalletId);
             if (investments.IsFailure)
                 return Result.Failure<TransactionDraft>(investments.Error);
             
@@ -70,7 +70,7 @@ public static class RecoverFunds
             var unsignedRecoveryTransaction = investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project.Value.ToProjectInfo(), investmentTransaction, signatureLookup.Value, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
             
-            var transactionInfo = await transactionRepository.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
+            var transactionInfo = await transactionService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
 
             if (transactionInfo is null)
                 return Result.Failure<TransactionDraft>("Could not find transaction info");

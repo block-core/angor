@@ -24,20 +24,20 @@ public static class ReleaseFunds
     public record ReleaseFundsRequest(Guid WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<TransactionDraft>>;
     
     public class ReleaseFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
-        IProjectService projectRepository, IInvestorTransactionActions investorTransactionActions,
-        IPortfolioRepository investmentRepository, INetworkConfiguration networkConfiguration,
+        IProjectService projectService, IInvestorTransactionActions investorTransactionActions,
+        IPortfolioService investmentService, INetworkConfiguration networkConfiguration,
         IWalletOperations walletOperations, ISignService signService,
         IEncryptionService decrypter, ISerializer serializer,
-        ITransactionService transactionRepository,
+        ITransactionService transactionService,
         IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<ReleaseFundsRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(ReleaseFundsRequest request, CancellationToken cancellationToken)
         {
-            var project = await projectRepository.GetAsync(request.ProjectId);
+            var project = await projectService.GetAsync(request.ProjectId);
             if (project.IsFailure)
                 return Result.Failure<TransactionDraft>(project.Error);
             
-            var investments = await investmentRepository.GetByWalletId(request.WalletId);
+            var investments = await investmentService.GetByWalletId(request.WalletId);
             if (investments.IsFailure)
                 return Result.Failure<TransactionDraft>(investments.Error);
             
@@ -80,7 +80,7 @@ public static class ReleaseFunds
             if (!sigCheckResult)
                 throw new Exception("Failed to validate signatures");
 
-            var transactionInfo = await transactionRepository.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
+            var transactionInfo = await transactionService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
 
             if (transactionInfo is null)
                 return Result.Failure<TransactionDraft>("Could not find transaction info");

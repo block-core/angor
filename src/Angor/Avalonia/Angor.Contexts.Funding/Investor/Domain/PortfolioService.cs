@@ -9,13 +9,13 @@ using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Funding.Investor.Domain;
 
-public class PortfolioRepository(
+public class PortfolioService(
     IEncryptionService encryptionService,
     IDerivationOperations derivationOperations,
     ISerializer serializer,
     ISeedwordsProvider seedwordsProvider,
     IRelayService relayService,
-    IGenericDocumentCollection<InvestmentRecordsDocument> documentCollection) : IPortfolioRepository
+    IGenericDocumentCollection<InvestmentRecordsDocument> documentCollection) : IPortfolioService
 {
     public async Task<Result<InvestmentRecords>> GetByWalletId(Guid walletId)
     {
