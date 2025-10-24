@@ -48,12 +48,12 @@ public class WalletFactory(
         var accountBalanceInfo = new AccountBalanceInfo();
         accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, []);
 
-        var resultingBalance = await accountBalanceService.RefreshAccountBalanceAsync(walletId.Value);
+        var resultingBalance = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId.Value);
 
         if (!resultingBalance.IsSuccess)
             return Result.Failure<Domain.Wallet>(resultingBalance.Error);
 
-        var savedResult = await accountBalanceService.SaveAccountBalanceAsync(walletId.Value, accountBalanceInfo);
+        var savedResult = await accountBalanceService.SaveAccountBalanceInfoAsync(walletId.Value, accountBalanceInfo);
 
         return !savedResult.IsSuccess ? Result.Failure<Domain.Wallet>(savedResult.Error) : Result.Success(wallet);
     }

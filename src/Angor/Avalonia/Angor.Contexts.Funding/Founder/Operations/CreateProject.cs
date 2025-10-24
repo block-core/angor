@@ -231,12 +231,12 @@ internal static class CreateProjectConstants
                 try
                 {
                     // Try to get from service first
-                    var dbResult = await walletAccountBalanceService.GetAccountBalanceAsync(walletId);
+                    var dbResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
 
                     if (dbResult.IsSuccess)
                     {
                         // Refresh the existing balance
-                        var refreshResult = await walletAccountBalanceService.RefreshAccountBalanceAsync(walletId);
+                        var refreshResult = await walletAccountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
                         return refreshResult;
                     }
                     
@@ -246,7 +246,7 @@ internal static class CreateProjectConstants
                     var accountBalanceInfo = new AccountBalanceInfo();
                     accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, []);
 
-                    await walletAccountBalanceService.SaveAccountBalanceAsync(walletId, accountBalanceInfo);
+                    await walletAccountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo);
 
                     return Result.Success(accountBalanceInfo);
                 }

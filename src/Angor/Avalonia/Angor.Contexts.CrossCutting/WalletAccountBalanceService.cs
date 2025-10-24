@@ -11,7 +11,7 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
     IGenericDocumentCollection<WalletAccountBalanceInfo> collection,
     ILogger<WalletAccountBalanceService> logger) : IWalletAccountBalanceService
 {
-    public async Task<Result<AccountBalanceInfo>> GetAccountBalanceAsync(Guid walletId)
+    public async Task<Result<AccountBalanceInfo>> GetAccountBalanceInfoAsync(Guid walletId)
     {
         var result = await collection.FindByIdAsync(walletId.ToString());
         if (result.IsFailure || result.Value is null)
@@ -20,7 +20,7 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
         return Result.Success(result.Value.AccountBalanceInfo);
     }
 
-    public async Task<Result> SaveAccountBalanceAsync(Guid walletId, AccountBalanceInfo accountBalanceInfo)
+    public async Task<Result> SaveAccountBalanceInfoAsync(Guid walletId, AccountBalanceInfo accountBalanceInfo)
     {
         var upsertResult = await collection.UpsertAsync(x => x.WalletId,
             new WalletAccountBalanceInfo { WalletId = walletId.ToString(), AccountBalanceInfo = accountBalanceInfo });
@@ -32,9 +32,9 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
         return Result.Failure<AccountBalanceInfo>(upsertResult.Error);
     }
 
-    public async Task<Result<AccountBalanceInfo>> RefreshAccountBalanceAsync(Guid walletId)
+    public async Task<Result<AccountBalanceInfo>> RefreshAccountBalanceInfoAsync(Guid walletId)
     {
-        var accountBalanceInfoResult = await GetAccountBalanceAsync(walletId);
+        var accountBalanceInfoResult = await GetAccountBalanceInfoAsync(walletId);
         if (accountBalanceInfoResult.IsFailure)
             return accountBalanceInfoResult;
         

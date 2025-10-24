@@ -88,7 +88,7 @@ public static class CreateInvestment
             long feerate)
         {
             // Get account info from database
-            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceAsync(walletId);
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
             if (accountBalanceResult.IsFailure)
                 return Result.Failure<TransactionInfo>(accountBalanceResult.Error);
             

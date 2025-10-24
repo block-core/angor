@@ -37,7 +37,7 @@ public static class RecoverFunds
                 return Result.Failure<TransactionDraft>(words.Error);
             
             // Get account info from database
-            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceAsync(request.WalletId);
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId);
             if (accountBalanceResult.IsFailure)
                 return Result.Failure<TransactionDraft>(accountBalanceResult.Error);
             

@@ -121,7 +121,7 @@ public static class SpendInvestorTransaction
         
         private async Task<Result<string>> GetUnfundedReleaseAddress(Guid walletId)
         {
-            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceAsync(walletId);
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
             if (accountBalanceResult.IsFailure)
                 return Result.Failure<string>(accountBalanceResult.Error);
 
