@@ -29,6 +29,7 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
 
         var command = loadCommand.Successes().Select(_ =>  ReactiveCommand.CreateFromTask(async () =>
         {
+            // TODO: This will be wired in a follow-up PR
             await uiServices.Dialog.ShowMessage("Action not implemented yet", "");
             return Result.Success();
         }).Enhance());
