@@ -12,21 +12,6 @@
         <manage:ManageInvestorProjectViewModelDesign />
     </Design.DataContext>
 
-    <!-- <UserControl.Resources> -->
-    <!--     <DataTemplate x:Key="ActionsTemplate" DataType="manage:IInvestorProjectItem"> -->
-    <!--         <Panel> -->
-    <!--             <Panel.Styles> -->
-    <!--                 <Style Selector="Button"> -->
-    <!--                     <Setter Property="Width" Value="120" /> -->
-    <!--                 </Style> -->
-    <!--             </Panel.Styles> -->
-    <!--             <Button Content="Recover" Command="{Binding Recover}" Opacity="{Binding ShowRecover, Converter={x:Static  OpacityConverters.BoolToOpacity}}" /> -->
-    <!--             <Button Content="Release" Command="{Binding Release}" IsVisible="{Binding ShowRelease, Converter={x:Static  OpacityConverters.BoolToOpacity}}" /> -->
-    <!--             <Button Content="End" Command="{Binding ClaimEndOfProject}" IsVisible="{Binding ShowClaimEndOfProject, Converter={x:Static  OpacityConverters.BoolToOpacity}}" /> -->
-    <!--         </Panel> -->
-    <!--     </DataTemplate> -->
-    <!-- </UserControl.Resources> -->
-
     <co:PageContainer>
         <DockPanel VerticalSpacing="20">
             <Card DockPanel.Dock="Top" Theme="{StaticResource WideCard}" Header="Manage Investment" Subheader="{Binding Project.Name}">
@@ -52,6 +37,13 @@
                             </Card.Subheader>
                         </Card>
                     </BalancedWrapGrid>
+                    <HeaderedContainer Header="Actions">
+                        <WrapPanel ItemSpacing="10">
+                            <Button>Recover All</Button>
+                            <Button>Release All</Button>
+                            <Button>Claim All</Button>
+                        </WrapPanel>
+                    </HeaderedContainer>
                     <ResponsivePresenter Breakpoint="600">
                         <ResponsivePresenter.Narrow>
                             <ItemsControl Classes="ShowEmptyContent" Empty.Content="No release items found" ItemsSource="{Binding Items}">
