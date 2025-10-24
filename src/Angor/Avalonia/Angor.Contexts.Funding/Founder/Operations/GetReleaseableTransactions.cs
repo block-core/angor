@@ -1,6 +1,7 @@
 using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
@@ -13,7 +14,7 @@ public static class GetReleaseableTransactions
 {
     public record GetReleaseableTransactionsRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ReleaseableTransactionDto>>>;
 
-    public class GetClaimableTransactionsHandler(ISignService signService, IProjectRepository projectRepository,
+    public class GetClaimableTransactionsHandler(ISignService signService, IProjectService projectRepository,
         INostrDecrypter nostrDecrypter, ISerializer serializer) : IRequestHandler<GetReleaseableTransactionsRequest, Result<IEnumerable<ReleaseableTransactionDto>>>
     {
         public async Task<Result<IEnumerable<ReleaseableTransactionDto>>> Handle(GetReleaseableTransactionsRequest request, CancellationToken cancellationToken)

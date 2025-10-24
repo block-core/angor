@@ -5,7 +5,7 @@ using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.Contexts.Funding.Shared.Repositories;
+using Angor.Contexts.Funding.Services;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -26,7 +26,7 @@ public class GetPenalties
         IPortfolioRepository investmentRepository,
         IIndexerService indexerService,
         IRelayService relayService,
-        ITransactionRepository transactionRepository,
+        ITransactionService transactionRepository,
         IProjectInvestmentsService investmentsService)
         : IRequestHandler<GetPenaltiesRequest, Result<IEnumerable<PenaltiesDto>>>
     {

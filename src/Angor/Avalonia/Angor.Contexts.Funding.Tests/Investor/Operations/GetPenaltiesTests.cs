@@ -3,7 +3,7 @@ using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.Contexts.Funding.Shared.Repositories;
+using Angor.Contexts.Funding.Services;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
@@ -16,7 +16,7 @@ public class GetPenaltiesTests
     private readonly Mock<IPortfolioRepository> _mockInvestmentRepository;
     private readonly Mock<IIndexerService> _mockIndexerService;
     private readonly Mock<IRelayService> _mockRelayService;
-    private readonly Mock<ITransactionRepository> _mockTransactionRepository;
+    private readonly Mock<ITransactionService> _mockTransactionRepository;
     private readonly Mock<IProjectInvestmentsService> _mockProjectInvestmentsService;
     private readonly GetPenalties.GetPenaltiesHandler _handler;
 
@@ -25,7 +25,7 @@ public class GetPenaltiesTests
         _mockInvestmentRepository = new Mock<IPortfolioRepository>();
         _mockIndexerService = new Mock<IIndexerService>();
         _mockRelayService = new Mock<IRelayService>();
-        _mockTransactionRepository = new Mock<ITransactionRepository>();
+        _mockTransactionRepository = new Mock<ITransactionService>();
         _mockProjectInvestmentsService = new Mock<IProjectInvestmentsService>();
         
         _handler = new GetPenalties.GetPenaltiesHandler(

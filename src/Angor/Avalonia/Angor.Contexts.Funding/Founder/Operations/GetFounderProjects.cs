@@ -2,6 +2,7 @@ using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using CSharpFunctionalExtensions;
@@ -13,7 +14,7 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 public static class GetFounderProjects
 {
     public class GetFounderProjectsHandler(
-        IProjectRepository projectRepository,
+        IProjectService projectRepository,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations, 
         INetworkConfiguration networkConfiguration,

@@ -2,6 +2,7 @@ using Angor.Contests.CrossCutting;
 using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.TransactionDrafts;
 using Angor.Data.Documents.Interfaces;
@@ -27,7 +28,7 @@ public static class RequestInvestmentSignatures
     }
     
     public class RequestFounderSignaturesHandler(
-        IProjectRepository projectRepository,
+        IProjectService projectRepository,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations,
         IEncryptionService encryptionService,

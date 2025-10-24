@@ -1,5 +1,6 @@
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Services;
 using Angor.Shared;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
@@ -10,7 +11,7 @@ using Nostr.Client.Messages.Direct;
 
 namespace Angor.Contexts.Funding.Shared;
 
-public class NostrDecrypter(IDerivationOperations derivationOperations, ISeedwordsProvider provider, IProjectRepository projectRepository) : INostrDecrypter
+public class NostrDecrypter(IDerivationOperations derivationOperations, ISeedwordsProvider provider, IProjectService projectRepository) : INostrDecrypter
 {
     public async Task<Result<string>> Decrypt(Guid walletId, ProjectId projectId, DirectMessage nostrMessage)
     {

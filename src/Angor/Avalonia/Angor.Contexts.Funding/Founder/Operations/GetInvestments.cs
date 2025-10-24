@@ -2,6 +2,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -24,7 +25,7 @@ public static class GetInvestments
 
     public class GetInvestmentsHandler(
         IIndexerService indexerService,
-        IProjectRepository projectRepository,
+        IProjectService projectRepository,
         ISignService signService,
         INostrDecrypter nostrDecrypter,
         INetworkConfiguration networkConfiguration,

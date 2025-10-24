@@ -1,16 +1,17 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using Stage = Angor.Contexts.Funding.Projects.Domain.Stage;
 
-namespace Angor.Contexts.Funding.Shared.Repositories;
+namespace Angor.Contexts.Funding.Services;
 
-public class DocumentProjectRepository(IGenericDocumentCollection<Project> collection, IRelayService relayService,
-    IIndexerService indexerService) : IProjectRepository
+public class DocumentProjectService(IGenericDocumentCollection<Project> collection, IRelayService relayService,
+    IIndexerService indexerService) : IProjectService
 {
 
     public Task<Result<Project>> GetAsync(ProjectId id)

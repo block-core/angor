@@ -2,6 +2,7 @@ using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -22,7 +23,7 @@ public static class Investments
         IPortfolioRepository investmentRepository,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations,
-        IProjectRepository projectRepository,
+        IProjectService projectRepository,
         ISignService signService,
         INetworkConfiguration networkConfiguration,
         ISerializer serializer ,

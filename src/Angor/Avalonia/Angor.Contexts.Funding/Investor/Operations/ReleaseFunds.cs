@@ -3,8 +3,8 @@ using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Shared.Repositories;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -24,11 +24,11 @@ public static class ReleaseFunds
     public record ReleaseFundsRequest(Guid WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<TransactionDraft>>;
     
     public class ReleaseFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
-        IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
+        IProjectService projectRepository, IInvestorTransactionActions investorTransactionActions,
         IPortfolioRepository investmentRepository, INetworkConfiguration networkConfiguration,
         IWalletOperations walletOperations, ISignService signService,
         IEncryptionService decrypter, ISerializer serializer,
-        ITransactionRepository transactionRepository,
+        ITransactionService transactionRepository,
         IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<ReleaseFundsRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(ReleaseFundsRequest request, CancellationToken cancellationToken)

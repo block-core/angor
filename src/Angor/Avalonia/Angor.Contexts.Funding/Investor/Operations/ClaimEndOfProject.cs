@@ -3,8 +3,8 @@ using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Shared.Repositories;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -22,9 +22,9 @@ public static class ClaimEndOfProject
     public record ClaimEndOfProjectRequest(Guid WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<TransactionDraft>>;
     
     public class ClaimEndOfProjectHandler(IWalletOperations walletOperations, IDerivationOperations derivationOperations,
-        IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
+        IProjectService projectRepository, IInvestorTransactionActions investorTransactionActions,
         IPortfolioRepository investmentRepository, IIndexerService indexerService, ISeedwordsProvider provider,
-        ITransactionRepository transactionRepository,
+        ITransactionService transactionRepository,
         IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<ClaimEndOfProjectRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(ClaimEndOfProjectRequest request, CancellationToken cancellationToken)

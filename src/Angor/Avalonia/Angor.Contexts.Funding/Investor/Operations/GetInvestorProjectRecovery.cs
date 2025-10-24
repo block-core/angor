@@ -3,8 +3,8 @@ using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Shared.Repositories;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -21,13 +21,13 @@ public static class GetInvestorProjectRecovery
     public record GetInvestorProjectRecoveryRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<InvestorProjectRecoveryDto>>;
 
     public class Handler(
-        IProjectRepository projectRepository,
+        IProjectService projectRepository,
         IPortfolioRepository investmentRepository,
         IIndexerService indexerService,
         INetworkConfiguration networkConfiguration,
         IInvestorTransactionActions investorTransactionActions,
         IProjectInvestmentsService projectInvestmentsRepository,
-        ITransactionRepository transactionRepository
+        ITransactionService transactionRepository
     ) : IRequestHandler<GetInvestorProjectRecoveryRequest, Result<InvestorProjectRecoveryDto>>
     {
         public async Task<Result<InvestorProjectRecoveryDto>> Handle(GetInvestorProjectRecoveryRequest request,

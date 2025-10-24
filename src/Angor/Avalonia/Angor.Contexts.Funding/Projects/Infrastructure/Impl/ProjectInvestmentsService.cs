@@ -7,16 +7,16 @@ using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Shared.Repositories;
 using Angor.Shared.Protocol;
 using Stage = Angor.Shared.Models.Stage;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
-public class ProjectInvestmentsService(IProjectRepository projectRepository, INetworkConfiguration networkConfiguration,
+public class ProjectInvestmentsService(IProjectService projectRepository, INetworkConfiguration networkConfiguration,
     IIndexerService indexerService, IInvestorTransactionActions investorTransactionActions,
-    ITransactionRepository transactionRepository) : IProjectInvestmentsService
+    ITransactionService transactionRepository) : IProjectInvestmentsService
 {
     public async Task<Result<IEnumerable<StageData>>> ScanFullInvestments(string projectId)
     {

@@ -1,8 +1,8 @@
 using Angor.Shared.Models;
 
-namespace Angor.Contexts.Funding.Shared.Repositories;
+namespace Angor.Contexts.Funding.Services;
 
-public interface ITransactionRepository
+public interface ITransactionService
 {
     Task<string?> GetTransactionHexByIdAsync(string transactionId);
     

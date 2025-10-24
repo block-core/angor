@@ -1,6 +1,7 @@
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -19,7 +20,7 @@ public static class ApproveInvestment
     public record ApproveInvestmentRequest(Guid WalletId, ProjectId ProjectId, Investment InvestmentRequest) : IRequest<Result>;
 
     public class ApproveInvestmentHandler(
-        IProjectRepository projectRepository,
+        IProjectService projectRepository,
         ISeedwordsProvider seedwordsProvider, 
         IDerivationOperations derivationOperations,
         IEncryptionService encryption,

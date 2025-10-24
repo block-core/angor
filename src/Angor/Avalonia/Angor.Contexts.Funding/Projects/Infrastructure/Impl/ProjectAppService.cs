@@ -4,6 +4,7 @@ using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Projects.Operations;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using CSharpFunctionalExtensions;
 using MediatR;
@@ -12,7 +13,7 @@ using Zafiro.CSharpFunctionalExtensions;
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
 public class ProjectAppService(
-    IProjectRepository projectRepository, IMediator mediator)
+    IProjectService projectRepository, IMediator mediator)
     : IProjectAppService
 {
     public async Task<Result<IEnumerable<ProjectDto>>> Latest()

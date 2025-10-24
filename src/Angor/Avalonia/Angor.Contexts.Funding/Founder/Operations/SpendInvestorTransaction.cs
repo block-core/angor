@@ -4,8 +4,8 @@ using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Shared.Repositories;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -27,10 +27,10 @@ public static class SpendInvestorTransaction
         IFounderTransactionActions founderTransactionActions,
         INetworkConfiguration networkConfiguration,
         IIndexerService indexerService,
-        IProjectRepository projectRepository,
+        IProjectService projectRepository,
         IDerivationOperations derivationOperations,
         ISeedwordsProvider seedwordsProvider,
-        ITransactionRepository transactionRepository,
+        ITransactionService transactionRepository,
         IWalletAccountBalanceService walletAccountBalanceService
     ) : IRequestHandler<SpendInvestorTransactionRequest, Result<TransactionDraft>>
     {

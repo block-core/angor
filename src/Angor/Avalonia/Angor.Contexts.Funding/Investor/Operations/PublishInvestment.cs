@@ -2,6 +2,7 @@ using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -28,7 +29,7 @@ public static class PublishInvestment
         IInvestorTransactionActions investorTransactionActions,
         IDerivationOperations derivationOperations,
         ISeedwordsProvider seedwordsProvider,
-        IProjectRepository projectRepository,
+        IProjectService projectRepository,
         IWalletOperations walletOperations,
         IPortfolioRepository  investmentRepository,
         ILogger logger) : IRequestHandler<PublishInvestmentRequest, Result>
