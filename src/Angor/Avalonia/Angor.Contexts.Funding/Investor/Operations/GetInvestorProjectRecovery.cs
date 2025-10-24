@@ -25,7 +25,8 @@ public static class GetInvestorProjectRecovery
         IIndexerService indexerService,
         INetworkConfiguration networkConfiguration,
         IInvestorTransactionActions investorTransactionActions,
-        IProjectInvestmentsRepository projectInvestmentsRepository
+        IProjectInvestmentsService projectInvestmentsRepository,
+        ITransactionRepository transactionRepository
     ) : IRequestHandler<GetInvestorProjectRecoveryRequest, Result<InvestorProjectRecoveryDto>>
     {
         public async Task<Result<InvestorProjectRecoveryDto>> Handle(GetInvestorProjectRecoveryRequest request,
@@ -77,7 +78,7 @@ public static class GetInvestorProjectRecovery
                 return Result.Failure<(QueryTransaction,IEnumerable<InvestorStageItemDto>)>("Investment transaction not found");
             }
 
-            var trxInfo = await indexerService.GetTransactionInfoByIdAsync(trx.TransactionId);
+            var trxInfo = await transactionRepository.GetTransactionInfoByIdAsync(trx.TransactionId);
             if (trxInfo == null)
             {
                 return Result.Failure<(QueryTransaction,IEnumerable<InvestorStageItemDto>)>("Investment transaction info not found");
@@ -108,7 +109,7 @@ public static class GetInvestorProjectRecovery
 
             var projectInfo = project.ToProjectInfo();
 
-            var trxHex = await indexerService.GetTransactionHexByIdAsync(transactionInfo.TransactionId);
+            var trxHex = await transactionRepository.GetTransactionHexByIdAsync(transactionInfo.TransactionId);
             var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(trxHex);
 
             var lookup = await projectInvestmentsRepository.ScanInvestmentSpends(projectInfo, transactionInfo.TransactionId);
@@ -121,10 +122,10 @@ public static class GetInvestorProjectRecovery
 
             if (!string.IsNullOrEmpty(lookup.Value.RecoveryTransactionId))
             {
-                var recoveryTansaction =
-                    await indexerService.GetTransactionInfoByIdAsync(lookup.Value.RecoveryTransactionId);
-                if (recoveryTansaction != null)
-                    penaltyExpieryDate = Utils.UnixTimeToDateTime(recoveryTansaction.Timestamp)
+                var recoveryTransaction =
+                    await transactionRepository.GetTransactionInfoByIdAsync(lookup.Value.RecoveryTransactionId);
+                if (recoveryTransaction != null)
+                    penaltyExpieryDate = Utils.UnixTimeToDateTime(recoveryTransaction.Timestamp)
                         .AddDays(projectInfo.PenaltyDays);
             }
 
@@ -191,7 +192,7 @@ public static class GetInvestorProjectRecovery
                     {
                         // try to resolve the destination
                         var spentInTransaction =
-                            await indexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+                            await transactionRepository.GetTransactionInfoByIdAsync(output.SpentInTransaction);
 
                         var input = spentInTransaction?.Inputs.FirstOrDefault(input =>
                             input.InputTransactionId == transactionInfo.TransactionId &&

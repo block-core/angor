@@ -11,7 +11,7 @@ public static class GetClaimableTransactions
 {
     public record GetClaimableTransactionsRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ClaimableTransactionDto>>>;
 
-    public class GetClaimableTransactionsHandler(IProjectInvestmentsRepository projectInvestmentsRepository) : IRequestHandler<GetClaimableTransactionsRequest, Result<IEnumerable<ClaimableTransactionDto>>>
+    public class GetClaimableTransactionsHandler(IProjectInvestmentsService projectInvestmentsRepository) : IRequestHandler<GetClaimableTransactionsRequest, Result<IEnumerable<ClaimableTransactionDto>>>
     {
         public async Task<Result<IEnumerable<ClaimableTransactionDto>>> Handle(GetClaimableTransactionsRequest request, CancellationToken cancellationToken)
         {

@@ -2,6 +2,7 @@ using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.TransactionDrafts;
 using Angor.Shared;
@@ -26,7 +27,7 @@ public static class RecoverFunds
         IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
         IPortfolioRepository investmentRepository, INetworkConfiguration networkConfiguration,
         IWalletOperations walletOperations, IIndexerService indexerService, ISignService signService,
-        IEncryptionService decrypter, ISerializer serializer) : IRequestHandler<RecoverFundsRequest, Result<TransactionDraft>>
+        IEncryptionService decrypter, ISerializer serializer, ITransactionRepository transactionRepository) : IRequestHandler<RecoverFundsRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(RecoverFundsRequest request, CancellationToken cancellationToken)
         {
@@ -64,7 +65,7 @@ public static class RecoverFunds
             var unsignedRecoveryTransaction = investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project.Value.ToProjectInfo(), investmentTransaction, signatureLookup.Value, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
             
-            var transactionInfo = await indexerService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
+            var transactionInfo = await transactionRepository.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
 
             if (transactionInfo is null)
                 return Result.Failure<TransactionDraft>("Could not find transaction info");

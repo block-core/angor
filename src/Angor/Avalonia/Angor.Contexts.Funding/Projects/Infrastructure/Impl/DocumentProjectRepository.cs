@@ -29,7 +29,7 @@ public class DocumentProjectRepository(IGenericDocumentCollection<Project> colle
         {
             var stringIds = ids.Select(id => id.Value).ToArray();
 
-            var projectResult = await collection.FindAsync(p => stringIds.Any(id => id == p.Id.Value));
+            var projectResult = await collection.FindByIdsAsync(stringIds);
             
             var localLookup = projectResult.IsSuccess && projectResult.Value.Any()//check the results from the local database
                 ? projectResult.Value.Select(item => item).ToList() : [];
@@ -99,7 +99,7 @@ public class DocumentProjectRepository(IGenericDocumentCollection<Project> colle
             if (!response.Any())
                 return Result.Failure<IEnumerable<Project>>("No projects found");
 
-            var insertResult = await collection.InsertAsync(response.ToArray()); //TODO log the result?
+            var insertResult = await collection.InsertAsync(project => project.Id.Value ,response.ToArray()); //TODO log the result?
 
             return Result.Success(response.Concat(localLookup));
         }
