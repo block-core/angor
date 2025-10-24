@@ -33,6 +33,31 @@
                     </Interaction.Behaviors>
                 </controls:AmountControl>
             </HeaderedContainer>
+
+            <!-- Penalty Warning - Above Threshold -->
+            <Card IsVisible="{Binding RequiresFounderApproval}" Classes="Warning">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="SizeMedium" FontWeight="Bold">
+                        ?? Penalty and Founder Approval Required
+                    </TextBlock>
+                    <TextBlock TextWrapping="Wrap">
+                        Your investment meets or exceeds the penalty threshold. To recover your funds early, you will need to obtain the founder's signatures and your funds will be subject to a time-locked penalty period. Without founder approval, you can only claim funds after the project expiry date.
+                    </TextBlock>
+                </StackPanel>
+            </Card>
+
+            <!-- No Penalty Notice - Below Threshold -->
+            <Card IsVisible="{Binding !RequiresFounderApproval}" Classes="Success">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="SizeMedium" FontWeight="Bold">
+                        ? No Penalty on Recovery
+                    </TextBlock>
+                    <TextBlock TextWrapping="Wrap">
+                        Your investment is below the penalty threshold. You can recover your funds immediately after investing without needing founder signatures and without incurring any penalty period.
+                    </TextBlock>
+                </StackPanel>
+            </Card>
+
             <HeaderedContainer IsVisible="{Binding IsValid^}" >
                 <HeaderedContainer.Header>
                     <TextBlock Padding="10 0">

@@ -12,4 +12,5 @@ public class AmountViewModelDesign : IAmountViewModel
     };
 
     public IObservable<bool> IsValid { get; } = Observable.Return(true);
+    public bool RequiresFounderApproval { get; } = true; // Show penalty warning in design mode (above threshold scenario)
 }

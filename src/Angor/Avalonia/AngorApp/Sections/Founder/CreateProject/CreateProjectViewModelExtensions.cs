@@ -26,6 +26,7 @@ public static class CreateProjectViewModelExtensions
             ExpiryDate = createProjectViewModel.FundingStructureViewModel.ExpiryDate,
             EndDate = createProjectViewModel.FundingStructureViewModel.FundingEndDate,
             PenaltyDays = createProjectViewModel.FundingStructureViewModel.PenaltyDays!.Value,
+            PenaltyThreshold = createProjectViewModel.FundingStructureViewModel.PenaltyThreshold,
             TargetAmount = new Amount(createProjectViewModel.FundingStructureViewModel.Sats!.Value),
             Stages = createProjectViewModel.StagesViewModel.Stages.Select(stage => new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent!.Value))
         };

@@ -10,6 +10,7 @@ public interface IManageInvestorProjectViewModel
     TimeSpan PenaltyPeriod { get; }
     IEnumerable<IInvestorProjectItem> Items { get; }
     IInvestedProject Project { get; }
+    bool CanClaimImmediately { get; }
 
     IEnhancedCommand Load { get; }
 }

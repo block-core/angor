@@ -14,9 +14,11 @@ public interface IInvestorProjectItem
     IEnhancedCommand<Result> Recover { get; }
     IEnhancedCommand<Result> Release { get; }
     IEnhancedCommand<Result> ClaimEndOfProject { get; }
+    IEnhancedCommand<Result> ClaimImmediate { get; }
 
     // Visibility helpers
     bool ShowRecover { get; }
     bool ShowRelease { get; }
     bool ShowClaimEndOfProject { get; }
+    bool ShowClaimImmediate { get; }
 }

@@ -34,7 +34,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
     }
 
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
-        uint256? hashOfSecret)
+        uint256? hashOfSecret, DateTime? expiryDateOverride = null)
     {
         // regular investor pre-co-sign with founder to gets funds with penalty
         var recoveryOps = new List<Op>
@@ -62,11 +62,14 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
                 projectInfo.ProjectSeeders.SecretHashes).ToList()
             : new List<Script>();
         
+        // Use the override expiry date if provided, otherwise use the project's expiry date
+        var effectiveExpiryDate = expiryDateOverride ?? projectInfo.ExpiryDate;
+        
         return new()
         {
             Founder = GetFounderSpendScript(projectInfo.FounderKey, projectInfo.Stages[stageIndex].ReleaseDate),
             Recover = new Script(recoveryOps),
-            EndOfProject = GetEndOfProjectInvestorSpendScript(investorKey, projectInfo.ExpiryDate),
+            EndOfProject = GetEndOfProjectInvestorSpendScript(investorKey, effectiveExpiryDate),
             Seeders = seeders
         };
     }
