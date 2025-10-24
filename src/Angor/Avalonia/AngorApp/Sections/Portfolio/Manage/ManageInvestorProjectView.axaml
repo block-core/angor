@@ -38,11 +38,7 @@
                         </Card>
                     </BalancedWrapGrid>
                     <HeaderedContainer Header="Actions">
-                        <WrapPanel ItemSpacing="10">
-                            <Button>Recover All</Button>
-                            <Button>Release All</Button>
-                            <Button>Claim All</Button>
-                        </WrapPanel>
+                        <Button Content="{Binding Action^.Text, FallbackValue='Empty'}" Command="{Binding Action^}" />
                     </HeaderedContainer>
                     <ResponsivePresenter Breakpoint="600">
                         <ResponsivePresenter.Narrow>
@@ -59,7 +55,6 @@
                                                 <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Stage:" Content="{Binding  Stage}" />
                                                 <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Amount:" Content="{Binding Amount.DecimalString}" />
                                                 <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Status:" Content="{Binding Status}" />
-                                                <ContentControl HorizontalAlignment="Center" Content="{Binding}" ContentTemplate="{StaticResource ActionsTemplate}" />
                                             </StackPanel>
                                         </Card>
                                     </DataTemplate>
@@ -72,7 +67,6 @@
                                     <Column Header="Stage" Binding="{Binding Stage}" />
                                     <Column Header="Amount" Binding="{Binding Amount.DecimalString}" />
                                     <Column Header="Status" Binding="{Binding Status}" />
-                                    <!-- <Column Header="Actions" Binding="{Binding}" CellTemplate="{StaticResource ActionsTemplate}" /> -->
                                 </SlimDataGrid.Columns>
                             </SlimDataGrid>
                         </ResponsivePresenter.Wide>

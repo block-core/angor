@@ -1,9 +1,13 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared.Models;
+using Angor.UI.Model.Implementation.Common;
+using ReactiveUI;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
 
@@ -15,56 +19,42 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
 
     private readonly ProjectId projectId;
     private readonly IInvestmentAppService investmentAppService;
-    private readonly UIServices uiServices;
+    private RecoveryState state = RecoveryState.Empty;
 
     public ManageInvestorProjectViewModel(ProjectId projectId, IInvestmentAppService investmentAppService, UIServices uiServices, IWalletContext walletContext)
     {
         this.projectId = projectId;
         this.investmentAppService = investmentAppService;
-        this.uiServices = uiServices;
 
         ViewTransaction = ReactiveCommand.Create(() => { }).Enhance();
 
-        var enhancedCommand = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetRecoveryData)).Enhance().DisposeWith(disposables);
-        Load = enhancedCommand;
+        
+        var loadCommand = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetRecoveryState)).Enhance().DisposeWith(disposables);
+        loadCommand.HandleErrorsWith(uiServices.NotificationService, "Failed to load recovery info").DisposeWith(disposables);
+        Load = loadCommand;
 
-        enhancedCommand.HandleErrorsWith(uiServices.NotificationService, "Failed to load recovery info").DisposeWith(disposables);
-
-        RefreshWhenAnyCommandExecutes().DisposeWith(disposables);
+        var command = loadCommand.Successes().Select(state => CreateCommand(state));
+        this.Action = command;
     }
 
-    private Task<Result<InvestorProjectRecoveryDto>> GetRecoveryData(IWallet wallet)
+    public IObservable<IEnhancedCommand> Action { get; set; }
+
+    private IEnhancedCommand<Result> CreateCommand(RecoveryState recoveryState)
+    {
+        var generateDraft = GetDraft(recoveryState);
+        return ReactiveCommand.Create(() => Result.Success()).Enhance("Some action");
+    }
+
+    private Maybe<ITransactionDraft> GetDraft(RecoveryState recoveryState)
+    {
+        throw new NotImplementedException();
+    }
+
+    private Task<Result<RecoveryState>> GetRecoveryState(IWallet wallet)
     {
         return investmentAppService
             .GetInvestorProjectRecovery(wallet.Id.Value, projectId)
-            .Tap(dto => Apply(wallet, dto));
-    }
-
-    private void Apply(IWallet wallet, InvestorProjectRecoveryDto dto)
-    {
-        Project = new InvestedProject(dto);
-        Items = dto.Items
-            .Select(x =>
-            {
-                Func<Task<Result>> recover = () => ExecuteDraft(() => investmentAppService.BuildRecoverInvestorFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value); // TODO fee from UI
-                Func<Task<Result>> release = () => ExecuteDraft(() => investmentAppService.BuildReleaseInvestorFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value);
-                Func<Task<Result>> claim = () => ExecuteDraft(() => investmentAppService.BuilodClaimInvestorEndOfProjectFunds(wallet.Id.Value, projectId, new DomainFeerate(1)), wallet.Id.Value);
-
-                return (IInvestorProjectItem)new InvestorProjectItem(
-                    stage: x.StageIndex + 1,
-                    amount: new AmountUI(x.Amount),
-                    status: x.Status,
-                    canRecover: !x.IsSpent && !dto.EndOfProject && dto.CanRecover,
-                    canRelease: x.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty && dto.CanRelease,
-                    canClaimEnd: dto.EndOfProject && !x.IsSpent,
-                    recoverAction: recover,
-                    releaseAction: release,
-                    claimAction: claim,
-                    notificationService: uiServices.NotificationService);
-            })
-            .ToList();
-        this.RaisePropertyChanged(nameof(Project));
-        this.RaisePropertyChanged(nameof(Items));
+            .Map(dto => CreateRecoveryViewModel(wallet.Id.Value, dto));
     }
 
     private async Task<Result> ExecuteDraft(Func<Task<Result<TransactionDraft>>> buildDraft, Guid walletId)
@@ -81,31 +71,74 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
 
     public IAmountUI TotalFunds => Project.TotalFunds;
     public IEnhancedCommand ViewTransaction { get; }
+    public IEnhancedCommand<Result> RecoverAll { get; }
+    public IEnhancedCommand<Result> ReleaseAll { get; }
+    public IEnhancedCommand<Result> ClaimAll { get; }
     public DateTime ExpiryDate => Project.ExpiryDate;
     public TimeSpan PenaltyPeriod => Project.PenaltyPeriod;
-    public IEnumerable<IInvestorProjectItem> Items { get; private set; } = Array.Empty<IInvestorProjectItem>();
-    public IInvestedProject Project { get; private set; } = new InvestedProjectDesign();
+    public IEnumerable<IInvestorProjectItem> Items => state.Items;
+    public IInvestedProject Project => state.Project;
     public IEnhancedCommand Load { get; }
 
-    private IDisposable RefreshWhenAnyCommandExecutes()
+    // private Task<Result<TransactionDraft>> RecoverAllAction()
+    // {
+    //     return ExecuteForWallet(id => investmentAppService.BuildRecoverInvestorFunds(id, projectId, new DomainFeerate(1)));
+    // }
+    //
+    // private Task<Result> ReleaseAllAction()
+    // {
+    //     return ExecuteForWallet(id => investmentAppService.BuildReleaseInvestorFunds(id, projectId, new DomainFeerate(1)));
+    // }
+    //
+    // private Task<Result> ClaimAllAction()
+    // {
+    //     return ExecuteForWallet(id => investmentAppService.BuilodClaimInvestorEndOfProjectFunds(id, projectId, new DomainFeerate(1)));
+    // }
+
+    private Task<Result> ExecuteForWallet(Func<Guid, Task<Result<TransactionDraft>>> buildDraft)
     {
-        return OnRowCommandsExecuted().InvokeCommand(Load);
+        if (state.WalletId is not Guid walletId)
+        {
+            return Task.FromResult(Result.Failure("Wallet not available"));
+        }
+
+        return ExecuteDraft(() => buildDraft(walletId), walletId);
+    }
+    private static RecoveryState CreateRecoveryViewModel(Guid walletId, InvestorProjectRecoveryDto dto)
+    {
+        var project = new InvestedProject(dto);
+        var items = dto.Items
+            .Select(x => (IInvestorProjectItem)new InvestorProjectItem(
+                stage: x.StageIndex + 1,
+                amount: new AmountUI(x.Amount),
+                status: x.Status))
+            .ToList();
+
+        var batchAction = DetermineBatchAction(dto);
+
+        return new RecoveryState(walletId, project, items);
     }
 
-    private IObservable<Unit> OnRowCommandsExecuted()
+    private static BatchActionMode DetermineBatchAction(InvestorProjectRecoveryDto dto)
     {
-        return this.WhenAnyValue(vm => vm.Items)
-            .WhereNotNull()
-            .Select(items =>
-                Observable.Merge(
-                    items.Select(i => i.Recover.Successes().ToSignal()).Merge(),
-                    items.Select(i => i.Release.Successes().ToSignal()).Merge(),
-                    items.Select(i => i.ClaimEndOfProject.Successes().ToSignal()).Merge()
-                )
-            )
-            .Switch();
-    }
+        if (dto.EndOfProject && dto.Items.Any(i => !i.IsSpent))
+        {
+            return BatchActionMode.Claim;
+        }
 
+        if (dto.CanRecover && dto.Items.Any(i => !i.IsSpent))
+        {
+            return BatchActionMode.Recover;
+        }
+
+        if (dto.CanRelease && dto.Items.Any(i => i.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty && !i.IsSpent))
+        {
+            return BatchActionMode.Release;
+        }
+
+        return BatchActionMode.None;
+    }
+    
     public void Dispose()
     {
         disposables.Dispose();
@@ -113,45 +146,16 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
 
     private class InvestorProjectItem : ReactiveObject, IInvestorProjectItem
     {
-        public InvestorProjectItem(int stage, IAmountUI amount, string status, bool canRecover, bool canRelease, bool canClaimEnd, Func<Task<Result>> recoverAction, Func<Task<Result>> releaseAction, Func<Task<Result>> claimAction, INotificationService notificationService)
+        public InvestorProjectItem(int stage, IAmountUI amount, string status)
         {
             Stage = stage;
             Amount = amount;
             Status = status;
-            ShowRecover = canRecover;
-            ShowRelease = canRelease;
-            ShowClaimEndOfProject = canClaimEnd;
-
-            Recover = ReactiveCommand.CreateFromTask(recoverAction, Observable.Return(canRecover)).Enhance();
-            Release = ReactiveCommand.CreateFromTask(releaseAction, Observable.Return(canRelease)).Enhance();
-            ClaimEndOfProject = ReactiveCommand.CreateFromTask(claimAction, Observable.Return(canClaimEnd)).Enhance();
-
-            Recover.HandleErrorsWith(notificationService, "Failed to recover funds");
-            Release.HandleErrorsWith(notificationService, "Failed to release funds");
-            ClaimEndOfProject.HandleErrorsWith(notificationService, "Failed to claim funds");
-
-            Recover.Successes()
-                .SelectMany(_ => Observable.FromAsync(() => notificationService.Show("Recovery transaction published", Maybe<string>.From("Success"))))
-                .Subscribe();
-            Release.Successes()
-                .SelectMany(_ => Observable.FromAsync(() => notificationService.Show("Release transaction published", Maybe<string>.From("Success"))))
-                .Subscribe();
-            ClaimEndOfProject.Successes()
-                .SelectMany(_ => Observable.FromAsync(() => notificationService.Show("Claim transaction published", Maybe<string>.From("Success"))))
-                .Subscribe();
         }
 
         public int Stage { get; }
         public IAmountUI Amount { get; }
         public string Status { get; }
-
-        public IEnhancedCommand<Result> Recover { get; }
-        public IEnhancedCommand<Result> Release { get; }
-        public IEnhancedCommand<Result> ClaimEndOfProject { get; }
-
-        public bool ShowRecover { get; }
-        public bool ShowRelease { get; }
-        public bool ShowClaimEndOfProject { get; }
     }
 
     private class InvestedProject : IInvestedProject
@@ -168,5 +172,18 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
         public DateTime ExpiryDate { get; }
         public TimeSpan PenaltyPeriod { get; }
         public string Name { get; }
+    }
+
+    private enum BatchActionMode
+    {
+        None,
+        Recover,
+        Release,
+        Claim
+    }
+
+    private sealed record RecoveryState(Guid? WalletId, IInvestedProject Project, IReadOnlyList<IInvestorProjectItem> Items)
+    {
+        public static RecoveryState Empty { get; } = new(null, new InvestedProjectDesign(), []);
     }
 }
