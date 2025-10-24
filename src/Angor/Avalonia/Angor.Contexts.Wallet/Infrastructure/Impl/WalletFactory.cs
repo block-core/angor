@@ -52,9 +52,9 @@ public class WalletFactory(
 
         if (!resultingBalance.IsSuccess)
             return Result.Failure<Domain.Wallet>(resultingBalance.Error);
-        
+
         var savedResult = await accountBalanceService.SaveAccountBalanceAsync(walletId.Value, accountBalanceInfo);
-        
+
         return !savedResult.IsSuccess ? Result.Failure<Domain.Wallet>(savedResult.Error) : Result.Success(wallet);
     }
 }

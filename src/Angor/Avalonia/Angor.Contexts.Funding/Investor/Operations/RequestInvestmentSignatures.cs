@@ -37,7 +37,7 @@ public static class RequestInvestmentSignatures
         IPortfolioRepository portfolioRepository,
         IProjectScriptsBuilder projectScriptsBuilder,
         IIndexerService indexerService,
-        IGenericDocumentCollection<WalletAccountBalanceInfo> walletAccountBalanceCollection) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
     {
         public async Task<Result<Guid>> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
         {
@@ -136,11 +136,11 @@ public static class RequestInvestmentSignatures
         private async Task<Result<string>> GetUnfundedReleaseAddress(Guid walletId)
         {
             // Get account info from database
-            var accountBalanceResult = await walletAccountBalanceCollection.FindByIdAsync(walletId.ToString());
-            if (accountBalanceResult.IsFailure || accountBalanceResult.Value is null)
-                return Result.Failure<string>("Account balance information not found in database. Please refresh your wallet first.");
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceAsync(walletId);
+            if (accountBalanceResult.IsFailure)
+                return Result.Failure<string>(accountBalanceResult.Error);
             
-            var accountInfo = accountBalanceResult.Value.AccountBalanceInfo.AccountInfo;
+            var accountInfo = accountBalanceResult.Value.AccountInfo;
 
             var address = accountInfo.GetNextReceiveAddress();
             if (string.IsNullOrEmpty(address))

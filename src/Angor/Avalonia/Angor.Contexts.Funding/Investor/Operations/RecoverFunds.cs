@@ -28,7 +28,7 @@ public static class RecoverFunds
         IPortfolioRepository investmentRepository, INetworkConfiguration networkConfiguration,
         IWalletOperations walletOperations, ISignService signService,
         IEncryptionService decrypter, ISerializer serializer, ITransactionRepository transactionRepository,
-        IGenericDocumentCollection<WalletAccountBalanceInfo> walletAccountBalanceCollection) : IRequestHandler<RecoverFundsRequest, Result<TransactionDraft>>
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<RecoverFundsRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(RecoverFundsRequest request, CancellationToken cancellationToken)
         {
@@ -37,11 +37,11 @@ public static class RecoverFunds
                 return Result.Failure<TransactionDraft>(words.Error);
             
             // Get account info from database
-            var accountBalanceResult = await walletAccountBalanceCollection.FindByIdAsync(request.WalletId.ToString());
-            if (accountBalanceResult.IsFailure || accountBalanceResult.Value is null)
-                return Result.Failure<TransactionDraft>("Account balance information not found in database. Please refresh your wallet first.");
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceAsync(request.WalletId);
+            if (accountBalanceResult.IsFailure)
+                return Result.Failure<TransactionDraft>(accountBalanceResult.Error);
             
-            var accountInfo = accountBalanceResult.Value.AccountBalanceInfo.AccountInfo;
+            var accountInfo = accountBalanceResult.Value.AccountInfo;
             
             var project = await projectRepository.GetAsync(request.ProjectId);
             if (project.IsFailure)

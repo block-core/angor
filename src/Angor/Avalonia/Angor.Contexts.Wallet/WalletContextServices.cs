@@ -1,4 +1,5 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.History;
@@ -39,6 +40,7 @@ public static class WalletContextServices
         services.TryAddSingleton<ISensitiveWalletDataProvider, SensitiveWalletDataProvider>();
         services.AddSingleton<IWalletStore, WalletStore>();
         services.AddSingleton<ITransactionHistory, TransactionHistory>();
+        services.TryAddSingleton<IWalletAccountBalanceService, WalletAccountBalanceService>();
         services.AddHttpClient();
 
         return services;

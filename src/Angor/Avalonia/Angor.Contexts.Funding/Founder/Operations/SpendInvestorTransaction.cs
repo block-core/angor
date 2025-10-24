@@ -31,7 +31,7 @@ public static class SpendInvestorTransaction
         IDerivationOperations derivationOperations,
         ISeedwordsProvider seedwordsProvider,
         ITransactionRepository transactionRepository,
-        IGenericDocumentCollection<WalletAccountBalanceInfo> walletAccountBalanceCollection // Injected here
+        IWalletAccountBalanceService walletAccountBalanceService
     ) : IRequestHandler<SpendInvestorTransactionRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(SpendInvestorTransactionRequest request, CancellationToken cancellationToken)
@@ -121,19 +121,18 @@ public static class SpendInvestorTransaction
         
         private async Task<Result<string>> GetUnfundedReleaseAddress(Guid walletId)
         {
-                var walletaccountBalanceInfoResult = await walletAccountBalanceCollection
-                    .FindByIdAsync(walletId.ToString());
-                if (walletaccountBalanceInfoResult.IsFailure || walletaccountBalanceInfoResult.Value == null)
-                    return Result.Failure<string>("Could not get the wallet account balance info");
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceAsync(walletId);
+            if (accountBalanceResult.IsFailure)
+                return Result.Failure<string>(accountBalanceResult.Error);
 
-                var accountInfo = walletaccountBalanceInfoResult.Value.AccountBalanceInfo.AccountInfo;
-                await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            var accountInfo = accountBalanceResult.Value.AccountInfo;
+            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
-                var nextChangeAddress = accountInfo.GetNextChangeReceiveAddress();
-                
-                return string.IsNullOrEmpty(nextChangeAddress) 
-                    ? Result.Failure<string>("Could not get the next change address") 
-                    : Result.Success(nextChangeAddress);
+            var nextChangeAddress = accountInfo.GetNextChangeReceiveAddress();
+            
+            return string.IsNullOrEmpty(nextChangeAddress) 
+                ? Result.Failure<string>("Could not get the next change address") 
+                : Result.Success(nextChangeAddress);
         }
     }
 }

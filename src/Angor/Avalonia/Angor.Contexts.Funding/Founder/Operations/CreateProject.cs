@@ -33,7 +33,7 @@ internal static class CreateProjectConstants
             IWalletOperations walletOperations,
             IIndexerService indexerService,
             INetworkConfiguration networkConfiguration,
-            IGenericDocumentCollection<WalletAccountBalanceInfo> walletAccountBalanceCollection,
+            IWalletAccountBalanceService walletAccountBalanceService,
             ILogger<CreateProjectHandler> logger // Inject logger
         ) : IRequestHandler<CreateProjectRequest, Result<TransactionDraft>>
         {
@@ -230,28 +230,23 @@ internal static class CreateProjectConstants
             {
                 try
                 {
-                    // Try to get WalletAccountBalanceInfo from DB using walletId
-                    var dbResult = await walletAccountBalanceCollection.FindByIdAsync(walletId.ToString());
+                    // Try to get from service first
+                    var dbResult = await walletAccountBalanceService.GetAccountBalanceAsync(walletId);
 
-                    AccountBalanceInfo accountBalanceInfo;
-                    if (dbResult.IsSuccess && dbResult.Value != null)
+                    if (dbResult.IsSuccess)
                     {
-                        accountBalanceInfo = dbResult.Value.AccountBalanceInfo;
+                        // Refresh the existing balance
+                        var refreshResult = await walletAccountBalanceService.RefreshAccountBalanceAsync(walletId);
+                        return refreshResult;
                     }
-                    else
-                    {
-                        var accountInfo = walletOperations.BuildAccountInfoForWalletWords(words);
-                        await walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
-                        await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+                    
+                    // If not found, create new one
+                    var accountInfo = walletOperations.BuildAccountInfoForWalletWords(words);
+                    
+                    var accountBalanceInfo = new AccountBalanceInfo();
+                    accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, []);
 
-                        accountBalanceInfo = new AccountBalanceInfo();
-                        accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, []);
-
-                        var walletAccountBalanceInfo = new WalletAccountBalanceInfo
-                            { WalletId = walletId.ToString(), AccountBalanceInfo = accountBalanceInfo };
-                        
-                        await walletAccountBalanceCollection.UpsertAsync(x => x.WalletId, walletAccountBalanceInfo);
-                    }
+                    await walletAccountBalanceService.SaveAccountBalanceAsync(walletId, accountBalanceInfo);
 
                     return Result.Success(accountBalanceInfo);
                 }

@@ -25,7 +25,7 @@ public static class ClaimEndOfProject
         IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
         IPortfolioRepository investmentRepository, IIndexerService indexerService, ISeedwordsProvider provider,
         ITransactionRepository transactionRepository,
-        IGenericDocumentCollection<WalletAccountBalanceInfo> walletAccountBalanceCollection) : IRequestHandler<ClaimEndOfProjectRequest, Result<TransactionDraft>>
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<ClaimEndOfProjectRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(ClaimEndOfProjectRequest request, CancellationToken cancellationToken)
         {
@@ -34,11 +34,11 @@ public static class ClaimEndOfProject
                 return Result.Failure<TransactionDraft>(words.Error);
             
             // Get account info from database
-            var accountBalanceResult = await walletAccountBalanceCollection.FindByIdAsync(request.WalletId.ToString());
-            if (accountBalanceResult.IsFailure || accountBalanceResult.Value is null)
-                return Result.Failure<TransactionDraft>("Account balance information not found in database. Please refresh your wallet first.");
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceAsync(request.WalletId);
+            if (accountBalanceResult.IsFailure)
+                return Result.Failure<TransactionDraft>(accountBalanceResult.Error);
             
-            var accountInfo = accountBalanceResult.Value.AccountBalanceInfo.AccountInfo;
+            var accountInfo = accountBalanceResult.Value.AccountInfo;
 
             var investments = await investmentRepository.GetByWalletId(request.WalletId);
             if (investments.IsFailure)

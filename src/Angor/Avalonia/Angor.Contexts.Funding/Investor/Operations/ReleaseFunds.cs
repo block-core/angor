@@ -29,7 +29,7 @@ public static class ReleaseFunds
         IWalletOperations walletOperations, ISignService signService,
         IEncryptionService decrypter, ISerializer serializer,
         ITransactionRepository transactionRepository,
-        IGenericDocumentCollection<WalletAccountBalanceInfo> walletAccountBalanceCollection) : IRequestHandler<ReleaseFundsRequest, Result<TransactionDraft>>
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<ReleaseFundsRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(ReleaseFundsRequest request, CancellationToken cancellationToken)
         {
@@ -50,11 +50,11 @@ public static class ReleaseFunds
                 return Result.Failure<TransactionDraft>(words.Error);
             
             // Get account info from database
-            var accountBalanceResult = await walletAccountBalanceCollection.FindByIdAsync(request.WalletId.ToString());
-            if (accountBalanceResult.IsFailure || accountBalanceResult.Value is null)
-                return Result.Failure<TransactionDraft>("Account balance information not found in database. Please refresh your wallet first.");
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceAsync(request.WalletId);
+            if (accountBalanceResult.IsFailure)
+                return Result.Failure<TransactionDraft>(accountBalanceResult.Error);
             
-            var accountInfo = accountBalanceResult.Value.AccountBalanceInfo.AccountInfo;
+            var accountInfo = accountBalanceResult.Value.AccountInfo;
 
             var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey);
 

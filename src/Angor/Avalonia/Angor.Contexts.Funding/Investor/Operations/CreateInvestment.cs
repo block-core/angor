@@ -25,7 +25,7 @@ public static class CreateInvestment
         ISeedwordsProvider seedwordsProvider,
         IWalletOperations walletOperations,
         IDerivationOperations derivationOperations,
-        IGenericDocumentCollection<WalletAccountBalanceInfo> walletAccountBalanceCollection) : IRequestHandler<CreateInvestmentTransactionRequest, Result<InvestmentDraft>>
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<CreateInvestmentTransactionRequest, Result<InvestmentDraft>>
     {
         public async Task<Result<InvestmentDraft>> Handle(CreateInvestmentTransactionRequest transactionRequest, CancellationToken cancellationToken)
         {
@@ -88,11 +88,11 @@ public static class CreateInvestment
             long feerate)
         {
             // Get account info from database
-            var accountBalanceResult = await walletAccountBalanceCollection.FindByIdAsync(walletId.ToString());
-            if (accountBalanceResult.IsFailure || accountBalanceResult.Value is null)
-                return Result.Failure<TransactionInfo>("Account balance information not found in database. Please refresh your wallet first.");
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceAsync(walletId);
+            if (accountBalanceResult.IsFailure)
+                return Result.Failure<TransactionInfo>(accountBalanceResult.Error);
             
-            var accountInfo = accountBalanceResult.Value.AccountBalanceInfo.AccountInfo;
+            var accountInfo = accountBalanceResult.Value.AccountInfo;
 
             var changeAddressResult = Result.Try(() => accountInfo.GetNextChangeReceiveAddress())
                 .Ensure(s => !string.IsNullOrEmpty(s), "Change address cannot be empty");
