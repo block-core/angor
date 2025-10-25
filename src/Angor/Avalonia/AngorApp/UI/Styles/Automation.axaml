@@ -1,57 +1,47 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:shell="clr-namespace:Zafiro.Avalonia.Controls.Shell;assembly=Zafiro.Avalonia">
+        xmlns:sections="clr-namespace:Zafiro.UI.Navigation.Sections;assembly=Zafiro.UI">
     <Style Selector=":is(Control)">
         <Setter Property="AutomationProperties.AutomationId"
                 Value="{Binding Name, RelativeSource={RelativeSource Self}}" />
     </Style>
 
     <Style Selector=":is(Button)">
-        <Setter Property="AutomationProperties.Name"
-                Value="{Binding Content, RelativeSource={RelativeSource Self}}" />
-    </Style>
-
-    <Style Selector=":is(ToggleButton)">
-        <Setter Property="AutomationProperties.Name"
-                Value="{Binding Content, RelativeSource={RelativeSource Self}}" />
+        <Setter Property="AutomationProperties.Name" Value="{Binding $self.Content}" />
+        <Setter Property="AutomationProperties.AutomationId" Value="{Binding $self.Content, Converter={x:Static ZafiroStringConverters.AsString}}" />
     </Style>
 
     <Style Selector=":is(TextBox)">
-        <Setter Property="AutomationProperties.HelpText"
-                Value="{Binding Watermark, RelativeSource={RelativeSource Self}}" />
+        <Setter Property="AutomationProperties.AutomationId" Value="{Binding $self.Watermark}" />
     </Style>
 
-    <Style Selector="shell|ShellControl">
+    <Style Selector="ShellView">
         <Setter Property="AutomationProperties.AutomationId" Value="ShellControl" />
         <Setter Property="AutomationProperties.Name" Value="Shell" />
     </Style>
 
-    <Style Selector="shell|ShellControl ListBox">
+    <Style Selector="ShellView ListBox">
         <Setter Property="AutomationProperties.AutomationId" Value="ShellSections" />
-        <Setter Property="AutomationProperties.Name" Value="Secciones del Shell" />
-        <Setter Property="AutomationProperties.HelpText" Value="Lista de secciones disponibles en el Shell" />
+        <Setter Property="AutomationProperties.Name" Value="Shell Sections" />
+        <Setter Property="AutomationProperties.HelpText" Value="Avaliable sections in the application" />
     </Style>
 
-    <Style Selector="shell|ShellControl ListBoxItem">
+    <Style Selector="ShellView ListBoxItem">
         <Setter Property="AutomationProperties.AutomationId">
             <Setter.Value>
-                <Binding Path="Name" StringFormat="ShellSection_{0}" />
+                <Binding Path="$self.((sections:IContentSection)DataContext).Name" StringFormat="Section_{0}" />
             </Setter.Value>
         </Setter>
         <Setter Property="AutomationProperties.Name">
             <Setter.Value>
-                <PriorityBinding>
-                    <Binding Path="FriendlyName" />
-                    <Binding Path="Name" />
-                </PriorityBinding>
+                <Binding Path="$self.((sections:IContentSection)DataContext).FriendlyName" StringFormat="Section_{0}" />
             </Setter.Value>
         </Setter>
-        <Setter Property="AutomationProperties.HelpText">
-            <Setter.Value>
-                <Binding Path="FriendlyName" StringFormat="Sección {0}" />
-            </Setter.Value>
-        </Setter>
-        <Setter Property="AutomationProperties.ItemStatus" Value="{Binding IsPrimary}" />
+        <Setter Property="AutomationProperties.ItemStatus" Value="{Binding $self.((sections:IContentSection)DataContext).IsPrimary}" />
         <Setter Property="AutomationProperties.ItemType" Value="ShellSection" />
+    </Style>
+    
+    <Style Selector="ListBoxItem">
+        <Setter Property="AutomationProperties.AutomationId" Value="{Binding $self.Content, Converter={x:Static ZafiroStringConverters.AsString}}" />
     </Style>
 </Styles>
