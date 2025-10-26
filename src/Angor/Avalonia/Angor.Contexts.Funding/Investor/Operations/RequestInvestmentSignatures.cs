@@ -1,11 +1,14 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
-using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.TransactionDrafts;
+using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
+using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Services;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
@@ -25,15 +28,17 @@ public static class RequestInvestmentSignatures
     }
     
     public class RequestFounderSignaturesHandler(
-        IProjectRepository projectRepository,
+        IProjectService projectService,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations,
         IEncryptionService encryptionService,
         INetworkConfiguration networkConfiguration,
         ISerializer serializer,
-        IWalletOperations walletOperations,
         ISignService signService,
-        IPortfolioRepository portfolioRepository) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
+        IPortfolioService portfolioService,
+        IProjectScriptsBuilder projectScriptsBuilder,
+        IIndexerService indexerService,
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<RequestFounderSignaturesRequest, Result<Guid>>
     {
         public async Task<Result<Guid>> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
         {
@@ -43,13 +48,20 @@ public static class RequestInvestmentSignatures
             var transactionId = strippedInvestmentTransaction.GetHash().ToString();
             strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = WitScript.Empty);
 
-            var projectResult = await projectRepository.GetAsync(request.ProjectId);
+            var projectResult = await projectService.GetAsync(request.ProjectId);
 
             if (projectResult.IsFailure)
             {
                 return Result.Failure<Guid>(projectResult.Error);
             }
 
+            var (investorKey,_) = projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(strippedInvestmentTransaction.Outputs[1].ScriptPubKey);
+            
+            var existingInvestment = await Result.Try(() => indexerService.GetInvestmentAsync(request.ProjectId.Value,investorKey));
+
+            if (existingInvestment is { IsSuccess: true, Value: not null })
+                return Result.Failure<Guid>("An investment with the same key already exists on the blockchain.");
+            
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId);
 
             if (sensitiveDataResult.IsFailure)
@@ -60,14 +72,14 @@ public static class RequestInvestmentSignatures
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
             var project = projectResult.Value;
 
-            var sendSignatureResult = await SendSignatureRequest(walletWords, project, strippedInvestmentTransaction.ToHex());
+            var sendSignatureResult = await SendSignatureRequest(request.WalletId, walletWords, project, strippedInvestmentTransaction.ToHex());
 
             if (sendSignatureResult.IsFailure)
             {
                 return Result.Failure<Guid>(sendSignatureResult.Error);
             }
             
-            await portfolioRepository.Add(request.WalletId, new InvestmentRecord
+            await portfolioService.Add(request.WalletId, new InvestmentRecord
             {
                 InvestmentTransactionHash = transactionId,
                 InvestmentTransactionHex = request.Draft.SignedTxHex,
@@ -81,7 +93,7 @@ public static class RequestInvestmentSignatures
             return Result.Success(Guid.Empty);
         }
 
-        private async Task<Result<(DateTime createdTime,string eventId)>> SendSignatureRequest(WalletWords walletWords, Project project, string signedTransactionHex)
+        private async Task<Result<(DateTime createdTime,string eventId)>> SendSignatureRequest(Guid walletId, WalletWords walletWords, Project project, string signedTransactionHex)
         {
             try
             {
@@ -89,7 +101,7 @@ public static class RequestInvestmentSignatures
 
                 var investorNostrPrivateKey = await derivationOperations.DeriveProjectNostrPrivateKeyAsync(walletWords, project.FounderKey);
                 var investorNostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
-                var releaseAddressResult = await GetUnfundedReleaseAddress(walletWords);
+                var releaseAddressResult = await GetUnfundedReleaseAddress(walletId);
 
                 if (releaseAddressResult.IsFailure)
                 {
@@ -122,15 +134,20 @@ public static class RequestInvestmentSignatures
             }
         }
 
-        private Task<Result<string>> GetUnfundedReleaseAddress(WalletWords wallet)
+        private async Task<Result<string>> GetUnfundedReleaseAddress(Guid walletId)
         {
-            return Result.Try(async () =>
-            {
-                var accountInfo = walletOperations.BuildAccountInfoForWalletWords(wallet);
-                await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            // Get account info from database
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
+            if (accountBalanceResult.IsFailure)
+                return Result.Failure<string>(accountBalanceResult.Error);
+            
+            var accountInfo = accountBalanceResult.Value.AccountInfo;
 
-                return accountInfo.GetNextReceiveAddress();
-            }).EnsureNotNull("Could not get the unfunded release address");
+            var address = accountInfo.GetNextReceiveAddress();
+            if (string.IsNullOrEmpty(address))
+                return Result.Failure<string>("Could not get the unfunded release address");
+
+            return Result.Success(address);
         }
     }
 }

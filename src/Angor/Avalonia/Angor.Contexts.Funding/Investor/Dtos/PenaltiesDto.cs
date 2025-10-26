@@ -8,4 +8,5 @@ public record PenaltiesDto()
     public long TotalAmountSats { get; set; }
     public bool IsExpired { get; set; }
     public int DaysLeftForPenalty { get; set; }
+    public string? ProjectName { get; set; }
 }

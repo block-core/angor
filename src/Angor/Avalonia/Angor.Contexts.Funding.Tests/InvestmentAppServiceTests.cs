@@ -1,3 +1,4 @@
+using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Shared;

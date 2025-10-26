@@ -1,4 +1,5 @@
 using Angor.Contexts.Funding.Founder;
+using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Founder.Operations;
 using ReactiveUI.SourceGenerators;
 

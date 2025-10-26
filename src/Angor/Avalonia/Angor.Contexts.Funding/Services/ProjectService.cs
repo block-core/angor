@@ -1,6 +1,5 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
@@ -11,12 +10,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Zafiro.CSharpFunctionalExtensions;
 using Stage = Angor.Contexts.Funding.Projects.Domain.Stage;
 
-namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+namespace Angor.Contexts.Funding.Services;
 
-public class ProjectRepository(
+[Obsolete("Use DocumentProjectRepository instead")]
+public class ProjectService(
     IRelayService relayService,
     IIndexerService indexerService,
-    [FromKeyedServices("memory")] IStore store) : IProjectRepository
+    [FromKeyedServices("memory")] IStore store) : IProjectService
 {
     private Task<Result<Maybe<Project>>> GetSingle(ProjectId id)
     {

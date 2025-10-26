@@ -1,8 +1,11 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.TransactionDrafts;
+using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -18,18 +21,19 @@ public static class CreateInvestment
         : IRequest<Result<InvestmentDraft>> { }
     
     public class CreateInvestmentTransactionHandler(
-        IProjectRepository projectRepository,
+        IProjectService projectService,
         IInvestorTransactionActions investorTransactionActions,
         ISeedwordsProvider seedwordsProvider,
         IWalletOperations walletOperations,
-        IDerivationOperations derivationOperations) : IRequestHandler<CreateInvestmentTransactionRequest, Result<InvestmentDraft>>
+        IDerivationOperations derivationOperations,
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<CreateInvestmentTransactionRequest, Result<InvestmentDraft>>
     {
         public async Task<Result<InvestmentDraft>> Handle(CreateInvestmentTransactionRequest transactionRequest, CancellationToken cancellationToken)
         {
             try
             {
                 // Get the project and investor key
-                var projectResult = await projectRepository.GetAsync(transactionRequest.ProjectId);
+                var projectResult = await projectService.GetAsync(transactionRequest.ProjectId);
                 if (projectResult.IsFailure)
                 {
                     return Result.Failure<InvestmentDraft>(projectResult.Error);
@@ -54,7 +58,7 @@ public static class CreateInvestment
                 if (transactionResult.IsFailure)
                     return Result.Failure<InvestmentDraft>(transactionResult.Error);
 
-                var signedTxResult = await SignTransaction(walletWords, transactionResult.Value, transactionRequest.FeeRate.SatsPerKilobyte);
+                var signedTxResult = await SignTransaction(transactionRequest.WalletId, walletWords, transactionResult.Value, transactionRequest.FeeRate.SatsPerKilobyte);
                 if (signedTxResult.IsFailure)
                 {
                     return Result.Failure<InvestmentDraft>(signedTxResult.Error);
@@ -81,11 +85,15 @@ public static class CreateInvestment
             }
         }
 
-        private async Task<Result<TransactionInfo>> SignTransaction(WalletWords walletWords, Transaction transaction,
+        private async Task<Result<TransactionInfo>> SignTransaction(Guid walletId, WalletWords walletWords, Transaction transaction,
             long feerate)
         {
-            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
-            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            // Get account info from database
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
+            if (accountBalanceResult.IsFailure)
+                return Result.Failure<TransactionInfo>(accountBalanceResult.Error);
+            
+            var accountInfo = accountBalanceResult.Value.AccountInfo;
 
             var changeAddressResult = Result.Try(() => accountInfo.GetNextChangeReceiveAddress())
                 .Ensure(s => !string.IsNullOrEmpty(s), "Change address cannot be empty");

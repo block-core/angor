@@ -1,4 +1,4 @@
-namespace AngorApp.UI.Controls.Common;
+namespace Angor.UI.Model.Implementation.Common;
 
 public class LongTextViewModel
 {

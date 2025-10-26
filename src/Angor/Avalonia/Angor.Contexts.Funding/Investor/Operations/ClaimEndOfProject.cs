@@ -1,12 +1,14 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
+using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
-using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
@@ -18,9 +20,11 @@ public static class ClaimEndOfProject
 {
     public record ClaimEndOfProjectRequest(Guid WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<TransactionDraft>>;
     
-    public class ClaimEndOfProjectHandler(IWalletOperations walletOperations, IDerivationOperations derivationOperations,
-        IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
-        IPortfolioRepository investmentRepository, IIndexerService indexerService, ISeedwordsProvider provider) : IRequestHandler<ClaimEndOfProjectRequest, Result<TransactionDraft>>
+    public class ClaimEndOfProjectHandler(
+        IDerivationOperations derivationOperations, IProjectService projectService, 
+        IInvestorTransactionActions investorTransactionActions, IPortfolioService investmentService, 
+        ISeedwordsProvider provider, ITransactionService transactionService,
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<ClaimEndOfProjectRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(ClaimEndOfProjectRequest request, CancellationToken cancellationToken)
         {
@@ -28,10 +32,14 @@ public static class ClaimEndOfProject
             if (words.IsFailure)
                 return Result.Failure<TransactionDraft>(words.Error);
             
-            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(words.Value.ToWalletWords());
-            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            // Get account info from database
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId);
+            if (accountBalanceResult.IsFailure)
+                return Result.Failure<TransactionDraft>(accountBalanceResult.Error);
+            
+            var accountInfo = accountBalanceResult.Value.AccountInfo;
 
-            var investments = await investmentRepository.GetByWalletId(request.WalletId);
+            var investments = await investmentService.GetByWalletId(request.WalletId);
             if (investments.IsFailure)
                 return Result.Failure<TransactionDraft>(investments.Error);
             
@@ -41,13 +49,12 @@ public static class ClaimEndOfProject
 
             if (investment.InvestmentTransactionHex is null)
             {
-                var lookupResult =  await Result.Try(() => indexerService.GetTransactionHexByIdAsync(investment.InvestmentTransactionHash));
-                if (lookupResult.IsFailure)
-                    return Result.Failure<TransactionDraft>("Could not find investment transaction in indexer: " + lookupResult.Error);
-                investment.InvestmentTransactionHex = lookupResult.Value;
+                investment.InvestmentTransactionHex =  await transactionService.GetTransactionHexByIdAsync(investment.InvestmentTransactionHash);
+                if (investment.InvestmentTransactionHex is null)
+                    return Result.Failure<TransactionDraft>("Could not find investment transaction in indexer: " + investment.InvestmentTransactionHash);
             }
             
-            var project = await projectRepository.GetAsync(request.ProjectId);
+            var project = await projectService.GetAsync(request.ProjectId);
             if (project.IsFailure)
                 return Result.Failure<TransactionDraft>(project.Error);
             
@@ -57,7 +64,7 @@ public static class ClaimEndOfProject
             if (changeAddress == null)
                 return Result.Failure<TransactionDraft>("Could not get a change address");
             
-            var transactionInfo = await indexerService.GetTransactionInfoByIdAsync(investment.InvestmentTransactionHash);
+            var transactionInfo = await transactionService.GetTransactionInfoByIdAsync(investment.InvestmentTransactionHash);
 
             if (transactionInfo is null)
                 return Result.Failure<TransactionDraft>("Could not find transaction info");
@@ -83,4 +90,3 @@ public static class ClaimEndOfProject
         }
     }
 }
-

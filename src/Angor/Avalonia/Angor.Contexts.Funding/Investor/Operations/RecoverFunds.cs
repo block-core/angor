@@ -1,9 +1,11 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Shared.TransactionDrafts;
+using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -20,13 +22,13 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 public static class RecoverFunds
 {
     public record RecoverFundsRequest(Guid WalletId, ProjectId ProjectId,DomainFeerate SelectedFeeRate) : IRequest<Result<TransactionDraft>>;
-
-    // TODO: Placeholder handler
+    
     public class RecoverFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
-        IProjectRepository projectRepository, IInvestorTransactionActions investorTransactionActions,
-        IPortfolioRepository investmentRepository, INetworkConfiguration networkConfiguration,
-        IWalletOperations walletOperations, IIndexerService indexerService, ISignService signService,
-        IEncryptionService decrypter, ISerializer serializer) : IRequestHandler<RecoverFundsRequest, Result<TransactionDraft>>
+        IProjectService projectService, IInvestorTransactionActions investorTransactionActions,
+        IPortfolioService investmentService, INetworkConfiguration networkConfiguration,
+        IWalletOperations walletOperations, ISignService signService,
+        IEncryptionService decrypter, ISerializer serializer, ITransactionService transactionService,
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<RecoverFundsRequest, Result<TransactionDraft>>
     {
         public async Task<Result<TransactionDraft>> Handle(RecoverFundsRequest request, CancellationToken cancellationToken)
         {
@@ -34,13 +36,17 @@ public static class RecoverFunds
             if (words.IsFailure)
                 return Result.Failure<TransactionDraft>(words.Error);
             
-            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(words.Value.ToWalletWords());
-            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            // Get account info from database
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId);
+            if (accountBalanceResult.IsFailure)
+                return Result.Failure<TransactionDraft>(accountBalanceResult.Error);
             
-            var project = await projectRepository.GetAsync(request.ProjectId);
+            var accountInfo = accountBalanceResult.Value.AccountInfo;
+            
+            var project = await projectService.GetAsync(request.ProjectId);
             if (project.IsFailure)
                 return Result.Failure<TransactionDraft>(project.Error);
-            var investments = await investmentRepository.GetByWalletId(request.WalletId);
+            var investments = await investmentService.GetByWalletId(request.WalletId);
             if (investments.IsFailure)
                 return Result.Failure<TransactionDraft>(investments.Error);
             
@@ -64,7 +70,7 @@ public static class RecoverFunds
             var unsignedRecoveryTransaction = investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project.Value.ToProjectInfo(), investmentTransaction, signatureLookup.Value, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
             
-            var transactionInfo = await indexerService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
+            var transactionInfo = await transactionService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
 
             if (transactionInfo is null)
                 return Result.Failure<TransactionDraft>("Could not find transaction info");
@@ -136,4 +142,3 @@ public static class RecoverFunds
         }
     }
 }
-

@@ -5,7 +5,7 @@ using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 
-public interface IProjectInvestmentsRepository
+public interface IProjectInvestmentsService
 {
     Task<Result<IEnumerable<StageData>>> ScanFullInvestments(string projectId);
 

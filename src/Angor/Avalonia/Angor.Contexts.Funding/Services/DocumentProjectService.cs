@@ -8,10 +8,10 @@ using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using Stage = Angor.Contexts.Funding.Projects.Domain.Stage;
 
-namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+namespace Angor.Contexts.Funding.Services;
 
-public class DocumentProjectRepository(IGenericDocumentCollection<Project> collection, IRelayService relayService,
-    IIndexerService indexerService) : IProjectRepository
+public class DocumentProjectService(IGenericDocumentCollection<Project> collection, IRelayService relayService,
+    IIndexerService indexerService) : IProjectService
 {
 
     public Task<Result<Project>> GetAsync(ProjectId id)
@@ -29,7 +29,7 @@ public class DocumentProjectRepository(IGenericDocumentCollection<Project> colle
         {
             var stringIds = ids.Select(id => id.Value).ToArray();
 
-            var projectResult = await collection.FindAsync(p => stringIds.Any(id => id == p.Id.Value));
+            var projectResult = await collection.FindByIdsAsync(stringIds);
             
             var localLookup = projectResult.IsSuccess && projectResult.Value.Any()//check the results from the local database
                 ? projectResult.Value.Select(item => item).ToList() : [];
@@ -100,7 +100,7 @@ public class DocumentProjectRepository(IGenericDocumentCollection<Project> colle
             if (!response.Any())
                 return Result.Failure<IEnumerable<Project>>("No projects found");
 
-            var insertResult = await collection.InsertAsync(response.ToArray()); //TODO log the result?
+            var insertResult = await collection.InsertAsync(project => project.Id.Value ,response.ToArray()); //TODO log the result?
 
             return Result.Success(response.Concat(localLookup));
         }

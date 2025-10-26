@@ -20,6 +20,7 @@ internal interface ISettingsSectionViewModel : IDisposable
     ReactiveCommand<Unit, Unit> AddIndexer { get; }
     ReactiveCommand<Unit, Unit> AddRelay { get; }
     ReactiveCommand<Unit, Unit> DeleteWallet { get; }
+    bool IsBitcoinPreferred { get; set; }
 }
 
 internal class SettingsSectionViewModelDesign : ISettingsSectionViewModel
@@ -52,5 +53,6 @@ internal class SettingsSectionViewModelDesign : ISettingsSectionViewModel
     public ReactiveCommand<Unit, Unit> AddIndexer { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> AddRelay { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> DeleteWallet { get; } = ReactiveCommand.Create(() => { });
+    public bool IsBitcoinPreferred { get; set; } = true;
     public void Dispose() { }
 }

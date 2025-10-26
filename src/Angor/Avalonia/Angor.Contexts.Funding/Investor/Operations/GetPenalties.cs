@@ -4,6 +4,8 @@ using System.Reactive.Threading.Tasks;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Services;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
@@ -21,11 +23,11 @@ public class GetPenalties
     public record GetPenaltiesRequest(Guid WalletId) : IRequest<Result<IEnumerable<PenaltiesDto>>>;
 
     public class GetPenaltiesHandler(
-        IPortfolioRepository investmentRepository,
+        IPortfolioService investmentService,
         IIndexerService indexerService,
-        IInvestorTransactionActions investorTransactionActions,
-        INetworkConfiguration networkConfiguration,
-        IRelayService relayService)
+        IRelayService relayService,
+        ITransactionService transactionService,
+        IProjectInvestmentsService investmentsService)
         : IRequestHandler<GetPenaltiesRequest, Result<IEnumerable<PenaltiesDto>>>
     {
 
@@ -49,6 +51,7 @@ public class GetPenalties
                 TotalAmountSats = p.TotalAmountSats,
                 IsExpired = p.IsExpired,
                 DaysLeftForPenalty = p.DaysLeftForPenalty,
+                ProjectName = "TODO" // TODO: Populate project name for the UI
                 
                 //TODO do we want to send the ids so the user can view on explorers?
                 // TransactionId = p.TransactionId,
@@ -61,7 +64,7 @@ public class GetPenalties
 
         public async Task<Result<IEnumerable<LookupInvestment>>> FetchInvestedProjects(Guid walletId)
         {
-            var investments = await investmentRepository.GetByWalletId(walletId);
+            var investments = await investmentService.GetByWalletId(walletId);
 
             if (investments.IsFailure)
                 return Result.Failure<IEnumerable<LookupInvestment>>(investments.Error);
@@ -106,7 +109,16 @@ public class GetPenalties
                     return list; // Return the updated list even if ProjectInfos times out
                 })
                 .SelectMany(x => x) // Flatten the list of LookupInvestment
-                .Bind(ScanInvestmentSpends)
+                .Bind(x => investmentsService.ScanInvestmentSpends(x.ProjectInfo,x.TransactionId)
+                    .Map(response =>
+                    {
+                        x.EndOfProjectTransactionId = response.EndOfProjectTransactionId;
+                        x.RecoveryTransactionId = response.RecoveryTransactionId;
+                        x.AmountInRecovery = response.AmountInRecovery;
+                        x.RecoveryReleaseTransactionId = response.RecoveryReleaseTransactionId;
+                        x.UnfundedReleaseTransactionId = response.UnfundedReleaseTransactionId;
+                        return x;
+                    }))
                 .Where(x => x.IsSuccess && x.Value.RecoveryTransactionId != null) // Filter out those without recovery transaction
                 .Select(x => x.Value)
                 .ToList()
@@ -138,7 +150,7 @@ public class GetPenalties
             {
                 foreach (var penaltyProject in penaltyProjects)
                 {
-                    var recoveryTransaction = await indexerService.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
+                    var recoveryTransaction = await transactionService.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
 
                     var totalsats = recoveryTransaction.Outputs
                         .Where(s => Script.FromHex(s.ScriptPubKey).IsScriptType(ScriptType.P2WSH)).Sum(s => s.Balance);
@@ -164,86 +176,6 @@ public class GetPenalties
             }
 
             return Result.Success("");
-        }
-
-        public async Task<Result<LookupInvestment>> ScanInvestmentSpends(LookupInvestment investorProject)
-        {
-            var trxInfo = await indexerService.GetTransactionInfoByIdAsync(investorProject.TransactionId);
-
-            if (trxInfo == null)
-                return investorProject;
-
-            var trxHex = await indexerService.GetTransactionHexByIdAsync(investorProject.TransactionId);
-            var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(trxHex);
-
-            for (int stageIndex = 0; stageIndex < investorProject.ProjectInfo.Stages.Count; stageIndex++)
-            {
-                var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
-
-                if (!string.IsNullOrEmpty(output.SpentInTransaction))
-                {
-                    var spentInfo = await indexerService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
-
-                    if (spentInfo == null)
-                        continue;
-
-                    var spentInput = spentInfo.Inputs.FirstOrDefault(input =>
-                        (input.InputTransactionId == investorProject.TransactionId) &&
-                        (input.InputIndex == output.Index));
-
-                    if (spentInput != null)
-                    {
-                        var scriptType = investorTransactionActions.DiscoverUsedScript(investorProject.ProjectInfo,
-                            investmentTransaction, stageIndex, spentInput.WitScript);
-
-                        switch (scriptType.ScriptType)
-                        {
-                            case ProjectScriptTypeEnum.Founder:
-                            {
-                                // check the next stage
-                                continue;
-                            }
-
-                            case ProjectScriptTypeEnum.EndOfProject:
-                            {
-                                investorProject.EndOfProjectTransactionId = output.SpentInTransaction;
-                                return investorProject;
-                            }
-
-                            case ProjectScriptTypeEnum.InvestorWithPenalty:
-                            {
-                                investorProject.RecoveryTransactionId = output.SpentInTransaction;
-                                var totalsats = trxInfo.Outputs.SkipLast(1).Sum(s => s.Balance);
-                                investorProject.AmountInRecovery = totalsats;
-
-                                var spentRecoveryInfo =
-                                    await indexerService.GetTransactionInfoByIdAsync(investorProject
-                                        .RecoveryTransactionId);
-
-                                if (spentRecoveryInfo == null) 
-                                    return investorProject;
-                                
-                                if (spentRecoveryInfo.Outputs.SkipLast(1)
-                                    .Any(_ => !string.IsNullOrEmpty(_.SpentInTransaction)))
-                                {
-                                    investorProject.RecoveryReleaseTransactionId = spentRecoveryInfo.Outputs
-                                        .First(_ => !string.IsNullOrEmpty(_.SpentInTransaction)).SpentInTransaction;
-                                }
-
-                                return investorProject;
-                            }
-
-                            case ProjectScriptTypeEnum.InvestorNoPenalty:
-                            {
-                                investorProject.UnfundedReleaseTransactionId = output.SpentInTransaction;
-                                return investorProject;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return investorProject;
         }
     }
 }
