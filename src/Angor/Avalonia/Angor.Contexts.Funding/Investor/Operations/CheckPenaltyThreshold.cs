@@ -1,5 +1,6 @@
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared.Protocol;
 using CSharpFunctionalExtensions;
@@ -12,7 +13,7 @@ public static class CheckPenaltyThreshold
     public record CheckPenaltyThresholdRequest(ProjectId ProjectId, Amount Amount) : IRequest<Result<bool>>;
 
     public class CheckPenaltyThresholdHandler(
-        IProjectRepository projectRepository,
+        IProjectService projectService,
         IInvestorTransactionActions investorTransactionActions) 
         : IRequestHandler<CheckPenaltyThresholdRequest, Result<bool>>
     {
@@ -21,7 +22,7 @@ public static class CheckPenaltyThreshold
             try
             {
                 // Get the project to access its info
-                var projectResult = await projectRepository.GetAsync(request.ProjectId);
+                var projectResult = await projectService.GetAsync(request.ProjectId);
                 if (projectResult.IsFailure)
                 {
                     return Result.Failure<bool>(projectResult.Error);

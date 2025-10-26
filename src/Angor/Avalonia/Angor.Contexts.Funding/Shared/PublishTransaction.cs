@@ -12,7 +12,7 @@ public static class PublishTransaction
     public record PublishTransactionRequest(Guid? WalletId, ProjectId? ProjectId, TransactionDraft TransactionDraft) : IRequest<Result<string>>;
     
     //TODO refresh the account info after publishing the transaction after the merge of penalty threshold is in
-    public class Handler(IIndexerService indexerService, IPortfolioRepository portfolioRepository) : IRequestHandler<PublishTransactionRequest, Result<string>>
+    public class Handler(IIndexerService indexerService, IPortfolioService portfolioService) : IRequestHandler<PublishTransactionRequest, Result<string>>
     {
         public async Task<Result<string>> Handle(PublishTransactionRequest request, CancellationToken cancellationToken)
         {
@@ -49,7 +49,7 @@ public static class PublishTransaction
                     RequestEventTime = null
                 };
 
-                var addResult = await portfolioRepository.Add(request.WalletId.Value, investmentRecord);
+                var addResult = await portfolioService.Add(request.WalletId.Value, investmentRecord);
                 
                 // Don't fail the operation if portfolio storage fails since the transaction is already published
                 // Just log/ignore the error
