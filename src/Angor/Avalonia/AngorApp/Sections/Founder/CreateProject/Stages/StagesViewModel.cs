@@ -33,15 +33,15 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
         stagesSource = new SourceCache<ICreateProjectStage, long>(stage => stage.GetHashCode())
             .DisposeWith(disposable);
 
-        var changes = stagesSource.Connect();
+        var childStagesChanges = stagesSource.Connect();
 
-        LastStageDate = changes
+        LastStageDate = childStagesChanges
             .AutoRefresh(stage => stage.ReleaseDate)
             .ToCollection()
             .Select(list => list.Select(s => s.ReleaseDate).Where(d => d.HasValue).DefaultIfEmpty().Max())
             .ReplayLastActive();
 
-        changes
+        childStagesChanges
             .Bind(out var stages)
             .Subscribe()
             .DisposeWith(disposable);
@@ -55,19 +55,19 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
             })
             .Enhance()
             .DisposeWith(disposable);
-
-
-        var totalPercent = stagesSource
-            .Connect()
+        
+        var totalPercent = childStagesChanges
             .AutoRefresh(stage => stage.Percent)
             .ToCollection()
             .Select(collection => collection.Sum(stage => stage.Percent ?? 0));
 
-        var allStagesAreValid = stagesSource.Connect()
-            .FilterOnObservable(stage => stage.IsValid().Not())
-            .Count().Select(i => i == 0);
+        var childrenAreValid =
+            childStagesChanges
+                .FilterOnObservable(s => s.IsValid().StartWith(false).Select(v => !v))
+                .IsEmpty()
+                .DistinctUntilChanged();
         
-        this.ValidationRule(allStagesAreValid, b => b, x => "All stages must be valid").DisposeWith(disposable);
+        this.ValidationRule(childrenAreValid, b => b, x => "All stages must be valid").DisposeWith(disposable);
         this.ValidationRule(stagesSource.CountChanged, b => b > 0, _ => "There must be at least one stage").DisposeWith(disposable);
         this.ValidationRule(totalPercent, percent => Math.Abs(percent - 100) < 1, _ => "Stage percentages should sum to 100%").DisposeWith(disposable);
         

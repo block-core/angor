@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
@@ -36,9 +37,9 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
             .Subscribe(date => FundingStructureViewModel.ExpiryDate = date)
             .DisposeWith(disposable);
 
-        this.ValidationRule(StagesViewModel.IsValid, b => b, _ => "Stages are not valid").DisposeWith(disposable);
         this.ValidationRule(FundingStructureViewModel.IsValid, b => b, _ => "Funding structures not valid").DisposeWith(disposable);
         this.ValidationRule(ProfileViewModel.IsValid, b => b, _ => "Profile not valid").DisposeWith(disposable);
+        this.ValidationRule(StagesViewModel.IsValid, b => b, _ => "Stages are not valid").DisposeWith(disposable);
 
         Create = ReactiveCommand.CreateFromTask(() =>
         {
@@ -48,6 +49,11 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
                 .Bind(fr => DoCreateProject(wallet, this.ToDto(), fr))
                 .TapError(() => uiServices.NotificationService.Show("An error occurred while creating the project. Please try again.", "Failed to create project"));
         }, IsValid).Enhance();
+        
+        IsValid.Subscribe(b => Debug.WriteLine("IsValid changed: " + b)).DisposeWith(disposable);
+        StagesViewModel.IsValid.Subscribe(b => Debug.WriteLine("Stages are valid changed: " + b)).DisposeWith(disposable);
+        ProfileViewModel.IsValid.Subscribe(b => Debug.WriteLine("Profile is valid changed: " + b)).DisposeWith(disposable);
+        FundingStructureViewModel.IsValid.Subscribe(b => Debug.WriteLine("FundingStructure is valid changed: " + b)).DisposeWith(disposable);
     }
 
     public IEnhancedCommand<Result<string>> Create { get; }
@@ -65,7 +71,7 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
     public IProfileViewModel ProfileViewModel { get; }
     public IFundingStructureViewModel FundingStructureViewModel { get; }
 
-    public object? Header => new PreviewHeaderViewModel(this);
+    public object Header => new PreviewHeaderViewModel(this);
 
     protected override void Dispose(bool disposing)
     {
