@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
@@ -36,9 +37,9 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
             .Subscribe(date => FundingStructureViewModel.ExpiryDate = date)
             .DisposeWith(disposable);
 
-        this.ValidationRule(StagesViewModel.IsValid, b => b, _ => "Stages are not valid").DisposeWith(disposable);
         this.ValidationRule(FundingStructureViewModel.IsValid, b => b, _ => "Funding structures not valid").DisposeWith(disposable);
         this.ValidationRule(ProfileViewModel.IsValid, b => b, _ => "Profile not valid").DisposeWith(disposable);
+        this.ValidationRule(StagesViewModel.IsValid, b => b, _ => "Stages are not valid").DisposeWith(disposable);
 
         Create = ReactiveCommand.CreateFromTask(() =>
         {
@@ -65,7 +66,7 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
     public IProfileViewModel ProfileViewModel { get; }
     public IFundingStructureViewModel FundingStructureViewModel { get; }
 
-    public object? Header => new PreviewHeaderViewModel(this);
+    public object Header => new PreviewHeaderViewModel(this);
 
     protected override void Dispose(bool disposing)
     {
