@@ -49,11 +49,6 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
                 .Bind(fr => DoCreateProject(wallet, this.ToDto(), fr))
                 .TapError(() => uiServices.NotificationService.Show("An error occurred while creating the project. Please try again.", "Failed to create project"));
         }, IsValid).Enhance();
-        
-        IsValid.Subscribe(b => Debug.WriteLine("IsValid changed: " + b)).DisposeWith(disposable);
-        StagesViewModel.IsValid.Subscribe(b => Debug.WriteLine("Stages are valid changed: " + b)).DisposeWith(disposable);
-        ProfileViewModel.IsValid.Subscribe(b => Debug.WriteLine("Profile is valid changed: " + b)).DisposeWith(disposable);
-        FundingStructureViewModel.IsValid.Subscribe(b => Debug.WriteLine("FundingStructure is valid changed: " + b)).DisposeWith(disposable);
     }
 
     public IEnhancedCommand<Result<string>> Create { get; }
