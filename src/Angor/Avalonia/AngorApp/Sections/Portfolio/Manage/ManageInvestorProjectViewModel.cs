@@ -3,8 +3,13 @@ using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Shared;
+using Angor.Contexts.Funding.Shared.TransactionDrafts;
+using Angor.Contexts.Wallet.Domain;
+using AngorApp.TransactionDrafts;
+using AngorApp.TransactionDrafts.DraftTypes;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
+using Option = Zafiro.Avalonia.Dialogs.Option;
 
 namespace AngorApp.Sections.Portfolio.Manage;
 
@@ -14,26 +19,99 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
 
     private readonly ProjectId projectId;
     private readonly IInvestmentAppService investmentAppService;
-    private RecoveryState state = RecoveryState.Empty;
+    private readonly UIServices uiServices;
 
     public ManageInvestorProjectViewModel(ProjectId projectId, IInvestmentAppService investmentAppService, UIServices uiServices, IWalletContext walletContext)
     {
         this.projectId = projectId;
         this.investmentAppService = investmentAppService;
+        this.uiServices = uiServices;
 
         ViewTransaction = ReactiveCommand.Create(() => { }).Enhance();
-        
+
         var loadCommand = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetRecoveryState)).Enhance().DisposeWith(disposables);
         loadCommand.HandleErrorsWith(uiServices.NotificationService, "Failed to load recovery info").DisposeWith(disposables);
         Load = loadCommand;
+        State = loadCommand.Successes();
 
-        var command = loadCommand.Successes().Select(_ =>  ReactiveCommand.CreateFromTask(async () =>
-        {
-            // TODO: This will be wired in a follow-up PR
-            await uiServices.Dialog.ShowMessage("Action not implemented yet", "");
-            return Result.Success();
-        }).Enhance());
+        var command = loadCommand.Successes().Select(recoveryState => ReactiveCommand.CreateFromTask(() => CreateTransactionDraft(recoveryState)).Enhance());
         Action = command;
+    }
+
+    public IObservable<RecoveryState> State { get; }
+
+    private Task<Maybe<Guid>> CreateTransactionDraft(RecoveryState recoveryState)
+    {
+        if (IsRecovery(recoveryState))
+        {
+            return Recover(recoveryState);
+        }
+        
+        if (IsClaim(recoveryState))
+        {
+            return Claim(recoveryState);
+        }
+        
+        if (IsRelease(recoveryState))
+        {
+            return Release(recoveryState);
+        }
+        
+        throw new ArgumentException("Invalid recoveryState");
+    }
+
+    private bool IsRelease(RecoveryState recoveryState)
+    {
+        return true;
+    }
+
+    private bool IsClaim(RecoveryState recoveryState)
+    {
+        return true;
+    }
+
+    private Task<Maybe<Guid>> Recover(RecoveryState recoveryState)
+    {
+        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
+        {
+            return investmentAppService.BuildRecoverInvestorFunds(recoveryState.WalletId.Value, projectId, new DomainFeerate(fr))
+                .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
+        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryState.WalletId.Value, model.Model)
+            .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds recovery transaction has been submitted successfully"))
+            .Map(_ => Guid.Empty), uiServices);
+
+        return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
+    }
+    
+    private Task<Maybe<Guid>> Claim(RecoveryState recoveryState)
+    {
+        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
+        {
+            return investmentAppService.BuilodClaimInvestorEndOfProjectFunds(recoveryState.WalletId.Value, projectId, new DomainFeerate(fr))
+                .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
+        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryState.WalletId.Value, model.Model)
+            .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
+            .Map(_ => Guid.Empty), uiServices);
+
+        return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
+    }
+    
+    private Task<Maybe<Guid>> Release(RecoveryState recoveryState)
+    {
+        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
+        {
+            return investmentAppService.BuildReleaseInvestorFunds(recoveryState.WalletId.Value, projectId, new DomainFeerate(fr))
+                .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
+        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryState.WalletId.Value, model.Model)
+            .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
+            .Map(_ => Guid.Empty), uiServices);
+
+        return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
+    }
+
+    private bool IsRecovery(RecoveryState recoveryState)
+    {
+        return true;
     }
 
     public IObservable<IEnhancedCommand> Action { get; }
@@ -42,27 +120,22 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
     {
         return investmentAppService
             .GetInvestorProjectRecovery(wallet.Id.Value, projectId)
-            .Map(dto => CreateRecoveryViewModel(wallet.Id.Value, dto));
+            .Map(dto => CreateRecoveryViewModel(wallet.Id, dto));
     }
-    
-    public IAmountUI TotalFunds => Project.TotalFunds;
+
     public IEnhancedCommand ViewTransaction { get; }
-    public DateTime ExpiryDate => Project.ExpiryDate;
-    public TimeSpan PenaltyPeriod => Project.PenaltyPeriod;
-    public IEnumerable<IInvestorProjectItem> Items => state.Items;
-    public IInvestedProject Project => state.Project;
     public IEnhancedCommand Load { get; }
 
-    private static RecoveryState CreateRecoveryViewModel(Guid walletId, InvestorProjectRecoveryDto dto)
+    private static RecoveryState CreateRecoveryViewModel(WalletId walletId, InvestorProjectRecoveryDto dto)
     {
         var project = new InvestedProject(dto);
         var items = dto.Items
-            .Select(x => (IInvestorProjectItem)new InvestorProjectItem(
+            .Select(IInvestorProjectItem (x) => new InvestorProjectItem(
                 stage: x.StageIndex + 1,
                 amount: new AmountUI(x.Amount),
                 status: x.Status))
             .ToList();
-        
+
         return new RecoveryState(walletId, project, items);
     }
 
@@ -100,9 +173,6 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
         public TimeSpan PenaltyPeriod { get; }
         public string Name { get; }
     }
-
-    private sealed record RecoveryState(Guid? WalletId, IInvestedProject Project, IReadOnlyList<IInvestorProjectItem> Items)
-    {
-        public static RecoveryState Empty { get; } = new(null, new InvestedProjectDesign(), []);
-    }
 }
+
+public sealed record RecoveryState(WalletId WalletId, IInvestedProject Project, IReadOnlyList<IInvestorProjectItem> Items);

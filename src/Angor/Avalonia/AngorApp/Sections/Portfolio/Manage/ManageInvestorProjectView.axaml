@@ -14,7 +14,7 @@
 
     <co:PageContainer>
         <DockPanel VerticalSpacing="20">
-            <Card DockPanel.Dock="Top" Theme="{StaticResource WideCard}" Header="Manage Investment" Subheader="{Binding Project.Name}">
+            <Card DockPanel.Dock="Top" Theme="{StaticResource WideCard}" Header="Manage Investment" Subheader="{Binding State^.Project.Name}">
                 <Card.HeaderStartContent>
                     <ui:Icon Source="fa-list-check" />
                 </Card.HeaderStartContent>
@@ -28,9 +28,9 @@
             <ScrollViewer>
                 <StackPanel Classes="BigGap">
                     <BalancedWrapGrid MinItemWidth="200" HorizontalSpacing="20" VerticalSpacing="20">
-                        <Card Header="Total Funds" Theme="{StaticResource LeftItemCard}" Subheader="{Binding Project.TotalFunds.DecimalString}" />
-                        <Card Header="Expiry Date" Theme="{StaticResource LeftItemCard}" Subheader="{Binding Project.ExpiryDate, Converter={x:Static co:AngorConverters.HumanizeDateTime}}" />
-                        <Card Header="Penalty Period" Theme="{StaticResource LeftItemCard}" Subheader="{Binding Project.PenaltyPeriod.TotalDays, StringFormat='{}{0} Days'}" />
+                        <Card Header="Total Funds" Theme="{StaticResource LeftItemCard}" Subheader="{Binding State^.Project.TotalFunds.DecimalString}" />
+                        <Card Header="Expiry Date" Theme="{StaticResource LeftItemCard}" Subheader="{Binding State^.Project.ExpiryDate, Converter={x:Static co:AngorConverters.HumanizeDateTime}}" />
+                        <Card Header="Penalty Period" Theme="{StaticResource LeftItemCard}" Subheader="{Binding State^.Project.PenaltyPeriod.TotalDays, StringFormat='{}{0} Days'}" />
                         <Card Header="Transaction" Theme="{StaticResource LeftItemCard}">
                             <Card.Subheader>
                                 <Button Command="{Binding ViewTransaction}" FontSize="{StaticResource FontSizeSmall}" Content="View" />
@@ -42,7 +42,7 @@
                     </HeaderedContainer>
                     <ResponsivePresenter Breakpoint="600">
                         <ResponsivePresenter.Narrow>
-                            <ItemsControl Classes="ShowEmptyContent" Empty.Content="No release items found" ItemsSource="{Binding Items}">
+                            <ItemsControl Classes="ShowEmptyContent" Empty.Content="No release items found" ItemsSource="{Binding State^.Items}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <StackPanel Classes="BigGap" />
@@ -62,7 +62,7 @@
                             </ItemsControl>
                         </ResponsivePresenter.Narrow>
                         <ResponsivePresenter.Wide>
-                            <SlimDataGrid ItemsSource="{Binding Items}">
+                            <SlimDataGrid ItemsSource="{Binding State^.Items}">
                                 <SlimDataGrid.Columns>
                                     <Column Header="Stage" Binding="{Binding Stage}" />
                                     <Column Header="Amount" Binding="{Binding Amount.DecimalString}" />
