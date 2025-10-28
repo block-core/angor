@@ -1,9 +1,7 @@
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.TransactionDrafts;
-using Angor.Contexts.Wallet.Domain;
 using AngorApp.TransactionDrafts;
 using AngorApp.TransactionDrafts.DraftTypes;
 using Zafiro.Avalonia.Dialogs;
@@ -27,14 +25,12 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
         this.uiServices = uiServices;
 
         ViewTransaction = ReactiveCommand.Create(() => { }).Enhance();
-
         Load = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetRecoveryState)).Enhance().DisposeWith(disposables);
-        
         State = Load.Successes();
         BatchAction = Load.Successes().Select(CreateBatchCommand);
         
         // Refresh on Batch Action completion
-        BatchAction.Select(command => (IObservable<Maybe<Guid>>)command).Switch().ToSignal().InvokeCommand(Load);
+        BatchAction.Select(command => (IObservable<Maybe<Guid>>)command).Switch().ToSignal().InvokeCommand(Load).DisposeWith(disposables);
     }
 
     private IEnhancedCommand<Maybe<Guid>> CreateBatchCommand(RecoveryState recoveryState)
@@ -104,18 +100,11 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
     {
         return investmentAppService
             .GetInvestorProjectRecovery(wallet.Id.Value, projectId)
-            .Map(dto => CreateRecoveryViewModel(wallet.Id, dto));
+            .Map(dto => new RecoveryState(wallet.Id, dto));
     }
 
     public IEnhancedCommand ViewTransaction { get; }
     public IEnhancedCommand<Result<RecoveryState>> Load { get; }
-
-    private static RecoveryState CreateRecoveryViewModel(WalletId walletId, InvestorProjectRecoveryDto dto)
-    {
-        
-
-        return new RecoveryState(walletId, dto);
-    }
 
     public void Dispose()
     {
