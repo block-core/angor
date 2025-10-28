@@ -34,41 +34,30 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
         Load = loadCommand;
         State = loadCommand.Successes();
 
-        var command = loadCommand.Successes().Select(recoveryState => ReactiveCommand.CreateFromTask(() => CreateTransactionDraft(recoveryState)).Enhance());
-        Action = command;
+        BatchAction = loadCommand.Successes().Select(recoveryState => CreateCommand(recoveryState).Enhance());
+    }
+
+    private IEnhancedCommand<Maybe<Guid>> CreateCommand(RecoveryState recoveryState)
+    {
+        if (recoveryState.CanRecover)
+        {
+            return ReactiveCommand.CreateFromTask(() => Recover(recoveryState)).Enhance("Recover Funds");
+        }
+        
+        if (recoveryState.CanRelease)
+        {
+            return ReactiveCommand.CreateFromTask(() => Release(recoveryState)).Enhance("Release Funds");
+        }
+        
+        if (recoveryState.CanClaim)
+        {
+            return ReactiveCommand.CreateFromTask(() => Claim(recoveryState)).Enhance("Claim Funds");
+        }
+
+        return ReactiveCommand.Create(() => Maybe<Guid>.None, Observable.Return(false)).Enhance();
     }
 
     public IObservable<RecoveryState> State { get; }
-
-    private Task<Maybe<Guid>> CreateTransactionDraft(RecoveryState recoveryState)
-    {
-        if (IsRecovery(recoveryState))
-        {
-            return Recover(recoveryState);
-        }
-        
-        if (IsClaim(recoveryState))
-        {
-            return Claim(recoveryState);
-        }
-        
-        if (IsRelease(recoveryState))
-        {
-            return Release(recoveryState);
-        }
-        
-        throw new ArgumentException("Invalid recoveryState");
-    }
-
-    private bool IsRelease(RecoveryState recoveryState)
-    {
-        return true;
-    }
-
-    private bool IsClaim(RecoveryState recoveryState)
-    {
-        return true;
-    }
 
     private Task<Maybe<Guid>> Recover(RecoveryState recoveryState)
     {
@@ -109,12 +98,7 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
         return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
     }
 
-    private bool IsRecovery(RecoveryState recoveryState)
-    {
-        return true;
-    }
-
-    public IObservable<IEnhancedCommand> Action { get; }
+    public IObservable<IEnhancedCommand> BatchAction { get; }
 
     private Task<Result<RecoveryState>> GetRecoveryState(IWallet wallet)
     {
@@ -128,51 +112,74 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
 
     private static RecoveryState CreateRecoveryViewModel(WalletId walletId, InvestorProjectRecoveryDto dto)
     {
-        var project = new InvestedProject(dto);
-        var items = dto.Items
-            .Select(IInvestorProjectItem (x) => new InvestorProjectItem(
-                stage: x.StageIndex + 1,
-                amount: new AmountUI(x.Amount),
-                status: x.Status))
-            .ToList();
+        
 
-        return new RecoveryState(walletId, project, items);
+        return new RecoveryState(walletId, dto);
     }
 
     public void Dispose()
     {
         disposables.Dispose();
     }
-
-    private class InvestorProjectItem : ReactiveObject, IInvestorProjectItem
-    {
-        public InvestorProjectItem(int stage, IAmountUI amount, string status)
-        {
-            Stage = stage;
-            Amount = amount;
-            Status = status;
-        }
-
-        public int Stage { get; }
-        public IAmountUI Amount { get; }
-        public string Status { get; }
-    }
-
-    private class InvestedProject : IInvestedProject
-    {
-        public InvestedProject(InvestorProjectRecoveryDto dto)
-        {
-            TotalFunds = new AmountUI(dto.TotalSpendable);
-            ExpiryDate = dto.ExpiryDate;
-            PenaltyPeriod = TimeSpan.FromDays(dto.PenaltyDays);
-            Name = dto.Name ?? dto.ProjectIdentifier;
-        }
-
-        public IAmountUI TotalFunds { get; }
-        public DateTime ExpiryDate { get; }
-        public TimeSpan PenaltyPeriod { get; }
-        public string Name { get; }
-    }
 }
 
-public sealed record RecoveryState(WalletId WalletId, IInvestedProject Project, IReadOnlyList<IInvestorProjectItem> Items);
+public class InvestorProjectStage : ReactiveObject, IInvestorProjectStage
+{
+    public InvestorProjectStage(int stage, IAmountUI amount, bool isSpent, string status)
+    {
+        Stage = stage;
+        Amount = amount;
+        Status = status;
+        IsSpent = isSpent;
+    }
+
+    public int Stage { get; }
+    public IAmountUI Amount { get; }
+    public string Status { get; }
+    public bool IsSpent { get; }
+}
+
+public class InvestedProject : IInvestedProject
+{
+    public InvestedProject(InvestorProjectRecoveryDto dto)
+    {
+        TotalFunds = new AmountUI(dto.TotalSpendable);
+        ExpiryDate = dto.ExpiryDate;
+        PenaltyPeriod = TimeSpan.FromDays(dto.PenaltyDays);
+        Name = dto.Name ?? dto.ProjectIdentifier;
+    }
+
+    public IAmountUI TotalFunds { get; }
+    public DateTime ExpiryDate { get; }
+    public TimeSpan PenaltyPeriod { get; }
+    public string Name { get; }
+}
+
+public sealed record RecoveryState
+{
+    private readonly InvestorProjectRecoveryDto dto;
+
+    public RecoveryState(WalletId WalletId, InvestorProjectRecoveryDto dto)
+    {
+        this.dto = dto;
+        this.WalletId = WalletId;
+        
+        Project = new InvestedProject(dto);
+        Stages = dto.Items
+            .Select(IInvestorProjectStage (x) => new InvestorProjectStage(
+                stage: x.StageIndex + 1,
+                amount: new AmountUI(x.Amount),
+                isSpent: x.IsSpent,
+                status: x.Status))
+            .ToList();
+    }
+
+    public List<IInvestorProjectStage> Stages { get;  }
+
+    public InvestedProject Project { get; }
+
+    public bool CanRecover => dto.CanRecover;
+    public bool CanRelease => dto.CanRelease;
+    public bool CanClaim => Stages.Any(stage => !stage.IsSpent);
+    public WalletId WalletId { get; }
+}
