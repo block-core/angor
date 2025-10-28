@@ -4,24 +4,8 @@ namespace AngorApp.Sections.Portfolio.Manage;
 
 public class ManageInvestorProjectViewModelDesign : IManageInvestorProjectViewModel
 {
-    public IAmountUI TotalFunds { get; } = new AmountUI(1234000);
     public IEnhancedCommand ViewTransaction { get; } = ReactiveCommand.Create(() => { }).Enhance();
-    public IObservable<IEnhancedCommand> Action { get; }
-    public DateTime ExpiryDate { get; } = DateTime.Now.AddMonths(1);
-    public TimeSpan PenaltyPeriod { get; } = TimeSpan.FromDays(90);
-
-    public IEnumerable<IInvestorProjectItem> Items { get; } = new[]
-    {
-        new InvestorProjectItemDesign(),
-        new InvestorProjectItemDesign(),
-        new InvestorProjectItemDesign(),
-        new InvestorProjectItemDesign(),
-    };
-
-    public IInvestedProject Project { get; } = new InvestedProjectDesign();
-
-    public IEnhancedCommand Load { get; } = ReactiveCommand.Create(() => Result.Success(new InvestorProjectRecoveryDto())).Enhance();
-    public bool ShowRecoverAll => true;
-    public bool ShowReleaseAll => false;
-    public bool ShowClaimAll => false;
+    public IObservable<IEnhancedCommand> BatchAction { get; }
+    public IEnhancedCommand<Result<RecoveryState>> Load { get; set; } 
+    public IObservable<RecoveryState> State { get; }
 }

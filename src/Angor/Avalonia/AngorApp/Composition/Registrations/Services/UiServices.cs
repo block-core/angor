@@ -7,6 +7,7 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Microsoft.Extensions.DependencyInjection;
 using Zafiro.Avalonia.Dialogs;
+using Zafiro.Avalonia.Dialogs.Implementations;
 using Zafiro.Avalonia.Misc;
 using Zafiro.Avalonia.Services;
 using Zafiro.Settings;
