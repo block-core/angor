@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared.Utilities;
 using Microsoft.Extensions.Logging;

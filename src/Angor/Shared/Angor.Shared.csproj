@@ -25,4 +25,10 @@
   <ItemGroup>
     <PackageReference Update="Microsoft.SourceLink.GitHub" Version="8.0.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CSharpFunctionalExtensions">
+      <HintPath>..\..\..\..\..\..\..\..\home\jmn\.nuget\packages\csharpfunctionalextensions\3.6.0\lib\net8.0\CSharpFunctionalExtensions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>
