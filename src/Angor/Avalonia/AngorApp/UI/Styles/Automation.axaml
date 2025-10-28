@@ -23,13 +23,17 @@
         <Setter Property="AutomationProperties.HelpText" Value="Available sections in the application" />
     </Style>
 
+    <Style Selector="ListBoxItem">
+        <Setter Property="AutomationProperties.AutomationId" Value="{Binding $self.Content, Converter={x:Static f:Automation.ContentToAutomationId}}" />
+    </Style>
+
     <Style Selector="ShellView ListBoxItem">
-        <Setter Property="AutomationProperties.AutomationId">
+        <Setter Property="AutomationProperties.Name">
             <Setter.Value>
                 <Binding Path="$self.((sections:IContentSection)DataContext).Name" StringFormat="Section_{0}" Converter="{x:Static f:Automation.ContentToAutomationId}" />
             </Setter.Value>
         </Setter>
-        <Setter Property="AutomationProperties.Name">
+        <Setter Property="AutomationProperties.AutomationId">
             <Setter.Value>
                 <Binding Path="$self.((sections:IContentSection)DataContext).FriendlyName" StringFormat="Section_{0}" Converter="{x:Static f:Automation.ContentToAutomationId}" />
             </Setter.Value>
@@ -38,7 +42,4 @@
         <Setter Property="AutomationProperties.ItemType" Value="ShellSection" />
     </Style>
 
-    <Style Selector="ListBoxItem">
-        <Setter Property="AutomationProperties.AutomationId" Value="{Binding $self.Content, Converter={x:Static f:Automation.ContentToAutomationId}}" />
-    </Style>
 </Styles>
