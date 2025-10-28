@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.Dtos;
@@ -9,11 +8,11 @@ using AngorApp.TransactionDrafts;
 using AngorApp.TransactionDrafts.DraftTypes;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
-using Option = Zafiro.Avalonia.Dialogs.Option;
+using Zafiro.Reactive;
 
 namespace AngorApp.Sections.Portfolio.Manage;
 
-public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorProjectViewModel, IDisposable
+public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorProjectViewModel, IDisposable
 {
     private readonly CompositeDisposable disposables = new();
 
@@ -29,15 +28,16 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
 
         ViewTransaction = ReactiveCommand.Create(() => { }).Enhance();
 
-        var loadCommand = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetRecoveryState)).Enhance().DisposeWith(disposables);
-        loadCommand.HandleErrorsWith(uiServices.NotificationService, "Failed to load recovery info").DisposeWith(disposables);
-        Load = loadCommand;
-        State = loadCommand.Successes();
-
-        BatchAction = loadCommand.Successes().Select(recoveryState => CreateCommand(recoveryState).Enhance());
+        Load = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetRecoveryState)).Enhance().DisposeWith(disposables);
+        
+        State = Load.Successes();
+        BatchAction = Load.Successes().Select(CreateBatchCommand);
+        
+        // Refresh on Batch Action completion
+        BatchAction.Select(command => (IObservable<Maybe<Guid>>)command).Switch().ToSignal().InvokeCommand(Load);
     }
 
-    private IEnhancedCommand<Maybe<Guid>> CreateCommand(RecoveryState recoveryState)
+    private IEnhancedCommand<Maybe<Guid>> CreateBatchCommand(RecoveryState recoveryState)
     {
         if (recoveryState.CanRecover)
         {
@@ -108,7 +108,7 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
     }
 
     public IEnhancedCommand ViewTransaction { get; }
-    public IEnhancedCommand Load { get; }
+    public IEnhancedCommand<Result<RecoveryState>> Load { get; }
 
     private static RecoveryState CreateRecoveryViewModel(WalletId walletId, InvestorProjectRecoveryDto dto)
     {
@@ -121,65 +121,4 @@ public partial class ManageInvestorProjectViewModel : ReactiveObject, IManageInv
     {
         disposables.Dispose();
     }
-}
-
-public class InvestorProjectStage : ReactiveObject, IInvestorProjectStage
-{
-    public InvestorProjectStage(int stage, IAmountUI amount, bool isSpent, string status)
-    {
-        Stage = stage;
-        Amount = amount;
-        Status = status;
-        IsSpent = isSpent;
-    }
-
-    public int Stage { get; }
-    public IAmountUI Amount { get; }
-    public string Status { get; }
-    public bool IsSpent { get; }
-}
-
-public class InvestedProject : IInvestedProject
-{
-    public InvestedProject(InvestorProjectRecoveryDto dto)
-    {
-        TotalFunds = new AmountUI(dto.TotalSpendable);
-        ExpiryDate = dto.ExpiryDate;
-        PenaltyPeriod = TimeSpan.FromDays(dto.PenaltyDays);
-        Name = dto.Name ?? dto.ProjectIdentifier;
-    }
-
-    public IAmountUI TotalFunds { get; }
-    public DateTime ExpiryDate { get; }
-    public TimeSpan PenaltyPeriod { get; }
-    public string Name { get; }
-}
-
-public sealed record RecoveryState
-{
-    private readonly InvestorProjectRecoveryDto dto;
-
-    public RecoveryState(WalletId WalletId, InvestorProjectRecoveryDto dto)
-    {
-        this.dto = dto;
-        this.WalletId = WalletId;
-        
-        Project = new InvestedProject(dto);
-        Stages = dto.Items
-            .Select(IInvestorProjectStage (x) => new InvestorProjectStage(
-                stage: x.StageIndex + 1,
-                amount: new AmountUI(x.Amount),
-                isSpent: x.IsSpent,
-                status: x.Status))
-            .ToList();
-    }
-
-    public List<IInvestorProjectStage> Stages { get;  }
-
-    public InvestedProject Project { get; }
-
-    public bool CanRecover => dto.CanRecover;
-    public bool CanRelease => dto.CanRelease;
-    public bool CanClaim => Stages.Any(stage => !stage.IsSpent);
-    public WalletId WalletId { get; }
 }

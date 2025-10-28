@@ -4,6 +4,6 @@ public interface IManageInvestorProjectViewModel
 {
     IEnhancedCommand ViewTransaction { get; }
     IObservable<IEnhancedCommand> BatchAction { get; }
-    IEnhancedCommand Load { get; }
+    IEnhancedCommand<Result<RecoveryState>> Load { get; }
     IObservable<RecoveryState> State { get; }
 }

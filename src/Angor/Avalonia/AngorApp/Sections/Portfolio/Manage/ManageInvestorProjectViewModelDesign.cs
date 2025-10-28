@@ -6,6 +6,6 @@ public class ManageInvestorProjectViewModelDesign : IManageInvestorProjectViewMo
 {
     public IEnhancedCommand ViewTransaction { get; } = ReactiveCommand.Create(() => { }).Enhance();
     public IObservable<IEnhancedCommand> BatchAction { get; }
-    public IEnhancedCommand Load { get; } = ReactiveCommand.Create(() => Result.Success(new InvestorProjectRecoveryDto())).Enhance();
+    public IEnhancedCommand<Result<RecoveryState>> Load { get; set; } 
     public IObservable<RecoveryState> State { get; }
 }

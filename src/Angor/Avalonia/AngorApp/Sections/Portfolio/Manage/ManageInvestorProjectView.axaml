@@ -45,7 +45,7 @@
                             </Card>
                         </BalancedWrapGrid>
                         <HeaderedContainer Header="Actions">
-                            <Button Content="{Binding BatchAction^.Text, FallbackValue='Empty'}" Command="{Binding BatchAction^}" />
+                            <Button IsVisible="{Binding $self.IsEffectivelyEnabled}" Content="{Binding BatchAction^.Text, FallbackValue='Empty'}" Command="{Binding BatchAction^}" />
                         </HeaderedContainer>
                         <ResponsivePresenter Breakpoint="600">
                             <ResponsivePresenter.Narrow>
