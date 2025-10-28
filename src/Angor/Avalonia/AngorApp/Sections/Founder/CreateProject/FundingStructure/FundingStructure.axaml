@@ -31,18 +31,18 @@
             </Card>
             <BalancedWrapGrid>
                 <Card Classes="Transparent" Header="Funding Start" Subheader="When the investment period begins (automatically set today)">
-                    <TextBox VerticalAlignment="Bottom" IsReadOnly="True" Text="{Binding FundingStartDate, StringFormat='d'}" />
+                    <TextBox VerticalAlignment="Bottom" IsReadOnly="True" Watermark="Funding start" Text="{Binding FundingStartDate, StringFormat='d'}" />
                 </Card>
                 <Card Classes="Transparent" Header="Funding End" Subheader="When the investment period ends">
-                    <CalendarDatePicker VerticalAlignment="Bottom" SelectedDate="{Binding FundingEndDate}" />
+                    <CalendarDatePicker VerticalAlignment="Bottom" Watermark="Funding end" SelectedDate="{Binding FundingEndDate}" />
                 </Card>
             </BalancedWrapGrid>
             <BalancedWrapGrid>
                 <Card Classes="Transparent" Header="Penalty Days" Subheader="Days to lock funds for departing investors">
-                    <TextBox TextInputOptions.ContentType="Number" Watermark="Enter the penalty days" Text="{Binding PenaltyDays}" />
+                    <TextBox TextInputOptions.ContentType="Number" Watermark="Penalty days" Text="{Binding PenaltyDays}" />
                 </Card>
                 <Card Classes="Transparent" Header="Emergency Expiry" Subheader="Emergency date for fund release">
-                    <CalendarDatePicker IsEnabled="False" SelectedDate="{Binding ExpiryDate}" />
+                    <CalendarDatePicker AutomationProperties.AutomationId="EmergencyExpiry" IsEnabled="False" SelectedDate="{Binding ExpiryDate}" />
                 </Card>
             </BalancedWrapGrid>
         </StackPanel>
