@@ -15,6 +15,7 @@ public class InvestorProjectRecoveryDto
     public bool EndOfProject { get; set; }
 
     public string? ExplorerLink { get; set; }
+    public string TransactionId { get; set; }
 
     public List<InvestorStageItemDto> Items { get; set; } = new();
 }
