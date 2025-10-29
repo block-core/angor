@@ -1,16 +1,9 @@
-using Angor.Contexts.Funding.Investor.Dtos;
-
 namespace AngorApp.Sections.Portfolio.Manage;
 
 public interface IManageInvestorProjectViewModel
 {
-    IAmountUI TotalFunds { get; }
     IEnhancedCommand ViewTransaction { get; }
-    DateTime ExpiryDate { get; }
-    TimeSpan PenaltyPeriod { get; }
-    IEnumerable<IInvestorProjectItem> Items { get; }
-    IInvestedProject Project { get; }
-    bool CanClaimImmediately { get; }
-
-    IEnhancedCommand Load { get; }
+    IObservable<IEnhancedCommand> BatchAction { get; }
+    IEnhancedCommand<Result<RecoveryState>> Load { get; }
+    IObservable<RecoveryState> State { get; }
 }
