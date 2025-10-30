@@ -11,6 +11,14 @@
     <Style Selector=":is(TextBox)">
         <Setter Property="AutomationProperties.AutomationId" Value="{Binding $self.Watermark, Converter={x:Static f:Automation.ContentToAutomationId}}" />
     </Style>
+    
+    <Style Selector=":is(CalendarDatePicker)">
+        <Setter Property="AutomationProperties.AutomationId" Value="{Binding $self.Watermark, Converter={x:Static f:Automation.ContentToAutomationId}}" />
+    </Style>
+    
+    <Style Selector=":is(NumericUpDown)">
+        <Setter Property="AutomationProperties.AutomationId" Value="{Binding $self.Watermark, Converter={x:Static f:Automation.ContentToAutomationId}}" />
+    </Style>
 
     <Style Selector="ShellView">
         <Setter Property="AutomationProperties.AutomationId" Value="ShellControl" />
