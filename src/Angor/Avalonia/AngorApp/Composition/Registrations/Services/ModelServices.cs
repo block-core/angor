@@ -1,6 +1,3 @@
-using Angor.UI.Model.Flows;
-using Angor.UI.Model.Implementation;
-using Angor.UI.Model.Implementation.Wallet.Simple;
 using AngorApp.Design;
 using AngorApp.Flows.CreateProyect;
 using AngorApp.Flows.Invest;

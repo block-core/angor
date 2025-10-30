@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace Angor.UI.Model.Implementation.Wallet.Password;
+namespace AngorApp.Model.Domain.Wallet.Password;
 
 public partial class PasswordView : UserControl
 {

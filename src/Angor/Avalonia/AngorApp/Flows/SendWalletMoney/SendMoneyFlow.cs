@@ -1,5 +1,5 @@
 using Angor.Contexts.Wallet.Application;
-using Angor.UI.Model.Flows;
+using AngorApp.Model.Contracts.Flows;
 using AngorApp.UI.Controls.Common.Success;
 using Zafiro.Avalonia.Dialogs.Wizards.Slim;
 using Zafiro.UI.Wizards.Slim.Builder;
