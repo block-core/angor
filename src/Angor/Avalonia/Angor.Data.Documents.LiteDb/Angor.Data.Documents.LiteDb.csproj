@@ -12,6 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\Shared\Angor.Shared.csproj" />
       <ProjectReference Include="..\Angor.Data.Documents\Angor.Data.Documents.csproj" />
     </ItemGroup>
 

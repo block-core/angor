@@ -1,7 +1,10 @@
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Angor.Shared;
+using Angor.Shared.Utilities;
+using CSharpFunctionalExtensions;
 using AngorApp.Sections.Shell;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
@@ -76,23 +79,17 @@ public static class UiServices
 
     private static string CreateSettingsFilePath(string profileName)
     {
-        var safeProfile = SanitizeProfileName(profileName);
-        return Path.Combine("profiles", safeProfile, "ui-settings.json");
-    }
-
-    private static string SanitizeProfileName(string profileName)
-    {
-        if (string.IsNullOrWhiteSpace(profileName))
-        {
-            return "Default";
-        }
-
-        var invalidChars = Path.GetInvalidFileNameChars();
-        var trimmed = profileName.Trim();
-        var sanitized = new string(trimmed
-            .Select(ch => Array.IndexOf(invalidChars, ch) >= 0 ? '_' : ch)
-            .ToArray());
-
-        return string.IsNullOrWhiteSpace(sanitized) ? "Default" : sanitized;
+        return ApplicationStoragePaths
+            .GetProfileFilePath("Angor", profileName, "ui-settings.json")
+            .OnFailureCompensate(_ => Result.Try(() =>
+            {
+                var fallbackRoot = Path.Combine(AppContext.BaseDirectory, "Profiles");
+                Directory.CreateDirectory(fallbackRoot);
+                var sanitizedProfile = ApplicationStoragePaths.SanitizeProfileName(profileName);
+                var profileDirectory = Path.Combine(fallbackRoot, sanitizedProfile);
+                Directory.CreateDirectory(profileDirectory);
+                return Path.Combine(profileDirectory, "ui-settings.json");
+            }))
+            .Value;
     }
 }

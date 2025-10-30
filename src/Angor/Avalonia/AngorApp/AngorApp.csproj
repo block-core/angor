@@ -32,6 +32,7 @@
         <PackageReference Include="QRCoder"/>
         <PackageReference Include="Serilog.Extensions.Logging"/>
         <PackageReference Include="Serilog.Sinks.Console"/>
+        <PackageReference Include="Serilog.Sinks.File" />
         <PackageReference Include="Zafiro"/>
         <PackageReference Include="Zafiro.Avalonia"/>
         <PackageReference Include="Zafiro.Avalonia.Generators"/>
