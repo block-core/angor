@@ -3,7 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:browse="clr-namespace:AngorApp.Sections.Browse"
-        xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
+        xmlns:model="clr-namespace:AngorApp.Model.Domain.Wallet;assembly=AngorApp.Model"
         xmlns:seedWordsGeneration1="clr-namespace:AngorApp.Sections.Wallet.CreateAndImport.Steps.SeedWordsGeneration"
         mc:Ignorable="d">
 

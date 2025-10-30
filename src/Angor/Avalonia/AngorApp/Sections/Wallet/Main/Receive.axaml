@@ -3,8 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:c="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
-             xmlns:simple="clr-namespace:Angor.UI.Model.Implementation.Wallet.Simple;assembly=Angor.UI.Model.Implementation"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
+             xmlns:simple="clr-namespace:AngorApp.Model.Domain.Wallet;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="400"
              x:Class="AngorApp.Sections.Wallet.Main.Receive" x:DataType="simple:SimpleWallet">
 

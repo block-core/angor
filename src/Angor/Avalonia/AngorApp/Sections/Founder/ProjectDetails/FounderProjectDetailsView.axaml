@@ -5,7 +5,7 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:pr="clr-namespace:AngorApp.Sections.Founder.ProjectDetails"
              xmlns:statistics="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Statistics"
-             xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
+             xmlns:model="clr-namespace:AngorApp.Model.Contracts.Projects;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.FounderProjectDetailsView" x:DataType="pr:IFounderProjectDetailsViewModel">
 

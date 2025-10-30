@@ -1,6 +1,6 @@
 using System.Reactive.Linq;
 using Angor.Contexts.Funding.Investor;
-using Angor.UI.Model.Implementation.Projects;
+using AngorApp.Model.Domain.Projects;
 using AngorApp.Flows.Invest;
 using AngorApp.UI.Services;
 using ReactiveUI;
