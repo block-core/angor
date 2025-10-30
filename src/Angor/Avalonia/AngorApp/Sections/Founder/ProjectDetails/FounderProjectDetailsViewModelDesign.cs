@@ -1,4 +1,3 @@
-using Angor.UI.Model;
 using AngorApp.Sections.Browse.Details;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.Approve;
 using Zafiro.UI.Commands;
