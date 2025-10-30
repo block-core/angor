@@ -29,6 +29,9 @@
             <Card Classes="Transparent" Header="Target Amount" Subheader="Minimum BTC this project is trying to raise">
                 <c:AmountControl Satoshis="{Binding Sats, Mode=TwoWay}" />
             </Card>
+            <Card Classes="Transparent" Header="Penalty Threshold" Subheader="Minimum investment amount (in satoshis) to avoid penalty deductions">
+                <c:AmountControl Satoshis="{Binding PenaltyThreshold, Mode=TwoWay}" />
+            </Card>
             <BalancedWrapGrid>
                 <Card Classes="Transparent" Header="Funding Start" Subheader="When the investment period begins (automatically set today)">
                     <TextBox VerticalAlignment="Bottom" IsReadOnly="True" Watermark="Funding start" Text="{Binding FundingStartDate, StringFormat='d'}" />

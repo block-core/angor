@@ -11,6 +11,7 @@ public interface IFullProject
     IEnumerable<IStage> Stages { get; }
     string Name { get; }
     TimeSpan PenaltyDuration { get; }
+    IAmountUI? PenaltyThreshold { get; }
     IAmountUI RaisedAmount { get; }
     int? TotalInvestors { get; }
     DateTime FundingStartDate { get; }

@@ -35,6 +35,11 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
         return mediator.Send(new GetPenalties.GetPenaltiesRequest(walletId));
     }
 
+    public Task<Result<bool>> IsInvestmentAbovePenaltyThreshold(ProjectId projectId, Amount amount)
+    {
+        return mediator.Send(new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(projectId, amount));
+    }
+
     #region Methods for Investor/Manage funds. Remove this region ASAP. It's only for clarity.
     
     // Investor/Manage Funds: Retrieve recovery info for an investment. Also contains a list of InvestorStageItemDtos 
@@ -56,14 +61,19 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     }
 
     // Investor/Manage Funds
-    public Task<Result<TransactionDraft>> BuilodClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate)
+    public Task<Result<TransactionDraft>> BuildClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate)
     {
         return mediator.Send(new ClaimEndOfProject.ClaimEndOfProjectRequest(walletId, projectId, feerate));
     }
 
     public Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, TransactionDraft draft)
     {
-        return mediator.Send(new PublishTransaction.PublishTransactionRequest(draft));
+        return mediator.Send(new PublishTransaction.PublishTransactionRequest(null, null, draft));
+    }
+
+    public Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, ProjectId projectId, TransactionDraft draft)
+    {
+        return mediator.Send(new PublishTransaction.PublishTransactionRequest(walletId, projectId, draft));
     }
 
     #endregion

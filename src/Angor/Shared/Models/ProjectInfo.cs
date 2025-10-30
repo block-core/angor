@@ -15,6 +15,7 @@ public class ProjectInfo
     public int PenaltyDays { get; set; }
     public DateTime ExpiryDate { get; set; }
     public long TargetAmount { get; set; }
+    public long? PenaltyThreshold { get; set; }
     public List<Stage> Stages { get; set; } = new();
     public ProjectSeeders ProjectSeeders { get; set; } = new();
 }

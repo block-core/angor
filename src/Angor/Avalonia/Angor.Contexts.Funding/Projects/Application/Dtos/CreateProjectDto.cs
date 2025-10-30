@@ -21,6 +21,7 @@ public class CreateProjectDto
     public DateTime? ExpiryDate { get; init; }
     public required Amount TargetAmount { get; init; }
     public required int PenaltyDays { get; set; }
+    public long? PenaltyThreshold { get; init; }
     public required IEnumerable<CreateProjectStageDto> Stages { get; init; }
 }
 

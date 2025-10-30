@@ -704,5 +704,68 @@ namespace Angor.Test.Protocol
 
             TransactionValidation.ThanTheTransactionHasNoErrors(signedReleaseTransaction, coins);
         }
+
+        [Fact]
+        public void InvestorTransaction_EndOfProject_BelowThreshold_Test()
+        {
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
+               new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+            InvestmentOperations operations = new InvestmentOperations(_walletOperations.Object, derivationOperations);
+
+            var network = Networks.Bitcoin.Testnet();
+
+            var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
+
+            var projectInvestmentInfo = new ProjectInfo();
+            projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
+            projectInvestmentInfo.StartDate = DateTime.UtcNow;
+            projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
+            projectInvestmentInfo.Stages = new List<Stage>
+            {
+                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+            };
+            projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
+            projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
+            projectInvestmentInfo.ProjectIdentifier =
+              derivationOperations.DeriveAngorKey(angorRootKey, projectInvestmentInfo.FounderKey);
+            projectInvestmentInfo.ProjectSeeders = new ProjectSeeders();
+
+            // Set penalty threshold to 2 BTC - investment will be 1.5 BTC which is below the threshold
+            // This should cause GetExpiryDateOverride to return StartDate instead of null (ExpiryDate)
+            projectInvestmentInfo.PenaltyThreshold = Money.Coins(2).Satoshi;
+
+            // Create the investor params
+            var investorKey = new Key();
+            var investorChangeKey = new Key();
+            var investorReceiveCoinsKey = new Key();
+
+            InvestorContext investorContext = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
+
+            investorContext.InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes());
+            investorContext.ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString();
+
+            // Create investment transaction with amount BELOW the penalty threshold (1.5 BTC < 2 BTC)
+            long investmentAmountBelowThreshold = Money.Coins(1.5m).Satoshi;
+
+            var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, investorContext.InvestorKey,
+             investmentAmountBelowThreshold);
+
+            // Verify the investment is below the threshold
+            var isAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInvestmentInfo, investorInvTrx);
+            Assert.False(isAboveThreshold, "Investment should be below the penalty threshold");
+
+            // Test RecoverEndOfProjectFunds - this should use StartDate as expiry date override
+            var investor1Expierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(investorInvTrx.ToHex(),
+           projectInvestmentInfo,
+             1, investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
+             Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation);
+
+            Assert.NotNull(investor1Expierytrx);
+
+            TransactionValidation.ThanTheTransactionHasNoErrors(investor1Expierytrx.Transaction,
+               investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
+        }
     }
 }

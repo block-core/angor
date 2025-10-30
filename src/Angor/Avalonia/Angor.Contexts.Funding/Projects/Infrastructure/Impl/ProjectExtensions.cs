@@ -18,6 +18,7 @@ public static class ProjectExtensions
             ShortDescription = project.ShortDescription,
             FundingStartDate = project.StartingDate,
             PenaltyDuration = project.PenaltyDuration,
+            PenaltyThreshold = project.PenaltyThreshold,
             NostrNpubKeyHex = project.NostrPubKey,
             FundingEndDate = project.EndDate,
             InformationUri = project.InformationUri,
@@ -39,11 +40,12 @@ public static class ProjectExtensions
             Stages = project.Stages.Select(stage => new Stage
             {
                 ReleaseDate = stage.ReleaseDate,
-                AmountToRelease = stage.RatioOfTotal * 100m,
+                AmountToRelease = stage.RatioOfTotal,
             }).ToList(),
             FounderKey = project.FounderKey,
             FounderRecoveryKey = project.FounderRecoveryKey,
             PenaltyDays = project.PenaltyDuration.Days,
+            PenaltyThreshold = project.PenaltyThreshold,
             ProjectIdentifier = project.Id.Value,
             StartDate = project.StartingDate,
             ExpiryDate = project.ExpiryDate,

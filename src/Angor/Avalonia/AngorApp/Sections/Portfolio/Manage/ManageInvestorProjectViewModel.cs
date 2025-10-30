@@ -72,7 +72,7 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
     {
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
         {
-            return investmentAppService.BuilodClaimInvestorEndOfProjectFunds(recoveryState.WalletId.Value, projectId, new DomainFeerate(fr))
+            return investmentAppService.BuildClaimInvestorEndOfProjectFunds(recoveryState.WalletId.Value, projectId, new DomainFeerate(fr))
                 .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
         }, model => investmentAppService.SubmitTransactionFromDraft(recoveryState.WalletId.Value, model.Model)
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
