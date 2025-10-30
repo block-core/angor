@@ -2,6 +2,7 @@ using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.TransactionDrafts;
+using AngorApp.Core;
 using AngorApp.TransactionDrafts;
 using AngorApp.TransactionDrafts.DraftTypes;
 using Zafiro.Avalonia.Dialogs;
@@ -18,93 +19,30 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
     private readonly IInvestmentAppService investmentAppService;
     private readonly UIServices uiServices;
 
-    public ManageInvestorProjectViewModel(ProjectId projectId, IInvestmentAppService investmentAppService, UIServices uiServices, IWalletContext walletContext)
+    public ManageInvestorProjectViewModel(ProjectId projectId, IInvestmentAppService investmentAppService, UIServices uiServices, IWalletContext walletContext, SharedCommands sharedCommands)
     {
         this.projectId = projectId;
         this.investmentAppService = investmentAppService;
         this.uiServices = uiServices;
 
-        ViewTransaction = ReactiveCommand.Create(() => { }).Enhance();
-        Load = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetRecoveryState)).Enhance().DisposeWith(disposables);
+        Load = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => GetRecoveryStateViewModel(wallet, sharedCommands))).Enhance().DisposeWith(disposables);
         State = Load.Successes();
-        BatchAction = Load.Successes().Select(CreateBatchCommand);
         
         // Refresh on Batch Action completion
-        BatchAction.Select(command => (IObservable<Maybe<Guid>>)command).Switch().ToSignal().InvokeCommand(Load).DisposeWith(disposables);
+        State.Select(model => model.BatchAction).Switch().ToSignal().InvokeCommand(Load).DisposeWith(disposables);
     }
 
-    private IEnhancedCommand<Maybe<Guid>> CreateBatchCommand(RecoveryState recoveryState)
-    {
-        if (recoveryState.CanRecover)
-        {
-            return ReactiveCommand.CreateFromTask(() => Recover(recoveryState)).Enhance("Recover Funds");
-        }
-        
-        if (recoveryState.CanRelease)
-        {
-            return ReactiveCommand.CreateFromTask(() => Release(recoveryState)).Enhance("Release Funds");
-        }
-        
-        if (recoveryState.CanClaim)
-        {
-            return ReactiveCommand.CreateFromTask(() => Claim(recoveryState)).Enhance("Claim Funds");
-        }
+    public IObservable<RecoveryStateViewModel> State { get; }
 
-        return ReactiveCommand.Create(() => Maybe<Guid>.None, Observable.Return(false)).Enhance();
-    }
-
-    public IObservable<RecoveryState> State { get; }
-
-    private Task<Maybe<Guid>> Recover(RecoveryState recoveryState)
-    {
-        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
-        {
-            return investmentAppService.BuildRecoverInvestorFunds(recoveryState.WalletId.Value, projectId, new DomainFeerate(fr))
-                .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
-        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryState.WalletId.Value, model.Model)
-            .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds recovery transaction has been submitted successfully"))
-            .Map(_ => Guid.Empty), uiServices);
-
-        return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
-    }
-    
-    private Task<Maybe<Guid>> Claim(RecoveryState recoveryState)
-    {
-        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
-        {
-            return investmentAppService.BuilodClaimInvestorEndOfProjectFunds(recoveryState.WalletId.Value, projectId, new DomainFeerate(fr))
-                .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
-        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryState.WalletId.Value, model.Model)
-            .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
-            .Map(_ => Guid.Empty), uiServices);
-
-        return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
-    }
-    
-    private Task<Maybe<Guid>> Release(RecoveryState recoveryState)
-    {
-        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
-        {
-            return investmentAppService.BuildReleaseInvestorFunds(recoveryState.WalletId.Value, projectId, new DomainFeerate(fr))
-                .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
-        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryState.WalletId.Value, model.Model)
-            .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
-            .Map(_ => Guid.Empty), uiServices);
-
-        return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
-    }
-
-    public IObservable<IEnhancedCommand> BatchAction { get; }
-
-    private Task<Result<RecoveryState>> GetRecoveryState(IWallet wallet)
+    private Task<Result<RecoveryStateViewModel>> GetRecoveryStateViewModel(IWallet wallet, SharedCommands sharedCommands)
     {
         return investmentAppService
             .GetInvestorProjectRecovery(wallet.Id.Value, projectId)
-            .Map(dto => new RecoveryState(wallet.Id, dto));
+            .Map(dto => new RecoveryStateViewModel(wallet.Id, dto, sharedCommands, investmentAppService, uiServices));
     }
 
     public IEnhancedCommand ViewTransaction { get; }
-    public IEnhancedCommand<Result<RecoveryState>> Load { get; }
+    public IEnhancedCommand<Result<RecoveryStateViewModel>> Load { get; }
 
     public void Dispose()
     {

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Angor.Shared;
+using AngorApp.Core;
 using AngorApp.Sections.Shell;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
@@ -44,6 +45,7 @@ public static class UiServices
             .AddSingleton<ISectionActions, SectionActions>()
             .AddSingleton<IWalletContext, WalletContext>()
             .AddSingleton<IValidations, Validations>()
+            .AddSingleton<SharedCommands>()
             .AddSingleton<INotificationService>(_ => notificationService)
             .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileName, topLevel));
     }

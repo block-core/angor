@@ -5,5 +5,5 @@ namespace AngorApp.Sections.Founder.CreateProject.ProjectCreated;
 
 public interface IProjectCreatedViewModel
 {
-    public IEnhancedCommand<Result> OpenTransaction { get; }
+    public IEnhancedCommand OpenTransaction { get; }
 }

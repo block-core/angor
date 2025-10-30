@@ -2,6 +2,7 @@ using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Shared;
+using AngorApp.Core;
 using AngorApp.Sections.Portfolio.Manage;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
@@ -16,7 +17,7 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
     private readonly InvestedProjectDto projectDto;
     private readonly CompositeDisposable disposable = new();
 
-    public PortfolioProjectViewModel(InvestedProjectDto projectDto, IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator, IWalletContext walletContext)
+    public PortfolioProjectViewModel(InvestedProjectDto projectDto, IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator, IWalletContext walletContext, SharedCommands sharedCommands)
     {
         this.projectDto = projectDto;
 
@@ -43,7 +44,7 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
         Invested = new AmountUI(projectDto.Investment.Sats);
 
         InvestmentStatus = projectDto.InvestmentStatus;
-        GoToManageFunds = ReactiveCommand.CreateFromTask(() => navigator.Go(() => new ManageInvestorProjectViewModel(new ProjectId(projectDto.Id), investmentAppService, uiServices, walletContext))).Enhance().DisposeWith(disposable);
+        GoToManageFunds = ReactiveCommand.CreateFromTask(() => navigator.Go(() => new ManageInvestorProjectViewModel(new ProjectId(projectDto.Id), investmentAppService, uiServices, walletContext, sharedCommands))).Enhance().DisposeWith(disposable);
     }
 
     public string Name => projectDto.Name;
