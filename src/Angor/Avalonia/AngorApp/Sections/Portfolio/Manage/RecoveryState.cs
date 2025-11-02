@@ -29,6 +29,8 @@ public sealed record RecoveryState
 
     public bool CanRecover => dto.CanRecover;
     public bool CanRelease => dto.CanRelease;
-    public bool CanClaim => Stages.Any(stage => !stage.IsSpent);
+    public bool CanClaim => dto.CanClaim;
+    public bool EndOfProject => dto.EndOfProject;
+    public bool IsBelowPenaltyThreshold => dto.CanClaim && !dto.EndOfProject;
     public WalletId WalletId { get; }
 }

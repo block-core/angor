@@ -136,15 +136,26 @@ public static class GetInvestorProjectRecovery
             
             await Task.WhenAll(tasks);
 
+            // Calculate total investment amount
+            var totalInvestmentAmount = stageItems.Sum(a => a.Amount);
+            
+            // Check if investment is above penalty threshold
+            var isAboveThreshold = investorTransactionActions.IsInvestmentAbovePenaltyThreshold(
+                projectInfo, 
+                totalInvestmentAmount);
+            
+            var isEndOfProject = projectInfo.ExpiryDate < DateTime.Now;
+
             var response = new InvestorProjectRecoveryDto
             {
                 CanRecover = stageItems.Any(a => a.IsSpent == false),
                 CanRelease = (stageItems.Any(a => a.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) &&
                               DateTime.UtcNow > penaltyExpieryDate),
+                CanClaim = stageItems.Any(a => !a.IsSpent) && (isEndOfProject || !isAboveThreshold),
                 TotalSpendable = stageItems.Where(a => !a.IsSpent).Sum(a => a.Amount),
                 TotalInPenalty = stageItems.Where(t => t.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty)
                     .Sum(t => t.Amount),
-                EndOfProject = projectInfo.ExpiryDate < DateTime.Now,
+                EndOfProject = isEndOfProject,
                 ExpiryDate = projectInfo.ExpiryDate,
                 Name = project.Name,
                 PenaltyDays = projectInfo.PenaltyDays,

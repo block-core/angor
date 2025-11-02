@@ -12,6 +12,7 @@ public class InvestorProjectRecoveryDto
 
     public bool CanRecover { get; set; }
     public bool CanRelease { get; set; }
+    public bool CanClaim { get; set; }
     public bool EndOfProject { get; set; }
 
     public string? ExplorerLink { get; set; }

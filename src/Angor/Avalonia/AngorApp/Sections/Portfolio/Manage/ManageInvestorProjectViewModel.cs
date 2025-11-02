@@ -47,7 +47,10 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
         
         if (recoveryState.CanClaim)
         {
-            return ReactiveCommand.CreateFromTask(() => Claim(recoveryState)).Enhance("Claim Funds");
+            var buttonText = recoveryState.IsBelowPenaltyThreshold 
+                ? "Claim Funds (Below Threshold)" 
+                : "Claim Funds";
+            return ReactiveCommand.CreateFromTask(() => Claim(recoveryState)).Enhance(buttonText);
         }
 
         return ReactiveCommand.Create(() => Maybe<Guid>.None, Observable.Return(false)).Enhance();
@@ -78,7 +81,7 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
             .Map(_ => Guid.Empty), uiServices);
 
-        return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
+        return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Claim Funds", s => s.CommitDraft.Enhance("Claim Funds"));
     }
     
     private Task<Maybe<Guid>> Release(RecoveryState recoveryState)
@@ -88,10 +91,10 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
             return investmentAppService.BuildReleaseInvestorFunds(recoveryState.WalletId.Value, projectId, new DomainFeerate(fr))
                 .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
         }, model => investmentAppService.SubmitTransactionFromDraft(recoveryState.WalletId.Value, model.Model)
-            .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
+            .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds release transaction has been submitted successfully"))
             .Map(_ => Guid.Empty), uiServices);
 
-        return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
+        return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Release Funds", s => s.CommitDraft.Enhance("Release Funds"));
     }
 
     public IObservable<IEnhancedCommand> BatchAction { get; }
