@@ -2,7 +2,7 @@ using System.Numerics;
 using System.Security.Cryptography;
 using Angor.Contexts.Wallet.Domain;
 
-namespace AngorApp.Model.Domain.Wallet;
+namespace AngorApp.Model.Wallet;
 
 public class BitcoinAddressValidator
 {

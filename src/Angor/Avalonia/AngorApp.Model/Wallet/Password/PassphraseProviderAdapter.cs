@@ -4,7 +4,7 @@ using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI;
 
-namespace AngorApp.Model.Domain.Wallet.Password;
+namespace AngorApp.Model.Wallet.Password;
 
 public class  PassphraseProviderAdapter(IDialog dialog): IPassphraseProvider
 {

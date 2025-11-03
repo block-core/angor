@@ -1,4 +1,4 @@
-namespace AngorApp.Model.Domain.Wallet.Password;
+namespace AngorApp.Model.Wallet.Password;
 
 public class PasswordViewModelDesign : IPasswordViewModel
 {

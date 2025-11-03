@@ -1,6 +1,6 @@
-using AngorApp.Model.Domain.Amounts;
+using AngorApp.Model.Amounts;
 
-namespace AngorApp.Model.Domain.Projects;
+namespace AngorApp.Model.Projects;
 
 public class StageDesign : IStage
 {

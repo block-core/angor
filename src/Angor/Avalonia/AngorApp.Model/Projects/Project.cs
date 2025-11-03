@@ -1,4 +1,4 @@
-namespace AngorApp.Model.Domain.Projects;
+namespace AngorApp.Model.Projects;
 
 public class Project : IProject
 {

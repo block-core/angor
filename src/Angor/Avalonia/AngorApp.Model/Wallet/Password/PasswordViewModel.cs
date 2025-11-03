@@ -3,7 +3,7 @@ using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 
-namespace AngorApp.Model.Domain.Wallet.Password;
+namespace AngorApp.Model.Wallet.Password;
 
 public partial class PasswordViewModel : ReactiveValidationObject, IPasswordViewModel
 {

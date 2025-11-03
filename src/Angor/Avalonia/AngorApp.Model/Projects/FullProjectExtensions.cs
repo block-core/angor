@@ -2,7 +2,7 @@ using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
 using CSharpFunctionalExtensions;
 
-namespace AngorApp.Model.Domain.Projects;
+namespace AngorApp.Model.Projects;
 
 public static class FullProjectExtensions
 {

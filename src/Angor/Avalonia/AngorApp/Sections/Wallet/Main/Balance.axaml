@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:simple="clr-namespace:AngorApp.Model.Domain.Wallet;assembly=AngorApp.Model"
+             xmlns:simple="clr-namespace:AngorApp.Model.Wallet;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.Sections.Wallet.Main.Balance" x:DataType="simple:SimpleWallet">
     

@@ -1,4 +1,4 @@
-namespace AngorApp.Model.Domain.Wallet;
+namespace AngorApp.Model.Wallet;
 
 public class SeedWord
 {

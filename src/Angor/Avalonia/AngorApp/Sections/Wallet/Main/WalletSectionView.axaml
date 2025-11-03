@@ -5,7 +5,7 @@
              xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:main="clr-namespace:AngorApp.Sections.Wallet.Main"
-             xmlns:dw="clr-namespace:AngorApp.Model.Domain.Wallet;assembly=AngorApp.Model"
+             xmlns:dw="clr-namespace:AngorApp.Model.Wallet;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Wallet.Main.WalletSectionView" x:DataType="main:IWalletSectionViewModel">
 

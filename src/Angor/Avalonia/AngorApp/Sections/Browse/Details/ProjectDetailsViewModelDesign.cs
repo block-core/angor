@@ -1,5 +1,5 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
-using AngorApp.Model.Domain.Projects;
+using AngorApp.Model.Projects;
 using AngorApp.UI.Controls.Common.FoundedProjectOptions;
 
 namespace AngorApp.Sections.Browse.Details;

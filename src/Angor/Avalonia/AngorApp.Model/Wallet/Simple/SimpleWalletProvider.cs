@@ -7,7 +7,7 @@ using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI;
 
-namespace AngorApp.Model.Domain.Wallet;
+namespace AngorApp.Model.Wallet;
 
 public class SimpleWalletProvider(IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, INotificationService notificationService, INetworkConfiguration networkConfiguration, IDialog dialogService) : IWalletProvider
 {

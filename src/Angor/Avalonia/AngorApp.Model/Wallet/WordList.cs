@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using Zafiro.Mixins;
 
-namespace AngorApp.Model.Domain.Wallet;
+namespace AngorApp.Model.Wallet;
 
 
 public class SeedWords : Collection<SeedWord>

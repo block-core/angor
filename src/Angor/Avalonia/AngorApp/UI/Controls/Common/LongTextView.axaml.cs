@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace AngorApp.Model.Domain.Common;
+namespace AngorApp.Model.Common;
 
 public partial class LongTextView : UserControl
 {

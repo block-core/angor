@@ -1,7 +1,7 @@
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using AngorApp.Model.Domain.Projects;
+using AngorApp.Model.Projects;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.Approve;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.Claim;
 using AngorApp.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;

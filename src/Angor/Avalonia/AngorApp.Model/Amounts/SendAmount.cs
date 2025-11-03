@@ -1,4 +1,4 @@
-namespace AngorApp.Model.Domain.Amounts;
+namespace AngorApp.Model.Amounts;
 
 public class SendAmount
 {

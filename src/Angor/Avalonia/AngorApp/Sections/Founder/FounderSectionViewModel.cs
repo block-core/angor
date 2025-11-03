@@ -4,7 +4,7 @@ using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
 using AngorApp.Model.Contracts.Flows;
-using AngorApp.Model.Domain.Common;
+using AngorApp.Model.Common;
 using ReactiveUI;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;

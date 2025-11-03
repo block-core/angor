@@ -1,6 +1,6 @@
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
-using AngorApp.Model.Domain.Projects;
+using AngorApp.Model.Projects;
 using AngorApp.Sections.Browse;
 using ReactiveUI;
 using Zafiro.CSharpFunctionalExtensions;

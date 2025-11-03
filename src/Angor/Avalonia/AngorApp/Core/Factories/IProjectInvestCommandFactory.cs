@@ -1,4 +1,4 @@
-using AngorApp.Model.Domain.Projects;
+using AngorApp.Model.Projects;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
 

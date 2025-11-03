@@ -2,9 +2,9 @@ using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
 using Zafiro.Avalonia.Controls;
-using AngorApp.Model.Domain.Amounts;
+using AngorApp.Model.Amounts;
 
-namespace AngorApp.Model.Domain.Projects;
+namespace AngorApp.Model.Projects;
 
 public class FullProject(ProjectDto info, ProjectStatisticsDto stats) : IFullProject
 {

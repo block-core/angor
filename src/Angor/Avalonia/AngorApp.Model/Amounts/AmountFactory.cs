@@ -1,7 +1,7 @@
 using Angor.Shared;
 using AngorApp.Model.Contracts.Amounts;
 
-namespace AngorApp.Model.Domain.Amounts;
+namespace AngorApp.Model.Amounts;
 
 public class AmountFactory : IAmountFactory
 {

@@ -1,5 +1,6 @@
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Shared;
+using AngorApp.Core;
 using AngorApp.Sections.Founder.CreateProject;
 using AngorApp.Sections.Founder.CreateProject.ProjectCreated;
 using Zafiro.Avalonia.Controls.Wizards.Slim;

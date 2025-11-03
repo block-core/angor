@@ -2,10 +2,10 @@ using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
 using AngorApp.Model.Contracts.Amounts;
 using AngorApp.Model.Contracts.Wallet;
-using AngorApp.Model.Domain.Amounts;
+using AngorApp.Model.Amounts;
 using CSharpFunctionalExtensions;
 
-namespace AngorApp.Model.Domain.Wallet;
+namespace AngorApp.Model.Wallet;
 
 public class TransactionDraft(WalletId walletId, long amount, string address, DomainFeeRate feeRate, FeeAndSize feeAndSize, IWalletAppService walletAppService) : ITransactionDraft
 {

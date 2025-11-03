@@ -1,6 +1,6 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:password="clr-namespace:AngorApp.Model.Domain.Wallet.Password;assembly=AngorApp.Model"
+             xmlns:password="clr-namespace:AngorApp.Model.Wallet.Password;assembly=AngorApp.Model"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:f="clr-namespace:AngorApp.UI"

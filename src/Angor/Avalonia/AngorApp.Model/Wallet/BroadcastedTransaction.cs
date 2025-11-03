@@ -2,13 +2,13 @@ using System.Text.Json;
 using Angor.Contexts.Wallet.Domain;
 using AngorApp.Model.Contracts.Amounts;
 using AngorApp.Model.Contracts.Wallet;
-using AngorApp.Model.Domain.Amounts;
-using AngorApp.Model.Domain.Common;
+using AngorApp.Model.Amounts;
+using AngorApp.Model.Common;
 using ReactiveUI;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI.Commands;
 
-namespace AngorApp.Model.Domain.Wallet;
+namespace AngorApp.Model.Wallet;
 
 public class HistoryTransaction : IBroadcastedTransaction
 {

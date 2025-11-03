@@ -1,6 +1,6 @@
 using System.Linq;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
-using AngorApp.Model.Domain.Projects;
+using AngorApp.Model.Projects;
 
 namespace AngorApp.Sections.Browse;
 

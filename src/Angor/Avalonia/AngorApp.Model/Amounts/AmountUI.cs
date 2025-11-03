@@ -1,6 +1,6 @@
 using Angor.Contexts.Wallet.Domain;
 
-namespace AngorApp.Model.Domain.Amounts;
+namespace AngorApp.Model.Amounts;
 
 public class AmountUI(long sats, string symbol = "BTC") : IAmountUI
 {

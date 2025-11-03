@@ -7,7 +7,7 @@ using CSharpFunctionalExtensions;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI.Commands;
 
-namespace AngorApp.Model.Domain.Common;
+namespace AngorApp.Model.Common;
 
 public static class RefreshableCollection
 {

@@ -1,5 +1,5 @@
 using System.Linq;
-using AngorApp.Model.Domain.Projects;
+using AngorApp.Model.Projects;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 

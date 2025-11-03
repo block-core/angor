@@ -1,4 +1,4 @@
-namespace AngorApp.Model.Domain.Common;
+namespace AngorApp.Model.Common;
 
 public class LongTextViewModel
 {
