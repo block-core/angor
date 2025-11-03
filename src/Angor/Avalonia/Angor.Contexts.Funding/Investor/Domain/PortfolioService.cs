@@ -143,7 +143,10 @@ public class PortfolioService(
             
             if (!lookupResult.IsSuccess) 
                 return Result.Failure<InvestmentRecords>(lookupResult.Error);
-            
+
+            if (string.IsNullOrEmpty(encryptedContent))
+                return Result.Success(new InvestmentRecords());
+
             var decrypted = await encryptionService.DecryptData(encryptedContent, password);
             var investmentRecords = serializer.Deserialize<InvestmentRecords>(decrypted);
             return Result.Success(investmentRecords!);
