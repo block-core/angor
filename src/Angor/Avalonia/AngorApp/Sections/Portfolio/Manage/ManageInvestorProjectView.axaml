@@ -40,7 +40,7 @@
                             <Card Header="Penalty Period" Theme="{StaticResource LeftItemCard}" Subheader="{Binding State^.Project.PenaltyPeriod.TotalDays, StringFormat='{}{0} Days'}" />
                             <Card Header="Transaction" Theme="{StaticResource LeftItemCard}">
                                 <Card.Subheader>
-                                    <Button Command="{Binding ViewTransaction}" FontSize="{StaticResource FontSizeSmall}" Content="View" />
+                                    <Button Command="{Binding State^.ViewTransaction}" FontSize="{StaticResource FontSizeSmall}" Content="View" />
                                 </Card.Subheader>
                             </Card>
                         </BalancedWrapGrid>
@@ -70,7 +70,7 @@
                         </Card>
                         
                         <HeaderedContainer Header="Actions">
-                            <Button IsVisible="{Binding $self.IsEffectivelyEnabled}" Content="{Binding BatchAction^.Text, FallbackValue='Empty'}" Command="{Binding BatchAction^}" />
+                            <Button IsVisible="{Binding $self.IsEffectivelyEnabled}" Content="{Binding State^.BatchAction.Text, FallbackValue='Empty'}" Command="{Binding State^.BatchAction}" />
                         </HeaderedContainer>
                         <ResponsivePresenter Breakpoint="600">
                             <ResponsivePresenter.Narrow>
