@@ -2,12 +2,7 @@ using Angor.Contexts.Funding.Shared.TransactionDrafts;
 using Zafiro.Avalonia.Dialogs;
 using TransactionDraft = Angor.Contexts.Funding.Shared.TransactionDraft;
 
-namespace AngorApp.TransactionDrafts.DraftTypes;
-
-public interface ITransactionDraftViewModel
-{
-    TransactionDraft Model { get; }
-}
+namespace AngorApp.TransactionDrafts.DraftTypes.Investment;
 
 public class InvestmentTransactionDraftViewModel(InvestmentDraft dto, UIServices uiServices) : ITransactionDraftViewModel
 {

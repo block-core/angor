@@ -7,6 +7,8 @@ using Angor.Contexts.Wallet.Domain;
 using AngorApp.Core;
 using AngorApp.TransactionDrafts;
 using AngorApp.TransactionDrafts.DraftTypes;
+using AngorApp.TransactionDrafts.DraftTypes.Base;
+using AngorApp.TransactionDrafts.DraftTypes.Investment;
 using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.Sections.Portfolio.Manage;
@@ -66,7 +68,7 @@ public sealed record RecoveryStateViewModel
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
         {
             return investmentAppService.BuildRecoverInvestorFunds(recoveryStateViewModel.WalletId.Value, Project.ProjectId, new DomainFeerate(fr))
-                .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
+                .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
         }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, model.Model)
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds recovery transaction has been submitted successfully"))
             .Map(_ => Guid.Empty), uiServices);
@@ -79,7 +81,7 @@ public sealed record RecoveryStateViewModel
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
         {
             return investmentAppService.BuildClaimInvestorEndOfProjectFunds(recoveryStateViewModel.WalletId.Value, Project.ProjectId, new DomainFeerate(fr))
-                .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
+                .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
         }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, model.Model)
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
             .Map(_ => Guid.Empty), uiServices);
@@ -92,7 +94,7 @@ public sealed record RecoveryStateViewModel
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
         {
             return investmentAppService.BuildReleaseInvestorFunds(recoveryStateViewModel.WalletId.Value, Project.ProjectId, new DomainFeerate(fr))
-                .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
+                .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
         }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, model.Model)
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
             .Map(_ => Guid.Empty), uiServices);

@@ -5,6 +5,7 @@ using Angor.Contexts.Wallet.Domain;
 using AngorApp.Model.Projects;
 using AngorApp.TransactionDrafts;
 using AngorApp.TransactionDrafts.DraftTypes;
+using AngorApp.TransactionDrafts.DraftTypes.Investment;
 using AngorApp.UI.Controls.Common.Success;
 using Zafiro.Avalonia.Dialogs.Wizards.Slim;
 using Zafiro.CSharpFunctionalExtensions;
