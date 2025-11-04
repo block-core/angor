@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Angor.Contests.CrossCutting;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.History;
 using Angor.Shared;
@@ -11,20 +12,17 @@ namespace Angor.Contexts.Wallet.Infrastructure.Impl.History;
 
 public class TransactionHistory(
     IIndexerService indexerService,
-    IWalletOperations walletOperations,
+    IWalletAccountBalanceService accountBalanceService,
     ILogger logger) : ITransactionHistory
 {
-    public Task<Result<IEnumerable<string>>> GetWalletAddresses(WalletWords walletWords)
+    public async Task<Result<IEnumerable<string>>> GetWalletAddresses(WalletWords walletWords)
     {
-        return Result.Try(async () =>
-        {
-            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
-
-            await walletOperations.UpdateDataForExistingAddressesAsync(accountInfo);
-            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
-
-            return accountInfo.AllAddresses().Select(a => a.Address);
-        });
+            var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(WalletAppService.SingleWalletId.Value); //TODO move the wallet id to be generated from a service for the wallet words
+            
+            if (accountBalanceInfo.IsFailure)
+                return Result.Failure<IEnumerable<string>>(accountBalanceInfo.Error);
+            
+            return Result.Success(accountBalanceInfo.Value.AccountInfo.AllAddresses().Select(a => a.Address));
     }
     
     private Task<Result<List<QueryTransaction>>> LookupAddressTransactions(string address)
