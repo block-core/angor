@@ -15,7 +15,6 @@
 
     <DockPanel>
         <EnhancedButton Margin="20" DockPanel.Dock="Bottom" Content="View Transaction" HorizontalAlignment="Center" Command="{Binding ShowTransaction}" />
-on}" />
         <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
             <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Angor fee" EndContent="{Binding AngorFee}" />
             <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Miner Fee" EndContent="{Binding MinerFee}" />

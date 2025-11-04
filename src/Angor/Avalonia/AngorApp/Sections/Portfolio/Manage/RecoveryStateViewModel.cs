@@ -37,25 +37,25 @@ public sealed record RecoveryStateViewModel
 
         BatchAction = CreateBatchCommand(this);
     }
-    
-     private IEnhancedCommand<Maybe<Guid>> CreateBatchCommand(RecoveryStateViewModel recoveryStateViewModel)
-    {
-        if (recoveryStateViewModel.CanRecover)
-        {
-            return ReactiveCommand.CreateFromTask(() => Recover(recoveryStateViewModel)).Enhance("Recover Funds");
-        }
-        
-        if (recoveryStateViewModel.CanRelease)
-        {
-            return ReactiveCommand.CreateFromTask(() => Release(recoveryStateViewModel)).Enhance("Release Funds");
-        }
 
-        if (recoveryStateViewModel.CanClaim)
+    private IEnhancedCommand<Maybe<Guid>> CreateBatchCommand(RecoveryStateViewModel recoveryStateViewModel)
+    {
+        if (recoveryStateViewModel.CanSpendEndOfProjectOrThreshold)
         {
             var buttonText = recoveryStateViewModel.IsBelowPenaltyThreshold
                 ? "Claim Funds (Below Threshold)"
                 : "Claim Funds";
             return ReactiveCommand.CreateFromTask(() => Claim(recoveryStateViewModel)).Enhance(buttonText);
+        }
+
+        if (recoveryStateViewModel.CanRecoverToPenalty)
+        {
+            return ReactiveCommand.CreateFromTask(() => Recover(recoveryStateViewModel)).Enhance("Recover Funds");
+        }
+
+        if (recoveryStateViewModel.CanReleaseFromPenalty)
+        {
+            return ReactiveCommand.CreateFromTask(() => Release(recoveryStateViewModel)).Enhance("Release Funds");
         }
 
         return ReactiveCommand.Create(() => Maybe<Guid>.None, Observable.Return(false)).Enhance();
@@ -108,11 +108,12 @@ public sealed record RecoveryStateViewModel
 
     public InvestedProject Project { get; }
 
-    public bool CanRecover => dto.CanRecover;
-    public bool CanRelease => dto.CanRelease;
+    public bool CanRecoverToPenalty => dto.HasUnspentItems && !dto.HasItemsInPenalty;
+    public bool CanReleaseFromPenalty => dto.HasUnspentItems && dto.HasItemsInPenalty;
+    public bool CanSpendEndOfProjectOrThreshold => dto.HasUnspentItems && (dto.EndOfProject || !dto.IsAboveThreshold);
     public bool EndOfProject => dto.EndOfProject;
-    public bool CanClaim => Stages.Any(stage => !stage.IsSpent);
-    public bool IsBelowPenaltyThreshold => dto.CanClaim && !dto.EndOfProject;
+
+    public bool IsBelowPenaltyThreshold => !dto.IsAboveThreshold;
     public WalletId WalletId { get; }
 
     public string TransactionId => dto.TransactionId; 

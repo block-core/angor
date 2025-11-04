@@ -148,14 +148,12 @@ public static class GetInvestorProjectRecovery
 
             var response = new InvestorProjectRecoveryDto
             {
-                CanRecover = stageItems.Any(a => a.IsSpent == false),
-                CanRelease = (stageItems.Any(a => a.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) &&
-                              DateTime.UtcNow > penaltyExpieryDate),
-                CanClaim = stageItems.Any(a => !a.IsSpent) && (isEndOfProject || !isAboveThreshold),
-                TotalSpendable = stageItems.Where(a => !a.IsSpent).Sum(a => a.Amount),
-                TotalInPenalty = stageItems.Where(t => t.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty)
-                    .Sum(t => t.Amount),
+                HasUnspentItems = stageItems.Any(a => a.IsSpent == false),
+                HasItemsInPenalty = (stageItems.Any(a => a.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) && DateTime.UtcNow > penaltyExpieryDate),
                 EndOfProject = isEndOfProject,
+                IsAboveThreshold = isAboveThreshold,
+                TotalSpendable = stageItems.Where(a => !a.IsSpent).Sum(a => a.Amount),
+                TotalInPenalty = stageItems.Where(t => t.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty).Sum(t => t.Amount),
                 ExpiryDate = projectInfo.ExpiryDate,
                 Name = project.Name,
                 PenaltyDays = projectInfo.PenaltyDays,
