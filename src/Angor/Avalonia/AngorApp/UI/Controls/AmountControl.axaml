@@ -68,7 +68,7 @@
                     <Template>
                         <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                             <TextBlock Classes="Dimmed" Text="{Binding $parent[controls:AmountControl].Unit}" VerticalAlignment="Center" Margin="0 0 10 0" />
-                            <Button Theme="{StaticResource ErrorButton}"
+                            <EnhancedButton Theme="{StaticResource ErrorButton}"
                                     Margin="0 0 8 0" Background="{DynamicResource SystemControlErrorTextForegroundBrush}" />
                         </StackPanel>
                     </Template>

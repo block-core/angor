@@ -32,6 +32,7 @@
         <PackageReference Include="QRCoder"/>
         <PackageReference Include="Serilog.Extensions.Logging"/>
         <PackageReference Include="Serilog.Sinks.Console"/>
+        <PackageReference Include="Serilog.Sinks.File" />
         <PackageReference Include="Zafiro"/>
         <PackageReference Include="Zafiro.Avalonia"/>
         <PackageReference Include="Zafiro.Avalonia.Generators"/>
@@ -39,8 +40,7 @@
 
     <ItemGroup>
         <ProjectReference Include="../Angor.Contexts.Integration.WalletFunding/Angor.Contexts.Integration.WalletFunding.csproj"/>
-        <ProjectReference Include="../Angor.UI.Model.Implementation/Angor.UI.Model.Implementation.csproj"/>
-        <ProjectReference Include="../Angor.UI.Model/Angor.UI.Model.csproj"/>
+        <ProjectReference Include="../AngorApp.Model/AngorApp.Model.csproj"/>
         <ProjectReference Include="../Angor.Contexts.Wallet/Angor.Contexts.Wallet.csproj"/>
         <ProjectReference Include="../Angor.Contexts.Funding/Angor.Contexts.Funding.csproj"/>
         <ProjectReference Include="..\Angor.Data.Documents.LiteDb\Angor.Data.Documents.LiteDb.csproj" />

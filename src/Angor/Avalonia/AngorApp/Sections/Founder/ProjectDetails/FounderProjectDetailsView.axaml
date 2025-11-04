@@ -5,7 +5,7 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:pr="clr-namespace:AngorApp.Sections.Founder.ProjectDetails"
              xmlns:statistics="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Statistics"
-             xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
+             xmlns:model="clr-namespace:AngorApp.Model.Contracts.Projects;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.FounderProjectDetailsView" x:DataType="pr:IFounderProjectDetailsViewModel">
 
@@ -73,13 +73,13 @@
                             </HeaderedContainer>
                             <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Target Amount" EndContent="{Binding TargetAmount.ShortDecimalString}" />
                             <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Raised Amount" EndContent="{Binding RaisedAmount.ShortDecimalString}" />
-                            <Button Content="See NSEC">
+                            <EnhancedButton Content="See NSEC">
                                 <Button.Flyout>
                                     <Flyout>
                                         Not available yet
                                     </Flyout>
                                 </Button.Flyout>
-                            </Button>
+                            </EnhancedButton>
                         </StackPanel>
                     </Card>
                 </StackPanel>

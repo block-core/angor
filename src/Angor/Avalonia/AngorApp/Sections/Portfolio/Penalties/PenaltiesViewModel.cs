@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Windows.Input;
 using Angor.Contexts.Funding.Investor;
-using Angor.UI.Model.Implementation.Common;
+using AngorApp.Model.Common;
 using AngorApp.Sections.Portfolio.Recover;
 using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;

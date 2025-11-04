@@ -67,7 +67,7 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
     {
         var feeResult = walletAppService.EstimateFeeAndSize(walletId, new Amount(destinationAmount), new Address(destinationBitcoinAddress), new DomainFeeRate(feeRate));
 
-        return feeResult.Map(fee => (ITransactionDraft)new Angor.UI.Model.Implementation.Wallet.TransactionDraft(
+        return feeResult.Map(fee => (ITransactionDraft)new AngorApp.Model.Wallet.TransactionDraft(
             walletId: walletId,
             amount: destinationAmount,
             address: destinationBitcoinAddress,

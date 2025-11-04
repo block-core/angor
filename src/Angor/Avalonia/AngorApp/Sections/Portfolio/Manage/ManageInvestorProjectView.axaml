@@ -25,10 +25,10 @@
                     <ui:Icon Source="fa-list-check" />
                 </Card.HeaderStartContent>
                 <Card.HeaderEndContent>
-                    <UniformGrid Rows="1" HorizontalAlignment="Stretch">
-                        <Button Content="{Icon fa-arrows-rotate}" Command="{Binding Load}" />
-                        <Button Content="Message" />
-                    </UniformGrid>
+                    <StackPanel Orientation="Horizontal" Classes="SmallGap" HorizontalAlignment="Stretch">
+                        <EnhancedButton Icon="{Icon fa-arrows-rotate}" Command="{Binding Load}" />
+                        <EnhancedButton Content="Message" />
+                    </StackPanel>
                 </Card.HeaderEndContent>
             </Card>
             <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading investment details...">
@@ -40,7 +40,7 @@
                             <Card Header="Penalty Period" Theme="{StaticResource LeftItemCard}" Subheader="{Binding State^.Project.PenaltyPeriod.TotalDays, StringFormat='{}{0} Days'}" />
                             <Card Header="Transaction" Theme="{StaticResource LeftItemCard}">
                                 <Card.Subheader>
-                                    <Button Command="{Binding State^.ViewTransaction}" FontSize="{StaticResource FontSizeSmall}" Content="View" />
+                                    <EnhancedButton Command="{Binding State^.ViewTransaction}" FontSize="{StaticResource FontSizeSmall}" Content="View" />
                                 </Card.Subheader>
                             </Card>
                         </BalancedWrapGrid>
@@ -70,7 +70,7 @@
                         </Card>
                         
                         <HeaderedContainer Header="Actions">
-                            <Button IsVisible="{Binding $self.IsEffectivelyEnabled}" Content="{Binding State^.BatchAction.Text, FallbackValue='Empty'}" Command="{Binding State^.BatchAction}" />
+                            <EnhancedButton IsVisible="{Binding $self.IsEffectivelyEnabled}" Content="{Binding State^.BatchAction.Text, FallbackValue='Empty'}" Command="{Binding State^.BatchAction}" />
                         </HeaderedContainer>
                         <ResponsivePresenter Breakpoint="600">
                             <ResponsivePresenter.Narrow>

@@ -95,18 +95,18 @@
                                 </BalancedWrapGrid>
                             </Card.Header>
                             <DockPanel IsVisible="{Binding #ToggleButton.IsChecked}">
-                                <ReactiveIconButton Icon="{Icon svg:/Assets/claim.svg}" Padding="15 10" Margin="0 20 0 0" HorizontalAlignment="Right" Command="{Binding Claim}" Content="Claim Selected Coins" DockPanel.Dock="Bottom" />
+                                <EnhancedButton Icon="{Icon svg:/Assets/claim.svg}" Padding="15 10" Margin="0 20 0 0" HorizontalAlignment="Right" Command="{Binding Claim}" Content="Claim Selected Coins" DockPanel.Dock="Bottom" />
                                 <StackPanel DockPanel.Dock="Top" Margin="0 10" Orientation="Horizontal" Spacing="10">
-                                    <IconButton IsVisible="{Binding $self.IsEffectivelyEnabled}" Command="{Binding ReactiveSelection.SelectAll}" Classes="Small" Content="Select Claimable" DockPanel.Dock="Top">
-                                        <IconButton.Icon>
+                                    <EnhancedButton IsVisible="{Binding $self.IsEffectivelyEnabled}" Command="{Binding ReactiveSelection.SelectAll}" Classes="Small" Content="Select Claimable" DockPanel.Dock="Top">
+                                        <EnhancedButton.Icon>
                                             <ui:Icon Source="mdi-checkbox-multiple-outline" />
-                                        </IconButton.Icon>
-                                    </IconButton>
-                                    <IconButton IsVisible="{Binding $self.IsEffectivelyEnabled}" Command="{Binding ReactiveSelection.Clear}" Classes="Small" Content="Clear Selection">
-                                        <IconButton.Icon>
+                                        </EnhancedButton.Icon>
+                                    </EnhancedButton>
+                                    <EnhancedButton IsVisible="{Binding $self.IsEffectivelyEnabled}" Command="{Binding ReactiveSelection.Clear}" Classes="Small" Content="Clear Selection">
+                                        <EnhancedButton.Icon>
                                             <ui:Icon Source="mdi-checkbox-multiple-blank-outline" />
-                                        </IconButton.Icon>
-                                    </IconButton>
+                                        </EnhancedButton.Icon>
+                                    </EnhancedButton>
                                 </StackPanel>
                                 <ListBox Classes="Rounded" x:Name="ListBox" Selection="{Binding ReactiveSelection.SelectionModel}" ItemsSource="{Binding Transactions}"
                                          Grid.IsSharedSizeScope="True" ItemContainerTheme="{StaticResource TransactionItemTheme}">

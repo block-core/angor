@@ -1,6 +1,5 @@
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding;
-using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Integration.WalletFunding;
 using Angor.Contexts.Wallet;
 using Angor.Contexts.Wallet.Domain;
@@ -8,25 +7,14 @@ using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Data.Documents.LiteDb.Extensions;
 using Angor.Shared;
 using Angor.Shared.Services;
-using AngorApp.Composition.Registrations;
+using AngorApp.Core;
 using AngorApp.Composition.Registrations.Sections;
 using AngorApp.Composition.Registrations.Services;
 using AngorApp.Composition.Registrations.ViewModels;
-using AngorApp.Sections;
-using AngorApp.Sections.Browse;
-using AngorApp.Sections.Founder;
-using AngorApp.Sections.Home;
-using AngorApp.Sections.Portfolio;
-using AngorApp.Sections.Settings;
 using AngorApp.Sections.Shell;
-using AngorApp.Sections.Wallet;
-using Humanizer;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using Serilog.Core;
-using Zafiro.Avalonia.Services;
 using Zafiro.UI.Navigation;
-using Zafiro.UI.Navigation.Sections;
 
 namespace AngorApp.Composition;
 
@@ -35,12 +23,11 @@ public static class CompositionRoot
     public static IMainViewModel CreateMainViewModel(Control topLevelView, string profileName)
     {
         var services = new ServiceCollection();
+        var applicationStorage = new ApplicationStorage();
+        var profileContext = new ProfileContext("Angor", applicationStorage.SanitizeProfileName(profileName));
+        var logger = LoggingConfigurator.CreateLogger(profileContext.AppName, applicationStorage);
 
-        var logger = new LoggerConfiguration()
-            .WriteTo.Console()
-            .MinimumLevel.Debug().CreateLogger();
-
-        var store = new FileStore("Angor", profileName);
+        var store = new FileStore(applicationStorage, profileContext);
         var networkStorage = new NetworkStorage(store);
         var network = networkStorage.GetNetwork() switch
         {
@@ -48,11 +35,11 @@ public static class CompositionRoot
             _ => BitcoinNetwork.Testnet
         };
 
-        services.AddLiteDbDocumentStorage(profileName);
-        
-       // RegisterLogger(services, logger);
+        services.AddSingleton<IApplicationStorage>(applicationStorage);
+        services.AddLiteDbDocumentStorage(profileContext);
         services.AddKeyedSingleton<IStore>("file", store);
         services.AddSingleton<IStore>(provider => provider.GetKeyedService<IStore>("file")!);
+        LoggingConfigurator.RegisterLogger(services, logger);
 
         services.AddSingleton<Func<BitcoinNetwork>>(sp => () =>
         {
@@ -64,7 +51,7 @@ public static class CompositionRoot
         services
             .AddModelServices()
             .AddViewModels()
-            .AddUiServices(topLevelView, profileName);
+            .AddUiServices(topLevelView, profileContext, applicationStorage);
         
         services.AddNavigator(logger);
         services.AddSecurityContext();
@@ -83,14 +70,8 @@ public static class CompositionRoot
     }
 
 
-    private static void RegisterWalletServices(ServiceCollection services, Logger logger, BitcoinNetwork network)
+    private static void RegisterWalletServices(ServiceCollection services, ILogger logger, BitcoinNetwork network)
     {
         WalletContextServices.Register(services, logger, network);
-    }
-
-    private static void RegisterLogger(ServiceCollection services, Logger logger)
-    {
-        services.AddLogging(builder => builder.AddSerilog());
-        services.AddSingleton<ILogger>(logger);
     }
 }

@@ -8,7 +8,6 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Blockcore.NBitcoin.BIP39;
 using CSharpFunctionalExtensions;
-using System.Net.Http;
 
 namespace Angor.Contexts.Wallet.Infrastructure.Impl;
 
@@ -19,7 +18,8 @@ public class WalletAppService(
     IWalletStore walletStore,
     IPsbtOperations psbtOperations,
     ITransactionHistory transactionHistory,
-    IHttpClientFactory httpClientFactory)
+    IHttpClientFactory httpClientFactory,
+    IWalletAccountBalanceService accountBalanceService)
     : IWalletAppService
 {
     public static readonly WalletId SingleWalletId = new(new Guid("8E3C5250-4E26-4A13-8075-0A189AEAF793"));
@@ -69,11 +69,13 @@ public class WalletAppService(
             }
 
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
-            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
-        
-            // Update AccountInfo to ensure it has change addresses
-            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
-        
+            var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId.Value);
+
+            if (accountBalanceInfo.IsFailure)
+                return Result.Failure<FeeAndSize>(accountBalanceInfo.Error);
+            
+            var accountInfo = accountBalanceInfo.Value.AccountInfo;
+            
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();
             if (string.IsNullOrEmpty(changeAddress))
                 return Result.Failure<FeeAndSize>("No change address available");
@@ -116,10 +118,12 @@ public class WalletAppService(
                 return Result.Failure<Address>(sensitiveDataResult.Error);
             }
 
-            var (seed, passphrase) = sensitiveDataResult.Value;
-            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
-            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
-            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId.Value);
+
+            if (accountBalanceInfo.IsFailure)
+                return Result.Failure<Address>(accountBalanceInfo.Error);  
+            
+            var accountInfo = accountBalanceInfo.Value.AccountInfo;
 
             var address = accountInfo.GetNextReceiveAddress();
             
@@ -152,8 +156,12 @@ public class WalletAppService(
             var (seed, passphrase) = sensitiveDataResult.Value;
             
             var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
-            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
-            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+            var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId.Value);
+
+            if (accountBalanceInfo.IsFailure)
+                return Result.Failure<TxId>(accountBalanceInfo.Error);
+            
+            var accountInfo = accountBalanceInfo.Value.AccountInfo;
             
             var satsPerVirtualKb = feeRate.SatsPerVByte * 1000;
             

@@ -43,11 +43,14 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
         
         var accountBalanceInfo = accountBalanceInfoResult.Value;
         
-        await Result.Try(async () =>
+        var updateResult = await Result.Try(async () =>
         {
             await walletOperations.UpdateDataForExistingAddressesAsync(accountBalanceInfo.AccountInfo);
             await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountBalanceInfo.AccountInfo);
         });
+
+        if (updateResult.IsFailure)
+            return Result.Failure<AccountBalanceInfo>(updateResult.Error);
         
         accountBalanceInfo.UpdateAccountBalanceInfo(accountBalanceInfo.AccountInfo, []);
         

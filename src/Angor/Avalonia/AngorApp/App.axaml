@@ -1,6 +1,6 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:password="clr-namespace:Angor.UI.Model.Implementation.Wallet.Password;assembly=Angor.UI.Model.Implementation"
+             xmlns:password="clr-namespace:AngorApp.Model.Wallet.Password;assembly=AngorApp.Model"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:f="clr-namespace:AngorApp.UI"
@@ -109,17 +109,15 @@
 
         </FluentTheme>
 
-        <StyleInclude Source="UI/Styles/Themes/Light.axaml" />
-
         <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
         <StyleInclude Source="avares://Zafiro.Avalonia.Dialogs/Styles.axaml" />
+        <StyleInclude Source="UI/Styles/Styles.axaml" />
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
         <StyleInclude Source="UI/Controls/Pane.axaml" />
         <StyleInclude Source="UI/Controls/AmountControl.axaml" />
         <StyleInclude Source="UI/Controls/List.axaml" />
         <StyleInclude Source="UI/Controls/IconLabel.axaml" />
         <StyleInclude Source="UI/Controls/ProjectCard.axaml" />
-        <StyleInclude Source="UI/Controls/IconButton.axaml" />
         <StyleInclude Source="UI/Controls/Feerate/FeerateSelector.axaml" />
         <StyleInclude Source="UI/Controls/ErrorSummary.axaml" />
         <StyleInclude Source="Sections/Wallet/CreateAndImport/Steps/SeedWordsGeneration/SeedWordList.axaml" />
@@ -132,7 +130,6 @@
         <StyleInclude Source="UI/Styles/TextBlock.axaml" />
         <StyleInclude Source="UI/Styles/ToggleButton.axaml" />
         <StyleInclude Source="UI/Styles/FlyoutPresenter.axaml" />
-        <StyleInclude Source="UI/Styles/Styles.axaml" />
         <StyleInclude Source="UI/Styles/Button.axaml" />
         <StyleInclude Source="UI/Styles/Automation.axaml" />
         <StyleInclude Source="UI/Styles/SlimDataGrid.axaml" />
@@ -151,9 +148,6 @@
         </DataTemplate>
         <DataTypeViewLocator />
         <DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
-        <DataTemplate DataType="password:IIcon">
-            <avalonia:Icon FontSize="40" VerticalAlignment="Center" Value="{Binding Key}" />
-        </DataTemplate>
     </Application.DataTemplates>
 
 </Application>

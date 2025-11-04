@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
-             xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
-             xmlns:simple="clr-namespace:Angor.UI.Model.Implementation.Wallet.Simple;assembly=Angor.UI.Model.Implementation"
+             xmlns:model="clr-namespace:AngorApp.Model.Contracts.Amounts;assembly=AngorApp.Model"
+             xmlns:simple="clr-namespace:AngorApp.Model.Wallet;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Wallet.Main.HistoryView"
              x:DataType="simple:SimpleWallet">
@@ -40,7 +40,7 @@
                     </Column.HeaderTemplate>
                     <Column.CellTemplate>
                         <DataTemplate>
-                            <Button Command="{Binding ShowJson}"
+                            <EnhancedButton Command="{Binding ShowJson}"
                                     i:Attached.Icon="fa-solid fa-ellipsis" />
                         </DataTemplate>
                     </Column.CellTemplate>

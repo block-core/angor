@@ -1,43 +1,44 @@
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
-using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
-using Angor.Shared;
+using Angor.Data.Documents.Interfaces;
 using CSharpFunctionalExtensions;
 using MediatR;
-using Zafiro.CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class GetFounderProjects
 {
     public class GetFounderProjectsHandler(
-        IProjectService projectService,
         ISeedwordsProvider seedwordsProvider,
-        IDerivationOperations derivationOperations, 
-        INetworkConfiguration networkConfiguration,
-        IStore store) : IRequestHandler<GetFounderProjectsRequest, Result<IEnumerable<ProjectDto>>>
+        IProjectService projectService,
+        IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection) : IRequestHandler<GetFounderProjectsRequest, Result<IEnumerable<ProjectDto>>>
     {
-        public Task<Result<IEnumerable<ProjectDto>>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
+        public async Task<Result<IEnumerable<ProjectDto>>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
         {
-            return GetProjectIds(request)
-                .Bind(ids => projectService.GetAllAsync(ids.ToArray()))
-                .MapEach(project => project.ToDto())
-                .WithTimeout(TimeSpan.FromSeconds(10));
-        }
+            var result = await seedwordsProvider.GetSensitiveData(request.WalletId); // Ensure wallet is unlocked
 
-        private async Task<Result<IEnumerable<ProjectId>>> GetProjectIds(GetFounderProjectsRequest request)
-        {
-            var result = await seedwordsProvider.GetSensitiveData(request.WalletId)
-                .Map(p => p.ToWalletWords())
-                .Map(words => derivationOperations.DeriveProjectKeys(words, networkConfiguration.GetAngorKey()))//TODO we need to change this, the derivation code requires very heavy computations
-                .Map(collection => collection.Keys.AsEnumerable())
-                .MapEach(keys => keys.ProjectIdentifier)
-                .MapEach(fk => new ProjectId(fk));
+            if (result.IsFailure)
+                return Result.Failure<IEnumerable<ProjectDto>>(result.Error);
             
-            return result;
+            var storageResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.ToString());
+
+            if (storageResult.IsFailure || storageResult.Value == null)
+                Result.Failure<IEnumerable<ProjectDto>>(storageResult.IsFailure ? storageResult.Error
+                    : "No projects found for the given wallet.");
+            
+            var keys = storageResult.Value!.Keys.Select(k => new ProjectId(k.ProjectIdentifier));
+            
+            var projects = await projectService.GetAllAsync(keys.ToArray());
+            
+            if (projects.IsFailure)
+                return Result.Failure<IEnumerable<ProjectDto>>(projects.Error);
+
+            var dtoList = projects.Value.Select(p => p.ToDto());
+            
+            return Result.Success(dtoList);
         }
     }
 

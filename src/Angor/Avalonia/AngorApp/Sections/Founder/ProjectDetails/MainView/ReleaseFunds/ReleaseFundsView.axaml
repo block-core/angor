@@ -26,11 +26,11 @@
                 </StackPanel>
                 <TextBlock Classes="Wrap Center" FontWeight="Regular" DockPanel.Dock="Top">As founder, you can only release the funds back to the investors</TextBlock>
             </StackPanel>
-            <IconButton Margin="0 0 10 0" Command="{Binding ReleaseAll}" Content="Release All" DockPanel.Dock="Top" HorizontalAlignment="Right">
-                <IconButton.Icon>
+            <EnhancedButton Margin="0 0 10 0" Command="{Binding ReleaseAll}" Content="Release All" DockPanel.Dock="Top" HorizontalAlignment="Right">
+                <EnhancedButton.Icon>
                     <ui:Icon Source="mdi-check-all" />
-                </IconButton.Icon>
-            </IconButton>
+                </EnhancedButton.Icon>
+            </EnhancedButton>
             <ResponsivePresenter Breakpoint="600">
                 <ResponsivePresenter.Narrow>
                     <ItemsControl Classes="ShowEmptyContent" Empty.Content="No release items found" ItemsSource="{Binding Transactions}">
@@ -46,7 +46,7 @@
                                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Arrived:" Content="{Binding Arrived, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
                                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Approved:" Content="{Binding Approved, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
                                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Released:" Content="{Binding Released, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
-                                        <Button HorizontalAlignment="Right" Command="{Binding Release}" Content="Release" IsVisible="{Binding $self.IsEffectivelyEnabled}" />
+                                        <EnhancedButton HorizontalAlignment="Right" Command="{Binding Release}" Content="Release" IsVisible="{Binding $self.IsEffectivelyEnabled}" />
                                     </StackPanel>
                                 </Card>
                             </DataTemplate>
@@ -76,11 +76,11 @@
                             <Column Binding="{Binding}">
                                 <Column.CellTemplate>
                                     <DataTemplate>
-                                        <IconButton Command="{Binding Release}" HorizontalAlignment="Right" Content="Release">
-                                            <IconButton.Icon>
+                                        <EnhancedButton Command="{Binding Release}" HorizontalAlignment="Right" Content="Release">
+                                            <EnhancedButton.Icon>
                                                 <ui:Icon Source="mdi-check" />
-                                            </IconButton.Icon>
-                                        </IconButton>
+                                            </EnhancedButton.Icon>
+                                        </EnhancedButton>
                                     </DataTemplate>
                                 </Column.CellTemplate>
                             </Column>

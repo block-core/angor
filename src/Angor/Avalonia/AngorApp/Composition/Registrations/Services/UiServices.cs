@@ -1,6 +1,8 @@
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Angor.Contests.CrossCutting;
 using Angor.Shared;
 using AngorApp.Core;
 using AngorApp.Sections.Shell;
@@ -20,19 +22,20 @@ namespace AngorApp.Composition.Registrations.Services;
 public static class UiServices
 {
     // Registers UI-level services, dialogs, shell and notifications
-    public static IServiceCollection AddUiServices(this IServiceCollection services, Control parent, string profileName)
+    public static IServiceCollection AddUiServices(this IServiceCollection services, Control parent, ProfileContext profileContext, IApplicationStorage storage)
     {
         var topLevel = TopLevel.GetTopLevel(parent);
         
         Debug.Assert(topLevel != null, "TopLevel cannot be null. Ensure that the parent control is attached to a TopLevel.");
         
         var notificationService = NotificationService(topLevel);
+        var settingsFilePath = CreateSettingsFilePath(storage, profileContext);
         
         return services
             .AddSettings(
-                company: "Angor",
+                company: profileContext.AppName,
                 product: "AngorApp",
-                fileName: CreateSettingsFilePath(profileName),
+                fileName: settingsFilePath,
                 createDefault: UIPreferences.CreateDefault)
             .AddSingleton<ILauncherService>(_ => new LauncherService(topLevel!.Launcher))
             .AddSingleton<IDialog>(new AdornerDialog(() =>
@@ -47,7 +50,7 @@ public static class UiServices
             .AddSingleton<IValidations, Validations>()
             .AddSingleton<SharedCommands>()
             .AddSingleton<INotificationService>(_ => notificationService)
-            .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileName, topLevel));
+            .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileContext.ProfileName, topLevel));
     }
     
     private static NotificationService NotificationService(TopLevel topLevel)
@@ -76,25 +79,19 @@ public static class UiServices
         return Observable.Return("");
     }
 
-    private static string CreateSettingsFilePath(string profileName)
+    private static string CreateSettingsFilePath(IApplicationStorage storage, ProfileContext profileContext)
     {
-        var safeProfile = SanitizeProfileName(profileName);
-        return Path.Combine("profiles", safeProfile, "ui-settings.json");
-    }
-
-    private static string SanitizeProfileName(string profileName)
-    {
-        if (string.IsNullOrWhiteSpace(profileName))
+        try
         {
-            return "Default";
+            return storage.GetProfileFilePath(profileContext.AppName, profileContext.ProfileName, "ui-settings.json");
         }
-
-        var invalidChars = Path.GetInvalidFileNameChars();
-        var trimmed = profileName.Trim();
-        var sanitized = new string(trimmed
-            .Select(ch => Array.IndexOf(invalidChars, ch) >= 0 ? '_' : ch)
-            .ToArray());
-
-        return string.IsNullOrWhiteSpace(sanitized) ? "Default" : sanitized;
+        catch (Exception)
+        {
+            var fallbackRoot = Path.Combine(AppContext.BaseDirectory, "Profiles");
+            Directory.CreateDirectory(fallbackRoot);
+            var profileDirectory = Path.Combine(fallbackRoot, profileContext.ProfileName);
+            Directory.CreateDirectory(profileDirectory);
+            return Path.Combine(profileDirectory, "ui-settings.json");
+        }
     }
 }

@@ -48,9 +48,13 @@ jobs:
       run: dotnet restore ${{env.SOLUTION_PATH}}
 
     - name: Unit Test (Debug)
+      shell: bash
       run: |
-       dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Debug src/Angor.sln | grep -E '(Passed|Failed) .*ms'
+        set -euo pipefail
+        dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Debug src/Angor.sln
 
     - name: Unit Test (Release)
+      shell: bash
       run: |
-        dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Release src/Angor.sln | grep -E '(Passed|Failed) .*ms'
+        set -euo pipefail
+        dotnet test --logger "trx;LogFileName=testresults.trx" -v normal -c Release src/Angor.sln

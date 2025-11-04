@@ -1,4 +1,4 @@
-using Angor.UI.Model.Implementation.Projects;
+using AngorApp.Model.Projects;
 using AngorApp.Sections.Browse.Details;
 using AngorApp.UI.Controls.Common.FoundedProjectOptions;
 

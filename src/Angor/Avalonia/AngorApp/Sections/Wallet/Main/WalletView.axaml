@@ -3,8 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:simple="clr-namespace:Angor.UI.Model.Implementation.Wallet.Simple;assembly=Angor.UI.Model.Implementation"
              xmlns:main="clr-namespace:AngorApp.Sections.Wallet.Main"
+             xmlns:simple="clr-namespace:AngorApp.Model.Wallet;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Wallet.Main.WalletView" x:DataType="simple:SimpleWallet">
     
@@ -19,16 +19,16 @@
             <Card Theme="{StaticResource WideCard}" Header="Wallet" Subheader="Wallet and balances" DockPanel.Dock="Top">
                 <Card.HeaderEndContent>
                     <WrapGrid ColumnSpacing="10">
-                        <Button Command="{Binding Load}" Content="{Icon fa-arrows-rotate}" />
-                        <Button Command="{Binding Send}" Content="Send" />
-                        <Button Content="Receive">
-                            <Button.Flyout>
+                        <EnhancedButton Command="{Binding Load}" Icon="{Icon fa-arrows-rotate}" />
+                        <EnhancedButton Command="{Binding Send}" Content="Send" />
+                        <EnhancedButton Content="Receive">
+                            <EnhancedButton.Flyout>
                                 <Flyout>
                                     <main:Receive />
                                 </Flyout>
-                            </Button.Flyout>
-                        </Button>
-                        <Button Command="{Binding GetTestCoins}" 
+                            </EnhancedButton.Flyout>
+                        </EnhancedButton>
+                        <EnhancedButton Command="{Binding GetTestCoins}" 
                                 Content="Get Test Coins" 
                                 IsVisible="{Binding CanGetTestCoins}" />
                     </WrapGrid>

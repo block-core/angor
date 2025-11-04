@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
+             xmlns:model="clr-namespace:AngorApp.Model.Contracts.Amounts;assembly=AngorApp.Model"
              xmlns:draftTypes="clr-namespace:AngorApp.TransactionDrafts.DraftTypes"
              mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="400"
              x:Class="AngorApp.TransactionDrafts.InvestmentDraftView" x:DataType="draftTypes:InvestmentTransactionDraftViewModel">
@@ -14,7 +14,8 @@
     </UserControl.DataTemplates>
 
     <DockPanel>
-        <Button Margin="20" DockPanel.Dock="Bottom" Content="View Transaction" HorizontalAlignment="Center" Command="{Binding ShowTransaction}" />
+        <EnhancedButton Margin="20" DockPanel.Dock="Bottom" Content="View Transaction" HorizontalAlignment="Center" Command="{Binding ShowTransaction}" />
+on}" />
         <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
             <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Angor fee" EndContent="{Binding AngorFee}" />
             <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Miner Fee" EndContent="{Binding MinerFee}" />

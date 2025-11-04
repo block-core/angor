@@ -36,12 +36,12 @@
             <StackPanel Spacing="15">
                 <seedWordsGeneration1:SeedWordsList SeedWords="{Binding Words.Value}" />
                 <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                    <controls:IconButton HorizontalAlignment="Stretch" Content="Copy All" Command="{Binding Source={x:Static f:Commands.Instance}, Path=CopyText}" CommandParameter="{Binding Words.Value, Converter={x:Static converters:ZafiroStringConverters.AsString}}">
-                        <controls:IconButton.Icon>
+                    <EnhancedButton HorizontalAlignment="Stretch" Content="Copy All" Command="{Binding Source={x:Static f:Commands.Instance}, Path=CopyText}" CommandParameter="{Binding Words.Value, Converter={x:Static converters:ZafiroStringConverters.AsString}}">
+                        <EnhancedButton.Icon>
                             <av:Icon Value="fa-copy" />
-                        </controls:IconButton.Icon>
-                    </controls:IconButton>
-                    <Button Command="{Binding GenerateWords}" Content="Generate New" HorizontalAlignment="Stretch"  />
+                        </EnhancedButton.Icon>
+                    </EnhancedButton>
+                    <EnhancedButton Command="{Binding GenerateWords}" Content="Generate New" HorizontalAlignment="Stretch"  />
                 </StackPanel>
             </StackPanel>
 

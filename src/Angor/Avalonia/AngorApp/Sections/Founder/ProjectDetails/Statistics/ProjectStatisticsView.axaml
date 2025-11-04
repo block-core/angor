@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:design="clr-namespace:AngorApp.Design"
              xmlns:statistics="clr-namespace:AngorApp.Sections.Founder.ProjectDetails.Statistics"
-             xmlns:model="clr-namespace:Angor.UI.Model;assembly=Angor.UI.Model"
+             xmlns:model="clr-namespace:AngorApp.Model.Contracts.Projects;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="400"
              x:Class="AngorApp.Sections.Founder.ProjectDetails.Statistics.ProjectStatisticsView" x:DataType="model:IFullProject">
     

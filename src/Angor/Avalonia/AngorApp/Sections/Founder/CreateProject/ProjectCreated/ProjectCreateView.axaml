@@ -13,6 +13,6 @@
             <TextBlock Classes="SizeLarge">The project transaction has been published</TextBlock>
             <TextBlock>Your project will appear once it has been added to a block in the blockchain</TextBlock>
         </StackPanel>
-        <Button HorizontalAlignment="Center" Command="{Binding OpenTransaction}">Check Transaction</Button>
+        <EnhancedButton HorizontalAlignment="Center" Command="{Binding OpenTransaction}">Check Transaction</EnhancedButton>
     </StackPanel>
 </UserControl>
