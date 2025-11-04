@@ -1,6 +1,6 @@
 using System.Linq;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
-using Angor.UI.Model.Implementation.Projects;
+using AngorApp.Model.Projects;
 
 namespace AngorApp.Sections.Founder.ProjectDetails.Statistics;
 

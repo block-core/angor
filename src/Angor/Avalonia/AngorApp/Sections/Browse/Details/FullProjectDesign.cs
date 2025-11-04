@@ -1,6 +1,6 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Shared;
-using Angor.UI.Model.Implementation.Projects;
+using AngorApp.Model.Projects;
 
 namespace AngorApp.Sections.Browse.Details;
 

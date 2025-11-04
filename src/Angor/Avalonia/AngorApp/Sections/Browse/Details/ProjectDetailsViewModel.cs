@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Angor.Contexts.Funding.Investor;
-using Angor.UI.Model.Implementation.Projects;
+using AngorApp.Model.Projects;
 using AngorApp.Core.Factories;
 using AngorApp.UI.Controls.Common.FoundedProjectOptions;
 using ReactiveUI;

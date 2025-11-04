@@ -1,4 +1,4 @@
-using Angor.UI.Model.Implementation.Projects;
+using AngorApp.Model.Projects;
 
 namespace AngorApp.Sections.Browse;
 

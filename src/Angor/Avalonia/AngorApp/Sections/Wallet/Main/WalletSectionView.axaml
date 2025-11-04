@@ -2,15 +2,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:simple="clr-namespace:Angor.UI.Model.Implementation.Wallet.Simple;assembly=Angor.UI.Model.Implementation"
              xmlns:wallet="clr-namespace:AngorApp.Sections.Wallet"
              xmlns:controls="clr-namespace:AngorApp.UI.Controls"
              xmlns:main="clr-namespace:AngorApp.Sections.Wallet.Main"
+             xmlns:dw="clr-namespace:AngorApp.Model.Wallet;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.Sections.Wallet.Main.WalletSectionView" x:DataType="main:IWalletSectionViewModel">
 
     <UserControl.DataTemplates>
-        <DataTemplate DataType="simple:SimpleWallet">
+        <DataTemplate DataType="dw:SimpleWallet">
             <main:WalletView />
         </DataTemplate>
     </UserControl.DataTemplates>

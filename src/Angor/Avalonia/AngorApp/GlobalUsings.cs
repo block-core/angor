@@ -1,11 +1,18 @@
 // Global using directives
-
 global using System;
 global using System.Collections.Generic;
 global using System.Reactive;
 global using System.Reactive.Linq;
 global using System.Threading.Tasks;
-global using Angor.UI.Model;
+global using AngorApp.Model.Contracts.Amounts;
+global using AngorApp.Model.Contracts.Flows;
+global using AngorApp.Model.Contracts.Projects;
+global using AngorApp.Model.Contracts.Wallet;
+global using AngorApp.Model.Amounts;
+global using AngorApp.Model.Common;
+global using AngorApp.Model.Projects;
+global using AngorApp.Model.Wallet;
+global using AngorApp.Model.Wallet.Password;
 global using AngorApp.UI.Services;
 global using Avalonia;
 global using Avalonia.Controls;

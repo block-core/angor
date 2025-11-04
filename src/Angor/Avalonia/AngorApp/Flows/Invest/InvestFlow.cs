@@ -2,7 +2,7 @@ using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.TransactionDrafts;
 using Angor.Contexts.Wallet.Domain;
-using Angor.UI.Model.Implementation.Projects;
+using AngorApp.Model.Projects;
 using AngorApp.TransactionDrafts;
 using AngorApp.TransactionDrafts.DraftTypes;
 using AngorApp.UI.Controls.Common.Success;

@@ -1,5 +1,4 @@
 using System.Windows.Input;
-using Angor.UI.Model;
 
 namespace AngorApp.Sections.Browse;
 
