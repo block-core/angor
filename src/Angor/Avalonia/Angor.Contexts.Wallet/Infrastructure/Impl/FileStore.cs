@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Text.Json;
 using Angor.Contests.CrossCutting;
 using CSharpFunctionalExtensions;
@@ -9,25 +10,13 @@ public class FileStore : IStore
 {
     private readonly string appDataPath;
 
-    public FileStore(string appName, string profileName)
+    public FileStore(IApplicationStorage storage, ProfileContext profileContext)
     {
-        if (string.IsNullOrWhiteSpace(appName))
-        {
-            throw new ArgumentException("App name cannot be null or whitespace.", nameof(appName));
-        }
+        ArgumentNullException.ThrowIfNull(storage);
+        ArgumentNullException.ThrowIfNull(profileContext);
 
-        if (string.IsNullOrWhiteSpace(profileName))
-        {
-            throw new ArgumentException("Profile name cannot be null or whitespace.", nameof(profileName));
-        }
-
-        appDataPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            appName,
-            profileName
-        );
-
-        Directory.CreateDirectory(appDataPath);
+        var directory = storage.GetProfileDirectory(profileContext.AppName, profileContext.ProfileName);
+        appDataPath = directory;
     }
 
     public async Task<Result> Save<T>(string key, T data)
