@@ -7,6 +7,7 @@ using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Data.Documents.LiteDb.Extensions;
 using Angor.Shared;
 using Angor.Shared.Services;
+using AngorApp.Core;
 using AngorApp.Composition.Registrations.Sections;
 using AngorApp.Composition.Registrations.Services;
 using AngorApp.Composition.Registrations.ViewModels;
@@ -22,9 +23,11 @@ public static class CompositionRoot
     public static IMainViewModel CreateMainViewModel(Control topLevelView, string profileName)
     {
         var services = new ServiceCollection();
-        var logger = LoggingConfigurator.CreateLogger("Angor");
+        var applicationStorage = new ApplicationStorage();
+        var profileContext = new ProfileContext("Angor", applicationStorage.SanitizeProfileName(profileName));
+        var logger = LoggingConfigurator.CreateLogger(profileContext.AppName, applicationStorage);
 
-        var store = new FileStore("Angor", profileName);
+        var store = new FileStore(applicationStorage, profileContext);
         var networkStorage = new NetworkStorage(store);
         var network = networkStorage.GetNetwork() switch
         {
@@ -32,7 +35,8 @@ public static class CompositionRoot
             _ => BitcoinNetwork.Testnet
         };
 
-        services.AddLiteDbDocumentStorage(profileName);
+        services.AddSingleton<IApplicationStorage>(applicationStorage);
+        services.AddLiteDbDocumentStorage(profileContext);
         services.AddKeyedSingleton<IStore>("file", store);
         services.AddSingleton<IStore>(provider => provider.GetKeyedService<IStore>("file")!);
         LoggingConfigurator.RegisterLogger(services, logger);
@@ -47,7 +51,7 @@ public static class CompositionRoot
         services
             .AddModelServices()
             .AddViewModels()
-            .AddUiServices(topLevelView, profileName);
+            .AddUiServices(topLevelView, profileContext, applicationStorage);
         
         services.AddNavigator(logger);
         services.AddSecurityContext();

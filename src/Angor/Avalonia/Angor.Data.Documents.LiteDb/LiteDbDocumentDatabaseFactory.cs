@@ -1,5 +1,7 @@
+using System;
+using System.IO;
+using Angor.Contests.CrossCutting;
 using Angor.Data.Documents.Interfaces;
-using Angor.Shared.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Data.Documents.LiteDb;
@@ -7,25 +9,19 @@ namespace Angor.Data.Documents.LiteDb;
 public class LiteDbDocumentDatabaseFactory : IAngorDocumentDatabaseFactory
 {
     private readonly ILogger<LiteDbDocumentDatabase> logger;
-    private readonly string appName;
+    private readonly IApplicationStorage storage;
+    private readonly ProfileContext profileContext;
 
-    public LiteDbDocumentDatabaseFactory(ILogger<LiteDbDocumentDatabase> logger, string profileName, string appName = "Angor")
+    public LiteDbDocumentDatabaseFactory(
+        ILogger<LiteDbDocumentDatabase> logger,
+        IApplicationStorage storage,
+        ProfileContext profileContext)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.storage = storage ?? throw new ArgumentNullException(nameof(storage));
+        this.profileContext = profileContext ?? throw new ArgumentNullException(nameof(profileContext));
 
-        if (string.IsNullOrWhiteSpace(appName))
-        {
-            throw new ArgumentException("App name cannot be null or whitespace.", nameof(appName));
-        }
-
-        this.appName = appName;
-
-        var profileDirectory = ApplicationStoragePaths.GetProfileDirectory(appName, profileName);
-
-        if (profileDirectory.IsFailure)
-        {
-            throw new ArgumentException(profileDirectory.Error, nameof(profileName));
-        }
+        _ = this.storage.GetProfileDirectory(profileContext.AppName, profileContext.ProfileName);
     }
 
     public IAngorDocumentDatabase CreateDatabase(string profileName)
@@ -35,16 +31,16 @@ public class LiteDbDocumentDatabaseFactory : IAngorDocumentDatabaseFactory
             throw new ArgumentException("Profile name cannot be null or whitespace.", nameof(profileName));
         }
 
-        var profileDirectory = ApplicationStoragePaths.GetProfileDirectory(appName, profileName);
-
-        if (profileDirectory.IsFailure)
+        if (!string.Equals(profileName, profileContext.ProfileName, StringComparison.Ordinal))
         {
-            throw new ArgumentException(profileDirectory.Error, nameof(profileName));
+            throw new ArgumentException(
+                $"Profile name '{profileName}' does not match the configured profile '{profileContext.ProfileName}'. Ensure the profile is sanitized at input.",
+                nameof(profileName));
         }
 
-        var sanitizedProfile = ApplicationStoragePaths.SanitizeProfileName(profileName);
-        var fileName = $"angor-documents-{sanitizedProfile}.db";
-        var filePath = Path.Combine(profileDirectory.Value, fileName);
+        var profileDirectory = storage.GetProfileDirectory(profileContext.AppName, profileContext.ProfileName);
+        var fileName = $"angor-documents-{profileContext.ProfileName}.db";
+        var filePath = Path.Combine(profileDirectory, fileName);
         var connectionString = $"Filename={filePath}";
 
         //TODO generate a password and encrypt it with the DPAPI for the user profile

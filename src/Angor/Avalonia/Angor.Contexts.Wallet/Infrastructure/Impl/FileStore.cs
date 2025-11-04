@@ -1,7 +1,7 @@
 using System;
+using System.IO;
 using System.Text.Json;
 using Angor.Contests.CrossCutting;
-using Angor.Shared.Utilities;
 using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Wallet.Infrastructure.Impl;
@@ -10,21 +10,13 @@ public class FileStore : IStore
 {
     private readonly string appDataPath;
 
-    public FileStore(string appName, string profileName)
+    public FileStore(IApplicationStorage storage, ProfileContext profileContext)
     {
-        if (string.IsNullOrWhiteSpace(appName))
-        {
-            throw new ArgumentException("App name cannot be null or whitespace.", nameof(appName));
-        }
+        ArgumentNullException.ThrowIfNull(storage);
+        ArgumentNullException.ThrowIfNull(profileContext);
 
-        var profileDirectory = ApplicationStoragePaths.GetProfileDirectory(appName, profileName);
-
-        if (profileDirectory.IsFailure)
-        {
-            throw new ArgumentException(profileDirectory.Error, nameof(profileName));
-        }
-
-        appDataPath = profileDirectory.Value;
+        var directory = storage.GetProfileDirectory(profileContext.AppName, profileContext.ProfileName);
+        appDataPath = directory;
     }
 
     public async Task<Result> Save<T>(string key, T data)

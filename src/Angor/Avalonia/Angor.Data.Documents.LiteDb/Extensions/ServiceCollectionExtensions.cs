@@ -1,33 +1,32 @@
-using Microsoft.Extensions.DependencyInjection;
+using System;
+using Angor.Contests.CrossCutting;
 using Angor.Data.Documents.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Data.Documents.LiteDb.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddLiteDbDocumentStorage(this IServiceCollection services, string profileName)
+    public static IServiceCollection AddLiteDbDocumentStorage(this IServiceCollection services, ProfileContext profileContext)
     {
-        if (string.IsNullOrWhiteSpace(profileName))
-        {
-            throw new ArgumentException("Profile name cannot be null or whitespace.", nameof(profileName));
-        }
+        ArgumentNullException.ThrowIfNull(profileContext);
 
-        // Register the factory
+        services.AddSingleton(profileContext);
+
         services.AddScoped<IAngorDocumentDatabaseFactory>(provider => new LiteDbDocumentDatabaseFactory(
             provider.GetRequiredService<ILogger<LiteDbDocumentDatabase>>(),
-            profileName));
+            provider.GetRequiredService<IApplicationStorage>(),
+            profileContext));
 
-        // Register the database with profile-specific configuration
-        services.AddScoped<IAngorDocumentDatabase>(provider => 
+        services.AddScoped<IAngorDocumentDatabase>(provider =>
         {
             var factory = provider.GetRequiredService<IAngorDocumentDatabaseFactory>();
-            return factory.CreateDatabase(profileName);
+            return factory.CreateDatabase(profileContext.ProfileName);
         });
-        
+
         services.AddScoped(typeof(IGenericDocumentCollection<>), typeof(LiteDbGenericDocumentCollection<>));
 
-        
         return services;
     }
 }

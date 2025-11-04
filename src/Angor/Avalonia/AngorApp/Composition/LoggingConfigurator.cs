@@ -1,5 +1,6 @@
+using System;
 using System.IO;
-using Angor.Shared.Utilities;
+using Angor.Contests.CrossCutting;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
@@ -8,20 +9,17 @@ namespace AngorApp.Composition;
 
 public static class LoggingConfigurator
 {
-    public static ILogger CreateLogger(string appName)
+    private const string LogLevelEnvironmentVariable = "ANGOR_LOG_LEVEL";
+
+    public static ILogger CreateLogger(string appName, IApplicationStorage storage)
     {
-        var logsDirectory = ApplicationStoragePaths
-            .GetLogsDirectory(appName)
-            .OnFailureCompensate(_ => Result.Try(() =>
-            {
-                var fallback = Path.Combine(AppContext.BaseDirectory, "Logs");
-                Directory.CreateDirectory(fallback);
-                return fallback;
-            }))
-            .Value;
+        ArgumentNullException.ThrowIfNull(storage);
+
+        var logsDirectory = TryGetLogsDirectory(storage, appName);
+        var minimumLevel = ResolveMinimumLevel();
 
         var logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            .MinimumLevel.Is(minimumLevel)
             .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
             .Enrich.FromLogContext()
             .WriteTo.Console(
@@ -41,5 +39,35 @@ public static class LoggingConfigurator
     {
         services.AddLogging(builder => builder.AddSerilog(logger));
         services.AddSingleton(logger);
+    }
+
+    private static string TryGetLogsDirectory(IApplicationStorage storage, string appName)
+    {
+        try
+        {
+            return storage.GetLogsDirectory(appName);
+        }
+        catch (Exception)
+        {
+            var fallback = Path.Combine(AppContext.BaseDirectory, "Logs");
+            Directory.CreateDirectory(fallback);
+            return fallback;
+        }
+    }
+
+    private static LogEventLevel ResolveMinimumLevel()
+    {
+#if DEBUG
+        return LogEventLevel.Debug;
+#else
+        var candidate = Environment.GetEnvironmentVariable(LogLevelEnvironmentVariable);
+        if (!string.IsNullOrWhiteSpace(candidate) &&
+            Enum.TryParse(candidate, ignoreCase: true, out LogEventLevel parsed))
+        {
+            return parsed;
+        }
+
+        return LogEventLevel.Information;
+#endif
     }
 }
