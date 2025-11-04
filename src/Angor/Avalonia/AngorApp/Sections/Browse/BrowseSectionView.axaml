@@ -33,7 +33,7 @@
 
                 <Card Header="Browse" Theme="{StaticResource WideCard}" Subheader="Browse Projects" DockPanel.Dock="Top">
                     <Card.HeaderEndContent>
-                        <Button Command="{Binding LoadProjects}" Content="{Icon fa-arrows-rotate}" />
+                        <EnhancedButton Command="{Binding LoadProjects}" Icon="{Icon fa-arrows-rotate}" />
                     </Card.HeaderEndContent>
                     <Card.HeaderStartContent>
                         <ui:Icon Source="svg:/Assets/browse.svg" />
@@ -51,9 +51,9 @@
                     <CardGrid ItemsSource="{Binding Projects}" Classes="Listing">
                         <CardGrid.ItemTemplate>
                             <DataTemplate DataType="browse:IProjectViewModel">
-                                <Button Classes="Card" Command="{Binding GoToDetails}">
+                                <EnhancedButton Classes="Card" Command="{Binding GoToDetails}">
                                     <browse:ProjectItemView />
-                                </Button>
+                                </EnhancedButton>
                             </DataTemplate>
                         </CardGrid.ItemTemplate>
                     </CardGrid>

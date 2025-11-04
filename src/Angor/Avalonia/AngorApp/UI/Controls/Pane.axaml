@@ -92,11 +92,11 @@
             <c:Pane Margin="20" Title="Title" VerticalAlignment="Top">
                 <c:Pane.Content>
                     <DockPanel>
-                        <c:IconButton DockPanel.Dock="Bottom" HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
-                            <c:IconButton.Icon>
+                        <EnhancedButton DockPanel.Dock="Bottom" HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
+                            <EnhancedButton.Icon>
                                 <avalonia:Icon Value="fa-folder" />
-                            </c:IconButton.Icon>
-                        </c:IconButton>
+                            </EnhancedButton.Icon>
+                        </EnhancedButton>
                         <Separator Margin="0 10" DockPanel.Dock="Bottom" />
 
                         <StackPanel DockPanel.Dock="Top">
@@ -122,11 +122,11 @@
                     IsTitleVisible="True">
                 <c:Pane.Content>
                     <DockPanel>
-                        <c:IconButton DockPanel.Dock="Bottom" HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
-                            <c:IconButton.Icon>
+                        <EnhancedButton DockPanel.Dock="Bottom" HorizontalContentAlignment="Left" HorizontalAlignment="Stretch" Content="VIEW PROJECT">
+                            <EnhancedButton.Icon>
                                 <avalonia:Icon Value="fa-folder" />
-                            </c:IconButton.Icon>
-                        </c:IconButton>
+                            </EnhancedButton.Icon>
+                        </EnhancedButton>
                         <Separator Margin="0 10" DockPanel.Dock="Bottom" />
 
                         <StackPanel VerticalAlignment="Center">

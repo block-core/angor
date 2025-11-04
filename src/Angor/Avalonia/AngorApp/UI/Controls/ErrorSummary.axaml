@@ -23,19 +23,19 @@
             <Setter Property="Template">
                 <ControlTemplate>
                     <Panel DataContext="{Binding $parent[controls:ErrorSummary]}">
-                        <Button IsVisible="{Binding !!$parent[controls:ErrorSummary].Errors.Count}"
+                        <EnhancedButton IsVisible="{Binding !!$parent[controls:ErrorSummary].Errors.Count}"
                                 Foreground="{DynamicResource SystemChromeWhiteColor}"
                                 Content="{Binding $parent[controls:ErrorSummary].Errors.Count, StringFormat='{}{0} error(s) found'}" HorizontalAlignment="Left" Padding="10 5"
                                 Theme="{StaticResource ThinTransparentButton}">
-                            <Button.Background>
+                            <EnhancedButton.Background>
                                 <SolidColorBrush Color="{StaticResource ErrorColor}" Opacity="0.7" />
-                            </Button.Background>
+                            </EnhancedButton.Background>
                             <Button.Flyout>
                                 <Flyout Placement="BottomEdgeAlignedLeft">
                                     <BulletList ItemsSource="{Binding $parent[controls:ErrorSummary].Errors}" />
                                 </Flyout>
                             </Button.Flyout>
-                        </Button>
+                        </EnhancedButton>
                         <ContentControl Foreground="{DynamicResource SuccessColor}" IsVisible="{Binding !!!$parent[controls:ErrorSummary].Errors.Count}" Content="{Icon fa-check}" />
                     </Panel>
                 </ControlTemplate>

@@ -57,23 +57,23 @@
                     <Panel>
                         <StackPanel x:Name="EasyWay" Classes="BigGap" IsVisible="{Binding #Easy.IsChecked}">
                             <ct:StagesCreatorView DataContext="{Binding StagesCreator}" />
-                            <Button Command="{Binding CreateStages}" Classes.Update="{Binding !!Stages.Count}" HorizontalAlignment="Center">
-                                <Button.Styles>
-                                    <Style Selector="Button">
+                            <EnhancedButton Command="{Binding CreateStages}" Classes.Update="{Binding !!Stages.Count}" HorizontalAlignment="Center">
+                                <EnhancedButton.Styles>
+                                    <Style Selector="EnhancedButton">
                                         <Setter Property="Content" Value="Create Stages" />
                                     </Style>
-                                    <Style Selector="Button.Update">
+                                    <Style Selector="EnhancedButton.Update">
                                         <Setter Property="Content" Value="Update Stages" />
                                     </Style>
-                                </Button.Styles>
-                            </Button>
+                                </EnhancedButton.Styles>
+                            </EnhancedButton>
                             <ItemsControl ItemsSource="{Binding Stages}" IsVisible="{Binding !!Stages.Count}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="stages:ICreateProjectStage">
                                         <Border Classes="CardAlt" Padding="10" CornerRadius="10" Margin="0 0 0 10">
                                             <Grid ColumnDefinitions="Auto * Auto" ColumnSpacing="15">
                                                 <Grid.Styles>
-                                                    <Style Selector="Button.Aligned">
+                                                    <Style Selector="EnhancedButton.Aligned">
                                                         <Setter Property="Height" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
                                                         <Setter Property="Width" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
                                                         <Setter Property="Margin" Value="1" />
@@ -83,9 +83,9 @@
                                                         <Setter Property="FontWeight" Value="Normal" />
                                                     </Style>
                                                 </Grid.Styles>
-                                                <Button Classes="Aligned" Width="33" Height="33">
+                                                <EnhancedButton Classes="Aligned" Width="33" Height="33">
                                                     <TextBlock VerticalAlignment="Center" Text="{ItemIndex StartFromOne=True}" />
-                                                </Button>
+                                                </EnhancedButton>
                                                 <BalancedWrapGrid MinItemWidth="250" Grid.Column="1" HorizontalSpacing="20" VerticalSpacing="10" Grid.IsSharedSizeScope="True">
                                                     <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Stage %">
                                                         <EdgePanel.EndContent>
@@ -105,18 +105,18 @@
                             </ItemsControl>
                         </StackPanel>
                         <DockPanel x:Name="AdvancedWay" IsVisible="{Binding !#Easy.IsChecked}">
-                            <IconButton Command="{Binding AddStage}" Margin="0 10 0 0" DockPanel.Dock="Bottom" Content="Add Stage">
-                                <IconButton.Icon>
+                            <EnhancedButton Command="{Binding AddStage}" Margin="0 10 0 0" DockPanel.Dock="Bottom" Content="Add Stage">
+                                <EnhancedButton.Icon>
                                     <ui:Icon Source="fa-plus" />
-                                </IconButton.Icon>
-                            </IconButton>
+                                </EnhancedButton.Icon>
+                            </EnhancedButton>
                             <ItemsControl ItemsSource="{Binding Stages}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="stages:ICreateProjectStage">
                                         <Border Classes="CardAlt" Padding="10" CornerRadius="10" Margin="0 0 0 10">
                                             <Grid ColumnDefinitions="Auto * Auto" ColumnSpacing="15">
                                                 <Grid.Styles>
-                                                    <Style Selector="Button.Aligned">
+                                                    <Style Selector="EnhancedButton.Aligned">
                                                         <Setter Property="Height" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
                                                         <Setter Property="Width" Value="{DynamicResource SearchBoxTextBoxThemeMinHeight}" />
                                                         <Setter Property="Margin" Value="1" />
@@ -126,9 +126,9 @@
                                                         <Setter Property="FontWeight" Value="Normal" />
                                                     </Style>
                                                 </Grid.Styles>
-                                                <Button Classes="Aligned" Width="33" Height="33">
+                                                <EnhancedButton Classes="Aligned" Width="33" Height="33">
                                                     <TextBlock VerticalAlignment="Center" Text="{ItemIndex StartFromOne=True}" />
-                                                </Button>
+                                                </EnhancedButton>
                                                 <BalancedWrapGrid MinItemWidth="250" Grid.Column="1" HorizontalSpacing="20" VerticalSpacing="10" Grid.IsSharedSizeScope="True">
                                                     <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Stage %">
                                                         <EdgePanel.Content>
@@ -145,9 +145,9 @@
                                                         </EdgePanel.Content>
                                                     </EdgePanel>
                                                 </BalancedWrapGrid>
-                                                <Button Classes="Aligned" Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="2">
+                                                <EnhancedButton Classes="Aligned" Theme="{StaticResource TransparentButton}" Command="{Binding Remove}" Grid.Column="2">
                                                     <ui:Icon Source="mdi-window-close" />
-                                                </Button>
+                                                </EnhancedButton>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>

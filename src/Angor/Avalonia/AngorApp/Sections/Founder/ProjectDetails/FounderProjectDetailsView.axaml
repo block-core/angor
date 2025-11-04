@@ -73,13 +73,13 @@
                             </HeaderedContainer>
                             <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Target Amount" EndContent="{Binding TargetAmount.ShortDecimalString}" />
                             <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Raised Amount" EndContent="{Binding RaisedAmount.ShortDecimalString}" />
-                            <Button Content="See NSEC">
+                            <EnhancedButton Content="See NSEC">
                                 <Button.Flyout>
                                     <Flyout>
                                         Not available yet
                                     </Flyout>
                                 </Button.Flyout>
-                            </Button>
+                            </EnhancedButton>
                         </StackPanel>
                     </Card>
                 </StackPanel>

@@ -39,7 +39,7 @@
                             <Bold>Good news!</Bold> The founder has accepted your investment request. Complete it to finalize the investment process.
                         </TextBlock>
                     </EdgePanel>
-                    <ReactiveButton ButtonTheme="{StaticResource {x:Type Button}}" Command="{Binding CompleteInvestment}" HorizontalAlignment="Center">Complete investment</ReactiveButton>
+                    <EnhancedButton Command="{Binding CompleteInvestment}" HorizontalAlignment="Center">Complete investment</EnhancedButton>
                 </StackPanel>
             </OverlayBorder>
         </DataTemplate>

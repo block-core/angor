@@ -19,16 +19,16 @@
             <Card Theme="{StaticResource WideCard}" Header="Wallet" Subheader="Wallet and balances" DockPanel.Dock="Top">
                 <Card.HeaderEndContent>
                     <WrapGrid ColumnSpacing="10">
-                        <Button Command="{Binding Load}" Content="{Icon fa-arrows-rotate}" />
-                        <Button Command="{Binding Send}" Content="Send" />
-                        <Button Content="Receive">
-                            <Button.Flyout>
+                        <EnhancedButton Command="{Binding Load}" Icon="{Icon fa-arrows-rotate}" />
+                        <EnhancedButton Command="{Binding Send}" Content="Send" />
+                        <EnhancedButton Content="Receive">
+                            <EnhancedButton.Flyout>
                                 <Flyout>
                                     <main:Receive />
                                 </Flyout>
-                            </Button.Flyout>
-                        </Button>
-                        <Button Command="{Binding GetTestCoins}" 
+                            </EnhancedButton.Flyout>
+                        </EnhancedButton>
+                        <EnhancedButton Command="{Binding GetTestCoins}" 
                                 Content="Get Test Coins" 
                                 IsVisible="{Binding CanGetTestCoins}" />
                     </WrapGrid>

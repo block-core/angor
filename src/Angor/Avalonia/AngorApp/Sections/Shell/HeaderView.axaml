@@ -8,14 +8,14 @@
 
     <DockPanel Height="42">
         <Viewbox>
-            <IconButton Margin="0 2"
+            <EnhancedButton Margin="0 2"
                         IsVisible="{Binding $self.IsEffectivelyEnabled}"
-                        ButtonTheme="{StaticResource TransparentButton}"
+                        Theme="{StaticResource TransparentButton}"
                         VerticalAlignment="Center"
                         Command="{Binding Back}"
                         Icon="{Icon fa-angle-left}"
                         Content="Back">
-            </IconButton>
+            </EnhancedButton>
         </Viewbox>
         <ToggleButton VerticalAlignment="Center" Margin="5 0" ToolTip.Tip="Switch theme" Theme="{StaticResource TransparentToggleButton}" DockPanel.Dock="Right" IsChecked="{Binding IsDarkThemeEnabled}">
             <ToggleButton.Styles>
