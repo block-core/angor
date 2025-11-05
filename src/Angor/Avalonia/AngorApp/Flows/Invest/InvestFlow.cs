@@ -63,7 +63,7 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
                     var publishResult = await investmentAppService.SubmitTransactionFromDraft(walletId.Value, fullProject.ProjectId, investmentDraft);
                     
                     // Return a GUID representing the transaction (use a hash or placeholder)
-                    return publishResult.IsSuccess 
+                    return publishResult.IsSuccess // todo: change this pointless guid
                         ? Result.Success(Guid.NewGuid()) // Transaction was published directly
                         : Result.Failure<Guid>(publishResult.Error);
                 }

@@ -53,7 +53,7 @@ public class PortfolioService(
         return relayResult;
     }
 
-    public async Task<Result> Add(Guid walletId, InvestmentRecord newInvestment)
+    public async Task<Result> AddOrUpdate(Guid walletId, InvestmentRecord investmentRecord)
     {
         var investmentsResult = await GetByWalletId(walletId);
         if (investmentsResult.IsFailure)
@@ -61,11 +61,11 @@ public class PortfolioService(
         
         var investments = investmentsResult.Value ?? new InvestmentRecords();
         var existingInvestment = investments.ProjectIdentifiers
-            .FirstOrDefault(i => i.ProjectIdentifier == newInvestment.ProjectIdentifier);
+            .FirstOrDefault(i => i.ProjectIdentifier == investmentRecord.ProjectIdentifier);
         if (existingInvestment != null)
             investments.ProjectIdentifiers.Remove(existingInvestment);
         
-        investments.ProjectIdentifiers.Add(newInvestment);
+        investments.ProjectIdentifiers.Add(investmentRecord);
         
         // Save to local document collection for future lookups
         var doc = new InvestmentRecordsDocument
@@ -81,38 +81,6 @@ public class PortfolioService(
         return savedLocally.IsSuccess || savedOnRelay.IsSuccess
             ? Result.Success()
             : Result.Failure("Failed to save investment record");
-    }
-
-    public async Task<Result> Update(Guid walletId, InvestmentRecord updatedInvestment)
-    {
-        var investmentsResult = await GetByWalletId(walletId);
-        if (investmentsResult.IsFailure)
-            return Result.Failure(investmentsResult.Error);
-        
-        var investments = investmentsResult.Value ?? new InvestmentRecords();
-        var existingInvestment = investments.ProjectIdentifiers
-            .FirstOrDefault(i => i.ProjectIdentifier == updatedInvestment.ProjectIdentifier);
-        
-        if (existingInvestment == null)
-            return Result.Failure("Investment record not found");
-        
-        investments.ProjectIdentifiers.Remove(existingInvestment);
-        investments.ProjectIdentifiers.Add(updatedInvestment);
-        
-        // Save to local document collection for future lookups
-        var doc = new InvestmentRecordsDocument
-        {
-            WalletId = walletId.ToString(),
-            Investments = investments.ProjectIdentifiers
-        };
-        
-        var savedLocally = await documentCollection.UpsertAsync(document => document.WalletId, doc);
-
-        var savedOnRelay = await PushInvestmentsRecordsToRelayAsync(walletId, investments);
-
-        return savedLocally.IsSuccess || savedOnRelay.IsSuccess
-            ? Result.Success()
-            : Result.Failure("Failed to update investment record");
     }
 
     private async Task<Result<bool>> PushInvestmentsRecordsToRelayAsync(Guid walletId, InvestmentRecords investments)

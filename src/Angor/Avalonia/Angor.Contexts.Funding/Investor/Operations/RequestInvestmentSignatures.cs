@@ -79,7 +79,7 @@ public static class RequestInvestmentSignatures
                 return Result.Failure<Guid>(sendSignatureResult.Error);
             }
             
-            await portfolioService.Add(request.WalletId, new InvestmentRecord
+            await portfolioService.AddOrUpdate(request.WalletId, new InvestmentRecord
             {
                 InvestmentTransactionHash = transactionId,
                 InvestmentTransactionHex = request.Draft.SignedTxHex,

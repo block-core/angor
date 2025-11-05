@@ -33,99 +33,90 @@ public static class PublishTransaction
                 return Result.Failure<string>(errorMessage);
             }
 
-            // If this is an investment draft and we have wallet/project context, persist to portfolio
-            if (request.TransactionDraft is InvestmentDraft investmentDraft && 
-                request.WalletId.HasValue && 
-                request.ProjectId != null)
+            // Handle all transaction draft types if we have wallet/project context
+            if (request.WalletId.HasValue && request.ProjectId != null)
             {
-                var investmentRecord = new InvestmentRecord
-                {
-                    InvestmentTransactionHash = request.TransactionDraft.TransactionId,
-                    InvestmentTransactionHex = request.TransactionDraft.SignedTxHex,
-                    InvestorPubKey = investmentDraft.InvestorKey,
-                    ProjectIdentifier = request.ProjectId.Value,
-                    UnfundedReleaseAddress = null, // No penalty path for direct investments
-                    RequestEventId = null, // No founder approval request for investments below threshold
-                    RequestEventTime = null
-                };
-
-                var addResult = await portfolioService.Add(request.WalletId.Value, investmentRecord);
+                var updateResult = await UpdateInvestmentRecordWithTransaction(
+                    request.WalletId.Value, 
+                    request.ProjectId.Value, 
+                    request.TransactionDraft);
                 
-                // Don't fail the operation if portfolio storage fails since the transaction is already published
-                // Just log/ignore the error
-            }
-            
-            // Handle EndOfProjectTransactionDraft
-            if (request.TransactionDraft is EndOfProjectTransactionDraft && 
-                request.WalletId.HasValue && 
-                request.ProjectId != null)
-            {
-                await UpdateInvestmentRecordWithTransaction(
-                    request.WalletId.Value, 
-                    request.ProjectId.Value, 
-                    request.TransactionDraft,
-                    (record, draft) =>
-                    {
-                        record.EndOfProjectTransactionId = draft.TransactionId;
-                        record.EndOfProjectTransactionHex = draft.SignedTxHex;
-                    });
-            }
-            
-            // Handle RecoveryTransactionDraft
-            if (request.TransactionDraft is RecoveryTransactionDraft && 
-                request.WalletId.HasValue && 
-                request.ProjectId != null)
-            {
-                await UpdateInvestmentRecordWithTransaction(
-                    request.WalletId.Value, 
-                    request.ProjectId.Value, 
-                    request.TransactionDraft,
-                    (record, draft) =>
-                    {
-                        record.RecoveryTransactionId = draft.TransactionId;
-                        record.RecoveryTransactionHex = draft.SignedTxHex;
-                    });
-            }
-            
-            // Handle ReleaseTransactionDraft
-            if (request.TransactionDraft is ReleaseTransactionDraft && 
-                request.WalletId.HasValue && 
-                request.ProjectId != null)
-            {
-                await UpdateInvestmentRecordWithTransaction(
-                    request.WalletId.Value, 
-                    request.ProjectId.Value, 
-                    request.TransactionDraft,
-                    (record, draft) =>
-                    {
-                        record.RecoveryReleaseTransactionId = draft.TransactionId;
-                        record.RecoveryReleaseTransactionHex = draft.SignedTxHex;
-                    });
+                if (updateResult.IsFailure)
+                    return Result.Failure<string>(updateResult.Error);
             }
             
             return Result.Success(request.TransactionDraft.TransactionId);
         }
 
-        private async Task UpdateInvestmentRecordWithTransaction(
+        private async Task<Result> UpdateInvestmentRecordWithTransaction(
             Guid walletId, 
             string projectId, 
-            TransactionDraft draft,
-            Action<InvestmentRecord, TransactionDraft> updateAction)
+            TransactionDraft draft)
         {
             var investmentsResult = await portfolioService.GetByWalletId(walletId);
             if (investmentsResult.IsFailure)
-                return; // Don't fail the operation if we can't update the record
+                return Result.Failure(investmentsResult.Error);
             
             var investment = investmentsResult.Value?.ProjectIdentifiers
                 .FirstOrDefault(i => i.ProjectIdentifier == projectId);
             
-            if (investment == null)
-                return; // Don't fail the operation if record doesn't exist
+            // Handle each draft type
+            switch (draft)
+            {
+                case InvestmentDraft investmentDraft:
+                    if (investment != null)
+                    {
+                        // Update existing investment record
+                        investment.InvestmentTransactionHash = draft.TransactionId;
+                        investment.InvestmentTransactionHex = draft.SignedTxHex;
+                        investment.InvestorPubKey = investmentDraft.InvestorKey;
+                    }
+                    else
+                    {
+                        // Create new investment record
+                        investment = new InvestmentRecord
+                        {
+                            InvestmentTransactionHash = draft.TransactionId,
+                            InvestmentTransactionHex = draft.SignedTxHex,
+                            InvestorPubKey = investmentDraft.InvestorKey,
+                            ProjectIdentifier = projectId,
+                            UnfundedReleaseAddress = null, // No penalty path for direct investments
+                            RequestEventId = null, // No founder approval request for investments below threshold
+                            RequestEventTime = null
+                        };
+                    }
+                    break;
+                    
+                case EndOfProjectTransactionDraft:
+                    if (investment == null)
+                        return Result.Failure("Investment record not found for end-of-project transaction");
+                    
+                    investment.EndOfProjectTransactionId = draft.TransactionId;
+                    break;
+                    
+                case RecoveryTransactionDraft:
+                    if (investment == null)
+                        return Result.Failure("Investment record not found for recovery transaction");
+                    
+                    investment.RecoveryTransactionId = draft.TransactionId;
+                    break;
+                    
+                case ReleaseTransactionDraft:
+                    if (investment == null)
+                        return Result.Failure("Investment record not found for release transaction");
+                    
+                    investment.RecoveryReleaseTransactionId = draft.TransactionId;
+                    break;
+                    
+                default:
+                    // Not a transaction type we track, just return success
+                    return Result.Success();
+            }
             
-            updateAction(investment, draft);
+            // Save the investment record (common for all cases that modify the investment)
+            await portfolioService.AddOrUpdate(walletId, investment);
             
-            await portfolioService.Update(walletId, investment);
-            // Don't fail the operation if portfolio update fails since the transaction is already published
+            return Result.Success();
         }
     }
 }
