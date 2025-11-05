@@ -58,10 +58,7 @@ public static class Investments
                     var investmentRecord = investmentRecordsLookup.Value.ProjectIdentifiers
                         .First(x => x.ProjectIdentifier == project.Id.Value);
 
-                    var investorKey = derivationOperations.DeriveInvestorKey(sensitiveDataResult.Value.ToWalletWords(),
-                        project.FounderKey);
-
-                    var investmentTask = Result.Try(() => indexerService.GetInvestmentAsync(project.Id.Value, investorKey));
+                    var investmentTask = Result.Try(() => indexerService.GetInvestmentAsync(project.Id.Value, investmentRecord.InvestorPubKey));
                     var statsTask = Result.Try(() => 
                         indexerService.GetProjectStatsAsync(project.Id.Value)); // Get project stats for the project ID
 
