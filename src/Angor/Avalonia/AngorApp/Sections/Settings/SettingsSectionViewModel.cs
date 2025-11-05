@@ -29,6 +29,8 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private readonly IWalletContext walletContext;
 
+    private readonly INetworkConfiguration networkConfiguration;
+
     private string network;
 
     private string newExplorer;
@@ -41,6 +43,10 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private string currentNetwork;
 
+    private bool isDebugMode;
+
+    private bool isTestnet;
+
     private readonly CompositeDisposable disposable = new();
 
     public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, INetworkService networkService, INetworkConfiguration networkConfiguration, IWalletContext walletContext)
@@ -49,17 +55,22 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         this.walletStore = walletStore;
         this.uiServices = uiServices;
         this.walletContext = walletContext;
+        this.networkConfiguration = networkConfiguration;
 
         networkService.AddSettingsIfNotExist();
 
-        var settings = networkStorage.GetSettings();
-        Explorers = new ObservableCollection<SettingsUrlViewModel>(settings.Explorers.Select(CreateExplorer));
+     var settings = networkStorage.GetSettings();
+ Explorers = new ObservableCollection<SettingsUrlViewModel>(settings.Explorers.Select(CreateExplorer));
         Indexers = new ObservableCollection<SettingsUrlViewModel>(settings.Indexers.Select(CreateIndexer));
-        Relays = new ObservableCollection<SettingsUrlViewModel>(settings.Relays.Select(CreateRelay));
+     Relays = new ObservableCollection<SettingsUrlViewModel>(settings.Relays.Select(CreateRelay));
 
         currentNetwork = networkStorage.GetNetwork();
         networkConfiguration.SetNetwork(currentNetwork == "Mainnet" ? new BitcoinMain() : new Angornet());
         Network = currentNetwork;
+        IsTestnet = currentNetwork == "Angornet";
+
+        IsDebugMode = settings.DebugMode;
+        networkConfiguration.SetDebugMode(IsDebugMode);
 
         AddExplorer = ReactiveCommand.Create(DoAddExplorer, this.WhenAnyValue(x => x.NewExplorer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
         AddIndexer = ReactiveCommand.Create(DoAddIndexer, this.WhenAnyValue(x => x.NewIndexer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
@@ -109,6 +120,17 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         this.WhenAnyValue(model => model.IsBitcoinPreferred)
             .BindTo(uiServices, services => services.IsBitcoinPreferred)
             .DisposeWith(disposable);
+
+        this.WhenAnyValue(x => x.IsDebugMode)
+            .Skip(1)
+      .Subscribe(debugMode =>
+    {
+    var settingsInfo = networkStorage.GetSettings();
+settingsInfo.DebugMode = debugMode;
+       networkStorage.SetSettings(settingsInfo);
+      networkConfiguration.SetDebugMode(debugMode);
+  })
+.DisposeWith(disposable);
     }
 
     public ObservableCollection<SettingsUrlViewModel> Explorers { get; }
@@ -125,7 +147,11 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     public string Network
     {
         get => network;
-        set => this.RaiseAndSetIfChanged(ref network, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref network, value);
+            IsTestnet = value == "Angornet";
+        }
     }
 
     public string NewExplorer
@@ -144,6 +170,18 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     {
         get => newRelay;
         set => this.RaiseAndSetIfChanged(ref newRelay, value);
+    }
+
+    public bool IsDebugMode
+    {
+        get => isDebugMode;
+        set => this.RaiseAndSetIfChanged(ref isDebugMode, value);
+    }
+
+    public bool IsTestnet
+    {
+        get => isTestnet;
+        private set => this.RaiseAndSetIfChanged(ref isTestnet, value);
     }
 
     private void DoAddExplorer()
@@ -274,13 +312,15 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private void SaveSettings()
     {
+        var currentSettings = networkStorage.GetSettings();
         var info = new SettingsInfo
         {
             Explorers = Explorers.Select(x => x.ToModel()).ToList(),
             Indexers = Indexers.Select(x => x.ToModel()).ToList(),
-            Relays = Relays.Select(x => x.ToModel()).ToList()
+            Relays = Relays.Select(x => x.ToModel()).ToList(),
+  DebugMode = currentSettings.DebugMode
         };
-        networkStorage.SetSettings(info);
+ networkStorage.SetSettings(info);
     }
 
     public void Dispose()

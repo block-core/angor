@@ -15,7 +15,8 @@ public class NetworkStorage(IStore store) : INetworkStorage
         {
             Explorers = data.Explorers,
             Indexers = data.Indexers,
-            Relays = data.Relays
+            Relays = data.Relays,
+            DebugMode = data.DebugMode
         })
         .OnFailureCompensate(_ => new SettingsInfo())
         .Value;
@@ -26,6 +27,7 @@ public class NetworkStorage(IStore store) : INetworkStorage
         data.Explorers = settingsInfo.Explorers;
         data.Indexers = settingsInfo.Indexers;
         data.Relays = settingsInfo.Relays;
+        data.DebugMode = settingsInfo.DebugMode;
         store.Save(SettingsFile, data);
     }
 
@@ -65,6 +67,7 @@ public class NetworkStorage(IStore store) : INetworkStorage
     private class SettingsData
     {
         public string Network { get; set; } = "Angornet";
+        public bool DebugMode { get; set; } = false;
         public List<SettingsUrl> Explorers { get; set; } = new();
         public List<SettingsUrl> Indexers { get; set; } = new();
         public List<SettingsUrl> Relays { get; set; } = new();

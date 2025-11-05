@@ -47,6 +47,12 @@
                 <Card Header="Appearance">
                     <ToggleSwitch IsChecked="{Binding IsBitcoinPreferred}" Content="Unit for amount entry" OnContent="BTC" OffContent="sats" />
                 </Card>
+                <Card Header="Debug Mode" IsVisible="{Binding IsTestnet}">
+                    <StackPanel Classes="BigGap">
+                        <TextBlock Classes="Wrap Center">Debug mode is only available on testnet networks. When enabled, additional debugging features will be available.</TextBlock>
+                        <ToggleSwitch IsChecked="{Binding IsDebugMode}" Content="Debug Mode" OnContent="Enabled" OffContent="Disabled" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Card>
                 <Card HeaderStartContent="{Icon fa-sitemap}" Header="Explorer">
                     <StackPanel Classes="BigGap">
                         <DockPanel Margin="0 0 20 0">
