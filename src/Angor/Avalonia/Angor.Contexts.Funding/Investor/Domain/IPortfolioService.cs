@@ -8,4 +8,5 @@ public interface IPortfolioService
 {
     Task<Result<InvestmentRecords>> GetByWalletId(Guid walletId);
     Task<Result> Add(Guid walletId, InvestmentRecord investment);
+    Task<Result> Update(Guid walletId, InvestmentRecord investment);
 }

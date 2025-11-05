@@ -55,7 +55,77 @@ public static class PublishTransaction
                 // Just log/ignore the error
             }
             
+            // Handle EndOfProjectTransactionDraft
+            if (request.TransactionDraft is EndOfProjectTransactionDraft && 
+                request.WalletId.HasValue && 
+                request.ProjectId != null)
+            {
+                await UpdateInvestmentRecordWithTransaction(
+                    request.WalletId.Value, 
+                    request.ProjectId.Value, 
+                    request.TransactionDraft,
+                    (record, draft) =>
+                    {
+                        record.EndOfProjectTransactionId = draft.TransactionId;
+                        record.EndOfProjectTransactionHex = draft.SignedTxHex;
+                    });
+            }
+            
+            // Handle RecoveryTransactionDraft
+            if (request.TransactionDraft is RecoveryTransactionDraft && 
+                request.WalletId.HasValue && 
+                request.ProjectId != null)
+            {
+                await UpdateInvestmentRecordWithTransaction(
+                    request.WalletId.Value, 
+                    request.ProjectId.Value, 
+                    request.TransactionDraft,
+                    (record, draft) =>
+                    {
+                        record.RecoveryTransactionId = draft.TransactionId;
+                        record.RecoveryTransactionHex = draft.SignedTxHex;
+                    });
+            }
+            
+            // Handle ReleaseTransactionDraft
+            if (request.TransactionDraft is ReleaseTransactionDraft && 
+                request.WalletId.HasValue && 
+                request.ProjectId != null)
+            {
+                await UpdateInvestmentRecordWithTransaction(
+                    request.WalletId.Value, 
+                    request.ProjectId.Value, 
+                    request.TransactionDraft,
+                    (record, draft) =>
+                    {
+                        record.RecoveryReleaseTransactionId = draft.TransactionId;
+                        record.RecoveryReleaseTransactionHex = draft.SignedTxHex;
+                    });
+            }
+            
             return Result.Success(request.TransactionDraft.TransactionId);
+        }
+
+        private async Task UpdateInvestmentRecordWithTransaction(
+            Guid walletId, 
+            string projectId, 
+            TransactionDraft draft,
+            Action<InvestmentRecord, TransactionDraft> updateAction)
+        {
+            var investmentsResult = await portfolioService.GetByWalletId(walletId);
+            if (investmentsResult.IsFailure)
+                return; // Don't fail the operation if we can't update the record
+            
+            var investment = investmentsResult.Value?.ProjectIdentifiers
+                .FirstOrDefault(i => i.ProjectIdentifier == projectId);
+            
+            if (investment == null)
+                return; // Don't fail the operation if record doesn't exist
+            
+            updateAction(investment, draft);
+            
+            await portfolioService.Update(walletId, investment);
+            // Don't fail the operation if portfolio update fails since the transaction is already published
         }
     }
 }

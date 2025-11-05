@@ -69,7 +69,7 @@ public sealed record RecoveryStateViewModel
         {
             return investmentAppService.BuildRecoverInvestorFunds(recoveryStateViewModel.WalletId.Value, Project.ProjectId, new DomainFeerate(fr))
                 .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
-        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, model.Model)
+        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model)
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds recovery transaction has been submitted successfully"))
             .Map(_ => Guid.Empty), uiServices);
 
@@ -82,7 +82,7 @@ public sealed record RecoveryStateViewModel
         {
             return investmentAppService.BuildClaimInvestorEndOfProjectFunds(recoveryStateViewModel.WalletId.Value, Project.ProjectId, new DomainFeerate(fr))
                 .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
-        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, model.Model)
+        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model)
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
             .Map(_ => Guid.Empty), uiServices);
 
@@ -95,7 +95,7 @@ public sealed record RecoveryStateViewModel
         {
             return investmentAppService.BuildReleaseInvestorFunds(recoveryStateViewModel.WalletId.Value, Project.ProjectId, new DomainFeerate(fr))
                 .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
-        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, model.Model)
+        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model)
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
             .Map(_ => Guid.Empty), uiServices);
 
