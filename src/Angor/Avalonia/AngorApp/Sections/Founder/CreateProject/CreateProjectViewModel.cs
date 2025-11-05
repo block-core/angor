@@ -3,6 +3,7 @@ using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Shared;
 using AngorApp.Flows;
 using AngorApp.Flows.CreateProyect;
 using AngorApp.Sections.Founder.CreateProject.FundingStructure;
@@ -24,10 +25,10 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
     private readonly IProjectAppService projectAppService;
     private readonly CompositeDisposable disposable = new();
 
-    public CreateProjectViewModel(IWallet wallet, CreateProjectFlow.ProjectSeed projectSeed, UIServices uiServices, IProjectAppService projectAppService)
+    public CreateProjectViewModel(IWallet wallet, CreateProjectFlow.ProjectSeed projectSeed, UIServices uiServices, IProjectAppService projectAppService, INetworkConfiguration networkConfiguration)
     {
         this.projectAppService = projectAppService;
-        FundingStructureViewModel = new FundingStructureViewModel().DisposeWith(disposable);
+        FundingStructureViewModel = new FundingStructureViewModel(networkConfiguration).DisposeWith(disposable);
         var endDateChanges = FundingStructureViewModel.WhenAnyValue(x => x.FundingEndDate);
         StagesViewModel = new StagesViewModel(endDateChanges, uiServices).DisposeWith(disposable);
         ProfileViewModel = new ProfileViewModel(projectSeed, uiServices).DisposeWith(disposable);

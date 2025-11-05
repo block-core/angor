@@ -1,4 +1,5 @@
 using AngorApp.UI.Services;
+using Angor.Shared;
 using Avalonia;
 using Avalonia.LogicalTree;
 using ReactiveUI.SourceGenerators;
@@ -11,11 +12,13 @@ namespace AngorApp.Sections.Shell;
 public partial class HeaderViewModel : ReactiveObject
 {
     private readonly Blockcore.Networks.Network network;
+    private readonly INetworkConfiguration networkConfiguration;
     private readonly ObservableAsPropertyHelper<object?> currentHeader;
 
-    public HeaderViewModel(IEnhancedCommand back, object content, Blockcore.Networks.Network network, UIServices uiServices)
+    public HeaderViewModel(IEnhancedCommand back, object content, Blockcore.Networks.Network network, UIServices uiServices, INetworkConfiguration networkConfiguration)
     {
         this.network = network;
+        this.networkConfiguration = networkConfiguration;
         Back = back;
         currentHeader = Header(content).ToProperty(this, vm => vm.Content);
 
@@ -44,7 +47,7 @@ public partial class HeaderViewModel : ReactiveObject
             return WizardHeader(navigator.Wizard);
         }
 
-        return Observable.Return(new NetworkViewModel(network));
+        return Observable.Return(new NetworkViewModel(network, networkConfiguration));
     }
 
     private static IObservable<object?> WizardHeader(ISlimWizard wizard)

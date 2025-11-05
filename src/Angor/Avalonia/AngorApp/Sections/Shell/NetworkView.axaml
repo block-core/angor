@@ -14,5 +14,6 @@
         <ContentControl VerticalAlignment="Center" Content="{Icon fa-network-wired}" />
         <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
         <TextBlock VerticalAlignment="Center" FontWeight="Thin" Text="{Binding NetworkType}" />
+        <TextBlock VerticalAlignment="Center" FontWeight="Light" Text="(Debug)" IsVisible="{Binding IsDebugMode}" />
     </StackPanel>
 </UserControl>
