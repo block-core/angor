@@ -26,6 +26,7 @@ public static class CompositionRoot
         var applicationStorage = new ApplicationStorage();
         var profileContext = new ProfileContext("Angor", applicationStorage.SanitizeProfileName(profileName));
         var logger = LoggingConfigurator.CreateLogger(profileContext.AppName, applicationStorage);
+        UnhandledExceptionLogger.Register(logger);
 
         var store = new FileStore(applicationStorage, profileContext);
         var networkStorage = new NetworkStorage(store);
