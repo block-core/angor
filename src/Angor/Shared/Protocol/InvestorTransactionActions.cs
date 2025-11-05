@@ -306,10 +306,10 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     /// </summary>
     public bool IsInvestmentAbovePenaltyThreshold(ProjectInfo projectInfo, long investmentAmount)
     {
-        // If no penalty threshold is set, return false (not above threshold)
+        // If no penalty threshold is set, return true (by default all investments where above threshold)
         if (!projectInfo.PenaltyThreshold.HasValue)
         {
-            return false;
+            return true;
         }
 
         // Return true if investment is at or above the threshold (requires penalty + founder approval)
