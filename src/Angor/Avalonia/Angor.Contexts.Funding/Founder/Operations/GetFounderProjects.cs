@@ -26,7 +26,7 @@ public static class GetFounderProjects
             var storageResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.ToString());
 
             if (storageResult.IsFailure || storageResult.Value == null)
-                Result.Failure<IEnumerable<ProjectDto>>(storageResult.IsFailure ? storageResult.Error
+                return Result.Failure<IEnumerable<ProjectDto>>(storageResult.IsFailure ? storageResult.Error
                     : "No projects found for the given wallet.");
             
             var keys = storageResult.Value!.Keys.Select(k => new ProjectId(k.ProjectIdentifier));
