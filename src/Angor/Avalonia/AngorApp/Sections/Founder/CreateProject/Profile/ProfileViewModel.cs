@@ -1,7 +1,7 @@
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using AngorApp.Flows;
-using AngorApp.Flows.CreateProyect;
+using AngorApp.Flows.CreateProject;
 using AngorApp.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.UI.Services;
 using ReactiveUI.SourceGenerators;
