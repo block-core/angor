@@ -47,33 +47,6 @@
                 <Card Header="Appearance">
                     <ToggleSwitch IsChecked="{Binding IsBitcoinPreferred}" Content="Unit for amount entry" OnContent="BTC" OffContent="sats" />
                 </Card>
-                <Card HeaderStartContent="{Icon fa-sitemap}" Header="Explorer">
-                    <StackPanel Classes="BigGap">
-                        <DockPanel Margin="0 0 20 0">
-                            <EnhancedButton DockPanel.Dock="Right" Icon="{Icon fa-plus}" Command="{Binding AddExplorer}" />
-                            <TextBox VerticalContentAlignment="Center" Watermark="Enter new explorer link" Text="{Binding NewExplorer}" />
-                        </DockPanel>
-                        <SlimDataGrid ItemsSource="{Binding Explorers}">
-                            <SlimDataGrid.Columns>
-                                <Column Header="Primary" Width="Auto" Binding="{Binding}">
-                                    <Column.CellTemplate>
-                                        <DataTemplate>
-                                            <RadioButton GroupName="Explorer" Command="{Binding SetPrimary}" IsChecked="{Binding IsPrimary, Mode=TwoWay}" />
-                                        </DataTemplate>
-                                    </Column.CellTemplate>
-                                </Column>
-                                <Column Header="Address" Binding="{Binding Url}" />
-                                <Column Width="Auto" Binding="{Binding}">
-                                    <Column.CellTemplate>
-                                        <DataTemplate>
-                                            <EnhancedButton Icon="{Icon fa-trash}" Command="{Binding Remove}" />
-                                        </DataTemplate>
-                                    </Column.CellTemplate>
-                                </Column>
-                            </SlimDataGrid.Columns>
-                        </SlimDataGrid>
-                    </StackPanel>
-                </Card>
                 <Card HeaderStartContent="{Icon fa-server}" Header="Indexer">
                     <StackPanel>
                         <DockPanel  Margin="0 0 20 0">
