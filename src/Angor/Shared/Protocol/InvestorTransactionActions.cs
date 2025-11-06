@@ -40,9 +40,12 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         // create the output and script of the investor pubkey script opreturn
         var opreturnScript = _projectScriptsBuilder.BuildInvestorInfoScript(investorKey);
 
+        // Determine the effective expiry date based on penalty threshold
+        var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
+
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
-        var stagesScript = Enumerable.Range(0,projectInfo.Stages.Count)
-            .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, index));
+        var stagesScript = Enumerable.Range(0, projectInfo.Stages.Count)
+            .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, index, null, expiryDateOverride));
 
         return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript, totalInvestmentAmount);
     }
@@ -51,7 +54,14 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
-        var scripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex);
+        // Calculate the investment amount from the transaction
+        var totalInvestmentAmount = GetTotalInvestmentAmount(projectInfo, investmentTransaction);
+
+        // Determine expiry date override based on investment amount using centralized logic
+        var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
+
+        // Generate scripts with the appropriate expiry date
+        var scripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, null, expiryDateOverride);
 
         var witScriptInfo = new Blockcore.Consensus.TransactionInfo.WitScript(Blockcore.Consensus.ScriptInfo.Script.FromHex(witScript));
         var executeScript = new Blockcore.Consensus.ScriptInfo.Script(witScriptInfo[witScriptInfo.PushCount - 2]);
@@ -150,6 +160,16 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     public TransactionInfo RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex,
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation)
     {
+        // Parse the investment transaction to calculate the total investment amount
+        var network = _networkConfiguration.GetNetwork();
+        var investmentTransaction = network.Consensus.ConsensusFactory.CreateTransaction(transactionHex);
+
+        // Calculate the investment amount from the transaction
+        var totalInvestmentAmount = GetTotalInvestmentAmount(projectInfo, investmentTransaction);
+
+        // Determine the effective expiry date based on penalty threshold
+        var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
+        
         return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, stageIndex,
             investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             projectScripts =>
@@ -167,7 +187,8 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
                 return new NBitcoin.WitScript(NBitcoin.Op.GetPushOp(sig.ToBytes()),
                     NBitcoin.Op.GetPushOp(scriptToExecute), NBitcoin.Op.GetPushOp(controlBlock));
-            });
+            },
+            expiryDateOverride);
     }
 
     public TransactionInfo RecoverRemainingFundsWithOutPenalty(string transactionHex, ProjectInfo projectInfo, int stageIndex,
@@ -256,6 +277,64 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var unsignedUnfundedReleaseFundsTransaction = _investmentTransactionBuilder.BuildUpfrontUnfundedReleaseFundsTransaction(projectInfo, investmentTransaction, investorReleaseKey);
 
         return CheckRecoverySignatures(projectInfo, investmentTransaction, unsignedUnfundedReleaseFundsTransaction, founderSignatures);
+    }
+
+    private long GetTotalInvestmentAmount(ProjectInfo projectInfo, Transaction investmentTransaction)
+    {
+        var totalInvestmentAmount = investmentTransaction.Outputs.AsIndexedOutputs()
+            .Skip(2)
+            .Take(projectInfo.Stages.Count)
+            .Sum(output => output.TxOut.Value.Satoshi);
+
+        return totalInvestmentAmount;
+    }
+
+    public bool IsInvestmentAbovePenaltyThreshold(ProjectInfo projectInfo, Transaction investmentTransaction)
+    {
+        // Calculate the total investment amount from the transaction outputs
+        // Skip first 2 outputs (Angor fee and OP_RETURN) and sum the stage outputs
+        var totalInvestmentAmount = GetTotalInvestmentAmount(projectInfo, investmentTransaction);
+
+        // Use the overload that takes the amount directly
+        return IsInvestmentAbovePenaltyThreshold(projectInfo, totalInvestmentAmount);
+    }
+
+    /// <summary>
+    /// Determines if an investment amount is above the penalty threshold.
+    /// Returns true if investment is at or above the threshold (requires penalty + founder approval).
+    /// Returns false if investment is below threshold (no penalty, no approval needed) or if no threshold is set.
+    /// </summary>
+    public bool IsInvestmentAbovePenaltyThreshold(ProjectInfo projectInfo, long investmentAmount)
+    {
+        // If no penalty threshold is set, return true (by default all investments where above threshold)
+        if (!projectInfo.PenaltyThreshold.HasValue)
+        {
+            return true;
+        }
+
+        // Return true if investment is at or above the threshold (requires penalty + founder approval)
+        // Return false if investment is below threshold (no penalty, no approval needed)
+        return investmentAmount > projectInfo.PenaltyThreshold.Value;
+    }
+
+    /// <summary>
+    /// Determines the effective expiry date based on the penalty threshold.
+    /// Returns StartDate for below-threshold investments (immediate access),
+    /// Returns null for at/above-threshold investments (uses standard ExpiryDate).
+    /// </summary>
+    private DateTime? GetExpiryDateOverride(ProjectInfo projectInfo, long investmentAmount)
+    {
+        // Use the centralized threshold check
+        if (!IsInvestmentAbovePenaltyThreshold(projectInfo, investmentAmount))
+        {
+            // Below threshold: immediate access via EndOfProject script (StartDate locktime)
+            // No penalty path needed, no founder approval required
+            return projectInfo.StartDate;
+        }
+        
+        // Above/at threshold: use standard ExpiryDate
+        // Requires penalty recovery path with founder approval
+        return null;
     }
 
     private Transaction AddSignaturesToRecoveryPathTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, Transaction recoveryTransaction, SignatureInfo founderSignatures, string investorPrivateKey)

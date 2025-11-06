@@ -10,9 +10,10 @@ public class InvestorProjectRecoveryDto
     public long TotalSpendable { get; set; }
     public long TotalInPenalty { get; set; }
 
-    public bool CanRecover { get; set; }
-    public bool CanRelease { get; set; }
+    public bool HasUnspentItems { get; set; }
+    public bool HasItemsInPenalty { get; set; }
     public bool EndOfProject { get; set; }
+    public bool IsAboveThreshold { get; set; }
 
     public string? ExplorerLink { get; set; }
     public string TransactionId { get; set; }

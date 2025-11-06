@@ -9,6 +9,7 @@ public interface IFundingStructureViewModel
     DateTime FundingStartDate { get; }
 
     int? PenaltyDays { get; set; }
+    long? PenaltyThreshold { get; set; }
 
     DateTime? FundingEndDate { get; set; }
 

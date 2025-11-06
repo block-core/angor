@@ -1,5 +1,5 @@
 using AngorApp.Design;
-using AngorApp.Flows.CreateProyect;
+using AngorApp.Flows.CreateProject;
 using AngorApp.Flows.Invest;
 using AngorApp.Flows.SendWalletMoney;
 using AngorApp.Sections.Wallet.CreateAndImport;
