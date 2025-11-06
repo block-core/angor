@@ -48,6 +48,7 @@ internal static class CreateProjectConstants
                 
                 if (storedKeysResult.IsFailure || storedKeysResult.Value == null)
                 {
+                    logger.LogDebug("Project keys not found in storage for WalletId {WalletId}. Result: {Result}", request.WalletId, storedKeysResult);
                     return Result.Failure<TransactionDraft>("Project keys not found in storage. Please load founder projects first.");
                 }
 
@@ -67,7 +68,10 @@ internal static class CreateProjectConstants
                 }
 
                 if (newProjectKeys == null)
+                {
+                    logger.LogDebug("Failed to find available project slot for WalletId {WalletId}. All project keys are already in use.", request.WalletId);
                     return Result.Failure<TransactionDraft>("Failed to find available project slot. All project keys are already in use.");
+                }
 
                 var nostrPrivateKey =
                     await derivationOperations.DeriveProjectNostrPrivateKeyAsync(wallet.Value.ToWalletWords(),
@@ -77,15 +81,18 @@ internal static class CreateProjectConstants
 
                 var profileCreateEvent = await CreatNostrProfileAsync(nostrKeyHex, request.Project);
 
-
                 if (profileCreateEvent.IsFailure)
+                {
+                    logger.LogDebug("Failed to create Nostr profile for Project {ProjectName} (WalletId: {WalletId}): {Error}", request.Project.ProjectName, request.WalletId, profileCreateEvent.Error);
                     return Result.Failure<TransactionDraft>(profileCreateEvent.Error);
+                }
 
                 var projectInfo =
                     await CreatProjectInfoOnNostr(nostrKeyHex, request.Project, newProjectKeys);
 
                 if (projectInfo.IsFailure)
                 {
+                    logger.LogDebug("Failed to create project info on Nostr for Project {ProjectName} (WalletId: {WalletId}): {Error}", request.Project.ProjectName, request.WalletId, projectInfo.Error);
                     // await relayService.DeleteProjectAsync(resultId,
                     //     nostrKeyHex); //TODO need to check if relays support the delete operation
                     
@@ -97,13 +104,16 @@ internal static class CreateProjectConstants
                     newProjectKeys.FounderKey, newProjectKeys.ProjectIdentifier, projectInfo.Value);
 
                 if (transactionInfo.IsFailure)
+                {
+                    logger.LogDebug("Failed to create project transaction for Project {ProjectName} (WalletId: {WalletId}): {Error}", request.Project.ProjectName, request.WalletId, transactionInfo.Error);
                     return Result.Failure<TransactionDraft>(transactionInfo.Error);
-                
+                }
                 
                 var response = await walletOperations.PublishTransactionAsync(networkConfiguration.GetNetwork(), transactionInfo.Value.Transaction);
 
                 if (!response.Success)
                 {
+                    logger.LogDebug("Failed to publish transaction for Project {ProjectName} (WalletId: {WalletId}): {Message}", request.Project.ProjectName, request.WalletId, response.Message);
                     return Result.Failure<TransactionDraft>(response.Message);
                 }
 
@@ -120,7 +130,6 @@ internal static class CreateProjectConstants
                 // project.CreationTransactionId = transactionId;
                 // storage.UpdateFounderProject(project);
             }
-
 
             private async Task<Result<string>> CreatNostrProfileAsync(string nostrKey, CreateProjectDto project)
             {
@@ -140,8 +149,9 @@ internal static class CreateProjectConstants
                     {
                         if (!okResponse.Accepted)
                         {
+                            logger.LogDebug("Failed to store the project information on the relay for Project {ProjectName}: Communicator {CommunicatorName} - {Message}", project.ProjectName, okResponse.CommunicatorName, okResponse.Message);
                             tcs.SetResult(Result.Failure<string>(
-                                "Failed to store the project information on the relay!!! {_.CommunicatorName} - {_.Message}"));
+                                $"Failed to store the project information on the relay!!! {{okResponse.CommunicatorName}} - {{okResponse.Message}}"));
                             return;
                         }
 
@@ -149,7 +159,8 @@ internal static class CreateProjectConstants
                         {
                             if(tcs.Task.IsCompleted)
                                 return;
-                            
+                            if(!nip65OkResponse.Accepted)
+                                logger.LogDebug("Failed to publish NIP-65 list for Project {ProjectName}", project.ProjectName);
                             tcs.SetResult(!nip65OkResponse.Accepted
                                 ? Result.Failure<string>("Failed to publish NIP-65 list")
                                 : Result.Success(okResponse.EventId!));
@@ -158,7 +169,6 @@ internal static class CreateProjectConstants
 
                 return await tcs.Task;
             }
-
 
             private async Task<Result<string>> CreatProjectInfoOnNostr(string nostrKeyHex, CreateProjectDto project,
                 FounderKeys founderKeys)
@@ -190,8 +200,9 @@ internal static class CreateProjectConstants
                     {
                         if (!okResponse.Accepted)
                         {
+                            logger.LogDebug("Failed to store the project information on the relay for Project {ProjectName}: Communicator {CommunicatorName} - {Message}", project.ProjectName, okResponse.CommunicatorName, okResponse.Message);
                             tsc.SetResult(Result.Failure<string>(
-                                "Failed to store the project information on the relay!!! {_.CommunicatorName} - {_.Message}"));
+                                $"Failed to store the project information on the relay!!! {{okResponse.CommunicatorName}} - {{okResponse.Message}}"));
                             return ;
                         }
 
@@ -204,7 +215,6 @@ internal static class CreateProjectConstants
                 return await tsc.Task;
             }
 
-
             private async Task<Result<TransactionInfo>> CreatProjectTransaction(Guid walletId, WalletWords words,
                 long selectedFee,
                 string founderKey,
@@ -213,11 +223,11 @@ internal static class CreateProjectConstants
                 var accountBalanceInfo = await RefreshWalletBalance(walletId);
                 if (accountBalanceInfo.IsFailure)
                 {
+                    logger.LogDebug("Failed to get account balance information for WalletId {WalletId}: {Error}", walletId, accountBalanceInfo.Error);
                     throw new InvalidOperationException("Failed to get account balance information");
                 }
 
                 var accountInfo = accountBalanceInfo.Value.AccountInfo;
-
 
                 var unsignedTransaction = founderTransactionActions.CreateNewProjectTransaction(founderKey,
                     derivationOperations.AngorKeyToScript(projectIdentifier), NetworkConfiguration.AngorCreateFeeSats,
@@ -228,7 +238,6 @@ internal static class CreateProjectConstants
                     selectedFee);
 
                 return Result.Success(signedTransaction);
-
             }
 
             private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(Guid walletId)
@@ -239,14 +248,21 @@ internal static class CreateProjectConstants
                     var dbResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
 
                     if (dbResult.IsFailure)
+                    {
+                        logger.LogDebug("Failed to get account balance info from DB for WalletId {WalletId}: {Error}", walletId, dbResult.Error);
                         return Result.Failure<AccountBalanceInfo>(dbResult.Error);
+                    }
 
                     // Refresh the existing balance
                     var refreshResult = await walletAccountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
 
-                    return refreshResult.IsFailure 
-                        ? Result.Failure<AccountBalanceInfo>(refreshResult.Error) 
-                        : Result.Success(refreshResult.Value);
+                    if (refreshResult.IsFailure)
+                    {
+                        logger.LogDebug("Failed to refresh account balance info for WalletId {WalletId}: {Error}", walletId, refreshResult.Error);
+                        return Result.Failure<AccountBalanceInfo>(refreshResult.Error);
+                    }
+
+                    return Result.Success(refreshResult.Value);
                 }
                 catch (Exception e)
                 {
