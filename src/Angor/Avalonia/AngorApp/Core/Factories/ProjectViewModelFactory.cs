@@ -1,7 +1,9 @@
+using System;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
 using AngorApp.Model.Projects;
 using AngorApp.Sections.Browse;
+using AngorApp.Sections.Browse.Details;
 using ReactiveUI;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
@@ -14,13 +16,13 @@ public class ProjectViewModelFactory : IProjectViewModelFactory
     private readonly IProjectAppService projectAppService;
     private readonly INavigator navigator;
     private readonly UIServices uiServices;
-    private readonly IProjectDetailsViewModelFactory projectDetailsViewModelFactory;
+    private readonly Func<FullProject, IProjectDetailsViewModel> projectDetailsViewModelFactory;
 
     public ProjectViewModelFactory(
         IProjectAppService projectAppService,
         INavigator navigator,
         UIServices uiServices,
-        IProjectDetailsViewModelFactory projectDetailsViewModelFactory)
+        Func<FullProject, IProjectDetailsViewModel> projectDetailsViewModelFactory)
     {
         this.projectAppService = projectAppService;
         this.navigator = navigator;
@@ -33,7 +35,7 @@ public class ProjectViewModelFactory : IProjectViewModelFactory
         var goToDetails = ReactiveCommand.CreateFromTask(async () =>
             {
                 var fullProject = await projectAppService.GetFullProject(new ProjectId(project.Id))
-                    .Map(p => projectDetailsViewModelFactory.Create((FullProject)p));
+                    .Map(p => projectDetailsViewModelFactory((FullProject)p));
 
                 var result = await fullProject.Bind(details => navigator.Go(() => details));
                 return result;

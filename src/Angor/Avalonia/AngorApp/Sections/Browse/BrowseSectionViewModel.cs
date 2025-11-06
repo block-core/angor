@@ -1,3 +1,4 @@
+using System;
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.Model.Common;
@@ -15,10 +16,10 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
     public BrowseSectionViewModel(
         IProjectAppService projectService,
         IProjectViewModelFactory projectViewModelFactory,
-        IProjectLookupViewModelFactory projectLookupViewModelFactory,
+        Func<IProjectLookupViewModel> projectLookupViewModelFactory,
         UIServices uiServices)
     {
-        ProjectLookupViewModel = projectLookupViewModelFactory.Create().DisposeWith(disposable);
+        ProjectLookupViewModel = projectLookupViewModelFactory().DisposeWith(disposable);
 
         var refresher = RefreshableCollection.Create(GetProjects(projectService, projectViewModelFactory), model => model.Project.Id)
             .DisposeWith(disposable);

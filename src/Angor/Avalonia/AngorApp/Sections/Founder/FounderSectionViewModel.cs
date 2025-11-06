@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
+using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
 using AngorApp.Model.Contracts.Flows;
@@ -22,12 +23,12 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
         IProjectAppService projectAppService,
         ICreateProjectFlow createProjectFlow,
         IWalletContext walletContext,
-        IFounderProjectViewModelFactory projectViewModelFactory)
+        Func<ProjectDto, IFounderProjectViewModel> projectViewModelFactory)
     {
         projectsCollection = RefreshableCollection.Create(
                 () => walletContext.RequiresWallet(wallet => projectAppService
                     .GetFounderProjects(wallet.Id.Value)
-                    .MapEach(projectViewModelFactory.Create)),
+                    .MapEach(projectViewModelFactory)),
                 project => project.Id)
             .DisposeWith(disposable);
 

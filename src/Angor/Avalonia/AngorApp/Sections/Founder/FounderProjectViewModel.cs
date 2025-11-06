@@ -11,7 +11,7 @@ namespace AngorApp.Sections.Founder;
 
 public class FounderProjectViewModel : IFounderProjectViewModel, IDisposable
 {
-    public FounderProjectViewModel(ProjectDto dto, INavigator navigator, IFounderProjectDetailsViewModelFactory detailsFactory)
+    public FounderProjectViewModel(ProjectDto dto, INavigator navigator, Func<ProjectId, IFounderProjectDetailsViewModel> detailsFactory)
     {
         Id = dto.Id;
         Name = dto.Name;
@@ -26,7 +26,7 @@ public class FounderProjectViewModel : IFounderProjectViewModel, IDisposable
         Stages = dto.Stages;
 
         GoToDetails = ReactiveCommand.CreateFromTask(() =>
-            navigator.Go(() => detailsFactory.Create(dto.Id))).Enhance();
+            navigator.Go(() => detailsFactory(dto.Id))).Enhance();
 
     }
 
