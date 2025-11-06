@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
 using AngorApp.Sections.Founder.ProjectDetails;
-using ReactiveUI;
-using Zafiro.Reactive;
 using Zafiro.UI.Navigation;
 
 namespace AngorApp.Sections.Founder;

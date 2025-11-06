@@ -1,7 +1,5 @@
-using System;
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using AngorApp.Model.Common;
 using AngorApp.Core.Factories;
 using AngorApp.Sections.Browse.ProjectLookup;
 using Zafiro.CSharpFunctionalExtensions;

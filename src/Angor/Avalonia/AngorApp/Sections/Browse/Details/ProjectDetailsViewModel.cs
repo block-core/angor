@@ -1,13 +1,6 @@
-using System;
-using System.Collections.Generic;
-using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Shared;
-using AngorApp.Model.Projects;
 using AngorApp.Core.Factories;
 using AngorApp.UI.Controls.Common.FoundedProjectOptions;
-using ReactiveUI;
-using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.UI;
 
 namespace AngorApp.Sections.Browse.Details;
 

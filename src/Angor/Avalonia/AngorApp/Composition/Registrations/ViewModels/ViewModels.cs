@@ -1,12 +1,6 @@
-using System;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
-using AngorApp.Core;
 using AngorApp.Core.Factories;
-using AngorApp.Model.Projects;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Browse.Details;
 using AngorApp.Sections.Browse.ProjectLookup;
@@ -20,7 +14,6 @@ using AngorApp.Sections.Settings;
 using AngorApp.Sections.Shell;
 using AngorApp.UI.Controls.Common.FoundedProjectOptions;
 using Microsoft.Extensions.DependencyInjection;
-using Zafiro.UI.Navigation;
 using IWalletSectionViewModel = AngorApp.Sections.Wallet.Main.IWalletSectionViewModel;
 using WalletSectionViewModel = AngorApp.Sections.Wallet.Main.WalletSectionViewModel;
 

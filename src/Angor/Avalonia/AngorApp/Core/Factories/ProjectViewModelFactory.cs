@@ -1,12 +1,7 @@
-using System;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
-using AngorApp.Model.Projects;
 using AngorApp.Sections.Browse;
 using AngorApp.Sections.Browse.Details;
-using ReactiveUI;
-using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.Reactive;
 using Zafiro.UI.Navigation;
 
 namespace AngorApp.Core.Factories;
