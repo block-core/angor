@@ -9,6 +9,7 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
 {
     [Reactive] private long? sats;
     [Reactive] private int? penaltyDays = 100;
+    [Reactive] private long? penaltyThreshold;
     [Reactive] private DateTime? fundingEndDate;
     [Reactive] private DateTime? expiryDate;
     [ObservableAsProperty] private IAmountUI targetAmount;
@@ -21,6 +22,7 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
         this.ValidationRule(x => x.Sats, x => x is not null, _ => "Amount should be especified").DisposeWith(disposable);
         this.ValidationRule(x => x.FundingEndDate, x => x != null, "Funding date needs to be specified").DisposeWith(disposable);
         this.ValidationRule(x => x.PenaltyDays, x => x >= 0, "Penalty Days should be greater than 0").DisposeWith(disposable);
+        this.ValidationRule(x => x.PenaltyThreshold, x => x is null or >= 0, "Penalty Threshold should be greater than or equal to 0").DisposeWith(disposable);
         this.ValidationRule(x => x.FundingEndDate, time => time >= FundingStartDate, "Funding end date should be after the funding start date").DisposeWith(disposable);
 
         targetAmountHelper = this.WhenAnyValue(x => x.Sats)

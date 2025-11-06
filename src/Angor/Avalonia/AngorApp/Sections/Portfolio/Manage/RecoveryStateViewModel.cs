@@ -7,6 +7,8 @@ using Angor.Contexts.Wallet.Domain;
 using AngorApp.Core;
 using AngorApp.TransactionDrafts;
 using AngorApp.TransactionDrafts.DraftTypes;
+using AngorApp.TransactionDrafts.DraftTypes.Base;
+using AngorApp.TransactionDrafts.DraftTypes.Investment;
 using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.Sections.Portfolio.Manage;
@@ -37,22 +39,25 @@ public sealed record RecoveryStateViewModel
 
         BatchAction = CreateBatchCommand(this);
     }
-    
-     private IEnhancedCommand<Maybe<Guid>> CreateBatchCommand(RecoveryStateViewModel recoveryStateViewModel)
+
+    private IEnhancedCommand<Maybe<Guid>> CreateBatchCommand(RecoveryStateViewModel recoveryStateViewModel)
     {
-        if (recoveryStateViewModel.CanRecover)
+        if (recoveryStateViewModel.CanSpendEndOfProjectOrThreshold)
+        {
+            var buttonText = recoveryStateViewModel.IsBelowPenaltyThreshold
+                ? "Claim Funds (Below Threshold)"
+                : "Claim Funds";
+            return ReactiveCommand.CreateFromTask(() => Claim(recoveryStateViewModel)).Enhance(buttonText);
+        }
+
+        if (recoveryStateViewModel.CanRecoverToPenalty)
         {
             return ReactiveCommand.CreateFromTask(() => Recover(recoveryStateViewModel)).Enhance("Recover Funds");
         }
-        
-        if (recoveryStateViewModel.CanRelease)
+
+        if (recoveryStateViewModel.CanReleaseFromPenalty)
         {
             return ReactiveCommand.CreateFromTask(() => Release(recoveryStateViewModel)).Enhance("Release Funds");
-        }
-        
-        if (recoveryStateViewModel.CanClaim)
-        {
-            return ReactiveCommand.CreateFromTask(() => Claim(recoveryStateViewModel)).Enhance("Claim Funds");
         }
 
         return ReactiveCommand.Create(() => Maybe<Guid>.None, Observable.Return(false)).Enhance();
@@ -63,8 +68,8 @@ public sealed record RecoveryStateViewModel
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
         {
             return investmentAppService.BuildRecoverInvestorFunds(recoveryStateViewModel.WalletId.Value, Project.ProjectId, new DomainFeerate(fr))
-                .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
-        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, model.Model)
+                .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
+        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model)
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds recovery transaction has been submitted successfully"))
             .Map(_ => Guid.Empty), uiServices);
 
@@ -75,9 +80,9 @@ public sealed record RecoveryStateViewModel
     {
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
         {
-            return investmentAppService.BuilodClaimInvestorEndOfProjectFunds(recoveryStateViewModel.WalletId.Value, Project.ProjectId, new DomainFeerate(fr))
-                .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
-        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, model.Model)
+            return investmentAppService.BuildClaimInvestorEndOfProjectFunds(recoveryStateViewModel.WalletId.Value, Project.ProjectId, new DomainFeerate(fr))
+                .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
+        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model)
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
             .Map(_ => Guid.Empty), uiServices);
 
@@ -89,8 +94,8 @@ public sealed record RecoveryStateViewModel
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
         {
             return investmentAppService.BuildReleaseInvestorFunds(recoveryStateViewModel.WalletId.Value, Project.ProjectId, new DomainFeerate(fr))
-                .Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel((InvestmentDraft)draft, uiServices));
-        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, model.Model)
+                .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
+        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model)
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
             .Map(_ => Guid.Empty), uiServices);
 
@@ -105,9 +110,13 @@ public sealed record RecoveryStateViewModel
 
     public InvestedProject Project { get; }
 
-    public bool CanRecover => dto.CanRecover;
-    public bool CanRelease => dto.CanRelease;
-    public bool CanClaim => Stages.Any(stage => !stage.IsSpent);
+    public bool CanRecoverToPenalty => dto.HasUnspentItems && !dto.HasItemsInPenalty;
+    public bool CanReleaseFromPenalty => dto.HasUnspentItems && dto.HasItemsInPenalty;
+    public bool CanSpendEndOfProjectOrThreshold => dto.HasUnspentItems && (dto.EndOfProject || !dto.IsAboveThreshold);
+    public bool EndOfProject => dto.EndOfProject;
+
+    public bool IsBelowPenaltyThreshold => !dto.IsAboveThreshold;
     public WalletId WalletId { get; }
+
     public string TransactionId => dto.TransactionId; 
 }

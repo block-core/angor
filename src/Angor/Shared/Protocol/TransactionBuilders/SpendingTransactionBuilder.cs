@@ -23,7 +23,8 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
     public TransactionInfo BuildRecoverInvestorRemainingFundsInProject(string investmentTransactionHex ,ProjectInfo projectInfo, 
         int startStageIndex, string receiveAddress, string privateKey, FeeRate feeRate, 
         Func<ProjectScripts, WitScript> buildWitScriptWithSigPlaceholder,
-        Func<WitScript, TaprootSignature, WitScript> addSignatureToWitScript)
+        Func<WitScript, TaprootSignature, WitScript> addSignatureToWitScript,
+        DateTime? expiryDateOverride = null)
     {
         var network = _networkConfiguration.GetNetwork();
         
@@ -34,10 +35,14 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
 
         var (investorKey, secretHash, investmentTrxOutputs) = GetInvestorTransactionData(investmentTransactionHex, startStageIndex);
 
+        // Determine the effective expiry date
+        // If expiryDateOverride is provided, use it; otherwise, use the project's standard ExpiryDate
+        var effectiveExpiryDate = expiryDateOverride ?? projectInfo.ExpiryDate;
+
         // Step 1 - the time lock
         // we must set the locktime to be ahead of the current block time
         // and ahead of the cltv otherwise the trx wont get accepted in the chain
-        spendingTrx.LockTime = Utils.DateTimeToUnixTime(projectInfo.ExpiryDate.AddMinutes(1));
+        spendingTrx.LockTime = Utils.DateTimeToUnixTime(effectiveExpiryDate.AddMinutes(1));
         
         // Step 2 - build the transaction outputs and inputs without signing using fake sigs for fee estimation
         spendingTrx.Outputs.Add(investmentTrxOutputs.Sum(_ => _.TxOut.Value), NBitcoin.BitcoinAddress.Create(receiveAddress, nbitcoinNetwork));
@@ -47,8 +52,9 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         {
             var currentStageIndex = i + startStageIndex;
             
+            // Pass the expiryDateOverride to BuildProjectScriptsForStage so scripts are built with the correct expiry
             var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
-                    currentStageIndex, secretHash);
+                    currentStageIndex, secretHash, expiryDateOverride);
 
             var witScript =  new WitScript(buildWitScriptWithSigPlaceholder(scriptStages).Pushes);
 

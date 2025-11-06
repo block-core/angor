@@ -87,6 +87,8 @@
                     <StackPanel Classes="BigGap">
                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="{Icon fa-solid fa-clock}" Content="Penalty duration"
                                    EndContent="{Binding Project.PenaltyDuration, Converter={x:Static controls:AngorConverters.HumanizeTimeSpan}}" />
+                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="{Icon fa-solid fa-coins}" Content="Penalty threshold"
+                                   EndContent="{Binding Project.PenaltyThreshold.DecimalString, TargetNullValue='No threshold set'}" />
                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="{Icon fa-solid fa-calendar-days}" Content="Project dates">
                             <EdgePanel.EndContent>
                                 <StackPanel>

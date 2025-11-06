@@ -53,7 +53,7 @@ public class PortfolioService(
         return relayResult;
     }
 
-    public async Task<Result> Add(Guid walletId, InvestmentRecord newInvestment)
+    public async Task<Result> AddOrUpdate(Guid walletId, InvestmentRecord investmentRecord)
     {
         var investmentsResult = await GetByWalletId(walletId);
         if (investmentsResult.IsFailure)
@@ -61,11 +61,11 @@ public class PortfolioService(
         
         var investments = investmentsResult.Value ?? new InvestmentRecords();
         var existingInvestment = investments.ProjectIdentifiers
-            .FirstOrDefault(i => i.ProjectIdentifier == newInvestment.ProjectIdentifier);
+            .FirstOrDefault(i => i.ProjectIdentifier == investmentRecord.ProjectIdentifier);
         if (existingInvestment != null)
             investments.ProjectIdentifiers.Remove(existingInvestment);
         
-        investments.ProjectIdentifiers.Add(newInvestment);
+        investments.ProjectIdentifiers.Add(investmentRecord);
         
         // Save to local document collection for future lookups
         var doc = new InvestmentRecordsDocument

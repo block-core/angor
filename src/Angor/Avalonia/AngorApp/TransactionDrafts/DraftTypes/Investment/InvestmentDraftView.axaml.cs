@@ -1,8 +1,4 @@
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-
-namespace AngorApp.TransactionDrafts;
+namespace AngorApp.TransactionDrafts.DraftTypes.Investment;
 
 public partial class InvestmentDraftView : UserControl
 {

@@ -19,6 +19,7 @@ public partial class FundingStructureViewModelDesign : ReactiveValidationObject,
         this.ValidationRule(x => x.FundingEndDate, x => x != null, "Enter a date").DisposeWith(disposable);
         this.ValidationRule(x => x.ExpiryDate, x => x != null, "Enter a date").DisposeWith(disposable);
         this.ValidationRule(x => x.PenaltyDays, x => x >=0, "Should be greater than 0").DisposeWith(disposable);
+        this.ValidationRule(x => x.PenaltyThreshold, x => x is null or >= 0, "Should be greater than or equal to 0").DisposeWith(disposable);
         
         targetAmountHelper = this.WhenAnyValue(model => model.Sats)
             .WhereNotNull()
@@ -35,6 +36,7 @@ public partial class FundingStructureViewModelDesign : ReactiveValidationObject,
 
     public DateTime FundingStartDate { get; set; }
     public int? PenaltyDays { get; set; }
+    public long? PenaltyThreshold { get; set; }
     public DateTime? FundingEndDate { get; set; }
     public DateTime? ExpiryDate { get; set; }
 

@@ -44,6 +44,31 @@
                                 </Card.Subheader>
                             </Card>
                         </BalancedWrapGrid>
+                        
+                        <!-- Information banner for below threshold investments -->
+                        <Card IsVisible="{Binding State^.IsBelowPenaltyThreshold}" Theme="{StaticResource WideCard}">
+                            <StackPanel Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock FontSize="18">??</TextBlock>
+                                    <TextBlock Text="Investment Below Penalty Threshold" FontWeight="SemiBold" />
+                                </StackPanel>
+                                <TextBlock TextWrapping="Wrap" 
+                                          Text="Your investment amount is below the penalty threshold, allowing you to claim funds immediately without waiting for the project to expire." />
+                            </StackPanel>
+                        </Card>
+                        
+                        <!-- Information banner for end of project -->
+                        <Card IsVisible="{Binding State^.EndOfProject}" Theme="{StaticResource WideCard}">
+                            <StackPanel Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock FontSize="18">?</TextBlock>
+                                    <TextBlock Text="Project Has Expired" FontWeight="SemiBold" />
+                                </StackPanel>
+                                <TextBlock TextWrapping="Wrap" 
+                                          Text="The project has reached its expiry date. You can now claim any remaining unspent funds." />
+                            </StackPanel>
+                        </Card>
+                        
                         <HeaderedContainer Header="Actions">
                             <EnhancedButton IsVisible="{Binding $self.IsEffectivelyEnabled}" Content="{Binding State^.BatchAction.Text, FallbackValue='Empty'}" Command="{Binding State^.BatchAction}" />
                         </HeaderedContainer>
