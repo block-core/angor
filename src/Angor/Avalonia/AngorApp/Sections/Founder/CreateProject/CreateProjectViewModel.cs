@@ -26,11 +26,10 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
     public CreateProjectViewModel(IWallet wallet, CreateProjectFlow.ProjectSeed projectSeed, UIServices uiServices, IProjectAppService projectAppService, ILogger<CreateProjectViewModel> logger, INetworkConfiguration networkConfiguration)
     {
         this.projectAppService = projectAppService;
-        FundingStructureViewModel = new FundingStructureViewModel(networkConfiguration).DisposeWith(disposable);
         this.logger = logger;
         FundingStructureViewModel = new FundingStructureViewModel(networkConfiguration).DisposeWith(disposable);
         var endDateChanges = FundingStructureViewModel.WhenAnyValue(x => x.FundingEndDate);
-        StagesViewModel = new StagesViewModel(endDateChanges, uiServices).DisposeWith(disposable);
+        StagesViewModel = new StagesViewModel(endDateChanges, uiServices, networkConfiguration).DisposeWith(disposable);
         ProfileViewModel = new ProfileViewModel(projectSeed, uiServices).DisposeWith(disposable);
 
         StagesViewModel.LastStageDate
