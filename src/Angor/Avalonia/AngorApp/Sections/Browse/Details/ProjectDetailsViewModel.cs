@@ -1,12 +1,6 @@
-using System;
-using System.Collections.Generic;
-using Angor.Contexts.Funding.Investor;
-using AngorApp.Model.Projects;
+using Angor.Contexts.Funding.Shared;
 using AngorApp.Core.Factories;
 using AngorApp.UI.Controls.Common.FoundedProjectOptions;
-using ReactiveUI;
-using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.UI;
 
 namespace AngorApp.Sections.Browse.Details;
 
@@ -17,13 +11,13 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
     public ProjectDetailsViewModel(
         FullProject project,
         IProjectInvestCommandFactory investCommandFactory,
-        IFoundedProjectOptionsViewModelFactory foundedProjectOptionsFactory)
+        Func<ProjectId, IFoundedProjectOptionsViewModel> foundedProjectOptionsFactory)
     {
         this.project = project;
 
         IsInsideInvestmentPeriod = DateTime.Now <= project.FundingEndDate;
         Invest = investCommandFactory.Create(project, IsInsideInvestmentPeriod);
-        FoundedProjectOptions = foundedProjectOptionsFactory.Create(project.ProjectId);
+        FoundedProjectOptions = foundedProjectOptionsFactory(project.ProjectId);
     }
 
     public bool IsInsideInvestmentPeriod { get; }
@@ -47,4 +41,3 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 
     public IFullProject Project => project;
 }
-

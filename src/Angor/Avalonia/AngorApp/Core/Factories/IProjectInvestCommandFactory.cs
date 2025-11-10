@@ -1,7 +1,3 @@
-using AngorApp.Model.Projects;
-using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.UI;
-
 namespace AngorApp.Core.Factories;
 
 public interface IProjectInvestCommandFactory
