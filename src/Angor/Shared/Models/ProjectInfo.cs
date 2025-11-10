@@ -60,6 +60,32 @@ public enum StageFrequency
 }
 
 /// <summary>
+/// Defines how payout days are calculated for dynamic stage patterns.
+/// </summary>
+public enum PayoutDayType
+{
+    /// <summary>
+    /// Payout is calculated from the investment start date by adding fixed intervals.
+    /// Example: If start date is Feb 15, and frequency is Monthly, stages are Mar 15, Apr 15, May 15, etc.
+    /// </summary>
+    FromStartDate = 0,
+    
+    /// <summary>
+    /// Payout occurs on a specific day of the month (1-31).
+    /// Only applicable for Monthly, BiMonthly, and Quarterly frequencies.
+    /// Example: PayoutDay = 1 means payout on the 1st of each month.
+    /// </summary>
+    SpecificDayOfMonth = 1,
+    
+    /// <summary>
+    /// Payout occurs on a specific day of the week (0=Sunday, 1=Monday, ..., 6=Saturday).
+    /// Only applicable for Weekly and Biweekly frequencies.
+    /// Example: PayoutDay = 1 means payout every Monday.
+    /// </summary>
+    SpecificDayOfWeek = 2
+}
+
+/// <summary>
 /// Helper class for working with dynamic stage patterns and epoch-based dates.
 /// </summary>
 public static class DynamicStageHelper
@@ -127,12 +153,28 @@ public static class DynamicStageHelper
     public static List<Stage> ComputeStagesFromPattern(DynamicStagePattern pattern, DateTime investmentStartDate)
     {
         var stages = new List<Stage>();
-        var duration = GetFrequencyDuration(pattern.Frequency);
         var percentagePerStage = 100m / pattern.StageCount;
 
         for (int i = 0; i < pattern.StageCount; i++)
         {
-            var releaseDate = investmentStartDate.Add(duration * i);
+            DateTime releaseDate;
+
+            if (pattern.PayoutDayType == PayoutDayType.FromStartDate)
+            {
+                // Simple: add fixed intervals from start date
+                var duration = GetFrequencyDuration(pattern.Frequency);
+                releaseDate = investmentStartDate.Add(duration * i);
+            }
+            else if (pattern.PayoutDayType == PayoutDayType.SpecificDayOfMonth)
+            {
+                // Payout on specific day of month (e.g., 1st, 15th)
+                releaseDate = CalculateNextMonthlyPayoutDate(investmentStartDate, pattern.Frequency, pattern.PayoutDay, i);
+            }
+            else // SpecificDayOfWeek
+            {
+                // Payout on specific day of week (e.g., Monday)
+                releaseDate = CalculateNextWeeklyPayoutDate(investmentStartDate, pattern.Frequency, pattern.PayoutDay, i);
+            }
 
             stages.Add(new Stage
             {
@@ -142,6 +184,70 @@ public static class DynamicStageHelper
         }
 
         return stages;
+    }
+
+    private static DateTime CalculateNextMonthlyPayoutDate(DateTime startDate, StageFrequency frequency, int dayOfMonth, int stageIndex)
+    {
+        // Determine how many months to add based on frequency
+        int monthsToAdd = frequency switch
+        {
+            StageFrequency.Monthly => stageIndex,
+            StageFrequency.BiMonthly => stageIndex * 2,
+            StageFrequency.Quarterly => stageIndex * 3,
+            _ => throw new ArgumentException($"Frequency {frequency} does not support SpecificDayOfMonth")
+        };
+
+        // Start from the first occurrence of the target day
+        var targetDate = new DateTime(startDate.Year, startDate.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        // Adjust to the target day of month (handle months with fewer days)
+        var daysInMonth = DateTime.DaysInMonth(targetDate.Year, targetDate.Month);
+        var actualDay = Math.Min(dayOfMonth, daysInMonth);
+        targetDate = new DateTime(targetDate.Year, targetDate.Month, actualDay, 0, 0, 0, DateTimeKind.Utc);
+
+        // If the target date is before the start date, move to next month
+        if (targetDate < startDate)
+        {
+            targetDate = targetDate.AddMonths(1);
+            daysInMonth = DateTime.DaysInMonth(targetDate.Year, targetDate.Month);
+            actualDay = Math.Min(dayOfMonth, daysInMonth);
+            targetDate = new DateTime(targetDate.Year, targetDate.Month, actualDay, 0, 0, 0, DateTimeKind.Utc);
+        }
+
+        // Add the appropriate number of months for this stage
+        targetDate = targetDate.AddMonths(monthsToAdd);
+
+        // Adjust for months with fewer days (e.g., Feb 31 -> Feb 28/29)
+        daysInMonth = DateTime.DaysInMonth(targetDate.Year, targetDate.Month);
+        actualDay = Math.Min(dayOfMonth, daysInMonth);
+
+        return new DateTime(targetDate.Year, targetDate.Month, actualDay, 0, 0, 0, DateTimeKind.Utc);
+    }
+
+    private static DateTime CalculateNextWeeklyPayoutDate(DateTime startDate, StageFrequency frequency, int dayOfWeek, int stageIndex)
+    {
+        if (dayOfWeek < 0 || dayOfWeek > 6)
+            throw new ArgumentOutOfRangeException(nameof(dayOfWeek), "DayOfWeek must be 0-6 (Sunday-Saturday)");
+
+        // Determine how many weeks to add based on frequency
+        int weeksToAdd = frequency switch
+        {
+            StageFrequency.Weekly => stageIndex,
+            StageFrequency.Biweekly => stageIndex * 2,
+            _ => throw new ArgumentException($"Frequency {frequency} does not support SpecificDayOfWeek")
+        };
+
+        // Find the first occurrence of the target day of week on or after start date
+        var targetDayOfWeek = (DayOfWeek)dayOfWeek;
+        var currentDate = startDate.Date;
+
+        while (currentDate.DayOfWeek != targetDayOfWeek)
+        {
+            currentDate = currentDate.AddDays(1);
+        }
+
+        // Add the appropriate number of weeks for this stage
+        return currentDate.AddDays(weeksToAdd * 7);
     }
 }
 
@@ -156,9 +262,9 @@ public class DynamicStagePattern
     /// </summary>
     public string PatternId { get; set; }
 
-  /// <summary>
+    /// <summary>
     /// Display name for this subscription/funding pattern.
-  /// </summary>
+    /// </summary>
     public string Name { get; set; }
 
     /// <summary>
@@ -172,11 +278,24 @@ public class DynamicStagePattern
     public StageFrequency Frequency { get; set; }
 
     /// <summary>
-  /// Number of stages in this pattern.
+    /// Number of stages in this pattern.
     /// Example: 6 for a 6-month subscription, 12 for a yearly subscription with monthly stages.
-/// The total investment amount will be split equally across all stages.
+    /// The total investment amount will be split equally across all stages.
     /// </summary>
     public int StageCount { get; set; }
+
+    /// <summary>
+    /// Defines how payout days are calculated.
+    /// </summary>
+    public PayoutDayType PayoutDayType { get; set; } = PayoutDayType.FromStartDate;
+
+    /// <summary>
+    /// Specific payout day value (interpretation depends on PayoutDayType):
+    /// - FromStartDate: Not used (ignored)
+    /// - SpecificDayOfMonth: Day of month (1-31)
+    /// - SpecificDayOfWeek: Day of week (0=Sunday, 1=Monday, ..., 6=Saturday)
+    /// </summary>
+    public int PayoutDay { get; set; }
 }
 
 /// <summary>
