@@ -307,4 +307,21 @@ public class DerivationOperations : IDerivationOperations
 
         return wit.ScriptPubKey;
     }
+
+    public string ConvertAngorKeyToBitcoinAddress(string projectId)
+    {
+        Network network = _networkConfiguration.GetNetwork();
+
+        // Decode the angor address to get the witness program
+        var angorEncoder = new Bech32Encoder("angor");
+        var data = angorEncoder.Decode(projectId, out byte witnessVersion);
+
+        // Re-encode using the network's Bech32 encoder
+        var networkEncoder = network.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS];
+        var bitcoinAddress = networkEncoder.Encode(witnessVersion, data);
+
+        _logger.LogInformation($"ConvertAngorKeyToBitcoinAddress - projectId = {projectId}, witnessVersion = {witnessVersion}, bitcoinAddress = {bitcoinAddress}");
+
+        return bitcoinAddress;
+    }
 }
