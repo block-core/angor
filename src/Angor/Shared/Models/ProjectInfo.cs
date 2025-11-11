@@ -341,6 +341,12 @@ public class ProjectInfo
     public string NostrPubKey { get; set; }
 
     /// <summary>
+    /// The blockchain network this project operates on (e.g., "Bitcoin", "BitcoinTestnet", "BitcoinRegtest", "angornet", "liquid").
+    /// Used to ensure investors connect to the correct network and prevent cross-network transaction errors.
+    /// </summary>
+    public string NetworkName { get; set; }
+
+    /// <summary>
     /// Start date of the funding period.
     /// Required for ProjectType.Invest, optional for Fund and Subscribe types.
     /// Defaults to DateTime.MinValue for Fund/Subscribe types where it's not used.
@@ -399,42 +405,26 @@ public class ProjectInfo
     public List<DynamicStagePattern> DynamicStagePatterns { get; set; } = new();
 
     /// <summary>
-    /// Indicates whether this is a legacy Version 1 project.
-    /// Version 1 projects don't have ProjectType support and are treated as Invest type.
-    /// </summary>
-    public bool IsLegacyVersion => Version < 2;
-
-    /// <summary>
-    /// Gets the effective project type, accounting for legacy versions.
-    /// Version 1 projects are always treated as Invest type regardless of ProjectType property.
-    /// </summary>
-    public ProjectType EffectiveProjectType => IsLegacyVersion ? ProjectType.Invest : ProjectType;
-
-    /// <summary>
     /// Indicates whether stages can be dynamically added or modified after project creation.
     /// True for Fund and Subscribe types, false for Invest type.
-    /// Always false for legacy Version 1 projects.
     /// </summary>
-    public bool AllowDynamicStages => !IsLegacyVersion && (EffectiveProjectType == ProjectType.Fund || EffectiveProjectType == ProjectType.Subscribe);
+    public bool AllowDynamicStages => ProjectType == ProjectType.Fund || ProjectType == ProjectType.Subscribe;
 
     /// <summary>
     /// Indicates whether the project requires a defined investment window (start and end dates).
     /// True for Invest type, false for Fund and Subscribe types.
-    /// Always true for legacy Version 1 projects.
     /// </summary>
-    public bool RequiresInvestmentWindow => IsLegacyVersion || EffectiveProjectType == ProjectType.Invest;
+    public bool RequiresInvestmentWindow => ProjectType == ProjectType.Invest;
 
     /// <summary>
     /// Indicates whether penalties apply for early withdrawal.
     /// True for Invest and Fund types, false for Subscribe type.
-    /// Always true for legacy Version 1 projects.
     /// </summary>
-    public bool HasPenalty => IsLegacyVersion || EffectiveProjectType == ProjectType.Invest || EffectiveProjectType == ProjectType.Fund;
+    public bool HasPenalty => ProjectType == ProjectType.Invest || ProjectType == ProjectType.Fund;
 
     /// <summary>
     /// Indicates whether a target amount is required.
     /// True for Invest type, false for Fund and Subscribe types.
-    /// Always true for legacy Version 1 projects.
     /// </summary>
-    public bool RequiresTargetAmount => IsLegacyVersion || EffectiveProjectType == ProjectType.Invest;
+    public bool RequiresTargetAmount => ProjectType == ProjectType.Invest;
 }
