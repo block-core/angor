@@ -194,4 +194,129 @@ public class MempoolIndexerMappers
             return null;
         }
     }
+
+    /// <summary>
+    /// Calculates project statistics from a list of transactions.
+    /// Analyzes investment transactions to determine investor count and total amount invested.
+    /// </summary>
+    /// <param name="projectId">The project identifier</param>
+    /// <param name="trxs">List of transactions for the project</param>
+    /// <returns>ProjectStats with calculated values or null if calculation fails</returns>
+    public ProjectStats? CalculateProjectStats(string projectId, List<MempoolSpaceIndexerApi.MempoolTransaction> trxs)
+    {
+        try
+        {
+            // Sort transactions by block height to process them in order
+            var sortedTransactions = trxs.OrderBy(t => t.Status.BlockHeight).ToList();
+
+            // Step 1: Find the funding transaction
+            MempoolSpaceIndexerApi.MempoolTransaction? fundingTrx = null;
+            foreach (var trx in sortedTransactions)
+            {
+                if (trx.Vout.Count < 2)
+                    continue;
+
+                var opReturnOutput = trx.Vout[1];
+                if (opReturnOutput.ScriptpubkeyType == "op_return" || opReturnOutput.ScriptpubkeyType == "nulldata")
+                {
+                    var parsedData = ParseFounderInfoFromOpReturn(opReturnOutput.Scriptpubkey);
+                    if (parsedData != null)
+                    {
+                        fundingTrx = trx;
+                        _logger.LogDebug($"Found funding transaction {trx.Txid} for stats calculation");
+                        break;
+                    }
+                }
+            }
+
+            if (fundingTrx == null)
+            {
+                _logger.LogWarning($"No funding transaction found for project {projectId} in stats calculation");
+                return null;
+            }
+
+            // Step 2: Analyze investment transactions
+            var uniqueInvestors = new HashSet<string>();
+            long totalAmountInvested = 0;
+
+            foreach (var trx in sortedTransactions)
+            {
+                // Skip the funding transaction
+                if (trx.Txid == fundingTrx.Txid)
+                    continue;
+
+                // Check if this transaction has at least 2 outputs
+                if (trx.Vout.Count < 2)
+                    continue;
+
+                // Check if second output is OP_RETURN with investor info
+                var opReturnOutput = trx.Vout[1];
+                if (opReturnOutput.ScriptpubkeyType == "op_return" || opReturnOutput.ScriptpubkeyType == "nulldata")
+                {
+                    try
+                    {
+                        var investorKey = ParseInvestorInfoFromOpReturn(opReturnOutput.Scriptpubkey);
+                        if (!string.IsNullOrEmpty(investorKey))
+                        {
+                            // Add investor to unique set
+                            uniqueInvestors.Add(investorKey);
+
+                            // Sum up all v1_p2tr (taproot) outputs which are the investment stage outputs
+                            // Skip first two outputs (Angor fee and OP_RETURN)
+                            long investmentAmount = 0;
+                            for (int i = 2; i < trx.Vout.Count; i++)
+                            {
+                                var vout = trx.Vout[i];
+
+                                // Check if this is a taproot output (investment stage output)
+                                if (vout.ScriptpubkeyType == "v1_p2tr")
+                                {
+                                    investmentAmount += vout.Value;
+                                    _logger.LogTrace($"Found taproot output at index {i} with value {vout.Value} in transaction {trx.Txid}");
+                                }
+                            }
+
+                            if (investmentAmount > 0)
+                            {
+                                totalAmountInvested += investmentAmount;
+                                _logger.LogDebug($"Investment transaction {trx.Txid}: investor={investorKey}, amount={investmentAmount}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, $"Failed to parse investment info from transaction {trx.Txid}");
+                    }
+                }
+            }
+
+            var stats = new ProjectStats
+            {
+                InvestorCount = uniqueInvestors.Count,
+                AmountInvested = totalAmountInvested,
+
+                // TODO: Implement penalty calculations
+                // To calculate AmountInPenalties and CountInPenalties, we need to:
+                // 1. For each investment transaction, track the taproot outputs (v1_p2tr)
+                // 2. Fetch spending transactions for these outputs
+                // 3. Analyze the witness script (witscript) of the spending transaction:
+                //    - Spent by Founder: Has OP_CLTV and 3 witness blocks
+                //    - Spent by Investor to Penalty: Has OP_CHECKSIGVERIFY, OP_CHECKSIG and 4 witness blocks
+                //    - Spent by Investor (End of Project): Has OP_CLTV and 3 witness blocks (different timelock)
+                // 4. Sum up amounts and count transactions where investor spent to penalty
+                AmountInPenalties = 0,
+                CountInPenalties = 0
+            };
+
+            _logger.LogInformation($"Calculated stats for project {projectId}: " +
+                $"Investors={stats.InvestorCount}, AmountInvested={stats.AmountInvested}");
+
+            return stats;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error calculating project stats for project {projectId}");
+            return null;
+        }
+    }
 }

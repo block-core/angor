@@ -94,20 +94,29 @@ public class MempoolIndexerCalculationApi : IMempoolIndexerCalculationApi
 
         try
         {
-            var projectData = await GetProjectByIdAsync(projectId);
+            var projectAddress = _derivationOperations.ConvertAngorKeyToBitcoinAddress(projectId);
 
-            if (projectData == null)
+            var response = await GetIndexerClient().GetAsync($"{MempoolApiRoute}/address/{projectAddress}/txs");
+
+            _networkService.CheckAndHandleError(response);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
             {
-                _logger.LogWarning($"No project data found for project {projectId}");
+                _logger.LogWarning($"No transactions found for project address {projectAddress}");
                 return (projectId, null);
             }
 
-            // Calculate stats from project data
-            // todo: add more stats calculations as needed
-            var stats = new ProjectStats
+            var trxs = await response.Content.ReadFromJsonAsync<List<MempoolSpaceIndexerApi.MempoolTransaction>>(new JsonSerializerOptions()
+            { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+
+            if (trxs == null || !trxs.Any())
             {
-                InvestorCount = projectData.TotalInvestmentsCount ?? 0
-            };
+                _logger.LogWarning($"No transactions found for project {projectId}");
+                return (projectId, null);
+            }
+
+            // Calculate stats using the mapper
+            var stats = _mappers.CalculateProjectStats(projectId, trxs);
 
             return (projectId, stats);
         }

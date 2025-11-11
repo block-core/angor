@@ -159,11 +159,27 @@ public class IndexerComparisonTests
             _logger.LogInformation("=== Blockchain Calculation API Stats ===");
             LogProjectStats(blockchainStats);
 
-            // Assert - Compare stats
+            // Assert - Compare investor count
             // Note: Stats might differ slightly due to calculation methods
             var investorCountDifference = Math.Abs(angorApiStats.InvestorCount - blockchainStats.InvestorCount);
             Assert.True(investorCountDifference <= 1,
                   $"Investor count difference too large. Angor API: {angorApiStats.InvestorCount}, Blockchain: {blockchainStats.InvestorCount}");
+
+            // Assert - Compare amount invested
+            // Allow for small differences due to rounding or calculation methods
+            var amountInvestedDifference = Math.Abs(angorApiStats.AmountInvested - blockchainStats.AmountInvested);
+            var amountInvestedDifferencePercentage = angorApiStats.AmountInvested > 0 
+                ? (double)amountInvestedDifference / angorApiStats.AmountInvested * 100 
+                : 0;
+
+            Assert.True(amountInvestedDifferencePercentage <= 1.0, // Allow up to 1% difference
+                $"Amount invested difference too large. Angor API: {angorApiStats.AmountInvested}, " +
+                $"Blockchain: {blockchainStats.AmountInvested}, Difference: {amountInvestedDifference} sats ({amountInvestedDifferencePercentage:F2}%)");
+
+            // Log the comparison summary
+            _logger.LogInformation("=== Comparison Summary ===");
+            _logger.LogInformation($"Investor Count - Angor: {angorApiStats.InvestorCount}, Blockchain: {blockchainStats.InvestorCount}, Diff: {investorCountDifference}");
+            _logger.LogInformation($"Amount Invested - Angor: {angorApiStats.AmountInvested}, Blockchain: {blockchainStats.AmountInvested}, Diff: {amountInvestedDifference} sats ({amountInvestedDifferencePercentage:F2}%)");
         }
         else
         {
