@@ -1,10 +1,10 @@
-using AngorApp.Sections.Browse;
-using AngorApp.Sections.Founder;
-using AngorApp.Sections.Home;
-using AngorApp.Sections.Portfolio;
-using AngorApp.Sections.Settings;
-using AngorApp.Sections.Wallet;
-using AngorApp.Sections.Wallet.Main;
+using AngorApp.UI.Sections.Browse;
+using AngorApp.UI.Sections.Founder;
+using AngorApp.UI.Sections.Home;
+using AngorApp.UI.Sections.Portfolio;
+using AngorApp.UI.Sections.Settings;
+using AngorApp.UI.Sections.Wallet;
+using AngorApp.UI.Sections.Wallet.Main;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Zafiro.Avalonia.Services;

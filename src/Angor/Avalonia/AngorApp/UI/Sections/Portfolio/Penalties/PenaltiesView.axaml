@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:penalties="clr-namespace:AngorApp.UI.Sections.Portfolio.Penalties"
+             xmlns:a="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls.SlimDataGrid;assembly=Zafiro.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1600" d:DesignHeight="600"
+             x:Class="AngorApp.UI.Sections.Portfolio.Penalties.PenaltiesView" x:DataType="penalties:IPenaltiesViewModel">
+
+    <Design.DataContext>
+        <penalties:PenaltiesViewModelSample />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Styles>
+
+    <a:PageContainer>
+        <ScrollViewer>
+            <DockPanel VerticalSpacing="20">
+                <Card Theme="{StaticResource WideCard}" DockPanel.Dock="Top" Header="Penalties" IsAdaptiveFlowEnabled="True"
+                      Subheader="Manage and monitor penalties for project compliance" HeaderStartContent="{Icon svg:/Assets/lock.svg}">
+                    <Card.HeaderEndContent>
+                        <EnhancedButton Icon="{Icon fa-arrows-rotate}" Command="{Binding Load}" HorizontalAlignment="Stretch" Content="Refresh" />
+                    </Card.HeaderEndContent>
+                </Card>
+                <Loading LoadingText="Loading penalties..." IsLoading="{Binding Load.IsExecuting^}">
+                    <Card Header="List of Penalties">
+                        <z:SlimDataGrid HeaderPadding="0 0 0 5"
+                                        ItemsSource="{Binding Penalties}">
+                            <z:SlimDataGrid.Columns>
+                                <z:Column Header="PROJECT NAME" Binding="{Binding ProjectName}" />
+                                <z:Column Header="AMOUNT IN PENALTY" Binding="{Binding AmountInRecovery.DecimalString}" />
+                                <z:Column Header="DAYS LEFT" Binding="{Binding DaysLeftForPenalty}" />
+                            </z:SlimDataGrid.Columns>
+                        </z:SlimDataGrid>
+                    </Card>
+                </Loading>
+            </DockPanel>
+        </ScrollViewer>
+    </a:PageContainer>
+</UserControl>

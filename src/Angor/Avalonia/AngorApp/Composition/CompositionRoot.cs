@@ -11,7 +11,7 @@ using AngorApp.Core;
 using AngorApp.Composition.Registrations.Sections;
 using AngorApp.Composition.Registrations.Services;
 using AngorApp.Composition.Registrations.ViewModels;
-using AngorApp.Sections.Shell;
+using AngorApp.UI.Sections.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Zafiro.UI.Navigation;

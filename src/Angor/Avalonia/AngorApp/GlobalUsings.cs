@@ -13,7 +13,7 @@ global using AngorApp.Model.Common;
 global using AngorApp.Model.Projects;
 global using AngorApp.Model.Wallet;
 global using AngorApp.Model.Wallet.Password;
-global using AngorApp.UI.Services;
+global using AngorApp.UI.Shared.Services;
 global using Avalonia;
 global using Avalonia.Controls;
 global using CSharpFunctionalExtensions;

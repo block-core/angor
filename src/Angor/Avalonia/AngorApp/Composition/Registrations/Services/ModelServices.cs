@@ -1,9 +1,9 @@
 using AngorApp.Design;
-using AngorApp.Flows.CreateProject;
-using AngorApp.Flows.Invest;
-using AngorApp.Flows.SendWalletMoney;
-using AngorApp.Sections.Wallet.CreateAndImport;
-using AngorApp.UI.Controls.Feerate;
+using AngorApp.UI.Flows.CreateProject;
+using AngorApp.UI.Flows.Invest;
+using AngorApp.UI.Flows.SendWalletMoney;
+using AngorApp.UI.Sections.Wallet.CreateAndImport;
+using AngorApp.UI.Shared.Controls.Feerate;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AngorApp.Composition.Registrations.Services;

@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:z="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:createWelcome1="clr-namespace:AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.CreateWelcome"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
+             x:Class="AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.CreateWelcome.WelcomeView"
+             x:DataType="createWelcome1:WelcomeViewModel">
+    
+    <DockPanel>
+        <CheckBox x:Name="ConfirmationCheckbox"
+                  DockPanel.Dock="Bottom"
+                  IsChecked="{Binding IsUserAware}"
+                  Content="I understand that I must keep my seed words in a safe place and that they are the only way to recover my wallet." />
+        <StackPanel Spacing="16">
+            <TextBlock Classes="Wrap">
+                This will guide you through the process of creating a new Bitcoin wallet securely.
+            </TextBlock>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <avalonia:Icon Value="fa-clock" />
+                <TextBlock Text="Estimated time: 5 minutes" />
+            </StackPanel>
+
+            <Border Classes="Alert" Margin="4 0">
+                <controls:List>
+                    <controls:List.Header>
+                        <controls:IconLabel Classes="Warning" Icon="fa-triangle-exclamation">Important Security Tips:</controls:IconLabel>
+                    </controls:List.Header>
+                    <z:Strings>
+                        <x:String>Make sure you are in a private and secure location</x:String>
+                        <x:String>You will need to write down 12 seed words that are the only way to recover your wallet</x:String>
+                    </z:Strings>
+                </controls:List>
+            </Border>
+
+        </StackPanel>
+    </DockPanel>
+</UserControl>

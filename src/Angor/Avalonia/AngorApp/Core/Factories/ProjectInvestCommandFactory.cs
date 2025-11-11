@@ -1,4 +1,4 @@
-using AngorApp.Flows.Invest;
+using AngorApp.UI.Flows.Invest;
 
 namespace AngorApp.Core.Factories;
 
