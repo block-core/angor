@@ -10,7 +10,7 @@
              x:Class="AngorApp.Sections.Browse.Details.ProjectDetailsView" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
-        <dt:ProjectDetailsViewModelDesign />
+        <dt:ProjectDetailsViewModelSample />
     </Design.DataContext>
 
     <ScrollViewer>

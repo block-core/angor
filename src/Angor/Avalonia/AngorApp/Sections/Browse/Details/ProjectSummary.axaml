@@ -10,7 +10,7 @@
              x:Class="AngorApp.Sections.Browse.Details.ProjectSummary" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
-        <dt:ProjectDetailsViewModelDesign />
+        <dt:ProjectDetailsViewModelSample />
     </Design.DataContext>
 
     <Card Header="Project Summary" Subheader="Key metrics and progress tracking">

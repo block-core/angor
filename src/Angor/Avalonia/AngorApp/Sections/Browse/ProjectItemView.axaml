@@ -9,11 +9,11 @@
              x:DataType="browse:IProjectViewModel">
 
     <Design.DataContext>
-        <browse:ProjectViewModelDesign>
-            <browse:ProjectViewModelDesign.Project>
-                <browse:ProjectDesign />
-            </browse:ProjectViewModelDesign.Project>
-        </browse:ProjectViewModelDesign>
+        <browse:ProjectViewModelSample>
+            <browse:ProjectViewModelSample.Project>
+                <browse:ProjectSample />
+            </browse:ProjectViewModelSample.Project>
+        </browse:ProjectViewModelSample>
     </Design.DataContext>
 
     <UserControl.Styles>

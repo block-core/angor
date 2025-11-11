@@ -11,7 +11,7 @@ public interface ISeedWordsConfirmationViewModel
     IEnumerable<Challenge> Challenges { get; }
 }
 
-public class SeedWordsConfirmationViewModelDesign : ISeedWordsConfirmationViewModel
+public class SeedWordsConfirmationViewModelSample : ISeedWordsConfirmationViewModel
 {
     public SeedWords SeedWords { get; } = SampleData.Seedwords;
     public IEnumerable<Challenge> Challenges => [new(new SeedWord(3, "test")), new(new SeedWord(7, "hi"))];

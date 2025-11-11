@@ -9,7 +9,7 @@
              x:DataType="approve:IApproveInvestmentsViewModel">
 
     <Design.DataContext>
-        <approve:ApproveInvestmentsViewModelDesign />
+        <approve:ApproveInvestmentsViewModelSample />
     </Design.DataContext>
 
     <UserControl.Styles>

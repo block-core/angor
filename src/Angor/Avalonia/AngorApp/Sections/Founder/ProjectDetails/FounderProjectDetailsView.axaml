@@ -10,7 +10,7 @@
              x:Class="AngorApp.Sections.Founder.ProjectDetails.FounderProjectDetailsView" x:DataType="pr:IFounderProjectDetailsViewModel">
 
     <Design.DataContext>
-        <pr:FounderProjectDetailsViewModelDesign />
+        <pr:FounderProjectDetailsViewModelSample />
     </Design.DataContext>
 
     <controls:PageContainer>

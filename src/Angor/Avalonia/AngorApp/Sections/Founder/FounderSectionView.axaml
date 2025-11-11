@@ -12,7 +12,7 @@
              x:DataType="founder:IFounderSectionViewModel">
 
     <Design.DataContext>
-        <founder:FounderSectionViewModelDesign />
+        <founder:FounderSectionViewModelSample />
     </Design.DataContext>
 
     <Interaction.Behaviors>

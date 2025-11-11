@@ -30,13 +30,13 @@
     </UserControl.Styles>
 
     <Design.DataContext>
-        <stages:StagesViewModelDesign>
-            <stages:StagesViewModelDesign.Stages>
-                <stages:CreateProjectStageDesign Percent="10" ReleaseDate="10/5/2025" />
-                <stages:CreateProjectStageDesign Percent="30" ReleaseDate="10/9/2025" />
-                <stages:CreateProjectStageDesign Percent="70" ReleaseDate="12/12/2025" />
-            </stages:StagesViewModelDesign.Stages>
-        </stages:StagesViewModelDesign>
+        <stages:StagesViewModelSample>
+            <stages:StagesViewModelSample.Stages>
+                <stages:CreateProjectStageSample Percent="10" ReleaseDate="10/5/2025" />
+                <stages:CreateProjectStageSample Percent="30" ReleaseDate="10/9/2025" />
+                <stages:CreateProjectStageSample Percent="70" ReleaseDate="12/12/2025" />
+            </stages:StagesViewModelSample.Stages>
+        </stages:StagesViewModelSample>
     </Design.DataContext>
 
     <Card Header="Stages" >

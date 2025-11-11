@@ -9,7 +9,7 @@
              x:Class="AngorApp.Sections.Home.HomeSectionView" x:DataType="home:IHomeSectionViewModel">
 
     <Design.DataContext>
-        <home:HomeSectionViewModelDesign IsWalletSetup="False" />
+        <home:HomeSectionViewModelSample IsWalletSetup="False" />
     </Design.DataContext>
 
     <UserControl.Styles>

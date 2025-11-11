@@ -11,7 +11,7 @@
              x:DataType="ad:IAddressAndAmountViewModel">
     
     <Design.DataContext>
-        <ad:AddressAndAmountViewModelDesign />
+        <ad:AddressAndAmountViewModelSample />
     </Design.DataContext>
 
     <StackPanel Classes="SmallGap">

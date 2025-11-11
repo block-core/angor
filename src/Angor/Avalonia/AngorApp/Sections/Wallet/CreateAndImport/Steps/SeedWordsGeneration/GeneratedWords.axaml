@@ -13,7 +13,7 @@
              x:DataType="seedWordsGeneration1:ISeedWordsViewModel">
 
     <Design.DataContext>
-        <seedWordsGeneration1:SeedWordsViewModelDesign HasWords="True" />
+        <seedWordsGeneration1:SeedWordsViewModelSample HasWords="True" />
     </Design.DataContext>
 
     <Border>

@@ -10,7 +10,7 @@
              x:DataType="release:IReleaseFundsViewModel">
 
     <Design.DataContext>
-        <release:ReleaseFundsViewModelDesign />
+        <release:ReleaseFundsViewModelSample />
     </Design.DataContext>
     
     <OverlayBorder Theme="{StaticResource CardOverlayBorder}">

@@ -21,7 +21,7 @@ internal interface INetworkViewModel
     public string Name { get; set; }
 }
 
-internal class NetworkViewModelDesign : INetworkViewModel
+internal class NetworkViewModelSample : INetworkViewModel
 {
     public NetworkType NetworkType { get; } = NetworkType.Mainnet;
     public string Name { get; set; } = "Main";

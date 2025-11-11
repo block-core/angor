@@ -11,7 +11,7 @@
              x:Class="AngorApp.Sections.Browse.ProjectLookup.ProjectLookupView" x:DataType="projectLookup:IProjectLookupViewModel">
 
     <Design.DataContext>
-        <projectLookup:ProjectLookupViewModelDesign HasResults="True" />
+        <projectLookup:ProjectLookupViewModelSample HasResults="True" />
     </Design.DataContext>
 
     <UserControl.DataTemplates>

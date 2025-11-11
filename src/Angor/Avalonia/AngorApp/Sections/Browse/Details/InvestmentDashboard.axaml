@@ -10,7 +10,7 @@
              x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
-        <dt:ProjectDetailsViewModelDesign IsInsideInvestmentPeriod="True" />
+        <dt:ProjectDetailsViewModelSample IsInsideInvestmentPeriod="True" />
     </Design.DataContext>
 
     <UserControl.Styles>

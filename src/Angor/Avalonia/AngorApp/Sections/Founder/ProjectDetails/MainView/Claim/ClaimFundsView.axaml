@@ -11,47 +11,47 @@
              x:Class="AngorApp.Sections.Founder.ProjectDetails.MainView.Claim.ClaimFundsView" x:DataType="claim:IClaimFundsViewModel">
 
     <Design.DataContext>
-        <claim:ClaimFundsViewModelDesign>
-            <claim:ClaimFundsViewModelDesign.ClaimableStages>
+        <claim:ClaimFundsViewModelSample>
+            <claim:ClaimFundsViewModelSample.ClaimableStages>
                 <generic:List x:TypeArguments="claim:IClaimableStage">
-                    <claim:ClaimableStageDesign>
-                        <claim:ClaimableStageDesign.Transactions>
+                    <claim:ClaimableStageSample>
+                        <claim:ClaimableStageSample.Transactions>
                             <generic:List x:TypeArguments="claim:IClaimableTransaction">
-                                <claim:ClaimableTransactionDesign ClaimStatus="Pending" Address="bc1qexampleaddress1">
-                                    <claim:ClaimableTransactionDesign.Amount>
+                                <claim:ClaimableTransactionSample ClaimStatus="Pending" Address="bc1qexampleaddress1">
+                                    <claim:ClaimableTransactionSample.Amount>
                                         <design:DesignTimeAmount Sats="1000000" />
-                                    </claim:ClaimableTransactionDesign.Amount>
-                                </claim:ClaimableTransactionDesign>
-                                <claim:ClaimableTransactionDesign ClaimStatus="WithdrawByInvestor" Address="bc1qexampleaddress2">
-                                    <claim:ClaimableTransactionDesign.Amount>
+                                    </claim:ClaimableTransactionSample.Amount>
+                                </claim:ClaimableTransactionSample>
+                                <claim:ClaimableTransactionSample ClaimStatus="WithdrawByInvestor" Address="bc1qexampleaddress2">
+                                    <claim:ClaimableTransactionSample.Amount>
                                         <design:DesignTimeAmount Sats="2000000" />
-                                    </claim:ClaimableTransactionDesign.Amount>
-                                </claim:ClaimableTransactionDesign>
-                                <claim:ClaimableTransactionDesign ClaimStatus="SpentByFounder" Address="bc1qexampleaddress3">
-                                    <claim:ClaimableTransactionDesign.Amount>
+                                    </claim:ClaimableTransactionSample.Amount>
+                                </claim:ClaimableTransactionSample>
+                                <claim:ClaimableTransactionSample ClaimStatus="SpentByFounder" Address="bc1qexampleaddress3">
+                                    <claim:ClaimableTransactionSample.Amount>
                                         <design:DesignTimeAmount Sats="300000" />
-                                    </claim:ClaimableTransactionDesign.Amount>
-                                </claim:ClaimableTransactionDesign>
-                                <claim:ClaimableTransactionDesign ClaimStatus="Unspent" Address="bc1qexampleaddress4">
-                                    <claim:ClaimableTransactionDesign.Amount>
+                                    </claim:ClaimableTransactionSample.Amount>
+                                </claim:ClaimableTransactionSample>
+                                <claim:ClaimableTransactionSample ClaimStatus="Unspent" Address="bc1qexampleaddress4">
+                                    <claim:ClaimableTransactionSample.Amount>
                                         <design:DesignTimeAmount Sats="300000" />
-                                    </claim:ClaimableTransactionDesign.Amount>
-                                </claim:ClaimableTransactionDesign>
-                                <claim:ClaimableTransactionDesign ClaimStatus="Unspent" Address="bc1qexampleaddress5">
-                                    <claim:ClaimableTransactionDesign.Amount>
+                                    </claim:ClaimableTransactionSample.Amount>
+                                </claim:ClaimableTransactionSample>
+                                <claim:ClaimableTransactionSample ClaimStatus="Unspent" Address="bc1qexampleaddress5">
+                                    <claim:ClaimableTransactionSample.Amount>
                                         <design:DesignTimeAmount Sats="34412344" />
-                                    </claim:ClaimableTransactionDesign.Amount>
-                                </claim:ClaimableTransactionDesign>
+                                    </claim:ClaimableTransactionSample.Amount>
+                                </claim:ClaimableTransactionSample>
                             </generic:List>
-                        </claim:ClaimableStageDesign.Transactions>
-                    </claim:ClaimableStageDesign>
-                    <claim:ClaimableStageDesign>
-                    </claim:ClaimableStageDesign>
-                    <claim:ClaimableStageDesign>
-                    </claim:ClaimableStageDesign>
+                        </claim:ClaimableStageSample.Transactions>
+                    </claim:ClaimableStageSample>
+                    <claim:ClaimableStageSample>
+                    </claim:ClaimableStageSample>
+                    <claim:ClaimableStageSample>
+                    </claim:ClaimableStageSample>
                 </generic:List>
-            </claim:ClaimFundsViewModelDesign.ClaimableStages>
-        </claim:ClaimFundsViewModelDesign>
+            </claim:ClaimFundsViewModelSample.ClaimableStages>
+        </claim:ClaimFundsViewModelSample>
     </Design.DataContext>
 
     <UserControl.Resources>

@@ -13,17 +13,17 @@
              x:Class="AngorApp.Sections.Portfolio.Items.PortfolioProjectView" x:DataType="p:IPortfolioProjectViewModel">
 
     <Design.DataContext>
-        <p:PortfolioProjectDesign InvestmentStatus="PendingFounderSignatures"
+        <p:PortfolioProjectSample InvestmentStatus="PendingFounderSignatures"
                                   IsInvestmentCompleted="False"
                                   Name="Project 1"
                                   LogoUri="https://test.angor.io/assets/img/no-image.jpg">
-            <p:PortfolioProjectDesign.Target>
+            <p:PortfolioProjectSample.Target>
                 <design:DesignTimeAmount Sats="12000000" />
-            </p:PortfolioProjectDesign.Target>
-            <p:PortfolioProjectDesign.Raised>
+            </p:PortfolioProjectSample.Target>
+            <p:PortfolioProjectSample.Raised>
                 <design:DesignTimeAmount Sats="4400000" />
-            </p:PortfolioProjectDesign.Raised>
-        </p:PortfolioProjectDesign>
+            </p:PortfolioProjectSample.Raised>
+        </p:PortfolioProjectSample>
     </Design.DataContext>
 
     <Border Classes="Card">
