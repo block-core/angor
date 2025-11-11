@@ -9,7 +9,7 @@
              x:DataType="settings:ISettingsSectionViewModel">
 
     <Design.DataContext>
-        <settings:SettingsSectionViewModelDesign />
+        <settings:SettingsSectionViewModelSample />
     </Design.DataContext>
 
     <UserControl.Styles>

@@ -9,7 +9,7 @@
              x:Class="AngorApp.Sections.Portfolio.Manage.ManageInvestorProjectView" x:DataType="manage:IManageInvestorProjectViewModel">
 
     <Design.DataContext>
-        <manage:ManageInvestorProjectViewModelDesign />
+        <manage:ManageInvestorProjectViewModelSample />
     </Design.DataContext>
     
     <Interaction.Behaviors>

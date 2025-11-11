@@ -10,15 +10,15 @@
              x:Class="AngorApp.UI.Controls.Common.FoundedProjectOptions.FoundedProjectOptionsView" x:DataType="foundedProjectOptions:IFoundedProjectOptionsViewModel">
 
     <Design.DataContext>
-        <foundedProjectOptions:FoundedProjectOptionsViewModelDesign>
-            <foundedProjectOptions:FoundedProjectOptionsViewModelDesign.ProjectInvestment>
+        <foundedProjectOptions:FoundedProjectOptionsViewModelSample>
+            <foundedProjectOptions:FoundedProjectOptionsViewModelSample.ProjectInvestment>
                 <Return>
                     <Return.Value>
-                        <portfolio:PortfolioProjectDesign InvestmentStatus="FounderSignaturesReceived" />
+                        <portfolio:PortfolioProjectSample InvestmentStatus="FounderSignaturesReceived" />
                     </Return.Value>
                 </Return>
-            </foundedProjectOptions:FoundedProjectOptionsViewModelDesign.ProjectInvestment>
-        </foundedProjectOptions:FoundedProjectOptionsViewModelDesign>
+            </foundedProjectOptions:FoundedProjectOptionsViewModelSample.ProjectInvestment>
+        </foundedProjectOptions:FoundedProjectOptionsViewModelSample>
     </Design.DataContext>
 
     <Interaction.Behaviors>

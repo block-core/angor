@@ -14,17 +14,17 @@
              x:DataType="cp:ICreateProjectViewModel">
 
     <Design.DataContext>
-        <cp:CreateProjectViewModelDesign>
-            <cp:CreateProjectViewModelDesign.StagesViewModel>
-                <stages:StagesViewModelDesign>
-                    <stages:StagesViewModelDesign.Stages>
-                        <stages:CreateProjectStageDesign Percent="10" ReleaseDate="10/5/2025" />
-                        <stages:CreateProjectStageDesign Percent="30" ReleaseDate="10/9/2025" />
-                        <stages:CreateProjectStageDesign Percent="70" ReleaseDate="12/12/2025" />
-                    </stages:StagesViewModelDesign.Stages>
-                </stages:StagesViewModelDesign>
-            </cp:CreateProjectViewModelDesign.StagesViewModel>
-        </cp:CreateProjectViewModelDesign>
+        <cp:CreateProjectViewModelSample>
+            <cp:CreateProjectViewModelSample.StagesViewModel>
+                <stages:StagesViewModelSample>
+                    <stages:StagesViewModelSample.Stages>
+                        <stages:CreateProjectStageSample Percent="10" ReleaseDate="10/5/2025" />
+                        <stages:CreateProjectStageSample Percent="30" ReleaseDate="10/9/2025" />
+                        <stages:CreateProjectStageSample Percent="70" ReleaseDate="12/12/2025" />
+                    </stages:StagesViewModelSample.Stages>
+                </stages:StagesViewModelSample>
+            </cp:CreateProjectViewModelSample.StagesViewModel>
+        </cp:CreateProjectViewModelSample>
     </Design.DataContext>
 
     <UserControl.Styles>

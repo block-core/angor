@@ -10,7 +10,7 @@
              x:Class="AngorApp.UI.Controls.Common.Success.SuccessView" x:DataType="success:ISuccessViewModel">
     
     <Design.DataContext>
-        <success:SuccessViewModelDesign Message="This is a very, very long message that is here to test how success messages are rendered on-screen" />
+        <success:SuccessViewModelSample Message="This is a very, very long message that is here to test how success messages are rendered on-screen" />
     </Design.DataContext>
     
     <UserControl.Styles>

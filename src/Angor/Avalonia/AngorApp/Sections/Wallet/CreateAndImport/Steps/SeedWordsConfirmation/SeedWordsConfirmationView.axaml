@@ -8,7 +8,7 @@
              x:Class="AngorApp.Sections.Wallet.CreateAndImport.Steps.SeedWordsConfirmation.SeedWordsConfirmationView" x:DataType="seedWordsConfirmation1:ISeedWordsConfirmationViewModel">
 
     <Design.DataContext>
-        <seedWordsConfirmation1:SeedWordsConfirmationViewModelDesign />
+        <seedWordsConfirmation1:SeedWordsConfirmationViewModelSample />
     </Design.DataContext>
 
     <StackPanel Spacing="10">

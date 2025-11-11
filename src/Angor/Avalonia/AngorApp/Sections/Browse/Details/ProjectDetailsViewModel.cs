@@ -29,11 +29,11 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 
     public IEnumerable<INostrRelay> Relays { get; } =
     [
-        new NostrRelayDesign
+        new NostrRelaySample
         {
             Uri = new Uri("wss://relay.angor.io")
         },
-        new NostrRelayDesign
+        new NostrRelaySample
         {
             Uri = new Uri("wss://relay2.angor.io")
         }

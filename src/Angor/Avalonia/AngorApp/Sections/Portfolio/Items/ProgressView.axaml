@@ -8,14 +8,14 @@
              x:Class="AngorApp.Sections.Portfolio.Items.ProgressView" x:DataType="portfolio:IPortfolioProjectViewModel">
 
     <Design.DataContext>
-        <portfolio:PortfolioProjectDesign InvestmentStatus="PendingFounderSignatures" FounderStatus="Approved" Name="Project 2" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
-            <portfolio:PortfolioProjectDesign.Target>
+        <portfolio:PortfolioProjectSample InvestmentStatus="PendingFounderSignatures" FounderStatus="Approved" Name="Project 2" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+            <portfolio:PortfolioProjectSample.Target>
                 <design:DesignTimeAmount Sats="12000000" />
-            </portfolio:PortfolioProjectDesign.Target>
-            <portfolio:PortfolioProjectDesign.Raised>
+            </portfolio:PortfolioProjectSample.Target>
+            <portfolio:PortfolioProjectSample.Raised>
                 <design:DesignTimeAmount Sats="4400000" />
-            </portfolio:PortfolioProjectDesign.Raised>
-        </portfolio:PortfolioProjectDesign>
+            </portfolio:PortfolioProjectSample.Raised>
+        </portfolio:PortfolioProjectSample>
     </Design.DataContext>
 
     <AdaptivePanel>

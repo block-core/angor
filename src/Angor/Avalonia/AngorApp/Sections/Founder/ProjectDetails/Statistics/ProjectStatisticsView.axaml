@@ -16,17 +16,17 @@
     </UserControl.Styles>
 
     <Design.DataContext>
-        <statistics:ProjectStatisticsViewModelDesign TotalStages="4" AvailableTransactions="3" TotalTransactions="6" SpentTransactions="3">
-            <statistics:ProjectStatisticsViewModelDesign.Withdrawable>
+        <statistics:ProjectStatisticsViewModelSample TotalStages="4" AvailableTransactions="3" TotalTransactions="6" SpentTransactions="3">
+            <statistics:ProjectStatisticsViewModelSample.Withdrawable>
                 <design:DesignTimeAmount Sats="200000000" />
-            </statistics:ProjectStatisticsViewModelDesign.Withdrawable>
-            <statistics:ProjectStatisticsViewModelDesign.TotalInvested>
+            </statistics:ProjectStatisticsViewModelSample.Withdrawable>
+            <statistics:ProjectStatisticsViewModelSample.TotalInvested>
                 <design:DesignTimeAmount Sats="400000000" />
-            </statistics:ProjectStatisticsViewModelDesign.TotalInvested>
-            <statistics:ProjectStatisticsViewModelDesign.AvailableBalance>
+            </statistics:ProjectStatisticsViewModelSample.TotalInvested>
+            <statistics:ProjectStatisticsViewModelSample.AvailableBalance>
                 <design:DesignTimeAmount Sats="200000000" />
-            </statistics:ProjectStatisticsViewModelDesign.AvailableBalance>
-        </statistics:ProjectStatisticsViewModelDesign>
+            </statistics:ProjectStatisticsViewModelSample.AvailableBalance>
+        </statistics:ProjectStatisticsViewModelSample>
     </Design.DataContext>
 
     <Card Header="Project Statistics">

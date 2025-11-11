@@ -7,7 +7,7 @@
              x:Class="AngorApp.Sections.Shell.MainView"
              x:DataType="shell:IMainViewModel">
     <Design.DataContext>
-        <shell:MainViewModelDesign />
+        <shell:MainViewModelSample />
     </Design.DataContext>
     <ShellView x:Name="Shell" OpenPaneLength="160" Shell="{Binding Shell}">
         <ShellView.HeaderContentTemplate>

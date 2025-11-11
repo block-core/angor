@@ -9,7 +9,7 @@
 
 
     <Design.DataContext>
-        <amount:AmountViewModelDesign />
+        <amount:AmountViewModelSample />
     </Design.DataContext>
 
     <ItemsControl ItemsSource="{Binding StageBreakdowns}">

@@ -11,7 +11,7 @@
              x:Class="AngorApp.Sections.Browse.Details.NostProperties" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
-        <dt:ProjectDetailsViewModelDesign />
+        <dt:ProjectDetailsViewModelSample />
     </Design.DataContext>
 
     <UserControl.Styles>

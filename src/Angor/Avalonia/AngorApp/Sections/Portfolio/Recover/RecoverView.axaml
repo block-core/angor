@@ -9,7 +9,7 @@
              x:Class="AngorApp.Sections.Portfolio.Recover.RecoverView" x:DataType="penalties:IPenaltiesViewModel">
 
     <Design.DataContext>
-        <penalties:PenaltiesViewModelDesign />
+        <penalties:PenaltiesViewModelSample />
     </Design.DataContext>
 
     <UserControl.Styles>

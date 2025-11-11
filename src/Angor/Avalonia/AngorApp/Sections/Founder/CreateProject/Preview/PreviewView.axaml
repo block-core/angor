@@ -16,28 +16,28 @@
     </UserControl.Styles>
 
     <Design.DataContext>
-        <cp:CreateProjectViewModelDesign>
-            <cp:CreateProjectViewModelDesign.FundingStructureViewModel>
-                <fundingStructure:FundingStructureViewModelDesign
+        <cp:CreateProjectViewModelSample>
+            <cp:CreateProjectViewModelSample.FundingStructureViewModel>
+                <fundingStructure:FundingStructureViewModelSample
                     PenaltyDays="30" FundingStartDate="10/1/2025" Sats="10000000">
-                </fundingStructure:FundingStructureViewModelDesign>
-            </cp:CreateProjectViewModelDesign.FundingStructureViewModel>
-            <cp:CreateProjectViewModelDesign.StagesViewModel>
-                <stages:StagesViewModelDesign>
-                    <stages:StagesViewModelDesign.Stages>
-                        <stages:CreateProjectStageDesign Percent="10" ReleaseDate="10/5/2025" />
-                        <stages:CreateProjectStageDesign Percent="30" ReleaseDate="10/9/2025" />
-                        <stages:CreateProjectStageDesign Percent="70" ReleaseDate="12/12/2025" />
-                    </stages:StagesViewModelDesign.Stages>
-                </stages:StagesViewModelDesign>
-            </cp:CreateProjectViewModelDesign.StagesViewModel>
-            <cp:CreateProjectViewModelDesign.ProfileViewModel>
-                <p:ProfileViewModelDesign BannerUri="https://pbs.twimg.com/profile_images/1835739941596430336/0zk73Tpj_400x400.png"
+                </fundingStructure:FundingStructureViewModelSample>
+            </cp:CreateProjectViewModelSample.FundingStructureViewModel>
+            <cp:CreateProjectViewModelSample.StagesViewModel>
+                <stages:StagesViewModelSample>
+                    <stages:StagesViewModelSample.Stages>
+                        <stages:CreateProjectStageSample Percent="10" ReleaseDate="10/5/2025" />
+                        <stages:CreateProjectStageSample Percent="30" ReleaseDate="10/9/2025" />
+                        <stages:CreateProjectStageSample Percent="70" ReleaseDate="12/12/2025" />
+                    </stages:StagesViewModelSample.Stages>
+                </stages:StagesViewModelSample>
+            </cp:CreateProjectViewModelSample.StagesViewModel>
+            <cp:CreateProjectViewModelSample.ProfileViewModel>
+                <p:ProfileViewModelSample BannerUri="https://pbs.twimg.com/profile_images/1835739941596430336/0zk73Tpj_400x400.png"
                                           AvatarUri="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSskvatKL_o8y2E2Zvaj8KEEYyyEzcJS6frydUCPizL_Txe1j3CqgjVq_WIfhEcM64IL0I&amp;usqp=CAU"
                                           ProjectName="Wasabi Wallet"
                                           Description="Wasabi Wallet is a non-custodial, privacy-focused Bitcoin wallet that uses CoinJoin to enhance user privacy by mixing coins with others, making it difficult to trace transactions. It is designed to help users maintain their financial privacy while managing their Bitcoin holdings." />
-            </cp:CreateProjectViewModelDesign.ProfileViewModel>
-        </cp:CreateProjectViewModelDesign>
+            </cp:CreateProjectViewModelSample.ProfileViewModel>
+        </cp:CreateProjectViewModelSample>
     </Design.DataContext>
 
     <StackPanel Classes="BigGap">

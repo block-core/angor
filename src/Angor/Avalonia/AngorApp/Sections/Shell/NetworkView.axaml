@@ -7,7 +7,7 @@
              x:Class="AngorApp.Sections.Shell.NetworkView" x:DataType="shell:INetworkViewModel">
     
     <Design.DataContext>
-        <shell:NetworkViewModelDesign />
+        <shell:NetworkViewModelSample />
     </Design.DataContext>
 
     <StackPanel Margin="5" HorizontalAlignment="Center" Orientation="Horizontal" Classes="SmallGap">

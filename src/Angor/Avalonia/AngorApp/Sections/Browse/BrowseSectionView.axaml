@@ -11,7 +11,7 @@
              x:DataType="browse:IBrowseSectionViewModel">
 
     <Design.DataContext>
-        <browse:BrowseSectionViewModelDesign />
+        <browse:BrowseSectionViewModelSample />
     </Design.DataContext>
 
     <Interaction.Behaviors>

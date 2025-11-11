@@ -6,9 +6,9 @@ public static class SampleData
 {
     public static IEnumerable<IProject> GetProjects()
     {
-        IEnumerable<ProjectDesign> projects =
+        IEnumerable<ProjectSample> projects =
         [
-            new ProjectDesign()
+            new ProjectSample()
             {
                 Name = "GHJ-TGH-56",
                 Banner = new Uri("https://img.freepik.com/premium-photo/shoot-blue-nebula-with-purple-parts-deep-space-colorful-generative-ai-aig15_31965-139737.jpg"),

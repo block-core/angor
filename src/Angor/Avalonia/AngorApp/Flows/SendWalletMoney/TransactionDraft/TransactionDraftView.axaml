@@ -13,7 +13,7 @@
              x:DataType="td:ITransactionDraftViewModel">
 
     <Design.DataContext>
-        <td:TransactionDraftViewModelDesign IsCalculating="{designTime:Return True}" />
+        <td:TransactionDraftViewModelSample IsCalculating="{designTime:Return True}" />
     </Design.DataContext>
 
     <UserControl.Styles>

@@ -9,7 +9,7 @@
              x:Class="AngorApp.Sections.Wallet.CreateAndImport.Steps.SeedWordsGeneration.Empty" x:DataType="seedWordsGeneration1:ISeedWordsViewModel">
 
     <Design.DataContext>
-        <seedWordsGeneration1:SeedWordsViewModelDesign />
+        <seedWordsGeneration1:SeedWordsViewModelSample />
     </Design.DataContext>
 
     <DockPanel>

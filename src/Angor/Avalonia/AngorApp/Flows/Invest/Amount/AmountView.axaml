@@ -10,7 +10,7 @@
              x:Class="AngorApp.Flows.Invest.Amount.AmountView" x:DataType="c:IAmountViewModel">
 
     <Design.DataContext>
-        <c:AmountViewModelDesign />
+        <c:AmountViewModelSample />
     </Design.DataContext>
 
     <UserControl.Styles>

@@ -35,34 +35,34 @@
     </UserControl.Styles>
 
     <Design.DataContext>
-        <p:PortfolioSectionViewModelDesign>
-            <p:PortfolioSectionViewModelDesign.InvestedProjects>
-                <p:PortfolioProjectDesign InvestmentStatus="FounderSignaturesReceived" FounderStatus="Approved" IsInvestmentCompleted="False" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
-                    <p:PortfolioProjectDesign.Target>
+        <p:PortfolioSectionViewModelSample>
+            <p:PortfolioSectionViewModelSample.InvestedProjects>
+                <p:PortfolioProjectSample InvestmentStatus="FounderSignaturesReceived" FounderStatus="Approved" IsInvestmentCompleted="False" Name="Project 1" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                    <p:PortfolioProjectSample.Target>
                         <design:DesignTimeAmount Sats="12000000" />
-                    </p:PortfolioProjectDesign.Target>
-                    <p:PortfolioProjectDesign.Raised>
+                    </p:PortfolioProjectSample.Target>
+                    <p:PortfolioProjectSample.Raised>
                         <design:DesignTimeAmount Sats="4400000" />
-                    </p:PortfolioProjectDesign.Raised>
-                </p:PortfolioProjectDesign>
-                <p:PortfolioProjectDesign FounderStatus="Approved" InvestmentStatus="PendingFounderSignatures" Name="Project 2" IsInvestmentCompleted="True" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
-                    <p:PortfolioProjectDesign.Target>
+                    </p:PortfolioProjectSample.Raised>
+                </p:PortfolioProjectSample>
+                <p:PortfolioProjectSample FounderStatus="Approved" InvestmentStatus="PendingFounderSignatures" Name="Project 2" IsInvestmentCompleted="True" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                    <p:PortfolioProjectSample.Target>
                         <design:DesignTimeAmount Sats="12000000" />
-                    </p:PortfolioProjectDesign.Target>
-                    <p:PortfolioProjectDesign.Raised>
+                    </p:PortfolioProjectSample.Target>
+                    <p:PortfolioProjectSample.Raised>
                         <design:DesignTimeAmount Sats="5404000" />
-                    </p:PortfolioProjectDesign.Raised>
-                </p:PortfolioProjectDesign>
-                <p:PortfolioProjectDesign FounderStatus="Approved" InvestmentStatus="Invested" Name="Project 2" IsInvestmentCompleted="True" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
-                    <p:PortfolioProjectDesign.Target>
+                    </p:PortfolioProjectSample.Raised>
+                </p:PortfolioProjectSample>
+                <p:PortfolioProjectSample FounderStatus="Approved" InvestmentStatus="Invested" Name="Project 2" IsInvestmentCompleted="True" LogoUri="https://test.angor.io/assets/img/no-image.jpg">
+                    <p:PortfolioProjectSample.Target>
                         <design:DesignTimeAmount Sats="12000000" />
-                    </p:PortfolioProjectDesign.Target>
-                    <p:PortfolioProjectDesign.Raised>
+                    </p:PortfolioProjectSample.Target>
+                    <p:PortfolioProjectSample.Raised>
                         <design:DesignTimeAmount Sats="5404000" />
-                    </p:PortfolioProjectDesign.Raised>
-                </p:PortfolioProjectDesign>
-            </p:PortfolioSectionViewModelDesign.InvestedProjects>
-        </p:PortfolioSectionViewModelDesign>
+                    </p:PortfolioProjectSample.Raised>
+                </p:PortfolioProjectSample>
+            </p:PortfolioSectionViewModelSample.InvestedProjects>
+        </p:PortfolioSectionViewModelSample>
     </Design.DataContext>
 
     <a:PageContainer Container.Name="RootPanel" Container.Sizing="Width">

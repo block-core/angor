@@ -9,7 +9,7 @@
              x:DataType="summary:ISummaryViewModel">
 
     <Design.DataContext>
-        <summary:SummaryViewModelDesign IsRecovery="True" />
+        <summary:SummaryViewModelSample IsRecovery="True" />
     </Design.DataContext>
 
     <Panel>

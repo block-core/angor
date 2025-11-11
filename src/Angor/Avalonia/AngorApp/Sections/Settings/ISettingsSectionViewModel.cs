@@ -20,9 +20,9 @@ internal interface ISettingsSectionViewModel : IDisposable
     bool IsBitcoinPreferred { get; set; }
 }
 
-internal class SettingsSectionViewModelDesign : ISettingsSectionViewModel
+internal class SettingsSectionViewModelSample : ISettingsSectionViewModel
 {
-    public SettingsSectionViewModelDesign()
+    public SettingsSectionViewModelSample()
     {
         Indexers = new ObservableCollection<SettingsUrlViewModel>
         {

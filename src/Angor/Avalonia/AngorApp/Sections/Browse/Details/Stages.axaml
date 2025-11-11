@@ -9,7 +9,7 @@
              x:Class="AngorApp.Sections.Browse.Details.Stages" x:DataType="dt:IProjectDetailsViewModel">
 
     <Design.DataContext>
-        <dt:ProjectDetailsViewModelDesign />
+        <dt:ProjectDetailsViewModelSample />
     </Design.DataContext>
 
     <Card Header="Project Stages" Subheader="Funding stages and release schedule">

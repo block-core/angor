@@ -10,7 +10,7 @@
              x:DataType="fundingStructure:IFundingStructureViewModel">
 
     <Design.DataContext>
-        <fundingStructure:FundingStructureViewModelDesign
+        <fundingStructure:FundingStructureViewModelSample
             PenaltyDays="30" FundingStartDate="10/1/2025" Sats="10000001" />
     </Design.DataContext>
 
