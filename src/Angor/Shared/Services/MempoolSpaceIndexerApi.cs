@@ -25,7 +25,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     private const string AngorApiRoute = "/api/v1/query/Angor";
     private const string MempoolApiRoute = "/api/v1";
 
-    private readonly bool _readFromAngorApi;
+    public bool _readFromAngorApi; //tempt
 
     public MempoolSpaceIndexerApi(
         ILogger<MempoolSpaceIndexerApi> logger,
@@ -249,7 +249,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     public async Task<string> PublishTransactionAsync(string trxHex)
     {
         var response = await GetIndexerClient()
-    .PostAsync($"{MempoolApiRoute}/tx", new StringContent(trxHex));
+    .       PostAsync($"{MempoolApiRoute}/tx", new StringContent(trxHex));
 
         _networkService.CheckAndHandleError(response);
 
