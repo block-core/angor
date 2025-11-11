@@ -39,6 +39,7 @@ public static class FundingContextServices
         services.TryAddScoped<HttpClient>(x => x.GetRequiredService<IHttpClientFactory>().CreateClient());
         services.TryAddSingleton<IIndexerService,MempoolSpaceIndexerApi>();
         services.TryAddSingleton<MempoolIndexerMappers>();
+        services.TryAddSingleton<IMempoolIndexerCalculationApi, MempoolIndexerCalculationApi>();
         services.TryAddSingleton<INetworkConfiguration>(networkConfiguration);
         services.TryAddSingleton<INetworkService, NetworkService>();
         services.TryAddSingleton<IEncryptionService, EncryptionService>();
