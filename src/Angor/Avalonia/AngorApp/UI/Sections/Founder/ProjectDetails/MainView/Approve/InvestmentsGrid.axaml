@@ -1,0 +1,186 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:approve="clr-namespace:AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="750"
+             x:Class="AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve.InvestmentsGrid"
+             x:DataType="approve:IApproveInvestmentsViewModel">
+
+    <Design.DataContext>
+        <approve:ApproveInvestmentsViewModelSample />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+
+        <Style Selector="TextBlock.Status[Tag=PendingFounderSignatures]">
+            <Setter Property="Text" Value="Pending" />
+        </Style>
+        <Style Selector="TextBlock.Status[Tag=FounderSignaturesReceived]">
+            <Setter Property="Text" Value="Approved" />
+        </Style>
+        <Style Selector="TextBlock.Status[Tag=Invested]">
+            <Setter Property="Text" Value="Invested" />
+        </Style>
+
+        <Style Selector="SlimDataGrid.TopLevel1 Row:not(.NestedGrid Row)">
+            <Setter Property="DataContext" Value="{Binding $self.Data}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SlimDataGridSeparatorBrush}" />
+            <Setter Property="Padding" Value="0 5" />
+            <Setter Property="BorderThickness" Value="{DynamicResource SlimDataGridBorderThickness}" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Padding="{TemplateBinding Padding}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            ClipToBounds="{TemplateBinding ClipToBounds}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <DockPanel>
+                            <ItemsControl ItemsSource="{TemplateBinding Properties}" DockPanel.Dock="Top">
+                                <ItemsControl.ItemContainerTheme>
+                                    <ControlTheme TargetType="Cell" BasedOn="{StaticResource {x:Type Cell}}">
+                                        <Setter Property="Grid.Column" Value="{Binding $self.Index}" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                        <Setter Property="Padding" Value="{DynamicResource CellPadding}" />
+                                    </ControlTheme>
+                                </ItemsControl.ItemContainerTheme>
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Grid>
+                                            <Interaction.Behaviors>
+                                                <BindableColumnDefinitionsBehavior ColumnDefinitions="{Binding $parent[SlimDataGrid].Columns, Mode=OneWay, Converter={x:Static Converters.ColumnDefsConverter}}" />
+                                            </Interaction.Behaviors>
+                                        </Grid>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                            <Card Header="Previous offers" x:DataType="approve:IInvestmentViewModel"
+                                  Margin="0 10 0 0"
+                                  Subheader="These are previous offers made by this investor"
+                                  Background="{DynamicResource SystemChromeMediumLowColor}"
+                                  IsVisible="{Binding AreDetailsShown, DataType=approve:IInvestmentViewModel}">
+                                <SlimDataGrid Classes="NestedGrid" ItemsSource="{Binding OtherInvestments}">
+                                    <SlimDataGrid.Styles>
+                                        <Style Selector="Row">
+                                            <Setter Property="Margin" Value="0 10" />
+                                        </Style>
+                                        <Style Selector="Cell TextBlock">
+                                            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                            <Setter Property="VerticalAlignment" Value="Center" />
+                                        </Style>
+                                    </SlimDataGrid.Styles>
+                                    <SlimDataGrid.Columns>
+                                        <Column Header="Amount" Width="*" Binding="{Binding Amount.BtcString}" />
+                                        <Column Header="Date" Width="*" Binding="{Binding CreatedOn, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                                        <Column Header="" Width="150" Binding="{Binding InvestorNostrPubKey}">
+                                            <Column.CellTemplate>
+                                                <DataTemplate>
+                                                </DataTemplate>
+                                            </Column.CellTemplate>
+                                        </Column>
+                                        <Column Header="Status" Width="Auto" Binding="{Binding Status}">
+                                            <Column.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Classes="Status" Tag="{Binding}" />
+                                                </DataTemplate>
+                                            </Column.CellTemplate>
+                                        </Column>
+                                    </SlimDataGrid.Columns>
+                                </SlimDataGrid>
+                            </Card>
+                        </DockPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+    </UserControl.Styles>
+
+    <ResponsivePresenter Breakpoint="600">
+        <ResponsivePresenter.Narrow>
+            <ItemsControl Classes="ShowEmptyContent" ItemsSource="{Binding Investments}" Empty.Content="No investments found">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Classes="SmallGap" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Card Theme="{StaticResource WideCard}" Header="{Binding MostRecentInvestment.Amount.BtcString}">
+                            <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
+                                <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="From:" Content="{Binding MostRecentInvestment.InvestorNostrPubKey}">
+                                    <EdgePanel.ContentTemplate>
+                                        <DataTemplate x:DataType="x:String">
+                                            <SelectableTextBlock TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" Text="{Binding}" MaxLines="1" />
+                                        </DataTemplate>
+                                    </EdgePanel.ContentTemplate>
+                                </EdgePanel>
+                                <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Created:" Content="{Binding MostRecentInvestment.CreatedOn, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                                <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Status:">
+                                    <EdgePanel.Content>
+                                        <TextBlock Classes="Status" Tag="{Binding MostRecentInvestment.Status}" />
+                                    </EdgePanel.Content>
+                                </EdgePanel>
+                                <EnhancedButton Command="{Binding Approve}" Content="Approve" IsVisible="{Binding $self.IsEffectivelyEnabled}" />
+                            </StackPanel>
+                        </Card>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ResponsivePresenter.Narrow>
+        <ResponsivePresenter.Wide>
+            <SlimDataGrid Classes="TopLevel1" ItemsSource="{Binding Investments}">
+                <SlimDataGrid.Columns>
+                    <Column Header="Amount" Width="*" Binding="{Binding MostRecentInvestment.Amount.BtcString}" />
+                    <Column Header="Date" Width="*" Binding="{Binding MostRecentInvestment.CreatedOn, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
+                    <Column Header="Investor" Width="150" Binding="{Binding MostRecentInvestment.InvestorNostrPubKey}">
+                        <Column.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" />
+                            </DataTemplate>
+                        </Column.CellTemplate>
+                    </Column>
+                    <Column Header="Status" Width="Auto" Binding="{Binding MostRecentInvestment.Status}">
+                        <Column.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Tag="{Binding}">
+                                    <TextBlock.Styles>
+                                        <Style Selector="TextBlock[Tag=PendingFounderSignatures]">
+                                            <Setter Property="Text" Value="Pending" />
+                                        </Style>
+                                        <Style Selector="TextBlock[Tag=FounderSignaturesReceived]">
+                                            <Setter Property="Text" Value="Approved" />
+                                        </Style>
+                                        <Style Selector="TextBlock[Tag=Invested]">
+                                            <Setter Property="Text" Value="Invested" />
+                                        </Style>
+                                    </TextBlock.Styles>
+                                </TextBlock>
+                            </DataTemplate>
+                        </Column.CellTemplate>
+                    </Column>
+                    <Column Header="" Width="Auto" Binding="{Binding}">
+                        <Column.CellTemplate>
+                            <DataTemplate>
+                                <EnhancedButton Command="{Binding Approve}"
+                                        IsVisible="{Binding $self.IsEffectivelyEnabled}"
+                                        Content="Approve" />
+                            </DataTemplate>
+                        </Column.CellTemplate>
+                    </Column>
+                    <Column Width="Auto" Binding="{Binding }">
+                        <Column.CellTemplate>
+                            <DataTemplate>
+                                <ToggleButton Theme="{StaticResource ExpandingToggleButtonNoText}" x:Name="AreDetailsShown" IsChecked="{Binding AreDetailsShown, Mode=TwoWay}"
+                                              IsVisible="{Binding OtherInvestments, Converter={x:Static Enumerable.Any}}" />
+                            </DataTemplate>
+                        </Column.CellTemplate>
+                    </Column>
+                </SlimDataGrid.Columns>
+            </SlimDataGrid>
+        </ResponsivePresenter.Wide>
+    </ResponsivePresenter>
+
+</UserControl>

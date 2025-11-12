@@ -1,0 +1,85 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+        xmlns:design="clr-namespace:AngorApp.Design"
+        xmlns:feerate="clr-namespace:AngorApp.UI.Shared.Controls.Feerate"
+        xmlns:ds="clr-namespace:AngorApp.UI.Shared.Controls">
+
+    <Design.PreviewWith>
+        <feerate:FeerateSelector Width="400" Height="500" Amount="1000">
+            <feerate:FeerateSelector.Presets>
+                <generic:List x:TypeArguments="feerate:IFeeratePreset">
+                    <ds:DesignTimePreset Name="Economy">
+                        <ds:DesignTimePreset.Feerate>
+                            <design:DesignTimeAmount Sats="1234" />
+                        </ds:DesignTimePreset.Feerate>
+                    </ds:DesignTimePreset>
+                    <ds:DesignTimePreset Name="Standard">
+                        <ds:DesignTimePreset.Feerate>
+                            <design:DesignTimeAmount Sats="1234" />
+                        </ds:DesignTimePreset.Feerate>
+                    </ds:DesignTimePreset>
+                    <ds:DesignTimePreset Name="Priority">
+                        <ds:DesignTimePreset.Feerate>
+                            <design:DesignTimeAmount Sats="1234" />
+                        </ds:DesignTimePreset.Feerate>
+                    </ds:DesignTimePreset>
+                </generic:List>
+            </feerate:FeerateSelector.Presets>
+            <feerate:FeerateSelector.FeeCalculator>
+                <design:FeeCalculatorDesignTime />
+            </feerate:FeerateSelector.FeeCalculator>
+        </feerate:FeerateSelector>
+    </Design.PreviewWith>
+
+
+    <Style Selector="feerate|FeerateSelector">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <StackPanel Spacing="10">
+                    <StackPanel.DataTemplates>
+                        <DataTemplate DataType="feerate:CustomFeeRate">
+                            <StackPanel>
+                                <RadioButton Name="UseCustom" IsChecked="{Binding $parent[ListBoxItem].IsSelected}" Content="Custom fee rate" />
+                                <StackPanel IsVisible="{Binding #UseCustom.IsChecked}">
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Bottom">
+                                            <Panel>
+                                                <TextBlock FontSize="{StaticResource FontSizeSmall}" HorizontalAlignment="Left">Low fee</TextBlock>
+                                                <TextBlock FontSize="{StaticResource FontSizeSmall}" HorizontalAlignment="Right">High fee</TextBlock>
+                                            </Panel>
+                                        </StackPanel>
+                                        <Slider TickPlacement="BottomRight" TickFrequency="10" Margin="0" FontSize="2" Padding="0" Minimum="4" Maximum="30" Value="{Binding Sats, Mode=TwoWay}" />
+                                    </DockPanel>
+
+                                    <TextBox Watermark="Custom" Margin="0 10 0 0" Text="{Binding Sats, Mode=TwoWay}"
+                                             TextInputOptions.ContentType="Number">
+                                        <TextBox.InnerRightContent>
+                                            <TextBlock VerticalAlignment="Center" Margin="0 0 6 0">sats/VByte</TextBlock>
+                                        </TextBox.InnerRightContent>
+                                    </TextBox>
+                                    <TextBlock IsVisible="{Binding Fee, Converter={x:Static ObjectConverters.IsNotNull}}" TextAlignment="Right" FontWeight="Bold" Margin="0 10" Text="{Binding Fee.SatsString, StringFormat='Fee: {0}'}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                        <DataTemplate DataType="feerate:Preset">
+                            <Grid ColumnDefinitions="* Auto Auto">
+                                <RadioButton IsChecked="{Binding $parent[ListBoxItem].IsSelected}" Content="{Binding Name}" />
+                                <TextBlock FontWeight="Bold" VerticalAlignment="Center" Grid.Column="1" Text="{Binding Fee.SatsString, StringFormat='Fee: {0}'}" />
+                            </Grid>
+                        </DataTemplate>
+                    </StackPanel.DataTemplates>
+                    <ListBox Background="Transparent" SelectedItem="{Binding $parent[feerate:FeerateSelector].Controller.SelectedFeeRate}"
+                             ItemsSource="{Binding $parent[feerate:FeerateSelector].Controller.FeeRates}">
+                        <ListBox.ItemContainerTheme>
+                            <ControlTheme TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                <Setter Property="Padding" Value="4" />
+                            </ControlTheme>
+                        </ListBox.ItemContainerTheme>
+                    </ListBox>
+                </StackPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

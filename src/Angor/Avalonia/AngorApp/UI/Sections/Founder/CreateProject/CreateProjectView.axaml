@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:cp="clr-namespace:AngorApp.UI.Sections.Founder.CreateProject"
+             xmlns:profile="clr-namespace:AngorApp.UI.Sections.Founder.CreateProject.Profile"
+             xmlns:fundingStructure="clr-namespace:AngorApp.UI.Sections.Founder.CreateProject.FundingStructure"
+             xmlns:stages="clr-namespace:AngorApp.UI.Sections.Founder.CreateProject.Stages"
+             xmlns:p="clr-namespace:AngorApp.UI.Sections.Founder.CreateProject.Preview"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="800"
+             Container.Name="Root" Container.Sizing="Width"
+             x:Class="AngorApp.UI.Sections.Founder.CreateProject.CreateProjectView"
+             x:DataType="cp:ICreateProjectViewModel">
+
+    <Design.DataContext>
+        <cp:CreateProjectViewModelSample>
+            <cp:CreateProjectViewModelSample.StagesViewModel>
+                <stages:StagesViewModelSample>
+                    <stages:StagesViewModelSample.Stages>
+                        <stages:CreateProjectStageSample Percent="10" ReleaseDate="10/5/2025" />
+                        <stages:CreateProjectStageSample Percent="30" ReleaseDate="10/9/2025" />
+                        <stages:CreateProjectStageSample Percent="70" ReleaseDate="12/12/2025" />
+                    </stages:StagesViewModelSample.Stages>
+                </stages:StagesViewModelSample>
+            </cp:CreateProjectViewModelSample.StagesViewModel>
+        </cp:CreateProjectViewModelSample>
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <StyleInclude Source="Common.axaml" />
+
+    </UserControl.Styles>
+
+    <Loading IsLoading="{Binding Create.IsExecuting^}" LoadingText="Creating project...">
+        <DockPanel HorizontalSpacing="10">
+            <ScrollViewer DockPanel.Dock="Right">
+                <ScrollViewer.Styles>
+                    <ContainerQuery Name="Root" Query="max-width:800">
+                        <Style Selector="p|PreviewView#PreviewView">
+                            <Setter Property="IsVisible" Value="False" />
+                        </Style>
+                    </ContainerQuery>
+                </ScrollViewer.Styles>
+                <p:PreviewView x:Name="PreviewView" Width="400" />
+            </ScrollViewer>
+            <ScrollViewer>
+                <StackPanel Spacing="10">
+                    <profile:ProfileView DataContext="{Binding ProfileViewModel}" />
+                    <fundingStructure:FundingStructure DataContext="{Binding FundingStructureViewModel}" />
+                    <stages:StagesView DataContext="{Binding StagesViewModel}" />
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Loading>
+
+</UserControl>

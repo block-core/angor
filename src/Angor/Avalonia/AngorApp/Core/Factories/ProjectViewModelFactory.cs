@@ -1,7 +1,7 @@
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
-using AngorApp.Sections.Browse;
-using AngorApp.Sections.Browse.Details;
+using AngorApp.UI.Sections.Browse;
+using AngorApp.UI.Sections.Browse.Details;
 using Zafiro.UI.Navigation;
 
 namespace AngorApp.Core.Factories;

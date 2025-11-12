@@ -1,0 +1,11 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Sections.Shell.Network" >
+    <controls:Pane DockPanel.Dock="Top">
+        <TextBlock Text="Network - Angornet (testnet)" DockPanel.Dock="Left" />
+    </controls:Pane>
+</UserControl>

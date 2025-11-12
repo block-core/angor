@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:z="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
+             xmlns:designTime="clr-namespace:Zafiro.Avalonia.DesignTime;assembly=Zafiro.Avalonia"
+             xmlns:feerate="clr-namespace:AngorApp.UI.Shared.Controls.Feerate"
+             xmlns:td="clr-namespace:AngorApp.UI.Flows.SendWalletMoney.TransactionDraft"
+             mc:Ignorable="d"
+             d:DesignWidth="500"
+             d:DesignHeight="350"
+             x:Class="AngorApp.UI.Flows.SendWalletMoney.TransactionDraft.TransactionDraftView"
+             x:DataType="td:ITransactionDraftViewModel">
+
+    <Design.DataContext>
+        <td:TransactionDraftViewModelSample IsCalculating="{designTime:Return True}" />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Styles>
+
+
+    <StackPanel Classes="SmallGap" IsEnabled="{Binding !IsSending^}">
+        <z:Card Header="Select transaction speed:">
+            <feerate:FeerateSelector Feerate="{Binding Feerate}"
+                                      Presets="{Binding Presets}" />
+        </z:Card>
+        <z:Loading IsLoading="{Binding IsCalculating^}" LoadingText="Calculating fee. Please wait.">
+            <TextBlock Text="{Binding Fee.SatsString, StringFormat='Total fee: {0}'}" />
+        </z:Loading>
+        <z:Loading LoadingText="Sending transaction..." IsLoading="{Binding IsSending^}" />
+    </StackPanel>
+
+</UserControl>
