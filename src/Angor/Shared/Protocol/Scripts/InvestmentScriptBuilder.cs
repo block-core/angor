@@ -39,16 +39,6 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         return BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, hashOfSecret, expiryDateOverride, null, 0);
     }
 
-    /// <summary>
-    /// Builds project scripts for a specific stage, supporting both Invest (fixed) and Fund/Subscribe (dynamic) projects.
-    /// </summary>
-    /// <param name="projectInfo">Project information</param>
-    /// <param name="investorKey">Investor's public key</param>
-    /// <param name="stageIndex">Index of the stage (0-based)</param>
-    /// <param name="hashOfSecret">Optional secret hash for seeders</param>
-    /// <param name="expiryDateOverride">Optional override for expiry date</param>
-    /// <param name="investmentStartDate">Required for Fund/Subscribe projects - the date when investment was made</param>
-    /// <param name="patternIndex">Index of the pattern in DynamicStagePatterns list (0-255). Only used for Fund/Subscribe projects.</param>
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
         uint256? hashOfSecret, DateTime? expiryDateOverride, DateTime? investmentStartDate, byte patternIndex = 0)
     {
@@ -135,91 +125,19 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         };
     }
 
-    /// <summary>
-    /// Calculates the release date for a dynamic stage based on the pattern and investment start date.
-    /// </summary>
     private static DateTime CalculateDynamicStageReleaseDate(DateTime investmentStartDate, DynamicStagePattern pattern, int stageIndex)
     {
-        if (pattern.PayoutDayType == PayoutDayType.FromStartDate)
-        {
-            // Simple: add fixed intervals from start date
-            var duration = DynamicStageHelper.GetFrequencyDuration(pattern.Frequency);
-            return investmentStartDate.Add(duration * (stageIndex + 1)); // +1 because first stage is after first interval
-        }
-        else if (pattern.PayoutDayType == PayoutDayType.SpecificDayOfMonth)
-        {
-            // Payout on specific day of month (e.g., 1st, 15th)
-            return CalculateNextMonthlyPayoutDate(investmentStartDate, pattern.Frequency, pattern.PayoutDay, stageIndex);
-        }
-        else // SpecificDayOfWeek
-        {
-            // Payout on specific day of week (e.g., Monday)
-            return CalculateNextWeeklyPayoutDate(investmentStartDate, pattern.Frequency, pattern.PayoutDay, stageIndex);
-        }
+        return DynamicStageCalculator.CalculateDynamicStageReleaseDate(investmentStartDate, pattern, stageIndex);
     }
 
     private static DateTime CalculateNextMonthlyPayoutDate(DateTime startDate, StageFrequency frequency, int dayOfMonth, int stageIndex)
     {
-        // Determine how many months to add based on frequency
-        int monthsToAdd = frequency switch
-        {
-            StageFrequency.Monthly => stageIndex,
-            StageFrequency.BiMonthly => stageIndex * 2,
-            StageFrequency.Quarterly => stageIndex * 3,
-            _ => throw new ArgumentException($"Frequency {frequency} does not support SpecificDayOfMonth")
-        };
-
-        // Start from the first occurrence of the target day
-        var targetDate = new DateTime(startDate.Year, startDate.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-
-        // Adjust to the target day of month (handle months with fewer days)
-        var daysInMonth = DateTime.DaysInMonth(targetDate.Year, targetDate.Month);
-        var actualDay = Math.Min(dayOfMonth, daysInMonth);
-        targetDate = new DateTime(targetDate.Year, targetDate.Month, actualDay, 0, 0, 0, DateTimeKind.Utc);
-
-        // If the target date is before the start date, move to next month
-        if (targetDate < startDate)
-        {
-            targetDate = targetDate.AddMonths(1);
-            daysInMonth = DateTime.DaysInMonth(targetDate.Year, targetDate.Month);
-            actualDay = Math.Min(dayOfMonth, daysInMonth);
-            targetDate = new DateTime(targetDate.Year, targetDate.Month, actualDay, 0, 0, 0, DateTimeKind.Utc);
-        }
-
-        // Add the appropriate number of months for this stage
-        targetDate = targetDate.AddMonths(monthsToAdd);
-
-        // Adjust for months with fewer days (e.g., Feb 31 -> Feb 28/29)
-        daysInMonth = DateTime.DaysInMonth(targetDate.Year, targetDate.Month);
-        actualDay = Math.Min(dayOfMonth, daysInMonth);
-
-        return new DateTime(targetDate.Year, targetDate.Month, actualDay, 0, 0, 0, DateTimeKind.Utc);
+        return DynamicStageCalculator.CalculateMonthlyPayoutDate(startDate, frequency, dayOfMonth, stageIndex);
     }
 
     private static DateTime CalculateNextWeeklyPayoutDate(DateTime startDate, StageFrequency frequency, int dayOfWeek, int stageIndex)
     {
-        if (dayOfWeek < 0 || dayOfWeek > 6)
-            throw new ArgumentOutOfRangeException(nameof(dayOfWeek), "DayOfWeek must be 0-6 (Sunday-Saturday)");
-
-        // Determine how many weeks to add based on frequency
-        int weeksToAdd = frequency switch
-        {
-            StageFrequency.Weekly => stageIndex,
-            StageFrequency.Biweekly => stageIndex * 2,
-            _ => throw new ArgumentException($"Frequency {frequency} does not support SpecificDayOfWeek")
-        };
-
-        // Find the first occurrence of the target day of week on or after start date
-        var targetDayOfWeek = (DayOfWeek)dayOfWeek;
-        var currentDate = startDate.Date;
-
-        while (currentDate.DayOfWeek != targetDayOfWeek)
-        {
-            currentDate = currentDate.AddDays(1);
-        }
-
-        // Add the appropriate number of weeks for this stage
-        return currentDate.AddDays(weeksToAdd * 7);
+        return DynamicStageCalculator.CalculateWeeklyPayoutDate(startDate, frequency, dayOfWeek, stageIndex);
     }
 
     private static Script GetFounderSpendScript(string founderKey, DateTime stageReleaseDate)
@@ -242,11 +160,11 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 
         // project ended and investor can collect remaining funds
         return new Script(new List<Op>
-     {
-            Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
-            OpcodeType.OP_CHECKSIGVERIFY,
-            Op.GetPushOp(locktimeExpiery),
-            OpcodeType.OP_CHECKLOCKTIMEVERIFY
-     });
+         {
+                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+                OpcodeType.OP_CHECKSIGVERIFY,
+                Op.GetPushOp(locktimeExpiery),
+                OpcodeType.OP_CHECKLOCKTIMEVERIFY
+         });
     }
 }
