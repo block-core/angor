@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:cv="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
+             xmlns:summary="clr-namespace:AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.Summary"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="300"
+             x:Class="AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.Summary.SummaryView"
+             x:DataType="summary:ISummaryViewModel">
+
+    <Design.DataContext>
+        <summary:SummaryViewModelSample IsRecovery="True" />
+    </Design.DataContext>
+
+    <Panel>
+        <Loading IsLoading="{Binding CreateWallet.IsExecuting^}" LoadingText="{Binding CreatingWalletText}">
+            <StackPanel Grid.IsSharedSizeScope="True" Spacing="20" Opacity="{Binding !CreateWallet.IsExecuting^, Converter={x:Static cv:OpacityConverters.BoolToOpacity}}">
+                <TextBlock Classes="SizeBig" TextAlignment="Center" Text="{Binding TitleText}" />
+                <TextBlock>Here's a short summary of the information you provided:</TextBlock>
+                <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" IsVisible="{Binding !IsRecovery}" Header="Seed words:">
+                    <TextBlock TextWrapping="Wrap">12 English words (already confirmed)</TextBlock>
+                </HeaderedContentControl>
+                <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="BIP39 Passphrase:">
+                    <Panel>
+                        <TextBlock Text="[Provided]" IsVisible="{Binding Passphrase.HasValue}" />
+                        <TextBlock Text="[None]" IsVisible="{Binding Passphrase.HasNoValue}" />
+                    </Panel>
+                </HeaderedContentControl>
+                <HeaderedContentControl Theme="{StaticResource InlineHeaderedContentControl}" Header="Encryption Password:">
+                    <TextBlock Text="[Set]" />
+                </HeaderedContentControl>
+            </StackPanel>
+        </Loading>
+    </Panel>
+</UserControl>

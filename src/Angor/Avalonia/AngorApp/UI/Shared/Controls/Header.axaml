@@ -1,0 +1,28 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:a="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+                    xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls">
+    <Design.PreviewWith>
+        <controls:Header Width="400" Height="300" BackgroundImageUri="/Assets/community.png" IconUri="/Assets/community.png" />
+    </Design.PreviewWith>
+
+    <ControlTheme TargetType="controls:Header" x:Key="{x:Type controls:Header}">
+        <Setter Property="IconMargin" Value="20, 20" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <a:AdvancedImage Stretch="UniformToFill" Source="{Binding $parent[controls:Header].BackgroundImageUri}" />
+                    <Panel Height="100" Width="100" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="{TemplateBinding IconMargin}">
+                        <Ellipse Fill="White" Width="100" Height="100" />
+                        <a:AdvancedImage Stretch="UniformToFill" Source="{Binding $parent[controls:Header].IconUri}">
+                            <a:AdvancedImage.Clip>
+                                <EllipseGeometry Center="50,50" RadiusX="50" RadiusY="50" />
+                            </a:AdvancedImage.Clip>
+                        </a:AdvancedImage>
+                        <Ellipse Stroke="White" StrokeThickness="5" Width="100" Height="100" />
+                    </Panel>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+</ResourceDictionary>

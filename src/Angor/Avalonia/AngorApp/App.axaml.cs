@@ -1,6 +1,6 @@
 using System;
 using AngorApp.Composition;
-using AngorApp.Sections.Shell;
+using AngorApp.UI.Sections.Shell;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;

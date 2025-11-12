@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:pr="clr-namespace:AngorApp.UI.Sections.Founder.ProjectDetails"
+             xmlns:statistics="clr-namespace:AngorApp.UI.Sections.Founder.ProjectDetails.Statistics"
+             xmlns:model="clr-namespace:AngorApp.Model.Contracts.Projects;assembly=AngorApp.Model"
+             mc:Ignorable="d" d:DesignWidth="1200"
+             x:Class="AngorApp.UI.Sections.Founder.ProjectDetails.FounderProjectDetailsView" x:DataType="pr:IFounderProjectDetailsViewModel">
+
+    <Design.DataContext>
+        <pr:FounderProjectDetailsViewModelSample />
+    </Design.DataContext>
+
+    <controls:PageContainer>
+        <ScrollViewer>
+            <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading Project Details...">
+                <StackPanel Classes="BigGap">
+                    <Panel DataContext="{Binding Project}">
+                        <controls:ProjectCard Banner="{Binding Banner}" Avatar="{Binding Avatar}" ProjectName="{Binding Name}" ShortDescription="{Binding ShortDescription}" />
+                        <Badge VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="20" Tag="{Binding Status}">
+                            <Badge.Styles>
+                                <Style Selector="Badge[Tag=Funding]">
+                                    <Setter Property="Content" Value="Funding" />
+                                    <Setter Property="Color" Value="DeepSkyBlue" />
+                                </Style>
+                                <Style Selector="Badge[Tag=Started]">
+                                    <Setter Property="Content" Value="Started" />
+                                    <Setter Property="Color" Value="Orange" />
+                                </Style>
+                                <Style Selector="Badge[Tag=Failed]">
+                                    <Setter Property="Content" Value="Failed" />
+                                    <Setter Property="Color" Value="Red" />
+                                </Style>
+                                <Style Selector="Badge[Tag=Succeeded]">
+                                    <Setter Property="Content" Value="Succeeded" />
+                                    <Setter Property="Color" Value="ForestGreen" />
+                                </Style>
+                            </Badge.Styles>
+                        </Badge>
+                    </Panel>
+                    <ContentControl Content="{Binding ContentViewModel}" />
+                    <statistics:ProjectStatisticsView DataContext="{Binding Project}" />
+                    <Card Header="More info" DataContext="{Binding Project}">
+                        <StackPanel x:DataType="model:IFullProject" Grid.IsSharedSizeScope="True" Classes="BigGap">
+                            <StackPanel.Styles>
+                                <Style Selector="ContentControl#StartContent">
+                                    <Setter Property="TextBlock.FontWeight" Value="Bold"></Setter>
+                                </Style>
+                                <Style Selector="EdgePanel">
+                                    <Setter Property="EndContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <SelectableTextBlock Text="{Binding DataType={x:Type x:Object}}" />
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </StackPanel.Styles>
+                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Founder Public Key" EndContent="{Binding FounderPubKey}" />
+                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Nostr Pub Key (NPUB)" EndContent="{Binding NostrNpubKeyHex}" />
+                            <HeaderedContainer Header="Stages">
+                                <HeaderedContainer.Content>
+                                    <SlimDataGrid ItemsSource="{Binding Stages}">
+                                        <SlimDataGrid.Columns>
+                                            <Column Header="" Binding="{Binding Index}" />
+                                            <Column Header="Amount" Binding="{Binding AmountUI.ShortDecimalString}" />
+                                            <Column Header="Percentage" Binding="{Binding RatioOfTotal, StringFormat=P2}" />
+                                        </SlimDataGrid.Columns>
+                                    </SlimDataGrid>
+                                </HeaderedContainer.Content>
+                            </HeaderedContainer>
+                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Target Amount" EndContent="{Binding TargetAmount.ShortDecimalString}" />
+                            <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Raised Amount" EndContent="{Binding RaisedAmount.ShortDecimalString}" />
+                            <EnhancedButton Content="See NSEC">
+                                <Button.Flyout>
+                                    <Flyout>
+                                        Not available yet
+                                    </Flyout>
+                                </Button.Flyout>
+                            </EnhancedButton>
+                        </StackPanel>
+                    </Card>
+                </StackPanel>
+            </Loading>
+        </ScrollViewer>
+    </controls:PageContainer>
+</UserControl>

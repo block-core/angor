@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:browse="clr-namespace:AngorApp.UI.Sections.Browse"
+             xmlns:lk="clr-namespace:AngorApp.UI.Sections.Browse.ProjectLookup"
+             xmlns:a="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
+             x:Class="AngorApp.UI.Sections.Browse.BrowseSectionView"
+             x:DataType="browse:IBrowseSectionViewModel">
+
+    <Design.DataContext>
+        <browse:BrowseSectionViewModelSample />
+    </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction IsEnabled="{Binding !!!Projects.Count}" Command="{Binding LoadProjects}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <UserControl.Styles>
+        <Style Selector="TextBox">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
+    <a:PageContainer>
+        <ScrollViewer>
+            <DockPanel VerticalSpacing="20">
+
+                <Card Header="Browse" Theme="{StaticResource WideCard}" Subheader="Browse Projects" DockPanel.Dock="Top">
+                    <Card.HeaderEndContent>
+                        <EnhancedButton Command="{Binding LoadProjects}" Icon="{Icon fa-arrows-rotate}" />
+                    </Card.HeaderEndContent>
+                    <Card.HeaderStartContent>
+                        <ui:Icon Source="svg:/Assets/browse.svg" />
+                    </Card.HeaderStartContent>
+                </Card>
+
+                <Card Theme="{StaticResource WideCard}" Header="Project lookup" DockPanel.Dock="Top">
+                    <Card.Subheader>
+                        <TextBlock TextWrapping="Wrap">You can look for a project directly by entering its <Bold>Project Id</Bold> here</TextBlock>
+                    </Card.Subheader>
+                    <lk:ProjectLookupView DataContext="{Binding ProjectLookupViewModel}" />
+                </Card>
+
+                <Loading IsLoading="{Binding LoadProjects.IsExecuting^}">
+                    <CardGrid ItemsSource="{Binding Projects}" Classes="Listing">
+                        <CardGrid.ItemTemplate>
+                            <DataTemplate DataType="browse:IProjectViewModel">
+                                <EnhancedButton Classes="Card" Command="{Binding GoToDetails}">
+                                    <browse:ProjectItemView />
+                                </EnhancedButton>
+                            </DataTemplate>
+                        </CardGrid.ItemTemplate>
+                    </CardGrid>
+                </Loading>
+            </DockPanel>
+        </ScrollViewer>
+
+    </a:PageContainer>
+
+</UserControl>

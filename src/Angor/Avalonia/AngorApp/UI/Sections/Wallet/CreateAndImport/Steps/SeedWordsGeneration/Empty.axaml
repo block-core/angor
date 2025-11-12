@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:z="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:seedWordsGeneration1="clr-namespace:AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.SeedWordsGeneration"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
+             x:Class="AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.SeedWordsGeneration.Empty" x:DataType="seedWordsGeneration1:ISeedWordsViewModel">
+
+    <Design.DataContext>
+        <seedWordsGeneration1:SeedWordsViewModelSample />
+    </Design.DataContext>
+
+    <DockPanel>
+        <EnhancedButton Command="{Binding GenerateWords}" Content="Generate Seed Words" HorizontalAlignment="Center" DockPanel.Dock="Bottom" />
+        <StackPanel VerticalAlignment="Center">
+            <TextBlock TextWrapping="Wrap">
+                You are about to generate 12 seed words. These words are the master key to your wallet - without them, you cannot recover your funds if something happens to your device.
+            </TextBlock>
+            <Border Classes="Alert" Margin="0 20">
+                <controls:List>
+                    <controls:List.Header>
+                        <TextBlock>Before generating your seed words, ensure:</TextBlock>
+                    </controls:List.Header>
+                    <z:Strings>
+                        <x:String>You are in a private space</x:String>
+                        <x:String>No one can see your screen</x:String>
+                        <x:String>You have paper and pen ready</x:String>
+                        <x:String>You have time to write them down carefully</x:String>
+                    </z:Strings>
+                </controls:List>
+            </Border>
+        </StackPanel>
+    </DockPanel>
+</UserControl>
