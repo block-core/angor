@@ -13,7 +13,8 @@ public interface IProjectScriptsBuilder
     /// For Invest projects: includes only investor key.
     /// For Fund/Subscribe projects: includes investor key + encoded dynamic stage info.
     /// </summary>
-    Script BuildInvestorInfoScript(string investorKey, ProjectInfo projectInfo, DateTime? investmentStartDate = null);
+    /// <param name="patternIndex">Index of the pattern in DynamicStagePatterns list (0-255). Only used for Fund/Subscribe projects.</param>
+    Script BuildInvestorInfoScript(string investorKey, ProjectInfo projectInfo, DateTime? investmentStartDate = null, byte patternIndex = 0);
     
     Script BuildFounderInfoScript(string founderKey, short keyType, string nostrEventId);
 
@@ -22,7 +23,8 @@ public interface IProjectScriptsBuilder
     /// For Invest projects: includes investor key + secret hash.
     /// For Fund/Subscribe projects: includes investor key + secret hash + encoded dynamic stage info.
     /// </summary>
-    Script BuildSeederInfoScript(string investorKey, uint256 secretHash, ProjectInfo projectInfo, DateTime? investmentStartDate = null);
+    /// <param name="patternIndex">Index of the pattern in DynamicStagePatterns list (0-255). Only used for Fund/Subscribe projects.</param>
+    Script BuildSeederInfoScript(string investorKey, uint256 secretHash, ProjectInfo projectInfo, DateTime? investmentStartDate = null, byte patternIndex = 0);
     
     (string investorKey, uint256? secretHash) GetInvestmentDataFromOpReturnScript(Script script);
     

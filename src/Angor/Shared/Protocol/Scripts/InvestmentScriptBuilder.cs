@@ -36,7 +36,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
       uint256? hashOfSecret, DateTime? expiryDateOverride = null)
     {
-        return BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, hashOfSecret, expiryDateOverride, null);
+        return BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, hashOfSecret, expiryDateOverride, null, 0);
     }
 
     /// <summary>
@@ -48,8 +48,9 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
     /// <param name="hashOfSecret">Optional secret hash for seeders</param>
     /// <param name="expiryDateOverride">Optional override for expiry date</param>
     /// <param name="investmentStartDate">Required for Fund/Subscribe projects - the date when investment was made</param>
+    /// <param name="patternIndex">Index of the pattern in DynamicStagePatterns list (0-255). Only used for Fund/Subscribe projects.</param>
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
-        uint256? hashOfSecret, DateTime? expiryDateOverride, DateTime? investmentStartDate)
+        uint256? hashOfSecret, DateTime? expiryDateOverride, DateTime? investmentStartDate, byte patternIndex = 0)
     {
         // Calculate stage release date based on project type
         DateTime stageReleaseDate;
@@ -77,8 +78,14 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
                 throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
             }
 
-            // Use the first pattern (or allow pattern selection in future)
-            var pattern = projectInfo.DynamicStagePatterns[0];
+            // Validate pattern index
+            if (patternIndex >= projectInfo.DynamicStagePatterns.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(patternIndex), $"Pattern index {patternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
+            }
+
+            // Use the specified pattern
+            var pattern = projectInfo.DynamicStagePatterns[patternIndex];
 
             // Validate stage index
             if (stageIndex >= pattern.StageCount)
@@ -87,8 +94,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
             }
 
             // Calculate the stage release date
-            stageReleaseDate = CalculateDynamicStageReleaseDate(
-                investmentStartDate.Value, pattern, stageIndex);
+            stageReleaseDate = CalculateDynamicStageReleaseDate(investmentStartDate.Value, pattern, stageIndex);
         }
 
         // regular investor pre-co-sign with founder to gets funds with penalty
@@ -102,20 +108,20 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         var secretHashOps = hashOfSecret == null
          ? new List<Op> { OpcodeType.OP_CHECKSIG }
             : new List<Op>
-                  {
+                {
                     OpcodeType.OP_CHECKSIGVERIFY,
                     OpcodeType.OP_HASH256,
                     Op.GetPushOp(new uint256(hashOfSecret).ToBytes()),
                     OpcodeType.OP_EQUAL
-                  };
+                };
 
         recoveryOps.AddRange(secretHashOps);
 
         var seeders = hashOfSecret == null && projectInfo.ProjectSeeders.SecretHashes.Any()
-        ? _seederScriptTreeBuilder.BuildSeederScriptTree(investorKey,
+            ? _seederScriptTreeBuilder.BuildSeederScriptTree(investorKey,
                    projectInfo.ProjectSeeders.Threshold,
-         projectInfo.ProjectSeeders.SecretHashes).ToList()
-       : new List<Script>();
+                   projectInfo.ProjectSeeders.SecretHashes).ToList()
+            : new List<Script>();
 
         // Use the override expiry date if provided, otherwise use the project's expiry date
         var effectiveExpiryDate = expiryDateOverride ?? projectInfo.ExpiryDate;

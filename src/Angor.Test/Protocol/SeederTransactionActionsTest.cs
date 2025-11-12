@@ -52,7 +52,7 @@ public class SeederTransactionActionsTest : AngorTestData
 
             var expectedOpReturnScript = new Key().ScriptPubKey;
 
-            _projectScriptsBuilder.Setup(_ => _.BuildSeederInfoScript(investorKey, investorSecret, projectInvestmentInfo, It.IsAny<DateTime?>()))
+            _projectScriptsBuilder.Setup(_ => _.BuildSeederInfoScript(investorKey, investorSecret, projectInvestmentInfo, It.IsAny<DateTime?>(), It.IsAny<byte>()))
                 .Returns(expectedOpReturnScript);
 
             var expectedTransaction = new Transaction { Inputs = { new TxIn(new Key().ScriptPubKey) } };

@@ -19,7 +19,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
         return _derivationOperations.AngorKeyToScript(angorKey);
     }
 
-    public Script BuildInvestorInfoScript(string investorKey, ProjectInfo projectInfo, DateTime? investmentStartDate = null)
+    public Script BuildInvestorInfoScript(string investorKey, ProjectInfo projectInfo, DateTime? investmentStartDate = null, byte patternIndex = 0)
     {
         var ops = new List<Op>
         {
@@ -40,9 +40,16 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
                 throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
             }
 
-            // Use the first pattern (or allow selection via parameter in future)
-            var pattern = projectInfo.DynamicStagePatterns[0];
-            var dynamicInfo = DynamicStageInfo.FromPattern(pattern, investmentStartDate.Value, 0);
+            // Validate pattern index
+            if (patternIndex >= projectInfo.DynamicStagePatterns.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(patternIndex), 
+                $"Pattern index {patternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
+            }
+
+            // Use the specified pattern
+            var pattern = projectInfo.DynamicStagePatterns[patternIndex];
+            var dynamicInfo = DynamicStageInfo.FromPattern(pattern, investmentStartDate.Value, patternIndex);
 
             ops.Add(Op.GetPushOp(dynamicInfo.ToBytes()));
         }
@@ -58,7 +65,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
             Op.GetPushOp(Encoders.Hex.DecodeData(nostrEventId)));
     }
 
-    public Script BuildSeederInfoScript(string investorKey, uint256 secretHash, ProjectInfo projectInfo, DateTime? investmentStartDate = null)
+    public Script BuildSeederInfoScript(string investorKey, uint256 secretHash, ProjectInfo projectInfo, DateTime? investmentStartDate = null, byte patternIndex = 0)
     {
         var ops = new List<Op>
         {
@@ -80,11 +87,18 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
                 throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
             }
 
-            // Use the first pattern (or allow selection via parameter in future)
-            var pattern = projectInfo.DynamicStagePatterns[0];
-            var dynamicInfo = DynamicStageInfo.FromPattern(pattern, investmentStartDate.Value, 0);
+            // Validate pattern index
+            if (patternIndex >= projectInfo.DynamicStagePatterns.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(patternIndex), 
+     $"Pattern index {patternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
+            }
 
-            ops.Add(Op.GetPushOp(dynamicInfo.ToBytes()));
+            // Use the specified pattern
+            var pattern = projectInfo.DynamicStagePatterns[patternIndex];
+            var dynamicInfo = DynamicStageInfo.FromPattern(pattern, investmentStartDate.Value, patternIndex);
+
+ ops.Add(Op.GetPushOp(dynamicInfo.ToBytes()));
         }
 
         return new Script(ops);

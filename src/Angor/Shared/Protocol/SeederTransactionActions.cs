@@ -39,23 +39,25 @@ public class SeederTransactionActions : ISeederTransactionActions
         // Capture investment start date for dynamic projects
         var investmentStartDate = DateTime.UtcNow;
    
+        // For dynamic projects, we could allow pattern selection here
+        // For now, default to pattern 0, but this could be passed as a parameter
+        byte patternIndex = 0;
+   
         // create the output and script of the investor pubkey script opreturn
-        var opreturnScript = _projectScriptsBuilder.BuildSeederInfoScript(investorKey, investorSecretHash, projectInfo, investmentStartDate);
+        var opreturnScript = _projectScriptsBuilder.BuildSeederInfoScript(investorKey, investorSecretHash, projectInfo, investmentStartDate, patternIndex);
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
         // For dynamic projects, we need to pass the investment start date
         List<ProjectScripts> stagesScript;
-
+        
         if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
         {
             // Dynamic stages - use pattern to determine stage count
-            var pattern = projectInfo.DynamicStagePatterns.FirstOrDefault();
-            if (pattern == null)
-                throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
-
+            var pattern = projectInfo.DynamicStagePatterns[patternIndex];
+   
             stagesScript = Enumerable.Range(0, pattern.StageCount)
                 .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(
-                    projectInfo, investorKey, index, investorSecretHash, null, investmentStartDate))
+                    projectInfo, investorKey, index, investorSecretHash, null, investmentStartDate, patternIndex))
                 .ToList();
         }
         else
