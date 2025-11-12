@@ -49,6 +49,7 @@
     <PackageVersion Include="Serilog.Sinks.XUnit" Version="3.0.19" />
     <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="9.0.10" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
+    <PackageVersion Include="Xamarin.Essentials" Version="1.8.1" />
     <PackageVersion Include="Zafiro" Version="38.0.3" />
     <PackageVersion Include="Zafiro.Avalonia" Version="37.2.3" />
     <PackageVersion Include="Zafiro.Avalonia.Generators" Version="37.2.3" />

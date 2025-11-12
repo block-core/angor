@@ -55,7 +55,7 @@ public static class CompositionRoot
             .AddUiServices(topLevelView, profileContext, applicationStorage);
         
         services.AddNavigator(logger);
-        services.AddSecurityContext();
+        services.AddSecurityContext(profileContext);
         RegisterWalletServices(services, logger, network);
         FundingContextServices.Register(services, logger);
 
