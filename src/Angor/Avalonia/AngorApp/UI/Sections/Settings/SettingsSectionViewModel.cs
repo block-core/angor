@@ -270,7 +270,8 @@ settingsInfo.DebugMode = debugMode;
         var current = networkStorage.GetSettings();
         current.Indexers = Indexers.Select(x => x.ToModel()).ToList();
         current.Relays = Relays.Select(x => x.ToModel()).ToList();
-        networkStorage.SetSettings(info);
+        current.DebugMode = IsDebugMode;
+        networkStorage.SetSettings(current);
     }
 
     public void Dispose()
