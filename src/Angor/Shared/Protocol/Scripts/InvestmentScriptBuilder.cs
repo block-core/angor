@@ -36,6 +36,11 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
         uint256? hashOfSecret, DateTime? expiryDateOverride = null)
     {
+    public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
+        uint256? hashOfSecret, DateTime? expiryDateOverride, DateTime? investmentStartDate)
+    {
+        // Calculate stage release date based on project type
+        DateTime stageReleaseDate;
         // regular investor pre-co-sign with founder to gets funds with penalty
         var recoveryOps = new List<Op>
         {
