@@ -22,7 +22,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class RecoverFunds
 {
-    public record RecoverFundsRequest(Guid WalletId, ProjectId ProjectId,DomainFeerate SelectedFeeRate) : IRequest<Result<RecoveryTransactionDraft>>;
+    public record RecoverFundsRequest(string WalletId, ProjectId ProjectId,DomainFeerate SelectedFeeRate) : IRequest<Result<RecoveryTransactionDraft>>;
     
     public class RecoverFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
         IProjectService projectService, IInvestorTransactionActions investorTransactionActions,
@@ -100,7 +100,7 @@ public static class RecoverFunds
             });
         }
         
-        private async Task<Result<SignatureInfo?>> LookupFounderSignatures(Guid walletId, Project project, DateTime createdAt, string eventId,
+        private async Task<Result<SignatureInfo?>> LookupFounderSignatures(string walletId, Project project, DateTime createdAt, string eventId,
             Transaction investment)
         {
             var sensitiveDataResult = await provider.GetSensitiveData(walletId);

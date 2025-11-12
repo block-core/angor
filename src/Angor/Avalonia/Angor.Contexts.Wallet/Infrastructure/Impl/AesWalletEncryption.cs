@@ -42,7 +42,7 @@ public class AesWalletEncryption : IWalletEncryption
         }
     }
 
-    public async Task<EncryptedWallet> Encrypt(WalletData walletData, string encryptionKey, string name, Guid id)
+    public async Task<EncryptedWallet> Encrypt(WalletData walletData, string encryptionKey, string name, string id)
     {
         var salt = GenerateRandomBytes(32);
         var iv = GenerateRandomBytes(16);

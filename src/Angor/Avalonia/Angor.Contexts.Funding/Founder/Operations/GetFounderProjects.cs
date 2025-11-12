@@ -36,5 +36,5 @@ public static class GetFounderProjects
         }
     }
 
-    public record GetFounderProjectsRequest(Guid WalletId) : IRequest<Result<IEnumerable<ProjectDto>>>;
+    public record GetFounderProjectsRequest(string WalletId) : IRequest<Result<IEnumerable<ProjectDto>>>;
 }

@@ -17,7 +17,7 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class ApproveInvestment
 {
-    public record ApproveInvestmentRequest(Guid WalletId, ProjectId ProjectId, Investment InvestmentRequest) : IRequest<Result>;
+    public record ApproveInvestmentRequest(string WalletId, ProjectId ProjectId, Investment InvestmentRequest) : IRequest<Result>;
 
     public class ApproveInvestmentHandler(
         IProjectService projectService,

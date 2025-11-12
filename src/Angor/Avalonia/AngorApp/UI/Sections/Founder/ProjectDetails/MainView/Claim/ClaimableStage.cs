@@ -58,7 +58,7 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
                 .Tap(() => uiServices.Dialog.ShowMessage("Claim successful", "The funds have been successfully claimed.", "Close"))));
     }
 
-    private async Task<Result> DoClaim(IEnumerable<IClaimableTransaction> selected, Guid walletId, long feerate)
+    private async Task<Result> DoClaim(IEnumerable<IClaimableTransaction> selected, string walletId, long feerate)
     {
         var toSpend = selected.Select(claimable => new SpendTransactionDto
         {

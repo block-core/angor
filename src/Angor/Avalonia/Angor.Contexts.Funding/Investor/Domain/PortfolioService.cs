@@ -17,7 +17,7 @@ public class PortfolioService(
     IRelayService relayService,
     IGenericDocumentCollection<InvestmentRecordsDocument> documentCollection) : IPortfolioService
 {
-    public async Task<Result<InvestmentRecords>> GetByWalletId(Guid walletId)
+    public async Task<Result<InvestmentRecords>> GetByWalletId(string walletId)
     {
         // We need to pronmpt user permission to access wallet sensitive data
         var sensiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
@@ -27,7 +27,7 @@ public class PortfolioService(
         }
         
         // Try to get from local document collection first
-        var localDoc = await documentCollection.FindByIdAsync(walletId.ToString());
+        var localDoc = await documentCollection.FindByIdAsync(walletId);
         if (localDoc is { IsSuccess: true, Value: not null })
             return Result.Success(new InvestmentRecords(){ProjectIdentifiers = localDoc.Value.Investments});
     
@@ -44,7 +44,7 @@ public class PortfolioService(
         // Save to local document collection for future lookups
         var doc = new InvestmentRecordsDocument
         {
-            WalletId = walletId.ToString(),
+            WalletId = walletId,
             Investments = relayResult.Value?.ProjectIdentifiers.ToList() ?? []
         };
         
@@ -53,7 +53,7 @@ public class PortfolioService(
         return relayResult;
     }
 
-    public async Task<Result> AddOrUpdate(Guid walletId, InvestmentRecord investmentRecord)
+    public async Task<Result> AddOrUpdate(string walletId, InvestmentRecord investmentRecord)
     {
         var investmentsResult = await GetByWalletId(walletId);
         if (investmentsResult.IsFailure)
@@ -70,7 +70,7 @@ public class PortfolioService(
         // Save to local document collection for future lookups
         var doc = new InvestmentRecordsDocument
         {
-            WalletId = walletId.ToString(),
+            WalletId = walletId,
             Investments = investments.ProjectIdentifiers
         };
         
@@ -83,7 +83,7 @@ public class PortfolioService(
             : Result.Failure("Failed to save investment record");
     }
 
-    private async Task<Result<bool>> PushInvestmentsRecordsToRelayAsync(Guid walletId, InvestmentRecords investments)
+    private async Task<Result<bool>> PushInvestmentsRecordsToRelayAsync(string walletId, InvestmentRecords investments)
     {
         // // Encrypt and send the investments
         var sensiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);

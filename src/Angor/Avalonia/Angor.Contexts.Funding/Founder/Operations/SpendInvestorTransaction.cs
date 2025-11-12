@@ -20,7 +20,7 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class SpendInvestorTransaction
 {
-    public record SpendInvestorTransactionRequest(Guid WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<TransactionDraft>>;
+    public record SpendInvestorTransactionRequest(string WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<TransactionDraft>>;
 
     public class SpendInvestorTransactionHandler(
         IWalletOperations walletOperations,
@@ -108,7 +108,7 @@ public static class SpendInvestorTransaction
             return await transactionService.GetTransactionHexByIdAsync(investment.TransactionId) ?? string.Empty;
         }
 
-        private async Task<string?> GetProjectFounderKeyAsync(Guid walletId, string projectId)
+        private async Task<string?> GetProjectFounderKeyAsync(string walletId, string projectId)
         {
             // Try to get from storage first
             var storedKeysResult = await derivedProjectKeysCollection.FindByIdAsync(walletId.ToString());
@@ -127,7 +127,7 @@ public static class SpendInvestorTransaction
             return Encoders.Hex.EncodeData(key.ToBytes());
         }
         
-        private async Task<Result<string>> GetUnfundedReleaseAddress(Guid walletId)
+        private async Task<Result<string>> GetUnfundedReleaseAddress(string walletId)
         {
             var accountBalanceResult = await walletAccountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
             if (accountBalanceResult.IsFailure)

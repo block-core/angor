@@ -12,7 +12,7 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class GetReleaseableTransactions
 {
-    public record GetReleaseableTransactionsRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ReleaseableTransactionDto>>>;
+    public record GetReleaseableTransactionsRequest(string WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ReleaseableTransactionDto>>>;
 
     public class GetClaimableTransactionsHandler(ISignService signService, IProjectService projectService,
         INostrDecrypter nostrDecrypter, ISerializer serializer) : IRequestHandler<GetReleaseableTransactionsRequest, Result<IEnumerable<ReleaseableTransactionDto>>>
@@ -92,7 +92,7 @@ public static class GetReleaseableTransactions
             return tcs.Task;
         }
 
-        private async Task<Result> DecryptMessages(Guid walletId, ProjectId projectId, IEnumerable<SignatureReleaseItem> signaturesReleaseItems)
+        private async Task<Result> DecryptMessages(string walletId, ProjectId projectId, IEnumerable<SignatureReleaseItem> signaturesReleaseItems)
         {
             foreach (var signatureReleaseItem in signaturesReleaseItems)
             {

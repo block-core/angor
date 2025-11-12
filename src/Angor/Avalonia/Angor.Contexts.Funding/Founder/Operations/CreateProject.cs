@@ -23,7 +23,7 @@ internal static class CreateProjectConstants
 {
     public static class CreateProject
     {
-        public record CreateProjectRequest(Guid WalletId, long SelectedFeeRate, CreateProjectDto Project)
+        public record CreateProjectRequest(string WalletId, long SelectedFeeRate, CreateProjectDto Project)
             : IRequest<Result<TransactionDraft>>;
 
         public class CreateProjectHandler(
@@ -215,7 +215,7 @@ internal static class CreateProjectConstants
                 return await tsc.Task;
             }
 
-            private async Task<Result<TransactionInfo>> CreatProjectTransaction(Guid walletId, WalletWords words,
+            private async Task<Result<TransactionInfo>> CreatProjectTransaction(string walletId, WalletWords words,
                 long selectedFee,
                 string founderKey,
                 string projectIdentifier, string projectInfoEventId)
@@ -240,7 +240,7 @@ internal static class CreateProjectConstants
                 return Result.Success(signedTransaction);
             }
 
-            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(Guid walletId)
+            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(string walletId)
             {
                 try
                 {

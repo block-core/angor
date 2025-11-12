@@ -8,20 +8,20 @@ namespace Angor.Contexts.Funding.Investor;
 
 public interface IInvestmentAppService
 {
-    Task<Result<InvestmentDraft>> CreateInvestmentDraft(Guid sourceWalletId, ProjectId projectId, Amount amount, DomainFeerate feerate);
-    Task<Result<Guid>> SubmitInvestment(Guid sourceWalletId, ProjectId projectId, InvestmentDraft draft);
-    Task<Result<IEnumerable<InvestedProjectDto>>> GetInvestorProjects(Guid idValue);
-    Task<Result> ConfirmInvestment(string investmentId, Guid walletId, ProjectId projectId);
-    Task<Result<IEnumerable<PenaltiesDto>>> GetPenalties(Guid walletId);
+    Task<Result<InvestmentDraft>> CreateInvestmentDraft(string sourceWalletId, ProjectId projectId, Amount amount, DomainFeerate feerate);
+    Task<Result<Guid>> SubmitInvestment(string sourceWalletId, ProjectId projectId, InvestmentDraft draft);
+    Task<Result<IEnumerable<InvestedProjectDto>>> GetInvestorProjects(string idValue);
+    Task<Result> ConfirmInvestment(string investmentId, string walletId, ProjectId projectId);
+    Task<Result<IEnumerable<PenaltiesDto>>> GetPenalties(string walletId);
     
     // Methods for Investor - Manage funds
-    Task<Result<InvestorProjectRecoveryDto>> GetInvestorProjectRecovery(Guid walletId, ProjectId projectId);
-    Task<Result<RecoveryTransactionDraft>> BuildRecoverInvestorFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate);
-    Task<Result<ReleaseTransactionDraft>> BuildReleaseInvestorFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate);
-    Task<Result<EndOfProjectTransactionDraft>> BuildClaimInvestorEndOfProjectFunds(Guid walletId, ProjectId projectId, DomainFeerate feerate);
+    Task<Result<InvestorProjectRecoveryDto>> GetInvestorProjectRecovery(string walletId, ProjectId projectId);
+    Task<Result<RecoveryTransactionDraft>> BuildRecoverInvestorFunds(string walletId, ProjectId projectId, DomainFeerate feerate);
+    Task<Result<ReleaseTransactionDraft>> BuildReleaseInvestorFunds(string walletId, ProjectId projectId, DomainFeerate feerate);
+    Task<Result<EndOfProjectTransactionDraft>> BuildClaimInvestorEndOfProjectFunds(string walletId, ProjectId projectId, DomainFeerate feerate);
     
-    Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, TransactionDraft draft);
-    Task<Result<string>> SubmitTransactionFromDraft(Guid walletId, ProjectId projectId, TransactionDraft draft);
+    Task<Result<string>> SubmitTransactionFromDraft(string walletId, TransactionDraft draft);
+    Task<Result<string>> SubmitTransactionFromDraft(string walletId, ProjectId projectId, TransactionDraft draft);
     
     Task<Result<bool>> IsInvestmentAbovePenaltyThreshold(ProjectId projectId, Amount amount);
 }

@@ -31,12 +31,12 @@ public class ProjectAppService(
         return projectService.GetAsync(projectId).Map(project => project.ToDto());
     }
 
-    public Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(Guid walletId)
+    public Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(string walletId)
     {
         return mediator.Send(new GetFounderProjects.GetFounderProjectsRequest(walletId));
     }
     
-    public Task<Result<TransactionDraft>> CreateProject(Guid walletId, long selectedFee, CreateProjectDto project)
+    public Task<Result<TransactionDraft>> CreateProject(string walletId, long selectedFee, CreateProjectDto project)
     {
         return mediator.Send(new CreateProjectConstants.CreateProject.CreateProjectRequest(walletId, selectedFee, project)); // WalletId and SelectedFeeRate are placeholders
     }

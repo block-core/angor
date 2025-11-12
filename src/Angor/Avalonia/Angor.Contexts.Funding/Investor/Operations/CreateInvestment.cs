@@ -17,7 +17,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class CreateInvestment
 {
-    public record CreateInvestmentTransactionRequest(Guid WalletId, ProjectId ProjectId, Amount Amount, DomainFeerate FeeRate) 
+    public record CreateInvestmentTransactionRequest(string WalletId, ProjectId ProjectId, Amount Amount, DomainFeerate FeeRate) 
         : IRequest<Result<InvestmentDraft>> { }
     
     public class CreateInvestmentTransactionHandler(
@@ -85,7 +85,7 @@ public static class CreateInvestment
             }
         }
 
-        private async Task<Result<TransactionInfo>> SignTransaction(Guid walletId, WalletWords walletWords, Transaction transaction,
+        private async Task<Result<TransactionInfo>> SignTransaction(string walletId, WalletWords walletWords, Transaction transaction,
             long feerate)
         {
             // Get account info from database

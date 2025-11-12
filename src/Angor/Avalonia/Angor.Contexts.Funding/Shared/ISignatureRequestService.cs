@@ -6,5 +6,5 @@ namespace Angor.Contexts.Funding.Shared;
 
 public interface ISignatureRequestService
 {
-    Task<Result> SendSignatureRequest(Guid walletId, string founderPubKey, ProjectId projectId, TransactionInfo signedTransaction);
+    Task<Result> SendSignatureRequest(string walletId, string founderPubKey, ProjectId projectId, TransactionInfo signedTransaction);
 }

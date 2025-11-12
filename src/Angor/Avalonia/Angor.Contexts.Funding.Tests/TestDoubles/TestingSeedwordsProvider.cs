@@ -18,12 +18,12 @@ public class TestingSeedwordsProvider : ISeedwordsProvider
         this.derivationOperations = derivationOperations;
     }
     
-    public async Task<Result<string>> InvestorKey(Guid walletId, string founderKey)
+    public async Task<Result<string>> InvestorKey(string walletId, string founderKey)
     {
         return Result.Try(() => DeriveInvestorKey(founderKey));
     }
 
-    public async Task<Result<(string Words, Maybe<string> Passphrase)>> GetSensitiveData(Guid walletId)
+    public async Task<Result<(string Words, Maybe<string> Passphrase)>> GetSensitiveData(string walletId)
     {
         return (seed, passphrase);
     }

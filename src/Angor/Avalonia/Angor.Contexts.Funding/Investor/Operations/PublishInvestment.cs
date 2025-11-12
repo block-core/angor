@@ -19,7 +19,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class PublishInvestment
 {
-    public record PublishInvestmentRequest(string InvestmentId, Guid WalletId, ProjectId ProjectId) : IRequest<Result>{}
+    public record PublishInvestmentRequest(string InvestmentId, string WalletId, ProjectId ProjectId) : IRequest<Result>{}
 
     public class PublishInvestmentHandler(
         INetworkConfiguration networkConfiguration,
@@ -128,7 +128,7 @@ public static class PublishInvestment
         }
 
 
-        private async Task<Result<bool>> ValidateFounderSignatures(Guid walletId, Project project, DateTime createdAt, string eventId,
+        private async Task<Result<bool>> ValidateFounderSignatures(string walletId, Project project, DateTime createdAt, string eventId,
             TransactionInfo investment,string projectPubKey)
         {
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);

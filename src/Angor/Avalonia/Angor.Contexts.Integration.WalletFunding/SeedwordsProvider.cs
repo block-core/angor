@@ -7,7 +7,7 @@ namespace Angor.Contexts.Integration.WalletFunding;
 
 public class SeedwordsProvider(ISensitiveWalletDataProvider sensitiveWalletDataProvider) : ISeedwordsProvider
 {
-    public Task<Result<(string Words, Maybe<string> Passphrase)>> GetSensitiveData(Guid walletId)
+    public Task<Result<(string Words, Maybe<string> Passphrase)>> GetSensitiveData(string walletId)
     {
         return sensitiveWalletDataProvider.RequestSensitiveData(new WalletId(walletId));
     }

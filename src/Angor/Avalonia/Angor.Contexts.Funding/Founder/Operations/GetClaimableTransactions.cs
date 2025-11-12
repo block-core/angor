@@ -9,7 +9,7 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class GetClaimableTransactions
 {
-    public record GetClaimableTransactionsRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ClaimableTransactionDto>>>;
+    public record GetClaimableTransactionsRequest(string WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ClaimableTransactionDto>>>;
 
     public class GetClaimableTransactionsHandler(IProjectInvestmentsService projectInvestmentsService) : IRequestHandler<GetClaimableTransactionsRequest, Result<IEnumerable<ClaimableTransactionDto>>>
     {

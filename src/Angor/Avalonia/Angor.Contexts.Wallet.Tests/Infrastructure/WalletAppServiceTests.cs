@@ -122,7 +122,7 @@ public class WalletAppServiceTests(ITestOutputHelper output)
     {
         // Arrange
         var sut = CreateSut();
-        var invalidWalletId = new WalletId(Guid.NewGuid());
+        var invalidWalletId = new WalletId(Guid.NewGuid().ToString());
 
         // Act
         var result = await sut.GetTransactions(invalidWalletId);

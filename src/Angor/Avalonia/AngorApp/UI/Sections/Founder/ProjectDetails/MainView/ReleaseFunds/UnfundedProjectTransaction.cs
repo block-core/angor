@@ -10,7 +10,7 @@ namespace AngorApp.UI.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
 
 public class UnfundedProjectTransaction : IUnfundedProjectTransaction
 {
-    public UnfundedProjectTransaction(Guid walletId, ProjectId projectId, ReleaseableTransactionDto dto, IFounderAppService founderAppService, UIServices uiServices)
+    public UnfundedProjectTransaction(string walletId, ProjectId projectId, ReleaseableTransactionDto dto, IFounderAppService founderAppService, UIServices uiServices)
     {
         Arrived = dto.Arrived;
         Released = dto.Released;

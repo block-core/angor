@@ -18,7 +18,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class GetInvestorProjectRecovery
 {
-    public record GetInvestorProjectRecoveryRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<InvestorProjectRecoveryDto>>;
+    public record GetInvestorProjectRecoveryRequest(string WalletId, ProjectId ProjectId) : IRequest<Result<InvestorProjectRecoveryDto>>;
 
     public class Handler(
         IProjectService projectService,

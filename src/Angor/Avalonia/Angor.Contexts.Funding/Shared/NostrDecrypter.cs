@@ -13,7 +13,7 @@ namespace Angor.Contexts.Funding.Shared;
 
 public class NostrDecrypter(IDerivationOperations derivationOperations, ISeedwordsProvider provider, IProjectService projectService) : INostrDecrypter
 {
-    public async Task<Result<string>> Decrypt(Guid walletId, ProjectId projectId, DirectMessage nostrMessage)
+    public async Task<Result<string>> Decrypt(string walletId, ProjectId projectId, DirectMessage nostrMessage)
     {
         var sensitiveDataResult = await provider.GetSensitiveData(walletId);
         if (sensitiveDataResult.IsFailure)

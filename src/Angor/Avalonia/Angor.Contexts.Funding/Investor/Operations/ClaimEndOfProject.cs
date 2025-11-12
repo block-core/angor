@@ -19,7 +19,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class ClaimEndOfProject
 {
-    public record ClaimEndOfProjectRequest(Guid WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<EndOfProjectTransactionDraft>>;
+    public record ClaimEndOfProjectRequest(string WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<EndOfProjectTransactionDraft>>;
     
     public class ClaimEndOfProjectHandler(
         IDerivationOperations derivationOperations, IProjectService projectService, 

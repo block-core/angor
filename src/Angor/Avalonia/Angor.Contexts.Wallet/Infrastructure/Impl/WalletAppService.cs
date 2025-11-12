@@ -22,7 +22,7 @@ public class WalletAppService(
     IWalletAccountBalanceService accountBalanceService)
     : IWalletAppService
 {
-    public static readonly WalletId SingleWalletId = new(new Guid("8E3C5250-4E26-4A13-8075-0A189AEAF793"));
+    public static readonly WalletId SingleWalletId = new("8E3C5250-4E26-4A13-8075-0A189AEAF793");
     private const string SingleWalletName = "<default>";
 
     public Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()

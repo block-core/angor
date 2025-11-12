@@ -40,7 +40,7 @@ public class GetPenaltiesTests
     public async Task Handle_WhenInvestmentRepositoryFails_ShouldReturnFailure()
     {
         // Arrange
-        var walletId = Guid.NewGuid();
+        var walletId = Guid.NewGuid().ToString();
         var request = new GetPenalties.GetPenaltiesRequest(walletId);
         var expectedError = "Repository error";
 
@@ -60,7 +60,7 @@ public class GetPenaltiesTests
     public async Task Handle_WhenFetchInvestedProjectsFails_ShouldReturnFailure()
     {
         // Arrange
-        var walletId = Guid.NewGuid();
+        var walletId = Guid.NewGuid().ToString();
         var request = new GetPenalties.GetPenaltiesRequest(walletId);
         var investment = new InvestmentRecords();
 
@@ -80,7 +80,7 @@ public class GetPenaltiesTests
     public async Task Handle_WhenSuccessful_ShouldReturnPenaltiesDto()
     {
         // Arrange
-        var walletId = Guid.NewGuid();
+        var walletId = Guid.NewGuid().ToString();
         var request = new GetPenalties.GetPenaltiesRequest(walletId);
         var projectIdentifier = "test-project-id";
         var investorPubKey = "test-investor-pubkey";
@@ -162,7 +162,7 @@ public class GetPenaltiesTests
     public async Task FetchInvestedProjects_WhenInvestmentRepositoryFails_ShouldReturnFailure()
     {
         // Arrange
-        var walletId = Guid.NewGuid();
+        var walletId = Guid.NewGuid().ToString();
         var expectedError = "Repository error";
 
         _mockInvestmentService
@@ -181,7 +181,7 @@ public class GetPenaltiesTests
     public async Task FetchInvestedProjects_WhenNoInvestments_ShouldReturnEmptyList()
     {
         // Arrange
-        var walletId = Guid.NewGuid();
+        var walletId = Guid.NewGuid().ToString();
         var investment = new InvestmentRecords();
 
         _mockInvestmentService
@@ -300,7 +300,7 @@ public class GetPenaltiesTests
     public void GetPenaltiesRequest_ShouldHaveCorrectWalletId()
     {
         // Arrange
-        var walletId = Guid.NewGuid();
+        var walletId = Guid.NewGuid().ToString();
 
         // Act
         var request = new GetPenalties.GetPenaltiesRequest(walletId);

@@ -5,5 +5,5 @@ namespace Angor.Contexts.Funding.Shared;
 
 public interface INostrDecrypter
 {
-    Task<Result<string>> Decrypt(Guid walletId, ProjectId projectId, DirectMessage nostrMessage);
+    Task<Result<string>> Decrypt(string walletId, ProjectId projectId, DirectMessage nostrMessage);
 }

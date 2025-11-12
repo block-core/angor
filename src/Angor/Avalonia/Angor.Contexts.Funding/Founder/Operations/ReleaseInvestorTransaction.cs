@@ -18,7 +18,7 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class ReleaseInvestorTransaction
 {
-    public record ReleaseInvestorTransactionRequest(Guid WalletId, ProjectId ProjectId, IEnumerable<string> InvestmentsEventIds) : IRequest<Result>;
+    public record ReleaseInvestorTransactionRequest(string WalletId, ProjectId ProjectId, IEnumerable<string> InvestmentsEventIds) : IRequest<Result>;
 
     public class ReleaseInvestorTransactionHandler(ISignService signService, IProjectService projectService,
         INostrDecrypter nostrDecrypter, ISerializer serializer, IDerivationOperations derivationOperations,
@@ -101,7 +101,7 @@ public static class ReleaseInvestorTransaction
             return tcs.Task;
         }
 
-        private async Task<Result<List<Payload>>> DecryptMessages(Guid walletId, ProjectId projectId, IEnumerable<SignatureReleaseItem> signaturesReleaseItems)
+        private async Task<Result<List<Payload>>> DecryptMessages(string walletId, ProjectId projectId, IEnumerable<SignatureReleaseItem> signaturesReleaseItems)
         {
             var list = new List<Payload>();
             

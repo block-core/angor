@@ -17,9 +17,9 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class GetInvestments
 {
-    public class GetInvestmentsRequest(Guid walletId, ProjectId projectId) : IRequest<Result<IEnumerable<Investment>>>
+    public class GetInvestmentsRequest(string walletId, ProjectId projectId) : IRequest<Result<IEnumerable<Investment>>>
     {
-        public Guid WalletId { get; } = walletId;
+        public string WalletId { get; } = walletId;
         public ProjectId ProjectId { get; } = projectId;
     }
 

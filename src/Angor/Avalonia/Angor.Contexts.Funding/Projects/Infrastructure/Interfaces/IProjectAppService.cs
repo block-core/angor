@@ -10,7 +10,7 @@ public interface IProjectAppService
     Task<Result<IEnumerable<ProjectDto>>> Latest();
     Task<Maybe<ProjectDto>> FindById(ProjectId projectId);
     Task<Result<ProjectDto>> Get(ProjectId projectId);
-    Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(Guid walletId);
-    Task<Result<TransactionDraft>> CreateProject(Guid walletId, long selectedFee, CreateProjectDto project);
+    Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(string walletId);
+    Task<Result<TransactionDraft>> CreateProject(string walletId, long selectedFee, CreateProjectDto project);
     Task<Result<ProjectStatisticsDto>> GetProjectStatistics(ProjectId projectId);
 }

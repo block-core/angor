@@ -22,7 +22,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class ReleaseFunds
 {
-    public record ReleaseFundsRequest(Guid WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<ReleaseTransactionDraft>>;
+    public record ReleaseFundsRequest(string WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<ReleaseTransactionDraft>>;
     
     public class ReleaseFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
         IProjectService projectService, IInvestorTransactionActions investorTransactionActions,
@@ -112,7 +112,7 @@ public static class ReleaseFunds
             });
         }
         
-        private async Task<Result<SignatureInfo?>> LookupFounderReleaseSignatures(Guid walletId, Project project, string eventId,
+        private async Task<Result<SignatureInfo?>> LookupFounderReleaseSignatures(string walletId, Project project, string eventId,
             Transaction investment)
         {
             var sensitiveDataResult = await provider.GetSensitiveData(walletId);

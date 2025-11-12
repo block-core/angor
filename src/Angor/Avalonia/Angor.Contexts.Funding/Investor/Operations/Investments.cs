@@ -16,7 +16,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class Investments
 {
-    public record InvestmentsPortfolioRequest(Guid WalletId) : IRequest<Result<IEnumerable<InvestedProjectDto>>>;
+    public record InvestmentsPortfolioRequest(string WalletId) : IRequest<Result<IEnumerable<InvestedProjectDto>>>;
     
     public class InvestmentsPortfolioHandler(
         IIndexerService indexerService,

@@ -20,7 +20,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public class GetPenalties
 {
-    public record GetPenaltiesRequest(Guid WalletId) : IRequest<Result<IEnumerable<PenaltiesDto>>>;
+    public record GetPenaltiesRequest(string WalletId) : IRequest<Result<IEnumerable<PenaltiesDto>>>;
 
     public class GetPenaltiesHandler(
         IPortfolioService investmentService,
@@ -62,7 +62,7 @@ public class GetPenalties
             }));
         }
 
-        public async Task<Result<IEnumerable<LookupInvestment>>> FetchInvestedProjects(Guid walletId)
+        public async Task<Result<IEnumerable<LookupInvestment>>> FetchInvestedProjects(string walletId)
         {
             var investments = await investmentService.GetByWalletId(walletId);
 

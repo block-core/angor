@@ -20,11 +20,11 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class RequestInvestmentSignatures
 {
-    public class RequestFounderSignaturesRequest(Guid walletId, ProjectId projectId, InvestmentDraft draft) : IRequest<Result<Guid>>
+    public class RequestFounderSignaturesRequest(string walletId, ProjectId projectId, InvestmentDraft draft) : IRequest<Result<Guid>>
     {
         public ProjectId ProjectId { get; } = projectId;
         public InvestmentDraft Draft { get; } = draft;
-        public Guid WalletId { get; } = walletId;
+        public string WalletId { get; } = walletId;
     }
     
     public class RequestFounderSignaturesHandler(
@@ -93,7 +93,7 @@ public static class RequestInvestmentSignatures
             return Result.Success(Guid.Empty);
         }
 
-        private async Task<Result<(DateTime createdTime,string eventId)>> SendSignatureRequest(Guid walletId, WalletWords walletWords, Project project, string signedTransactionHex)
+        private async Task<Result<(DateTime createdTime,string eventId)>> SendSignatureRequest(string walletId, WalletWords walletWords, Project project, string signedTransactionHex)
         {
             try
             {
@@ -134,7 +134,7 @@ public static class RequestInvestmentSignatures
             }
         }
 
-        private async Task<Result<string>> GetUnfundedReleaseAddress(Guid walletId)
+        private async Task<Result<string>> GetUnfundedReleaseAddress(string walletId)
         {
             // Get account info from database
             var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
