@@ -32,8 +32,6 @@ public class PenaltiesViewModel : ReactiveObject, IPenaltiesViewModel, IDisposab
         Load.HandleErrorsWith(uiServices.NotificationService, "Failed to load penalties").DisposeWith(disposable);
 
         Penalties = penaltiesCollection.Items;
-
-        Load.Execute().Subscribe().DisposeWith(disposable);
     }
 
     public IEnhancedCommand<Result<IEnumerable<IPenaltyViewModel>>> Load { get; }

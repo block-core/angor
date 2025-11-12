@@ -13,6 +13,12 @@
         <pr:FounderProjectDetailsViewModelSample />
     </Design.DataContext>
 
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction IsEnabled="{Binding !!!Project}" Command="{Binding Load}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
     <controls:PageContainer>
         <ScrollViewer>
             <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading Project Details...">

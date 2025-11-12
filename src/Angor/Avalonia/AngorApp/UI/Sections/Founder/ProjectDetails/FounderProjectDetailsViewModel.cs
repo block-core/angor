@@ -31,8 +31,6 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
             .DisposeWith(disposable);
 
         Load = loadProject;
-
-        loadProject.Execute().Subscribe().DisposeWith(disposable);
     }
 
     private static object CreateContent(ProjectId projectId, ProjectStatus status, IFounderAppService founderAppService, UIServices uiServices, IWalletContext walletContext)

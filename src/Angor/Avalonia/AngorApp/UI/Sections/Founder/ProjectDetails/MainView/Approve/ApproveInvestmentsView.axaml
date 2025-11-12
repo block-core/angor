@@ -11,6 +11,12 @@
     <Design.DataContext>
         <approve:ApproveInvestmentsViewModelSample />
     </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction IsEnabled="{Binding !!!Investments}" Command="{Binding LoadInvestments}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
     
     <Card Header="Investments">
         <Card.HeaderEndContent>

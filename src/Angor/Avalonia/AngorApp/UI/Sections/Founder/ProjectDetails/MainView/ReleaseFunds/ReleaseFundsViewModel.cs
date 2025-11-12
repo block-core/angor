@@ -38,13 +38,12 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
             .Successes()
             .ToProperty(this, model => model.Transactions)
             .DisposeWith(disposable);
-
+        
         ReleaseAll = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => DoReleaseAll(wallet)).ToMaybeResult(), this.WhenAnyValue(model => model.Transactions).NotNull())
             .Enhance()
             .DisposeWith(disposable);
         
         RefreshWhenAnyCommandExecutes().DisposeWith(disposable);
-        RefreshTransactions.Execute().Subscribe().DisposeWith(disposable);
     }
 
     public ReactiveCommand<Unit, Result<List<IUnfundedProjectTransaction>>> RefreshTransactions { get; }

@@ -12,6 +12,12 @@
         <penalties:PenaltiesViewModelSample />
     </Design.DataContext>
 
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction IsEnabled="{Binding !!!Penalties.Count}" Command="{Binding Load}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
     <UserControl.Styles>
         <Style Selector="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap" />

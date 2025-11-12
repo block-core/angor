@@ -28,8 +28,6 @@ public partial class ApproveInvestmentsViewModel : ReactiveObject, IApproveInves
         LoadInvestments = ReactiveCommand.CreateFromTask(() => GetInvestments(projectId)).DisposeWith(disposable);
         LoadInvestments.HandleErrorsWith(uiServices.NotificationService, "Could not load the investments").DisposeWith(disposable);
         investmentsHelper = LoadInvestments.Successes().ToProperty(this, x => x.Investments);
-
-        LoadInvestments.Execute().Subscribe().DisposeWith(disposable);
     }
 
     private Task<Result<IEnumerable<IInvestmentViewModel>>> GetInvestments(ProjectId projectId)
