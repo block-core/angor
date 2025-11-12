@@ -1,5 +1,6 @@
 using System.Reactive.Disposables;
 using Angor.Shared;
+using AngorApp.UI.Shared.Services;
 using Blockcore.Networks;
 using NBitcoin;
 using ReactiveUI.SourceGenerators;
@@ -20,13 +21,10 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
     private readonly CompositeDisposable disposable = new();
     private readonly bool skipValidation;
 
-    public FundingStructureViewModel(INetworkConfiguration networkConfiguration)
+    public FundingStructureViewModel(UIServices uiServices)
     {
         // Skip production validations only if debug mode is enabled AND we're on testnet
-        var isDebugMode = networkConfiguration.GetDebugMode();
-        var network = networkConfiguration.GetNetwork();
-        var isTestnet = network.NetworkType == NetworkType.Testnet;
-        skipValidation = isDebugMode && isTestnet;
+        skipValidation = uiServices.ShouldSkipProductionValidations();
 
         // TARGET AMOUNT VALIDATIONS
         // Always enforced: Must be > 0

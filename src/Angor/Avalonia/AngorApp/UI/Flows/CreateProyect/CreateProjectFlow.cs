@@ -27,7 +27,7 @@ public class CreateProjectFlow(UIServices uiServices, INavigator navigator, IPro
     private SlimWizard<string> CreateWizard(IWallet wallet, ProjectSeed projectSeed)
     {
         var wizard = WizardBuilder
-            .StartWith(() => new CreateProjectViewModel(wallet, projectSeed, uiServices, projectAppService, logger, networkConfiguration), "Create Project").NextCommand(model => model.Create)
+            .StartWith(() => new CreateProjectViewModel(wallet, projectSeed, uiServices, projectAppService, logger), "Create Project").NextCommand(model => model.Create)
             .Then(transactionId => new ProjectCreatedViewModel(transactionId, commands), "Success").Next((_, projectId) => projectId, "Close").Always()
             .WithCompletionFinalStep();
 

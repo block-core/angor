@@ -6,7 +6,6 @@ public class SettingsInfo
     public List<SettingsUrl> Relays { get; set; } = new();
     public List<SettingsUrl> Explorers { get; set; } = new();
     public List<SettingsUrl> ChatApps { get; set; } = new();
-    public bool DebugMode { get; set; } = false;
 }
 
 public class SettingsUrl

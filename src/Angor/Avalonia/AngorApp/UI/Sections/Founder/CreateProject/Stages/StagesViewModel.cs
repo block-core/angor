@@ -28,13 +28,10 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
 
     private readonly SourceCache<ICreateProjectStage, long> stagesSource;
 
-    public StagesViewModel(IObservable<DateTime?> endDateChanges, UIServices uiServices, INetworkConfiguration networkConfiguration)
+    public StagesViewModel(IObservable<DateTime?> endDateChanges, UIServices uiServices)
     {
         // Skip production validations only if debug mode is enabled AND we're on testnet
-        var isDebugMode = networkConfiguration.GetDebugMode();
-        var network = networkConfiguration.GetNetwork();
-        var isTestnet = network.NetworkType == NetworkType.Testnet;
-        skipValidation = isDebugMode && isTestnet;
+        skipValidation = uiServices.ShouldSkipProductionValidations();
 
         endDateSubject = new BehaviorSubject<DateTime?>(null);
         endDateChanges.Subscribe(endDateSubject);
@@ -95,12 +92,12 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
         StagesCreator = new StagesCreatorViewModel().DisposeWith(disposable);
         CreateStages = ReactiveCommand.CreateFromTask(async () =>
         {
-          var create = Stages.Count == 0 || await uiServices.Dialog.ShowConfirmation("Create stages", "Do you want to replace the current stages with new ones?\n\nThis action can't be undone.").GetValueOrDefault(() => false);
+            var create = Stages.Count == 0 || await uiServices.Dialog.ShowConfirmation("Create stages", "Do you want to replace the current stages with new ones?\n\nThis action can't be undone.").GetValueOrDefault(() => false);
 
-          if (create)
-          {
-              CreateStagesFromCreator();
-          }
+            if (create)
+            {
+                CreateStagesFromCreator();
+            }
 
         })
        .Enhance()
@@ -123,31 +120,31 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
 
     private void CreateStagesFromCreator()
     {
-var stageCount = StagesCreator.NumberOfStages!.Value;
+        var stageCount = StagesCreator.NumberOfStages!.Value;
         decimal stagePercent = 100 / new decimal(stageCount);
         var initialDate = StagesCreator.SelectedInitialDate!.Value;
-    
-     var timespan = StagesCreator.SelectedFrequency switch
+
+        var timespan = StagesCreator.SelectedFrequency switch
         {
-      PaymentFrequency.Daily => TimeSpan.FromDays(1),
-       PaymentFrequency.Weekly => TimeSpan.FromDays(7),
-     PaymentFrequency.Monthly => TimeSpan.FromDays(30),
+            PaymentFrequency.Daily => TimeSpan.FromDays(1),
+            PaymentFrequency.Weekly => TimeSpan.FromDays(7),
+            PaymentFrequency.Monthly => TimeSpan.FromDays(30),
             PaymentFrequency.Quarterly => TimeSpan.FromDays(90),
             _ => TimeSpan.FromDays(7)
         };
-        
-   var stages = Enumerable.Range(0, stageCount).Select(i =>
-        {
-      return new CreateProjectStage(stage =>
-      {
-        stagesSource.Remove(stage);
-      RecalculatePercentages();
-     }, endDateSubject)
+
+        var stages = Enumerable.Range(0, stageCount).Select(i =>
+             {
+                 return new CreateProjectStage(stage =>
             {
-    Percent = stagePercent,
-  ReleaseDate = initialDate.Add(timespan * i)
-       };
-        });
+               stagesSource.Remove(stage);
+               RecalculatePercentages();
+           }, endDateSubject)
+                 {
+                     Percent = stagePercent,
+                     ReleaseDate = initialDate.Add(timespan * i)
+                 };
+             });
 
         stagesSource.Edit(updater => updater.Load(stages));
     }
@@ -156,36 +153,36 @@ var stageCount = StagesCreator.NumberOfStages!.Value;
 
     private CreateProjectStage CreateStage()
     {
-  return new CreateProjectStage(stage =>
-     {
-            stagesSource.Remove(stage);
-       RecalculatePercentages();
-        }, endDateSubject)
+        return new CreateProjectStage(stage =>
+           {
+               stagesSource.Remove(stage);
+               RecalculatePercentages();
+           }, endDateSubject)
         {
-  Percent = 100,
-       ReleaseDate = (endDateSubject.Value ?? DateTime.Now).AddDays(7)
-   };
-  }
+            Percent = 100,
+            ReleaseDate = (endDateSubject.Value ?? DateTime.Now).AddDays(7)
+        };
+    }
 
     private void RecalculatePercentages()
     {
         var count = stagesSource.Count;
         if (count == 0)
-  {
-     return;
-      }
+        {
+            return;
+        }
 
         var percent = 100m / count;
         foreach (var stage in stagesSource.Items)
         {
-stage.Percent = percent;
+            stage.Percent = percent;
         }
     }
 
     protected override void Dispose(bool disposing)
     {
-   disposable.Dispose();
-     base.Dispose(disposing);
+        disposable.Dispose();
+        base.Dispose(disposing);
     }
 
     public IObservable<bool> IsValid => this.IsValid();

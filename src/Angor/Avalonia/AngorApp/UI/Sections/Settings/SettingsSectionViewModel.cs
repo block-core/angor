@@ -59,15 +59,12 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
         var settings = networkStorage.GetSettings();
         Indexers = new ObservableCollection<SettingsUrlViewModel>(settings.Indexers.Select(CreateIndexer));
-     Relays = new ObservableCollection<SettingsUrlViewModel>(settings.Relays.Select(CreateRelay));
+        Relays = new ObservableCollection<SettingsUrlViewModel>(settings.Relays.Select(CreateRelay));
 
         currentNetwork = networkStorage.GetNetwork();
         networkConfiguration.SetNetwork(currentNetwork == "Mainnet" ? new BitcoinMain() : new Angornet());
         Network = currentNetwork;
         IsTestnet = currentNetwork == "Angornet";
-
-        IsDebugMode = settings.DebugMode;
-        networkConfiguration.SetDebugMode(IsDebugMode);
 
         AddIndexer = ReactiveCommand.Create(DoAddIndexer, this.WhenAnyValue(x => x.NewIndexer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
         AddRelay = ReactiveCommand.Create(DoAddRelay, this.WhenAnyValue(x => x.NewRelay, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
@@ -116,16 +113,11 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
             .BindTo(uiServices, services => services.IsBitcoinPreferred)
             .DisposeWith(disposable);
 
+        IsDebugMode = uiServices.IsDebugModeEnabled;
         this.WhenAnyValue(x => x.IsDebugMode)
             .Skip(1)
-      .Subscribe(debugMode =>
-    {
-    var settingsInfo = networkStorage.GetSettings();
-settingsInfo.DebugMode = debugMode;
-       networkStorage.SetSettings(settingsInfo);
-      networkConfiguration.SetDebugMode(debugMode);
-  })
-.DisposeWith(disposable);
+            .BindTo(uiServices, services => services.IsDebugModeEnabled)
+            .DisposeWith(disposable);
     }
 
     public ObservableCollection<SettingsUrlViewModel> Indexers { get; }
@@ -270,7 +262,6 @@ settingsInfo.DebugMode = debugMode;
         var current = networkStorage.GetSettings();
         current.Indexers = Indexers.Select(x => x.ToModel()).ToList();
         current.Relays = Relays.Select(x => x.ToModel()).ToList();
-        current.DebugMode = IsDebugMode;
         networkStorage.SetSettings(current);
     }
 
