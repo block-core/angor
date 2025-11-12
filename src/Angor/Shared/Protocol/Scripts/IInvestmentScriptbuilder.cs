@@ -10,4 +10,11 @@ public interface IInvestmentScriptBuilder
 
     ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
         uint256? hashOfSecret = null, DateTime? expiryDateOverride = null);
+        
+    /// <summary>
+    /// Builds project scripts for a specific stage, supporting both Invest (fixed) and Fund/Subscribe (dynamic) projects.
+    /// </summary>
+    /// <param name="investmentStartDate">Required for Fund/Subscribe projects - the date when investment was made</param>
+    ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
+        uint256? hashOfSecret, DateTime? expiryDateOverride, DateTime? investmentStartDate);
 }

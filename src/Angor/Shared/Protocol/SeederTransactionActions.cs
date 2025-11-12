@@ -36,13 +36,36 @@ public class SeederTransactionActions : ISeederTransactionActions
     public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey,
         uint256 investorSecretHash, long totalInvestmentAmount)
     {
+        // Capture investment start date for dynamic projects
+        var investmentStartDate = DateTime.UtcNow;
+   
         // create the output and script of the investor pubkey script opreturn
-        var opreturnScript = _projectScriptsBuilder.BuildSeederInfoScript(investorKey, investorSecretHash);
+        var opreturnScript = _projectScriptsBuilder.BuildSeederInfoScript(investorKey, investorSecretHash, projectInfo, investmentStartDate);
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
-        var stagesScript = projectInfo.Stages
-            .Select((_,index) => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo,
-                investorKey,index, investorSecretHash));
+        // For dynamic projects, we need to pass the investment start date
+        List<ProjectScripts> stagesScript;
+
+        if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
+        {
+            // Dynamic stages - use pattern to determine stage count
+            var pattern = projectInfo.DynamicStagePatterns.FirstOrDefault();
+            if (pattern == null)
+                throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
+
+            stagesScript = Enumerable.Range(0, pattern.StageCount)
+                .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(
+                    projectInfo, investorKey, index, investorSecretHash, null, investmentStartDate))
+                .ToList();
+        }
+        else
+        {
+            // Fixed stages - use predefined stages
+            stagesScript = projectInfo.Stages
+                .Select((_, index) => _investmentScriptBuilder.BuildProjectScriptsForStage(
+                    projectInfo, investorKey, index, investorSecretHash))
+                .ToList();
+        }
 
         return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript,
             totalInvestmentAmount);

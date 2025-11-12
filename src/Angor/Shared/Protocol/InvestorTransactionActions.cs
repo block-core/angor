@@ -37,15 +37,38 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey,
         long totalInvestmentAmount)
     {
+        // Capture investment start date for dynamic projects
+        var investmentStartDate = DateTime.UtcNow;
+      
         // create the output and script of the investor pubkey script opreturn
-        var opreturnScript = _projectScriptsBuilder.BuildInvestorInfoScript(investorKey);
+        var opreturnScript = _projectScriptsBuilder.BuildInvestorInfoScript(investorKey, projectInfo, investmentStartDate);
 
         // Determine the effective expiry date based on penalty threshold
         var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
-        var stagesScript = Enumerable.Range(0, projectInfo.Stages.Count)
-            .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, index, null, expiryDateOverride));
+        List<ProjectScripts> stagesScript;
+      
+        if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
+        {
+            // Dynamic stages - use pattern to determine stage count
+            var pattern = projectInfo.DynamicStagePatterns.FirstOrDefault();
+            if (pattern == null)
+                throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
+            
+            stagesScript = Enumerable.Range(0, pattern.StageCount)
+                .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(
+                    projectInfo, investorKey, index, null, expiryDateOverride, investmentStartDate))
+                .ToList();
+        }
+        else
+        {
+            // Fixed stages - use predefined stages
+            stagesScript = Enumerable.Range(0, projectInfo.Stages.Count)
+                .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(
+                    projectInfo, investorKey, index, null, expiryDateOverride))
+                .ToList();
+        }
 
         return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript, totalInvestmentAmount);
     }
