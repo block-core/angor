@@ -15,7 +15,7 @@ public class CreateProjectFlow(UIServices uiServices, INavigator navigator, IPro
 {
     public Task<Result<Maybe<string>>> CreateProject()
     {
-        var createWizardResult = 
+        var createWizardResult =
             from wallet in walletContext.CurrentWallet.ToResult("A wallet is required to create a project")
             from projectSeed in GetProjectSeed()
             select CreateWizard(wallet, projectSeed);
@@ -26,7 +26,7 @@ public class CreateProjectFlow(UIServices uiServices, INavigator navigator, IPro
     private SlimWizard<string> CreateWizard(IWallet wallet, ProjectSeed projectSeed)
     {
         var wizard = WizardBuilder
-            .StartWith(() => new CreateProjectViewModel(wallet,  projectSeed, uiServices, projectAppService, logger), "Create Project").NextCommand(model => model.Create)
+            .StartWith(() => new CreateProjectViewModel(wallet, projectSeed, uiServices, projectAppService, logger), "Create Project").NextCommand(model => model.Create)
             .Then(transactionId => new ProjectCreatedViewModel(transactionId, commands), "Success").Next((_, projectId) => projectId, "Close").Always()
             .WithCompletionFinalStep();
 

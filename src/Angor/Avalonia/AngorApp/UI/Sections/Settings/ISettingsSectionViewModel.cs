@@ -18,6 +18,8 @@ internal interface ISettingsSectionViewModel : IDisposable
     ReactiveCommand<Unit, Unit> AddRelay { get; }
     ReactiveCommand<Unit, Unit> DeleteWallet { get; }
     bool IsBitcoinPreferred { get; set; }
+    bool IsDebugMode { get; set; }
+    bool IsTestnet { get; }
 }
 
 internal class SettingsSectionViewModelSample : ISettingsSectionViewModel
@@ -44,5 +46,7 @@ internal class SettingsSectionViewModelSample : ISettingsSectionViewModel
     public ReactiveCommand<Unit, Unit> AddRelay { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> DeleteWallet { get; } = ReactiveCommand.Create(() => { });
     public bool IsBitcoinPreferred { get; set; } = true;
+    public bool IsDebugMode { get; set; } = false;
+    public bool IsTestnet { get; } = true;
     public void Dispose() { }
 }

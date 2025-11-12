@@ -29,6 +29,8 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private readonly IWalletContext walletContext;
 
+    private readonly INetworkConfiguration networkConfiguration;
+
     private string network;
 
     private string newIndexer;
@@ -39,6 +41,10 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private string currentNetwork;
 
+    private bool isDebugMode;
+
+    private bool isTestnet;
+
     private readonly CompositeDisposable disposable = new();
 
     public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, INetworkService networkService, INetworkConfiguration networkConfiguration, IWalletContext walletContext)
@@ -47,6 +53,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         this.walletStore = walletStore;
         this.uiServices = uiServices;
         this.walletContext = walletContext;
+        this.networkConfiguration = networkConfiguration;
 
         networkService.AddSettingsIfNotExist();
 
@@ -57,6 +64,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         currentNetwork = networkStorage.GetNetwork();
         networkConfiguration.SetNetwork(currentNetwork == "Mainnet" ? new BitcoinMain() : new Angornet());
         Network = currentNetwork;
+        IsTestnet = currentNetwork == "Angornet";
 
         AddIndexer = ReactiveCommand.Create(DoAddIndexer, this.WhenAnyValue(x => x.NewIndexer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
         AddRelay = ReactiveCommand.Create(DoAddRelay, this.WhenAnyValue(x => x.NewRelay, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
@@ -104,6 +112,12 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         this.WhenAnyValue(model => model.IsBitcoinPreferred)
             .BindTo(uiServices, services => services.IsBitcoinPreferred)
             .DisposeWith(disposable);
+
+        IsDebugMode = uiServices.IsDebugModeEnabled;
+        this.WhenAnyValue(x => x.IsDebugMode)
+            .Skip(1)
+            .BindTo(uiServices, services => services.IsDebugModeEnabled)
+            .DisposeWith(disposable);
     }
 
     public ObservableCollection<SettingsUrlViewModel> Indexers { get; }
@@ -118,7 +132,11 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     public string Network
     {
         get => network;
-        set => this.RaiseAndSetIfChanged(ref network, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref network, value);
+            IsTestnet = value == "Angornet";
+        }
     }
 
     public string NewIndexer
@@ -131,6 +149,18 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     {
         get => newRelay;
         set => this.RaiseAndSetIfChanged(ref newRelay, value);
+    }
+
+    public bool IsDebugMode
+    {
+        get => isDebugMode;
+        set => this.RaiseAndSetIfChanged(ref isDebugMode, value);
+    }
+
+    public bool IsTestnet
+    {
+        get => isTestnet;
+        private set => this.RaiseAndSetIfChanged(ref isTestnet, value);
     }
 
     private void DoAddIndexer()

@@ -19,7 +19,7 @@ using Zafiro.UI.Shell;
 
 namespace AngorApp.Composition.Registrations.Services;
 
-public static class UiServices
+public static class UIServicesRegistration
 {
     // Registers UI-level services, dialogs, shell and notifications
     public static IServiceCollection AddUiServices(this IServiceCollection services, Control parent, ProfileContext profileContext, IApplicationStorage storage)
@@ -73,7 +73,7 @@ public static class UiServices
             var network = config.GetNetwork();
             var uiServices = sp.GetRequiredService<UIServices>();
             
-            return navigator.Content.Select(content => new HeaderViewModel(navigator.Back, content, network, uiServices));
+            return navigator.Content.Select(content => new HeaderViewModel(navigator.Back, content, network, uiServices, config));
         }
         
         return Observable.Return("");
