@@ -1,6 +1,5 @@
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.Core;
-using Angor.Shared;
 using AngorApp.UI.Sections.Founder.CreateProject;
 using AngorApp.UI.Sections.Founder.CreateProject.ProjectCreated;
 using Microsoft.Extensions.Logging;
@@ -11,15 +10,15 @@ using Zafiro.UI.Wizards.Slim.Builder;
 
 namespace AngorApp.UI.Flows.CreateProject;
 
-public class CreateProjectFlow(UIServices uiServices, INavigator navigator, IProjectAppService projectAppService, SharedCommands commands, IWalletContext walletContext, ILogger<CreateProjectViewModel> logger, INetworkConfiguration networkConfiguration)
+public class CreateProjectFlow(UIServices uiServices, INavigator navigator, IProjectAppService projectAppService, SharedCommands commands, IWalletContext walletContext, ILogger<CreateProjectViewModel> logger)
     : ICreateProjectFlow
 {
     public Task<Result<Maybe<string>>> CreateProject()
     {
         var createWizardResult =
-         from wallet in walletContext.CurrentWallet.ToResult("A wallet is required to create a project")
-         from projectSeed in GetProjectSeed()
-         select CreateWizard(wallet, projectSeed);
+            from wallet in walletContext.CurrentWallet.ToResult("A wallet is required to create a project")
+            from projectSeed in GetProjectSeed()
+            select CreateWizard(wallet, projectSeed);
 
         return createWizardResult.Map(slimWizard => slimWizard.Navigate(navigator));
     }
