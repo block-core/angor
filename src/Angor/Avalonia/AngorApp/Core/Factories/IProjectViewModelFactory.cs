@@ -1,5 +1,4 @@
-using AngorApp.Model.Projects;
-using AngorApp.Sections.Browse;
+using AngorApp.UI.Sections.Browse;
 
 namespace AngorApp.Core.Factories;
 

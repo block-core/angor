@@ -1,4 +1,4 @@
-namespace AngorApp.Sections.Founder.CreateProject.FundingStructure;
+namespace AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 
 public interface IHaveErrors
 {

@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             xmlns:approve="clr-namespace:AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve.ApproveInvestmentsView"
+             x:DataType="approve:IApproveInvestmentsViewModel">
+    
+    <Design.DataContext>
+        <approve:ApproveInvestmentsViewModelSample />
+    </Design.DataContext>
+    
+    <Card Header="Investments">
+        <Card.HeaderEndContent>
+            <EnhancedButton ToolTip.Tip="Reload" avalonia:Attached.Icon="fa-rotate-right" Command="{Binding LoadInvestments}" />
+        </Card.HeaderEndContent>
+        <Loading IsLoading="{Binding LoadInvestments.IsExecuting^}">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                <approve:InvestmentsGrid />
+            </ScrollViewer>
+        </Loading>
+    </Card>
+</UserControl>

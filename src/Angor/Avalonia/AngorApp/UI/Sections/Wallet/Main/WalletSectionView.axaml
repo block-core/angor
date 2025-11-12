@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:wallet="clr-namespace:AngorApp.UI.Sections.Wallet"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:main="clr-namespace:AngorApp.UI.Sections.Wallet.Main"
+             xmlns:dw="clr-namespace:AngorApp.Model.Wallet;assembly=AngorApp.Model"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.UI.Sections.Wallet.Main.WalletSectionView" x:DataType="main:IWalletSectionViewModel">
+
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="dw:SimpleWallet">
+            <main:WalletView />
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <ScrollViewer>
+        <controls:PageContainer>
+            <Panel>
+                <ContentControl IsVisible="{Binding CurrentWallet, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                Content="{Binding CurrentWallet}" />
+                <wallet:WalletSetupView IsVisible="{Binding CurrentWallet, Converter={x:Static ObjectConverters.IsNull}}" />
+            </Panel>
+        </controls:PageContainer>
+        
+        <Interaction.Behaviors>
+            <NestedScrollViewerBehavior />
+        </Interaction.Behaviors>
+    </ScrollViewer>
+
+</UserControl>

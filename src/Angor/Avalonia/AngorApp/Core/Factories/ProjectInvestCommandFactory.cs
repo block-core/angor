@@ -1,12 +1,4 @@
-using System.Reactive.Linq;
-using Angor.Contexts.Funding.Investor;
-using AngorApp.Model.Projects;
-using AngorApp.Flows.Invest;
-using AngorApp.UI.Services;
-using ReactiveUI;
-using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.Reactive;
-using Zafiro.UI;
+using AngorApp.UI.Flows.Invest;
 
 namespace AngorApp.Core.Factories;
 

@@ -5,7 +5,7 @@ using System.Linq;
 using Angor.Contests.CrossCutting;
 using Angor.Shared;
 using AngorApp.Core;
-using AngorApp.Sections.Shell;
+using AngorApp.UI.Sections.Shell;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Microsoft.Extensions.DependencyInjection;
