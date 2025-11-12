@@ -1,3 +1,7 @@
+using System.Collections.Generic;
+using System.Reactive;
+using ReactiveUI;
+using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.UI.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
@@ -27,4 +31,6 @@ public class ReleaseFundsViewModelSample : IReleaseFundsViewModel
     ];
 
     public IEnhancedCommand<Maybe<Result>> ReleaseAll { get; }
+    public ReactiveCommand<Unit, Result<List<IUnfundedProjectTransaction>>> RefreshTransactions { get; } =
+        ReactiveCommand.Create(() => Result.Success(new List<IUnfundedProjectTransaction>()));
 }

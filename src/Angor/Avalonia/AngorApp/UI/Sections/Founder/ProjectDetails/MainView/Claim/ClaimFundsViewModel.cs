@@ -44,8 +44,6 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
             .SelectMany(_ => LoadClaimableStages.Execute())
             .Subscribe()
             .DisposeWith(disposable);
-        
-        LoadClaimableStages.Execute().Subscribe().DisposeWith(disposable);
         claimableStagesHelper.DisposeWith(disposable);
     }
 

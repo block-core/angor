@@ -12,6 +12,12 @@
     <Design.DataContext>
         <release:ReleaseFundsViewModelSample />
     </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction IsEnabled="{Binding !!!Transactions}" Command="{Binding RefreshTransactions}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
     
     <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
         <DockPanel VerticalAlignment="Stretch" VerticalSpacing="20">

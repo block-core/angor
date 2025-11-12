@@ -54,6 +54,12 @@
         </claim:ClaimFundsViewModelSample>
     </Design.DataContext>
 
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction IsEnabled="{Binding !!!ClaimableStages}" Command="{Binding LoadClaimableStages}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
     <UserControl.Resources>
         <ControlTheme x:Key="TransactionItemTheme" BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
             <Setter Property="Interaction.Behaviors">
