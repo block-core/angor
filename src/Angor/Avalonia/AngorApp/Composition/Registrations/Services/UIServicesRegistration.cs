@@ -19,7 +19,7 @@ using Zafiro.UI.Shell;
 
 namespace AngorApp.Composition.Registrations.Services;
 
-public static class UiServicesRegistration
+public static class UIServicesRegistration
 {
     // Registers UI-level services, dialogs, shell and notifications
     public static IServiceCollection AddUiServices(this IServiceCollection services, Control parent, ProfileContext profileContext, IApplicationStorage storage)
