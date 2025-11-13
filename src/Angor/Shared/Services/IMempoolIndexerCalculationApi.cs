@@ -4,6 +4,9 @@ namespace Angor.Shared.Services;
 
 public interface IMempoolIndexerCalculationApi
 {
+    bool ReadFromAngorApi { get; set; }
+    
+    Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit);
     Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId);
     Task<(string projectId, ProjectStats? stats)> GetProjectStatsAsync(string projectId);
     Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId);

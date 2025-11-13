@@ -195,13 +195,6 @@ public class MempoolIndexerMappers
         }
     }
 
-    /// <summary>
-    /// Calculates project statistics from a list of transactions.
-    /// Analyzes investment transactions to determine investor count and total amount invested.
-    /// </summary>
-    /// <param name="projectId">The project identifier</param>
-    /// <param name="trxs">List of transactions for the project</param>
-    /// <returns>ProjectStats with calculated values or null if calculation fails</returns>
     public ProjectStats? CalculateProjectStats(string projectId, List<MempoolSpaceIndexerApi.MempoolTransaction> trxs)
     {
         try
@@ -317,6 +310,85 @@ public class MempoolIndexerMappers
         {
             _logger.LogError(ex, $"Error calculating project stats for project {projectId}");
             return null;
+        }
+    }
+
+    public List<ProjectInvestment> ConvertTransactionsToInvestments(string projectId, List<MempoolSpaceIndexerApi.MempoolTransaction> trxs)
+    {
+        try
+        {
+            // Sort transactions by block height to process them in order
+            var sortedTransactions = trxs.OrderBy(t => t.Status.BlockHeight).ToList();
+
+            // Step 1: Find the funding transaction first
+            MempoolSpaceIndexerApi.MempoolTransaction? fundingTrx = null;
+            foreach (var trx in sortedTransactions)
+            {
+                if (trx.Vout.Count < 2)
+                    continue;
+
+                var opReturnOutput = trx.Vout[1];
+                if (opReturnOutput.ScriptpubkeyType == "op_return" || opReturnOutput.ScriptpubkeyType == "nulldata")
+                {
+                    var parsedData = ParseFounderInfoFromOpReturn(opReturnOutput.Scriptpubkey);
+                    if (parsedData != null)
+                    {
+                        fundingTrx = trx;
+                        _logger.LogDebug($"Found funding transaction {trx.Txid} for investments extraction");
+                        break;
+                    }
+                }
+            }
+
+            if (fundingTrx == null)
+            {
+                _logger.LogWarning($"No funding transaction found for project {projectId}");
+                return new List<ProjectInvestment>();
+            }
+
+            // Step 2: Collect all investment transactions
+            var investments = new List<ProjectInvestment>();
+            foreach (var trx in sortedTransactions)
+            {
+                // Skip the funding transaction
+                if (trx.Txid == fundingTrx.Txid)
+                    continue;
+
+                if (trx.Vout.Count < 2)
+                    continue;
+
+                var opReturnOutput = trx.Vout[1];
+                if (opReturnOutput.ScriptpubkeyType == "op_return" || opReturnOutput.ScriptpubkeyType == "nulldata")
+                {
+                    try
+                    {
+                        var investorKey = ParseInvestorInfoFromOpReturn(opReturnOutput.Scriptpubkey);
+                        if (!string.IsNullOrEmpty(investorKey))
+                        {
+                            investments.Add(new ProjectInvestment
+                            {
+                                TransactionId = trx.Txid,
+                                InvestorPublicKey = investorKey,
+                                HashOfSecret = string.Empty // TODO: Extract from OP_RETURN if present
+                            });
+
+                            _logger.LogDebug($"Found investment transaction {trx.Txid} for project {projectId}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, $"Failed to parse investor info from transaction {trx.Txid}");
+                    }
+                }
+            }
+
+            _logger.LogInformation($"Extracted {investments.Count} investments for project {projectId}");
+            return investments;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error converting transactions to investments for project {projectId}");
+            return new List<ProjectInvestment>();
         }
     }
 }

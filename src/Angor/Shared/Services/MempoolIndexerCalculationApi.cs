@@ -14,7 +14,10 @@ public class MempoolIndexerCalculationApi : IMempoolIndexerCalculationApi
     private readonly MempoolIndexerMappers _mappers;
     private readonly IHttpClientFactory _clientFactory;
 
+    private const string AngorApiRoute = "/api/v1/query/Angor";
     private const string MempoolApiRoute = "/api/v1";
+
+    public bool ReadFromAngorApi { get; set; } = false;
 
     public MempoolIndexerCalculationApi(
         ILogger<MempoolIndexerCalculationApi> logger,
@@ -39,6 +42,27 @@ public class MempoolIndexerCalculationApi : IMempoolIndexerCalculationApi
         return client;
     }
 
+    public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
+    {
+        // GetProjectsAsync only supports Angor API (no blockchain equivalent for listing all projects)
+        try
+        {
+            var url = offset == null ?
+                $"{AngorApiRoute}/projects?limit={limit}" :
+                $"{AngorApiRoute}/projects?offset={offset}&limit={limit}";
+
+            var response = await GetIndexerClient().GetAsync(url);
+            _networkService.CheckAndHandleError(response);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>() ?? new List<ProjectIndexerData>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error fetching projects from Angor API: {ex.Message}");
+            return new List<ProjectIndexerData>();
+        }
+    }
+
     public async Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId)
     {
         if (string.IsNullOrEmpty(projectId))
@@ -51,7 +75,30 @@ public class MempoolIndexerCalculationApi : IMempoolIndexerCalculationApi
             return null;
         }
 
-        // Fetch project info from Mempool.space API
+        if (ReadFromAngorApi)
+        {
+            // Call Angor API
+            try
+            {
+                var response = await GetIndexerClient()
+                    .GetAsync($"{AngorApiRoute}/projects/{projectId}");
+                _networkService.CheckAndHandleError(response);
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+
+                return await response.Content.ReadFromJsonAsync<ProjectIndexerData>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error fetching project by ID from Angor API {projectId}: {ex.Message}");
+                return null;
+            }
+        }
+
+        // Fetch project info from Mempool.space API (blockchain-based)
         try
         {
             var projectAddress = _derivationOperations.ConvertAngorKeyToBitcoinAddress(projectId);
@@ -92,6 +139,30 @@ public class MempoolIndexerCalculationApi : IMempoolIndexerCalculationApi
             return (projectId, null);
         }
 
+        if (ReadFromAngorApi)
+        {
+            // Call Angor API
+            try
+            {
+                var response = await GetIndexerClient()
+                    .GetAsync($"{AngorApiRoute}/projects/{projectId}/stats");
+                _networkService.CheckAndHandleError(response);
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return (projectId, null);
+                }
+
+                return (projectId, await response.Content.ReadFromJsonAsync<ProjectStats>());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error fetching project stats from Angor API for ID {projectId}: {ex.Message}");
+                return (projectId, null);
+            }
+        }
+
+        // Calculate stats from blockchain data
         try
         {
             var projectAddress = _derivationOperations.ConvertAngorKeyToBitcoinAddress(projectId);
@@ -129,6 +200,25 @@ public class MempoolIndexerCalculationApi : IMempoolIndexerCalculationApi
 
     public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)
     {
+        if (ReadFromAngorApi)
+        {
+            // Call Angor API
+            try
+            {
+                var response = await GetIndexerClient()
+                    .GetAsync($"{AngorApiRoute}/projects/{projectId}/investments?limit=50");
+                _networkService.CheckAndHandleError(response);
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>() ?? new List<ProjectInvestment>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error fetching investments from Angor API for project {projectId}: {ex.Message}");
+                return new List<ProjectInvestment>();
+            }
+        }
+
+        // Get investments from blockchain data
         if (string.IsNullOrEmpty(projectId))
         {
             return new List<ProjectInvestment>();
@@ -157,71 +247,8 @@ public class MempoolIndexerCalculationApi : IMempoolIndexerCalculationApi
                 return new List<ProjectInvestment>();
             }
 
-            // Sort transactions by block height
-            var sortedTransactions = trxs.OrderBy(t => t.Status.BlockHeight).ToList();
-
-            // Find the funding transaction first
-            MempoolSpaceIndexerApi.MempoolTransaction? fundingTrx = null;
-            foreach (var trx in sortedTransactions)
-            {
-                if (trx.Vout.Count < 2)
-                    continue;
-
-                var opReturnOutput = trx.Vout[1];
-                if (opReturnOutput.ScriptpubkeyType == "op_return" || opReturnOutput.ScriptpubkeyType == "nulldata")
-                {
-                    var parsedData = _mappers.ParseFounderInfoFromOpReturn(opReturnOutput.Scriptpubkey);
-                    if (parsedData != null)
-                    {
-                        fundingTrx = trx;
-                        break;
-                    }
-                }
-            }
-
-            if (fundingTrx == null)
-            {
-                _logger.LogWarning($"No funding transaction found for project {projectId}");
-                return new List<ProjectInvestment>();
-            }
-
-            // Collect all investment transactions
-            var investments = new List<ProjectInvestment>();
-            foreach (var trx in sortedTransactions)
-            {
-                // Skip the funding transaction
-                if (trx.Txid == fundingTrx.Txid)
-                    continue;
-
-                if (trx.Vout.Count < 2)
-                    continue;
-
-                var opReturnOutput = trx.Vout[1];
-                if (opReturnOutput.ScriptpubkeyType == "op_return" || opReturnOutput.ScriptpubkeyType == "nulldata")
-                {
-                    try
-                    {
-                        var investorKey = _mappers.ParseInvestorInfoFromOpReturn(opReturnOutput.Scriptpubkey);
-                        if (!string.IsNullOrEmpty(investorKey))
-                        {
-                            investments.Add(new ProjectInvestment
-                            {
-                                TransactionId = trx.Txid,
-                                InvestorPublicKey = investorKey,
-                                HashOfSecret = string.Empty // TODO: Extract from OP_RETURN if present
-                            });
-
-                            _logger.LogDebug($"Found investment transaction {trx.Txid} for project {projectId}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogDebug(ex, $"Failed to parse investor info from transaction {trx.Txid}");
-                    }
-                }
-            }
-
-            return investments;
+            // Use the mapper to convert transactions to investments
+            return _mappers.ConvertTransactionsToInvestments(projectId, trxs);
         }
         catch (Exception ex)
         {
@@ -232,6 +259,25 @@ public class MempoolIndexerCalculationApi : IMempoolIndexerCalculationApi
 
     public async Task<ProjectInvestment?> GetInvestmentAsync(string projectId, string investorPubKey)
     {
+        if (ReadFromAngorApi)
+        {
+            // Call Angor API
+            try
+            {
+                var response = await GetIndexerClient()
+                    .GetAsync($"{AngorApiRoute}/projects/{projectId}/investments/{investorPubKey}");
+                _networkService.CheckAndHandleError(response);
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<ProjectInvestment>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error fetching investment from Angor API for project {projectId} and investor {investorPubKey}: {ex.Message}");
+                return null;
+            }
+        }
+
+        // Get specific investment from blockchain data
         if (string.IsNullOrEmpty(projectId) || string.IsNullOrEmpty(investorPubKey))
         {
             return null;

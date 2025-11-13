@@ -22,10 +22,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
     private ConcurrentDictionary<string, HttpClient> _clients = new();
 
-    private const string AngorApiRoute = "/api/v1/query/Angor";
     private const string MempoolApiRoute = "/api/v1";
-
-    public bool _readFromAngorApi; //tempt
 
     public MempoolSpaceIndexerApi(
         ILogger<MempoolSpaceIndexerApi> logger,
@@ -41,7 +38,6 @@ public class MempoolSpaceIndexerApi : IIndexerService
         _derivationOperations = derivationOperations;
         _mappers = mappers;
         _calculationApi = calculationApi;
-        _readFromAngorApi = false;
     }
 
     #region Mempool.space API Models
@@ -150,106 +146,32 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
     public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
     {
-        var url = offset == null ?
-            $"{AngorApiRoute}/projects?limit={limit}" :
-            $"{AngorApiRoute}/projects?offset={offset}&limit={limit}";
-
-        var response = await GetIndexerClient()
-            .GetAsync(url);
-        _networkService.CheckAndHandleError(response);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<List<ProjectIndexerData>>() ?? new List<ProjectIndexerData>();
+        return await _calculationApi.GetProjectsAsync(offset, limit);
     }
 
     public async Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId)
     {
-        if (string.IsNullOrEmpty(projectId))
-        {
-            return null;
-        }
-
-        if (projectId.Length <= 1)
-        {
-            return null;
-        }
-
-        if (_readFromAngorApi)
-        {
-            var response = await GetIndexerClient()
-                .GetAsync($"{AngorApiRoute}/projects/{projectId}");
-            _networkService.CheckAndHandleError(response);
-
-            if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                return null;
-            }
-
-            return await response.Content.ReadFromJsonAsync<ProjectIndexerData>();
-        }
-
-        // Use the calculation API for blockchain-based data
         return await _calculationApi.GetProjectByIdAsync(projectId);
     }
 
     public async Task<(string projectId, ProjectStats? stats)> GetProjectStatsAsync(string projectId)
     {
-        if (string.IsNullOrEmpty(projectId))
-        {
-            return (projectId, null);
-        }
-
-        if (_readFromAngorApi)
-        {
-            var response = await GetIndexerClient()
-  .GetAsync($"{AngorApiRoute}/projects/{projectId}/stats");
-            _networkService.CheckAndHandleError(response);
-
-            if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                return (projectId, null);
-            }
-
-            return (projectId, await response.Content.ReadFromJsonAsync<ProjectStats>());
-        }
-
-        // Use the calculation API for blockchain-based data
         return await _calculationApi.GetProjectStatsAsync(projectId);
     }
 
     public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)
     {
-        if (_readFromAngorApi)
-        {
-            var response = await GetIndexerClient()
-       .GetAsync($"{AngorApiRoute}/projects/{projectId}/investments?limit=50");
-            _networkService.CheckAndHandleError(response);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
-        }
-
-        // Use the calculation API for blockchain-based data
         return await _calculationApi.GetInvestmentsAsync(projectId);
     }
 
     public async Task<ProjectInvestment?> GetInvestmentAsync(string projectId, string investorPubKey)
     {
-        if (_readFromAngorApi)
-        {
-            var response = await GetIndexerClient()
-           .GetAsync($"{AngorApiRoute}/projects/{projectId}/investments/{investorPubKey}");
-            _networkService.CheckAndHandleError(response);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<ProjectInvestment>();
-        }
-
-        // Use the calculation API for blockchain-based data
         return await _calculationApi.GetInvestmentAsync(projectId, investorPubKey);
     }
 
     public async Task<string> PublishTransactionAsync(string trxHex)
     {
-        var response = await GetIndexerClient()
-    .       PostAsync($"{MempoolApiRoute}/tx", new StringContent(trxHex));
+        var response = await GetIndexerClient().PostAsync($"{MempoolApiRoute}/tx", new StringContent(trxHex));
 
         _networkService.CheckAndHandleError(response);
 
@@ -273,8 +195,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         {
             //check all new addresses for balance or a history
 
-            return GetIndexerClient()
-         .GetAsync(urlBalance + x.Address);
+            return GetIndexerClient().GetAsync(urlBalance + x.Address);
         });
 
         var results = await Task.WhenAll(tasks);
@@ -309,8 +230,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     {
         var txsUrl = $"{MempoolApiRoute}/address/{address}/txs";
 
-        var response = await GetIndexerClient()
-.GetAsync(txsUrl);
+        var response = await GetIndexerClient().GetAsync(txsUrl);
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
@@ -381,7 +301,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
             txsUrl += $"?after_txid={afterTrxId}";
 
         var response = await GetIndexerClient()
-                  .GetAsync( txsUrl);
+                  .GetAsync(txsUrl);
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
@@ -397,8 +317,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     {
         var url = $"{MempoolApiRoute}/fees/recommended";
 
-        var response = await GetIndexerClient()
- .GetAsync(url);
+        var response = await GetIndexerClient().GetAsync(url);
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
@@ -416,11 +335,11 @@ public class MempoolSpaceIndexerApi : IIndexerService
         {
             Fees = new List<FeeEstimation>
             {
-    new() { FeeRate = feeEstimations.FastestFee * 1100, Confirmations = 1 }, //TODO this is an estimation
+                new() { FeeRate = feeEstimations.FastestFee * 1100, Confirmations = 1 }, //TODO this is an estimation
                 new() { FeeRate = feeEstimations.HalfHourFee * 1100, Confirmations = 3 },
-    new() { FeeRate = feeEstimations.HourFee * 1100, Confirmations = 6 },
-         new() { FeeRate = feeEstimations.EconomyFee * 1100, Confirmations = 18 }, //TODO this is an estimation
-}
+                new() { FeeRate = feeEstimations.HourFee * 1100, Confirmations = 6 },
+                new() { FeeRate = feeEstimations.EconomyFee * 1100, Confirmations = 18 }, //TODO this is an estimation
+            }
         };
     }
 
@@ -472,7 +391,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         return MapToQueryTransaction(trx, spends);
     }
 
-    public async Task<IEnumerable<(int,bool)>> GetIsSpentOutputsOnTransactionAsync(string transactionId)
+    public async Task<IEnumerable<(int, bool)>> GetIsSpentOutputsOnTransactionAsync(string transactionId)
     {
         var urlSpent = $"{MempoolApiRoute}/tx/{transactionId}/outspends";
 
@@ -483,7 +402,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         var options = new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
         var spends = await responseSpent.Content.ReadFromJsonAsync<List<Outspent>>(options);
 
-        return spends!.Select((s,i) => (i,s.Spent));
+        return spends!.Select((s, i) => (i, s.Spent));
     }
 
     private static QueryTransaction MapToQueryTransaction(MempoolTransaction x, List<Outspent>? spends = null)
