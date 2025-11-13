@@ -16,6 +16,7 @@
 @inject IWalletStorage _walletStorage;
 @inject ICacheStorage SessionStorage;
 @inject IIndexerService _IndexerService
+@inject IAngorIndexerService _AngorIndexerService
 @inject IDerivationOperations _DerivationOperations
 @inject IRelayService _RelayService
 @inject ISignService _SignService
@@ -488,7 +489,7 @@
 
     private async Task AddProjectStats(string projectId)
     {
-        var projectStats = await _IndexerService.GetProjectStatsAsync(projectId);
+        var projectStats = await _AngorIndexerService.GetProjectStatsAsync(projectId);
         if (projectStats.stats != null)
             Stats.Add(projectId, projectStats.stats);
     }
@@ -585,7 +586,7 @@
     {
         _Logger.LogInformation($"Scanning for project {investmentState.ProjectIdentifier}");
 
-        var projectIndexerData = await _IndexerService.GetProjectByIdAsync(investmentState.ProjectIdentifier);
+    var projectIndexerData = await _AngorIndexerService.GetProjectByIdAsync(investmentState.ProjectIdentifier);
 
         if (projectIndexerData == null)
         {
@@ -595,7 +596,7 @@
 
         var words = await passwordComponent.GetWalletAsync();
 
-        var investment = await _IndexerService.GetInvestmentAsync(investmentState.ProjectIdentifier, investmentState.InvestorPubKey);
+        var investment = await _AngorIndexerService.GetInvestmentAsync(investmentState.ProjectIdentifier, investmentState.InvestorPubKey);
 
         if (investment == null)
         {

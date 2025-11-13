@@ -8,8 +8,7 @@
 @inject IClientStorage Storage;
 @inject IHtmlStripperService HtmlStripperService;
 @inject IIndexerService _IndexerService
-
-
+@inject IAngorIndexerService _AngorIndexerService
 
 <div class="col d-flex align-items-stretch hover-effect">
     <div class="card mt-4 w-100 project-card">
@@ -147,7 +146,7 @@
 
             if (FounderProject?.ProjectInfo != null)
             {
-                var data = await _IndexerService.GetProjectStatsAsync(FounderProject.ProjectInfo.ProjectIdentifier);
+                var data = await _AngorIndexerService.GetProjectStatsAsync(FounderProject.ProjectInfo.ProjectIdentifier);
 
                 if (data.stats != null)
                 {
@@ -173,4 +172,4 @@
         string sanitizedInput = HtmlStripperService.StripHtmlTags(input);
         return new MarkupString(sanitizedInput);
     }
-}
+}}

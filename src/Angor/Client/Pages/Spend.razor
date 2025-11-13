@@ -20,6 +20,7 @@
 @inject NavMenuState NavMenuState
 @inject ICacheStorage _cacheStorage;
 @inject IIndexerService _IndexerService
+@inject IAngorIndexerService _AngorIndexerService
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IDerivationOperations _derivationOperations
 @inject IWalletOperations _WalletOperations
@@ -712,7 +713,7 @@
 
     private async Task FindInvestments()
     {
-        var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
+        var trxs = await _AngorIndexerService.GetInvestmentsAsync(project.ProjectIdentifier);
 
         var trxList = transactions.ToList();
 

@@ -20,6 +20,7 @@
 @inject ISerializer serializer
 @inject IEncryptionService encryption
 @inject IIndexerService _IndexerService
+@inject IAngorIndexerService _AngorIndexerService
 @inject IWalletOperations _WalletOperations
 @inject IWalletUIService _walletUIService;
 @inject NavMenuState NavMenuState
@@ -275,7 +276,7 @@
                 throw new ArgumentException("The project is not founder or investor");
             }
 
-            projectStats = (await _IndexerService.GetProjectStatsAsync(ProjectIdentifier)).stats;
+            projectStats = (await _AngorIndexerService.GetProjectStatsAsync(ProjectIdentifier)).stats;
 
             Logger.LogInformation($"Fetching project stats  stats AmountInvested = {projectStats?.AmountInvested} InvestorCount = {projectStats?.InvestorCount}");
         }
@@ -335,7 +336,7 @@
         {
             await FetchSignatureRequests();
 
-            projectStats = (await _IndexerService.GetProjectStatsAsync(ProjectIdentifier)).stats;
+            projectStats = (await _AngorIndexerService.GetProjectStatsAsync(ProjectIdentifier)).stats;
 
             Logger.LogInformation($"Fetching project stats  stats AmountInvested = {projectStats?.AmountInvested} InvestorCount = {projectStats?.InvestorCount}");
 
