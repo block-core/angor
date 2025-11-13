@@ -18,7 +18,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     private readonly INetworkService _networkService;
     private readonly IDerivationOperations _derivationOperations;
     private readonly MempoolIndexerMappers _mappers;
-    private readonly IMempoolIndexerCalculationApi _calculationApi;
+    private readonly IAngorIndexerService _calculationApi;
 
     private ConcurrentDictionary<string, HttpClient> _clients = new();
 
@@ -30,7 +30,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         INetworkService networkService,
         IDerivationOperations derivationOperations,
         MempoolIndexerMappers mappers,
-        IMempoolIndexerCalculationApi calculationApi)
+        IAngorIndexerService calculationApi)
     {
         _logger = logger;
         _clientFactory = clientFactory;

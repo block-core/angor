@@ -15,7 +15,7 @@ namespace Angor.Test.Services;
 public class IndexerComparisonTests
 {
     private readonly MempoolSpaceIndexerApi _indexerApi;
-    private readonly IMempoolIndexerCalculationApi _calculationApi;
+    private readonly IAngorIndexerService _calculationApi;
     private readonly ILogger<IndexerComparisonTests> _logger;
 
     // Test configuration
@@ -69,8 +69,8 @@ public class IndexerComparisonTests
 
         var mappers = new MempoolIndexerMappers(new NullLogger<MempoolIndexerMappers>());
 
-        _calculationApi = new MempoolIndexerCalculationApi(
-                            new NullLogger<MempoolIndexerCalculationApi>(),
+        _calculationApi = new MempoolIndexerAngorApi(
+                            new NullLogger<MempoolIndexerAngorApi>(),
                             networkService,
                             mockDerivationOperations.Object,
                             mappers,

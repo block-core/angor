@@ -2,7 +2,7 @@ using Angor.Shared.Models;
 
 namespace Angor.Shared.Services;
 
-public interface IMempoolIndexerCalculationApi
+public interface IAngorIndexerService
 {
     bool ReadFromAngorApi { get; set; }
     

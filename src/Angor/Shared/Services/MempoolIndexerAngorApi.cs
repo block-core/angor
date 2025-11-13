@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared.Services;
 
-public class MempoolIndexerCalculationApi : IMempoolIndexerCalculationApi
+public class MempoolIndexerAngorApi : IAngorIndexerService
 {
-    private readonly ILogger<MempoolIndexerCalculationApi> _logger;
+    private readonly ILogger<MempoolIndexerAngorApi> _logger;
     private readonly INetworkService _networkService;
     private readonly IDerivationOperations _derivationOperations;
     private readonly MempoolIndexerMappers _mappers;
@@ -19,8 +19,8 @@ public class MempoolIndexerCalculationApi : IMempoolIndexerCalculationApi
 
     public bool ReadFromAngorApi { get; set; } = false;
 
-    public MempoolIndexerCalculationApi(
-        ILogger<MempoolIndexerCalculationApi> logger,
+    public MempoolIndexerAngorApi(
+        ILogger<MempoolIndexerAngorApi> logger,
         INetworkService networkService,
         IDerivationOperations derivationOperations,
         MempoolIndexerMappers mappers,
