@@ -24,7 +24,7 @@ public class GetPenalties
 
     public class GetPenaltiesHandler(
         IPortfolioService investmentService,
-        IIndexerService indexerService,
+        IAngorIndexerService angorIndexerService,
         IRelayService relayService,
         ITransactionService transactionService,
         IProjectInvestmentsService investmentsService)
@@ -75,7 +75,7 @@ public class GetPenalties
             return await Result.Try(() => investments.Value.ProjectIdentifiers //lookup investments pipeline
                 .ToObservable()
                 .Select(x => //get the investment
-                    Result.Try(() => indexerService.GetInvestmentAsync(x.ProjectIdentifier, x.InvestorPubKey))
+                    Result.Try(() => angorIndexerService.GetInvestmentAsync(x.ProjectIdentifier, x.InvestorPubKey))
                         .Map<ProjectInvestment?, LookupInvestment>(projectInvestment => new LookupInvestment
                         {
                             ProjectIdentifier = x.ProjectIdentifier,
@@ -85,7 +85,7 @@ public class GetPenalties
                         }))
                 .Merge()
                 .Bind(investment => //Get the project by id
-                    Result.Try(() => indexerService.GetProjectByIdAsync(investment.ProjectIdentifier))
+                    Result.Try(() => angorIndexerService.GetProjectByIdAsync(investment.ProjectIdentifier))
                         .Map(project =>
                         {
                             investment.NostrEventId = project.NostrEventId;

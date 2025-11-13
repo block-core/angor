@@ -17,8 +17,6 @@ public class MempoolSpaceIndexerApi : IIndexerService
     private readonly IHttpClientFactory _clientFactory;
     private readonly INetworkService _networkService;
     private readonly IDerivationOperations _derivationOperations;
-    private readonly MempoolIndexerMappers _mappers;
-    private readonly IAngorIndexerService _calculationApi;
 
     private ConcurrentDictionary<string, HttpClient> _clients = new();
 
@@ -28,16 +26,12 @@ public class MempoolSpaceIndexerApi : IIndexerService
         ILogger<MempoolSpaceIndexerApi> logger,
         IHttpClientFactory clientFactory,
         INetworkService networkService,
-        IDerivationOperations derivationOperations,
-        MempoolIndexerMappers mappers,
-        IAngorIndexerService calculationApi)
+        IDerivationOperations derivationOperations)
     {
         _logger = logger;
         _clientFactory = clientFactory;
         _networkService = networkService;
         _derivationOperations = derivationOperations;
-        _mappers = mappers;
-        _calculationApi = calculationApi;
     }
 
     #region Mempool.space API Models
@@ -142,31 +136,6 @@ public class MempoolSpaceIndexerApi : IIndexerService
         _clients.TryAdd(key, client);
 
         return client;
-    }
-
-    public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
-    {
-        return await _calculationApi.GetProjectsAsync(offset, limit);
-    }
-
-    public async Task<ProjectIndexerData?> GetProjectByIdAsync(string projectId)
-    {
-        return await _calculationApi.GetProjectByIdAsync(projectId);
-    }
-
-    public async Task<(string projectId, ProjectStats? stats)> GetProjectStatsAsync(string projectId)
-    {
-        return await _calculationApi.GetProjectStatsAsync(projectId);
-    }
-
-    public async Task<List<ProjectInvestment>> GetInvestmentsAsync(string projectId)
-    {
-        return await _calculationApi.GetInvestmentsAsync(projectId);
-    }
-
-    public async Task<ProjectInvestment?> GetInvestmentAsync(string projectId, string investorPubKey)
-    {
-        return await _calculationApi.GetInvestmentAsync(projectId, investorPubKey);
     }
 
     public async Task<string> PublishTransactionAsync(string trxHex)

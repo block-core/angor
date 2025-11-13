@@ -15,7 +15,7 @@ namespace Angor.Contexts.Funding.Services;
 [Obsolete("Use DocumentProjectRepository instead")]
 public class ProjectService(
     IRelayService relayService,
-    IIndexerService indexerService,
+    IAngorIndexerService angorIndexerService,
     [FromKeyedServices("memory")] IStore store) : IProjectService
 {
     private Task<Result<Maybe<Project>>> GetSingle(ProjectId id)
@@ -25,32 +25,32 @@ public class ProjectService(
 
     private async Task<Result<IEnumerable<Project>>> Get(params ProjectId[] projectIds)
     {
-        var projects = new List<Project>();
+     var projects = new List<Project>();
 
-        foreach (var projectId in projectIds)
+     foreach (var projectId in projectIds)
         {
-            var cached = await store.Load<Project>(projectId.Value);
-            if (cached.IsSuccess)
+    var cached = await store.Load<Project>(projectId.Value);
+      if (cached.IsSuccess)
             {
-                projects.Add(cached.Value);
-            }
+      projects.Add(cached.Value);
+      }
         }   
         
         var lookups = GetProjects(() => GetIndexerDatasIgnoreNotFound(projectIds.Where(x => projects.All(p => p.Id != x))));
         
         var lookupResult = await lookups;
         if (lookupResult.IsFailure)
-            return projects.Any()
-                ? Result.Success<IEnumerable<Project>>(projects)
-                : Result.Failure<IEnumerable<Project>>("Failed to retrieve some projects: " + lookupResult.Error);
-        
+     return projects.Any()
+      ? Result.Success<IEnumerable<Project>>(projects)
+      : Result.Failure<IEnumerable<Project>>("Failed to retrieve some projects: " + lookupResult.Error);
+     
         
         projects.AddRange(lookupResult.Value);
-        foreach (var project in lookupResult.Value)
+     foreach (var project in lookupResult.Value)
         {
-            await store.Save(project.Id.Value, project);
+      await store.Save(project.Id.Value, project);
         }
-        
+   
         return Result.Success(projects.AsEnumerable());
     }
 
@@ -113,19 +113,19 @@ public class ProjectService(
 
     private Task<Result<IEnumerable<ProjectIndexerData>>> GetIndexerDatas(IEnumerable<ProjectId> ids)
     {
-        return ids
-            .Select(id => Result.Try(() => indexerService.GetProjectByIdAsync(id.Value))
+      return ids
+            .Select(id => Result.Try(() => angorIndexerService.GetProjectByIdAsync(id.Value))
                 .EnsureNotNull(() => $"Project not found: {id.Value}"))
-            .CombineInOrder();
+          .CombineInOrder();
     }
 
 
     private Task<Result<IEnumerable<ProjectIndexerData>>> GetIndexerDatasIgnoreNotFound(IEnumerable<ProjectId> ids)
     {
-        return ids
-            .Select(id => Result.Try(() => indexerService.GetProjectByIdAsync(id.Value).AsMaybe()))
+      return ids
+            .Select(id => Result.Try(() => angorIndexerService.GetProjectByIdAsync(id.Value).AsMaybe()))
             .CombineInOrder()
-            .Map(maybes => maybes.Values());
+   .Map(maybes => maybes.Values());
     }
 
     public Task<Result<Project>> GetAsync(ProjectId id)
@@ -140,7 +140,7 @@ public class ProjectService(
 
     public Task<Result<IEnumerable<Project>>> LatestAsync()
     {
-        return GetProjects(() => Result.Try(() => indexerService.GetProjectsAsync(null, 20)).Map(list => list.AsEnumerable()));
+        return GetProjects(() => Result.Try(() => angorIndexerService.GetProjectsAsync(null, 20)).Map(list => list.AsEnumerable()));
     }
 
     public Task<Result<Maybe<Project>>> TryGet(ProjectId projectId)

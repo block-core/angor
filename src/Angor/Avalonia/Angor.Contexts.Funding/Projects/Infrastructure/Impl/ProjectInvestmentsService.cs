@@ -15,71 +15,70 @@ using Stage = Angor.Shared.Models.Stage;
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
 public class ProjectInvestmentsService(IProjectService projectService, INetworkConfiguration networkConfiguration,
-    IIndexerService indexerService, IInvestorTransactionActions investorTransactionActions,
+    IAngorIndexerService angorIndexerService, IInvestorTransactionActions investorTransactionActions,
     ITransactionService transactionService) : IProjectInvestmentsService
 {
     public async Task<Result<IEnumerable<StageData>>> ScanFullInvestments(string projectId)
     {
         var project = await projectService.GetAsync(new ProjectId(projectId));
 
-            if (project.IsFailure)
-                return Result.Failure<IEnumerable<StageData>>("Failed to retrieve project data.");
-            
-            try
-            {
-                var stageDataList = project.Value.Stages
-                    .Select(x => new StageData
-                    {
-                        Stage = new Stage() { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal },
-                        StageIndex = x.Index,
-                        Items = []
-                    }).ToList();
-                
-                var projectInvestments = await indexerService.GetInvestmentsAsync(projectId);
+        if (project.IsFailure)
+            return Result.Failure<IEnumerable<StageData>>("Failed to retrieve project data.");
 
-                if (projectInvestments.Count == 0)
-                    return Result.Success(stageDataList.AsEnumerable());
-                
-                var (_, isFailure, investments, error) = await GetProjectInvestmentsTransactionsAsync(projectInvestments);
-                
-                if (isFailure)
-                    return Result.Failure<IEnumerable<StageData>>("Failed to retrieve investment transactions: " + error);
-                
-                foreach (var stage in stageDataList)
+        try
+        {
+            var stageDataList = project.Value.Stages
+                .Select(x => new StageData
                 {
+                    Stage = new Stage() { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal },
+                    StageIndex = x.Index,
+                    Items = []
+                }).ToList();
 
-                    var tasks = investments.Select(tuple =>
-                            (output: tuple.trxInfo?.Outputs.First(outp => outp.Index == stage.StageIndex + 2)
-                                     ?? null,
-                                // +2 because the first two outputs are the Angor fee and Op return output but the stages start from index 1
-                                transaction: tuple.trx, index: stage.StageIndex))
-                        .Select(x => CheckSpentFund(x.output, x.transaction, project.Value.ToProjectInfo(), x.index));
-                    
-                    var results = await Task.WhenAll(tasks);
+            var projectInvestments = await angorIndexerService.GetInvestmentsAsync(projectId);
 
-                    var combinedResult = results.Combine();
-
-                    if (combinedResult.IsFailure)
-                        return Result.Failure<IEnumerable<StageData>>("Failed to process investment transactions: " +
-                                                                      combinedResult.Error);
-
-                    stage.Items = combinedResult.Value.ToList();
-
-                    foreach (var item in stage.Items)
-                    {
-                        item.InvestorPublicKey = projectInvestments
-                            .First(p => p.TransactionId == item.Trxid)
-                            .InvestorPublicKey;
-                    }
-                }
-                
+            if (projectInvestments.Count == 0)
                 return Result.Success(stageDataList.AsEnumerable());
-            }
-            catch (Exception e)
+
+            var investmentsResult = await GetProjectInvestmentsTransactionsAsync(projectInvestments);
+
+            if (investmentsResult.IsFailure)
+                return Result.Failure<IEnumerable<StageData>>("Failed to retrieve investment transactions: " + investmentsResult.Error);
+
+            foreach (var stage in stageDataList)
             {
-                //TODO add logging
-                return Result.Failure<IEnumerable<StageData>>(e.Message);
+
+                var tasks = investmentsResult.Value.Select(tuple =>
+                    (output: tuple.trxInfo?.Outputs.First(outp => outp.Index == stage.StageIndex + 2)
+                    ?? null,
+                     transaction: tuple.trx, index: stage.StageIndex))
+                    .Select(x => CheckSpentFund(x.output, x.transaction, project.Value.ToProjectInfo(), x.index));
+
+                var results = await Task.WhenAll(tasks);
+
+                var combinedResult = results.Combine();
+
+                if (combinedResult.IsFailure)
+                    return Result.Failure<IEnumerable<StageData>>("Failed to process investment transactions: " +
+                                                                  combinedResult.Error);
+
+                stage.Items = combinedResult.Value.ToList();
+
+                foreach (var item in stage.Items)
+                {
+                    item.InvestorPublicKey = projectInvestments
+                        .First(p => p.TransactionId == item.Trxid)
+                        .InvestorPublicKey;
+                }
             }
+
+            return Result.Success(stageDataList.AsEnumerable());
+        }
+        catch (Exception e)
+        {
+            //TODO add logging
+            return Result.Failure<IEnumerable<StageData>>(e.Message);
+        }
     }
 
     private async Task<Result<IList<(Transaction trx, QueryTransaction? trxInfo)>>> GetProjectInvestmentsTransactionsAsync(

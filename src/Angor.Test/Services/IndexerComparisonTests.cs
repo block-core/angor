@@ -80,9 +80,7 @@ public class IndexerComparisonTests
             new NullLogger<MempoolSpaceIndexerApi>(),
             mockHttpClientFactory.Object,
             networkService,
-            mockDerivationOperations.Object,
-            mappers,
-            _calculationApi);
+            mockDerivationOperations.Object);
     }
 
     /// <summary>
@@ -98,11 +96,11 @@ public class IndexerComparisonTests
 
         // Act - Call Angor API
         _calculationApi.ReadFromAngorApi = true;
-        var angorApiResult = await _indexerApi.GetProjectByIdAsync(TestProjectId);
+        var angorApiResult = await _calculationApi.GetProjectByIdAsync(TestProjectId);
 
         // Act - Call Blockchain Calculation API
         _calculationApi.ReadFromAngorApi = false;
-        var blockchainResult = await _indexerApi.GetProjectByIdAsync(TestProjectId);
+        var blockchainResult = await _calculationApi.GetProjectByIdAsync(TestProjectId);
 
         // Assert - Both should return data
         Assert.NotNull(angorApiResult);
@@ -140,11 +138,11 @@ public class IndexerComparisonTests
 
         // Act - Call Angor API
         _calculationApi.ReadFromAngorApi = true;
-        var (apiProjectId, angorApiStats) = await _indexerApi.GetProjectStatsAsync(TestProjectId);
+        var (apiProjectId, angorApiStats) = await _calculationApi.GetProjectStatsAsync(TestProjectId);
 
         // Act - Call Blockchain Calculation API
         _calculationApi.ReadFromAngorApi = false;
-        var (blockchainProjectId, blockchainStats) = await _indexerApi.GetProjectStatsAsync(TestProjectId);
+        var (blockchainProjectId, blockchainStats) = await _calculationApi.GetProjectStatsAsync(TestProjectId);
 
         // Assert - Both should return data
         Assert.Equal(TestProjectId, apiProjectId);
@@ -199,11 +197,11 @@ public class IndexerComparisonTests
 
         // Act - Call Angor API
         _calculationApi.ReadFromAngorApi = true;
-        var angorApiInvestments = await _indexerApi.GetInvestmentsAsync(TestProjectId);
+        var angorApiInvestments = await _calculationApi.GetInvestmentsAsync(TestProjectId);
 
         // Act - Call Blockchain Calculation API
         _calculationApi.ReadFromAngorApi = false;
-        var blockchainInvestments = await _indexerApi.GetInvestmentsAsync(TestProjectId);
+        var blockchainInvestments = await _calculationApi.GetInvestmentsAsync(TestProjectId);
 
         // Assert - Both should return data
         Assert.NotNull(angorApiInvestments);
@@ -261,7 +259,7 @@ public class IndexerComparisonTests
         // Arrange
         // First, get investments to find a valid investor public key
         _calculationApi.ReadFromAngorApi = true;
-        var investments = await _indexerApi.GetInvestmentsAsync(TestProjectId);
+        var investments = await _calculationApi.GetInvestmentsAsync(TestProjectId);
 
         if (!investments.Any())
         {
@@ -274,11 +272,11 @@ public class IndexerComparisonTests
 
         // Act - Call Angor API
         _calculationApi.ReadFromAngorApi = true;
-        var angorApiInvestment = await _indexerApi.GetInvestmentAsync(TestProjectId, testInvestorPubKey);
+        var angorApiInvestment = await _calculationApi.GetInvestmentAsync(TestProjectId, testInvestorPubKey);
 
         // Act - Call Blockchain Calculation API
         _calculationApi.ReadFromAngorApi = false;
-        var blockchainInvestment = await _indexerApi.GetInvestmentAsync(TestProjectId, testInvestorPubKey);
+        var blockchainInvestment = await _calculationApi.GetInvestmentAsync(TestProjectId, testInvestorPubKey);
 
         // Assert - Both should return data
         Assert.NotNull(angorApiInvestment);
@@ -318,7 +316,7 @@ public class IndexerComparisonTests
             // Test Angor API
             _calculationApi.ReadFromAngorApi = true;
             var angorWatch = System.Diagnostics.Stopwatch.StartNew();
-            await _indexerApi.GetProjectByIdAsync(TestProjectId);
+            await _calculationApi.GetProjectByIdAsync(TestProjectId);
             angorWatch.Stop();
             angorApiTimes.Add(angorWatch.Elapsed);
             _logger.LogInformation($"Angor API: {angorWatch.ElapsedMilliseconds}ms");
@@ -329,7 +327,7 @@ public class IndexerComparisonTests
             // Test Blockchain API
             _calculationApi.ReadFromAngorApi = false;
             var blockchainWatch = System.Diagnostics.Stopwatch.StartNew();
-            await _indexerApi.GetProjectByIdAsync(TestProjectId);
+            await _calculationApi.GetProjectByIdAsync(TestProjectId);
             blockchainWatch.Stop();
             blockchainApiTimes.Add(blockchainWatch.Elapsed);
             _logger.LogInformation($"Blockchain API: {blockchainWatch.ElapsedMilliseconds}ms");
