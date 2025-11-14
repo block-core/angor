@@ -1,7 +1,6 @@
 using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Founder.Dtos;
-using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Shared;
 using CSharpFunctionalExtensions;
 

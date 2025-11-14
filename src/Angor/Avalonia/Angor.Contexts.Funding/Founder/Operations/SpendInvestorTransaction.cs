@@ -1,6 +1,4 @@
 using Angor.Contexts.CrossCutting;
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -23,7 +21,6 @@ public static class SpendInvestorTransaction
     public record SpendInvestorTransactionRequest(WalletId WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<TransactionDraft>>;
 
     public class SpendInvestorTransactionHandler(
-        IWalletOperations walletOperations,
         IFounderTransactionActions founderTransactionActions,
         INetworkConfiguration networkConfiguration,
         IIndexerService indexerService,

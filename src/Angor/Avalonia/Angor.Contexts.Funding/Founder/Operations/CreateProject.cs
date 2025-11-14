@@ -1,5 +1,4 @@
 using Angor.Contexts.CrossCutting;
-using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
