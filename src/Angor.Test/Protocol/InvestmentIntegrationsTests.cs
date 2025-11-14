@@ -835,7 +835,7 @@ namespace Angor.Test.Protocol
 
         [Fact]
         public void SpendFundMonthlyBelowAndAboveThreshold()
-        {
+         {
             // Arrange
             var network = Networks.Bitcoin.Testnet();
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
@@ -852,22 +852,23 @@ namespace Angor.Test.Protocol
                 TargetAmount = 0,
                 PenaltyDays = 30,
                 PenaltyThreshold = Money.Coins(1).Satoshi, // Set threshold at 1 BTC
+                StartDate = DateTime.UtcNow.AddDays(-1),
                 ExpiryDate = DateTime.UtcNow.AddYears(1),
                 FounderKey = _derivationOperations.DeriveFounderKey(words, 1),
                 FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, _derivationOperations.DeriveFounderKey(words, 1)),
                 ProjectSeeders = new ProjectSeeders(),
                 DynamicStagePatterns = new List<DynamicStagePattern>
-     {
-              new DynamicStagePattern
-      {
-           PatternId = 0,
-     Name = "3-Month Fund (15th of month)",
-  Frequency = StageFrequency.Monthly,
-        StageCount = 3,
-        PayoutDayType = PayoutDayType.SpecificDayOfMonth,
-         PayoutDay = 15 // 15th of each month
-       }
-   }
+                 {
+                          new DynamicStagePattern
+                          {
+                                PatternId = 0,
+                                Name = "3-Month Fund (15th of month)",
+                                Frequency = StageFrequency.Monthly,
+                                StageCount = 3,
+                                PayoutDayType = PayoutDayType.SpecificDayOfMonth,
+                                PayoutDay = 15 // 15th of each month
+                           }
+                }
             };
             projectInfo.ProjectIdentifier = _derivationOperations.DeriveAngorKey(angorRootKey, projectInfo.FounderKey);
 
@@ -889,10 +890,10 @@ namespace Angor.Test.Protocol
 
             // Step 1: Create investment transaction for investor 1 (below threshold)
             var investor1Parameters = ProjectParameters.CreateForDynamicProject(
-          Encoders.Hex.EncodeData(investor1Key.PubKey.ToBytes()),
-      investor1Amount,
-        0,
-  investor1StartDate);
+             Encoders.Hex.EncodeData(investor1Key.PubKey.ToBytes()),
+            investor1Amount,
+            0,
+            investor1StartDate);
 
             var investor1Trx = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investor1Parameters);
             Assert.NotNull(investor1Trx);
@@ -902,14 +903,14 @@ namespace Angor.Test.Protocol
             Assert.False(investor1IsAboveThreshold, "Investor 1 should be below threshold (0.5 BTC < 1 BTC)");
 
             TransactionValidation.ThanTheTransactionHasNoErrors(investor1Trx,
-          new[] { new Coin(uint256.Zero, 0, Money.Coins(20), new Key().ScriptPubKey) });
+                new[] { new Coin(uint256.Zero, 0, Money.Coins(20), new Key().ScriptPubKey) });
 
             // Step 2: Create investment transaction for investor 2 (above threshold)
             var investor2Parameters = ProjectParameters.CreateForDynamicProject(
-        Encoders.Hex.EncodeData(investor2Key.PubKey.ToBytes()),
-  investor2Amount,
-         0,
-   investor2StartDate);
+                Encoders.Hex.EncodeData(investor2Key.PubKey.ToBytes()),
+                  investor2Amount,
+                         0,
+                   investor2StartDate);
 
             var investor2Trx = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investor2Parameters);
             Assert.NotNull(investor2Trx);
@@ -927,7 +928,7 @@ namespace Angor.Test.Protocol
              projectInfo,
               1, // Stage 1
                         investor1ReceiveAddress,
-          Encoders.Hex.EncodeData(investor1PrivateKey),
+             Encoders.Hex.EncodeData(investor1PrivateKey),
               _expectedFeeEstimation);
 
             Assert.NotNull(investor1RecoverStage1);
@@ -955,21 +956,21 @@ namespace Angor.Test.Protocol
 
             // Step 7: Investor 2 adds their signature to recovery transaction
             var investor2SignedRecoveryTrx = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(
-           projectInfo,
-      investor2Trx,
-        founderSignatures,
-      Encoders.Hex.EncodeData(investor2PrivateKey));
+             projectInfo,
+              investor2Trx,
+                founderSignatures,
+              Encoders.Hex.EncodeData(investor2PrivateKey));
 
             Assert.NotNull(investor2SignedRecoveryTrx);
 
             // Step 8: After penalty period, investor 2 recovers stage 1
             var investor2RecoverStage1 = _investorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(
-       projectInfo,
-       investor2Trx,
-    investor2SignedRecoveryTrx,
-    investor2ReceiveAddress,
-           _expectedFeeEstimation,
-  Encoders.Hex.EncodeData(investor2PrivateKey));
+                   projectInfo,
+                   investor2Trx,
+                investor2SignedRecoveryTrx,
+                investor2ReceiveAddress,
+                       _expectedFeeEstimation,
+              Encoders.Hex.EncodeData(investor2PrivateKey));
 
             Assert.NotNull(investor2RecoverStage1);
             Assert.NotNull(investor2RecoverStage1.Transaction);
@@ -979,18 +980,18 @@ namespace Angor.Test.Protocol
 
             // Founder spends Stage 2
             var founderSpendStage2 = _founderTransactionActions.SpendFounderStage(
-     projectInfo,
-    allInvestmentHexes,
-  2,
- founderReceiveAddress,
-        Encoders.Hex.EncodeData(founderKey.ToBytes()),
-      _expectedFeeEstimation);
+                 projectInfo,
+                allInvestmentHexes,
+              2,
+             founderReceiveAddress,
+                    Encoders.Hex.EncodeData(founderKey.ToBytes()),
+                  _expectedFeeEstimation);
 
             Assert.NotNull(founderSpendStage2);
             Assert.NotNull(founderSpendStage2.Transaction);
             TransactionValidation.ThanTheTransactionHasNoErrors(founderSpendStage2.Transaction,
-           allInvestmentHexes.SelectMany(hex =>
-          network.CreateTransaction(hex).Outputs.AsCoins().Where(c => c.Amount > 0)));
+                   allInvestmentHexes.SelectMany(hex =>
+                  network.CreateTransaction(hex).Outputs.AsCoins().Where(c => c.Amount > 0)));
 
             // Founder spends Stage 3
             var founderSpendStage3 = _founderTransactionActions.SpendFounderStage(
@@ -998,13 +999,13 @@ namespace Angor.Test.Protocol
                 allInvestmentHexes,
                  3,
                   founderReceiveAddress,
-             Encoders.Hex.EncodeData(founderKey.ToBytes()),
-          _expectedFeeEstimation);
+                  Encoders.Hex.EncodeData(founderKey.ToBytes()),
+                 _expectedFeeEstimation);
 
             Assert.NotNull(founderSpendStage3);
             Assert.NotNull(founderSpendStage3.Transaction);
             TransactionValidation.ThanTheTransactionHasNoErrors(founderSpendStage3.Transaction,
-         allInvestmentHexes.SelectMany(hex =>
+                   allInvestmentHexes.SelectMany(hex =>
              network.CreateTransaction(hex).Outputs.AsCoins().Where(c => c.Amount > 0)));
         }
     }
