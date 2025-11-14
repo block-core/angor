@@ -15,25 +15,28 @@ public class TransactionHistory(
     IWalletAccountBalanceService accountBalanceService,
     ILogger logger) : ITransactionHistory
 {
-    public async Task<Result<IEnumerable<string>>> GetWalletAddresses(WalletWords walletWords)
+    public async Task<Result<IEnumerable<string>>> GetWalletAddresses(WalletId walletId)
     {
-            var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(WalletAppService.SingleWalletId.Value); //TODO move the wallet id to be generated from a service for the wallet words
-            
-            if (accountBalanceInfo.IsFailure)
-                return Result.Failure<IEnumerable<string>>(accountBalanceInfo.Error);
-            
-            return Result.Success(accountBalanceInfo.Value.AccountInfo.AllAddresses().Select(a => a.Address));
+        var accountBalanceInfo =
+            await accountBalanceService
+                .RefreshAccountBalanceInfoAsync(walletId
+                    .Value);
+
+        if (accountBalanceInfo.IsFailure)
+            return Result.Failure<IEnumerable<string>>(accountBalanceInfo.Error);
+
+        return Result.Success(accountBalanceInfo.Value.AccountInfo.AllAddresses().Select(a => a.Address));
     }
-    
+
     private Task<Result<List<QueryTransaction>>> LookupAddressTransactions(string address)
     {
         return Result.Try(() => indexerService.FetchAddressHistoryAsync(address)) //TODO handle paging with sending the last received transaction id
             .Map(txns => txns ?? new List<QueryTransaction>());
     }
 
-    public async Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletWords walletWords)
+    public async Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletId walletId)
     {
-        var result = await GetWalletAddresses(walletWords);
+        var result = await GetWalletAddresses(walletId);
         if (result.IsFailure)
         {
             return Result.Failure<IEnumerable<BroadcastedTransaction>>(result.Error);

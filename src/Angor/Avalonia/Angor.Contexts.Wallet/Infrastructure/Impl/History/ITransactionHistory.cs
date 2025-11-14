@@ -6,6 +6,6 @@ namespace Angor.Contexts.Wallet.Infrastructure.History;
 
 public interface ITransactionHistory
 {
-    Task<Result<IEnumerable<string>>> GetWalletAddresses(WalletWords walletWords);
-    Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletWords walletWords);
+    Task<Result<IEnumerable<string>>> GetWalletAddresses(WalletId walletId);
+    Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletId walletId);
 }

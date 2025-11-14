@@ -56,4 +56,17 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
 
         return !upsertResult.IsFailure ? Result.Success(accountBalanceInfo) : Result.Failure<AccountBalanceInfo>(upsertResult.Error);
     }
+
+    public async Task<Result<IEnumerable<AccountBalanceInfo>>> GetAllAccountBalancesAsync()
+    {
+        var result = await collection.FindAllAsync();
+        if (result.IsFailure)
+        {
+            logger.LogError("Failed to retrieve all account balances: {Error}", result.Error);
+            return Result.Failure<IEnumerable<AccountBalanceInfo>>(result.Error);
+        }
+
+        var accountBalances = result.Value.Select(x => x.AccountBalanceInfo);
+        return Result.Success(accountBalances);
+    }
 }

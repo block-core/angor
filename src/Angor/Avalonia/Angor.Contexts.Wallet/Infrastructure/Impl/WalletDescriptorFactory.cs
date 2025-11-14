@@ -12,9 +12,8 @@ public abstract class WalletDescriptorFactory
             throw new DomainException("Invalid seed phrase");
 
         var masterKey = new Mnemonic(seedPhrase).DeriveExtKey(passphrase.GetValueOrDefault());
-
-        // Determine the coin_type based on the network (0 for MainNet, 1 for TestNet)
-        uint coinType = (uint)(network == Network.TestNet ? 1 : 0);
+        
+        var coinType = (uint)network.Consensus.CoinType;
 
         // Derive xpub for Segwit (P2WPKH)
         var segwitPath = $"m/84'/{coinType}'/0'";
