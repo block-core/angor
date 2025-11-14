@@ -31,7 +31,7 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
     public StagesViewModel(IObservable<DateTime?> endDateChanges, UIServices uiServices)
     {
         // Skip production validations only if debug mode is enabled AND we're on testnet
-        skipValidation = uiServices.ShouldSkipProductionValidations();
+        skipValidation = uiServices.ShouldSkipProductionValidations.Value;
 
         endDateSubject = new BehaviorSubject<DateTime?>(null);
         endDateChanges.Subscribe(endDateSubject);

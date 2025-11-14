@@ -24,7 +24,7 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
     public FundingStructureViewModel(UIServices uiServices)
     {
         // Skip production validations only if debug mode is enabled AND we're on testnet
-        skipValidation = uiServices.ShouldSkipProductionValidations();
+        skipValidation = uiServices.ShouldSkipProductionValidations.Value;
 
         // TARGET AMOUNT VALIDATIONS
         // Always enforced: Must be > 0

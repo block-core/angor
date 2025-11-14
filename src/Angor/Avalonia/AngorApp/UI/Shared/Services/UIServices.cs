@@ -1,9 +1,11 @@
-using System;
-using System.Reactive.Linq;
+using Angor.Contexts.Wallet.Infrastructure.Impl;
+using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
+using Angor.Shared.Models;
+using Angor.Shared.Networks;
+using Angor.Shared.Services;
 using AngorApp.UI.Shared.Controls;
 using AngorApp.UI.Shared.Controls.Feerate;
-using Avalonia.Controls;
 using Avalonia.Styling;
 using Blockcore.Networks;
 using Serilog;
@@ -18,10 +20,15 @@ public partial class UIServices : ReactiveObject
 {
     private readonly ISettings<UIPreferences> preferences;
     private readonly INetworkConfiguration networkConfiguration;
+    private readonly INetworkStorage networkStorage;
+    private readonly INetworkService networkService;
+    private readonly IWalletStore walletStore;
+    private static readonly IReadOnlyList<string> networkOptions = new[] { "Angornet", "Mainnet" };
 
     [Reactive] private bool isDarkThemeEnabled;
     [Reactive] private bool isBitcoinPreferred = true;
     [Reactive] private bool isDebugModeEnabled;
+    [Reactive] private Network currentNetwork;
 
     public ILauncherService LauncherService { get; }
     public IDialog Dialog { get; }
@@ -33,7 +40,10 @@ public partial class UIServices : ReactiveObject
         ISettings<UIPreferences> preferences,
         string profileName,
         TopLevel topLevel,
-        INetworkConfiguration networkConfiguration)
+        INetworkConfiguration networkConfiguration,
+        INetworkStorage networkStorage,
+        INetworkService networkService,
+        IWalletStore walletStore)
     {
         if (string.IsNullOrWhiteSpace(profileName))
         {
@@ -42,12 +52,16 @@ public partial class UIServices : ReactiveObject
 
         this.preferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
         this.networkConfiguration = networkConfiguration ?? throw new ArgumentNullException(nameof(networkConfiguration));
+        this.networkStorage = networkStorage ?? throw new ArgumentNullException(nameof(networkStorage));
+        this.networkService = networkService ?? throw new ArgumentNullException(nameof(networkService));
+        this.walletStore = walletStore ?? throw new ArgumentNullException(nameof(walletStore));
 
         LauncherService = launcherService;
         Dialog = dialog;
         NotificationService = notificationService;
         Validations = validations;
         ProfileName = profileName;
+        CurrentNetwork = EnsureCurrentNetwork();
 
         var loadResult = this.preferences.Get();
         if (loadResult.IsSuccess)
@@ -101,21 +115,43 @@ public partial class UIServices : ReactiveObject
                             Log.Warning("Could not persist UI preferences for profile {Profile}. Reason: {Error}", profileName, update.Error);
                         }
                     });
+
+        var initialValue = this.WhenAnyValue(services => services.IsDebugModeEnabled, services => services.CurrentNetwork, GetShouldSkipProductionValidations);
+
+        ShouldSkipProductionValidations = new Reactive.Bindings.ReactiveProperty<bool>(initialValue);
     }
 
-    /// <summary>
-    /// Determines if production validations should be skipped.
-    /// Returns true only when BOTH debug mode is enabled AND the network is testnet.
-    /// This allows for more flexible testing in development environments.
-    /// </summary>
-    /// <returns>True if debug mode is enabled and network is testnet; otherwise false.</returns>
-    public bool ShouldSkipProductionValidations()
-    {
-        var isDebugMode = IsDebugModeEnabled;
-        var network = networkConfiguration.GetNetwork();
-        var isTestnet = network.NetworkType == NetworkType.Testnet;
+    public Reactive.Bindings.ReactiveProperty<bool> ShouldSkipProductionValidations { get; }
 
-        return isDebugMode && isTestnet;
+    public IReadOnlyList<string> NetworkOptions => networkOptions;
+
+    public string CurrentNetworkName => MapNetworkToDisplayName(CurrentNetwork);
+
+    public void ApplyNetworkSelection(string networkName)
+    {
+        if (string.IsNullOrWhiteSpace(networkName))
+        {
+            throw new ArgumentException("Network name cannot be null or empty.", nameof(networkName));
+        }
+
+        if (string.Equals(CurrentNetworkName, networkName, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var targetNetwork = ResolveNetwork(networkName);
+        networkStorage.SetNetwork(networkName);
+        networkStorage.SetSettings(new SettingsInfo());
+        networkConfiguration.SetNetwork(targetNetwork);
+        CurrentNetwork = targetNetwork;
+        networkService.AddSettingsIfNotExist();
+        _ = walletStore.SaveAll(Array.Empty<EncryptedWallet>());
+    }
+    
+    private bool GetShouldSkipProductionValidations(bool isDebugModeEnabled, Network currentNetwork)
+    {
+        var isTestnet = currentNetwork.NetworkType == NetworkType.Testnet;
+        return isDebugModeEnabled && isTestnet;
     }
 
     public IEnumerable<IFeeratePreset> FeeratePresets
@@ -132,4 +168,43 @@ public partial class UIServices : ReactiveObject
     }
 
     public IValidations Validations { get; }
+
+    private Network EnsureCurrentNetwork()
+    {
+        try
+        {
+            return networkConfiguration.GetNetwork();
+        }
+        catch (ApplicationException)
+        {
+            var storedNetwork = networkStorage.GetNetwork();
+            var resolvedNetwork = ResolveNetwork(storedNetwork);
+            networkConfiguration.SetNetwork(resolvedNetwork);
+            return resolvedNetwork;
+        }
+    }
+
+    private static Network ResolveNetwork(string networkName) =>
+        networkName switch
+        {
+            "Main" => new BitcoinMain(),
+            "Mainnet" => new BitcoinMain(),
+            _ => new Angornet(),
+        };
+
+    private static string MapNetworkToDisplayName(Network? network)
+    {
+        if (network is null)
+        {
+            return "Angornet";
+        }
+
+        return network.Name switch
+        {
+            "Main" => "Mainnet",
+            "Mainnet" => "Mainnet",
+            "Angornet" => "Angornet",
+            _ => network.Name
+        };
+    }
 }

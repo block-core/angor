@@ -1,11 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
-using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
-using Angor.Shared.Networks;
-using Angor.Shared.Services;
 using System.Linq;
 using System.Reactive.Disposables;
 using AngorApp.UI.Shared.Controls;
@@ -29,8 +26,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private readonly IWalletContext walletContext;
 
-    private readonly INetworkConfiguration networkConfiguration;
-
     private string network;
 
     private string newIndexer;
@@ -47,22 +42,19 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private readonly CompositeDisposable disposable = new();
 
-    public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, INetworkService networkService, INetworkConfiguration networkConfiguration, IWalletContext walletContext)
+    public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, IWalletContext walletContext)
     {
         this.networkStorage = networkStorage;
         this.walletStore = walletStore;
         this.uiServices = uiServices;
         this.walletContext = walletContext;
-        this.networkConfiguration = networkConfiguration;
 
-        networkService.AddSettingsIfNotExist();
-
+        Networks = uiServices.NetworkOptions;
         var settings = networkStorage.GetSettings();
         Indexers = new ObservableCollection<SettingsUrlViewModel>(settings.Indexers.Select(CreateIndexer));
         Relays = new ObservableCollection<SettingsUrlViewModel>(settings.Relays.Select(CreateRelay));
 
-        currentNetwork = networkStorage.GetNetwork();
-        networkConfiguration.SetNetwork(currentNetwork == "Mainnet" ? new BitcoinMain() : new Angornet());
+        currentNetwork = uiServices.CurrentNetworkName;
         Network = currentNetwork;
         IsTestnet = currentNetwork == "Angornet";
 
@@ -75,6 +67,23 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
             .ObserveOn(RxApp.MainThreadScheduler);
         DeleteWallet = ReactiveCommand.CreateFromTask(DeleteWalletAsync, canDeleteWallet).DisposeWith(disposable);
 
+        uiServices.WhenAnyValue(s => s.CurrentNetwork)
+            .Select(_ => uiServices.CurrentNetworkName)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(name =>
+            {
+                if (currentNetwork == name)
+                {
+                    return;
+                }
+
+                currentNetwork = name;
+                restoringNetwork = true;
+                Network = name;
+                restoringNetwork = false;
+            })
+            .DisposeWith(disposable);
+
         this.WhenAnyValue(x => x.Network)
             .Skip(1)
             .Where(_ => !restoringNetwork)
@@ -85,14 +94,10 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
                 {
                     if (confirmed)
                     {
-                        networkStorage.SetNetwork(t.n);
-                        networkStorage.SetSettings(new SettingsInfo());
-                        networkConfiguration.SetNetwork(t.n == "Mainnet" ? new BitcoinMain() : new Angornet());
-                        networkService.AddSettingsIfNotExist();
+                        uiServices.ApplyNetworkSelection(t.n);
                         var s = networkStorage.GetSettings();
                         Reset(Indexers, s.Indexers.Select(CreateIndexer));
                         Reset(Relays, s.Relays.Select(CreateRelay));
-                        this.walletStore.SaveAll([]);
                         currentNetwork = t.n;
                     }
                     else
@@ -123,7 +128,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     public ObservableCollection<SettingsUrlViewModel> Indexers { get; }
     public ObservableCollection<SettingsUrlViewModel> Relays { get; }
 
-    public IReadOnlyList<string> Networks { get; } = new[] { "Angornet", "Mainnet" };
+    public IReadOnlyList<string> Networks { get; }
 
     public ReactiveCommand<Unit, Unit> AddIndexer { get; }
     public ReactiveCommand<Unit, Unit> AddRelay { get; }
