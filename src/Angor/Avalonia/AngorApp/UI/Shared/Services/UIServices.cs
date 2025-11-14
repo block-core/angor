@@ -22,6 +22,7 @@ public partial class UIServices : ReactiveObject
     [Reactive] private bool isDarkThemeEnabled;
     [Reactive] private bool isBitcoinPreferred = true;
     [Reactive] private bool isDebugModeEnabled;
+    private bool shouldSkipProductionValidations;
 
     public ILauncherService LauncherService { get; }
     public IDialog Dialog { get; }
@@ -75,10 +76,14 @@ public partial class UIServices : ReactiveObject
                   .Do(isBtc => AmountOptions.SetIsBitcoinPreferred(topLevel, isBtc))
                   .Subscribe();
 
-        // Sync debug mode changes to network configuration
+        // Sync debug mode changes to network configuration and cached validation flag
         this.WhenAnyValue(services => services.IsDebugModeEnabled)
             .DistinctUntilChanged()
-            .Do(isDebug => networkConfiguration.SetDebugMode(isDebug))
+            .Do(isDebug =>
+            {
+                networkConfiguration.SetDebugMode(isDebug);
+                UpdateShouldSkipProductionValidations();
+            })
             .Subscribe();
 
         this.WhenAnyValue(
@@ -101,6 +106,7 @@ public partial class UIServices : ReactiveObject
                             Log.Warning("Could not persist UI preferences for profile {Profile}. Reason: {Error}", profileName, update.Error);
                         }
                     });
+        UpdateShouldSkipProductionValidations();
     }
 
     /// <summary>
@@ -109,13 +115,11 @@ public partial class UIServices : ReactiveObject
     /// This allows for more flexible testing in development environments.
     /// </summary>
     /// <returns>True if debug mode is enabled and network is testnet; otherwise false.</returns>
-    public bool ShouldSkipProductionValidations()
-    {
-        var isDebugMode = IsDebugModeEnabled;
-        var network = networkConfiguration.GetNetwork();
-        var isTestnet = network.NetworkType == NetworkType.Testnet;
+    public bool ShouldSkipProductionValidations() => shouldSkipProductionValidations;
 
-        return isDebugMode && isTestnet;
+    public void RefreshShouldSkipProductionValidations()
+    {
+        UpdateShouldSkipProductionValidations();
     }
 
     public IEnumerable<IFeeratePreset> FeeratePresets
@@ -132,4 +136,19 @@ public partial class UIServices : ReactiveObject
     }
 
     public IValidations Validations { get; }
+
+    private void UpdateShouldSkipProductionValidations()
+    {
+        var network = networkConfiguration.GetNetwork();
+        var isTestnet = network.NetworkType == NetworkType.Testnet;
+        var shouldSkip = IsDebugModeEnabled && isTestnet;
+
+        if (shouldSkipProductionValidations == shouldSkip)
+        {
+            return;
+        }
+
+        shouldSkipProductionValidations = shouldSkip;
+        this.RaisePropertyChanged(nameof(ShouldSkipProductionValidations));
+    }
 }

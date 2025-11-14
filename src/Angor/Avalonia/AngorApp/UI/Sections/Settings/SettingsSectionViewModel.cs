@@ -63,6 +63,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
         currentNetwork = networkStorage.GetNetwork();
         networkConfiguration.SetNetwork(currentNetwork == "Mainnet" ? new BitcoinMain() : new Angornet());
+        uiServices.RefreshShouldSkipProductionValidations();
         Network = currentNetwork;
         IsTestnet = currentNetwork == "Angornet";
 
@@ -88,6 +89,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
                         networkStorage.SetNetwork(t.n);
                         networkStorage.SetSettings(new SettingsInfo());
                         networkConfiguration.SetNetwork(t.n == "Mainnet" ? new BitcoinMain() : new Angornet());
+                        uiServices.RefreshShouldSkipProductionValidations();
                         networkService.AddSettingsIfNotExist();
                         var s = networkStorage.GetSettings();
                         Reset(Indexers, s.Indexers.Select(CreateIndexer));
