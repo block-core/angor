@@ -1,3 +1,5 @@
+using Angor.Contexts.CrossCutting;
+
 namespace Angor.Contexts.Wallet.Domain;
 
 public class Wallet

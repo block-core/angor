@@ -58,7 +58,7 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
 
     private async Task<Result<string>> DoCreateProject(IWallet wallet, CreateProjectDto dto, long feeRate)
     {
-        var result = await projectAppService.CreateProject(wallet.Id.Value, feeRate, dto);
+        var result = await projectAppService.CreateProject(wallet.Id, feeRate, dto);
         if(result.IsSuccess)
             return Result.Success(result.Value.TransactionId); //TODO Jose, need to fix this when the changes are implemented in the UI
         logger.LogDebug("[CreateProject] Service returned failure: {Error}\nWalletId: {WalletId}, Dto: {@Dto}", result.Error, wallet.Id.Value, dto);

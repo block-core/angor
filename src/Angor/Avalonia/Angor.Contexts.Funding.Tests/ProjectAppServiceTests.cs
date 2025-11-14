@@ -1,4 +1,4 @@
-﻿using Angor.Contests.CrossCutting;
+﻿﻿﻿using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Tests.TestDoubles;
@@ -11,6 +11,8 @@ namespace Angor.Contexts.Funding.Tests;
 
 public class ProjectAppServiceTests(ITestOutputHelper output)
 {
+    private static readonly WalletId TestWalletId = new("test-project-app-service-wallet");
+
     [Fact(Skip = "Skipping failing test: DI for document collection not configured yet.")]
     public async Task Get_latest_projects()
     {
@@ -27,7 +29,7 @@ public class ProjectAppServiceTests(ITestOutputHelper output)
         var sut = CreateSut();
         
         var projectId = new ProjectId("angor1qkmmqqktfhe79wxp20555cdp5gfardr4s26wr00");
-        var result = await sut.GetFounderProjects(Guid.NewGuid().ToString());
+        var result = await sut.GetFounderProjects(TestWalletId);
         
         Assert.NotEmpty(result.Value);
     }

@@ -1,4 +1,4 @@
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;
 

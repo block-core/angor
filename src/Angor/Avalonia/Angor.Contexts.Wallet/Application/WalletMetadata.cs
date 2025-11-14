@@ -1,4 +1,4 @@
-using Angor.Contexts.Wallet.Domain;
+using Angor.Contexts.CrossCutting;
 
 namespace Angor.Contexts.Wallet.Application;
 

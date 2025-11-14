@@ -1,3 +1,4 @@
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Investor;
@@ -17,7 +18,7 @@ public class UnfundedProjectTransaction : IUnfundedProjectTransaction
         Approved = dto.Approved;
         InvestmentEventId = dto.InvestmentEventId;
 
-        Release = ReactiveCommand.CreateFromTask(() => UserFlow.PromptAndNotify(() => founderAppService.ReleaseInvestorTransactions(walletId, projectId, [InvestmentEventId]), uiServices,
+        Release = ReactiveCommand.CreateFromTask(() => UserFlow.PromptAndNotify(() => founderAppService.ReleaseInvestorTransactions(new WalletId(walletId), projectId, [InvestmentEventId]), uiServices,
                 "Are you sure you want to release these funds?",
                 "Confirm Release",
                 "Success fully released",

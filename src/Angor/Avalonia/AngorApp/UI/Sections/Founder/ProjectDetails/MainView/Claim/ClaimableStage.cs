@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Investor;
@@ -66,7 +67,7 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
             StageId = stageId
         });
 
-        var result = await founderAppService.Spend(walletId, new DomainFeerate(feerate), projectId, toSpend);
+        var result = await founderAppService.Spend(new WalletId(walletId), new DomainFeerate(feerate), projectId, toSpend);
         return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
     }
 

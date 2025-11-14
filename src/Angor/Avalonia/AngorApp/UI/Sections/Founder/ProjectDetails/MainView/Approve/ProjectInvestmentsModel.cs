@@ -39,7 +39,7 @@ public partial class ApproveInvestmentsViewModel : ReactiveObject, IApproveInves
 
     private Task<Result<(IWallet wallet, IEnumerable<Investment> investments)>> GetWalletInvestments(ProjectId projectId, IWallet wallet)
     {
-        var investments = founderAppService.GetInvestments(wallet.Id.Value, projectId);
+        var investments = founderAppService.GetInvestments(wallet.Id, projectId);
         return investments.Map(x => (wallet, investments: x));
     }
 
@@ -52,7 +52,7 @@ public partial class ApproveInvestmentsViewModel : ReactiveObject, IApproveInves
             return false;
         }
 
-        var approvalResult = await founderAppService.ApproveInvestment(wallet.Id.Value, projectId, investment);
+        var approvalResult = await founderAppService.ApproveInvestment(wallet.Id, projectId, investment);
 
         return approvalResult.IsSuccess;
     }

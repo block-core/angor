@@ -50,7 +50,7 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
     private Task<Result<IEnumerable<IClaimableStage>>> GetClaimableStages(IWallet wallet)
     {
         return founderAppService
-            .GetClaimableTransactions(wallet.Id.Value, projectId)
+            .GetClaimableTransactions(wallet.Id, projectId)
             .Map(CreateStage);
     }
 

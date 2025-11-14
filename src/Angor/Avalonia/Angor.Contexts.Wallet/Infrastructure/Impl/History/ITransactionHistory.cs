@@ -1,3 +1,4 @@
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;

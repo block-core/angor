@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using Angor.Data.Documents.Interfaces;
