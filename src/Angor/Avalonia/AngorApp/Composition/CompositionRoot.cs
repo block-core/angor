@@ -1,3 +1,5 @@
+using System.IO;
+using System.Text.Json;
 using Angor.Contests.CrossCutting;
 using Angor.Contexts.Funding;
 using Angor.Contexts.Integration.WalletFunding;
@@ -12,6 +14,7 @@ using AngorApp.Composition.Registrations.Sections;
 using AngorApp.Composition.Registrations.Services;
 using AngorApp.Composition.Registrations.ViewModels;
 using AngorApp.UI.Sections.Shell;
+using AngorApp.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Zafiro.UI.Navigation;
@@ -29,8 +32,10 @@ public static class CompositionRoot
         UnhandledExceptionLogger.Register(logger);
 
         var store = new FileStore(applicationStorage, profileContext);
-        var networkStorage = new NetworkStorage(store);
-        var network = networkStorage.GetNetwork() switch
+        var uiSettingsPath = UIServicesRegistration.GetSettingsFilePath(applicationStorage, profileContext);
+        var uiPreferences = LoadUiPreferences(uiSettingsPath);
+        var selectedNetworkName = string.IsNullOrWhiteSpace(uiPreferences.SelectedNetwork) ? "Angornet" : uiPreferences.SelectedNetwork;
+        var network = selectedNetworkName switch
         {
             "Mainnet" => BitcoinNetwork.Mainnet,
             _ => BitcoinNetwork.Testnet
@@ -40,6 +45,7 @@ public static class CompositionRoot
         services.AddLiteDbDocumentStorage(profileContext);
         services.AddKeyedSingleton<IStore>("file", store);
         services.AddSingleton<IStore>(provider => provider.GetKeyedService<IStore>("file")!);
+        services.AddSingleton<INetworkStorage>(_ => new NetworkStorage(store, selectedNetworkName));
         LoggingConfigurator.RegisterLogger(services, logger);
 
         services.AddSingleton<Func<BitcoinNetwork>>(sp => () =>
@@ -74,5 +80,23 @@ public static class CompositionRoot
     private static void RegisterWalletServices(ServiceCollection services, ILogger logger, BitcoinNetwork network)
     {
         WalletContextServices.Register(services, logger, network);
+    }
+
+    private static UIPreferences LoadUiPreferences(string path)
+    {
+        try
+        {
+            if (!File.Exists(path))
+            {
+                return UIPreferences.CreateDefault();
+            }
+
+            var json = File.ReadAllText(path);
+            return JsonSerializer.Deserialize<UIPreferences>(json) ?? UIPreferences.CreateDefault();
+        }
+        catch
+        {
+            return UIPreferences.CreateDefault();
+        }
     }
 }

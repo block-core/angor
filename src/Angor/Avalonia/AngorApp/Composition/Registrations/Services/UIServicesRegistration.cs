@@ -29,7 +29,7 @@ public static class UIServicesRegistration
         Debug.Assert(topLevel != null, "TopLevel cannot be null. Ensure that the parent control is attached to a TopLevel.");
         
         var notificationService = NotificationService(topLevel);
-        var settingsFilePath = CreateSettingsFilePath(storage, profileContext);
+        var settingsFilePath = GetSettingsFilePath(storage, profileContext);
         
         return services
             .AddSettings(
@@ -79,7 +79,7 @@ public static class UIServicesRegistration
         return Observable.Return("");
     }
 
-    private static string CreateSettingsFilePath(IApplicationStorage storage, ProfileContext profileContext)
+    internal static string GetSettingsFilePath(IApplicationStorage storage, ProfileContext profileContext)
     {
         try
         {

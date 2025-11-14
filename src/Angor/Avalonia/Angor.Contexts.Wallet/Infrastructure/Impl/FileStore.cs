@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Text.Json;
 using Angor.Contests.CrossCutting;
 using CSharpFunctionalExtensions;
@@ -15,37 +16,68 @@ public class FileStore : IStore
         ArgumentNullException.ThrowIfNull(storage);
         ArgumentNullException.ThrowIfNull(profileContext);
 
-        var directory = storage.GetProfileDirectory(profileContext.AppName, profileContext.ProfileName);
-        appDataPath = directory;
+        appDataPath = storage.GetProfileDirectory(profileContext.AppName, profileContext.ProfileName);
     }
 
     public async Task<Result> Save<T>(string key, T data)
     {
-        return from filePath in Result.Try(() => Path.Combine(appDataPath, key))
-            from contents in Result.Try(() => JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }))
-            select Result.Try(() => File.WriteAllTextAsync(filePath, contents))
-                .Bind(Result.Success);
+        try
+        {
+            var filePath = Path.Combine(appDataPath, key);
+            EnsureDirectory(filePath);
+            var contents = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(filePath, contents).ConfigureAwait(false);
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(ex.Message);
+        }
     }
 
-    public Task<Result<T>> Load<T>(string key)
+    public async Task<Result<T>> Load<T>(string key)
     {
-        return Result.Try(() => Path.Combine(appDataPath, key))
-            .TapTry(CreateFile)
-            .MapTry(s => File.ReadAllTextAsync(s))
-            .Ensure(x => !string.IsNullOrWhiteSpace(x), $"Could not read file {key}")
-            .Bind(json => Result.Try(() => JsonSerializer.Deserialize<T>(json))
-                .Ensure(x => x != null, $"Could not deserialize {json} as {typeof(T)}")
-                .Map(x => x!)
-            );
+        try
+        {
+            var filePath = Path.Combine(appDataPath, key);
+            CreateFile(filePath);
+            var json = await File.ReadAllTextAsync(filePath).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return Result.Failure<T>($"Could not read file {key}");
+            }
+
+            var deserialized = JsonSerializer.Deserialize<T>(json);
+            return deserialized is null
+                ? Result.Failure<T>($"Could not deserialize {json} as {typeof(T)}")
+                : Result.Success(deserialized);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<T>(ex.Message);
+        }
     }
 
     private static void CreateFile(string path)
     {
+        EnsureDirectory(path);
+
         if (File.Exists(path))
         {
             return;
         }
 
-        using (File.Create(path)) { }
+        using var _ = File.Create(path);
+    }
+
+    private static void EnsureDirectory(string path)
+    {
+        var directory = Path.GetDirectoryName(path);
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(directory);
     }
 }

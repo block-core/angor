@@ -1,72 +1,80 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Angor.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 
 namespace Angor.Contests.CrossCutting;
 
-public class NetworkStorage(IStore store) : INetworkStorage
+public class NetworkStorage : INetworkStorage
 {
-    private const string SettingsFile = "settings.json";
+    private const string NetworkSettingsFileName = "network-settings.json";
 
-    private SettingsData? _settingsData;
-    
-    public SettingsInfo GetSettings() => Load()
-        .Map(data => new SettingsInfo
-        {
-            Explorers = data.Explorers,
-            Indexers = data.Indexers,
-            Relays = data.Relays
-        })
-        .OnFailureCompensate(_ => new SettingsInfo())
-        .Value;
+    private readonly IStore store;
+    private string currentNetwork;
+
+    public NetworkStorage(IStore store, string initialNetwork = "Angornet")
+    {
+        this.store = store ?? throw new ArgumentNullException(nameof(store));
+        currentNetwork = Normalize(initialNetwork);
+    }
+
+    public SettingsInfo GetSettings() => LoadSettingsForNetwork(currentNetwork);
 
     public void SetSettings(SettingsInfo settingsInfo)
     {
-        var data = Load().OnFailureCompensate(_ => new SettingsData()).Value;
-        data.Explorers = settingsInfo.Explorers;
-        data.Indexers = settingsInfo.Indexers;
-        data.Relays = settingsInfo.Relays;
-        store.Save(SettingsFile, data);
+        ArgumentNullException.ThrowIfNull(settingsInfo);
+        SaveSettingsForNetwork(currentNetwork, settingsInfo);
     }
 
     public void SetNetwork(string network)
     {
-        var data = Load().OnFailureCompensate(_ => new SettingsData()).Value;
-        data.Network = network;
-        store.Save(SettingsFile, data);
+        currentNetwork = Normalize(network);
     }
 
-    public string GetNetwork() => Load()
-        .Map(d => d.Network)
-        .OnFailureCompensate(_ => "Angornet")
-        .Value;
+    public string GetNetwork() => currentNetwork;
 
-    private Result<SettingsData> Load()
+    private SettingsInfo LoadSettingsForNetwork(string network)
     {
-        if (_settingsData != null)
-        {
-            return Result.Success(_settingsData);
-        }
+        var scopedKey = NetworkScopedKey(network);
+        var result = store.Load<SettingsInfo>(scopedKey).GetAwaiter().GetResult();
 
-        var result = store.Load<SettingsData>(SettingsFile).GetAwaiter().GetResult();
-
-        if (result.IsSuccess)
-        {
-            _settingsData = result.Value;
-            return Result.Success(_settingsData);
-        }
-        else
-        {
-            _settingsData = null;
-            return Result.Failure<SettingsData>(result.Error);
-        }
-    } 
-
-    private class SettingsData
-    {
-        public string Network { get; set; } = "Angornet";
-        public List<SettingsUrl> Explorers { get; set; } = new();
-        public List<SettingsUrl> Indexers { get; set; } = new();
-        public List<SettingsUrl> Relays { get; set; } = new();
+        return result.IsSuccess
+            ? Clone(result.Value)
+            : new SettingsInfo();
     }
+
+    private void SaveSettingsForNetwork(string network, SettingsInfo settingsInfo)
+    {
+        var scopedKey = NetworkScopedKey(network);
+        store.Save(scopedKey, Clone(settingsInfo)).GetAwaiter().GetResult();
+    }
+
+    private static string NetworkScopedKey(string network) =>
+        Path.Combine(network, NetworkSettingsFileName);
+
+    private static SettingsInfo Clone(SettingsInfo source) => new()
+    {
+        Explorers = CloneList(source.Explorers),
+        Indexers = CloneList(source.Indexers),
+        Relays = CloneList(source.Relays),
+        ChatApps = CloneList(source.ChatApps),
+    };
+
+    private static List<SettingsUrl> CloneList(List<SettingsUrl>? source) =>
+        source?.Select(Clone).ToList() ?? new List<SettingsUrl>();
+
+    private static SettingsUrl Clone(SettingsUrl url) => new()
+    {
+        Name = url.Name,
+        Url = url.Url,
+        IsPrimary = url.IsPrimary,
+        Status = url.Status,
+        LastCheck = url.LastCheck
+    };
+
+    private static string Normalize(string? network) =>
+        string.IsNullOrWhiteSpace(network) ? "Angornet" : network;
 }

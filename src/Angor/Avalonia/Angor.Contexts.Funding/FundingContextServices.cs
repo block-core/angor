@@ -34,7 +34,7 @@ public static class FundingContextServices
         services.TryAddSingleton<ISerializer, Serializer>();
         services.TryAddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
         services.TryAddSingleton<IRelayService, RelayService>();
-        services.TryAddSingleton<INetworkStorage, NetworkStorage>();
+        services.TryAddSingleton<INetworkStorage>(sp => new NetworkStorage(sp.GetRequiredService<IStore>()));
         //TODO change the call to use the factory
         services.TryAddScoped<HttpClient>(x => x.GetRequiredService<IHttpClientFactory>().CreateClient());
         services.TryAddSingleton<IIndexerService,MempoolSpaceIndexerApi>();

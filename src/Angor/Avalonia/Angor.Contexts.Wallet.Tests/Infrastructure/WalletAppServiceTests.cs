@@ -167,7 +167,6 @@ public class WalletAppServiceTests(ITestOutputHelper output)
             ""
         );
 
-        serviceCollection.AddSingleton<IWalletStore>(new WalletStore(new InMemoryStore()));
         serviceCollection.AddSingleton<IWalletSecurityContext>(walletSecurityContext);
         serviceCollection.AddSingleton<ISensitiveWalletDataProvider>(sensitiveWalletDataProvider);
         

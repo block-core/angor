@@ -1,12 +1,15 @@
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
-using Angor.Contexts.Wallet.Infrastructure.Interfaces;
-using Angor.Shared;
-using Angor.Shared.Models;
 using System.Linq;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Threading.Tasks;
+using Angor.Shared;
+using Angor.Shared.Models;
 using AngorApp.UI.Shared.Controls;
 using AngorApp.UI.Shared.Services;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using ReactiveUI;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
@@ -19,8 +22,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     private bool isBitcoinPreferred;
 
     private readonly INetworkStorage networkStorage;
-
-    private readonly IWalletStore walletStore;
 
     private readonly UIServices uiServices;
 
@@ -42,10 +43,9 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private readonly CompositeDisposable disposable = new();
 
-    public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, IWalletContext walletContext)
+    public SettingsSectionViewModel(INetworkStorage networkStorage, UIServices uiServices, IWalletContext walletContext)
     {
         this.networkStorage = networkStorage;
-        this.walletStore = walletStore;
         this.uiServices = uiServices;
         this.walletContext = walletContext;
 
@@ -87,30 +87,9 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         this.WhenAnyValue(x => x.Network)
             .Skip(1)
             .Where(_ => !restoringNetwork)
-            .SelectMany(async n => (n, await this.uiServices.Dialog.ShowConfirmation("Change network?", "Changing network will delete the current wallet")))
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(t => t.Item2.Match(
-                confirmed =>
-                {
-                    if (confirmed)
-                    {
-                        uiServices.ApplyNetworkSelection(t.n);
-                        var s = networkStorage.GetSettings();
-                        Reset(Indexers, s.Indexers.Select(CreateIndexer));
-                        Reset(Relays, s.Relays.Select(CreateRelay));
-                        currentNetwork = t.n;
-                    }
-                    else
-                    {
-                        RestoreNetwork();
-                    }
-                    return Unit.Default;
-                },
-                () =>
-                {
-                    RestoreNetwork();
-                    return Unit.Default;
-                }))
+            .SelectMany(network => Observable.FromAsync(() => HandleNetworkChangeAsync(network)))
+            .Subscribe()
             .DisposeWith(disposable);
 
         IsBitcoinPreferred = uiServices.IsBitcoinPreferred;
@@ -280,5 +259,41 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         restoringNetwork = true;
         Network = currentNetwork;
         restoringNetwork = false;
+    }
+
+    private async Task HandleNetworkChangeAsync(string targetNetwork)
+    {
+        var confirmation = await uiServices.Dialog.ShowConfirmation("Change network?", "Changing network will close the application. Continue?");
+        var shouldChange = confirmation.Match(result => result, () => false);
+
+        if (!shouldChange)
+        {
+            RestoreNetwork();
+            return;
+        }
+
+        var applyResult = await uiServices.ApplyNetworkSelectionAsync(targetNetwork);
+        if (applyResult.IsFailure)
+        {
+            await uiServices.Dialog.ShowMessage("Network change failed", applyResult.Error);
+            RestoreNetwork();
+            return;
+        }
+
+        CloseApplication();
+    }
+
+    private static void CloseApplication()
+    {
+        var lifetime = Application.Current?.ApplicationLifetime;
+        switch (lifetime)
+        {
+            case IClassicDesktopStyleApplicationLifetime desktop:
+                desktop.Shutdown();
+                break;
+            case ISingleViewApplicationLifetime single:
+                single.MainView = null;
+                break;
+        }
     }
 }

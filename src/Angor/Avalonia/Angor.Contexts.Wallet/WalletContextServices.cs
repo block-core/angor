@@ -23,6 +23,7 @@ public static class WalletContextServices
     {
         RegisterLogger(services, logger);
         services.AddKeyedSingleton<IStore,InMemoryStore>("memory");
+        services.TryAddSingleton<IStore>(provider => provider.GetKeyedService<IStore>("memory")!);
         services.AddSingleton<IWalletAppService, WalletAppService>();
         services.AddSingleton<IHdOperations, HdOperations>();
         var networkConfiguration = new NetworkConfiguration();
@@ -30,7 +31,7 @@ public static class WalletContextServices
         networkConfiguration.SetNetwork(blockcoreNetwork);
         services.AddSingleton<INetworkConfiguration>(networkConfiguration);
         services.AddSingleton<INetworkService, NetworkService>();
-        services.AddSingleton<INetworkStorage, NetworkStorage>();
+        services.TryAddSingleton<INetworkStorage>(sp => new NetworkStorage(sp.GetRequiredService<IStore>()));
         //TODO change the call to use the factory
         services.TryAddScoped<HttpClient>(x => x.GetRequiredService<IHttpClientFactory>().CreateClient());
         services.TryAddSingleton<IIndexerService,MempoolSpaceIndexerApi>();
