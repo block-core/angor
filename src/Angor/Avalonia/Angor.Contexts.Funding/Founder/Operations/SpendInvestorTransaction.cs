@@ -1,6 +1,4 @@
-using Angor.Contests.CrossCutting;
 using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -20,10 +18,9 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class SpendInvestorTransaction
 {
-    public record SpendInvestorTransactionRequest(Guid WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<TransactionDraft>>;
+    public record SpendInvestorTransactionRequest(WalletId WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<TransactionDraft>>;
 
     public class SpendInvestorTransactionHandler(
-        IWalletOperations walletOperations,
         IFounderTransactionActions founderTransactionActions,
         INetworkConfiguration networkConfiguration,
         IAngorIndexerService angorIndexerService,
@@ -50,7 +47,7 @@ public static class SpendInvestorTransaction
                 return Result.Failure<TransactionDraft>(project.Error);
             }
             
-            var founderKey = await GetProjectFounderKeyAsync(request.WalletId, request.ProjectId.Value);
+            var founderKey = await GetProjectFounderKeyAsync(request.WalletId.Value, request.ProjectId.Value);
             if (founderKey == null)
                 return Result.Failure<TransactionDraft>("Project keys not found in storage. Please load founder projects first.");
             
@@ -61,7 +58,7 @@ public static class SpendInvestorTransaction
             var investmentTransactions = await Task.WhenAll(tasks);
             founderContext.InvestmentTrasnactionsHex = investmentTransactions.Where(hex => hex != string.Empty).ToList();
             
-            var addressResult = await GetUnfundedReleaseAddress(request.WalletId);
+            var addressResult = await GetUnfundedReleaseAddress(request.WalletId.Value);
             if (addressResult.IsFailure) 
                 return Result.Failure<TransactionDraft>("Could not get an unfunded release address");
             
@@ -108,7 +105,7 @@ public static class SpendInvestorTransaction
             return await transactionService.GetTransactionHexByIdAsync(investment.TransactionId) ?? string.Empty;
         }
 
-        private async Task<string?> GetProjectFounderKeyAsync(Guid walletId, string projectId)
+        private async Task<string?> GetProjectFounderKeyAsync(string walletId, string projectId)
         {
             // Try to get from storage first
             var storedKeysResult = await derivedProjectKeysCollection.FindByIdAsync(walletId.ToString());
@@ -127,7 +124,7 @@ public static class SpendInvestorTransaction
             return Encoders.Hex.EncodeData(key.ToBytes());
         }
         
-        private async Task<Result<string>> GetUnfundedReleaseAddress(Guid walletId)
+        private async Task<Result<string>> GetUnfundedReleaseAddress(string walletId)
         {
             var accountBalanceResult = await walletAccountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
             if (accountBalanceResult.IsFailure)

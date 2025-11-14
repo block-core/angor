@@ -2,7 +2,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contests.CrossCutting;
+namespace Angor.Contexts.CrossCutting;
 
 public class NetworkStorage(IStore store) : INetworkStorage
 {

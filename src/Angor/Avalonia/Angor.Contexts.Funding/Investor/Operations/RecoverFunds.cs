@@ -1,4 +1,4 @@
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -22,7 +22,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class RecoverFunds
 {
-    public record RecoverFundsRequest(Guid WalletId, ProjectId ProjectId,DomainFeerate SelectedFeeRate) : IRequest<Result<RecoveryTransactionDraft>>;
+    public record RecoverFundsRequest(WalletId WalletId, ProjectId ProjectId,DomainFeerate SelectedFeeRate) : IRequest<Result<RecoveryTransactionDraft>>;
     
     public class RecoverFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
         IProjectService projectService, IInvestorTransactionActions investorTransactionActions,
@@ -33,12 +33,12 @@ public static class RecoverFunds
     {
         public async Task<Result<RecoveryTransactionDraft>> Handle(RecoverFundsRequest request, CancellationToken cancellationToken)
         {
-            var words = await provider.GetSensitiveData(request.WalletId);
+            var words = await provider.GetSensitiveData(request.WalletId.Value);
             if (words.IsFailure)
                 return Result.Failure<RecoveryTransactionDraft>(words.Error);
             
             // Get account info from database
-            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId);
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId.Value);
             if (accountBalanceResult.IsFailure)
                 return Result.Failure<RecoveryTransactionDraft>(accountBalanceResult.Error);
             
@@ -47,7 +47,7 @@ public static class RecoverFunds
             var project = await projectService.GetAsync(request.ProjectId);
             if (project.IsFailure)
                 return Result.Failure<RecoveryTransactionDraft>(project.Error);
-            var investments = await investmentService.GetByWalletId(request.WalletId);
+            var investments = await investmentService.GetByWalletId(request.WalletId.Value);
             if (investments.IsFailure)
                 return Result.Failure<RecoveryTransactionDraft>(investments.Error);
             
@@ -59,7 +59,7 @@ public static class RecoverFunds
 
             var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(investment.InvestmentTransactionHex);
             
-            var signatureLookup = await LookupFounderSignatures(request.WalletId, project.Value, investment.RequestEventTime.Value, investment.RequestEventId, 
+            var signatureLookup = await LookupFounderSignatures(request.WalletId.Value, project.Value, investment.RequestEventTime.Value, investment.RequestEventId, 
                 investmentTransaction);
 
             if (signatureLookup.IsFailure)
@@ -100,7 +100,7 @@ public static class RecoverFunds
             });
         }
         
-        private async Task<Result<SignatureInfo?>> LookupFounderSignatures(Guid walletId, Project project, DateTime createdAt, string eventId,
+        private async Task<Result<SignatureInfo?>> LookupFounderSignatures(string walletId, Project project, DateTime createdAt, string eventId,
             Transaction investment)
         {
             var sensitiveDataResult = await provider.GetSensitiveData(walletId);

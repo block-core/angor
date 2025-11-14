@@ -3,7 +3,7 @@ using Nostr.Client.Client;
 using Nostr.Client.Requests;
 using Nostr.Client.Responses;
 
-namespace Angor.Contests.CrossCutting
+namespace Angor.Contexts.CrossCutting
 {
     /// <summary>
     /// Client that provides query capabilities for Nostr events through multiple WebSocket connections.

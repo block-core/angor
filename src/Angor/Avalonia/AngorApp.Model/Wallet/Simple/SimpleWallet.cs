@@ -1,3 +1,4 @@
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Wallet.Application;
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;

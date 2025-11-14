@@ -1,3 +1,4 @@
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Shared;
 using Angor.Contexts.Funding.Shared.TransactionDrafts;
@@ -48,7 +49,7 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
             feerate =>
             {
                 var amount = new Angor.Contexts.Funding.Projects.Domain.Amount(satsToInvest);
-                var investmentDraft = investmentAppService.CreateInvestmentDraft(walletId.Value, fullProject.ProjectId, amount, new DomainFeerate(feerate));
+                var investmentDraft = investmentAppService.CreateInvestmentDraft(walletId, fullProject.ProjectId, amount, new DomainFeerate(feerate));
                 var viewModel = investmentDraft.Map(ITransactionDraftViewModel (draft) => new InvestmentTransactionDraftViewModel(draft, uiServices));
                 return viewModel;
             }, 
@@ -60,7 +61,7 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
                 if (!isAboveThreshold)
                 {
                     // Below threshold: directly publish the transaction and store in portfolio (no founder approval needed)
-                    var publishResult = await investmentAppService.SubmitTransactionFromDraft(walletId.Value, fullProject.ProjectId, investmentDraft);
+                    var publishResult = await investmentAppService.SubmitTransactionFromDraft(walletId, fullProject.ProjectId, investmentDraft);
                     
                     // Return a GUID representing the transaction (use a hash or placeholder)
                     return publishResult.IsSuccess // todo: change this pointless guid
@@ -70,7 +71,7 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
                 else
                 {
                     // Above/at threshold: request founder signatures (penalty path)
-                    return await investmentAppService.SubmitInvestment(walletId.Value, fullProject.ProjectId, investmentDraft);
+                    return await investmentAppService.SubmitInvestment(walletId, fullProject.ProjectId, investmentDraft);
                 }
             }, 
             uiServices)

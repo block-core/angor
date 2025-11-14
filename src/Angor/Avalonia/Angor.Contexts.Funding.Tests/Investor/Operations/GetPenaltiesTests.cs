@@ -1,7 +1,7 @@
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Investor.Operations;
 using Angor.Contexts.Funding.Projects.Domain;
-using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Services;
 using Angor.Shared.Models;
@@ -19,6 +19,7 @@ public class GetPenaltiesTests
     private readonly Mock<ITransactionService> _mockTransactionService;
     private readonly Mock<IProjectInvestmentsService> _mockProjectInvestmentsService;
     private readonly GetPenalties.GetPenaltiesHandler _handler;
+    private static readonly WalletId TestWalletId = new("test-penalties-wallet");
 
     public GetPenaltiesTests()
     {
@@ -40,12 +41,11 @@ public class GetPenaltiesTests
     public async Task Handle_WhenInvestmentRepositoryFails_ShouldReturnFailure()
     {
         // Arrange
-        var walletId = Guid.NewGuid();
-        var request = new GetPenalties.GetPenaltiesRequest(walletId);
+        var request = new GetPenalties.GetPenaltiesRequest(TestWalletId);
         var expectedError = "Repository error";
 
         _mockInvestmentService
-            .Setup(x => x.GetByWalletId(walletId))
+            .Setup(x => x.GetByWalletId(TestWalletId.Value))
             .ReturnsAsync(Result.Failure<InvestmentRecords>(expectedError));
 
         // Act
@@ -60,12 +60,11 @@ public class GetPenaltiesTests
     public async Task Handle_WhenFetchInvestedProjectsFails_ShouldReturnFailure()
     {
         // Arrange
-        var walletId = Guid.NewGuid();
-        var request = new GetPenalties.GetPenaltiesRequest(walletId);
+        var request = new GetPenalties.GetPenaltiesRequest(TestWalletId);
         var investment = new InvestmentRecords();
 
         _mockInvestmentService
-            .Setup(x => x.GetByWalletId(walletId))
+            .Setup(x => x.GetByWalletId(TestWalletId.Value))
             .ReturnsAsync(Result.Success(investment));
 
         // Act
@@ -79,9 +78,7 @@ public class GetPenaltiesTests
     [Fact]
     public async Task Handle_WhenSuccessful_ShouldReturnPenaltiesDto()
     {
-        // Arrange
-        var walletId = Guid.NewGuid();
-        var request = new GetPenalties.GetPenaltiesRequest(walletId);
+        var request = new GetPenalties.GetPenaltiesRequest(TestWalletId);
         var projectIdentifier = "test-project-id";
         var investorPubKey = "test-investor-pubkey";
         var nostrEventId = "test-event-id";
@@ -106,7 +103,7 @@ public class GetPenaltiesTests
         };
 
         _mockInvestmentService
-            .Setup(x => x.GetByWalletId(walletId))
+            .Setup(x => x.GetByWalletId(TestWalletId.Value))
             .ReturnsAsync(Result.Success(investment));
 
         _mockAngorIndexerService
@@ -162,15 +159,14 @@ public class GetPenaltiesTests
     public async Task FetchInvestedProjects_WhenInvestmentRepositoryFails_ShouldReturnFailure()
     {
         // Arrange
-        var walletId = Guid.NewGuid();
         var expectedError = "Repository error";
 
         _mockInvestmentService
-            .Setup(x => x.GetByWalletId(walletId))
+            .Setup(x => x.GetByWalletId(TestWalletId.Value))
             .ReturnsAsync(Result.Failure<InvestmentRecords>(expectedError));
 
         // Act
-        var result = await _handler.FetchInvestedProjects(walletId);
+        var result = await _handler.FetchInvestedProjects(TestWalletId.Value);
 
         // Assert
         Assert.True(result.IsFailure);
@@ -181,15 +177,14 @@ public class GetPenaltiesTests
     public async Task FetchInvestedProjects_WhenNoInvestments_ShouldReturnEmptyList()
     {
         // Arrange
-        var walletId = Guid.NewGuid();
         var investment = new InvestmentRecords();
 
         _mockInvestmentService
-            .Setup(x => x.GetByWalletId(walletId))
+            .Setup(x => x.GetByWalletId(TestWalletId.Value))
             .ReturnsAsync(Result.Success(investment));
 
         // Act
-        var result = await _handler.FetchInvestedProjects(walletId);
+        var result = await _handler.FetchInvestedProjects(TestWalletId.Value);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -300,12 +295,13 @@ public class GetPenaltiesTests
     public void GetPenaltiesRequest_ShouldHaveCorrectWalletId()
     {
         // Arrange
-        var walletId = Guid.NewGuid();
+        var walletId = Guid.NewGuid().ToString();
 
-        // Act
-        var request = new GetPenalties.GetPenaltiesRequest(walletId);
-
+        // Arrange & Act
+        var request = new GetPenalties.GetPenaltiesRequest(TestWalletId);
+        
         // Assert
-        Assert.Equal(walletId, request.WalletId);
+        Assert.Equal(TestWalletId, request.WalletId);
     }
 }
+        

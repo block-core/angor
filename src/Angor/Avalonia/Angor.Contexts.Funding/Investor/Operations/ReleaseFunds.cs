@@ -1,4 +1,4 @@
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -22,7 +22,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class ReleaseFunds
 {
-    public record ReleaseFundsRequest(Guid WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<ReleaseTransactionDraft>>;
+    public record ReleaseFundsRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<ReleaseTransactionDraft>>;
     
     public class ReleaseFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
         IProjectService projectService, IInvestorTransactionActions investorTransactionActions,
@@ -38,7 +38,7 @@ public static class ReleaseFunds
             if (project.IsFailure)
                 return Result.Failure<ReleaseTransactionDraft>(project.Error);
             
-            var investments = await investmentService.GetByWalletId(request.WalletId);
+            var investments = await investmentService.GetByWalletId(request.WalletId.Value);
             if (investments.IsFailure)
                 return Result.Failure<ReleaseTransactionDraft>(investments.Error);
             
@@ -46,12 +46,12 @@ public static class ReleaseFunds
             if (investment is null) //TODO we need to make sure we always have this data
                 return Result.Failure<ReleaseTransactionDraft>("No investment found for this project");
 
-            var words = await provider.GetSensitiveData(request.WalletId);
+            var words = await provider.GetSensitiveData(request.WalletId.Value);
             if (words.IsFailure)
                 return Result.Failure<ReleaseTransactionDraft>(words.Error);
             
             // Get account info from database
-            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId);
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId.Value);
             if (accountBalanceResult.IsFailure)
                 return Result.Failure<ReleaseTransactionDraft>(accountBalanceResult.Error);
             
@@ -61,7 +61,7 @@ public static class ReleaseFunds
 
             var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(investment.InvestmentTransactionHex);
 
-            var signatureLookup = await LookupFounderReleaseSignatures(request.WalletId, project.Value, investment.RequestEventId, 
+            var signatureLookup = await LookupFounderReleaseSignatures(request.WalletId.Value, project.Value, investment.RequestEventId, 
                 investmentTransaction);
             
             if (signatureLookup.IsFailure)
@@ -112,7 +112,7 @@ public static class ReleaseFunds
             });
         }
         
-        private async Task<Result<SignatureInfo?>> LookupFounderReleaseSignatures(Guid walletId, Project project, string eventId,
+        private async Task<Result<SignatureInfo?>> LookupFounderReleaseSignatures(string walletId, Project project, string eventId,
             Transaction investment)
         {
             var sensitiveDataResult = await provider.GetSensitiveData(walletId);

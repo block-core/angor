@@ -13,11 +13,7 @@ public class TransactionHistoryServiceTests(ITestOutputHelper outputHelper)
     public async Task Get_addresses()
     {
         var sut = CreateSut();
-        var getAddressesResult = await sut.GetWalletAddresses(new WalletWords()
-        {
-            Words = "print foil moment average quarter keep amateur shell tray roof acoustic where",
-            Passphrase = "",
-        });
+        var getAddressesResult = await sut.GetWalletAddresses(new WalletId("TODO"));
         
         Assert.True(getAddressesResult.IsSuccess);
     }
@@ -31,7 +27,7 @@ public class TransactionHistoryServiceTests(ITestOutputHelper outputHelper)
             Words = "print foil moment average quarter keep amateur shell tray roof acoustic where",
             Passphrase = "",
         };
-        var getAddressesResult = await sut.GetTransactions(walletWords);
+        var getAddressesResult = await sut.GetTransactions(new WalletId("TODO"));
         
         Assert.True(getAddressesResult.IsSuccess);
     }

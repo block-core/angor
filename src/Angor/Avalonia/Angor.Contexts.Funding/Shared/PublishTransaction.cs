@@ -9,7 +9,7 @@ namespace Angor.Contexts.Funding.Shared;
 
 public static class PublishTransaction
 {
-    public record PublishTransactionRequest(Guid? WalletId, ProjectId? ProjectId, TransactionDraft TransactionDraft) : IRequest<Result<string>>;
+    public record PublishTransactionRequest(string? WalletId, ProjectId? ProjectId, TransactionDraft TransactionDraft) : IRequest<Result<string>>;
     
     //TODO refresh the account info after publishing the transaction after the merge of penalty threshold is in
     public class Handler(IIndexerService indexerService, IPortfolioService portfolioService) : IRequestHandler<PublishTransactionRequest, Result<string>>
@@ -34,10 +34,10 @@ public static class PublishTransaction
             }
 
             // Handle all transaction draft types if we have wallet/project context
-            if (request.WalletId.HasValue && request.ProjectId != null)
+            if (!string.IsNullOrEmpty(request.WalletId) && request.ProjectId != null)
             {
                 var updateResult = await UpdateInvestmentRecordWithTransaction(
-                    request.WalletId.Value, 
+                    request.WalletId, 
                     request.ProjectId.Value, 
                     request.TransactionDraft);
                 
@@ -49,7 +49,7 @@ public static class PublishTransaction
         }
 
         private async Task<Result> UpdateInvestmentRecordWithTransaction(
-            Guid walletId, 
+            string walletId, 
             string projectId, 
             TransactionDraft draft)
         {

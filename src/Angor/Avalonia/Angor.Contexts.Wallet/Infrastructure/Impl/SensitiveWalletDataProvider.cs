@@ -1,3 +1,4 @@
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;
@@ -5,17 +6,13 @@ using CSharpFunctionalExtensions.ValueTasks;
 
 namespace Angor.Contexts.Wallet.Infrastructure.Impl;
 
-public class SensitiveWalletDataProvider(IWalletStore walletStore, IWalletSecurityContext walletSecurityContext) : ISensitiveWalletDataProvider
+public class SensitiveWalletDataProvider(IWalletStore walletStore, IWalletSecurityContext walletSecurityContext,
+    IWalletEncryption walletEncryption) : ISensitiveWalletDataProvider
 {
     private readonly Dictionary<WalletId, (string, Maybe<string>)> cachedSensitiveData = new();
 
     public async Task<Result<(string seed, Maybe<string> passphrase)>> RequestSensitiveData(WalletId walletId)
     {
-        if (walletId != WalletAppService.SingleWalletId)
-        {
-            return Result.Failure<(string seed, Maybe<string> passphrase)>("Invalid wallet ID");
-        }
-        
         var findResult = cachedSensitiveData.TryFind(walletId);
         if (findResult.HasValue)
         {
@@ -57,7 +54,7 @@ public class SensitiveWalletDataProvider(IWalletStore walletStore, IWalletSecuri
         
 
         // Decrypt the wallet
-        var decryptedResult = await walletSecurityContext.WalletEncryption.Decrypt(encryptedWalletResult.Value, encryptionKey.Value);
+        var decryptedResult = await walletEncryption.Decrypt(encryptedWalletResult.Value, encryptionKey.Value);
         if (decryptedResult.IsFailure)
         {
             return Result.Failure<(string, Maybe<string>)>("Invalid encryption key");

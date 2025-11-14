@@ -1,6 +1,6 @@
 using System.Reactive.Linq;
 
-namespace Angor.Contests.CrossCutting;
+namespace Angor.Contexts.CrossCutting;
 
 /// <summary>
 /// Extension methods for observable sequences.

@@ -36,7 +36,7 @@ public class FoundedProjectOptionsViewModel : IFoundedProjectOptionsViewModel
 
     private Task<Result<Maybe<InvestedProjectDto>>> GetInvestedProject(IWallet wallet)
     {
-        return investmentAppService.GetInvestorProjects(wallet.Id.Value)
+        return investmentAppService.GetInvestorProjects(wallet.Id)
             .Map(dtos => dtos.TryFirst(dto => dto.Id == projectId.Value));
     }
 

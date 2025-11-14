@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Wallet.Infrastructure.Impl;

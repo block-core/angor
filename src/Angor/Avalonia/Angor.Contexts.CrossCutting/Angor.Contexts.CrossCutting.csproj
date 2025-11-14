@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
-        <RootNamespace>Angor.Contests.CrossCutting</RootNamespace>
+        <RootNamespace>Angor.Contexts.CrossCutting</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

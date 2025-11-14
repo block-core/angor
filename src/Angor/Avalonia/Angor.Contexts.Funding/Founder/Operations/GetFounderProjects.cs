@@ -1,4 +1,4 @@
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Services;
@@ -17,7 +17,7 @@ public static class GetFounderProjects
     {
         public async Task<Result<IEnumerable<ProjectDto>>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
         {
-            var storageResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.ToString());
+            var storageResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.Value);
 
             if (storageResult.IsFailure || storageResult.Value == null)
                 return Result.Failure<IEnumerable<ProjectDto>>(storageResult.IsFailure ? storageResult.Error
@@ -36,5 +36,5 @@ public static class GetFounderProjects
         }
     }
 
-    public record GetFounderProjectsRequest(Guid WalletId) : IRequest<Result<IEnumerable<ProjectDto>>>;
+    public record GetFounderProjectsRequest(WalletId WalletId) : IRequest<Result<IEnumerable<ProjectDto>>>;
 }

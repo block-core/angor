@@ -1,4 +1,4 @@
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Shared;
@@ -16,6 +16,8 @@ using Draft = Shared.TransactionDrafts.InvestmentDraft;
 
 public class InvestmentAppServiceTests(ITestOutputHelper output)
 {
+    private static readonly WalletId TestWalletId = new("test-wallet-id-123");
+
     [Fact]
     public void Service_can_be_created()
     {
@@ -31,7 +33,7 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
         var projectId = new ProjectId("angor1qkmmqqktfhe79wxp20555cdp5gfardr4s26wr00");
         
         // Act
-        var result = await sut.CreateInvestmentDraft(Guid.Empty, projectId, new Amount(12345), new DomainFeerate(123));
+        var result = await sut.CreateInvestmentDraft(TestWalletId, projectId, new Amount(12345), new DomainFeerate(123));
         
         // Assert
         Assert.True(result.IsSuccess, result.IsFailure ? result.Error : string.Empty);
@@ -50,7 +52,7 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
         { SignedTxHex = txHex, TransactionId = txId, TransactionFee = new Amount(0), };
 
         // Act
-        var result = await sut.SubmitInvestment(Guid.Empty, projectId, draft);
+        var result = await sut.SubmitInvestment(TestWalletId, projectId, draft);
 
         // Assert
         Assert.True(result.IsSuccess, result.IsFailure ? result.Error : string.Empty);
@@ -63,7 +65,7 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
         var sut = CreatFounderSut();
 
         // Act
-        var result = await sut.GetInvestments(Guid.Empty, new ProjectId("angor1qatlv9htzte8vtddgyxpgt78ruyzaj57n4l7k46"));
+        var result = await sut.GetInvestments(TestWalletId, new ProjectId("angor1qatlv9htzte8vtddgyxpgt78ruyzaj57n4l7k46"));
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -75,11 +77,11 @@ public class InvestmentAppServiceTests(ITestOutputHelper output)
     {
         // Arrange
         var sut = CreatFounderSut();
-        var pendingInvestments = await sut.GetInvestments(Guid.Empty, new ProjectId("angor1qatlv9htzte8vtddgyxpgt78ruyzaj57n4l7k46"));
+        var pendingInvestments = await sut.GetInvestments(TestWalletId, new ProjectId("angor1qatlv9htzte8vtddgyxpgt78ruyzaj57n4l7k46"));
         var pendingInvestmentDto = pendingInvestments.Value.TryFirst().GetValueOrThrow("Failed");
 
         // Act
-        var approveResult = await sut.ApproveInvestment(Guid.Empty, new ProjectId("angor1qatlv9htzte8vtddgyxpgt78ruyzaj57n4l7k46"), pendingInvestmentDto);
+        var approveResult = await sut.ApproveInvestment(TestWalletId, new ProjectId("angor1qatlv9htzte8vtddgyxpgt78ruyzaj57n4l7k46"), pendingInvestmentDto);
         
         // Assert
         Assert.True(approveResult.IsSuccess);

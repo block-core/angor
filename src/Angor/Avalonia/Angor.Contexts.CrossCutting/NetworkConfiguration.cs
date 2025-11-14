@@ -3,7 +3,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Blockcore.Networks;
 
-namespace Angor.Contests.CrossCutting;
+namespace Angor.Contexts.CrossCutting;
 
 public class NetworkConfiguration : INetworkConfiguration
 {

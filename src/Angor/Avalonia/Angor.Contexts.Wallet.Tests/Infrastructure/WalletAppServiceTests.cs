@@ -10,7 +10,7 @@ namespace Angor.Contexts.Wallet.Tests.Infrastructure;
 
 public class WalletAppServiceTests(ITestOutputHelper output)
 {
-    private readonly WalletId walletId = WalletAppService.SingleWalletId;
+    private readonly WalletId walletId = new WalletId("test-wallet-001");
     
     [Fact(Skip = "Skipping failing test: missing indexer configuration.")]
     public async Task GetBalance_ShouldReturnNonZeroBalance()
@@ -122,7 +122,7 @@ public class WalletAppServiceTests(ITestOutputHelper output)
     {
         // Arrange
         var sut = CreateSut();
-        var invalidWalletId = new WalletId(Guid.NewGuid());
+        var invalidWalletId = new WalletId(Guid.NewGuid().ToString());
 
         // Act
         var result = await sut.GetTransactions(invalidWalletId);

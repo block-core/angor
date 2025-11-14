@@ -1,5 +1,5 @@
 using System.Linq;
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
 using Angor.Contexts.Wallet.Infrastructure.History;
@@ -22,13 +22,16 @@ public class WalletAppService(
     IWalletAccountBalanceService accountBalanceService)
     : IWalletAppService
 {
-    public static readonly WalletId SingleWalletId = new(new Guid("8E3C5250-4E26-4A13-8075-0A189AEAF793"));
+    //public static readonly WalletId SingleWalletId = new("8E3C5250-4E26-4A13-8075-0A189AEAF793");
     private const string SingleWalletName = "<default>";
 
     public Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
     {
-        List<WalletMetadata> singleWalletList = [new(SingleWalletName, SingleWalletId)];
-        return walletStore.GetAll().Map(wallets => wallets.Any() ? singleWalletList : []).Map(metadatas => metadatas.AsEnumerable());
+        var result =  accountBalanceService.GetAllAccountBalancesAsync();
+        return result.Map(list => list.Select(info => new WalletMetadata(
+            SingleWalletName,
+            new WalletId(info.AccountInfo.walletId)
+        )));
     }
 
     public async Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletId walletId)
@@ -40,12 +43,8 @@ public class WalletAppService(
             {
                 return Result.Failure<IEnumerable<BroadcastedTransaction>>(sensitiveDataResult.Error);
             }
-
-            var sensitiveData = sensitiveDataResult.Value;
             
-            var walletWords = sensitiveData.ToWalletWords();
-            
-            return await transactionHistory.GetTransactions(walletWords);
+            return await transactionHistory.GetTransactions(walletId);
         }
         catch (Exception ex)
         {
@@ -107,9 +106,6 @@ public class WalletAppService(
     
     public async Task<Result<Address>> GetNextReceiveAddress(WalletId walletId)
     {
-        if (walletId != SingleWalletId)
-            return Result.Failure<Address>("Invalid wallet ID");
-
         try
         {
             var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
@@ -142,9 +138,6 @@ public class WalletAppService(
 
     public async Task<Result<TxId>> SendAmount(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate)
     {
-        if (walletId != SingleWalletId)
-            return Result.Failure<TxId>("Invalid wallet ID");
-        
         try
         {
             var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
@@ -200,17 +193,12 @@ public class WalletAppService(
 
     public Task<Result<WalletId>> CreateWallet(string name, string seedWords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
     {
-        return walletFactory.CreateWallet(SingleWalletName, seedWords, passphrase, encryptionKey, network)
-            .Map(_ => SingleWalletId);
+        return walletFactory.CreateWallet(name ?? SingleWalletName, seedWords, passphrase, encryptionKey, network)
+            .Map(_ => _.Id);
     }
     
     public async Task<Result> DeleteWallet(WalletId walletId)
     {
-        if (walletId != SingleWalletId)
-        {
-            return Result.Failure("Invalid wallet ID");
-        }
-
         var walletsResult = await walletStore.GetAll();
         if (walletsResult.IsFailure)
         {

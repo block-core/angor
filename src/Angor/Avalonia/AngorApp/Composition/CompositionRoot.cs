@@ -1,4 +1,4 @@
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding;
 using Angor.Contexts.Integration.WalletFunding;
 using Angor.Contexts.Wallet;

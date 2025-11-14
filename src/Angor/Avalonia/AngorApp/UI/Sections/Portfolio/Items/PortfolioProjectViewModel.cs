@@ -23,7 +23,7 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
 
         var canCompleteInvestment = this.WhenAnyValue(x => x.InvestmentStatus).Select(x => x == InvestmentStatus.FounderSignaturesReceived);
         
-        CompleteInvestment = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => investmentAppService.ConfirmInvestment(projectDto.InvestmentId, wallet.Id.Value, new ProjectId(projectDto.Id))), canCompleteInvestment)
+        CompleteInvestment = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => investmentAppService.ConfirmInvestment(projectDto.InvestmentId, wallet.Id, new ProjectId(projectDto.Id))), canCompleteInvestment)
             .Enhance()
             .DisposeWith(disposable);
 

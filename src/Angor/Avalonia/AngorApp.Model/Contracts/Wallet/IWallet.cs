@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Wallet.Domain;
 using CSharpFunctionalExtensions;
 using Zafiro.UI.Commands;

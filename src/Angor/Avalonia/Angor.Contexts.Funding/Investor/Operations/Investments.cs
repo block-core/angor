@@ -1,4 +1,5 @@
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -16,7 +17,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class Investments
 {
-    public record InvestmentsPortfolioRequest(Guid WalletId) : IRequest<Result<IEnumerable<InvestedProjectDto>>>;
+    public record InvestmentsPortfolioRequest(WalletId WalletId) : IRequest<Result<IEnumerable<InvestedProjectDto>>>;
     
     public class InvestmentsPortfolioHandler(
         IAngorIndexerService angorIndexerService,
@@ -33,7 +34,7 @@ public static class Investments
 
         public async Task<Result<IEnumerable<InvestedProjectDto>>> Handle(InvestmentsPortfolioRequest request, CancellationToken cancellationToken)
         {
-            var investmentRecordsLookup = await investmentService.GetByWalletId(request.WalletId);
+            var investmentRecordsLookup = await investmentService.GetByWalletId(request.WalletId.Value);
 
             if (investmentRecordsLookup.IsFailure)
                 return Result.Failure<IEnumerable<InvestedProjectDto>>("Failed to retrieve investment records: " + investmentRecordsLookup.Error);
@@ -49,7 +50,7 @@ public static class Investments
             if (lookup.IsFailure)
                 return Result.Failure<IEnumerable<InvestedProjectDto>>("Failed to retrieve projects: " + lookup.Error);
 
-            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId);
+            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
 
             var investmentLookupTasks = lookup.Value.ToList().Select(async project =>
             {

@@ -1,5 +1,6 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Services;
@@ -17,9 +18,9 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class GetInvestments
 {
-    public class GetInvestmentsRequest(Guid walletId, ProjectId projectId) : IRequest<Result<IEnumerable<Investment>>>
+    public class GetInvestmentsRequest(WalletId walletId, ProjectId projectId) : IRequest<Result<IEnumerable<Investment>>>
     {
-        public Guid WalletId { get; } = walletId;
+        public WalletId WalletId { get; } = walletId;
         public ProjectId ProjectId { get; } = projectId;
     }
 

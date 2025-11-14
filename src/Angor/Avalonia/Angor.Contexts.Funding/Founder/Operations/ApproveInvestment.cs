@@ -1,5 +1,4 @@
-using Angor.Contests.CrossCutting;
-using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
@@ -17,7 +16,7 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class ApproveInvestment
 {
-    public record ApproveInvestmentRequest(Guid WalletId, ProjectId ProjectId, Investment InvestmentRequest) : IRequest<Result>;
+    public record ApproveInvestmentRequest(WalletId WalletId, ProjectId ProjectId, Investment InvestmentRequest) : IRequest<Result>;
 
     public class ApproveInvestmentHandler(
         IProjectService projectService,
@@ -42,7 +41,7 @@ public static class ApproveInvestment
                 investorNostrPubKey = request.InvestmentRequest.InvestorNostrPubKey,
             };
             
-            var approvalResult = await from walletWords in seedwordsProvider.GetSensitiveData(request.WalletId)
+            var approvalResult = await from walletWords in seedwordsProvider.GetSensitiveData(request.WalletId.Value)
                 from project in projectService.GetAsync(request.ProjectId)
                 select PerformSignatureApproval(signatureItem, walletWords.ToWalletWords(), project.ToProjectInfo());
             

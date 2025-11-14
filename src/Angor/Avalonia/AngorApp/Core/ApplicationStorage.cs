@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 
 namespace AngorApp.Core;
 

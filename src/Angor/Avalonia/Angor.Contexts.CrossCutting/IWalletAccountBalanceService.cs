@@ -1,11 +1,12 @@
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contests.CrossCutting;
+namespace Angor.Contexts.CrossCutting;
 
 public interface IWalletAccountBalanceService
 {
-    Task<Result<AccountBalanceInfo>> GetAccountBalanceInfoAsync(Guid walletId);
-    Task<Result> SaveAccountBalanceInfoAsync(Guid walletId, AccountBalanceInfo accountBalanceInfo);
-    Task<Result<AccountBalanceInfo>> RefreshAccountBalanceInfoAsync(Guid walletId);
+    Task<Result<AccountBalanceInfo>> GetAccountBalanceInfoAsync(string walletId);
+    Task<Result> SaveAccountBalanceInfoAsync(string walletId, AccountBalanceInfo accountBalanceInfo);
+    Task<Result<AccountBalanceInfo>> RefreshAccountBalanceInfoAsync(string walletId);
+    Task<Result<IEnumerable<AccountBalanceInfo>>> GetAllAccountBalancesAsync();
 }

@@ -1,4 +1,5 @@
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -19,7 +20,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class PublishInvestment
 {
-    public record PublishInvestmentRequest(string InvestmentId, Guid WalletId, ProjectId ProjectId) : IRequest<Result>{}
+    public record PublishInvestmentRequest(string InvestmentId, WalletId WalletId, ProjectId ProjectId) : IRequest<Result>{}
 
     public class PublishInvestmentHandler(
         INetworkConfiguration networkConfiguration,
@@ -41,7 +42,7 @@ public static class PublishInvestment
             if (projectResult.IsFailure)
                 return projectResult;
 
-            var portfolio = await investmentService.GetByWalletId(request.WalletId);
+            var portfolio = await investmentService.GetByWalletId(request.WalletId.Value);
             
             if (portfolio.IsFailure)
                 return Result.Failure(portfolio.Error);
@@ -61,7 +62,7 @@ public static class PublishInvestment
                     .CreateTransaction(investmentRecord.InvestmentTransactionHex)
             };
             
-            var validate = await ValidateFounderSignatures(request.WalletId, projectResult.Value,
+            var validate = await ValidateFounderSignatures(request.WalletId.Value, projectResult.Value,
                 investmentRecord.RequestEventTime.Value, investmentRecord.RequestEventId, transactionInfo, 
                 projectResult.Value.NostrPubKey);
 
@@ -128,7 +129,7 @@ public static class PublishInvestment
         }
 
 
-        private async Task<Result<bool>> ValidateFounderSignatures(Guid walletId, Project project, DateTime createdAt, string eventId,
+        private async Task<Result<bool>> ValidateFounderSignatures(string walletId, Project project, DateTime createdAt, string eventId,
             TransactionInfo investment,string projectPubKey)
         {
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);

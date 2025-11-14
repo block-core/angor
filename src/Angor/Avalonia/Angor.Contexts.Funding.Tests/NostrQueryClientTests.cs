@@ -1,5 +1,5 @@
 using System.Reactive.Linq;
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Client;
 using Nostr.Client.Communicator;

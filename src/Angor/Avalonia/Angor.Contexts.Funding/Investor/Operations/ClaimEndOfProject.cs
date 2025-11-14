@@ -1,4 +1,4 @@
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -19,7 +19,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class ClaimEndOfProject
 {
-    public record ClaimEndOfProjectRequest(Guid WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<EndOfProjectTransactionDraft>>;
+    public record ClaimEndOfProjectRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<EndOfProjectTransactionDraft>>;
     
     public class ClaimEndOfProjectHandler(
         IDerivationOperations derivationOperations, IProjectService projectService, 
@@ -29,18 +29,18 @@ public static class ClaimEndOfProject
     {
         public async Task<Result<EndOfProjectTransactionDraft>> Handle(ClaimEndOfProjectRequest request, CancellationToken cancellationToken)
         {
-            var words = await provider.GetSensitiveData(request.WalletId);
+            var words = await provider.GetSensitiveData(request.WalletId.Value);
             if (words.IsFailure)
                 return Result.Failure<EndOfProjectTransactionDraft>(words.Error);
             
             // Get account info from database
-            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId);
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId.Value);
             if (accountBalanceResult.IsFailure)
                 return Result.Failure<EndOfProjectTransactionDraft>(accountBalanceResult.Error);
             
             var accountInfo = accountBalanceResult.Value.AccountInfo;
 
-            var investments = await investmentService.GetByWalletId(request.WalletId);
+            var investments = await investmentService.GetByWalletId(request.WalletId.Value);
             if (investments.IsFailure)
                 return Result.Failure<EndOfProjectTransactionDraft>(investments.Error);
             

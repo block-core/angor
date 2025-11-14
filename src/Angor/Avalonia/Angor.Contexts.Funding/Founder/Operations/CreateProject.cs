@@ -1,4 +1,4 @@
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
@@ -23,7 +23,7 @@ internal static class CreateProjectConstants
 {
     public static class CreateProject
     {
-        public record CreateProjectRequest(Guid WalletId, long SelectedFeeRate, CreateProjectDto Project)
+        public record CreateProjectRequest(WalletId WalletId, long SelectedFeeRate, CreateProjectDto Project)
             : IRequest<Result<TransactionDraft>>;
 
         public class CreateProjectHandler(
@@ -41,7 +41,7 @@ internal static class CreateProjectConstants
         {
             public async Task<Result<TransactionDraft>> Handle(CreateProjectRequest request, CancellationToken cancellationToken)
             {
-                var wallet = await seedwordsProvider.GetSensitiveData(request.WalletId);
+                var wallet = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
 
                 // Try to get from storage (read-only, no fallback derivation)
                 var storedKeysResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.ToString());
@@ -99,13 +99,13 @@ internal static class CreateProjectConstants
                     return Result.Failure<TransactionDraft>(projectInfo.Error);
                 }
 
-                var transactionInfo = await CreatProjectTransaction(request.WalletId, wallet.Value.ToWalletWords(),
+                var transactionInfo = await CreatProjectTransaction(request.WalletId.Value, wallet.Value.ToWalletWords(),
                     request.SelectedFeeRate,
                     newProjectKeys.FounderKey, newProjectKeys.ProjectIdentifier, projectInfo.Value);
 
                 if (transactionInfo.IsFailure)
                 {
-                    logger.LogDebug("Failed to create project transaction for Project {ProjectName} (WalletId: {WalletId}): {Error}", request.Project.ProjectName, request.WalletId, transactionInfo.Error);
+                    logger.LogDebug("Failed to create project transaction for Project {ProjectName} (WalletId: {WalletId}): {Error}", request.Project.ProjectName, request.WalletId.Value, transactionInfo.Error);
                     return Result.Failure<TransactionDraft>(transactionInfo.Error);
                 }
                 
@@ -215,7 +215,7 @@ internal static class CreateProjectConstants
                 return await tsc.Task;
             }
 
-            private async Task<Result<TransactionInfo>> CreatProjectTransaction(Guid walletId, WalletWords words,
+            private async Task<Result<TransactionInfo>> CreatProjectTransaction(string walletId, WalletWords words,
                 long selectedFee,
                 string founderKey,
                 string projectIdentifier, string projectInfoEventId)
@@ -240,7 +240,7 @@ internal static class CreateProjectConstants
                 return Result.Success(signedTransaction);
             }
 
-            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(Guid walletId)
+            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(string walletId)
             {
                 try
                 {

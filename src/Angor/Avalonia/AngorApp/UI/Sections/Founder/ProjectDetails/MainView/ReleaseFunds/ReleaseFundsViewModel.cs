@@ -57,7 +57,7 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
 
     private Task<Result<List<IUnfundedProjectTransaction>>> GetTransactions(IWallet wallet)
     {
-        return founderAppService.GetReleasableTransactions(wallet.Id.Value, projectId)
+        return founderAppService.GetReleasableTransactions(wallet.Id, projectId)
             .MapEach(IUnfundedProjectTransaction (dto) => new UnfundedProjectTransaction(wallet.Id.Value, projectId, dto, founderAppService, uiServices))
             .Map(enumerable => enumerable.ToList());
     }
@@ -89,7 +89,7 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
         var addresses = Transactions.Select(transaction => transaction.InvestmentEventId);
         
         return UserFlow.PromptAndNotify(
-            () => founderAppService.ReleaseInvestorTransactions(wallet.Id.Value, projectId, addresses), uiServices,
+            () => founderAppService.ReleaseInvestorTransactions(wallet.Id, projectId, addresses), uiServices,
             "Are you sure you want to release all the funds?",
             "Confirm Release All",
             "Successfully released all",

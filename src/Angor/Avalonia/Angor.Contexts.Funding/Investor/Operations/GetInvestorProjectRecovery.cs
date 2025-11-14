@@ -1,3 +1,4 @@
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -18,7 +19,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class GetInvestorProjectRecovery
 {
-    public record GetInvestorProjectRecoveryRequest(Guid WalletId, ProjectId ProjectId) : IRequest<Result<InvestorProjectRecoveryDto>>;
+    public record GetInvestorProjectRecoveryRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<InvestorProjectRecoveryDto>>;
 
     public class Handler(
         IProjectService projectService,
@@ -38,7 +39,7 @@ public static class GetInvestorProjectRecovery
             if (project.IsFailure)
                 return Result.Failure<InvestorProjectRecoveryDto>(project.Error);
             
-            var investments = await investmentService.GetByWalletId(request.WalletId);
+            var investments = await investmentService.GetByWalletId(request.WalletId.Value);
 
             if (investments.IsFailure)
                 return Result.Failure<InvestorProjectRecoveryDto>(investments.Error);

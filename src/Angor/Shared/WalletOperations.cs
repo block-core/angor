@@ -8,6 +8,7 @@ using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.BIP39;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
+using NBitcoin.Crypto;
 
 namespace Angor.Shared;
 
@@ -359,8 +360,6 @@ public class WalletOperations : IWalletOperations
         Network network = _networkConfiguration.GetNetwork();
         var coinType = network.Consensus.CoinType;
 
-        var accountInfo = new AccountInfo();
-
         ExtKey extendedKey;
         try
         {
@@ -382,11 +381,17 @@ public class WalletOperations : IWalletOperations
         ExtPubKey accountExtPubKeyTostore =
             _hdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
 
-        accountInfo.RootExtPubKey = extendedKey.Neuter().ToString(network);
-        accountInfo.ExtPubKey = accountExtPubKeyTostore.ToString(network);
-        accountInfo.Path = accountHdPath;
+        var rootExtPubKey = extendedKey.Neuter();
         
-        return accountInfo;
+        var rootExtPubKeyHash = Convert.ToHexString(Hashes.SHA256(rootExtPubKey.ToBytes()));
+
+        return new AccountInfo()
+        {
+            walletId = rootExtPubKeyHash,
+            RootExtPubKey = rootExtPubKey.ToString(network),
+            ExtPubKey = accountExtPubKeyTostore.ToString(network),
+            Path = accountHdPath
+        };
     }
 
     public async Task UpdateDataForExistingAddressesAsync(AccountInfo accountInfo)

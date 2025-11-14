@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Investor;
@@ -58,7 +59,7 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
                 .Tap(() => uiServices.Dialog.ShowMessage("Claim successful", "The funds have been successfully claimed.", "Close"))));
     }
 
-    private async Task<Result> DoClaim(IEnumerable<IClaimableTransaction> selected, Guid walletId, long feerate)
+    private async Task<Result> DoClaim(IEnumerable<IClaimableTransaction> selected, string walletId, long feerate)
     {
         var toSpend = selected.Select(claimable => new SpendTransactionDto
         {
@@ -66,7 +67,7 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
             StageId = stageId
         });
 
-        var result = await founderAppService.Spend(walletId, new DomainFeerate(feerate), projectId, toSpend);
+        var result = await founderAppService.Spend(new WalletId(walletId), new DomainFeerate(feerate), projectId, toSpend);
         return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
     }
 

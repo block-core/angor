@@ -1,4 +1,4 @@
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -20,11 +20,11 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class RequestInvestmentSignatures
 {
-    public class RequestFounderSignaturesRequest(Guid walletId, ProjectId projectId, InvestmentDraft draft) : IRequest<Result<Guid>>
+    public class RequestFounderSignaturesRequest(WalletId walletId, ProjectId projectId, InvestmentDraft draft) : IRequest<Result<Guid>>
     {
         public ProjectId ProjectId { get; } = projectId;
         public InvestmentDraft Draft { get; } = draft;
-        public Guid WalletId { get; } = walletId;
+        public WalletId WalletId { get; } = walletId;
     }
     
     public class RequestFounderSignaturesHandler(
@@ -62,7 +62,7 @@ public static class RequestInvestmentSignatures
             if (existingInvestment is { IsSuccess: true, Value: not null })
                 return Result.Failure<Guid>("An investment with the same key already exists on the blockchain.");
             
-            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId);
+            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
 
             if (sensitiveDataResult.IsFailure)
             {
@@ -72,14 +72,14 @@ public static class RequestInvestmentSignatures
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
             var project = projectResult.Value;
 
-            var sendSignatureResult = await SendSignatureRequest(request.WalletId, walletWords, project, strippedInvestmentTransaction.ToHex());
+            var sendSignatureResult = await SendSignatureRequest(request.WalletId.Value, walletWords, project, strippedInvestmentTransaction.ToHex());
 
             if (sendSignatureResult.IsFailure)
             {
                 return Result.Failure<Guid>(sendSignatureResult.Error);
             }
             
-            await portfolioService.AddOrUpdate(request.WalletId, new InvestmentRecord
+            await portfolioService.AddOrUpdate(request.WalletId.Value, new InvestmentRecord
             {
                 InvestmentTransactionHash = transactionId,
                 InvestmentTransactionHex = request.Draft.SignedTxHex,
@@ -93,7 +93,7 @@ public static class RequestInvestmentSignatures
             return Result.Success(Guid.Empty);
         }
 
-        private async Task<Result<(DateTime createdTime,string eventId)>> SendSignatureRequest(Guid walletId, WalletWords walletWords, Project project, string signedTransactionHex)
+        private async Task<Result<(DateTime createdTime,string eventId)>> SendSignatureRequest(string walletId, WalletWords walletWords, Project project, string signedTransactionHex)
         {
             try
             {
@@ -134,7 +134,7 @@ public static class RequestInvestmentSignatures
             }
         }
 
-        private async Task<Result<string>> GetUnfundedReleaseAddress(Guid walletId)
+        private async Task<Result<string>> GetUnfundedReleaseAddress(string walletId)
         {
             // Get account info from database
             var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);

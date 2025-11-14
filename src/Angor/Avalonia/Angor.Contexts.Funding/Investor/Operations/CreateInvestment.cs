@@ -1,4 +1,4 @@
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -17,7 +17,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public static class CreateInvestment
 {
-    public record CreateInvestmentTransactionRequest(Guid WalletId, ProjectId ProjectId, Amount Amount, DomainFeerate FeeRate) 
+    public record CreateInvestmentTransactionRequest(WalletId WalletId, ProjectId ProjectId, Amount Amount, DomainFeerate FeeRate) 
         : IRequest<Result<InvestmentDraft>> { }
     
     public class CreateInvestmentTransactionHandler(
@@ -39,7 +39,7 @@ public static class CreateInvestment
                     return Result.Failure<InvestmentDraft>(projectResult.Error);
                 }
 
-                var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(transactionRequest.WalletId);
+                var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(transactionRequest.WalletId.Value);
 
                 var walletWords = sensitiveDataResult.Value.ToWalletWords();
 
@@ -58,7 +58,7 @@ public static class CreateInvestment
                 if (transactionResult.IsFailure)
                     return Result.Failure<InvestmentDraft>(transactionResult.Error);
 
-                var signedTxResult = await SignTransaction(transactionRequest.WalletId, walletWords, transactionResult.Value, transactionRequest.FeeRate.SatsPerKilobyte);
+                var signedTxResult = await SignTransaction(transactionRequest.WalletId.Value, walletWords, transactionResult.Value, transactionRequest.FeeRate.SatsPerKilobyte);
                 if (signedTxResult.IsFailure)
                 {
                     return Result.Failure<InvestmentDraft>(signedTxResult.Error);
@@ -85,7 +85,7 @@ public static class CreateInvestment
             }
         }
 
-        private async Task<Result<TransactionInfo>> SignTransaction(Guid walletId, WalletWords walletWords, Transaction transaction,
+        private async Task<Result<TransactionInfo>> SignTransaction(string walletId, WalletWords walletWords, Transaction transaction,
             long feerate)
         {
             // Get account info from database

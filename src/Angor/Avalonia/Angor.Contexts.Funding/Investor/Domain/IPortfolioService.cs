@@ -6,6 +6,6 @@ namespace Angor.Contexts.Funding.Investor.Domain;
 
 public interface IPortfolioService
 {
-    Task<Result<InvestmentRecords>> GetByWalletId(Guid walletId);
-    Task<Result> AddOrUpdate(Guid walletId, InvestmentRecord investment);
+    Task<Result<InvestmentRecords>> GetByWalletId(string walletId);
+    Task<Result> AddOrUpdate(string walletId, InvestmentRecord investment);
 }
