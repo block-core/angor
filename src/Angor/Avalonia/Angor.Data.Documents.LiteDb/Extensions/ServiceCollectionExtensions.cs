@@ -1,6 +1,7 @@
 using System;
 using Angor.Contests.CrossCutting;
 using Angor.Data.Documents.Interfaces;
+using Angor.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -17,7 +18,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAngorDocumentDatabaseFactory>(provider => new LiteDbDocumentDatabaseFactory(
             provider.GetRequiredService<ILogger<LiteDbDocumentDatabase>>(),
             provider.GetRequiredService<IApplicationStorage>(),
-            profileContext));
+            profileContext,
+            provider.GetRequiredService<INetworkStorage>()));
 
         services.AddScoped<IAngorDocumentDatabase>(provider =>
         {
