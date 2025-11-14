@@ -1,4 +1,4 @@
-namespace Angor.Contests.CrossCutting;
+namespace Angor.Contexts.CrossCutting;
 
 public interface IApplicationStorage
 {

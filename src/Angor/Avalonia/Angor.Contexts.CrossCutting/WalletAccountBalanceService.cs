@@ -5,7 +5,7 @@ using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 
-namespace Angor.Contests.CrossCutting;
+namespace Angor.Contexts.CrossCutting;
 
 public class WalletAccountBalanceService(IWalletOperations walletOperations,
     IGenericDocumentCollection<WalletAccountBalanceInfo> collection,

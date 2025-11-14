@@ -1,7 +1,7 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 
-namespace Angor.Contests.CrossCutting;
+namespace Angor.Contexts.CrossCutting;
 
 public class DerivedProjectKeys
 {

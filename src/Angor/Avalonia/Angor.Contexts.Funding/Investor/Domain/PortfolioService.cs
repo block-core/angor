@@ -1,4 +1,4 @@
-using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared;

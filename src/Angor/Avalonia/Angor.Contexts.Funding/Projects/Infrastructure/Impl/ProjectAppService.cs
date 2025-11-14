@@ -1,4 +1,4 @@
-﻿using Angor.Contests.CrossCutting;
+﻿using Angor.Contexts.CrossCutting;
 using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
