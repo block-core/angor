@@ -21,7 +21,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
             // https://en.bitcoin.it/wiki/Timelock
             throw new ArgumentOutOfRangeException(nameof(punishmentLockDays), $"Invalid CSV value {punishmentLockDays}");
         }
-        
+
         var sequence = new Sequence(TimeSpan.FromDays(punishmentLockDays));
 
         return new(new List<Op>
@@ -34,8 +34,59 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
     }
 
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
-        uint256? hashOfSecret, DateTime? expiryDateOverride = null)
+      uint256? hashOfSecret, DateTime? expiryDateOverride = null)
     {
+        return BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, hashOfSecret, expiryDateOverride, null, 0);
+    }
+
+    public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
+        uint256? hashOfSecret, DateTime? expiryDateOverride, DateTime? investmentStartDate, byte patternIndex = 0)
+    {
+        // Calculate stage release date based on project type
+        DateTime stageReleaseDate;
+
+        if (projectInfo.ProjectType == ProjectType.Invest)
+        {
+            // Fixed stages - use predefined dates
+            if (stageIndex >= projectInfo.Stages.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(stageIndex), $"Stage index {stageIndex} is out of range. Project has {projectInfo.Stages.Count} stages.");
+            }
+
+            stageReleaseDate = projectInfo.Stages[stageIndex].ReleaseDate;
+        }
+        else // Fund or Subscribe
+        {
+            // Dynamic stages - calculate from investment start date and pattern
+            if (!investmentStartDate.HasValue)
+            {
+                throw new ArgumentException("investmentStartDate is required for Fund/Subscribe projects", nameof(investmentStartDate));
+            }
+
+            if (!projectInfo.DynamicStagePatterns.Any())
+            {
+                throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
+            }
+
+            // Validate pattern index
+            if (patternIndex >= projectInfo.DynamicStagePatterns.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(patternIndex), $"Pattern index {patternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
+            }
+
+            // Use the specified pattern
+            var pattern = projectInfo.DynamicStagePatterns[patternIndex];
+
+            // Validate stage index
+            if (stageIndex >= pattern.StageCount)
+            {
+                throw new ArgumentOutOfRangeException(nameof(stageIndex), $"Stage index {stageIndex} is out of range. Pattern has {pattern.StageCount} stages.");
+            }
+
+            // Calculate the stage release date
+            stageReleaseDate = CalculateDynamicStageReleaseDate(investmentStartDate.Value, pattern, stageIndex);
+        }
+
         // regular investor pre-co-sign with founder to gets funds with penalty
         var recoveryOps = new List<Op>
         {
@@ -45,39 +96,54 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         };
 
         var secretHashOps = hashOfSecret == null
-            ? new List<Op> { OpcodeType.OP_CHECKSIG }
+         ? new List<Op> { OpcodeType.OP_CHECKSIG }
             : new List<Op>
-            {
-                OpcodeType.OP_CHECKSIGVERIFY,
-                OpcodeType.OP_HASH256,
-                Op.GetPushOp(new uint256(hashOfSecret).ToBytes()),
-                OpcodeType.OP_EQUAL
-            };
-        
+                {
+                    OpcodeType.OP_CHECKSIGVERIFY,
+                    OpcodeType.OP_HASH256,
+                    Op.GetPushOp(new uint256(hashOfSecret).ToBytes()),
+                    OpcodeType.OP_EQUAL
+                };
+
         recoveryOps.AddRange(secretHashOps);
 
         var seeders = hashOfSecret == null && projectInfo.ProjectSeeders.SecretHashes.Any()
             ? _seederScriptTreeBuilder.BuildSeederScriptTree(investorKey,
-                projectInfo.ProjectSeeders.Threshold,
-                projectInfo.ProjectSeeders.SecretHashes).ToList()
+                   projectInfo.ProjectSeeders.Threshold,
+                   projectInfo.ProjectSeeders.SecretHashes).ToList()
             : new List<Script>();
-        
+
         // Use the override expiry date if provided, otherwise use the project's expiry date
         var effectiveExpiryDate = expiryDateOverride ?? projectInfo.ExpiryDate;
-        
+
         return new()
         {
-            Founder = GetFounderSpendScript(projectInfo.FounderKey, projectInfo.Stages[stageIndex].ReleaseDate),
+            Founder = GetFounderSpendScript(projectInfo.FounderKey, stageReleaseDate),
             Recover = new Script(recoveryOps),
             EndOfProject = GetEndOfProjectInvestorSpendScript(investorKey, effectiveExpiryDate),
             Seeders = seeders
         };
     }
 
+    private static DateTime CalculateDynamicStageReleaseDate(DateTime investmentStartDate, DynamicStagePattern pattern, int stageIndex)
+    {
+        return DynamicStageCalculator.CalculateDynamicStageReleaseDate(investmentStartDate, pattern, stageIndex);
+    }
+
+    private static DateTime CalculateNextMonthlyPayoutDate(DateTime startDate, StageFrequency frequency, int dayOfMonth, int stageIndex)
+    {
+        return DynamicStageCalculator.CalculateMonthlyPayoutDate(startDate, frequency, dayOfMonth, stageIndex);
+    }
+
+    private static DateTime CalculateNextWeeklyPayoutDate(DateTime startDate, StageFrequency frequency, int dayOfWeek, int stageIndex)
+    {
+        return DynamicStageCalculator.CalculateWeeklyPayoutDate(startDate, frequency, dayOfWeek, stageIndex);
+    }
+
     private static Script GetFounderSpendScript(string founderKey, DateTime stageReleaseDate)
     {
-        long locktimeFounder = Utils.DateTimeToUnixTime(stageReleaseDate);   
-        
+        long locktimeFounder = Utils.DateTimeToUnixTime(stageReleaseDate);
+
         // founder gets funds after stage started
         return new Script(new List<Op>
         {
@@ -85,20 +151,20 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
             OpcodeType.OP_CHECKSIGVERIFY,
             Op.GetPushOp(locktimeFounder),
             OpcodeType.OP_CHECKLOCKTIMEVERIFY
-        });
+      });
     }
 
     private static Script GetEndOfProjectInvestorSpendScript(string investorKey, DateTime projectExpieryDate)
     {
         long locktimeExpiery = Utils.DateTimeToUnixTime(projectExpieryDate);
-        
+
         // project ended and investor can collect remaining funds
         return new Script(new List<Op>
-        {
-            Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
-            OpcodeType.OP_CHECKSIGVERIFY,
-            Op.GetPushOp(locktimeExpiery),
-            OpcodeType.OP_CHECKLOCKTIMEVERIFY
-        });
+         {
+                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+                OpcodeType.OP_CHECKSIGVERIFY,
+                Op.GetPushOp(locktimeExpiery),
+                OpcodeType.OP_CHECKLOCKTIMEVERIFY
+         });
     }
 }

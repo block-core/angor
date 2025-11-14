@@ -5,7 +5,17 @@ namespace Angor.Shared.Protocol;
 
 public interface IInvestorTransactionActions
 {
+    /// <summary>
+    /// Creates an investment transaction using the legacy method signature (backward compatible).
+    /// </summary>
     Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey, long totalInvestmentAmount);
+    
+    /// <summary>
+    /// Creates an investment transaction using project parameters.
+    /// Recommended for new code as it supports pattern selection and explicit start dates.
+    /// </summary>
+    Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, ProjectParameters parameters);
+    
     Transaction BuildRecoverInvestorFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction);
     Transaction BuildUnfundedReleaseInvestorFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, string investorReleaseKey);
 

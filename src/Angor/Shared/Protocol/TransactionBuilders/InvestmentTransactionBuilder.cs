@@ -19,11 +19,11 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
     {
         _networkConfiguration = networkConfiguration;
         _projectScriptsBuilder = projectScriptsBuilder;
-        _investmentScriptBuilder = investmentScriptBuilder;
-        _taprootScriptBuilder = taprootScriptBuilder;
+      _investmentScriptBuilder = investmentScriptBuilder;
+  _taprootScriptBuilder = taprootScriptBuilder;
     }
 
-    public Transaction BuildInvestmentTransaction(ProjectInfo projectInfo, Script opReturnScript, 
+    public Transaction BuildInvestmentTransaction(ProjectInfo projectInfo, Script opReturnScript,
         IEnumerable<ProjectScripts> projectScripts, long totalInvestmentAmount)
     {
         var network = _networkConfiguration.GetNetwork();
@@ -33,7 +33,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
         // create the output and script of the project id 
         var angorFeeOutputScript = _projectScriptsBuilder.GetAngorFeeOutputScript(projectInfo.ProjectIdentifier);
         int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
-        long angorFee = (totalInvestmentAmount * angorFeePercentage) / 100; 
+        long angorFee = (totalInvestmentAmount * angorFeePercentage) / 100;
         var angorOutput = new TxOut(new Money(angorFee), angorFeeOutputScript);
         investmentTransaction.AddOutput(angorOutput);
 
@@ -45,31 +45,51 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
 
         var stagesScripts = projectScripts.Select(_ => _taprootScriptBuilder.CreateStage(network, _));
 
+        // Determine stage count and percentages based on project type
+        int stageCount = projectScripts.Count();
+        List<decimal> stagePercentages = new List<decimal>();
+
+        if (projectInfo.AllowDynamicStages)
+        {
+            // Dynamic stages (Fund/Subscribe) - equal distribution
+            decimal equalPercentage = 100m / stageCount;
+            stagePercentages.AddRange(Enumerable.Repeat(equalPercentage, stageCount));
+        }
+        else
+        {
+            // Fixed stages (Invest) - use predefined percentages
+            if (projectInfo.Stages == null || projectInfo.Stages.Count != stageCount)
+            {
+                throw new InvalidOperationException($"Stage count mismatch: expected {stageCount} stages, but ProjectInfo has {projectInfo.Stages?.Count ?? 0}");
+            }
+            stagePercentages.AddRange(projectInfo.Stages.Select(s => s.AmountToRelease));
+        }
+
         // Calculate amounts for each stage
         var stageAmounts = new List<long>();
         long totalAllocated = 0;
 
-        for (int i = 0; i < projectInfo.Stages.Count; i++)
+        for (int i = 0; i < stageCount; i++)
         {
             long stageAmount;
-            if (i == projectInfo.Stages.Count - 1) // Last stage gets remainder
+            if (i == stageCount - 1) // Last stage gets remainder
             {
                 stageAmount = totalInvestmentAmountAfterFee - totalAllocated;
             }
             else
             {
-                stageAmount = Convert.ToInt64(totalInvestmentAmountAfterFee * (projectInfo.Stages[i].AmountToRelease / 100));
+                stageAmount = Convert.ToInt64(totalInvestmentAmountAfterFee * (stagePercentages[i] / 100));
                 totalAllocated += stageAmount;
             }
             stageAmounts.Add(stageAmount);
         }
 
         var stagesOutputs = stagesScripts.Select((script, i) =>
-            new TxOut(new Money(stageAmounts[i]), new Script(script.ToBytes())));
+        new TxOut(new Money(stageAmounts[i]), new Script(script.ToBytes())));
 
         investmentTransaction.Outputs.AddRange(stagesOutputs);
 
-        if(investmentTransaction.TotalOut.Satoshi != totalInvestmentAmount)
+        if (investmentTransaction.TotalOut.Satoshi != totalInvestmentAmount)
             throw new InvalidOperationException($"Total output amount {investmentTransaction.TotalOut.Satoshi} does not match expected total investment amount {totalInvestmentAmount}.");
 
         return investmentTransaction;
@@ -79,18 +99,31 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
     {
         var spendingScript = _investmentScriptBuilder.GetInvestorPenaltyTransactionScript(
             investorKey,
-            penaltyDays);
+          penaltyDays);
 
         var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
         
-        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2).Take(projectInfo.Stages.Count))
+      // Determine stage count based on project type
+ int stageCount;
+     if (projectInfo.AllowDynamicStages)
         {
-            transaction.Inputs.Add( new TxIn(output.ToOutPoint()));
+  // For dynamic stages, count outputs after fee and OP_RETURN (outputs 2+)
+        stageCount = investmentTransaction.Outputs.Count - 2;
+        }
+        else
+        {
+    // For fixed stages, use Stages.Count
+            stageCount = projectInfo.Stages.Count;
+  }
+        
+        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2).Take(stageCount))
+        {
+  transaction.Inputs.Add( new TxIn(output.ToOutPoint()));
 
             transaction.Outputs.Add(new TxOut(output.TxOut.Value, spendingScript.WitHash.ScriptPubKey));
         }
 
-        return transaction;
+  return transaction;
     }
 
     public Transaction BuildUpfrontUnfundedReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, string investorReleaseKey)
@@ -98,23 +131,36 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
         // the release may be an address or a pubkey, first check if it is an address
         Script spendingScript = null;
         if (BitcoinWitPubKeyAddress.IsValid(investorReleaseKey, _networkConfiguration.GetNetwork(), out Exception _))
-        {
-            spendingScript = new BitcoinWitPubKeyAddress(investorReleaseKey, _networkConfiguration.GetNetwork()).ScriptPubKey;
+      {
+       spendingScript = new BitcoinWitPubKeyAddress(investorReleaseKey, _networkConfiguration.GetNetwork()).ScriptPubKey;
         }
-        else  // if it is not an address, then it is a pubkey
-        {
-            // for the release we just send to a regular witness address
-            spendingScript = new PubKey(investorReleaseKey).WitHash.ScriptPubKey;
+     else  // if it is not an address, then it is a pubkey
+      {
+    // for the release we just send to a regular witness address
+      spendingScript = new PubKey(investorReleaseKey).WitHash.ScriptPubKey;
         }
 
-        var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
+    var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
 
-        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2).Take(projectInfo.Stages.Count))
+      // Determine stage count based on project type
+        int stageCount;
+ if (projectInfo.AllowDynamicStages)
+    {
+    // For dynamic stages, count outputs after fee and OP_RETURN (outputs 2+)
+            stageCount = investmentTransaction.Outputs.Count - 2;
+ }
+     else
+    {
+     // For fixed stages, use Stages.Count
+        stageCount = projectInfo.Stages.Count;
+      }
+
+        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2).Take(stageCount))
         {
-            transaction.Inputs.Add(new TxIn(output.ToOutPoint()));
+     transaction.Inputs.Add(new TxIn(output.ToOutPoint()));
 
-            transaction.Outputs.Add(new TxOut(output.TxOut.Value, spendingScript));
-        }
+        transaction.Outputs.Add(new TxOut(output.TxOut.Value, spendingScript));
+   }
 
         return transaction;
     }
