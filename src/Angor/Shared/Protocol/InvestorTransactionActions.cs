@@ -36,18 +36,24 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
     public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey, long totalInvestmentAmount)
     {
-        // Capture investment start date for dynamic projects
-        var investmentStartDate = DateTime.UtcNow;
+        // Legacy method - delegates to new parameter-based method with defaults
+        return CreateInvestmentTransaction(projectInfo, ProjectParameters.Create(investorKey, totalInvestmentAmount));
+    }
 
-        // For dynamic projects, we could allow pattern selection here
-        // For now, default to pattern 0, but this could be passed as a parameter
-        byte patternIndex = 0;
+    public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, ProjectParameters parameters)
+    {
+        // Capture investment start date for dynamic projects
+        var investmentStartDate = parameters.InvestmentStartDate ?? DateTime.UtcNow;
 
         // create the output and script of the investor pubkey script opreturn
-        var opreturnScript = _projectScriptsBuilder.BuildInvestorInfoScript(investorKey, projectInfo, investmentStartDate, patternIndex);
+        var opreturnScript = _projectScriptsBuilder.BuildInvestorInfoScript(
+            parameters.InvestorKey,
+            projectInfo,
+            investmentStartDate,
+            parameters.PatternIndex);
 
         // Determine the effective expiry date based on penalty threshold
-        var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
+        var expiryDateOverride = GetExpiryDateOverride(projectInfo, parameters.TotalInvestmentAmount);
 
         // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
         List<ProjectScripts> stagesScript;
@@ -55,23 +61,24 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
         {
             // Dynamic stages - use pattern to determine stage count
-            var pattern = projectInfo.DynamicStagePatterns[patternIndex];
+            var pattern = projectInfo.DynamicStagePatterns[parameters.PatternIndex];
 
             stagesScript = Enumerable.Range(0, pattern.StageCount)
-              .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(
-                projectInfo, investorKey, index, null, expiryDateOverride, investmentStartDate, patternIndex))
-            .ToList();
+                     .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(
+                        projectInfo, parameters.InvestorKey, index, null, expiryDateOverride, investmentStartDate, parameters.PatternIndex))
+                    .ToList();
         }
         else
         {
             // Fixed stages - use predefined stages
             stagesScript = Enumerable.Range(0, projectInfo.Stages.Count)
-                .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(
-        projectInfo, investorKey, index, null, expiryDateOverride))
-            .ToList();
+                   .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(
+                         projectInfo, parameters.InvestorKey, index, null, expiryDateOverride))
+                    .ToList();
         }
 
-        return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript, totalInvestmentAmount);
+        return _investmentTransactionBuilder.BuildInvestmentTransaction(
+             projectInfo, opreturnScript, stagesScript, parameters.TotalInvestmentAmount);
     }
 
     public ProjectScriptType DiscoverUsedScript(ProjectInfo projectInfo, Transaction investmentTransaction, int stageIndex, string witScript)

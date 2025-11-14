@@ -32,7 +32,7 @@ namespace Angor.Test.Protocol
             "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
 
         private FeeEstimation _expectedFeeEstimation = new FeeEstimation()
-            { Confirmations = 1, FeeRate = 10000 };
+        { Confirmations = 1, FeeRate = 10000 };
 
         public InvestmentIntegrationsTests()
         {
@@ -104,7 +104,7 @@ namespace Angor.Test.Protocol
             var funderReceiveCoinsKey = new Key();
 
             var projectInvestmentInfo = new ProjectInfo();
-            projectInvestmentInfo.TargetAmount  = Money.Coins(3).Satoshi;
+            projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
@@ -181,7 +181,7 @@ namespace Angor.Test.Protocol
 
             // create founder context
             FounderContext founderContext = new FounderContext
-                { ProjectInfo = projectInvestmentInfo, ProjectSeeders = projectSeeders };
+            { ProjectInfo = projectInvestmentInfo, ProjectSeeders = projectSeeders };
 
             // create seeder1 investment transaction
 
@@ -238,7 +238,7 @@ namespace Angor.Test.Protocol
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
-            projectInvestmentInfo.TargetAmount  = Money.Coins(3).Satoshi;
+            projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
@@ -268,15 +268,15 @@ namespace Angor.Test.Protocol
 
             // create the investment transaction
 
-            var seeder1InvTrx = _seederTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,seeder1Context.InvestorKey,
+            var seeder1InvTrx = _seederTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, seeder1Context.InvestorKey,
                 new uint256(seeder1Context.InvestorSecretHash), projectInvestmentInfo.TargetAmount);
 
-            var seeder1Expierytrx  = _seederTransactionActions.RecoverEndOfProjectFunds(seeder1InvTrx.ToHex(), projectInvestmentInfo,
+            var seeder1Expierytrx = _seederTransactionActions.RecoverEndOfProjectFunds(seeder1InvTrx.ToHex(), projectInvestmentInfo,
                 1, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
                 Encoders.Hex.EncodeData(seeder11Key.ToBytes()), _expectedFeeEstimation);
 
             Assert.NotNull(seeder1Expierytrx);
-            
+
             TransactionValidation.ThanTheTransactionHasNoErrors(seeder1Expierytrx.Transaction,
                 seeder1InvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
         }
@@ -293,7 +293,7 @@ namespace Angor.Test.Protocol
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
-            projectInvestmentInfo.TargetAmount  = Money.Coins(3).Satoshi;
+            projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
@@ -320,7 +320,7 @@ namespace Angor.Test.Protocol
 
             // create the investment transaction
 
-            var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,seeder1Context.InvestorKey,
+            var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, seeder1Context.InvestorKey,
                 projectInvestmentInfo.TargetAmount);
 
             var investor1Expierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(investorInvTrx.ToHex(),
@@ -329,7 +329,7 @@ namespace Angor.Test.Protocol
                 Encoders.Hex.EncodeData(seeder11Key.ToBytes()), _expectedFeeEstimation);
 
             Assert.NotNull(investor1Expierytrx);
-            
+
             TransactionValidation.ThanTheTransactionHasNoErrors(investor1Expierytrx.Transaction,
                 investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
         }
@@ -346,7 +346,7 @@ namespace Angor.Test.Protocol
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
-            projectInvestmentInfo.TargetAmount  = Money.Coins(3).Satoshi;
+            projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
@@ -373,20 +373,20 @@ namespace Angor.Test.Protocol
             projectSeeders.SecretHashes.Add(Hashes.Hash256(new Key().ToBytes()).ToString());
 
             projectInvestmentInfo.ProjectSeeders = projectSeeders;
-            
+
             var investorPubKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes());
 
             // create the investment transaction
 
-            var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,investorPubKey,
+            var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, investorPubKey,
                 projectInvestmentInfo.TargetAmount);
 
             var investorExpierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(investorInvTrx.ToHex(),
                 projectInvestmentInfo, 1, investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
-                Encoders.Hex.EncodeData(investorKey.ToBytes()),_expectedFeeEstimation);
+                Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation);
 
             Assert.NotNull(investorExpierytrx);
-            
+
             TransactionValidation.ThanTheTransactionHasNoErrors(investorExpierytrx.Transaction,
                 investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
         }
@@ -414,7 +414,7 @@ namespace Angor.Test.Protocol
             {
                 ProjectInfo = new ProjectInfo
                 {
-                    TargetAmount  = Money.Coins(3).Satoshi,
+                    TargetAmount = Money.Coins(3).Satoshi,
                     StartDate = DateTime.UtcNow,
                     ExpiryDate = DateTime.UtcNow.AddDays(5),
                     Stages = new List<Stage>
@@ -435,33 +435,33 @@ namespace Angor.Test.Protocol
 
             // create the investment transaction
 
-            var investmentTransaction = _seederTransactionActions.CreateInvestmentTransaction(investorContext.ProjectInfo,investorContext.InvestorKey,
+            var investmentTransaction = _seederTransactionActions.CreateInvestmentTransaction(investorContext.ProjectInfo, investorContext.InvestorKey,
                 Hashes.Hash256(seederSecret.ToBytes()), investorContext.ProjectInfo.TargetAmount);
 
             investorContext.TransactionHex = investmentTransaction.ToHex();
 
-            var recoveryTransaction = _seederTransactionActions.BuildRecoverSeederFundsTransaction(investorContext.ProjectInfo, 
+            var recoveryTransaction = _seederTransactionActions.BuildRecoverSeederFundsTransaction(investorContext.ProjectInfo,
                 investmentTransaction,
                 investorContext.ProjectInfo.PenaltyDays, Encoders.Hex.EncodeData(seederFundsRecoveryKey.PubKey.ToBytes()));
 
             var founderSignatures = _founderTransactionActions.SignInvestorRecoveryTransactions(investorContext.ProjectInfo,
-                investmentTransaction.ToHex(),recoveryTransaction,
+                investmentTransaction.ToHex(), recoveryTransaction,
                 Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
 
             var signedRecoveryTransaction = _seederTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(investorContext.ProjectInfo,
                 investmentTransaction, seederFundsRecoveryKey.PubKey.ToHex(),
-                founderSignatures, Encoders.Hex.EncodeData(seederKey.ToBytes()),Encoders.Hex.EncodeData(seederSecret.ToBytes()));
+                founderSignatures, Encoders.Hex.EncodeData(seederKey.ToBytes()), Encoders.Hex.EncodeData(seederSecret.ToBytes()));
 
             // Adding the input that will be spent as fee 
-            signedRecoveryTransaction.Inputs.Add(new Blockcore.Consensus.TransactionInfo.TxIn(new Blockcore.Consensus.TransactionInfo.OutPoint(Blockcore.NBitcoin.uint256.Zero,0))); //Add fee to the transaction
-            
-            TransactionValidation.ThanTheTransactionHasNoErrors(signedRecoveryTransaction,investmentTransaction.Outputs.AsCoins()
+            signedRecoveryTransaction.Inputs.Add(new Blockcore.Consensus.TransactionInfo.TxIn(new Blockcore.Consensus.TransactionInfo.OutPoint(Blockcore.NBitcoin.uint256.Zero, 0))); //Add fee to the transaction
+
+            TransactionValidation.ThanTheTransactionHasNoErrors(signedRecoveryTransaction, investmentTransaction.Outputs.AsCoins()
                 .Where(_ => _.Amount > 0)
                 // Adding the coin to spend as fee - so the transaction validation doesn't fail
-                .Append(new Coin(uint256.Zero, 0,new Money(1000),
+                .Append(new Coin(uint256.Zero, 0, new Money(1000),
                     new Blockcore.Consensus.ScriptInfo.Script("4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))));
         }
-        
+
         [Fact]
         public void SpendInvestorRecoveryTest()
         {
@@ -483,7 +483,7 @@ namespace Angor.Test.Protocol
             {
                 ProjectInfo = new ProjectInfo
                 {
-                    TargetAmount  = Money.Coins(3).Satoshi,
+                    TargetAmount = Money.Coins(3).Satoshi,
                     StartDate = DateTime.UtcNow,
                     ExpiryDate = DateTime.UtcNow.AddDays(5),
                     PenaltyDays = 5,
@@ -504,7 +504,7 @@ namespace Angor.Test.Protocol
 
             // create the investment transaction
 
-            var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(investorContext.ProjectInfo,investorContext.InvestorKey,
+            var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(investorContext.ProjectInfo, investorContext.InvestorKey,
                 investorContext.ProjectInfo.TargetAmount);
 
             investorContext.TransactionHex = investmentTransaction.ToHex();
@@ -513,7 +513,7 @@ namespace Angor.Test.Protocol
                 investmentTransaction);
 
             var founderSignatures = _founderTransactionActions.SignInvestorRecoveryTransactions(investorContext.ProjectInfo,
-                investmentTransaction.ToHex(),recoveryTransaction,
+                investmentTransaction.ToHex(), recoveryTransaction,
                 Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
 
             var sigCheckResult = _investorTransactionActions.CheckInvestorRecoverySignatures(investorContext.ProjectInfo, investmentTransaction, founderSignatures);
@@ -531,14 +531,14 @@ namespace Angor.Test.Protocol
                     new Script("4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
 
             }
-           
+
             signedRecoveryTransaction.Inputs.Add(new Blockcore.Consensus.TransactionInfo.TxIn(
                 new Blockcore.Consensus.TransactionInfo.OutPoint(Blockcore.NBitcoin.uint256.Zero, 0), null)); //Add fee to the transaction
 
             TransactionValidation.ThanTheTransactionHasNoErrors(signedRecoveryTransaction, coins);
 
             // recover the coins after the penalty
-            var releaseTransaction = _investorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(investorContext.ProjectInfo, investmentTransaction, signedRecoveryTransaction, 
+            var releaseTransaction = _investorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(investorContext.ProjectInfo, investmentTransaction, signedRecoveryTransaction,
                 investorContext.ChangeAddress, _expectedFeeEstimation, Encoders.Hex.EncodeData(investorKey.ToBytes()));
 
             coins = new();
@@ -567,10 +567,10 @@ namespace Angor.Test.Protocol
             var seeder1Key = new Key();
             var seeder2Key = new Key();
             var seeder3Key = new Key();
-            
+
             var projectInvestmentInfo = new ProjectInfo
             {
-                TargetAmount  = Money.Coins(3).Satoshi,
+                TargetAmount = Money.Coins(3).Satoshi,
                 StartDate = DateTime.UtcNow,
                 ExpiryDate = DateTime.UtcNow.AddDays(5),
                 Stages = new List<Stage>
@@ -592,7 +592,7 @@ namespace Angor.Test.Protocol
                     }
                 }
             };
-            
+
             projectInvestmentInfo.ProjectIdentifier =
                 _derivationOperations.DeriveAngorKey(angorRootKey, projectInvestmentInfo.FounderKey);
 
@@ -601,7 +601,7 @@ namespace Angor.Test.Protocol
             var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo,
                 Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
                 projectInvestmentInfo.TargetAmount);
-            
+
             var secrets = new List<byte[]>
             {
                 seeder1Key.ToBytes(),
@@ -617,11 +617,11 @@ namespace Angor.Test.Protocol
                 var investorRecoverFundsNoPenalty = _investorTransactionActions.RecoverRemainingFundsWithOutPenalty(
                     investorInvTrx.ToHex(), projectInvestmentInfo, stageIndex,
                     investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
-                    Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation,partSecrets
+                    Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation, partSecrets
                 );
 
                 Assert.NotNull(investorRecoverFundsNoPenalty);
-            
+
                 TransactionValidation.ThanTheTransactionHasNoErrors(investorRecoverFundsNoPenalty.Transaction,
                     investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
             }
@@ -648,7 +648,7 @@ namespace Angor.Test.Protocol
             {
                 ProjectInfo = new ProjectInfo
                 {
-                    TargetAmount  = Money.Coins(3).Satoshi,
+                    TargetAmount = Money.Coins(3).Satoshi,
                     StartDate = DateTime.UtcNow,
                     ExpiryDate = DateTime.UtcNow.AddDays(5),
                     PenaltyDays = 5,
@@ -829,6 +829,183 @@ namespace Angor.Test.Protocol
 
             TransactionValidation.ThanTheTransactionHasNoErrors(investor1Expierytrx.Transaction,
                investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
+        }
+
+
+
+        [Fact]
+        public void SpendFundMonthlyBelowAndAboveThreshold()
+        {
+            // Arrange
+            var network = Networks.Bitcoin.Testnet();
+            var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
+
+            var founderKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
+            var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, _derivationOperations.DeriveFounderKey(words, 1));
+            var founderReceiveAddress = new Key().PubKey.ScriptPubKey;
+
+            // Create a Fund project with 3 monthly stages, payout on 15th of each month
+            var projectInfo = new ProjectInfo
+            {
+                Version = 2,
+                ProjectType = ProjectType.Fund,
+                TargetAmount = 0,
+                PenaltyDays = 30,
+                PenaltyThreshold = Money.Coins(1).Satoshi, // Set threshold at 1 BTC
+                ExpiryDate = DateTime.UtcNow.AddYears(1),
+                FounderKey = _derivationOperations.DeriveFounderKey(words, 1),
+                FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, _derivationOperations.DeriveFounderKey(words, 1)),
+                ProjectSeeders = new ProjectSeeders(),
+                DynamicStagePatterns = new List<DynamicStagePattern>
+     {
+              new DynamicStagePattern
+      {
+           PatternId = 0,
+     Name = "3-Month Fund (15th of month)",
+  Frequency = StageFrequency.Monthly,
+        StageCount = 3,
+        PayoutDayType = PayoutDayType.SpecificDayOfMonth,
+         PayoutDay = 15 // 15th of each month
+       }
+   }
+            };
+            projectInfo.ProjectIdentifier = _derivationOperations.DeriveAngorKey(angorRootKey, projectInfo.FounderKey);
+
+            // Create investor 1 - BELOW threshold (0.5 BTC < 1 BTC threshold)
+            var investor1Key = new Key();
+            var investor1PrivateKey = investor1Key.ToBytes();
+            var investor1ReceiveAddress = new Key().PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString();
+            var investor1StartDate = new DateTime(2025, 2, 1, 0, 0, 0, DateTimeKind.Utc);
+            var investor1Amount = Money.Coins(0.5m).Satoshi;
+
+            // Create investor 2 - ABOVE threshold (1.5 BTC > 1 BTC threshold)
+            var investor2Key = new Key();
+            var investor2PrivateKey = investor2Key.ToBytes();
+            var investor2ReceiveAddress = new Key().PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString();
+            var investor2StartDate = new DateTime(2025, 2, 1, 0, 0, 0, DateTimeKind.Utc);
+            var investor2Amount = Money.Coins(1.5m).Satoshi;
+
+            // Act & Assert
+
+            // Step 1: Create investment transaction for investor 1 (below threshold)
+            var investor1Parameters = ProjectParameters.CreateForDynamicProject(
+          Encoders.Hex.EncodeData(investor1Key.PubKey.ToBytes()),
+      investor1Amount,
+        0,
+  investor1StartDate);
+
+            var investor1Trx = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investor1Parameters);
+            Assert.NotNull(investor1Trx);
+
+            // Verify investor 1 is below threshold
+            var investor1IsAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInfo, investor1Trx);
+            Assert.False(investor1IsAboveThreshold, "Investor 1 should be below threshold (0.5 BTC < 1 BTC)");
+
+            TransactionValidation.ThanTheTransactionHasNoErrors(investor1Trx,
+          new[] { new Coin(uint256.Zero, 0, Money.Coins(20), new Key().ScriptPubKey) });
+
+            // Step 2: Create investment transaction for investor 2 (above threshold)
+            var investor2Parameters = ProjectParameters.CreateForDynamicProject(
+        Encoders.Hex.EncodeData(investor2Key.PubKey.ToBytes()),
+  investor2Amount,
+         0,
+   investor2StartDate);
+
+            var investor2Trx = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investor2Parameters);
+            Assert.NotNull(investor2Trx);
+
+            // Verify investor 2 is above threshold
+            var investor2IsAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInfo, investor2Trx);
+            Assert.True(investor2IsAboveThreshold, "Investor 2 should be above threshold (1.5 BTC > 1 BTC)");
+
+            TransactionValidation.ThanTheTransactionHasNoErrors(investor2Trx,
+             new[] { new Coin(uint256.Zero, 0, Money.Coins(20), new Key().ScriptPubKey) });
+
+            // Step 3: Investor 1 recovers stage 1 immediately (no penalty, no founder approval needed)
+            var investor1RecoverStage1 = _investorTransactionActions.RecoverEndOfProjectFunds(
+            investor1Trx.ToHex(),
+             projectInfo,
+              1, // Stage 1
+                        investor1ReceiveAddress,
+          Encoders.Hex.EncodeData(investor1PrivateKey),
+              _expectedFeeEstimation);
+
+            Assert.NotNull(investor1RecoverStage1);
+            Assert.NotNull(investor1RecoverStage1.Transaction);
+            TransactionValidation.ThanTheTransactionHasNoErrors(investor1RecoverStage1.Transaction,
+                investor1Trx.Outputs.AsCoins().Where(c => c.Amount > 0));
+
+            // Step 4: Investor 2 builds recovery transaction (needs founder signatures because above threshold)
+            var investor2RecoveryTrx = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInfo, investor2Trx);
+            Assert.NotNull(investor2RecoveryTrx);
+
+            // Step 5: Founder signs investor 2's recovery transaction
+            var founderSignatures = _founderTransactionActions.SignInvestorRecoveryTransactions(
+                   projectInfo,
+              investor2Trx.ToHex(),
+                        investor2RecoveryTrx,
+              Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
+
+            Assert.NotNull(founderSignatures);
+            Assert.NotEmpty(founderSignatures.Signatures);
+
+            // Step 6: Verify founder signatures
+            var sigCheckResult = _investorTransactionActions.CheckInvestorRecoverySignatures(projectInfo, investor2Trx, founderSignatures);
+            Assert.True(sigCheckResult, "Failed to validate founder signatures for investor 2");
+
+            // Step 7: Investor 2 adds their signature to recovery transaction
+            var investor2SignedRecoveryTrx = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(
+           projectInfo,
+      investor2Trx,
+        founderSignatures,
+      Encoders.Hex.EncodeData(investor2PrivateKey));
+
+            Assert.NotNull(investor2SignedRecoveryTrx);
+
+            // Step 8: After penalty period, investor 2 recovers stage 1
+            var investor2RecoverStage1 = _investorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(
+       projectInfo,
+       investor2Trx,
+    investor2SignedRecoveryTrx,
+    investor2ReceiveAddress,
+           _expectedFeeEstimation,
+  Encoders.Hex.EncodeData(investor2PrivateKey));
+
+            Assert.NotNull(investor2RecoverStage1);
+            Assert.NotNull(investor2RecoverStage1.Transaction);
+
+            // Step 9: Founder spends stages 2 and 3 from both investments
+            var allInvestmentHexes = new[] { investor1Trx.ToHex(), investor2Trx.ToHex() };
+
+            // Founder spends Stage 2
+            var founderSpendStage2 = _founderTransactionActions.SpendFounderStage(
+     projectInfo,
+    allInvestmentHexes,
+  2,
+ founderReceiveAddress,
+        Encoders.Hex.EncodeData(founderKey.ToBytes()),
+      _expectedFeeEstimation);
+
+            Assert.NotNull(founderSpendStage2);
+            Assert.NotNull(founderSpendStage2.Transaction);
+            TransactionValidation.ThanTheTransactionHasNoErrors(founderSpendStage2.Transaction,
+           allInvestmentHexes.SelectMany(hex =>
+          network.CreateTransaction(hex).Outputs.AsCoins().Where(c => c.Amount > 0)));
+
+            // Founder spends Stage 3
+            var founderSpendStage3 = _founderTransactionActions.SpendFounderStage(
+                projectInfo,
+                allInvestmentHexes,
+                 3,
+                  founderReceiveAddress,
+             Encoders.Hex.EncodeData(founderKey.ToBytes()),
+          _expectedFeeEstimation);
+
+            Assert.NotNull(founderSpendStage3);
+            Assert.NotNull(founderSpendStage3.Transaction);
+            TransactionValidation.ThanTheTransactionHasNoErrors(founderSpendStage3.Transaction,
+         allInvestmentHexes.SelectMany(hex =>
+             network.CreateTransaction(hex).Outputs.AsCoins().Where(c => c.Amount > 0)));
         }
     }
 }

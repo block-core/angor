@@ -177,9 +177,11 @@ public static class DynamicStageHelper
 public class DynamicStagePattern
 {
     /// <summary>
-    /// Unique identifier for this pattern (e.g., "6-month-sub", "3-month-sub").
+    /// Unique numeric identifier for this pattern (0-255).
+    /// Examples: 0 = "3-month monthly", 1 = "6-month monthly", 2 = "12-week biweekly", etc.
+    /// This ID is stored in the OP_RETURN script alongside the investment data.
     /// </summary>
-    public string PatternId { get; set; }
+    public byte PatternId { get; set; }
 
     /// <summary>
     /// Display name for this subscription/funding pattern.
