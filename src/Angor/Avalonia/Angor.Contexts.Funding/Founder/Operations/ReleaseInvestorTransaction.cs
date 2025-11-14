@@ -1,5 +1,6 @@
 using System.Text;
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -18,7 +19,7 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class ReleaseInvestorTransaction
 {
-    public record ReleaseInvestorTransactionRequest(string WalletId, ProjectId ProjectId, IEnumerable<string> InvestmentsEventIds) : IRequest<Result>;
+    public record ReleaseInvestorTransactionRequest(WalletId WalletId, ProjectId ProjectId, IEnumerable<string> InvestmentsEventIds) : IRequest<Result>;
 
     public class ReleaseInvestorTransactionHandler(ISignService signService, IProjectService projectService,
         INostrDecrypter nostrDecrypter, ISerializer serializer, IDerivationOperations derivationOperations,
@@ -36,9 +37,9 @@ public static class ReleaseInvestorTransaction
 
             var items = requests.ToList();
             
-            var decryptResult = await DecryptMessages(request.WalletId, request.ProjectId, items);
+            var decryptResult = await DecryptMessages(request.WalletId.Value, request.ProjectId, items);
             
-            var wordsResult = await seedwordsProvider.GetSensitiveData(request.WalletId);
+            var wordsResult = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
             if (wordsResult.IsFailure)
                 return Result.Failure(wordsResult.Error);
 
@@ -109,7 +110,7 @@ public static class ReleaseInvestorTransaction
             {
                 try
                 {
-                    var sigResJson = await nostrDecrypter.Decrypt(walletId, projectId,
+                    var sigResJson = await nostrDecrypter.Decrypt(new WalletId(walletId), projectId,
                         new DirectMessage(signatureReleaseItem.EventId, signatureReleaseItem.investorNostrPubKey,
                             signatureReleaseItem.EncryptedSignRecoveryMessage,
                             signatureReleaseItem.InvestmentRequestTime));

@@ -20,7 +20,7 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class SpendInvestorTransaction
 {
-    public record SpendInvestorTransactionRequest(string WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<TransactionDraft>>;
+    public record SpendInvestorTransactionRequest(WalletId WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<TransactionDraft>>;
 
     public class SpendInvestorTransactionHandler(
         IWalletOperations walletOperations,
@@ -50,7 +50,7 @@ public static class SpendInvestorTransaction
                 return Result.Failure<TransactionDraft>(project.Error);
             }
             
-            var founderKey = await GetProjectFounderKeyAsync(request.WalletId, request.ProjectId.Value);
+            var founderKey = await GetProjectFounderKeyAsync(request.WalletId.Value, request.ProjectId.Value);
             if (founderKey == null)
                 return Result.Failure<TransactionDraft>("Project keys not found in storage. Please load founder projects first.");
             
@@ -61,7 +61,7 @@ public static class SpendInvestorTransaction
             var investmentTransactions = await Task.WhenAll(tasks);
             founderContext.InvestmentTrasnactionsHex = investmentTransactions.Where(hex => hex != string.Empty).ToList();
             
-            var addressResult = await GetUnfundedReleaseAddress(request.WalletId);
+            var addressResult = await GetUnfundedReleaseAddress(request.WalletId.Value);
             if (addressResult.IsFailure) 
                 return Result.Failure<TransactionDraft>("Could not get an unfunded release address");
             

@@ -1,6 +1,7 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Investor.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -20,7 +21,7 @@ namespace Angor.Contexts.Funding.Investor.Operations;
 
 public class GetPenalties
 {
-    public record GetPenaltiesRequest(string WalletId) : IRequest<Result<IEnumerable<PenaltiesDto>>>;
+    public record GetPenaltiesRequest(WalletId WalletId) : IRequest<Result<IEnumerable<PenaltiesDto>>>;
 
     public class GetPenaltiesHandler(
         IPortfolioService investmentService,
@@ -34,7 +35,7 @@ public class GetPenalties
         public async Task<Result<IEnumerable<PenaltiesDto>>> Handle(GetPenaltiesRequest request,
             CancellationToken cancellationToken)
         {
-            var penaltyProjects = await FetchInvestedProjects(request.WalletId);
+            var penaltyProjects = await FetchInvestedProjects(request.WalletId.Value);
 
             if (penaltyProjects.IsFailure)
                 return Result.Failure<IEnumerable<PenaltiesDto>>(penaltyProjects.Error);

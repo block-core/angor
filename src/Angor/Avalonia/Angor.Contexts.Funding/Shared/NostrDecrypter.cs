@@ -1,4 +1,5 @@
 using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Services;
 using Angor.Shared;
@@ -13,9 +14,9 @@ namespace Angor.Contexts.Funding.Shared;
 
 public class NostrDecrypter(IDerivationOperations derivationOperations, ISeedwordsProvider provider, IProjectService projectService) : INostrDecrypter
 {
-    public async Task<Result<string>> Decrypt(string walletId, ProjectId projectId, DirectMessage nostrMessage)
+    public async Task<Result<string>> Decrypt(WalletId walletId, ProjectId projectId, DirectMessage nostrMessage)
     {
-        var sensitiveDataResult = await provider.GetSensitiveData(walletId);
+        var sensitiveDataResult = await provider.GetSensitiveData(walletId.Value);
         if (sensitiveDataResult.IsFailure)
             return Result.Failure<string>(sensitiveDataResult.Error);
 

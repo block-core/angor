@@ -1,3 +1,4 @@
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -12,7 +13,7 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class GetReleaseableTransactions
 {
-    public record GetReleaseableTransactionsRequest(string WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ReleaseableTransactionDto>>>;
+    public record GetReleaseableTransactionsRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ReleaseableTransactionDto>>>;
 
     public class GetClaimableTransactionsHandler(ISignService signService, IProjectService projectService,
         INostrDecrypter nostrDecrypter, ISerializer serializer) : IRequestHandler<GetReleaseableTransactionsRequest, Result<IEnumerable<ReleaseableTransactionDto>>>
@@ -28,7 +29,7 @@ public static class GetReleaseableTransactions
             
             var items = requests.ToList();
             
-            var decryptResult = DecryptMessages(request.WalletId, request.ProjectId, items);
+            var decryptResult = DecryptMessages(request.WalletId.Value, request.ProjectId, items);
             var approvalTask = FetchFounderApprovalsSignaturesAsync(projectResult.Value.NostrPubKey, items);
             var releaseTask = FetchFounderReleaseSignaturesAsync(projectResult.Value.NostrPubKey, items);
             
@@ -98,7 +99,7 @@ public static class GetReleaseableTransactions
             {
                 try
                 {
-                    var sigResJson = await nostrDecrypter.Decrypt(walletId, projectId,
+                    var sigResJson = await nostrDecrypter.Decrypt(new WalletId(walletId), projectId,
                         new DirectMessage(signatureReleaseItem.EventId, signatureReleaseItem.investorNostrPubKey,
                             signatureReleaseItem.EncryptedSignRecoveryMessage,
                             signatureReleaseItem.InvestmentRequestTime));

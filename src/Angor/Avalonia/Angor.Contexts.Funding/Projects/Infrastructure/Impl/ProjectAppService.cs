@@ -1,4 +1,5 @@
 ﻿using Angor.Contests.CrossCutting;
+using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
@@ -31,12 +32,12 @@ public class ProjectAppService(
         return projectService.GetAsync(projectId).Map(project => project.ToDto());
     }
 
-    public Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(string walletId)
+    public Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(WalletId walletId)
     {
         return mediator.Send(new GetFounderProjects.GetFounderProjectsRequest(walletId));
     }
     
-    public Task<Result<TransactionDraft>> CreateProject(string walletId, long selectedFee, CreateProjectDto project)
+    public Task<Result<TransactionDraft>> CreateProject(WalletId walletId, long selectedFee, CreateProjectDto project)
     {
         return mediator.Send(new CreateProjectConstants.CreateProject.CreateProjectRequest(walletId, selectedFee, project)); // WalletId and SelectedFeeRate are placeholders
     }
