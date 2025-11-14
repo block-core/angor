@@ -21,6 +21,7 @@
 @inject ISerializer serializer
 @inject IEncryptionService encryption
 @inject IIndexerService _IndexerService
+@inject IAngorIndexerService _AngorIndexerService
 @inject IWalletOperations _WalletOperations
 @inject IWalletUIService _walletUIService;
 @inject NavMenuState NavMenuState
@@ -268,7 +269,7 @@
             var investmentTransaction = _networkConfiguration.GetNetwork().CreateTransaction(signedTransactionHex);
             totalInvested = investmentTransaction.Outputs.Skip(2).Take(InvestorProject.ProjectInfo.Stages.Count).Sum(_ => _.Value);
 
-            projectStats = (await _IndexerService.GetProjectStatsAsync(ProjectIdentifier)).stats;
+            projectStats = (await _AngorIndexerService.GetProjectStatsAsync(ProjectIdentifier)).stats;
 
             Logger.LogInformation($"Fetching project stats  stats AmountInvested = {projectStats?.AmountInvested} InvestorCount = {projectStats?.InvestorCount}");
         }

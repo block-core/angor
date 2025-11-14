@@ -32,7 +32,7 @@ internal static class CreateProjectConstants
             IRelayService relayService,
             IFounderTransactionActions founderTransactionActions,
             IWalletOperations walletOperations,
-            IIndexerService indexerService,
+            IAngorIndexerService angorIndexerService,
             INetworkConfiguration networkConfiguration,
             IWalletAccountBalanceService walletAccountBalanceService,
             IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
@@ -59,7 +59,7 @@ internal static class CreateProjectConstants
 
                 foreach (var founderKeys in founderKeysList)
                 {
-                    var project = await indexerService.GetProjectByIdAsync(founderKeys.ProjectIdentifier);
+                    var project = await angorIndexerService.GetProjectByIdAsync(founderKeys.ProjectIdentifier);
 
                     if (project != null) continue;
 

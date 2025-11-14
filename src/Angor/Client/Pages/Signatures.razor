@@ -34,6 +34,7 @@
 @inject IRelayService _RelayService
 @inject NavigationManager NavigationManager
 @inject IIndexerService indexerService
+@inject IAngorIndexerService _AngorIndexerService
 
 @inherits BaseComponent
 
@@ -361,7 +362,7 @@
 
             await FetchPendingSignatures(FounderProject);
 
-            investments = await indexerService.GetInvestmentsAsync(FounderProject.ProjectInfo.ProjectIdentifier);
+            investments = await _AngorIndexerService.GetInvestmentsAsync(FounderProject.ProjectInfo.ProjectIdentifier);
             
         }
         Logger.LogDebug("End of OnInitializedAsync");
@@ -908,4 +909,4 @@
     {
         messageSubscription?.Dispose();
     }
-}
+}}

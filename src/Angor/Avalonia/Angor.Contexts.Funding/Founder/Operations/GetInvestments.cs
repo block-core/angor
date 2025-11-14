@@ -24,7 +24,7 @@ public static class GetInvestments
     }
 
     public class GetInvestmentsHandler(
-        IIndexerService indexerService,
+        IAngorIndexerService angorIndexerService,
         IProjectService projectService,
         ISignService signService,
         INostrDecrypter nostrDecrypter,
@@ -115,7 +115,7 @@ public static class GetInvestments
 
         private Task<Result<List<ProjectInvestment>>> LookupCurrentInvestments(GetInvestmentsRequest request)
         {
-            return Result.Try(() => indexerService.GetInvestmentsAsync(request.ProjectId.Value));
+            return Result.Try(() => angorIndexerService.GetInvestmentsAsync(request.ProjectId.Value));
         }
 
         private async Task<Result<IEnumerable<InvestmentRequest>>> LookupRemoteRequests(GetInvestmentsRequest request, string nostrPubKey)

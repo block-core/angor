@@ -24,4 +24,5 @@ public interface IDerivationOperations
     string DeriveNostrStoragePassword(WalletWords walletWords);
     Key DeriveNostrStorageKey(WalletWords walletWords);
     string DeriveNostrStoragePubKeyHex(WalletWords walletWords);
+    string ConvertAngorKeyToBitcoinAddress(string projectId);
 }

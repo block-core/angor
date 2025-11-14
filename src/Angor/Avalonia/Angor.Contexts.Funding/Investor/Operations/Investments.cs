@@ -19,7 +19,7 @@ public static class Investments
     public record InvestmentsPortfolioRequest(Guid WalletId) : IRequest<Result<IEnumerable<InvestedProjectDto>>>;
     
     public class InvestmentsPortfolioHandler(
-        IIndexerService indexerService,
+        IAngorIndexerService angorIndexerService,
         IPortfolioService investmentService,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations,
@@ -58,9 +58,9 @@ public static class Investments
                     var investmentRecord = investmentRecordsLookup.Value.ProjectIdentifiers
                         .First(x => x.ProjectIdentifier == project.Id.Value);
 
-                    var investmentTask = Result.Try(() => indexerService.GetInvestmentAsync(project.Id.Value, investmentRecord.InvestorPubKey));
+                    var investmentTask = Result.Try(() => angorIndexerService.GetInvestmentAsync(project.Id.Value, investmentRecord.InvestorPubKey));
                     var statsTask = Result.Try(() => 
-                        indexerService.GetProjectStatsAsync(project.Id.Value)); // Get project stats for the project ID
+                        angorIndexerService.GetProjectStatsAsync(project.Id.Value)); // Get project stats for the project ID
 
                     await Task.WhenAll(investmentTask, statsTask);
 

@@ -11,7 +11,7 @@ using Stage = Angor.Contexts.Funding.Projects.Domain.Stage;
 namespace Angor.Contexts.Funding.Services;
 
 public class DocumentProjectService(IGenericDocumentCollection<Project> collection, IRelayService relayService,
-    IIndexerService indexerService) : IProjectService
+    IAngorIndexerService angorIndexerService) : IProjectService
 {
 
     public Task<Result<Project>> GetAsync(ProjectId id)
@@ -30,27 +30,27 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
             var stringIds = ids.Select(id => id.Value).ToArray();
 
             var projectResult = await collection.FindByIdsAsync(stringIds);
-            
+
             var localLookup = projectResult.IsSuccess && projectResult.Value.Any()//check the results from the local database
-                ? projectResult.Value.Select(item => item).ToList() : [];
+              ? projectResult.Value.Select(item => item).ToList() : [];
 
             if (ids.Length == localLookup.Count)
                 return Result.Success(localLookup.AsEnumerable()); //all ids are in the local database, return them
-            
+
             var tasks = stringIds
-                .Except(localLookup.Select(p => p.Id.Value)) //ids that are not in the local database
-                .Select(id => Result.Try(() => indexerService.GetProjectByIdAsync(id)));
-            
+             .Except(localLookup.Select(p => p.Id.Value)) //ids that are not in the local database
+                   .Select(id => Result.Try(() => angorIndexerService.GetProjectByIdAsync(id)));
+
             var results = await Task.WhenAll(tasks).WaitAsync(TimeSpan.FromSeconds(10));
 
             var indexerResults = results //TODO log the failures, we don't need an all or nothing approach here
-                .Where(r => r is { IsSuccess: true, Value: not null })
-                .Select(r => r.Value!)
-                .ToList();
-            
+             .Where(r => r is { IsSuccess: true, Value: not null })
+                     .Select(r => r.Value!)
+              .ToList();
+
             if (indexerResults.Count == 0)
                 return Result.Success(localLookup.AsEnumerable());
-            
+
             var nostrEventIds = indexerResults.Select(r => r!.NostrEventId).ToArray();
             var projectInfo = await ProjectInfos(nostrEventIds);
             if (projectInfo.IsFailure || !projectInfo.Value.Any())
@@ -61,46 +61,46 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
                 return Result.Failure<IEnumerable<Project>>("Project metadata not found in relay");
 
             var lookupList = indexerResults.Select(data =>
-            {
-                var info = projectInfo.Value.FirstOrDefault(i => i.FounderKey == data.FounderKey);
-                if (info is null)
-                    return null;
-                var metadata = metadataResult.Value.FirstOrDefault(m => m.Npub == info.NostrPubKey)?.NostrMetadata;
-                if (metadata is null)
-                    return null;
+          {
+              var info = projectInfo.Value.FirstOrDefault(i => i.FounderKey == data.FounderKey);
+              if (info is null)
+                  return null;
+              var metadata = metadataResult.Value.FirstOrDefault(m => m.Npub == info.NostrPubKey)?.NostrMetadata;
+              if (metadata is null)
+                  return null;
 
-                return new Project
-                {
-                    Id = new ProjectId(info.ProjectIdentifier),
-                    FounderKey = info.FounderKey,
-                    ExpiryDate = info.ExpiryDate,
-                    FounderRecoveryKey = info.FounderRecoveryKey,
-                    NostrPubKey = info.NostrPubKey,
-                    PenaltyDuration = TimeSpan.FromDays(info.PenaltyDays),
-                    PenaltyThreshold = info.PenaltyThreshold,
-                    TargetAmount = info.TargetAmount,
-                    Stages = info.Stages.Select((stage, i) => new Stage
-                    {
-                        Index = i,
-                        ReleaseDate = stage.ReleaseDate,
-                        RatioOfTotal = stage.AmountToRelease
-                    }),
-                    StartingDate = info.StartDate,
-                    EndDate = info.EndDate,
-                    Banner = TryGetUri(metadata.Banner),
-                    InformationUri = TryGetUri(metadata.Website),
-                    Picture = TryGetUri(metadata.Picture),
-                    Name = metadata.Name,
-                    ShortDescription = metadata.About
-                };
-            });
+              return new Project
+              {
+                  Id = new ProjectId(info.ProjectIdentifier),
+                  FounderKey = info.FounderKey,
+                  ExpiryDate = info.ExpiryDate,
+                  FounderRecoveryKey = info.FounderRecoveryKey,
+                  NostrPubKey = info.NostrPubKey,
+                  PenaltyDuration = TimeSpan.FromDays(info.PenaltyDays),
+                  PenaltyThreshold = info.PenaltyThreshold,
+                  TargetAmount = info.TargetAmount,
+                  Stages = info.Stages.Select((stage, i) => new Stage
+                  {
+                      Index = i,
+                      ReleaseDate = stage.ReleaseDate,
+                      RatioOfTotal = stage.AmountToRelease
+                  }),
+                  StartingDate = info.StartDate,
+                  EndDate = info.EndDate,
+                  Banner = TryGetUri(metadata.Banner),
+                  InformationUri = TryGetUri(metadata.Website),
+                  Picture = TryGetUri(metadata.Picture),
+                  Name = metadata.Name,
+                  ShortDescription = metadata.About
+              };
+          });
 
             var response = lookupList.Where(p => p != null).Select(p => p!).ToList();
 
             if (!response.Any())
                 return Result.Failure<IEnumerable<Project>>("No projects found");
 
-            var insertResult = await collection.InsertAsync(project => project.Id.Value ,response.ToArray()); //TODO log the result?
+            var insertResult = await collection.InsertAsync(project => project.Id.Value, response.ToArray()); //TODO log the result?
 
             return Result.Success(response.Concat(localLookup));
         }
@@ -112,11 +112,11 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
 
     public async Task<Result<IEnumerable<Project>>> LatestAsync()
     {
-        var top30 = await Result.Try(() => indexerService.GetProjectsAsync(null, 30));
+        var top30 = await Result.Try(() => angorIndexerService.GetProjectsAsync(null, 30));
 
         if (top30.IsFailure)
             return Result.Failure<IEnumerable<Project>>("Failed to retrieve top 20 projects");
-        
+
         var projectIds = top30.Value.Select(p => new ProjectId(p.ProjectIdentifier)).ToArray();
         return await GetAllAsync(projectIds);
     }

@@ -23,7 +23,7 @@ public static class GetInvestorProjectRecovery
     public class Handler(
         IProjectService projectService,
         IPortfolioService investmentService,
-        IIndexerService indexerService,
+        IAngorIndexerService angorIndexerService,
         INetworkConfiguration networkConfiguration,
         IInvestorTransactionActions investorTransactionActions,
         IProjectInvestmentsService projectInvestmentsService,
@@ -67,7 +67,7 @@ public static class GetInvestorProjectRecovery
 
         private async Task<Result<(QueryTransaction,IEnumerable<InvestorStageItemDto>)>> FindInvestments(Project project,string investorPubKey)
         {
-            var trxResult = await Result.Try(() => indexerService.GetInvestmentAsync(project.Id.Value, investorPubKey));
+            var trxResult = await Result.Try(() => angorIndexerService.GetInvestmentAsync(project.Id.Value, investorPubKey));
 
             if (trxResult.IsFailure)
                 return Result.Failure<(QueryTransaction, IEnumerable<InvestorStageItemDto>)>(trxResult.Error);

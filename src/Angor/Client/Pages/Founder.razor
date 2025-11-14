@@ -11,7 +11,7 @@
 @inject IWalletStorage _walletStorage;
 @inject IClientStorage storage;
 @inject IRelayService RelayService;
-@inject IIndexerService _IndexerService
+@inject IAngorIndexerService _AngorIndexerService
 @inject ISerializer serializer
 @inject ILogger<Founder> _Logger;
 
@@ -128,18 +128,18 @@
     {
         scanningForProjects = true;
 
-        var keys = _walletStorage.GetFounderKeys();
-        var founderProjectsToLookup = new Dictionary<string, ProjectIndexerData>();
+    var keys = _walletStorage.GetFounderKeys();
+      var founderProjectsToLookup = new Dictionary<string, ProjectIndexerData>();
 
         foreach (var key in keys.Keys)
         {
             if (founderProjects.Any(_ => _.ProjectInfo.ProjectIdentifier == key.ProjectIdentifier))
                 continue;
 
-            var indexerProject = await _IndexerService.GetProjectByIdAsync(key.ProjectIdentifier);
+            var indexerProject = await _AngorIndexerService.GetProjectByIdAsync(key.ProjectIdentifier);
 
             if (indexerProject != null) //TODO we need to talk about supporting projects that are created with gaps
-                founderProjectsToLookup.Add(key.NostrPubKey, indexerProject);
+          founderProjectsToLookup.Add(key.NostrPubKey, indexerProject);
         }
 
         if (!founderProjectsToLookup.Any())

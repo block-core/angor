@@ -16,6 +16,7 @@
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;
 @inject IIndexerService _IndexerService
+@inject IAngorIndexerService _AngorIndexerService
 @inject INetworkConfiguration _NetworkConfiguration
 @inject IDerivationOperations _derivationOperations
 @inject IWalletOperations _WalletOperations
@@ -690,7 +691,7 @@
             return;
         }
 
-        var trxs = await _IndexerService.GetInvestmentsAsync(project.ProjectInfo.ProjectIdentifier);
+        var trxs = await _AngorIndexerService.GetInvestmentsAsync(project.ProjectInfo.ProjectIdentifier);
 
         var trx = trxs.FirstOrDefault(f => f.TransactionId == project.TransactionId);
 

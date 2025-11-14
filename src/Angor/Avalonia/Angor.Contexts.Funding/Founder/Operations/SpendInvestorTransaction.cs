@@ -26,7 +26,7 @@ public static class SpendInvestorTransaction
         IWalletOperations walletOperations,
         IFounderTransactionActions founderTransactionActions,
         INetworkConfiguration networkConfiguration,
-        IIndexerService indexerService,
+        IAngorIndexerService angorIndexerService,
         IProjectService projectService,
         IDerivationOperations derivationOperations,
         ISeedwordsProvider seedwordsProvider,
@@ -102,7 +102,7 @@ public static class SpendInvestorTransaction
 
         private async Task<string> GetInvestmentByInvestorKey(string projectId, SpendTransactionDto x)
         {
-            var investment = await indexerService.GetInvestmentAsync(projectId, x.InvestorAddress);
+            var investment = await angorIndexerService.GetInvestmentAsync(projectId, x.InvestorAddress);
             if (investment == null)
                 return string.Empty;
             return await transactionService.GetTransactionHexByIdAsync(investment.TransactionId) ?? string.Empty;

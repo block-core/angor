@@ -14,7 +14,7 @@ namespace Angor.Contexts.Funding.Tests.Investor.Operations;
 public class GetPenaltiesTests
 {
     private readonly Mock<IPortfolioService> _mockInvestmentService;
-    private readonly Mock<IIndexerService> _mockIndexerService;
+    private readonly Mock<IAngorIndexerService> _mockAngorIndexerService;
     private readonly Mock<IRelayService> _mockRelayService;
     private readonly Mock<ITransactionService> _mockTransactionService;
     private readonly Mock<IProjectInvestmentsService> _mockProjectInvestmentsService;
@@ -23,14 +23,14 @@ public class GetPenaltiesTests
     public GetPenaltiesTests()
     {
         _mockInvestmentService = new Mock<IPortfolioService>();
-        _mockIndexerService = new Mock<IIndexerService>();
+        _mockAngorIndexerService = new Mock<IAngorIndexerService>();
         _mockRelayService = new Mock<IRelayService>();
         _mockTransactionService = new Mock<ITransactionService>();
         _mockProjectInvestmentsService = new Mock<IProjectInvestmentsService>();
         
         _handler = new GetPenalties.GetPenaltiesHandler(
             _mockInvestmentService.Object,
-            _mockIndexerService.Object,
+            _mockAngorIndexerService.Object,
             _mockRelayService.Object,
             _mockTransactionService.Object,
             _mockProjectInvestmentsService.Object);
@@ -109,11 +109,11 @@ public class GetPenaltiesTests
             .Setup(x => x.GetByWalletId(walletId))
             .ReturnsAsync(Result.Success(investment));
 
-        _mockIndexerService
+        _mockAngorIndexerService
             .Setup(x => x.GetInvestmentAsync(projectIdentifier, investorPubKey))
             .ReturnsAsync(projectInvestment);
 
-        _mockIndexerService
+        _mockAngorIndexerService
             .Setup(x => x.GetProjectByIdAsync(projectIdentifier))
             .ReturnsAsync(new ProjectIndexerData { TrxId = transactionId, NostrEventId = nostrEventId });
 
