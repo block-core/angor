@@ -31,11 +31,15 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private readonly INetworkConfiguration networkConfiguration;
 
+    private readonly INetworkService networkService;
+
     private string network;
 
     private string newIndexer;
 
     private string newRelay;
+
+    private string? selectedIndexerUri;
 
     private bool restoringNetwork;
 
@@ -54,12 +58,14 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         this.uiServices = uiServices;
         this.walletContext = walletContext;
         this.networkConfiguration = networkConfiguration;
+        this.networkService = networkService;
 
-        networkService.AddSettingsIfNotExist();
+        this.networkService.AddSettingsIfNotExist();
 
         var settings = networkStorage.GetSettings();
         Indexers = new ObservableCollection<SettingsUrlViewModel>(settings.Indexers.Select(CreateIndexer));
         Relays = new ObservableCollection<SettingsUrlViewModel>(settings.Relays.Select(CreateRelay));
+        SelectedIndexerUri = Indexers.FirstOrDefault(x => x.IsPrimary)?.Url ?? Indexers.FirstOrDefault()?.Url;
 
         currentNetwork = networkStorage.GetNetwork();
         networkConfiguration.SetNetwork(currentNetwork == "Mainnet" ? new BitcoinMain() : new Angornet());
@@ -68,6 +74,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
         AddIndexer = ReactiveCommand.Create(DoAddIndexer, this.WhenAnyValue(x => x.NewIndexer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
         AddRelay = ReactiveCommand.Create(DoAddRelay, this.WhenAnyValue(x => x.NewRelay, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
+        RefreshIndexers = ReactiveCommand.CreateFromTask(RefreshIndexersAsync).DisposeWith(disposable);
 
         var canDeleteWallet = walletContext.CurrentWalletChanges
             .Select(maybe => maybe.HasValue)
@@ -91,6 +98,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
                         networkService.AddSettingsIfNotExist();
                         var s = networkStorage.GetSettings();
                         Reset(Indexers, s.Indexers.Select(CreateIndexer));
+                        SelectedIndexerUri = ResolveSelection(SelectedIndexerUri, s.Indexers);
                         Reset(Relays, s.Relays.Select(CreateRelay));
                         this.walletStore.SaveAll([]);
                         currentNetwork = t.n;
@@ -127,6 +135,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     public ReactiveCommand<Unit, Unit> AddIndexer { get; }
     public ReactiveCommand<Unit, Unit> AddRelay { get; }
+    public ReactiveCommand<Unit, Unit> RefreshIndexers { get; }
     public ReactiveCommand<Unit, Unit> DeleteWallet { get; }
 
     public string Network
@@ -151,6 +160,12 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         set => this.RaiseAndSetIfChanged(ref newRelay, value);
     }
 
+    public string? SelectedIndexerUri
+    {
+        get => selectedIndexerUri;
+        set => this.RaiseAndSetIfChanged(ref selectedIndexerUri, value);
+    }
+
     public bool IsDebugMode
     {
         get => isDebugMode;
@@ -165,7 +180,13 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private void DoAddIndexer()
     {
-        Indexers.Add(CreateIndexer(new SettingsUrl { Url = NewIndexer, IsPrimary = Indexers.Count == 0 }));
+        Indexers.Add(CreateIndexer(new SettingsUrl
+        {
+            Url = NewIndexer,
+            IsPrimary = Indexers.Count == 0,
+            Status = UrlStatus.NotReady,
+            LastCheck = DateTime.UtcNow
+        }));
         NewIndexer = string.Empty;
         Refresh(Indexers);
         SaveSettings();
@@ -173,14 +194,19 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private void DoAddRelay()
     {
-        Relays.Add(CreateRelay(new SettingsUrl { Url = NewRelay }));
+        Relays.Add(CreateRelay(new SettingsUrl
+        {
+            Url = NewRelay,
+            Status = UrlStatus.NotReady,
+            LastCheck = DateTime.UtcNow
+        }));
         NewRelay = string.Empty;
         Refresh(Relays);
         SaveSettings();
     }
 
-    private SettingsUrlViewModel CreateIndexer(SettingsUrl url) => new(url.Url, url.IsPrimary, DoRemoveIndexer, DoSetPrimaryIndexer);
-    private SettingsUrlViewModel CreateRelay(SettingsUrl url) => new(url.Url, url.IsPrimary, DoRemoveRelay);
+    private SettingsUrlViewModel CreateIndexer(SettingsUrl url) => new(url.Url, url.IsPrimary, url.Status, url.LastCheck, DoRemoveIndexer, DoSetPrimaryIndexer, url.Name);
+    private SettingsUrlViewModel CreateRelay(SettingsUrl url) => new(url.Url, url.IsPrimary, url.Status, url.LastCheck, DoRemoveRelay, name: url.Name);
 
     private void DoRemoveIndexer(SettingsUrlViewModel url)
     {
@@ -201,6 +227,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
             e.IsPrimary = false;
         }
         url.IsPrimary = true;
+        SelectedIndexerUri = url.Url;
         Refresh(Indexers);
         SaveSettings();
     }
@@ -210,6 +237,23 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Relays.Remove(url);
         Refresh(Relays);
         SaveSettings();
+    }
+
+    private async Task RefreshIndexersAsync()
+    {
+        var previousSelection = SelectedIndexerUri;
+        try
+        {
+            await networkService.CheckServices(true);
+        }
+        catch (Exception ex)
+        {
+            await uiServices.Dialog.ShowMessage("Indexer refresh failed", ex.Message);
+        }
+
+        var settings = networkStorage.GetSettings();
+        Reset(Indexers, settings.Indexers.Select(CreateIndexer));
+        SelectedIndexerUri = ResolveSelection(previousSelection, settings.Indexers);
     }
 
     private async Task DeleteWalletAsync()
@@ -255,6 +299,17 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
             collection.Add(item);
         }
         Refresh(collection);
+    }
+
+    private static string? ResolveSelection(string? previousSelection, IEnumerable<SettingsUrl> settingsUrls)
+    {
+        var list = settingsUrls.ToList();
+        if (!string.IsNullOrWhiteSpace(previousSelection) && list.Any(x => string.Equals(x.Url, previousSelection, StringComparison.OrdinalIgnoreCase)))
+        {
+            return previousSelection;
+        }
+
+        return list.FirstOrDefault(x => x.IsPrimary)?.Url ?? list.FirstOrDefault()?.Url;
     }
 
     private void SaveSettings()
