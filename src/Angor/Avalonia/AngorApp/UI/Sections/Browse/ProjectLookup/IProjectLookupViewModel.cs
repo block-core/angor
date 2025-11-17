@@ -9,7 +9,7 @@ public interface IProjectLookupViewModel : IDisposable
     public IProjectViewModel SelectedProject { get; set; }
     public IObservable<bool> IsBusy { get; }
 
-    ReactiveCommand<string, SafeMaybe<IList<IProjectViewModel>>> Lookup { get; }
+    ReactiveCommand<string, Result<SafeMaybe<IList<IProjectViewModel>>>> Lookup { get; }
     SafeMaybe<IList<IProjectViewModel>> LookupResults { get; }
     public ICommand GoToSelectedProject { get; }
 }

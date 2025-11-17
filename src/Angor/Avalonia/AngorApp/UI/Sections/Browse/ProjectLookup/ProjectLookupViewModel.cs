@@ -18,24 +18,28 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
     [Reactive] private string? projectId;
     [Reactive] private IProjectViewModel? selectedProject;
 
-    public ProjectLookupViewModel(IProjectAppService projectAppService, IProjectViewModelFactory projectViewModelFactory)
+    public ProjectLookupViewModel(IProjectAppService projectAppService, IProjectViewModelFactory projectViewModelFactory, UIServices uiServices)
     {
         lookupResults = new SafeMaybe<IList<IProjectViewModel>>(Maybe<IList<IProjectViewModel>>.None);
 
-        Lookup = ReactiveCommand.CreateFromTask<string, SafeMaybe<IList<IProjectViewModel>>>(async pid =>
+        Lookup = ReactiveCommand.CreateFromTask<string, Result<SafeMaybe<IList<IProjectViewModel>>>>(async pid =>
             {
-                var maybeProject = await projectAppService.FindById(new ProjectId(pid)).Map(dto => dto.ToProject());
-                Log.Debug("Got project {ProjectId}", pid);
+                Result<SafeMaybe<IList<IProjectViewModel>>> project = await projectAppService.TryGet(new ProjectId(pid))
+                    .Map(maybeProject => maybeProject.Map(dto => dto.ToProject())
+                        .Tap(p => Log.Debug("Got project {ProjectId}", p))
+                        .Map<IProject, IList<IProjectViewModel>>(project =>
+                        {
+                            var vm = projectViewModelFactory.Create(project);
+                            return new List<IProjectViewModel> { vm };
+                        }).AsSafeMaybe());
 
-                return maybeProject.Map<IProject, IList<IProjectViewModel>>(project =>
-                {
-                    var vm = projectViewModelFactory.Create(project);
-                    return new List<IProjectViewModel> { vm };
-                }).AsSafeMaybe();
+                return project;
             }
         );
+        
+        Lookup.HandleErrorsWith(uiServices.NotificationService, "Could not lookup project");
 
-        lookupResultsHelper = Lookup.ToProperty(this, x => x.LookupResults);
+        lookupResultsHelper = Lookup.Successes().ToProperty(this, x => x.LookupResults);
 
         IsBusy = Lookup.IsExecuting;
 
@@ -52,7 +56,7 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
             .ToProperty(this, x => x.GoToSelectedProject);
     }
 
-    public ReactiveCommand<string, SafeMaybe<IList<IProjectViewModel>>> Lookup { get; }
+    public ReactiveCommand<string, Result<SafeMaybe<IList<IProjectViewModel>>>> Lookup { get; }
 
     public IObservable<bool> IsBusy { get; }
 

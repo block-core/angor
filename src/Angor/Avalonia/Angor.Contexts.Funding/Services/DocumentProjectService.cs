@@ -16,8 +16,12 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
 
     public Task<Result<Project>> GetAsync(ProjectId id)
     {
-        return GetAllAsync( id )
-            .Map(x =>x.First());
+        return TryGetAsync(id).Bind(maybe => maybe.ToResult($"Project with id {id} not found"));
+    }
+    
+    public Task<Result<Maybe<Project>>> TryGetAsync(ProjectId id)
+    {
+        return GetAllAsync(id).Map(x => x.TryFirst());
     }
 
     public async Task<Result<IEnumerable<Project>>> GetAllAsync(params ProjectId[] ids)
