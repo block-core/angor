@@ -1,5 +1,6 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
+using Angor.Shared.Utilities;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
@@ -14,13 +15,13 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
     private readonly IInvestmentScriptBuilder _investmentScriptBuilder;
     private readonly ITaprootScriptBuilder _taprootScriptBuilder;
 
-    public InvestmentTransactionBuilder(INetworkConfiguration networkConfiguration, IProjectScriptsBuilder projectScriptsBuilder, 
+    public InvestmentTransactionBuilder(INetworkConfiguration networkConfiguration, IProjectScriptsBuilder projectScriptsBuilder,
         IInvestmentScriptBuilder investmentScriptBuilder, ITaprootScriptBuilder taprootScriptBuilder)
     {
         _networkConfiguration = networkConfiguration;
         _projectScriptsBuilder = projectScriptsBuilder;
-      _investmentScriptBuilder = investmentScriptBuilder;
-  _taprootScriptBuilder = taprootScriptBuilder;
+        _investmentScriptBuilder = investmentScriptBuilder;
+        _taprootScriptBuilder = taprootScriptBuilder;
     }
 
     public Transaction BuildInvestmentTransaction(ProjectInfo projectInfo, Script opReturnScript,
@@ -102,28 +103,15 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
           penaltyDays);
 
         var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
-        
-      // Determine stage count based on project type
- int stageCount;
-     if (projectInfo.AllowDynamicStages)
+
+        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Where(utxo => utxo.IsTaprooOutput()))
         {
-  // For dynamic stages, count outputs after fee and OP_RETURN (outputs 2+)
-        stageCount = investmentTransaction.Outputs.Count - 2;
-        }
-        else
-        {
-    // For fixed stages, use Stages.Count
-            stageCount = projectInfo.Stages.Count;
-  }
-        
-        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2).Take(stageCount))
-        {
-  transaction.Inputs.Add( new TxIn(output.ToOutPoint()));
+            transaction.Inputs.Add(new TxIn(output.ToOutPoint()));
 
             transaction.Outputs.Add(new TxOut(output.TxOut.Value, spendingScript.WitHash.ScriptPubKey));
         }
 
-  return transaction;
+        return transaction;
     }
 
     public Transaction BuildUpfrontUnfundedReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, string investorReleaseKey)
@@ -131,36 +119,23 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
         // the release may be an address or a pubkey, first check if it is an address
         Script spendingScript = null;
         if (BitcoinWitPubKeyAddress.IsValid(investorReleaseKey, _networkConfiguration.GetNetwork(), out Exception _))
-      {
-       spendingScript = new BitcoinWitPubKeyAddress(investorReleaseKey, _networkConfiguration.GetNetwork()).ScriptPubKey;
-        }
-     else  // if it is not an address, then it is a pubkey
-      {
-    // for the release we just send to a regular witness address
-      spendingScript = new PubKey(investorReleaseKey).WitHash.ScriptPubKey;
-        }
-
-    var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
-
-      // Determine stage count based on project type
-        int stageCount;
- if (projectInfo.AllowDynamicStages)
-    {
-    // For dynamic stages, count outputs after fee and OP_RETURN (outputs 2+)
-            stageCount = investmentTransaction.Outputs.Count - 2;
- }
-     else
-    {
-     // For fixed stages, use Stages.Count
-        stageCount = projectInfo.Stages.Count;
-      }
-
-        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2).Take(stageCount))
         {
-     transaction.Inputs.Add(new TxIn(output.ToOutPoint()));
+            spendingScript = new BitcoinWitPubKeyAddress(investorReleaseKey, _networkConfiguration.GetNetwork()).ScriptPubKey;
+        }
+        else  // if it is not an address, then it is a pubkey
+        {
+            // for the release we just send to a regular witness address
+            spendingScript = new PubKey(investorReleaseKey).WitHash.ScriptPubKey;
+        }
 
-        transaction.Outputs.Add(new TxOut(output.TxOut.Value, spendingScript));
-   }
+        var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
+
+        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Where(utxo => utxo.IsTaprooOutput()))
+        {
+            transaction.Inputs.Add(new TxIn(output.ToOutPoint()));
+
+            transaction.Outputs.Add(new TxOut(output.TxOut.Value, spendingScript));
+        }
 
         return transaction;
     }
