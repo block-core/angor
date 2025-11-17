@@ -77,6 +77,9 @@
                                         <DataTemplate>
                                             <TextBlock Text="{Binding Status}" Tag="{Binding Status}">
                                                 <TextBlock.Styles>
+                                                    <Style Selector="TextBlock[Tag=Unknown]">
+                                                        <Setter Property="Foreground" Value="Gray" />
+                                                    </Style>
                                                     <Style Selector="TextBlock[Tag=Online]">
                                                         <Setter Property="Foreground" Value="{DynamicResource SuccessColor}" />
                                                     </Style>
