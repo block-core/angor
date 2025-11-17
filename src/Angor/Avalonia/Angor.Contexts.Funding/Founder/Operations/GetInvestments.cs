@@ -30,7 +30,8 @@ public static class GetInvestments
         ISignService signService,
         INostrDecrypter nostrDecrypter,
         INetworkConfiguration networkConfiguration,
-        ISerializer serializer) : IRequestHandler<GetInvestmentsRequest, Result<IEnumerable<Investment>>>
+        ISerializer serializer,
+        IInvestmentConversationService conversationService) : IRequestHandler<GetInvestmentsRequest, Result<IEnumerable<Investment>>>
     {
         public Task<Result<IEnumerable<Investment>>> Handle(GetInvestmentsRequest request, CancellationToken cancellationToken)
         {
@@ -46,6 +47,19 @@ public static class GetInvestments
             }
 
             var nostrPubKey = projectResult.Value.NostrPubKey;
+
+            // Sync investment conversations from Nostr to database in the background
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await conversationService.SyncConversationsFromNostrAsync(request.WalletId, request.ProjectId, nostrPubKey);
+                }
+                catch (Exception)
+                {
+                    // Log errors but don't fail the main operation
+                }
+            });
 
             var dataResult = await GetInvestmentData(request, nostrPubKey);
 
