@@ -56,7 +56,10 @@
                 <Card HeaderStartContent="{Icon fa-server}" Header="Indexer">
                     <StackPanel>
                         <DockPanel  Margin="0 0 20 0">
-                            <EnhancedButton DockPanel.Dock="Right" Icon="{Icon fa-plus}" Command="{Binding AddIndexer}" />
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10">
+                                <EnhancedButton Icon="{Icon fa-rotate-right}" Command="{Binding RefreshIndexers}" />
+                                <EnhancedButton Icon="{Icon fa-plus}" Command="{Binding AddIndexer}" />
+                            </StackPanel>
                             <TextBox VerticalContentAlignment="Center" Watermark="Enter new indexer link" Text="{Binding NewIndexer}" />
                         </DockPanel>
                         <SlimDataGrid ItemsSource="{Binding Indexers}">
@@ -69,6 +72,28 @@
                                     </Column.CellTemplate>
                                 </Column>
                                 <Column Header="Address" Binding="{Binding Url}" />
+                                <Column Header="Status" Width="Auto">
+                                    <Column.CellTemplate>
+                                        <DataTemplate>
+                                            <Badge Content="{Binding Status}" Tag="{Binding Status}">
+                                                <Badge.Styles>
+                                                    <Style Selector="Badge[Tag=Unknown]">
+                                                        <Setter Property="Color" Value="Gray" />
+                                                    </Style>
+                                                    <Style Selector="Badge[Tag=Online]">
+                                                        <Setter Property="Color" Value="{DynamicResource SuccessColor}" />
+                                                    </Style>
+                                                    <Style Selector="Badge[Tag=Offline]">
+                                                        <Setter Property="Color" Value="{DynamicResource ErrorColor}" />
+                                                    </Style>
+                                                    <Style Selector="Badge[Tag=NotReady]">
+                                                        <Setter Property="Color" Value="{DynamicResource WarningColor}" />
+                                                    </Style>
+                                                </Badge.Styles>
+                                            </Badge>
+                                        </DataTemplate>
+                                    </Column.CellTemplate>
+                                </Column>
                                 <Column Width="Auto" Binding="{Binding}">
                                     <Column.CellTemplate>
                                         <DataTemplate>

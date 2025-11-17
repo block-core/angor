@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive;
+using Angor.Shared.Models;
 using ReactiveUI;
 
 namespace AngorApp.UI.Sections.Settings;
@@ -16,6 +17,7 @@ internal interface ISettingsSectionViewModel : IDisposable
     string NewRelay { get; set; }
     ReactiveCommand<Unit, Unit> AddIndexer { get; }
     ReactiveCommand<Unit, Unit> AddRelay { get; }
+    ReactiveCommand<Unit, Unit> RefreshIndexers { get; }
     ReactiveCommand<Unit, Unit> DeleteWallet { get; }
     bool IsBitcoinPreferred { get; set; }
     bool IsDebugMode { get; set; }
@@ -28,11 +30,11 @@ internal class SettingsSectionViewModelSample : ISettingsSectionViewModel
     {
         Indexers = new ObservableCollection<SettingsUrlViewModel>
         {
-            new("https://indexer.angor.io", true, _ => { }, _ => { })
+            new("https://indexer.angor.io", true, UrlStatus.Online, DateTime.UtcNow, _ => { }, _ => { })
         };
         Relays = new ObservableCollection<SettingsUrlViewModel>
         {
-            new("wss://relay.angor.io", false, _ => { })
+            new("wss://relay.angor.io", false, UrlStatus.Offline, DateTime.UtcNow, _ => { })
         };
     }
 
@@ -44,6 +46,7 @@ internal class SettingsSectionViewModelSample : ISettingsSectionViewModel
     public string NewRelay { get; set; } = string.Empty;
     public ReactiveCommand<Unit, Unit> AddIndexer { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> AddRelay { get; } = ReactiveCommand.Create(() => { });
+    public ReactiveCommand<Unit, Unit> RefreshIndexers { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> DeleteWallet { get; } = ReactiveCommand.Create(() => { });
     public bool IsBitcoinPreferred { get; set; } = true;
     public bool IsDebugMode { get; set; } = false;

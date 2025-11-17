@@ -22,6 +22,7 @@ public class SettingsUrl
 
 public enum UrlStatus
 {
+    Unknown,
     Offline,
     NotReady,
     Online
