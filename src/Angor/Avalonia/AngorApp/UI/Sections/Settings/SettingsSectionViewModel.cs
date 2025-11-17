@@ -39,8 +39,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private string newRelay;
 
-    private string? selectedIndexerUri;
-
     private bool restoringNetwork;
 
     private string currentNetwork;
@@ -65,8 +63,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         var settings = networkStorage.GetSettings();
         Indexers = new ObservableCollection<SettingsUrlViewModel>(settings.Indexers.Select(CreateIndexer));
         Relays = new ObservableCollection<SettingsUrlViewModel>(settings.Relays.Select(CreateRelay));
-        SelectedIndexerUri = Indexers.FirstOrDefault(x => x.IsPrimary)?.Url ?? Indexers.FirstOrDefault()?.Url;
-
         currentNetwork = networkStorage.GetNetwork();
         networkConfiguration.SetNetwork(currentNetwork == "Mainnet" ? new BitcoinMain() : new Angornet());
         Network = currentNetwork;
@@ -98,7 +94,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
                         networkService.AddSettingsIfNotExist();
                         var s = networkStorage.GetSettings();
                         Reset(Indexers, s.Indexers.Select(CreateIndexer));
-                        SelectedIndexerUri = ResolveSelection(SelectedIndexerUri, s.Indexers);
                         Reset(Relays, s.Relays.Select(CreateRelay));
                         this.walletStore.SaveAll([]);
                         currentNetwork = t.n;
@@ -158,12 +153,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     {
         get => newRelay;
         set => this.RaiseAndSetIfChanged(ref newRelay, value);
-    }
-
-    public string? SelectedIndexerUri
-    {
-        get => selectedIndexerUri;
-        set => this.RaiseAndSetIfChanged(ref selectedIndexerUri, value);
     }
 
     public bool IsDebugMode
@@ -227,7 +216,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
             e.IsPrimary = false;
         }
         url.IsPrimary = true;
-        SelectedIndexerUri = url.Url;
         Refresh(Indexers);
         SaveSettings();
     }
@@ -241,7 +229,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private async Task RefreshIndexersAsync()
     {
-        var previousSelection = SelectedIndexerUri;
         try
         {
             await networkService.CheckServices(true);
@@ -253,7 +240,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
         var settings = networkStorage.GetSettings();
         Reset(Indexers, settings.Indexers.Select(CreateIndexer));
-        SelectedIndexerUri = ResolveSelection(previousSelection, settings.Indexers);
     }
 
     private async Task DeleteWalletAsync()
@@ -299,17 +285,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
             collection.Add(item);
         }
         Refresh(collection);
-    }
-
-    private static string? ResolveSelection(string? previousSelection, IEnumerable<SettingsUrl> settingsUrls)
-    {
-        var list = settingsUrls.ToList();
-        if (!string.IsNullOrWhiteSpace(previousSelection) && list.Any(x => string.Equals(x.Url, previousSelection, StringComparison.OrdinalIgnoreCase)))
-        {
-            return previousSelection;
-        }
-
-        return list.FirstOrDefault(x => x.IsPrimary)?.Url ?? list.FirstOrDefault()?.Url;
     }
 
     private void SaveSettings()

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive;
-using System.Linq;
 using Angor.Shared.Models;
 using ReactiveUI;
 
@@ -16,7 +15,6 @@ internal interface ISettingsSectionViewModel : IDisposable
     string Network { get; set; }
     string NewIndexer { get; set; }
     string NewRelay { get; set; }
-    string? SelectedIndexerUri { get; set; }
     ReactiveCommand<Unit, Unit> AddIndexer { get; }
     ReactiveCommand<Unit, Unit> AddRelay { get; }
     ReactiveCommand<Unit, Unit> RefreshIndexers { get; }
@@ -38,7 +36,6 @@ internal class SettingsSectionViewModelSample : ISettingsSectionViewModel
         {
             new("wss://relay.angor.io", false, UrlStatus.Offline, DateTime.UtcNow, _ => { })
         };
-        SelectedIndexerUri = Indexers.First().Url;
     }
 
     public ObservableCollection<SettingsUrlViewModel> Indexers { get; }
@@ -54,6 +51,5 @@ internal class SettingsSectionViewModelSample : ISettingsSectionViewModel
     public bool IsBitcoinPreferred { get; set; } = true;
     public bool IsDebugMode { get; set; } = false;
     public bool IsTestnet { get; } = true;
-    public string? SelectedIndexerUri { get; set; }
     public void Dispose() { }
 }

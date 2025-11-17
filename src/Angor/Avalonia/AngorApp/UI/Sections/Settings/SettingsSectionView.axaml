@@ -75,22 +75,22 @@
                                 <Column Header="Status" Width="Auto">
                                     <Column.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding Status}" Tag="{Binding Status}">
-                                                <TextBlock.Styles>
-                                                    <Style Selector="TextBlock[Tag=Unknown]">
-                                                        <Setter Property="Foreground" Value="Gray" />
+                                            <Badge Content="{Binding Status}" Tag="{Binding Status}">
+                                                <Badge.Styles>
+                                                    <Style Selector="Badge[Tag=Unknown]">
+                                                        <Setter Property="Color" Value="Gray" />
                                                     </Style>
-                                                    <Style Selector="TextBlock[Tag=Online]">
-                                                        <Setter Property="Foreground" Value="{DynamicResource SuccessColor}" />
+                                                    <Style Selector="Badge[Tag=Online]">
+                                                        <Setter Property="Color" Value="{DynamicResource SuccessColor}" />
                                                     </Style>
-                                                    <Style Selector="TextBlock[Tag=Offline]">
-                                                        <Setter Property="Foreground" Value="{DynamicResource ErrorColor}" />
+                                                    <Style Selector="Badge[Tag=Offline]">
+                                                        <Setter Property="Color" Value="{DynamicResource ErrorColor}" />
                                                     </Style>
-                                                    <Style Selector="TextBlock[Tag=NotReady]">
-                                                        <Setter Property="Foreground" Value="{DynamicResource WarningColor}" />
+                                                    <Style Selector="Badge[Tag=NotReady]">
+                                                        <Setter Property="Color" Value="{DynamicResource WarningColor}" />
                                                     </Style>
-                                                </TextBlock.Styles>
-                                            </TextBlock>
+                                                </Badge.Styles>
+                                            </Badge>
                                         </DataTemplate>
                                     </Column.CellTemplate>
                                 </Column>
