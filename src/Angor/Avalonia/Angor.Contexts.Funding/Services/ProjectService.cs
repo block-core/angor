@@ -25,32 +25,32 @@ public class ProjectService(
 
     private async Task<Result<IEnumerable<Project>>> Get(params ProjectId[] projectIds)
     {
-     var projects = new List<Project>();
+        var projects = new List<Project>();
 
-     foreach (var projectId in projectIds)
+        foreach (var projectId in projectIds)
         {
-    var cached = await store.Load<Project>(projectId.Value);
-      if (cached.IsSuccess)
+            var cached = await store.Load<Project>(projectId.Value);
+            if (cached.IsSuccess)
             {
-      projects.Add(cached.Value);
-      }
-        }   
-        
+                projects.Add(cached.Value);
+            }
+        }
+
         var lookups = GetProjects(() => GetIndexerDatasIgnoreNotFound(projectIds.Where(x => projects.All(p => p.Id != x))));
-        
+
         var lookupResult = await lookups;
         if (lookupResult.IsFailure)
-     return projects.Any()
-      ? Result.Success<IEnumerable<Project>>(projects)
-      : Result.Failure<IEnumerable<Project>>("Failed to retrieve some projects: " + lookupResult.Error);
-     
-        
+            return projects.Any()
+                ? Result.Success<IEnumerable<Project>>(projects)
+                : Result.Failure<IEnumerable<Project>>("Failed to retrieve some projects: " + lookupResult.Error);
+
+
         projects.AddRange(lookupResult.Value);
-     foreach (var project in lookupResult.Value)
+        foreach (var project in lookupResult.Value)
         {
-      await store.Save(project.Id.Value, project);
+            await store.Save(project.Id.Value, project);
         }
-   
+
         return Result.Success(projects.AsEnumerable());
     }
 
@@ -113,24 +113,30 @@ public class ProjectService(
 
     private Task<Result<IEnumerable<ProjectIndexerData>>> GetIndexerDatas(IEnumerable<ProjectId> ids)
     {
-      return ids
+        return ids
             .Select(id => Result.Try(() => angorIndexerService.GetProjectByIdAsync(id.Value))
                 .EnsureNotNull(() => $"Project not found: {id.Value}"))
-          .CombineInOrder();
+            .CombineInOrder();
     }
 
 
     private Task<Result<IEnumerable<ProjectIndexerData>>> GetIndexerDatasIgnoreNotFound(IEnumerable<ProjectId> ids)
     {
-      return ids
+        return ids
             .Select(id => Result.Try(() => angorIndexerService.GetProjectByIdAsync(id.Value).AsMaybe()))
             .CombineInOrder()
-   .Map(maybes => maybes.Values());
+            .Map(maybes => maybes.Values());
     }
 
     public Task<Result<Project>> GetAsync(ProjectId id)
     {
         return GetSingle(id).ToResult($"Project not found: {id.Value}");
+    }
+
+    public Task<Result<Maybe<Project>>> TryGetAsync(ProjectId projectId)
+    {
+        // this class is obsolete. Remove it ASAP.
+        throw new NotSupportedException();
     }
 
     public Task<Result<IEnumerable<Project>>> GetAllAsync(params ProjectId[] ids)
@@ -150,37 +156,37 @@ public class ProjectService(
 
     private static class Wrapper
     {
-            public static Task<Result<IEnumerable<ProjectInfo>>> ProjectInfos(IRelayService relayService, IEnumerable<string> eventIds)
-            {
-                var projectInfos = Observable.Create<ProjectInfo>(observer =>
-                    {
-                        relayService.LookupProjectsInfoByEventIds<ProjectInfo>(
-                            observer.OnNext,
-                            observer.OnCompleted,
-                            eventIds.ToArray()
-                        );
-
-                        return Disposable.Empty;
-                    })
-                    .Timeout(TimeSpan.FromSeconds(30));
-
-                return Result.Try(async () => await projectInfos.ToList()).Map(list => list.AsEnumerable());
-            }
-
-            public static Task<Result<IEnumerable<ProjectMetadataWithNpub>>> ProjectMetadatas(IRelayService relayService, IEnumerable<string> projectIds)
-            {
-                var projectMetadatas = Observable.Create<ProjectMetadataWithNpub>(observer =>
+        public static Task<Result<IEnumerable<ProjectInfo>>> ProjectInfos(IRelayService relayService, IEnumerable<string> eventIds)
+        {
+            var projectInfos = Observable.Create<ProjectInfo>(observer =>
                 {
-                    relayService.LookupNostrProfileForNPub(
-                        (npub, nostrMetadata) => observer.OnNext(new ProjectMetadataWithNpub(npub, nostrMetadata)),
+                    relayService.LookupProjectsInfoByEventIds<ProjectInfo>(
+                        observer.OnNext,
                         observer.OnCompleted,
-                        projectIds.Where(x => x != null).ToArray());
+                        eventIds.ToArray()
+                    );
 
                     return Disposable.Empty;
-                }).Timeout(TimeSpan.FromSeconds(30));
+                })
+                .Timeout(TimeSpan.FromSeconds(30));
 
-                return Result.Try(async () => await projectMetadatas.ToList()).Map(list => list.AsEnumerable());
-            }
+            return Result.Try(async () => await projectInfos.ToList()).Map(list => list.AsEnumerable());
+        }
+
+        public static Task<Result<IEnumerable<ProjectMetadataWithNpub>>> ProjectMetadatas(IRelayService relayService, IEnumerable<string> projectIds)
+        {
+            var projectMetadatas = Observable.Create<ProjectMetadataWithNpub>(observer =>
+            {
+                relayService.LookupNostrProfileForNPub(
+                    (npub, nostrMetadata) => observer.OnNext(new ProjectMetadataWithNpub(npub, nostrMetadata)),
+                    observer.OnCompleted,
+                    projectIds.Where(x => x != null).ToArray());
+
+                return Disposable.Empty;
+            }).Timeout(TimeSpan.FromSeconds(30));
+
+            return Result.Try(async () => await projectMetadatas.ToList()).Map(list => list.AsEnumerable());
+        }
     }
 
     private record ProjectMetadataWithNpub(string Npub, ProjectMetadata NostrMetadata);

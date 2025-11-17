@@ -22,7 +22,7 @@ public partial class ProjectLookupViewModelSample : ReactiveObject, IProjectLook
     }
 
     public IObservable<bool> IsBusy { get; set; } = Observable.Return(false);
-    public ReactiveCommand<string, SafeMaybe<IList<IProjectViewModel>>> Lookup { get; }
+    public ReactiveCommand<string, Result<SafeMaybe<IList<IProjectViewModel>>>> Lookup { get; }
     public ICommand GoToSelectedProject { get; }
 
     public string? ProjectId { get; set; }

@@ -18,13 +18,12 @@
 
         <DataTemplate DataType="browse:IProjectViewModel">
             <Panel>
-                <DockPanel Background="Transparent">
-                    <asyncImageLoader:AdvancedImage MaxWidth="200" MaxHeight="200" Margin="10" Source="{Binding Project.Picture}" />
-                    <StackPanel Spacing="10" VerticalAlignment="Center" Margin="10">
-                        <TextBlock Classes="SizeBig" TextWrapping="Wrap" Text="{Binding Project.Name}" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Classes="SizeNormal" MaxLines="3" TextWrapping="Wrap" Text="{Binding Project.ShortDescription}" TextTrimming="CharacterEllipsis" />
+                <DockPanel Background="Transparent" MaxHeight="300" HorizontalSpacing="10">
+                    <asyncImageLoader:AdvancedImage MaxWidth="200"  Margin="10" Source="{Binding Project.Picture}" />
+                    <StackPanel Spacing="10" Margin="10">
+                        <TextBlock Classes="SizeNormal" TextWrapping="Wrap" Text="{Binding Project.Name}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock TextWrapping="Wrap" Text="{Binding Project.ShortDescription}" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
-
                 </DockPanel>
                 <Interaction.Behaviors>
                     <PointerPressedTrigger MarkAsHandled="True" EventRoutingStrategy="Tunnel">
@@ -50,7 +49,7 @@
                 </KeyDownTrigger>
             </Interaction.Behaviors>
         </TextBox>
-        <Popup Placement="BottomEdgeAlignedLeft" PlacementTarget="{Binding #SearchBox}">
+        <Popup Placement="BottomEdgeAlignedLeft" PlacementTarget="{Binding #SearchBox}" MaxWidth="640">
             <Popup.IsOpen>
                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                     <Binding Path="#SearchBox.IsKeyboardFocusWithin" />

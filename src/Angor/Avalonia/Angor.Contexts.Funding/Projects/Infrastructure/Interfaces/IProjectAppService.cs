@@ -9,7 +9,7 @@ namespace Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 public interface IProjectAppService
 {
     Task<Result<IEnumerable<ProjectDto>>> Latest();
-    Task<Maybe<ProjectDto>> FindById(ProjectId projectId);
+    Task<Result<Maybe<ProjectDto>>> TryGet(ProjectId projectId);
     Task<Result<ProjectDto>> Get(ProjectId projectId);
     Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(WalletId walletId);
     Task<Result<TransactionDraft>> CreateProject(WalletId walletId, long selectedFee, CreateProjectDto project);

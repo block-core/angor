@@ -22,9 +22,9 @@ public class ProjectAppService(
         return await projectService.LatestAsync().Map(t => t.AsEnumerable()).MapEach(project => project.ToDto());
     }
 
-    public Task<Maybe<ProjectDto>> FindById(ProjectId projectId)
+    public Task<Result<Maybe<ProjectDto>>> TryGet(ProjectId projectId)
     {
-        return projectService.GetAsync(projectId).Map(p => p.ToDto()).AsMaybe();
+        return projectService.TryGetAsync(projectId).Map(maybe => maybe.Map(project => project.ToDto()));
     }
 
     public Task<Result<ProjectDto>> Get(ProjectId projectId)
