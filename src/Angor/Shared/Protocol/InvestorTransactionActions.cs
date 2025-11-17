@@ -87,7 +87,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
         // Calculate the investment amount from the transaction
-        var totalInvestmentAmount = GetTotalInvestmentAmount(projectInfo, investmentTransaction);
+        var totalInvestmentAmount = PenaltyThresholdHelper.GetTotalInvestmentAmount(investmentTransaction);
 
         // Determine expiry date override based on investment amount using centralized logic
         var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
@@ -197,7 +197,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var investmentTransaction = network.Consensus.ConsensusFactory.CreateTransaction(transactionHex);
 
         // Calculate the investment amount from the transaction
-        var totalInvestmentAmount = GetTotalInvestmentAmount(projectInfo, investmentTransaction);
+        var totalInvestmentAmount = PenaltyThresholdHelper.GetTotalInvestmentAmount(investmentTransaction);
 
         // Determine the effective expiry date based on penalty threshold
         var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
@@ -311,31 +311,11 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         return CheckRecoverySignatures(projectInfo, investmentTransaction, unsignedUnfundedReleaseFundsTransaction, founderSignatures);
     }
 
-    private long GetTotalInvestmentAmount(ProjectInfo projectInfo, Transaction investmentTransaction)
-    {
-        return PenaltyThresholdHelper.GetTotalInvestmentAmount(investmentTransaction);
-    }
-
-    public bool IsInvestmentAbovePenaltyThreshold(ProjectInfo projectInfo, Transaction investmentTransaction)
-    {
-        return PenaltyThresholdHelper.IsInvestmentAbovePenaltyThreshold(projectInfo, investmentTransaction);
-    }
-
-    /// <summary>
-    /// Determines if an investment amount is above the penalty threshold.
-    /// Returns true if investment is at or above the threshold (requires penalty + founder approval).
-    /// Returns false if investment is below threshold (no penalty, no approval needed) or if no threshold is set.
-    /// </summary>
     public bool IsInvestmentAbovePenaltyThreshold(ProjectInfo projectInfo, long investmentAmount)
     {
         return PenaltyThresholdHelper.IsInvestmentAbovePenaltyThreshold(projectInfo, investmentAmount);
     }
 
-    /// <summary>
-    /// Determines the effective expiry date based on the penalty threshold.
-    /// Returns StartDate for below-threshold investments (immediate access),
-    /// Returns null for at/above-threshold investments (uses standard ExpiryDate).
-    /// </summary>
     private DateTime? GetExpiryDateOverride(ProjectInfo projectInfo, long investmentAmount)
     {
         return PenaltyThresholdHelper.GetExpiryDateOverride(projectInfo, investmentAmount);

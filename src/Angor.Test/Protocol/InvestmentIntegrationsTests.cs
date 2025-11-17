@@ -4,6 +4,7 @@ using Angor.Shared.Networks;
 using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
+using Angor.Shared.Utilities;
 using Angor.Test.DataBuilders;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.Crypto;
@@ -753,7 +754,7 @@ namespace Angor.Test.Protocol
              investmentAmountBelowThreshold);
 
             // Verify the investment is below the threshold
-            var isAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInvestmentInfo, investorInvTrx);
+            var isAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInvestmentInfo, PenaltyThresholdHelper.GetTotalInvestmentAmount(investorInvTrx));
             Assert.False(isAboveThreshold, "Investment should be below the penalty threshold");
 
             // Test RecoverEndOfProjectFunds - this should use StartDate as expiry date override
@@ -816,7 +817,7 @@ namespace Angor.Test.Protocol
              investmentAmountBelowThreshold);
 
             // Verify the investment is below the threshold
-            var isAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInvestmentInfo, investorInvTrx);
+            var isAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInvestmentInfo, PenaltyThresholdHelper.GetTotalInvestmentAmount(investorInvTrx));
             Assert.True(isAboveThreshold, "Investment should be above the penalty threshold");
 
             // Test RecoverEndOfProjectFunds - this should use StartDate as expiry date override
@@ -899,7 +900,7 @@ namespace Angor.Test.Protocol
             Assert.NotNull(investor1Trx);
 
             // Verify investor 1 is below threshold
-            var investor1IsAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInfo, investor1Trx);
+            var investor1IsAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInfo, PenaltyThresholdHelper.GetTotalInvestmentAmount(investor1Trx));
             Assert.False(investor1IsAboveThreshold, "Investor 1 should be below threshold (0.5 BTC < 1 BTC)");
 
 
@@ -916,7 +917,7 @@ namespace Angor.Test.Protocol
             Assert.NotNull(investor2Trx);
 
             // Verify investor 2 is above threshold
-            var investor2IsAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInfo, investor2Trx);
+            var investor2IsAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInfo, PenaltyThresholdHelper.GetTotalInvestmentAmount(investor2Trx));
             Assert.True(investor2IsAboveThreshold, "Investor 2 should be above threshold (1.5 BTC > 1 BTC)");
 
             // Step 3: Investor 1 recovers stage 1 immediately (no penalty, no founder approval needed)
