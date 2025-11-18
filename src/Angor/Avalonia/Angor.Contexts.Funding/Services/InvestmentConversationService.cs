@@ -1,5 +1,3 @@
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
@@ -246,32 +244,24 @@ public class InvestmentConversationService(
     {
         try
         {
-            var messages = await InvestmentRequestsObs()
-                .ToList()
-                .Select(list => list.AsEnumerable());
-            
-            return Result.Success(messages);
+            var tcs = new TaskCompletionSource<List<DirectMessage>>();
+            var messages = new List<DirectMessage>();
+
+            signService.LookupInvestmentRequestsAsync(
+                projectNostrPubKey,
+                null,
+                null,
+                (id, pubKey, content, created) => messages.Add(new DirectMessage(id, pubKey, content, created)),
+                () => tcs.SetResult(messages)
+            );
+
+            var result = await tcs.Task;
+            return Result.Success<IEnumerable<DirectMessage>>(result);
         }
         catch (Exception ex)
         {
             logger.Error(ex, "Failed to fetch investment requests from Nostr");
             return Result.Failure<IEnumerable<DirectMessage>>($"Failed to fetch investment requests: {ex.Message}");
-        }
-
-        IObservable<DirectMessage> InvestmentRequestsObs()
-        {
-            return Observable.Create<DirectMessage>(observer =>
-            {
-                signService.LookupInvestmentRequestsAsync(
-                    projectNostrPubKey,
-                    null,
-                    null,
-                    (id, pubKey, content, created) => observer.OnNext(new DirectMessage(id, pubKey, content, created)),
-                    observer.OnCompleted
-                );
-
-                return Disposable.Empty;
-            });
         }
     }
 
@@ -279,31 +269,23 @@ public class InvestmentConversationService(
     {
         try
         {
-            var approvals = await ApprovalMessagesObs()
-                .ToList()
-                .Select(list => list.AsEnumerable());
-            
-            return Result.Success(approvals);
+            var tcs = new TaskCompletionSource<List<ApprovalInfo>>();
+            var approvals = new List<ApprovalInfo>();
+
+            signService.LookupInvestmentRequestApprovals(
+                projectNostrPubKey,
+                (profileIdentifier, created, eventIdentifier) => 
+                    approvals.Add(new ApprovalInfo(profileIdentifier, created, eventIdentifier)),
+                () => tcs.SetResult(approvals)
+            );
+
+            var result = await tcs.Task;
+            return Result.Success<IEnumerable<ApprovalInfo>>(result);
         }
         catch (Exception ex)
         {
             logger.Error(ex, "Failed to fetch investment approvals from Nostr");
             return Result.Failure<IEnumerable<ApprovalInfo>>($"Failed to fetch approvals: {ex.Message}");
-        }
-
-        IObservable<ApprovalInfo> ApprovalMessagesObs()
-        {
-            return Observable.Create<ApprovalInfo>(observer =>
-            {
-                signService.LookupInvestmentRequestApprovals(
-                    projectNostrPubKey,
-                    (profileIdentifier, created, eventIdentifier) => 
-                        observer.OnNext(new ApprovalInfo(profileIdentifier, created, eventIdentifier)),
-                    observer.OnCompleted
-                );
-
-                return Disposable.Empty;
-            });
         }
     }
 
