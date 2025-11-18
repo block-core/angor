@@ -50,6 +50,7 @@ public static class UIServicesRegistration
             .AddSingleton<IValidations, Validations>()
             .AddSingleton<SharedCommands>()
             .AddSingleton<INotificationService>(_ => notificationService)
+            .AddSingleton<IImageValidationService, ImageValidationService>()
             .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileContext.ProfileName, topLevel));
     }
     

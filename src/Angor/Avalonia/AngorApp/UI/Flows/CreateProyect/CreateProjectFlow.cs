@@ -10,7 +10,7 @@ using Zafiro.UI.Wizards.Slim.Builder;
 
 namespace AngorApp.UI.Flows.CreateProject;
 
-public class CreateProjectFlow(UIServices uiServices, INavigator navigator, IProjectAppService projectAppService, SharedCommands commands, IWalletContext walletContext, ILogger<CreateProjectViewModel> logger)
+public class CreateProjectFlow(UIServices uiServices, INavigator navigator, IProjectAppService projectAppService, SharedCommands commands, IWalletContext walletContext, IImageValidationService imageValidationService, ILogger<CreateProjectViewModel> logger)
     : ICreateProjectFlow
 {
     public Task<Result<Maybe<string>>> CreateProject()
@@ -26,7 +26,7 @@ public class CreateProjectFlow(UIServices uiServices, INavigator navigator, IPro
     private SlimWizard<string> CreateWizard(IWallet wallet, ProjectSeed projectSeed)
     {
         var wizard = WizardBuilder
-            .StartWith(() => new CreateProjectViewModel(wallet, projectSeed, uiServices, projectAppService, logger), "Create Project").NextCommand(model => model.Create)
+            .StartWith(() => new CreateProjectViewModel(wallet, projectSeed, uiServices, projectAppService, imageValidationService, logger), "Create Project").NextCommand(model => model.Create)
             .Then(transactionId => new ProjectCreatedViewModel(transactionId, commands), "Success").Next((_, projectId) => projectId, "Close").Always()
             .WithCompletionFinalStep();
 
