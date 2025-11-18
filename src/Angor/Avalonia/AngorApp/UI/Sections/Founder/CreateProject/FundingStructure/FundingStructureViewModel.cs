@@ -60,12 +60,12 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
         if (skipValidation)
         {
             // Debug mode: Allow end date to be equal to or after start date
-            this.ValidationRule(x => x.FundingEndDate, time => time >= FundingStartDate, "Funding end date must be on or after the funding start date.").DisposeWith(disposable);
+            this.ValidationRule(x => x.FundingEndDate, time => time?.Date >= FundingStartDate.Date, "Funding end date must be on or after the funding start date.").DisposeWith(disposable);
         }
         else
         {
             // Production mode: End date must be strictly after start date
-            this.ValidationRule(x => x.FundingEndDate, time => time > FundingStartDate, "Funding end date must be after the start date.").DisposeWith(disposable);
+            this.ValidationRule(x => x.FundingEndDate, time => time?.Date > FundingStartDate.Date, "Funding end date must be after the start date.").DisposeWith(disposable);
 
             // Production only: Funding period cannot exceed 1 year
             this.ValidationRule(x => x.FundingEndDate,
