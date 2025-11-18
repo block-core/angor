@@ -6,6 +6,7 @@ using AngorApp.UI.Shared.Controls.Feerate;
 using Avalonia.Controls;
 using Avalonia.Styling;
 using Blockcore.Networks;
+using Reactive.Bindings;
 using Serilog;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Services;
@@ -22,6 +23,7 @@ public partial class UIServices : ReactiveObject
     [Reactive] private bool isDarkThemeEnabled;
     [Reactive] private bool isBitcoinPreferred = true;
     [Reactive] private bool isDebugModeEnabled;
+    [Reactive] private Network activeNetwork;
 
     public ILauncherService LauncherService { get; }
     public IDialog Dialog { get; }
@@ -42,6 +44,7 @@ public partial class UIServices : ReactiveObject
 
         this.preferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
         this.networkConfiguration = networkConfiguration ?? throw new ArgumentNullException(nameof(networkConfiguration));
+        ActiveNetwork = networkConfiguration.GetNetwork();
 
         LauncherService = launcherService;
         Dialog = dialog;
@@ -101,22 +104,17 @@ public partial class UIServices : ReactiveObject
                             Log.Warning("Could not persist UI preferences for profile {Profile}. Reason: {Error}", profileName, update.Error);
                         }
                     });
+
+        var isDebugModeEffectivelyEnabled =
+            this.WhenAnyValue(
+                x => x.IsDebugModeEnabled,
+                x => x.ActiveNetwork.NetworkType,
+                (debugMode, networkType) => networkType == NetworkType.Testnet && debugMode);
+        
+        IsDebugModeEffectivelyEnabled = new Reactive.Bindings.ReactiveProperty<bool>(isDebugModeEffectivelyEnabled);
     }
 
-    /// <summary>
-    /// Determines if production validations should be skipped.
-    /// Returns true only when BOTH debug mode is enabled AND the network is testnet.
-    /// This allows for more flexible testing in development environments.
-    /// </summary>
-    /// <returns>True if debug mode is enabled and network is testnet; otherwise false.</returns>
-    public bool ShouldSkipProductionValidations()
-    {
-        var isDebugMode = IsDebugModeEnabled;
-        var network = networkConfiguration.GetNetwork();
-        var isTestnet = network.NetworkType == NetworkType.Testnet;
-
-        return isDebugMode && isTestnet;
-    }
+    public Reactive.Bindings.ReactiveProperty<bool> IsDebugModeEffectivelyEnabled { get; }
 
     public IEnumerable<IFeeratePreset> FeeratePresets
     {

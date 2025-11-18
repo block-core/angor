@@ -91,6 +91,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
                         networkStorage.SetNetwork(t.n);
                         networkStorage.SetSettings(new SettingsInfo());
                         networkConfiguration.SetNetwork(t.n == "Mainnet" ? new BitcoinMain() : new Angornet());
+                        uiServices.ActiveNetwork = networkConfiguration.GetNetwork();
                         networkService.AddSettingsIfNotExist();
                         var s = networkStorage.GetSettings();
                         Reset(Indexers, s.Indexers.Select(CreateIndexer));
