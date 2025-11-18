@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Reactive.Disposables;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -48,32 +49,19 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
             x => string.IsNullOrWhiteSpace(x) || (Uri.TryCreate(x, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)),
             "Please enter a valid URL (starting with http:// or https://)").DisposeWith(disposable);
 
-        // BANNER URL VALIDATIONS (ALWAYS - Optional but must be valid if provided)
-        this.ValidationRule(x => x.BannerUri,
-          x => string.IsNullOrWhiteSpace(x) || (Uri.TryCreate(x, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)),
-          "Please enter a valid URL (starting with http:// or https://)").DisposeWith(disposable);
-        this.ValidationRule(x => x.BannerUri,
-            x => string.IsNullOrWhiteSpace(x) || IsValidImageUrl(x),
-          "Banner URL must link to a valid image file (jpg, jpeg, png, gif, webp, svg)").DisposeWith(disposable);
-
-        // AVATAR URL VALIDATIONS (ALWAYS - Optional but must be valid if provided)
-        this.ValidationRule(x => x.AvatarUri,
-            x => string.IsNullOrWhiteSpace(x) || (Uri.TryCreate(x, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)),
-          "Please enter a valid URL (starting with http:// or https://)").DisposeWith(disposable);
-        this.ValidationRule(x => x.AvatarUri,
-         x => string.IsNullOrWhiteSpace(x) || IsValidImageUrl(x),
-              "Profile image URL must link to a valid image file (jpg, jpeg, png, gif, webp, svg)").DisposeWith(disposable);
+        this.ValidationRule(x => x.AvatarUri, IsValidImage(model => model.AvatarUri), result => result.IsSuccess, result => $"Invalid image: {result}").DisposeWith(disposable);
+        this.ValidationRule(x => x.BannerUri, IsValidImage(model => model.BannerUri), result => result.IsSuccess, result => $"Invalid image: {result}").DisposeWith(disposable);
 
         // NIP-05 and Lightning Address validations (async)
         var isValidNip05Username = this.WhenAnyValue(model => model.Nip05Username)
-        .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
-        .Select(s => Observable.FromAsync(() => s == null ? Task.FromResult(Result.Success()) : uiServices.Validations.CheckNip05Username(s, projectSeed.NostrPubKey)))
-        .Switch();
+            .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
+            .Select(s => Observable.FromAsync(() => string.IsNullOrWhiteSpace(s) ? Task.FromResult(Result.Success()) : uiServices.Validations.CheckNip05Username(s, projectSeed.NostrPubKey)))
+            .Switch();
 
         var isValidLightningAddress = this.WhenAnyValue(model => model.LightningAddress)
-        .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
-        .Select(s => Observable.FromAsync(() => s == null ? Task.FromResult(Result.Success()) : uiServices.Validations.CheckLightningAddress(s)))
-        .Switch();
+            .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
+            .Select(s => Observable.FromAsync(() => string.IsNullOrWhiteSpace(s) ? Task.FromResult(Result.Success()) : uiServices.Validations.CheckLightningAddress(s)))
+            .Switch();
 
         this.ValidationRule(x => x.Nip05Username, isValidNip05Username, x => x.IsSuccess, error => error.Error).DisposeWith(disposable);
         this.ValidationRule(x => x.LightningAddress, isValidLightningAddress, x => x.IsSuccess, error => error.Error).DisposeWith(disposable);
@@ -81,18 +69,13 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
         Errors = new ErrorSummarizer(ValidationContext).DisposeWith(disposable).Errors;
     }
 
-    private static bool IsValidImageUrl(string url)
+    private IObservable<Result<bool>> IsValidImage(Expression<Func<ProfileViewModel, string?>> expression)
     {
-        if (string.IsNullOrWhiteSpace(url))
-            return false;
-
-        var lowerUrl = url.ToLowerInvariant();
-        return lowerUrl.EndsWith(".jpg") ||
-          lowerUrl.EndsWith(".jpeg") ||
-          lowerUrl.EndsWith(".png") ||
-          lowerUrl.EndsWith(".gif") ||
-          lowerUrl.EndsWith(".webp") ||
-          lowerUrl.EndsWith(".svg");
+        return this.WhenAnyValue(expression)
+            .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
+            .Select(uri => Observable.FromAsync(() => uiServices.Validations.IsImage(uri)))
+            .Switch()
+            .ObserveOn(RxApp.MainThreadScheduler);
     }
 
     public ICollection<string> Errors { get; }
