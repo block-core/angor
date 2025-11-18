@@ -30,7 +30,7 @@
 
     <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
         <StackPanel Spacing="20" HorizontalAlignment="Center" IsVisible="{Binding !IsInvestmentCompleted}">
-            <EdgePanel>
+            <EdgePanel HorizontalAlignment="Center">
                 <EdgePanel.StartContent>
                     <ui:Icon Source="fa-circle-info" />
                 </EdgePanel.StartContent>
