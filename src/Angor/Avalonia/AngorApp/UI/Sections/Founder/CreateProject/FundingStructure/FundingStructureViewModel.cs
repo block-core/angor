@@ -66,11 +66,6 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
         }
     }
 
-    private bool FullYear(DateTime? time)
-    {
-        return time == null || time.Value - FundingStartDate <= TimeSpan.FromDays(365);
-    }
-
     protected override void Dispose(bool disposing)
     {
         disposable.Dispose();
