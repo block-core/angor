@@ -14,7 +14,7 @@
 
     <Design.DataContext>
         <p:PortfolioProjectSample InvestmentStatus="PendingFounderSignatures"
-                                  IsInvestmentCompleted="False"
+                                  IsInvestmentCompleted="True"
                                   Name="Project 1"
                                   LogoUri="https://test.angor.io/assets/img/no-image.jpg">
             <p:PortfolioProjectSample.Target>
@@ -32,6 +32,8 @@
                 <TextBlock Text="{Binding Name}" Classes="SizeBig Center" />
                 <av:AdvancedImage Height="150" Stretch="UniformToFill" CornerRadius="10" Source="{Binding LogoUri}" />
                 <items:ProgressView />
+            </StackPanel>
+            <Panel>
                 <items:OfferAcceptedView x:Name="OfferAcceptedView">
                     <items:OfferAcceptedView.IsVisible>
                         <MultiBinding Converter="{x:Static BoolConverters.Or}">
@@ -40,50 +42,52 @@
                         </MultiBinding>
                     </items:OfferAcceptedView.IsVisible>
                 </items:OfferAcceptedView>
-            </StackPanel>
-            <BalancedWrapGrid MinItemWidth="230" DockPanel.Dock="Top" IsVisible="{Binding !#OfferAcceptedView.IsVisible}">
-                <Border Classes="CardAlt" Padding="10">
-                    <UniformGrid Grid.IsSharedSizeScope="True" Columns="1" VerticalAlignment="Center" RowSpacing="10">
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="My Investment" EndContent="{Binding Invested.DecimalString}" />
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Investment Status">
-                            <EdgePanel.EndContent>
-                                <controls:Badge Tag="{Binding InvestmentStatus}">
-                                    <controls:Badge.Styles>
-                                        <Style Selector="controls|Badge[Tag=PendingFounderSignatures]">
-                                            <Setter Property="Color" Value="DarkOrange" />
-                                            <Setter Property="Content" Value="Pending" />
-                                        </Style>
-                                        <Style Selector="controls|Badge[Tag=FounderSignaturesReceived]">
-                                            <Setter Property="Color" Value="Goldenrod" />
-                                            <Setter Property="Content" Value="Approved" />
-                                        </Style>
-                                        <Style Selector="controls|Badge[Tag=Invested]">
-                                            <Setter Property="Color" Value="LimeGreen" />
-                                            <Setter Property="Content" Value="Invested" />
-                                        </Style>
-                                        <Style Selector="controls|Badge[Tag=Invalid]">
-                                            <Setter Property="Color" Value="Red" />
-                                            <Setter Property="Content" Value="INVALID!" />
-                                        </Style>
-                                    </controls:Badge.Styles>
-                                </controls:Badge>
+                <StackPanel Classes="BigGap" IsVisible="{Binding !#OfferAcceptedView.IsVisible}">
+                    <BalancedWrapGrid MinItemWidth="230" DockPanel.Dock="Top">
+                        <Border Classes="CardAlt" Padding="10">
+                            <UniformGrid Grid.IsSharedSizeScope="True" Columns="1" VerticalAlignment="Center" RowSpacing="10">
+                                <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="My Investment" EndContent="{Binding Invested.DecimalString}" />
+                                <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Investment Status">
+                                    <EdgePanel.EndContent>
+                                        <controls:Badge Tag="{Binding InvestmentStatus}">
+                                            <controls:Badge.Styles>
+                                                <Style Selector="controls|Badge[Tag=PendingFounderSignatures]">
+                                                    <Setter Property="Color" Value="DarkOrange" />
+                                                    <Setter Property="Content" Value="Pending" />
+                                                </Style>
+                                                <Style Selector="controls|Badge[Tag=FounderSignaturesReceived]">
+                                                    <Setter Property="Color" Value="Goldenrod" />
+                                                    <Setter Property="Content" Value="Approved" />
+                                                </Style>
+                                                <Style Selector="controls|Badge[Tag=Invested]">
+                                                    <Setter Property="Color" Value="LimeGreen" />
+                                                    <Setter Property="Content" Value="Invested" />
+                                                </Style>
+                                                <Style Selector="controls|Badge[Tag=Invalid]">
+                                                    <Setter Property="Color" Value="Red" />
+                                                    <Setter Property="Content" Value="INVALID!" />
+                                                </Style>
+                                            </controls:Badge.Styles>
+                                        </controls:Badge>
 
-                            </EdgePanel.EndContent>
-                        </EdgePanel>
-                    </UniformGrid>
-                </Border>
-                <Border Classes="CardAlt" Padding="10">
-                    <UniformGrid Columns="1" VerticalAlignment="Center" Grid.IsSharedSizeScope="True" RowSpacing="10">
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}"  StartContent="In Recovery" EndContent="{Binding InRecovery.DecimalString}" />
-                        <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Recovery Status" EndContent="None" />
-                    </UniformGrid>
-                </Border>
-            </BalancedWrapGrid>
-            <EnhancedButton HorizontalAlignment="Right" Command="{Binding GoToManageFunds}" Content="Manage funds">
-                <EnhancedButton.Icon>
-                    <ui:Icon Source="mdi-cog" />
-                </EnhancedButton.Icon>
-            </EnhancedButton>
+                                    </EdgePanel.EndContent>
+                                </EdgePanel>
+                            </UniformGrid>
+                        </Border>
+                        <Border Classes="CardAlt" Padding="10">
+                            <UniformGrid Columns="1" VerticalAlignment="Center" Grid.IsSharedSizeScope="True" RowSpacing="10">
+                                <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="In Recovery" EndContent="{Binding InRecovery.DecimalString}" />
+                                <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Recovery Status" EndContent="None" />
+                            </UniformGrid>
+                        </Border>
+                    </BalancedWrapGrid>
+                    <EnhancedButton HorizontalAlignment="Right" Command="{Binding GoToManageFunds}" Content="Manage funds">
+                        <EnhancedButton.Icon>
+                            <ui:Icon Source="mdi-cog" />
+                        </EnhancedButton.Icon>
+                    </EnhancedButton>
+                </StackPanel>
+            </Panel>
         </StackPanel>
     </Border>
 
