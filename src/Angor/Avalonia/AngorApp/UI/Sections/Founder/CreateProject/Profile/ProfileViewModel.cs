@@ -15,7 +15,7 @@ namespace AngorApp.UI.Sections.Founder.CreateProject.Profile;
 
 public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewModel, IHaveErrors
 {
-    private readonly IImageValidationService validationService;
+    private readonly UIServices uiServices;
     private readonly CompositeDisposable disposable = new();
     [Reactive] private string? avatarUri;
     [Reactive] private string? bannerUri;
@@ -25,9 +25,9 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
     [Reactive] private string? nip05Username;
     [Reactive] private string? lightningAddress;
 
-    public ProfileViewModel(CreateProjectFlow.ProjectSeed projectSeed, UIServices uiServices, IImageValidationService validationService)
+    public ProfileViewModel(CreateProjectFlow.ProjectSeed projectSeed, UIServices uiServices)
     {
-        this.validationService = validationService;
+        this.uiServices = uiServices;
 #if DEBUG
         AvatarUri = "https://picsum.photos/170/170"; // Placeholder for avatar
         BannerUri = "https://picsum.photos/800/312"; // Placeholder for banner
@@ -73,7 +73,7 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
     {
         return this.WhenAnyValue(expression)
             .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
-            .Select(uri => Observable.FromAsync(() => validationService.IsImage(uri)))
+            .Select(uri => Observable.FromAsync(() => uiServices.Validations.IsImage(uri)))
             .Switch()
             .ObserveOn(RxApp.MainThreadScheduler);
     }
