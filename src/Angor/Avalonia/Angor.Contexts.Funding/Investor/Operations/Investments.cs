@@ -1,17 +1,14 @@
 using Angor.Contexts.CrossCutting;
-using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
-using Angor.Shared.Models;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Angor.Contexts.Funding.Investor.Operations;
 
@@ -22,13 +19,10 @@ public static class Investments
     public class InvestmentsPortfolioHandler(
         IAngorIndexerService angorIndexerService,
         IPortfolioService investmentService,
-        ISeedwordsProvider seedwordsProvider,
-        IDerivationOperations derivationOperations,
         IProjectService projectService,
-        ISignService signService,
+        IInvestmentConversationService conversationService,
         INetworkConfiguration networkConfiguration,
-        ISerializer serializer ,
-        IEncryptionService decrypter
+        ILogger<InvestmentsPortfolioHandler> logger
     ) : IRequestHandler<InvestmentsPortfolioRequest,Result<IEnumerable<InvestedProjectDto>>>
     {
 
@@ -50,152 +44,134 @@ public static class Investments
             if (lookup.IsFailure)
                 return Result.Failure<IEnumerable<InvestedProjectDto>>("Failed to retrieve projects: " + lookup.Error);
 
-            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
-
-            var investmentLookupTasks = lookup.Value
-                .OrderByDescending(x => x.StartingDate)
-                .ToList()
-                .Select(async project =>
+            var investmentLookupTasks = lookup.Value.ToList().Select(async project =>
+            {
+                try
                 {
-                    try
+                    var investmentRecord = investmentRecordsLookup.Value.ProjectIdentifiers
+                        .First(x => x.ProjectIdentifier == project.Id.Value);
+
+                    var investmentTask = Result.Try(() => angorIndexerService.GetInvestmentAsync(project.Id.Value, investmentRecord.InvestorPubKey));
+                    var statsTask = Result.Try(() => 
+                        angorIndexerService.GetProjectStatsAsync(project.Id.Value));
+
+                    await Task.WhenAll(investmentTask, statsTask);
+
+                    var investment = investmentTask.Result.IsSuccess ? investmentTask.Result.Value : null;
+                    var stats = statsTask.Result.IsSuccess ? statsTask.Result.Value : (project.Id.Value, null);
+
+                    var dto = new InvestedProjectDto
                     {
-                        var investmentRecord = investmentRecordsLookup.Value.ProjectIdentifiers
-                            .First(x => x.ProjectIdentifier == project.Id.Value);
+                        Id = project.Id.Value,
+                        Name = project.Name,
+                        Description = project.ShortDescription,
+                        LogoUri = project.Picture,
+                        Target = new Amount(project.TargetAmount),
+                        FounderStatus = investment == null ? FounderStatus.Requested : FounderStatus.Approved,
+                        InvestmentStatus = investment == null ? InvestmentStatus.Invalid : InvestmentStatus.Invested,
+                        Investment = new Amount(investment?.TotalAmount ?? 0),
+                        InvestmentId = investment?.TransactionId ?? string.Empty,
+                        Raised = new Amount(stats.stats?.AmountInvested ?? 0),
+                        InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0)
+                    };
 
-                        var investmentTask = Result.Try(() =>
-                            angorIndexerService.GetInvestmentAsync(project.Id.Value, investmentRecord.InvestorPubKey));
-                        var statsTask = Result.Try(() =>
-                            angorIndexerService
-                                .GetProjectStatsAsync(project.Id.Value)); // Get project stats for the project ID
+                    if (investment != null)
+                        return Result.Success(dto);
 
-                        await Task.WhenAll(investmentTask, statsTask);
+                    // Sync conversations from Nostr for this project
+                    var syncResult = await conversationService.SyncConversationsFromNostrAsync(
+                        request.WalletId,
+                        project.Id,
+                        project.NostrPubKey);
 
-                        var investment = investmentTask.Result.IsSuccess ? investmentTask.Result.Value : null;
-                        var stats = statsTask.Result.IsSuccess ? statsTask.Result.Value : (project.Id.Value, null);
+                    if (syncResult.IsFailure)
+                    {
+                        logger.LogWarning("Failed to sync conversations for project {ProjectId}: {Error}", 
+                            project.Id.Value, syncResult.Error);
+                    }
 
-                        var dto = new InvestedProjectDto
+                    // Get the conversation for this specific request event
+                    Result<InvestmentConversation?> conversationResult;
+                    if (!string.IsNullOrEmpty(investmentRecord.RequestEventId))
+                    {
+                        conversationResult = await conversationService.GetConversationByRequestEventIdAsync(
+                            request.WalletId,
+                            project.Id,
+                            investmentRecord.RequestEventId);
+                    }
+                    else
+                    {
+                        // If we don't have a request event ID, get all conversations and take the most recent
+                        var conversationsResult = await conversationService.GetConversationsAsync(
+                            request.WalletId,
+                            project.Id);
+                        
+                        if (conversationsResult.IsSuccess && conversationsResult.Value.Any())
                         {
-                            Id = project.Id.Value,
-                            Name = project.Name,
-                            Description = project.ShortDescription,
-                            LogoUri = project.Picture,
-                            Target = new Amount(project.TargetAmount),
-                            FounderStatus = investment == null ? FounderStatus.Requested : FounderStatus.Approved,
-                            InvestmentStatus =
-                                investment == null ? InvestmentStatus.Invalid : InvestmentStatus.Invested,
-                            Investment = new Amount(investment?.TotalAmount ?? 0),
-                            InvestmentId = investment?.TransactionId ?? string.Empty,
-                            Raised = new Amount(stats.stats?.AmountInvested ?? 0),
-                            InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0)
-                        };
+                            var latestConversation = conversationsResult.Value
+                                .OrderByDescending(c => c.RequestCreated)
+                                .FirstOrDefault();
+                            conversationResult = Result.Success(latestConversation);
+                        }
+                        else
+                        {
+                            conversationResult = Result.Success<InvestmentConversation?>(null);
+                        }
+                    }
 
-                        if (investment != null)
-                            return Result.Success(dto);
-
-                        var (amount, investmentStatus) = await GetInvestmentStatusFromDms(
-                            sensitiveDataResult.Value.ToWalletWords(), project,
-                            investmentRecord.RequestEventTime, investmentRecord.RequestEventId);
-
-                        dto.FounderStatus = investmentStatus == InvestmentStatus.FounderSignaturesReceived
-                            ? FounderStatus.Approved
-                            : FounderStatus.Requested;
-                        dto.Investment = amount;
-                        dto.InvestmentStatus = investmentStatus;
-                        dto.InvestmentId = investmentRecord.InvestmentTransactionHash;
-
+                    if (conversationResult.IsFailure)
+                    {
+                        logger.LogWarning("Failed to get conversation for project {ProjectId}: {Error}", 
+                            project.Id.Value, conversationResult.Error);
                         return Result.Success(dto);
                     }
-                    catch (Exception e)
+
+                    var conversation = conversationResult.Value;
+                    if (conversation == null)
                     {
-                        return Result.Failure<InvestedProjectDto>(
-                            $"Error processing project {project.Id.Value}: {e.Message}");
+                        // No conversation found, return current dto
+                        return Result.Success(dto);
                     }
-                });
+
+                    // Update dto with conversation information
+                    dto.FounderStatus = conversation.Status == InvestmentRequestStatus.Approved
+                        ? FounderStatus.Approved
+                        : FounderStatus.Requested;
+
+                    dto.InvestmentStatus = DetermineInvestmentStatus(conversation);
+
+                    if (!string.IsNullOrEmpty(conversation.InvestmentTransactionHex))
+                    {
+                        var trx = networkConfiguration.GetNetwork()
+                            .CreateTransaction(conversation.InvestmentTransactionHex);
+                        dto.Investment = new Amount(trx.Outputs.Sum(x => x.Value));
+                    }
+
+                    dto.InvestmentId = investmentRecord.InvestmentTransactionHash;
+
+                    return Result.Success(dto);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Error processing project {ProjectId}", project.Id.Value);
+                    return Result.Failure<InvestedProjectDto>(
+                        $"Error processing project {project.Id.Value}: {e.Message}");
+                }
+            });
             
             var results = await Task.WhenAll(investmentLookupTasks);
             return results.Combine();
         }
         
-        private async Task<(Amount, InvestmentStatus)> GetInvestmentStatusFromDms(WalletWords words, Project project,
-            DateTime? createdAt = null, string? eventId = null)
+        private static InvestmentStatus DetermineInvestmentStatus(InvestmentConversation conversation)
         {
-            var pubKey =
-                derivationOperations.DeriveNostrPubKey(words, project.FounderKey);
-            var nostrPrivateKey =
-                await derivationOperations.DeriveProjectNostrPrivateKeyAsync(words,
-                    project.FounderKey);
+            if (string.IsNullOrEmpty(conversation.InvestmentTransactionHex))
+                return InvestmentStatus.PendingFounderSignatures;
 
-            var privateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
+            if (conversation.Status == InvestmentRequestStatus.Approved)
+                return InvestmentStatus.FounderSignaturesReceived;
 
-            var investmentStatus = InvestmentStatus.Invalid;
-            var amount = new Amount(0);
-            var investmentId = string.Empty;
-
-
-            if (createdAt == null && eventId == null) //If we don't have a createdAt or eventId, we need to fetch it from NOSTR
-            {
-                createdAt = DateTime.MinValue;
-                eventId = string.Empty;
-
-                var requestLookupTcs = new TaskCompletionSource();
-                var encryptedContent = string.Empty;
-                var investorPubKey = string.Empty;
-                await signService.LookupInvestmentRequestsAsync(project.NostrPubKey, pubKey, null,
-                    async (id, publisherPubKey, content, eventTime) =>
-                    {
-                        if (createdAt >= eventTime) return;
-
-                        createdAt = eventTime;
-                        eventId = id;
-                        investmentStatus = InvestmentStatus.PendingFounderSignatures;
-                        encryptedContent = content;
-                        investorPubKey = publisherPubKey;
-                    }, () => { requestLookupTcs.SetResult(); });
-
-                await requestLookupTcs.Task;
-                
-                try
-                {
-                    var decrypted =
-                        await decrypter.DecryptNostrContentAsync(privateKeyHex, investorPubKey, encryptedContent);
-
-                    var investmentRequest = serializer.Deserialize<SignRecoveryRequest>(decrypted);
-                    var trx = networkConfiguration.GetNetwork()
-                        .CreateTransaction(investmentRequest.InvestmentTransactionHex);
-
-                    amount = new Amount(trx.Outputs.Sum(x => x.Value));
-                }
-                catch (Exception e)
-                {
-                    requestLookupTcs.SetException(e);
-                }
-            }
-            else
-            {
-                //If we have the event id we know we sent a request to the founder
-                investmentStatus = InvestmentStatus.PendingFounderSignatures;
-            }
-
-            if (createdAt == DateTime.MinValue || string.IsNullOrEmpty(eventId))
-            {
-                // If we still don't have a createdAt or eventId, we cannot proceed
-                return (amount, InvestmentStatus.Invalid);
-            }
-
-            var tcs = new TaskCompletionSource<InvestmentStatus>();
-
-
-            signService.LookupSignatureForInvestmentRequest(pubKey, project.NostrPubKey, createdAt, eventId,
-                signature =>
-                {
-                    investmentStatus = InvestmentStatus.FounderSignaturesReceived;
-                    return tcs.Task;
-                },
-                () => { tcs.SetResult(investmentStatus); });
-
-            await tcs.Task;
-
-            return (amount, investmentStatus);
+            return InvestmentStatus.PendingFounderSignatures;
         }
     }
 }
