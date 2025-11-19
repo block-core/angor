@@ -153,9 +153,7 @@ public class InvestmentConversationService(
                     }
                     continue;
                 }
-
-                // Try to decrypt and parse the request
-                string? decryptedContent = null;
+                
                 SignRecoveryRequest? recoveryRequest = null;
 
                 try
@@ -163,8 +161,7 @@ public class InvestmentConversationService(
                     var decryptResult = await nostrDecrypter.Decrypt(walletId, projectId, request);
                     if (decryptResult.IsSuccess)
                     {
-                        decryptedContent = decryptResult.Value;
-                        recoveryRequest = serializer.Deserialize<SignRecoveryRequest>(decryptedContent);
+                        recoveryRequest = serializer.Deserialize<SignRecoveryRequest>(decryptResult.Value);
                     }
                 }
                 catch (Exception ex)
@@ -183,10 +180,7 @@ public class InvestmentConversationService(
                     ProjectId = projectId.Value,
                     RequestEventId = request.Id,
                     InvestorNostrPubKey = request.InvestorNostrPubKey,
-                    ProjectNostrPubKey = projectNostrPubKey,
                     RequestCreated = request.Created,
-                    EncryptedContent = request.Content,
-                    DecryptedContent = decryptedContent,
                     ProjectIdentifier = recoveryRequest?.ProjectIdentifier,
                     InvestmentTransactionHex = recoveryRequest?.InvestmentTransactionHex,
                     UnfundedReleaseAddress = recoveryRequest?.UnfundedReleaseAddress,
@@ -237,7 +231,9 @@ public class InvestmentConversationService(
 
     private static string GenerateCompositeId(WalletId walletId, ProjectId projectId, string requestEventId)
     {
-        return $"{walletId.Value}_{projectId.Value}_{requestEventId}";
+        var composite = $"{walletId.Value}|{projectId.Value}|{requestEventId}";
+        var hashBytes = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(composite));
+        return Convert.ToHexString(hashBytes);
     }
 
     private async Task<Result<IEnumerable<DirectMessage>>> FetchInvestmentRequestsFromNostr(string projectNostrPubKey)
