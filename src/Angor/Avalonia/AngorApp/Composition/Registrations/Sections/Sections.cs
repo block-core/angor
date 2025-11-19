@@ -20,7 +20,7 @@ public static class Sections
         services.AddSingleton<IEnumerable<ISection>>(provider =>
         {
             var homeSection = CreateContentSection<IHomeSectionViewModel>(provider, "Home", new Icon("svg:/Assets/angor-icon.svg"));
-            var dynamicHome = new DynamicContentSection(homeSection)
+            var dynamicHome = new DynamicContentSection<IHomeSectionViewModel>(homeSection)
             {
                 NarrowVisibility = false,
                 WideVisibility = true,
@@ -30,7 +30,7 @@ public static class Sections
             
             return
             [
-                CreateContentSection<IHomeSectionViewModel>(provider, "Home", new Icon("svg:/Assets/angor-icon.svg")),
+                dynamicHome,
                 CreateContentSection<IWalletSectionViewModel>(provider, "Wallet", new Icon("svg:/Assets/wallet.svg")),
                 CreateContentSection<IBrowseSectionViewModel>(provider, "Browse", new Icon("svg:/Assets/browse.svg")),
                 CreateContentSection<IPortfolioSectionViewModel>(provider, "Portfolio", new Icon("svg:/Assets/portfolio.svg")),

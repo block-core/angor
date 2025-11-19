@@ -6,7 +6,7 @@ using Zafiro.UI.Navigation.Sections;
 
 namespace AngorApp.Composition.Registrations.Sections;
 
-public partial class DynamicContentSection : ReactiveObject, ISection
+public partial class DynamicContentSection<T> : ContentSection<T> where T : class
 {
     private readonly ISection section;
     
@@ -15,7 +15,7 @@ public partial class DynamicContentSection : ReactiveObject, ISection
     [Reactive]
     private int sortOrder;
 
-    public DynamicContentSection(ISection section)
+    public DynamicContentSection(ContentSection<T> section) : base(section.Name, section.Content.Select(o => (T)o), section.Icon, section.Initialize)
     {
         this.section = section;
         IsVisible = section.IsVisible;
