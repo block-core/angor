@@ -25,7 +25,7 @@ public class InvestmentConversationService(
 
     public Task<Result<IEnumerable<InvestmentConversation>>> GetConversationsAsync(WalletId walletId, ProjectId projectId)
     {
-        return _collection.FindAsync(c => 
+        return _collection.FindAsync(c =>
             c.WalletId == walletId.Value && 
             c.ProjectId == projectId.Value);
     }
@@ -179,7 +179,7 @@ public class InvestmentConversationService(
                     WalletId = walletId.Value,
                     ProjectId = projectId.Value,
                     RequestEventId = request.Id,
-                    InvestorNostrPubKey = request.InvestorNostrPubKey,
+                    InvestorNostrPubKey = request.SenderNostrPubKey,
                     RequestCreated = request.Created,
                     ProjectIdentifier = recoveryRequest?.ProjectIdentifier,
                     InvestmentTransactionHex = recoveryRequest?.InvestmentTransactionHex,
@@ -243,7 +243,7 @@ public class InvestmentConversationService(
             var tcs = new TaskCompletionSource<List<DirectMessage>>();
             var messages = new List<DirectMessage>();
 
-            signService.LookupInvestmentRequestsAsync(
+            await signService.LookupInvestmentRequestsAsync(
                 projectNostrPubKey,
                 null,
                 null,

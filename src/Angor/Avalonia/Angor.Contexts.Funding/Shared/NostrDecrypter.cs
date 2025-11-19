@@ -1,18 +1,15 @@
 using Angor.Contexts.CrossCutting;
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Services;
 using Angor.Shared;
+using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
-using Nostr.Client.Keys;
-using Nostr.Client.Messages;
-using Nostr.Client.Messages.Direct;
 
 namespace Angor.Contexts.Funding.Shared;
 
-public class NostrDecrypter(IDerivationOperations derivationOperations, ISeedwordsProvider provider, IProjectService projectService) : INostrDecrypter
+public class NostrDecrypter(IDerivationOperations derivationOperations, ISeedwordsProvider provider, IProjectService projectService,
+    IEncryptionService encryptionService) : INostrDecrypter
 {
     public async Task<Result<string>> Decrypt(WalletId walletId, ProjectId projectId, DirectMessage nostrMessage)
     {
@@ -34,17 +31,15 @@ public class NostrDecrypter(IDerivationOperations derivationOperations, ISeedwor
             var bytes = nostrPrivateKey.ToBytes();
             var hex = Encoders.Hex.EncodeData(bytes);
 
-            var nostrClientPrivateKey = NostrPrivateKey.FromHex(hex);
+            var nostrPubKey = nostrPrivateKey.PubKey.ToHex()[2..];
             
-            var encryptedEvent = new NostrEncryptedEvent(nostrMessage.Content,
-                new NostrEventTags(NostrEventTag.Profile(nostrClientPrivateKey.DerivePublicKey().Hex)))
-            {
-                Pubkey = nostrMessage.InvestorNostrPubKey,
-            };
+            var isSender = nostrPubKey.Equals(nostrMessage.SenderNostrPubKey, StringComparison.OrdinalIgnoreCase);
+            
+            var otherPubKey = isSender ? projectResult.Value.NostrPubKey : nostrMessage.SenderNostrPubKey; //We assume all messages are between investor and project npub
 
-            return encryptedEvent.DecryptContent(nostrClientPrivateKey);
+            return encryptionService.DecryptNostrContentAsync(hex, otherPubKey, nostrMessage.Content);
         });
 
-        return decryptResult;
+        return await decryptResult;
     }
 }

@@ -1,3 +1,3 @@
 namespace Angor.Contexts.Funding.Shared;
 
-public record DirectMessage(string Id, string InvestorNostrPubKey, string Content, DateTime Created);
+public record DirectMessage(string Id, string SenderNostrPubKey, string Content, DateTime Created);

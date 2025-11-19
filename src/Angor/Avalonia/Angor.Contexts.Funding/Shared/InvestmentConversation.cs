@@ -28,24 +28,9 @@ public class InvestmentConversation : BaseDocument
     public string InvestorNostrPubKey { get; set; } = string.Empty;
     
     /// <summary>
-    /// The Nostr public key of the project/founder
-    /// </summary>
-    public string ProjectNostrPubKey { get; set; } = string.Empty;
-    
-    /// <summary>
     /// When the investment request was created
     /// </summary>
     public DateTime RequestCreated { get; set; }
-    
-    /// <summary>
-    /// The encrypted content of the request message
-    /// </summary>
-    public string EncryptedContent { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// The decrypted content of the request message (if available)
-    /// </summary>
-    public string? DecryptedContent { get; set; }
     
     // SignRecoveryRequest properties
     public string? ProjectIdentifier { get; set; }
