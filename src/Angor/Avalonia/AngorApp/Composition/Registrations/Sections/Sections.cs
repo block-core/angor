@@ -30,8 +30,8 @@ public static class Sections
             
             return
             [
+                CreateContentSection<IHomeSectionViewModel>(provider, "Home", new Icon("svg:/Assets/angor-icon.svg")),
                 CreateContentSection<IWalletSectionViewModel>(provider, "Wallet", new Icon("svg:/Assets/wallet.svg")),
-                CreateContentSection<IWalletSectionViewModel>(provider, "Wallet2", new Icon("svg:/Assets/wallet.svg")),
                 CreateContentSection<IBrowseSectionViewModel>(provider, "Browse", new Icon("svg:/Assets/browse.svg")),
                 CreateContentSection<IPortfolioSectionViewModel>(provider, "Portfolio", new Icon("svg:/Assets/portfolio.svg")),
                 CreateContentSection<IFounderSectionViewModel>(provider, "Founder", new Icon("svg:/Assets/user.svg")),

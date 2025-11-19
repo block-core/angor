@@ -9,7 +9,7 @@ namespace AngorApp.UI.Sections.Home;
 
 public partial class HomeSectionViewModel : ReactiveObject, IHomeSectionViewModel
 {
-    public HomeSectionViewModel(UIServices uiServices, INavigator navigator, ISectionActions sectionActions)
+    public HomeSectionViewModel(INavigator navigator, ISectionActions sectionActions)
     {
         //GoToWalletSection = ReactiveCommand.Create(() => getMainViewModel().GoToSection("Wallet"), activeWallet.HasWallet);
         GoToAngorFlow = ReactiveCommand.Create(() => navigator.Go(() => new AngorFlowViewModel())).Enhance();
