@@ -22,11 +22,8 @@ namespace AngorApp.Composition.Registrations.Services;
 public static class UIServicesRegistration
 {
     // Registers UI-level services, dialogs, shell and notifications
-    public static IServiceCollection AddUiServices(this IServiceCollection services, Control mainView, ProfileContext profileContext, IApplicationStorage storage)
+    public static IServiceCollection AddUIServices(this IServiceCollection services, Control mainView, ProfileContext profileContext, IApplicationStorage storage)
     {
-        TopLevel? topLevel = null!;
-        mainView.Loaded += (sender, args) => topLevel = TopLevel.GetTopLevel(mainView);
-        
         var settingsFilePath = CreateSettingsFilePath(storage, profileContext);
         
         return services
