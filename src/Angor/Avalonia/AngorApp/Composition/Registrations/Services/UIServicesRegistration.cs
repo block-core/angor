@@ -22,13 +22,11 @@ namespace AngorApp.Composition.Registrations.Services;
 public static class UIServicesRegistration
 {
     // Registers UI-level services, dialogs, shell and notifications
-    public static IServiceCollection AddUiServices(this IServiceCollection services, Control parent, ProfileContext profileContext, IApplicationStorage storage)
+    public static IServiceCollection AddUiServices(this IServiceCollection services, Control mainView, ProfileContext profileContext, IApplicationStorage storage)
     {
-        var topLevel = TopLevel.GetTopLevel(parent);
+        TopLevel? topLevel = null!;
+        mainView.Loaded += (sender, args) => topLevel = TopLevel.GetTopLevel(mainView);
         
-        Debug.Assert(topLevel != null, "TopLevel cannot be null. Ensure that the parent control is attached to a TopLevel.");
-        
-        var notificationService = NotificationService(topLevel);
         var settingsFilePath = CreateSettingsFilePath(storage, profileContext);
         
         return services
@@ -37,10 +35,9 @@ public static class UIServicesRegistration
                 product: "AngorApp",
                 fileName: settingsFilePath,
                 createDefault: UIPreferences.CreateDefault)
-            .AddSingleton<ILauncherService>(_ => new LauncherService(topLevel!.Launcher))
             .AddSingleton<IDialog>(new AdornerDialog(() =>
             {
-                var adornerLayer = AdornerLayer.GetAdornerLayer(parent);
+                var adornerLayer = AdornerLayer.GetAdornerLayer(mainView);
                 return adornerLayer!;
             }))
             .AddSingleton(sp => new ShellProperties("Angor", content => GetHeader(content, sp)))
@@ -49,23 +46,24 @@ public static class UIServicesRegistration
             .AddSingleton<IWalletContext, WalletContext>()
             .AddSingleton<IValidations, Validations>()
             .AddSingleton<SharedCommands>()
-            .AddSingleton<INotificationService>(_ => notificationService)
+            .AddSingleton<INotificationService>(_ => NotificationService())
             .AddSingleton<IImageValidationService, ImageValidationService>()
-            .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileContext.ProfileName, topLevel));
+            .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileContext.ProfileName, mainView));
     }
     
-    private static NotificationService NotificationService(TopLevel topLevel)
+    private static NotificationService NotificationService()
     {
-        var managedNotificationManager = new WindowNotificationManager(topLevel)
+        return new NotificationService(() =>
         {
-            Position = NotificationPosition.BottomRight,
-        };
+            var managedNotificationManager = new WindowNotificationManager(ApplicationUtils.TopLevel().GetValueOrThrow("No top level window"))
+            {
+                Position = NotificationPosition.BottomRight,
+            };
         
-        ApplicationUtils.SafeAreaPadding.BindTo(managedNotificationManager, manager => manager.Margin);
-        
-        return new NotificationService(managedNotificationManager);
+            ApplicationUtils.SafeAreaPadding.BindTo(managedNotificationManager, manager => manager.Margin);
+            return managedNotificationManager;
+        });
     }
-
     private static IObservable<object?> GetHeader(object content, IServiceProvider sp)
     {
         if (content is INavigator navigator)

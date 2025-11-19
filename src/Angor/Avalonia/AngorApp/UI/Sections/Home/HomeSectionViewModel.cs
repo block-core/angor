@@ -12,7 +12,6 @@ public partial class HomeSectionViewModel : ReactiveObject, IHomeSectionViewMode
     public HomeSectionViewModel(UIServices uiServices, INavigator navigator, ISectionActions sectionActions)
     {
         //GoToWalletSection = ReactiveCommand.Create(() => getMainViewModel().GoToSection("Wallet"), activeWallet.HasWallet);
-        OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(Constants.AngorHubUri));
         GoToAngorFlow = ReactiveCommand.Create(() => navigator.Go(() => new AngorFlowViewModel())).Enhance();
         GoToSection = ReactiveCommand.Create((string s) => sectionActions.RequestGoToSection(s));
     }

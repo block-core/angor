@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:conv="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
-             xmlns:misc="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia"
+             xmlns:misc="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
              xmlns:dt="clr-namespace:AngorApp.UI.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"

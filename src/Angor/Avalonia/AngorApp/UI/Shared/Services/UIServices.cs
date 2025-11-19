@@ -4,11 +4,11 @@ using Angor.Shared;
 using AngorApp.UI.Shared.Controls;
 using AngorApp.UI.Shared.Controls.Feerate;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Styling;
 using Blockcore.Networks;
 using Serilog;
 using Zafiro.Avalonia.Dialogs;
-using Zafiro.Avalonia.Services;
 using Zafiro.Settings;
 using Preset = AngorApp.UI.Shared.Controls.Feerate.Preset;
 
@@ -23,17 +23,17 @@ public partial class UIServices : ReactiveObject
     [Reactive] private bool isBitcoinPreferred = true;
     [Reactive] private bool isDebugModeEnabled;
 
-    public ILauncherService LauncherService { get; }
     public IDialog Dialog { get; }
     public INotificationService NotificationService { get; }
     public string ProfileName { get; }
 
-    public UIServices(ILauncherService launcherService, IDialog dialog, INotificationService notificationService,
+    public UIServices(IDialog dialog, 
+        INotificationService notificationService,
         IValidations validations,
         ISettings<UIPreferences> preferences,
         string profileName,
-        TopLevel topLevel,
-        INetworkConfiguration networkConfiguration)
+        INetworkConfiguration networkConfiguration,
+        Control mainView)
     {
         if (string.IsNullOrWhiteSpace(profileName))
         {
@@ -43,7 +43,6 @@ public partial class UIServices : ReactiveObject
         this.preferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
         this.networkConfiguration = networkConfiguration ?? throw new ArgumentNullException(nameof(networkConfiguration));
 
-        LauncherService = launcherService;
         Dialog = dialog;
         NotificationService = notificationService;
         Validations = validations;
@@ -65,15 +64,22 @@ public partial class UIServices : ReactiveObject
         }
 
         this.WhenAnyValue(services => services.IsDarkThemeEnabled)
-                  .DistinctUntilChanged()
-                  .Do(isDarkTheme => Application.Current.RequestedThemeVariant = isDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light)
-                  .Subscribe();
+            .DistinctUntilChanged()
+            .Do(isDarkTheme => Application.Current.RequestedThemeVariant = isDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light)
+            .Subscribe();
+        
+        var topLevel = Observable.FromEventPattern<RoutedEventArgs>(h => mainView.Loaded += h, h => mainView.Loaded -= h)
+            .Select(_ => TopLevel.GetTopLevel(mainView))
+            .WhereNotNull();
+        
+        var property = new Reactive.Bindings.ReactiveProperty<TopLevel?>(topLevel);
 
         // Propagate preferred unit globally via inheritable attached property
         this.WhenAnyValue(services => services.IsBitcoinPreferred)
-                  .DistinctUntilChanged()
-                  .Do(isBtc => AmountOptions.SetIsBitcoinPreferred(topLevel, isBtc))
-                  .Subscribe();
+            .WithLatestFrom(topLevel)
+            .DistinctUntilChanged()
+            .Do(args => AmountOptions.SetIsBitcoinPreferred(args.Second, args.First))
+            .Subscribe();
 
         // Sync debug mode changes to network configuration
         this.WhenAnyValue(services => services.IsDebugModeEnabled)
