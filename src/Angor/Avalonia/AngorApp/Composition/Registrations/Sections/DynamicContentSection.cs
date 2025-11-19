@@ -8,16 +8,9 @@ namespace AngorApp.Composition.Registrations.Sections;
 
 public partial class DynamicContentSection<T> : ContentSection<T> where T : class
 {
-    private readonly ISection section;
-    
-    [Reactive]
-    private bool isVisible = true;
-    [Reactive]
-    private int sortOrder;
 
     public DynamicContentSection(ContentSection<T> section) : base(section.Name, section.Content.Select(o => (T)o), section.Icon, section.Initialize)
     {
-        this.section = section;
         IsVisible = section.IsVisible;
         SortOrder = section.SortOrder;
         
@@ -52,11 +45,4 @@ public partial class DynamicContentSection<T> : ContentSection<T> where T : clas
 
     public bool NarrowVisibility { get; set; } = true;
     public bool WideVisibility { get; set; } = true;
-    
-    public string Name => section.Name;
-    public string FriendlyName => section.FriendlyName;
-
-    public object? Icon => section.Icon;
-
-    public IObservable<object> Content => section.Content;
 }

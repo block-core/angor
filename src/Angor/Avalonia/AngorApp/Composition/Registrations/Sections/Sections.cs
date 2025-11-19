@@ -24,7 +24,7 @@ public static class Sections
             {
                 NarrowVisibility = false,
                 WideVisibility = true,
-                WideSortOrder = -1,
+                WideSortOrder = 0,
                 NarrowSortOrder = 100,
             };
             
