@@ -21,15 +21,10 @@
 
     <PropertyGroup>
         <ApplicationManifest>app.manifest</ApplicationManifest>
-        <ApplicationIcon>angor-logo.ico</ApplicationIcon>
+        <ApplicationIcon>app.ico</ApplicationIcon>
         <AssemblyTitle>Angor</AssemblyTitle>
     </PropertyGroup>
-
-    <ItemGroup>
-      <Content Include="..\AngorApp\Assets\angor-logo.ico" Link="angor-logo.ico" />
-      <Content Include="angor-logo.ico" />
-    </ItemGroup>
-
+    
     <ItemGroup>
         <PackageReference Include="Avalonia.Desktop" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->

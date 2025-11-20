@@ -76,7 +76,7 @@ public partial class UIServices : ReactiveObject
 
         // Propagate preferred unit globally via inheritable attached property
         this.WhenAnyValue(services => services.IsBitcoinPreferred)
-            .WithLatestFrom(topLevel)
+            .CombineLatest(topLevel)
             .DistinctUntilChanged()
             .Do(args => AmountOptions.SetIsBitcoinPreferred(args.Second, args.First))
             .Subscribe();
