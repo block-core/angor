@@ -8,6 +8,7 @@ using AngorApp.Core;
 using AngorApp.UI.Sections.Shell;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Dialogs.Implementations;
@@ -43,6 +44,7 @@ public static class UIServicesRegistration
             .AddSingleton<IWalletContext, WalletContext>()
             .AddSingleton<IValidations, Validations>()
             .AddSingleton<SharedCommands>()
+            .AddSingleton<ILauncherService, LauncherService>()
             .AddSingleton<INotificationService>(_ => NotificationService())
             .AddSingleton<IImageValidationService, ImageValidationService>()
             .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileContext.ProfileName, mainView));
