@@ -1,14 +1,10 @@
-using System;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Angor.Contexts.CrossCutting;
 using Angor.Shared;
 using AngorApp.Core;
 using AngorApp.UI.Sections.Shell;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
-using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Dialogs.Implementations;

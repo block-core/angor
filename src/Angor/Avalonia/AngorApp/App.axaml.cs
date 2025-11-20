@@ -1,7 +1,5 @@
-using System;
 using AngorApp.Composition;
 using AngorApp.UI.Sections.Shell;
-using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Zafiro.Avalonia.Icons;

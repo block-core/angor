@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:conv="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
-             xmlns:misc="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
              xmlns:dt="clr-namespace:AngorApp.UI.Sections.Browse.Details"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
@@ -39,7 +38,7 @@
                                 </EdgePanel.StartContent>
                                 <SelectableTextBlock Text="{Binding Project.NostrNpubKeyHex, Converter={x:Static controls:AngorConverters.HexToNpub}}" />
                                 <EdgePanel.EndContent>
-                                    <EnhancedButton Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}"
+                                    <EnhancedButton Command="{Binding Source={x:Static Commands.Instance}, Path=LaunchUriString}"
                                             ToolTip.Tip="Open in Nostr Hub"
                                             Padding="8"
                                             CornerRadius="5">
@@ -67,7 +66,7 @@
                             <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="{Icon fa-solid fa-hashtag}">
                                 <SelectableTextBlock Text="{Binding Project.NostrNpubKeyHex}" />
                                 <EdgePanel.EndContent>
-                                    <EnhancedButton Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}"
+                                    <EnhancedButton Command="{Binding Source={x:Static Commands.Instance}, Path=LaunchUriString}"
                                             ToolTip.Tip="Open in Nostr Hub"
                                             Padding="8"
                                             CornerRadius="5">
