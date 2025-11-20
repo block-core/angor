@@ -134,7 +134,7 @@
                                                                  VerticalAlignment="Center" />
                                         </EdgePanel.Content>
                                         <EdgePanel.EndContent>
-                                            <EnhancedButton Command="{Binding Source={x:Static misc:Commands.Instance}, Path=LaunchUri}"
+                                            <EnhancedButton Command="{Binding Source={x:Static Commands.Instance}, Path=LaunchUri}"
                                                     CommandParameter="{Binding Uri}"
                                                     ToolTip.Tip="Open relay URL"
                                                     Padding="8"
