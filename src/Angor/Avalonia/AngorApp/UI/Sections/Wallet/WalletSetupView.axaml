@@ -65,16 +65,6 @@
                                 </StackPanel>
                             </Button.Content>
                         </EnhancedButton>
-                        <EnhancedButton Command="{Binding Import}">
-                            <Button.Content>
-                                <StackPanel Classes="SmallGap">
-                                    <ContentControl ContentTemplate="{StaticResource BigIcon}">
-                                        <ui:Icon Source="svg:/Assets/recovery.svg" />
-                                    </ContentControl>
-                                    <TextBlock>Import Wallet</TextBlock>
-                                </StackPanel>
-                            </Button.Content>
-                        </EnhancedButton>
                     </collections:ArrayList>
                 </ItemsControl.ItemsSource>
             </ItemsControl>
