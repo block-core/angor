@@ -20,7 +20,7 @@ public static class Investments
         IAngorIndexerService angorIndexerService,
         IPortfolioService investmentService,
         IProjectService projectService,
-        IInvestmentConversationService conversationService,
+        IInvestmentHandshakeService HandshakeService,
         INetworkConfiguration networkConfiguration,
         ILogger<InvestmentsPortfolioHandler> logger
     ) : IRequestHandler<InvestmentsPortfolioRequest,Result<IEnumerable<InvestedProjectDto>>>
@@ -78,72 +78,72 @@ public static class Investments
                     if (investment != null)
                         return Result.Success(dto);
 
-                    // Sync conversations from Nostr for this project
-                    var syncResult = await conversationService.SyncConversationsFromNostrAsync(
+                    // Sync Handshakes from Nostr for this project
+                    var syncResult = await HandshakeService.SyncHandshakesFromNostrAsync(
                         request.WalletId,
                         project.Id,
                         project.NostrPubKey);
 
                     if (syncResult.IsFailure)
                     {
-                        logger.LogWarning("Failed to sync conversations for project {ProjectId}: {Error}", 
+                        logger.LogWarning("Failed to sync Handshakes for project {ProjectId}: {Error}", 
                             project.Id.Value, syncResult.Error);
                     }
 
-                    // Get the conversation for this specific request event
-                    Result<InvestmentConversation?> conversationResult;
+                    // Get the Handshake for this specific request event
+                    Result<InvestmentHandshake?> HandshakeResult;
                     if (!string.IsNullOrEmpty(investmentRecord.RequestEventId))
                     {
-                        conversationResult = await conversationService.GetConversationByRequestEventIdAsync(
+                        HandshakeResult = await HandshakeService.GetHandshakeByRequestEventIdAsync(
                             request.WalletId,
                             project.Id,
                             investmentRecord.RequestEventId);
                     }
                     else
                     {
-                        // If we don't have a request event ID, get all conversations and take the most recent
-                        var conversationsResult = await conversationService.GetConversationsAsync(
+                        // If we don't have a request event ID, get all Handshakes and take the most recent
+                        var HandshakesResult = await HandshakeService.GetHandshakesAsync(
                             request.WalletId,
                             project.Id);
                         
-                        if (conversationsResult.IsSuccess && conversationsResult.Value.Any())
+                        if (HandshakesResult.IsSuccess && HandshakesResult.Value.Any())
                         {
-                            var latestConversation = conversationsResult.Value
+                            var latestHandshake = HandshakesResult.Value
                                 .OrderByDescending(c => c.RequestCreated)
                                 .FirstOrDefault();
-                            conversationResult = Result.Success(latestConversation);
+                            HandshakeResult = Result.Success(latestHandshake);
                         }
                         else
                         {
-                            conversationResult = Result.Success<InvestmentConversation?>(null);
+                            HandshakeResult = Result.Success<InvestmentHandshake?>(null);
                         }
                     }
 
-                    if (conversationResult.IsFailure)
+                    if (HandshakeResult.IsFailure)
                     {
-                        logger.LogWarning("Failed to get conversation for project {ProjectId}: {Error}", 
-                            project.Id.Value, conversationResult.Error);
+                        logger.LogWarning("Failed to get Handshake for project {ProjectId}: {Error}", 
+                            project.Id.Value, HandshakeResult.Error);
                         return Result.Success(dto);
                     }
 
-                    var conversation = conversationResult.Value;
-                    if (conversation == null)
+                    var Handshake = HandshakeResult.Value;
+                    if (Handshake == null)
                     {
-                        // No conversation found, return current dto
+                        // No Handshake found, return current dto
                         return Result.Success(dto);
                     }
 
-                    // Update dto with conversation information
-                    dto.FounderStatus = conversation.Status == InvestmentRequestStatus.Approved
+                    // Update dto with Handshake information
+                    dto.FounderStatus = Handshake.Status == InvestmentRequestStatus.Approved
                         ? FounderStatus.Approved
                         : FounderStatus.Requested;
 
-                    dto.InvestmentStatus = DetermineInvestmentStatus(conversation);
+                    dto.InvestmentStatus = DetermineInvestmentStatus(Handshake);
 
-                    if (!string.IsNullOrEmpty(conversation.InvestmentTransactionHex))
+                    if (!string.IsNullOrEmpty(Handshake.InvestmentTransactionHex))
                     {
                         var trx = networkConfiguration.GetNetwork()
-                            .CreateTransaction(conversation.InvestmentTransactionHex);
+                            .CreateTransaction(Handshake.InvestmentTransactionHex);
                         dto.Investment = new Amount(trx.Outputs.Sum(x => x.Value));
                     }
 
@@ -163,12 +163,12 @@ public static class Investments
             return results.Combine();
         }
         
-        private static InvestmentStatus DetermineInvestmentStatus(InvestmentConversation conversation)
+        private static InvestmentStatus DetermineInvestmentStatus(InvestmentHandshake Handshake)
         {
-            if (string.IsNullOrEmpty(conversation.InvestmentTransactionHex))
+            if (string.IsNullOrEmpty(Handshake.InvestmentTransactionHex))
                 return InvestmentStatus.PendingFounderSignatures;
 
-            if (conversation.Status == InvestmentRequestStatus.Approved)
+            if (Handshake.Status == InvestmentRequestStatus.Approved)
                 return InvestmentStatus.FounderSignaturesReceived;
 
             return InvestmentStatus.PendingFounderSignatures;

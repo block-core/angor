@@ -3,9 +3,9 @@ using Angor.Data.Documents.Models;
 namespace Angor.Contexts.Funding.Shared;
 
 /// <summary>
-/// Represents a combined view of investment requests and approvals for a project conversation
+/// Represents a combined view of investment requests and approvals for a project Handshake
 /// </summary>
-public class InvestmentConversation : BaseDocument
+public class InvestmentHandshake : BaseDocument
 {
     /// <summary>
     /// Composite key: WalletId + ProjectId
@@ -13,7 +13,7 @@ public class InvestmentConversation : BaseDocument
     public string WalletId { get; set; } = string.Empty;
     
     /// <summary>
-    /// The project ID this conversation belongs to
+    /// The project ID this Handshake belongs to
     /// </summary>
     public string ProjectId { get; set; } = string.Empty;
     
@@ -59,12 +59,3 @@ public class InvestmentConversation : BaseDocument
     /// </summary>
     public bool IsSynced { get; set; }
 }
-
-public enum InvestmentRequestStatus
-{
-    Pending,
-    Approved,
-    Invested,
-    Rejected
-}
-
