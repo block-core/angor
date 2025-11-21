@@ -2,14 +2,14 @@
 
 ## Changes Made
 
-Successfully refactored `GetInvestments.cs` to **remove all direct ISignService calls** and exclusively use the `IInvestmentConversationService`.
+Successfully refactored `GetInvestments.cs` to **remove all direct ISignService calls** and exclusively use the `IInvestmentHandshakeService`.
 
 ## What Was Removed
 
 ### Dependencies Removed:
 - ❌ `ISignService` - No longer needed
-- ❌ `INostrDecrypter` - Now handled by InvestmentConversationService
-- ❌ `ISerializer` - Now handled by InvestmentConversationService
+- ❌ `INostrDecrypter` - Now handled by InvestmentHandshakeService
+- ❌ `ISerializer` - Now handled by InvestmentHandshakeService
 - ❌ `System.Reactive.Disposables`
 - ❌ `System.Reactive.Linq`
 - ❌ `Zafiro.CSharpFunctionalExtensions`
@@ -35,12 +35,12 @@ Successfully refactored `GetInvestments.cs` to **remove all direct ISignService 
 - ✅ `IAngorIndexerService` - For checking already invested transactions
 - ✅ `IProjectService` - For getting project details
 - ✅ `INetworkConfiguration` - For network-specific transaction operations
-- ✅ `IInvestmentConversationService` - **New** unified service
+- ✅ `IInvestmentHandshakeService` - **New** unified service
 
 ### Simplified Methods:
 - ✅ `GetInvestments()` - Now much simpler, just syncs and retrieves from DB
-- ✅ `DetermineInvestmentStatus()` - Works with InvestmentConversation objects
-- ✅ `CreateInvestmentFromConversation()` - Simplified conversion
+- ✅ `DetermineInvestmentStatus()` - Works with InvestmentHandshake objects
+- ✅ `CreateInvestmentFromHandshake()` - Simplified conversion
 - ✅ `LookupCurrentInvestments()` - Unchanged
 - ✅ `GetAmount()` - Unchanged
 
@@ -64,11 +64,11 @@ GetInvestments
 ### After (Simple):
 ```
 GetInvestments
-  └─> SyncConversationsFromNostrAsync
+  └─> SyncHandshakesFromNostrAsync
        (All Nostr communication handled internally)
-  └─> GetConversationsAsync
+  └─> GetHandshakesAsync
        (Retrieve from database)
-  └─> CreateInvestmentFromConversation
+  └─> CreateInvestmentFromHandshake
        (Simple transformation)
 ```
 
@@ -85,7 +85,7 @@ GetInvestments
 
 1. **Simplicity**: Removed ~70 lines of complex Observable/Reactive code
 2. **Single Responsibility**: GetInvestments now just orchestrates, doesn't handle Nostr details
-3. **Reusability**: InvestmentConversationService can be used by other operations
+3. **Reusability**: InvestmentHandshakeService can be used by other operations
 4. **Maintainability**: All Nostr logic centralized in one service
 5. **Testability**: Easier to mock and test with fewer dependencies
 6. **Performance**: Database queries are faster than repeated Nostr calls
@@ -94,7 +94,7 @@ GetInvestments
 ## Key Improvements
 
 ### 1. Unified Data Model
-Now uses `InvestmentConversation` which combines:
+Now uses `InvestmentHandshake` which combines:
 - Investment requests (SignRecoveryRequest data)
 - Approval messages
 - Status tracking
@@ -103,21 +103,21 @@ Now uses `InvestmentConversation` which combines:
 ### 2. Automatic Syncing
 ```csharp
 // Sync from Nostr to database
-var syncResult = await conversationService.SyncConversationsFromNostrAsync(
+var syncResult = await HandshakeService.SyncHandshakesFromNostrAsync(
     request.WalletId, 
     request.ProjectId, 
     nostrPubKey);
 
 // Retrieve from database
-var conversationsResult = await conversationService.GetConversationsAsync(
+var HandshakesResult = await HandshakeService.GetHandshakesAsync(
     request.WalletId, 
     request.ProjectId);
 ```
 
 ### 3. Simple Transformation
 ```csharp
-var investments = conversationsResult.Value
-    .Select(conv => CreateInvestmentFromConversation(
+var investments = HandshakesResult.Value
+    .Select(conv => CreateInvestmentFromHandshake(
         conv, 
         alreadyInvestedResult.Value, 
         projectResult.Value))
@@ -139,7 +139,7 @@ var investments = conversationsResult.Value
 
 ### For Future Development:
 - Can now easily add features like:
-  - Real-time conversation updates
+  - Real-time Handshake updates
   - Message threading
   - Search and filtering
   - Analytics and reporting
@@ -156,5 +156,5 @@ Consider refactoring other operations that use ISignService directly:
 - `GetReleaseableTransactions.cs`
 - `ReleaseInvestorTransaction.cs`
 
-All of these can benefit from using `IInvestmentConversationService` instead of making direct ISignService calls.
+All of these can benefit from using `IInvestmentHandshakeService` instead of making direct ISignService calls.
 

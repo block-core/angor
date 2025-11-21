@@ -1,4 +1,4 @@
-# Summary: Investment Conversation Service Implementation
+# Summary: Investment Handshake Service Implementation
 
 ## What Was Created
 
@@ -7,34 +7,34 @@ I've successfully implemented a comprehensive service that combines `ISignServic
 ## Files Created
 
 ### 1. Domain Models
-- **`InvestmentConversation.cs`** - Main document model that combines investment requests and approvals
+- **`InvestmentHandshake.cs`** - Main document model that combines investment requests and approvals
   - Composite key: `WalletId + ProjectId + RequestEventId`
   - Contains all properties from both `SignRecoveryRequest` and approval messages
   - Includes status tracking (Pending, Approved, Invested, Rejected)
 
 ### 2. Service Layer
-- **`IInvestmentConversationService.cs`** - Service interface
-  - Methods for querying, syncing, and managing investment conversations
+- **`IInvestmentHandshakeService.cs`** - Service interface
+  - Methods for querying, syncing, and managing investment Handshakes
   
-- **`InvestmentConversationService.cs`** - Service implementation
+- **`InvestmentHandshakeService.cs`** - Service implementation
   - Fetches data from both Nostr APIs
   - Combines requests with their approvals
   - Decrypts and parses `SignRecoveryRequest` data
   - Stores everything in LiteDB with composite key
 
 ### 3. MediatR Operations
-- **`GetInvestmentConversations.cs`** - Query handler for retrieving conversations
+- **`GetInvestmentHandshakes.cs`** - Query handler for retrieving Handshakes
   - Supports filtering by status
   - Optional auto-sync from Nostr
   - Background synchronization
 
 ### 4. Additional Files (from earlier work)
-- **`ConversationMessage.cs`** - Generic conversation message model
-- **`IConversationService.cs` & `ConversationService.cs`** - Generic conversation service
-- **`SendMessage.cs` & `GetConversationMessages.cs`** - Additional MediatR operations
+- **`HandshakeMessage.cs`** - Generic Handshake message model
+- **`IHandshakeService.cs` & `HandshakeService.cs`** - Generic Handshake service
+- **`SendMessage.cs` & `GetHandshakeMessages.cs`** - Additional MediatR operations
 
 ### 5. Documentation
-- **`INVESTMENT_CONVERSATION_SERVICE.md`** - Comprehensive documentation with usage examples
+- **`INVESTMENT_Handshake_SERVICE.md`** - Comprehensive documentation with usage examples
 
 ## Key Features
 
@@ -52,7 +52,7 @@ I've successfully implemented a comprehensive service that combines `ISignServic
 ### Dependency Injection
 ```csharp
 // In FundingContextServices.cs
-services.AddSingleton<IInvestmentConversationService, InvestmentConversationService>();
+services.AddSingleton<IInvestmentHandshakeService, InvestmentHandshakeService>();
 ```
 
 ### Automatic Background Sync
@@ -60,7 +60,7 @@ services.AddSingleton<IInvestmentConversationService, InvestmentConversationServ
 // In GetInvestmentsHandler
 _ = Task.Run(async () =>
 {
-    await conversationService.SyncConversationsFromNostrAsync(
+    await HandshakeService.SyncHandshakesFromNostrAsync(
         request.WalletId, 
         request.ProjectId, 
         nostrPubKey);
@@ -104,7 +104,7 @@ _ = Task.Run(async () =>
 
 ```csharp
 // Using MediatR
-var request = new GetInvestmentConversations.GetInvestmentConversationsRequest(
+var request = new GetInvestmentHandshakes.GetInvestmentHandshakesRequest(
     walletId: myWalletId,
     projectId: myProjectId,
     filterByStatus: InvestmentRequestStatus.Pending,
@@ -113,12 +113,12 @@ var request = new GetInvestmentConversations.GetInvestmentConversationsRequest(
 
 var result = await mediator.Send(request);
 
-foreach (var conversation in result.Value)
+foreach (var Handshake in result.Value)
 {
-    Console.WriteLine($"Request: {conversation.RequestEventId}");
-    Console.WriteLine($"Status: {conversation.Status}");
-    Console.WriteLine($"Tx Hex: {conversation.InvestmentTransactionHex}");
-    Console.WriteLine($"Approved: {conversation.ApprovalEventId != null}");
+    Console.WriteLine($"Request: {Handshake.RequestEventId}");
+    Console.WriteLine($"Status: {Handshake.Status}");
+    Console.WriteLine($"Tx Hex: {Handshake.InvestmentTransactionHex}");
+    Console.WriteLine($"Approved: {Handshake.ApprovalEventId != null}");
 }
 ```
 
@@ -140,10 +140,10 @@ foreach (var conversation in result.Value)
 
 To use the service:
 
-1. **Query conversations**: Use `GetInvestmentConversationsRequest` via MediatR
-2. **Manual sync**: Call `SyncConversationsFromNostrAsync()` directly
+1. **Query Handshakes**: Use `GetInvestmentHandshakesRequest` via MediatR
+2. **Manual sync**: Call `SyncHandshakesFromNostrAsync()` directly
 3. **Auto sync**: Already integrated in `GetInvestments` operation
-4. **Filter by status**: Use `GetConversationsByStatusAsync()`
+4. **Filter by status**: Use `GetHandshakesByStatusAsync()`
 
 The service is production-ready and fully integrated into your application!
 

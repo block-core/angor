@@ -1,5 +1,4 @@
 using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Funding.Founder.Domain;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
@@ -25,7 +24,7 @@ public static class GetInvestments
         IAngorIndexerService angorIndexerService,
         IProjectService projectService,
         INetworkConfiguration networkConfiguration,
-        IInvestmentConversationService conversationService) : IRequestHandler<GetInvestmentsRequest, Result<IEnumerable<Investment>>>
+        IInvestmentHandshakeService HandshakeService) : IRequestHandler<GetInvestmentsRequest, Result<IEnumerable<Investment>>>
     {
         public Task<Result<IEnumerable<Investment>>> Handle(GetInvestmentsRequest request, CancellationToken cancellationToken)
         {
@@ -42,8 +41,8 @@ public static class GetInvestments
 
             var nostrPubKey = projectResult.Value.NostrPubKey;
 
-            // Sync investment conversations from Nostr to database
-            var syncResult = await conversationService.SyncConversationsFromNostrAsync(
+            // Sync investment Handshakes from Nostr to database
+            var syncResult = await HandshakeService.SyncHandshakesFromNostrAsync(
                 request.WalletId, 
                 request.ProjectId, 
                 nostrPubKey);
@@ -53,14 +52,14 @@ public static class GetInvestments
                 return Result.Failure<IEnumerable<Investment>>(syncResult.Error);
             }
 
-            // Get conversations from database
-            var conversationsResult = await conversationService.GetConversationsAsync(
+            // Get Handshakes from database
+            var HandshakesResult = await HandshakeService.GetHandshakesAsync(
                 request.WalletId, 
                 request.ProjectId);
 
-            if (conversationsResult.IsFailure)
+            if (HandshakesResult.IsFailure)
             {
-                return Result.Failure<IEnumerable<Investment>>(conversationsResult.Error);
+                return Result.Failure<IEnumerable<Investment>>(HandshakesResult.Error);
             }
 
             var alreadyInvestedResult = await LookupCurrentInvestments(request);
@@ -69,28 +68,28 @@ public static class GetInvestments
                 return Result.Failure<IEnumerable<Investment>>(alreadyInvestedResult.Error);
             }
 
-            var investments = conversationsResult.Value
+            var investments = HandshakesResult.Value
                 .OrderByDescending(req => req.CreatedOn)
-                .Select(conv => CreateInvestmentFromConversation(conv, alreadyInvestedResult.Value, projectResult.Value))
+                .Select(conv => CreateInvestmentFromHandshake(conv, alreadyInvestedResult.Value, projectResult.Value))
                 .ToList();
 
             return Result.Success<IEnumerable<Investment>>(investments);
         }
         
         private InvestmentStatus DetermineInvestmentStatus(
-            InvestmentConversation conversation,
+            InvestmentHandshake Handshake,
             List<ProjectInvestment> alreadyInvested)
         {
-            if (string.IsNullOrEmpty(conversation.InvestmentTransactionHex))
+            if (string.IsNullOrEmpty(Handshake.InvestmentTransactionHex))
                 return InvestmentStatus.PendingFounderSignatures;
 
-            var transaction = networkConfiguration.GetNetwork().CreateTransaction(conversation.InvestmentTransactionHex);
+            var transaction = networkConfiguration.GetNetwork().CreateTransaction(Handshake.InvestmentTransactionHex);
             var transactionId = transaction.GetHash().ToString();
 
             if (IsAlreadyInvested(transactionId, alreadyInvested))
                 return InvestmentStatus.Invested;
     
-            if (conversation.Status == InvestmentRequestStatus.Approved)
+            if (Handshake.Status == InvestmentRequestStatus.Approved)
                 return InvestmentStatus.FounderSignaturesReceived;
     
             return InvestmentStatus.PendingFounderSignatures;
@@ -101,33 +100,33 @@ public static class GetInvestments
             return alreadyInvested.Any(investment => investment.TransactionId == transactionId);
         }
         
-        private Investment CreateInvestmentFromConversation(
-            InvestmentConversation conversation,
+        private Investment CreateInvestmentFromHandshake(
+            InvestmentHandshake Handshake,
             List<ProjectInvestment> alreadyInvested,
             Project project)
         {
-            if (string.IsNullOrEmpty(conversation.InvestmentTransactionHex))
+            if (string.IsNullOrEmpty(Handshake.InvestmentTransactionHex))
             {
                 // Invalid investment - missing transaction hex
                 return new Investment(
-                    conversation.RequestEventId,
-                    conversation.RequestCreated,
+                    Handshake.RequestEventId,
+                    Handshake.RequestCreated,
                     string.Empty,
-                    conversation.InvestorNostrPubKey,
+                    Handshake.InvestorNostrPubKey,
                     0,
                     InvestmentStatus.PendingFounderSignatures);
             }
 
-            var transaction = networkConfiguration.GetNetwork().CreateTransaction(conversation.InvestmentTransactionHex);
+            var transaction = networkConfiguration.GetNetwork().CreateTransaction(Handshake.InvestmentTransactionHex);
             var amount = GetAmount(transaction, project);
     
-            var investmentStatus = DetermineInvestmentStatus(conversation, alreadyInvested);
+            var investmentStatus = DetermineInvestmentStatus(Handshake, alreadyInvested);
     
             return new Investment(
-                conversation.RequestEventId,
-                conversation.RequestCreated,
-                conversation.InvestmentTransactionHex,
-                conversation.InvestorNostrPubKey,
+                Handshake.RequestEventId,
+                Handshake.RequestCreated,
+                Handshake.InvestmentTransactionHex,
+                Handshake.InvestorNostrPubKey,
                 amount,
                 investmentStatus);
         }

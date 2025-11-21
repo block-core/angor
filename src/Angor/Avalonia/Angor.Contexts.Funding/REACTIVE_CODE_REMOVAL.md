@@ -1,6 +1,6 @@
 # Reactive Code Removal Summary
 
-## Changes Made to InvestmentConversationService
+## Changes Made to InvestmentHandshakeService
 
 Successfully removed all **System.Reactive** dependencies and replaced them with simpler async/await patterns.
 
@@ -149,7 +149,7 @@ return Result.Success<IEnumerable<DirectMessage>>(result);
 
 ## Files Modified
 
-1. `InvestmentConversationService.cs` - Removed all reactive code
+1. `InvestmentHandshakeService.cs` - Removed all reactive code
 
 ## Migration Impact
 
@@ -176,5 +176,5 @@ The existing tests should continue to pass without modification since:
 
 ## Conclusion
 
-Successfully removed all reactive code from `InvestmentConversationService` and replaced it with simpler, more maintainable async/await patterns using `TaskCompletionSource<T>`. The code is now easier to understand, debug, and maintain while providing the exact same functionality.
+Successfully removed all reactive code from `InvestmentHandshakeService` and replaced it with simpler, more maintainable async/await patterns using `TaskCompletionSource<T>`. The code is now easier to understand, debug, and maintain while providing the exact same functionality.
 
