@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:settings="clr-namespace:AngorApp.UI.Sections.Settings"
-             mc:Ignorable="d" d:DesignWidth="800"
+             mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.UI.Sections.Settings.SettingsSectionView"
              x:DataType="settings:ISettingsSectionViewModel">
 
@@ -37,7 +37,7 @@
 
     <controls:PageContainer>
         <ScrollViewer IconOptions.Size="{StaticResource IconSizeSmall}">
-            <StackPanel Classes="BigGap">
+            <StackPanel Classes="BigGap" MaxWidth="700">
                 <Card HeaderStartContent="{Icon fa-network-wired}" Header="Network">
                     <StackPanel Classes="BigGap">
                         <TextBlock Classes="Warning Wrap Center">WARNING NOTICE: Changing networks will wipe your wallet data.</TextBlock>
