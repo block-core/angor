@@ -1,12 +1,10 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.Shared;
 using AngorApp.UI.Flows.CreateProject;
 using AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.UI.Sections.Founder.CreateProject.Preview;
 using AngorApp.UI.Sections.Founder.CreateProject.Profile;
 using AngorApp.UI.Sections.Founder.CreateProject.Stages;
-using AngorApp.UI.Sections.Shell;
 using AngorApp.UI.Shared.Controls.Common;
 using Microsoft.Extensions.Logging;
 using ReactiveUI.Validation.Extensions;
@@ -17,7 +15,7 @@ using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject;
 
-public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectViewModel, IHaveHeader
+public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectViewModel
 {
     private readonly IProjectAppService projectAppService;
     private readonly CompositeDisposable disposable = new();
