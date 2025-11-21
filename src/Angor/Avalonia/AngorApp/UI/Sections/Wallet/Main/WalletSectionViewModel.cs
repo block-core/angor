@@ -2,9 +2,11 @@ using System.Reactive.Disposables;
 using AngorApp.UI.Sections.Wallet.CreateAndImport;
 using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.UI.Shell.Utils;
 
 namespace AngorApp.UI.Sections.Wallet.Main;
 
+[Section("Funds", icon: "fa-regular fa-credit-card", sortIndex: 1)]
 public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionViewModel, IDisposable
 {
     private readonly CompositeDisposable disposable = new();

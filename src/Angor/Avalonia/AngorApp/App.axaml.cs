@@ -1,12 +1,11 @@
 using AngorApp.Composition;
-using AngorApp.UI.Sections.Shell;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Zafiro.Avalonia.Icons;
 using Zafiro.Avalonia.Misc;
 using Humanizer.Configuration;
 using AngorApp.Localization;
-using AngorApp.UI.Shared;
+using AngorApp.UI.Shell;
 
 namespace AngorApp;
 
@@ -17,8 +16,8 @@ public partial class App : Application
         // Register Humanizer strategy to prefer "in X" over "X from now" in English
         Configurator.DateTimeHumanizeStrategy = new InPrepositionDateTimeHumanizeStrategy();
 
-        IconControlProviderRegistry.Register(new AngorSvgIconProvider());
         IconControlProviderRegistry.Register(new ProjektankerIconControlProvider(), asDefault: true);
+        IconControlProviderRegistry.Register(new SvgIconControlProvider());
 
         AvaloniaXamlLoader.Load(this);
     }
@@ -29,7 +28,7 @@ public partial class App : Application
         var profileName = GetProfileName(lifetime?.Args);
 
         this.Connect(
-            () => new MainView(),
+            () => new ShellView(),
             view => CompositionRoot.CreateMainViewModel(view, profileName),
             () => new MainWindow());
 

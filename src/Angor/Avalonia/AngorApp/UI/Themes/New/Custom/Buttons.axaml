@@ -1,0 +1,35 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="{DynamicResource Overbackground}" />
+        <SolidColorBrush x:Key="ToggleButtonBackgroundPointerOver" Color="{DynamicResource Border}" />
+        <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="{DynamicResource Border}" />
+        <SolidColorBrush x:Key="ToggleButtonBackgroundIndeterminatePressed" Color="{DynamicResource Border}" />
+        <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="{DynamicResource Border}" />
+        <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="{DynamicResource Border}" />
+    </Styles.Resources>
+
+    <Style Selector="ToggleButton.Widget">
+        <Setter Property="Height" Value="42" />
+        <Setter Property="Width" Value="42" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="{DynamicResource Overbackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
+    </Style>
+
+    <Design.PreviewWith>
+        <ThemeVariantScope RequestedThemeVariant="Dark">
+            <Border Padding="20" Background="{DynamicResource RegionBrush}" >
+                <ToggleButton Classes="Widget" IsChecked="True">
+                    <ToggleButton.Content>
+                        <PathIcon Foreground="{DynamicResource Text}" Data="{DynamicResource Sun}" />
+                    </ToggleButton.Content>
+                </ToggleButton>
+            </Border>
+        </ThemeVariantScope>
+    </Design.PreviewWith>
+
+
+</Styles>

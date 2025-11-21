@@ -6,6 +6,6 @@
         Width="1400"
         Height="800"
         WindowStartupLocation="CenterOwner"
-        x:Class="AngorApp.UI.Sections.Shell.MainWindow"
+        x:Class="AngorApp.UI.Shell.MainWindow"
         Title="Angor">
 </Window>
