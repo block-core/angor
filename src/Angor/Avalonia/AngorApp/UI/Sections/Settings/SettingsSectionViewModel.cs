@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using AngorApp.UI.Shared.Controls;
 using AngorApp.UI.Shared.Services;
+using AngorApp.UI.Sections.Wallet.CreateAndImport;
 using ReactiveUI;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
@@ -49,7 +50,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private readonly CompositeDisposable disposable = new();
 
-    public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, INetworkService networkService, INetworkConfiguration networkConfiguration, IWalletContext walletContext)
+    public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, INetworkService networkService, INetworkConfiguration networkConfiguration, IWalletContext walletContext, WalletImportWizard walletImportWizard)
     {
         this.networkStorage = networkStorage;
         this.walletStore = walletStore;
@@ -71,6 +72,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         AddIndexer = ReactiveCommand.Create(DoAddIndexer, this.WhenAnyValue(x => x.NewIndexer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
         AddRelay = ReactiveCommand.Create(DoAddRelay, this.WhenAnyValue(x => x.NewRelay, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
         RefreshIndexers = ReactiveCommand.CreateFromTask(RefreshIndexersAsync).DisposeWith(disposable);
+        ImportWallet = ReactiveCommand.CreateFromTask(walletImportWizard.Start).Enhance().DisposeWith(disposable);
 
         var canDeleteWallet = walletContext.CurrentWalletChanges
             .Select(maybe => maybe.HasValue)
@@ -132,6 +134,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     public ReactiveCommand<Unit, Unit> AddRelay { get; }
     public ReactiveCommand<Unit, Unit> RefreshIndexers { get; }
     public ReactiveCommand<Unit, Unit> DeleteWallet { get; }
+    public IEnhancedCommand ImportWallet { get; }
 
     public string Network
     {

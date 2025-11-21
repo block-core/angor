@@ -12,7 +12,7 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
     [Reactive]
     private IWallet? currentWallet;
 
-    public WalletSectionViewModel(IWalletContext walletContext, WalletCreationWizard creationWizard, WalletImportWizard importWizard)
+    public WalletSectionViewModel(IWalletContext walletContext, WalletCreationWizard creationWizard)
     {
         walletContext
             .WalletChanges
@@ -22,7 +22,6 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
         
         Wallets = wallets;
 
-        Import = ReactiveCommand.CreateFromTask(importWizard.Start).Enhance().DisposeWith(disposable);
         Create = ReactiveCommand.CreateFromTask(creationWizard.Start).Enhance().DisposeWith(disposable);
         
         CurrentWallet = walletContext.CurrentWallet.GetValueOrDefault();
@@ -32,7 +31,6 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
     }
 
     public IEnhancedCommand Create { get; }
-    public IEnhancedCommand Import { get; }
     public IEnumerable<IWallet> Wallets { get; }
 
     public void Dispose()

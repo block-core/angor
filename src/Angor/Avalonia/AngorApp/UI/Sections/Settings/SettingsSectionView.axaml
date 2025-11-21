@@ -125,6 +125,12 @@
                         </SlimDataGrid>
                     </StackPanel>
                 </Card>
+                <Card HeaderStartContent="{Icon fa-wallet}" Header="Wallet">
+                    <StackPanel Classes="BigGap">
+                        <TextBlock Classes="Wrap Center">Import an existing wallet using your recovery words.</TextBlock>
+                        <EnhancedButton HorizontalAlignment="Right" Command="{Binding ImportWallet}" Content="Import wallet" />
+                    </StackPanel>
+                </Card>
                 <Card BorderBrush="{StaticResource DangerColor}" BorderThickness="3" HeaderStartContent="{Icon mdi alert-outline}" Header="Danger Zone">
                     <EnhancedButton HorizontalAlignment="Right" Classes="Danger" Content="Delete wallet" Command="{Binding DeleteWallet}" />
                 </Card>
