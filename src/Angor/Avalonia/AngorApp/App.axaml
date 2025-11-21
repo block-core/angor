@@ -44,7 +44,7 @@
         </ResourceDictionary>
     </Application.Resources>
     <Application.Styles>
-        <StyleInclude Source="UI/Themes/ClassicTheme.axaml" />
+        <StyleInclude Source="UI/Themes/NewTheme.axaml" />
         <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
         <StyleInclude Source="avares://Zafiro.Avalonia.Dialogs/Styles.axaml" />
         <StyleInclude Source="UI/Shared/Styles/Styles.axaml" />
