@@ -9,7 +9,6 @@ public partial class MainViewModel : ReactiveObject, IMainViewModel
     public MainViewModel(IShell shell, UIServices uiServices)
     {
         Shell = shell;
-        OpenHub = ReactiveCommand.CreateFromTask(() => uiServices.LauncherService.LaunchUri(Constants.AngorHubUri));
     }
 
     public IShell Shell { get; }

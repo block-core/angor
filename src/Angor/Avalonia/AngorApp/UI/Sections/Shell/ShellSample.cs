@@ -11,15 +11,12 @@ public class ShellSample : IShell
     {
         Sections =
         [
-            new ContentSection<IHomeSectionViewModel>("Home", Observable.Defer(() => Observable.Return<IHomeSectionViewModel>(new HomeSectionViewModelSample())), new Icon("svg:/Assets/angor-icon.svg")),
-            new SectionSeparator(),
-            new ContentSection<object>("Wallet", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-wallet")),
-            new ContentSection<object>("Browse", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-magnifying-glass")),
-            new ContentSection<object>("Portfolio", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-hand-holding-dollar")),
-            new ContentSection<object>("Founder", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-money-bills")),
-            new SectionSeparator(),
-            new ContentSection<object>("Settings", Observable.Defer(() => Observable.Return(new object())), new Icon("fa-gear")),
-            new CommandSection("Angor Hub", ReactiveCommand.Create(() => { }), new Icon("fa-magnifying-glass")) { IsPrimary = false },
+            CreateSection("Home", () => new HomeSectionViewModelSample(), new Icon("svg:/Assets/angor-icon.svg")),
+            CreateSection("Wallet", () => new object(), new Icon("fa-wallet")),
+            CreateSection("Browse", () => new object(), new Icon("fa-magnifying-glass")),
+            CreateSection("Portfolio", () => new object(), new Icon("fa-hand-holding-dollar")),
+            CreateSection("Founder", () => new object(), new Icon("fa-money-bills")),
+            CreateSection("Settings", () => new object(), new Icon("fa-gear")),
         ];
     }
 
@@ -34,6 +31,12 @@ public class ShellSample : IShell
 
     public IObservable<object> ContentHeader => Observable.Return("Header content");
     public IEnumerable<ISection> Sections { get; }
-    public IContentSection SelectedSection { get; set; }
+    public ISection SelectedSection { get; set; }
     public INavigator Navigator { get; }
+
+    private static ContentSection<T> CreateSection<T>(string name, Func<T> factory, Icon icon) where T : class
+    {
+        var content = Observable.Defer(() => Observable.Return(factory()));
+        return new ContentSection<T>(name, content, icon, navigator => navigator.Go(() => factory()!));
+    }
 }

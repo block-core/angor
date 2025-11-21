@@ -52,7 +52,7 @@ public static class CompositionRoot
         services
             .AddModelServices()
             .AddViewModels()
-            .AddUiServices(topLevelView, profileContext, applicationStorage);
+            .AddUIServices(topLevelView, profileContext, applicationStorage);
         
         services.AddNavigator(logger);
         services.AddSecurityContext();

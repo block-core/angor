@@ -1,24 +1,21 @@
+using System.IO;
 using System.Xml.Linq;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Platform;
 using Avalonia.Styling;
-using Zafiro.Avalonia;
-using Zafiro.Reactive;
+using Zafiro.Avalonia.Icons;
+using Zafiro.UI;
 
 namespace AngorApp.UI.Shared;
 
-public class AngorIconConverter : IIconConverter
+public class AngorSvgIconProvider : IIconControlProvider
 {
-    public static AngorIconConverter Instance { get; } = new();
+    public string Prefix => "svg";
 
-    public Control? Convert(Zafiro.UI.IIcon icon)
+    public Control? Create(IIcon icon, string valueWithoutPrefix)
     {
-        // 1. División en dos partes: esquema y resto
-        var parts = icon.Source.Split(new[] { ':' }, 2);
-        if (parts.Length != 2 || parts[0] != "svg")
-            return new Projektanker.Icons.Avalonia.Icon() { Value = icon.Source };
-
-        var remainder = parts[1];
+        var remainder = valueWithoutPrefix;
         string assemblyName;
         string resourcePath;
 
@@ -33,7 +30,10 @@ public class AngorIconConverter : IIconConverter
             // 3. Formato explícito: NombreEnsamblado/ruta
             var idx = remainder.IndexOf('/');
             if (idx <= 0)
-                return new Projektanker.Icons.Avalonia.Icon { Value = icon.Source }; // formato inválido
+            {
+                // Invalid format for this provider
+                return null;
+            }
 
             assemblyName = remainder[..idx];
             resourcePath = remainder[(idx + 1)..];
@@ -72,7 +72,9 @@ public class AngorIconConverter : IIconConverter
 
         private void UpdateSource(ThemeVariant themeVariant)
         {
-            var contents = AssetLoader.Open(this.Uri).ReadToEnd().Result;
+            using var stream = AssetLoader.Open(this.Uri);
+            using var reader = new StreamReader(stream);
+            var contents = reader.ReadToEnd();
             var color = themeVariant == ThemeVariant.Light ? "Black" : "White";
             Source = AngorSvgTransformer.Transform(contents, color);
         }
