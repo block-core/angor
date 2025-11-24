@@ -1,16 +1,10 @@
 using System.Diagnostics;
 using System.Text.Json;
-using Angor.Contexts.CrossCutting;
 using Angor.Shared.Utilities;
-using Avalonia;
 using Avalonia.Data.Converters;
-using Avalonia.Svg;
 using Avalonia.Svg.Skia;
 using Humanizer;
 using Microsoft.Extensions.Logging.Abstractions;
-using Newtonsoft.Json;
-using Projektanker.Icons.Avalonia;
-using Zafiro.UI.Navigation.Sections;
 
 namespace AngorApp.UI.Shared.Controls;
 

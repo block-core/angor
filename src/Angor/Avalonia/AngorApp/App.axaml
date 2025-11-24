@@ -3,14 +3,13 @@
              xmlns:password="clr-namespace:AngorApp.Model.Wallet.Password;assembly=AngorApp.Model"
              xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:f="clr-namespace:AngorApp.UI.Shared"
              x:Class="AngorApp.App"
              RequestedThemeVariant="Default">
 
     <Application.Resources>
         <ResourceDictionary>
 
-            <IconDataTemplate x:Key="IconDataTemplate" Converter="{x:Static f:AngorIconConverter.Instance}" />
+            <IconDataTemplate x:Key="IconDataTemplate" />
 
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="UI/Shared/Controls/Header.axaml" />

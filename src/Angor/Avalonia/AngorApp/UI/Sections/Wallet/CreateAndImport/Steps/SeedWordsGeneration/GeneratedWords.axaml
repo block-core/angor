@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:f="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia"
+             xmlns:f="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
              xmlns:converters="clr-namespace:Zafiro.Avalonia.Converters;assembly=Zafiro.Avalonia"
              xmlns:av="https://github.com/projektanker/icons.avalonia"
              xmlns:avalonia="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
@@ -36,7 +36,7 @@
             <StackPanel Spacing="15">
                 <seedWordsGeneration1:SeedWordsList SeedWords="{Binding Words.Value}" />
                 <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                    <EnhancedButton HorizontalAlignment="Stretch" Content="Copy All" Command="{Binding Source={x:Static f:Commands.Instance}, Path=CopyText}" CommandParameter="{Binding Words.Value, Converter={x:Static converters:ZafiroStringConverters.AsString}}">
+                    <EnhancedButton HorizontalAlignment="Stretch" Content="Copy All" Command="{Binding Source={x:Static f:Commands.Instance}, Path=CopyParameter}" CommandParameter="{Binding Words.Value, Converter={x:Static converters:ZafiroStringConverters.AsString}}">
                         <EnhancedButton.Icon>
                             <av:Icon Value="fa-copy" />
                         </EnhancedButton.Icon>
@@ -52,6 +52,4 @@
         </StackPanel>
 
     </Border>
-
-
 </UserControl>
