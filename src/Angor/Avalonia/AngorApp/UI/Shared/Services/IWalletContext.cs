@@ -10,4 +10,5 @@ public interface IWalletContext
     IObservable<Maybe<IWallet>> CurrentWalletChanges { get; }
     Maybe<IWallet> CurrentWallet { get; set; }
     Task<Result> DeleteWallet(WalletId walletId);
+    Task<Result<IWallet>> GetDefaultWallet();
 }
