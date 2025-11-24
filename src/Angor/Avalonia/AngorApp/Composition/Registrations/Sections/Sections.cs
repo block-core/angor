@@ -19,7 +19,7 @@ public static class Sections
     {
         services.AddSingleton<IEnumerable<ISection>>(provider =>
         {
-            var homeSection = CreateContentSection<IHomeSectionViewModel>(provider, "Home", new Icon("svg:/Assets/angor-icon.svg"));
+            var homeSection = CreateContentSection<IHomeSectionViewModel>(provider, "Home", new Icon("svg:/Assets/angor-icon.svg"), new SectionGroup("Home", ""));
             var dynamicHome = new DynamicContentSection<IHomeSectionViewModel>(homeSection)
             {
                 NarrowVisibility = false,
@@ -31,20 +31,20 @@ public static class Sections
             return
             [
                 dynamicHome,
-                CreateContentSection<IWalletSectionViewModel>(provider, "Wallet", new Icon("svg:/Assets/wallet.svg")),
-                CreateContentSection<IBrowseSectionViewModel>(provider, "Browse", new Icon("svg:/Assets/browse.svg")),
-                CreateContentSection<IPortfolioSectionViewModel>(provider, "Portfolio", new Icon("svg:/Assets/portfolio.svg")),
-                CreateContentSection<IFounderSectionViewModel>(provider, "Founder", new Icon("svg:/Assets/user.svg")),
-                CreateContentSection<ISettingsSectionViewModel>(provider, "Settings", new Icon("svg:/Assets/settings.svg")),
+                CreateContentSection<IWalletSectionViewModel>(provider, "Wallet", new Icon("svg:/Assets/wallet.svg"), new SectionGroup("Home", "")),
+                CreateContentSection<IBrowseSectionViewModel>(provider, "Browse", new Icon("svg:/Assets/browse.svg"), new SectionGroup("Investor", "Investor")),
+                CreateContentSection<IPortfolioSectionViewModel>(provider, "Portfolio", new Icon("svg:/Assets/portfolio.svg"), new SectionGroup("Investor", "Investor")),
+                CreateContentSection<IFounderSectionViewModel>(provider, "Founder", new Icon("svg:/Assets/user.svg"), new SectionGroup("Founder", "Founder")),
+                //CreateContentSection<ISettingsSectionViewModel>(provider, "Settings", new Icon("svg:/Assets/settings.svg")),
             ];
         });
         
         return services;
     }
 
-    private static ContentSection<T> CreateContentSection<T>(IServiceProvider provider, string name, Icon icon) where T : class
+    private static ContentSection<T> CreateContentSection<T>(IServiceProvider provider, string name, Icon icon, SectionGroup? sectionGroup = null) where T : class
     {
         var content = Observable.Defer(() => Observable.Return(provider.GetRequiredService<T>()));
-        return new ContentSection<T>(name, content, icon, navigator => navigator.Go(typeof(T)));
+        return new ContentSection<T>(name, content, icon, navigator => navigator.Go(typeof(T)), sectionGroup);
     }
 }
