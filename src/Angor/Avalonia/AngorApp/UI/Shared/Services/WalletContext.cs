@@ -5,6 +5,7 @@ using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
 using DynamicData;
+using NBitcoin;
 using Zafiro.CSharpFunctionalExtensions;
 
 namespace AngorApp.UI.Shared.Services;
@@ -12,13 +13,17 @@ namespace AngorApp.UI.Shared.Services;
 public sealed class WalletContext : IWalletContext, IDisposable
 {
     private readonly IWalletAppService walletAppService;
+    private readonly IWalletProvider walletProvider;
+    private readonly Func<BitcoinNetwork> bitcoinNetwork;
     private readonly CompositeDisposable disposable = new();
     private readonly SourceCache<IWallet, WalletId> sourceCache = new(wallet => wallet.Id);
     private readonly BehaviorSubject<Maybe<IWallet>> current = new(Maybe<IWallet>.None);
 
-    public WalletContext(IWalletAppService walletAppService, IWalletProvider walletProvider)
+    public WalletContext(IWalletAppService walletAppService, IWalletProvider walletProvider, Func<BitcoinNetwork> bitcoinNetwork)
     {
         this.walletAppService = walletAppService;
+        this.walletProvider = walletProvider;
+        this.bitcoinNetwork = bitcoinNetwork;
         LoadInitialWallets(walletAppService, walletProvider, sourceCache).DisposeWith(disposable);
 
         WalletChanges = sourceCache.Connect();
@@ -35,6 +40,7 @@ public sealed class WalletContext : IWalletContext, IDisposable
 
     public IObservable<IChangeSet<IWallet, WalletId>> WalletChanges { get; }
     public IObservable<Maybe<IWallet>> CurrentWalletChanges => current.DistinctUntilChanged();
+
     public Maybe<IWallet> CurrentWallet
     {
         get => current.Value;
@@ -62,6 +68,24 @@ public sealed class WalletContext : IWalletContext, IDisposable
 
         CurrentWallet = sourceCache.Items.TryFirst();
         return Result.Success();
+    }
+
+    public Task<Result<IWallet>> GetDefaultWallet()
+    {
+        if (CurrentWallet.HasValue)
+        {
+            return Task.FromResult(Result.Success(CurrentWallet.Value));
+        }
+        
+        var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
+        return walletAppService.CreateWallet("<default>", mnemonic.ToString(), Maybe<string>.None, GetUniqueId(), bitcoinNetwork())
+            .Bind(id => walletProvider.Get(id))
+            .Tap(id => sourceCache.AddOrUpdate(id));
+    }
+
+    private string GetUniqueId()
+    {
+        return "DEFAULT";
     }
 
     public void Dispose()
