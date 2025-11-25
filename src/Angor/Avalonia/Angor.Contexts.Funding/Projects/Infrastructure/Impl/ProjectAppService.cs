@@ -1,4 +1,5 @@
 ﻿using Angor.Contexts.CrossCutting;
+using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
@@ -27,9 +28,9 @@ public class ProjectAppService(
         return mediator.Send(new GetFounderProjects.GetFounderProjectsRequest(walletId));
     }
     
-    public Task<Result<TransactionDraft>> CreateProject(WalletId walletId, long selectedFee, CreateProjectDto project)
+    public Task<Result<TransactionDraft>> CreateProject(WalletId walletId, long selectedFee, CreateProjectDto project, ProjectSeedDto seedDto)
     {
-        return mediator.Send(new CreateProjectConstants.CreateProject.CreateProjectRequest(walletId, selectedFee, project)); // WalletId and SelectedFeeRate are placeholders
+        return mediator.Send(new CreateProjectConstants.CreateProject.CreateProjectRequest(walletId, selectedFee, project, seedDto)); // WalletId and SelectedFeeRate are placeholders
     }
 
     public Task<Result<ProjectStatisticsDto>> GetProjectStatistics(ProjectId projectId)
