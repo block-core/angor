@@ -1,23 +1,20 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="CSharpFunctionalExtensions" />
     <PackageReference Include="MediatR" />
-    <PackageReference Include="Zafiro" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Serilog" />
+    <PackageReference Include="Zafiro" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Angor.Shared.csproj" />
     <ProjectReference Include="..\Angor.Contexts.CrossCutting\Angor.Contexts.CrossCutting.csproj" />
     <ProjectReference Include="..\Angor.Data.Documents\Angor.Data.Documents.csproj" />
   </ItemGroup>
-  
 </Project>
