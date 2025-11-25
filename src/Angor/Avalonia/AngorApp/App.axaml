@@ -1,7 +1,5 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:password="clr-namespace:AngorApp.Model.Wallet.Password;assembly=AngorApp.Model"
-             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              x:Class="AngorApp.App"
              RequestedThemeVariant="Default">
@@ -76,13 +74,6 @@
     </Application.Styles>
 
     <Application.DataTemplates>
-        <!-- TEMPLATE PRIORITY IS IMPORTANT! -->
-        <!-- The first template that matches the type will be used, so first templates in this list are checked for a match before the others -->
-        <DataTemplate DataType="ui:IIcon">
-            <Viewbox Height="{Binding $self.(IconOptions.Size)}" Width="{Binding $self.Width}">
-                <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
-            </Viewbox>
-        </DataTemplate>
         <DataTypeViewLocator />
         <DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
     </Application.DataTemplates>

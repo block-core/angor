@@ -30,6 +30,7 @@
     <PackageReference Include="Serilog.Extensions.Logging" />
     <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Zafiro.Avalonia.Icons.Svg" />
     <ProjectReference Include="../../../../../Zafiro/src/Zafiro/Zafiro.csproj" />
     <ProjectReference Include="../../../../../Zafiro/src/Zafiro.UI/Zafiro.UI.csproj" />
     <ProjectReference Include="../../../../../Zafiro.Avalonia/src/Zafiro.Avalonia/Zafiro.Avalonia.csproj" />

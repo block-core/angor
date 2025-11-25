@@ -17,8 +17,8 @@ public partial class App : Application
         // Register Humanizer strategy to prefer "in X" over "X from now" in English
         Configurator.DateTimeHumanizeStrategy = new InPrepositionDateTimeHumanizeStrategy();
 
-        IconControlProviderRegistry.Register(new AngorSvgIconProvider());
         IconControlProviderRegistry.Register(new ProjektankerIconControlProvider(), asDefault: true);
+        IconControlProviderRegistry.Register(new SvgIconControlProvider());
 
         AvaloniaXamlLoader.Load(this);
     }

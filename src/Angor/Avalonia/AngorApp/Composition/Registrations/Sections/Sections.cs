@@ -31,10 +31,10 @@ public static class Sections
             return
             [
                 dynamicHome,
-                CreateContentSection<IWalletSectionViewModel>(provider, "Wallet", new Icon("svg:/Assets/wallet.svg"), new SectionGroup("Home", "")),
-                CreateContentSection<IBrowseSectionViewModel>(provider, "Browse", new Icon("svg:/Assets/browse.svg"), new SectionGroup("Investor", "Investor")),
-                CreateContentSection<IPortfolioSectionViewModel>(provider, "Portfolio", new Icon("svg:/Assets/portfolio.svg"), new SectionGroup("Investor", "Investor")),
-                CreateContentSection<IFounderSectionViewModel>(provider, "Founder", new Icon("svg:/Assets/user.svg"), new SectionGroup("Founder", "Founder")),
+                // CreateContentSection<IWalletSectionViewModel>(provider, "Wallet", new Icon("svg:/Assets/wallet.svg"), new SectionGroup("Home", "")),
+                // CreateContentSection<IBrowseSectionViewModel>(provider, "Browse", new Icon("svg:/Assets/browse.svg"), new SectionGroup("Investor", "Investor")),
+                // CreateContentSection<IPortfolioSectionViewModel>(provider, "Portfolio", new Icon("svg:/Assets/portfolio.svg"), new SectionGroup("Investor", "Investor")),
+                // CreateContentSection<IFounderSectionViewModel>(provider, "Founder", new Icon("svg:/Assets/user.svg"), new SectionGroup("Founder", "Founder")),
                 //CreateContentSection<ISettingsSectionViewModel>(provider, "Settings", new Icon("svg:/Assets/settings.svg")),
             ];
         });
