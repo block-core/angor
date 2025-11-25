@@ -50,7 +50,9 @@ public static class GetInvestments
             var dataResult = await GetInvestmentData(request, nostrPubKey);
 
             return dataResult
-                .Map(data => data.requests.Select(req => CreateInvestment(req, data.approvals, data.alreadyInvested, projectResult.Value))
+                .Map(data => data.requests
+                    .OrderByDescending(req => req.CreatedOn)
+                    .Select(req => CreateInvestment(req, data.approvals, data.alreadyInvested, projectResult.Value))
             );
         }
         

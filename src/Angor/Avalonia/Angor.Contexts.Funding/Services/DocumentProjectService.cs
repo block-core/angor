@@ -119,7 +119,7 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
         var top30 = await Result.Try(() => angorIndexerService.GetProjectsAsync(null, 30));
 
         if (top30.IsFailure)
-            return Result.Failure<IEnumerable<Project>>("Failed to retrieve top 20 projects");
+            return Result.Failure<IEnumerable<Project>>("Failed to retrieve top 30 projects");
 
         var projectIds = top30.Value.Select(p => new ProjectId(p.ProjectIdentifier)).ToArray();
         return await GetAllAsync(projectIds);
