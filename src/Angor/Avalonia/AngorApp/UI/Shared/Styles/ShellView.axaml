@@ -1,0 +1,23 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <ShellView Width="900" Height="900">
+            <ShellView.Shell>
+                <ShellDesign />
+            </ShellView.Shell>
+        </ShellView>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <ControlTheme x:Key="{x:Type ShellView}" TargetType="ShellView">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <DockPanel>
+                        <SectionStrip SelectedSection="{Binding $parent[ShellView].Shell.SelectedSection}" Width="200" Orientation="Vertical" Sections="{Binding $parent[ShellView].Shell.Sections}" />
+                        <Frame Navigator="{Binding $parent[ShellView].Shell.Navigator}" />
+                    </DockPanel>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </Styles.Resources>
+</Styles>

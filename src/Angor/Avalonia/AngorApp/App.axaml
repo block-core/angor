@@ -72,6 +72,7 @@
         <StyleInclude Source="UI/Shared/Styles/HeaderedContainer.axaml" />
         <StyleInclude Source="UI/Shared/Styles/EdgePanel.axaml" />
         <StyleInclude Source="UI/Shared/Styles/Border.axaml" />
+        <StyleInclude Source="UI/Shared/Styles/ShellView.axaml" />
     </Application.Styles>
 
     <Application.DataTemplates>
