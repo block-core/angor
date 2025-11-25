@@ -8,9 +8,9 @@
   <ItemGroup>
     <PackageReference Include="CSharpFunctionalExtensions" />
     <PackageReference Include="Microsoft.Extensions.Http" />
-    <PackageReference Include="Zafiro.Avalonia.Dialogs" />
-    <PackageReference Include="Zafiro.Avalonia.Generators" />
-    <PackageReference Include="Zafiro.UI" />
+    <ProjectReference Include="../../../../../Zafiro.Avalonia/src/Zafiro.Avalonia.Dialogs/Zafiro.Avalonia.Dialogs.csproj" />
+    <ProjectReference Include="../../../../../Zafiro.Avalonia/src/Zafiro.Avalonia.Generators/Zafiro.Avalonia.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../../../../Zafiro/src/Zafiro.UI/Zafiro.UI.csproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj" />

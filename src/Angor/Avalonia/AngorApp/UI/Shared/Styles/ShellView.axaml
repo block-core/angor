@@ -1,5 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sections="clr-namespace:Zafiro.UI.Navigation.Sections;assembly=Zafiro.UI">
     <Design.PreviewWith>
         <ShellView Width="900" Height="900">
             <ShellView.Shell>
@@ -9,6 +10,138 @@
     </Design.PreviewWith>
 
     <Styles.Resources>
+        
+        <StringNotNullOrWhiteSpaceConverter x:Key="StringNotNullOrWhiteSpaceConverter" />
+
+        <ControlTheme x:Key="SectionListItem" TargetType="ListBoxItem" x:DataType="sections:ISection"
+                      BasedOn="{StaticResource {x:Type ListBoxItem}}">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Focusable" Value="False" />
+        </ControlTheme>
+
+        <DataTemplate x:Key="VerticalItem" DataType="sections:ISection">
+            <Grid Margin="{Binding $parent[SectionStrip].ItemPadding}" ColumnSpacing="{Binding $parent[SectionStrip].HorizontalIconLabelSpacing}"
+                  RowSpacing="{Binding $parent[SectionStrip].VerticalIconLabelSpacing}" x:Name="SectionGrid">
+                <Grid.RowDefinitions>
+                    <RowDefinition SharedSizeGroup="Icon" Height="Auto" />
+                    <RowDefinition SharedSizeGroup="Label" Height="Auto" />
+                </Grid.RowDefinitions>
+                <Viewbox Grid.Row="0" Height="{Binding $parent[SectionStrip].IconSize}" Width="{Binding $self.Width}" DockPanel.Dock="Top">
+                    <ContentControl Margin="{Binding $parent[SectionStrip].IconMargin}" Content="{Binding Icon}" />
+                </Viewbox>
+                <TextBlock Grid.Row="1" DockPanel.Dock="Bottom"
+                           TextAlignment="Center" TextWrapping="Wrap"
+                           HorizontalAlignment="Center" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" Text="{Binding FriendlyName}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="HorizontalItem" DataType="sections:ISection">
+            <DockPanel Margin="{Binding $parent[SectionStrip].ItemPadding}" HorizontalSpacing="{Binding $parent[SectionStrip].HorizontalIconLabelSpacing}">
+                <Viewbox Height="{Binding $parent[SectionStrip].IconSize}" Width="{Binding $self.Width}">
+                    <ContentControl Margin="{Binding $parent[SectionStrip].IconMargin}" Content="{Binding Icon}" />
+                </Viewbox>
+                <TextBlock VerticalAlignment="Center" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" Text="{Binding FriendlyName}" />
+            </DockPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="SectionGroupTemplate" DataType="SectionGroupView">
+            <StackPanel Spacing="6">
+                <TextBlock Classes="SectionStripGroupHeader"
+                           Text="{Binding Group.FriendlyName}"
+                           TextTrimming="{x:Static TextTrimming.CharacterEllipsis}"
+                           FontWeight="Bold"
+                           IsVisible="{Binding Group.FriendlyName, Converter={StaticResource StringNotNullOrWhiteSpaceConverter}}" />
+                <ListBox Background="Transparent"
+                         ItemContainerTheme="{StaticResource SectionListItem}"
+                         SelectedValue="{Binding $parent[SectionStrip].SelectedSection, Mode=TwoWay}"
+                         ItemsSource="{Binding Sections}">
+                    <ListBox.DataTemplates>
+                        <DataTemplate DataType="sections:ISection">
+                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HorizontalItem}" />
+                        </DataTemplate>
+                    </ListBox.DataTemplates>
+                </ListBox>
+            </StackPanel>
+        </DataTemplate>
+
+        <ControlTheme x:Key="{x:Type SectionStrip}" TargetType="SectionStrip">
+            <Setter Property="HorizontalIconLabelSpacing" Value="10" />
+            <Setter Property="VerticalIconLabelSpacing" Value="4" />
+            <Setter Property="ItemPadding" Value="5" />
+            <Setter Property="Padding" Value="10"></Setter>
+            <Style Selector="^ /template/ ListBox">
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+            <Style Selector="^ /template/ Button">
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+            <Style Selector="^[Orientation=Vertical]">
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <ScrollViewer>
+                            <ItemsControl Padding="{TemplateBinding Padding}" ItemsSource="{TemplateBinding SectionGroups}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Spacing="{Binding $parent[SectionStrip].ItemSpacing}" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <StaticResource ResourceKey="SectionGroupTemplate" />
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </Setter>
+            </Style>
+            <Style Selector="^[Orientation=Horizontal]">
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <DockPanel>
+                            <DockPanel.DataTemplates>
+                                <DataTemplate DataType="sections:ISection">
+                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource VerticalItem}" />
+                                </DataTemplate>
+                            </DockPanel.DataTemplates>
+                            <EnhancedButton VerticalAlignment="Stretch" x:Name="Button" IsVisible="{Binding !!#VisibilityExposerBehavior.InvisibleItems.Count}"
+                                            DockPanel.Dock="Right" HorizontalAlignment="Right" Content="...">
+                                <Button.Flyout>
+                                    <Flyout>
+                                        <ListBox x:Name="OtherSections" SelectedItem="{TemplateBinding SelectedSection, Mode=TwoWay}"
+                                                 ItemContainerTheme="{StaticResource SectionListItem}"
+                                                 ItemsSource="{Binding #VisibilityExposerBehavior.InvisibleItems}">
+                                        </ListBox>
+                                    </Flyout>
+                                </Button.Flyout>
+                                <Interaction.Behaviors>
+                                    <EventTriggerBehavior SourceObject="OtherSections" EventName="SelectionChanged">
+                                        <HideFlyoutAction Flyout="{Binding #Button.Flyout}" />
+                                    </EventTriggerBehavior>
+                                </Interaction.Behaviors>
+                            </EnhancedButton>
+                            <ListBox ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     Background="{TemplateBinding Background}"
+                                     ItemContainerTheme="{StaticResource SectionListItem}"
+                                     SelectedItem="{TemplateBinding SelectedSection, Mode=TwoWay}" ItemsSource="{TemplateBinding FilteredSections}">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformStripPanel
+                                            Grid.IsSharedSizeScope="True"
+                                            ItemSpacing="{Binding $parent[SectionStrip].ItemSpacing}"
+                                            ItemMinWidth="{Binding $parent[SectionStrip].MinItemWidth}"
+                                            ItemMaxWidth="{Binding $parent[SectionStrip].MaxItemWidth}" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <Interaction.Behaviors>
+                                    <ItemVisibilityMonitoringBehavior x:Name="VisibilityExposerBehavior" />
+                                </Interaction.Behaviors>
+                            </ListBox>
+                        </DockPanel>
+                    </ControlTemplate>
+                </Setter>
+            </Style>
+
+        </ControlTheme>
+        
         <ControlTheme x:Key="{x:Type ShellView}" TargetType="ShellView">
             <Setter Property="Template">
                 <ControlTemplate>
