@@ -41,6 +41,8 @@ public class GetPenalties
                 return Result.Failure<IEnumerable<PenaltiesDto>>(penaltyProjects.Error);
 
             var penaltyList = penaltyProjects.Value.ToList();
+
+            penaltyList.Reverse(); // Show the most recent penalties first
             
             await RefreshPenalties(penaltyList);
 

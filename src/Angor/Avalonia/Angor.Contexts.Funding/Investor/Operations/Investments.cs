@@ -52,59 +52,65 @@ public static class Investments
 
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
 
-            var investmentLookupTasks = lookup.Value.ToList().Select(async project =>
-            {
-                try
+            var investmentLookupTasks = lookup.Value
+                .OrderByDescending(x => x.StartingDate)
+                .ToList()
+                .Select(async project =>
                 {
-                    var investmentRecord = investmentRecordsLookup.Value.ProjectIdentifiers
-                        .First(x => x.ProjectIdentifier == project.Id.Value);
-
-                    var investmentTask = Result.Try(() => angorIndexerService.GetInvestmentAsync(project.Id.Value, investmentRecord.InvestorPubKey));
-                    var statsTask = Result.Try(() => 
-                        angorIndexerService.GetProjectStatsAsync(project.Id.Value)); // Get project stats for the project ID
-
-                    await Task.WhenAll(investmentTask, statsTask);
-
-                    var investment = investmentTask.Result.IsSuccess ? investmentTask.Result.Value : null;
-                    var stats = statsTask.Result.IsSuccess ? statsTask.Result.Value : (project.Id.Value, null);
-
-                    var dto = new InvestedProjectDto
+                    try
                     {
-                        Id = project.Id.Value,
-                        Name = project.Name,
-                        Description = project.ShortDescription,
-                        LogoUri = project.Picture,
-                        Target = new Amount(project.TargetAmount),
-                        FounderStatus = investment == null ? FounderStatus.Requested : FounderStatus.Approved,
-                        InvestmentStatus = investment == null ? InvestmentStatus.Invalid : InvestmentStatus.Invested,
-                        Investment = new Amount(investment?.TotalAmount ?? 0),
-                        InvestmentId = investment?.TransactionId ?? string.Empty,
-                        Raised = new Amount(stats.stats?.AmountInvested ?? 0),
-                        InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0)
-                    };
+                        var investmentRecord = investmentRecordsLookup.Value.ProjectIdentifiers
+                            .First(x => x.ProjectIdentifier == project.Id.Value);
 
-                    if (investment != null)
+                        var investmentTask = Result.Try(() =>
+                            angorIndexerService.GetInvestmentAsync(project.Id.Value, investmentRecord.InvestorPubKey));
+                        var statsTask = Result.Try(() =>
+                            angorIndexerService
+                                .GetProjectStatsAsync(project.Id.Value)); // Get project stats for the project ID
+
+                        await Task.WhenAll(investmentTask, statsTask);
+
+                        var investment = investmentTask.Result.IsSuccess ? investmentTask.Result.Value : null;
+                        var stats = statsTask.Result.IsSuccess ? statsTask.Result.Value : (project.Id.Value, null);
+
+                        var dto = new InvestedProjectDto
+                        {
+                            Id = project.Id.Value,
+                            Name = project.Name,
+                            Description = project.ShortDescription,
+                            LogoUri = project.Picture,
+                            Target = new Amount(project.TargetAmount),
+                            FounderStatus = investment == null ? FounderStatus.Requested : FounderStatus.Approved,
+                            InvestmentStatus =
+                                investment == null ? InvestmentStatus.Invalid : InvestmentStatus.Invested,
+                            Investment = new Amount(investment?.TotalAmount ?? 0),
+                            InvestmentId = investment?.TransactionId ?? string.Empty,
+                            Raised = new Amount(stats.stats?.AmountInvested ?? 0),
+                            InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0)
+                        };
+
+                        if (investment != null)
+                            return Result.Success(dto);
+
+                        var (amount, investmentStatus) = await GetInvestmentStatusFromDms(
+                            sensitiveDataResult.Value.ToWalletWords(), project,
+                            investmentRecord.RequestEventTime, investmentRecord.RequestEventId);
+
+                        dto.FounderStatus = investmentStatus == InvestmentStatus.FounderSignaturesReceived
+                            ? FounderStatus.Approved
+                            : FounderStatus.Requested;
+                        dto.Investment = amount;
+                        dto.InvestmentStatus = investmentStatus;
+                        dto.InvestmentId = investmentRecord.InvestmentTransactionHash;
+
                         return Result.Success(dto);
-
-                    var (amount, investmentStatus) = await GetInvestmentStatusFromDms(
-                        sensitiveDataResult.Value.ToWalletWords(), project,
-                        investmentRecord.RequestEventTime, investmentRecord.RequestEventId);
-
-                    dto.FounderStatus = investmentStatus == InvestmentStatus.FounderSignaturesReceived
-                        ? FounderStatus.Approved
-                        : FounderStatus.Requested;
-                    dto.Investment = amount;
-                    dto.InvestmentStatus = investmentStatus;
-                    dto.InvestmentId = investmentRecord.InvestmentTransactionHash;
-
-                    return Result.Success(dto);
-                }
-                catch (Exception e)
-                {
-                    return Result.Failure<InvestedProjectDto>(
-                        $"Error processing project {project.Id.Value}: {e.Message}");
-                }
-            });
+                    }
+                    catch (Exception e)
+                    {
+                        return Result.Failure<InvestedProjectDto>(
+                            $"Error processing project {project.Id.Value}: {e.Message}");
+                    }
+                });
             
             var results = await Task.WhenAll(investmentLookupTasks);
             return results.Combine();
