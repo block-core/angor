@@ -7,13 +7,13 @@
              x:Class="AngorApp.UI.Sections.Founder.CreateProject.Preview.PreviewHeaderView"
              x:DataType="preview:PreviewHeaderViewModel" Container.Name="Root" Container.Sizing="Width">
     
-    <UserControl.Styles>
-        <ContainerQuery Name="Root" Query="min-width:800">
-            <Style Selector="EnhancedButton#PreviewButton">
-                <Setter Property="IsVisible" Value="False" />
-            </Style>
-        </ContainerQuery>
-    </UserControl.Styles>
+    <!-- <UserControl.Styles> -->
+    <!--     <ContainerQuery Name="Root" Query="min-width:800"> -->
+    <!--         <Style Selector="EnhancedButton#PreviewButton"> -->
+    <!--             <Setter Property="IsVisible" Value="False" /> -->
+    <!--         </Style> -->
+    <!--     </ContainerQuery> -->
+    <!-- </UserControl.Styles> -->
     
     <EnhancedButton Margin="5" Padding="10 5" x:Name="PreviewButton" FontSize="13" FontWeight="Regular" Content="Show Preview"
             HorizontalAlignment="Center">
