@@ -5,16 +5,6 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.UI.Sections.New.HomeView">
 
-    <UserControl.Styles>
-        <Style Selector="TextBlock">
-            <Setter Property="FontSize" Value="24" />
-        </Style>
-        <Style Selector="TextBlock.Title">
-            <Setter Property="FontSize" Value="24" />
-            <Setter Property="FontWeight" Value="Bold" />
-        </Style>
-    </UserControl.Styles>
-
     <BalancedWrapGrid>
         <Border Classes="Regular" Height="500">
             <StackPanel>
