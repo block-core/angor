@@ -10,12 +10,13 @@
         <StreamGeometry x:Key="Lightning">M 13 10 V 3 L 4 14 H 11 V 21 L 20 10 H 13 Z</StreamGeometry>
     </UserControl.Resources>
 
-    <BalancedWrapGrid>
+    <BalancedWrapGrid HorizontalSpacing="20">
         <Border Classes="Regular" Height="500">
             <StackPanel Classes="HugeGap" VerticalAlignment="Center">
                 <PathIcon Height="96" Width="96" Foreground="{StaticResource Accent}" Data="{StaticResource BitcoinSymbol}" />
                 <TextBlock Classes="TitleStrong Center">Fund Projects</TextBlock>
                 <TextBlock Classes="Subtitle Center">Discover and fund innovative Bitcoin Projects</TextBlock>
+                <EnhancedButton Icon="{Icon fa-search}" Content="Find projects" Classes="Center" />
             </StackPanel>
         </Border>
         <Border Classes="Regular">
@@ -26,13 +27,18 @@
                             <Setter Property="Margin" Value="1.2" />
                             <Setter Property="Stroke" Value="{StaticResource Accent}" />
                             <Setter Property="StrokeThickness" Value="1.2" />
-                            <Setter Property="StrokeJoin" Value="Round"></Setter>
+                            <Setter Property="StrokeJoin" Value="Round" />
                         </Style>
                     </PathIcon.Styles>
                 </PathIcon>
                 <TextBlock Classes="TitleStrong Center">Fund Projects</TextBlock>
                 <TextBlock Classes="Subtitle Center">Discover and fund innovative Bitcoin Projects</TextBlock>
+                <BalancedWrapGrid>
+                    <EnhancedButton Content="Launch a Project" Classes="Center Primary" />
+                    <EnhancedButton Content="Try a Test Project" Classes="Center Secondary" />
+                </BalancedWrapGrid>
             </StackPanel>
         </Border>
     </BalancedWrapGrid>
+    
 </UserControl>

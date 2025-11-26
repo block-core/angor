@@ -42,35 +42,35 @@
         </ResourceDictionary>
     </Application.Resources>
     <Application.Styles>
-        <StyleInclude Source="UI/Themes/NewTheme.axaml" />
-        <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
-        <StyleInclude Source="avares://Zafiro.Avalonia.Dialogs/Styles.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/Styles.axaml" />
-        <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/Pane.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/AmountControl.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/List.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/IconLabel.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/ProjectCard.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/Feerate/FeerateSelector.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/ErrorSummary.axaml" />
-        <StyleInclude Source="UI/Sections/Wallet/CreateAndImport/Steps/SeedWordsGeneration/SeedWordList.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/PageContainer.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/Badge.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/Cards.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/TextBox.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/OverlayBorder.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/CalendarDatePicker.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/TextBlock.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/ToggleButton.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/FlyoutPresenter.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/Button.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/Automation.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/SlimDataGrid.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/HeaderedContainer.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/EdgePanel.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/Border.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/ShellView.axaml" />
+        <StyleInclude Source="UI/Themes/New/NewTheme.axaml" />
+        <!-- <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" /> -->
+        <!-- <StyleInclude Source="avares://Zafiro.Avalonia.Dialogs/Styles.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/Styles.axaml" /> -->
+        <!-- <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Controls/Pane.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Controls/AmountControl.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Controls/List.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Controls/IconLabel.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Controls/ProjectCard.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Controls/Feerate/FeerateSelector.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Controls/ErrorSummary.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Sections/Wallet/CreateAndImport/Steps/SeedWordsGeneration/SeedWordList.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Controls/PageContainer.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Controls/Badge.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/Cards.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/TextBox.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/OverlayBorder.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/CalendarDatePicker.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/TextBlock.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/ToggleButton.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/FlyoutPresenter.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/Button.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/Automation.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/SlimDataGrid.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/HeaderedContainer.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/EdgePanel.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/Border.axaml" /> -->
+        <!-- <StyleInclude Source="UI/Shared/Styles/ShellView.axaml" /> -->
     </Application.Styles>
 
     <Application.DataTemplates>

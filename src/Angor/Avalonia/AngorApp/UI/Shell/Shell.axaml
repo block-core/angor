@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:newShell="clr-namespace:AngorApp.UI.NewShell"
+             xmlns:new="clr-namespace:AngorApp.UI.Sections.New"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
              x:Class="AngorApp.UI.NewShell.Shell" x:DataType="newShell:IShellViewModel" Background="{StaticResource Background}">
 
@@ -19,12 +20,12 @@
                     <TextBlock FontWeight="Bold" VerticalAlignment="Center" FontSize="20" Text="{Binding SelectedSection.FriendlyName}" />
                     <StackPanel HorizontalAlignment="Right"  Spacing="20" Orientation="Horizontal">
                         <ComboBox VerticalAlignment="Center" />
-                        <EnhancedButton Tint="White" BorderThickness="1" Icon="{Icon fa-sun}" />
-                        <EnhancedButton Tint="White" BorderThickness="1" Icon="{Icon fa-cog}" />
+                        <!-- <EnhancedButton Tint="White" BorderThickness="1" Icon="{Icon fa-sun}" /> -->
+                        <!-- <EnhancedButton Tint="White" BorderThickness="1" Icon="{Icon fa-cog}" /> -->
                     </StackPanel>
                 </DockPanel>
                 <Border Classes="Regular">
-                    <Frame Navigator="{Binding Navigator}" />
+                    <new:HomeView />
                 </Border>
             </DockPanel>
         </DockPanel>
