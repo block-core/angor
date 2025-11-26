@@ -41,6 +41,7 @@
         <Setter Property="CornerRadius" Value="10" />
         <Setter Property="Padding" Value="8" />
         <Setter Property="Margin" Value="10" />
+        <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="{StaticResource Text}" />
         <Setter Property="ClipToBounds" Value="False" />
         <Setter Property="BorderThickness" Value="1" />
@@ -64,6 +65,21 @@
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
     
+    <Style Selector="TextBlock.Label">
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+    </Style>
+    
+    <Style Selector="Run.Label">
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+    </Style>
+    
+    <Style Selector="Run.Thin">
+        <Setter Property="FontWeight" Value="SemiLight" />
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+    </Style>
+
     <Style Selector=":is(TemplatedControl).Center">
         <Setter Property="HorizontalAlignment" Value="Center" />
     </Style>

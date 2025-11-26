@@ -30,10 +30,10 @@
     <PackageReference Include="Serilog.Extensions.Logging" />
     <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="Serilog.Sinks.File" />
-    <PackageReference Include="Zafiro.Avalonia.Icons.Svg" />
-    <PackageReference Include="Zafiro" />
-    <PackageReference Include="Zafiro.Avalonia.Generators" />
-    <PackageReference Include="Zafiro.Avalonia.Icons.Projektanker" />
+    <ProjectReference Include="../../../../../Zafiro.Avalonia/src/Zafiro.Avalonia.Icons.Svg/Zafiro.Avalonia.Icons.Svg.csproj" />
+    <ProjectReference Include="../../../../../Zafiro/src/Zafiro/Zafiro.csproj" />
+    <ProjectReference Include="../../../../../Zafiro.Avalonia/src/Zafiro.Avalonia.Generators/Zafiro.Avalonia.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../../../../Zafiro.Avalonia/src/Zafiro.Avalonia.Icons.Projektanker/Zafiro.Avalonia.Icons.Projektanker.csproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Angor.Contexts.Integration.WalletFunding/Angor.Contexts.Integration.WalletFunding.csproj" />

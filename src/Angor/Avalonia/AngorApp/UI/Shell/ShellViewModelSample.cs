@@ -15,6 +15,7 @@ public partial class ShellViewModelSample : ReactiveObject, IShellViewModel
             FriendlyName = "Home",
             Name = "Home",
             Icon = new Icon("fa-home"),
+            SortOrder = 0,
         };
         var funds = new SimpleSection()
         {
@@ -22,6 +23,7 @@ public partial class ShellViewModelSample : ReactiveObject, IShellViewModel
             FriendlyName = "Funds",
             Name = "Funds",
             Icon = new Icon("fa-regular fa-credit-card"),
+            SortOrder = 1,
         };
         var find = new SimpleSection()
         {

@@ -10,7 +10,7 @@
     <PackageReference Include="MediatR" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Serilog" />
-    <PackageReference Include="Zafiro" />
+    <ProjectReference Include="../../../../../Zafiro/src/Zafiro/Zafiro.csproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Angor.Shared.csproj" />
