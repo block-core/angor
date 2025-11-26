@@ -33,35 +33,6 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         });
     }
 
-    // todo get rid of this method
-    public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
-        uint256? hashOfSecret, DateTime? expiryDateOverride = null)
-    {
-        if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
-        {
-            throw new InvalidOperationException("Only type Invest can use this method");
-        }
-
-        return BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, hashOfSecret, expiryDateOverride, null, 0);
-    }
-
-    // todo get rid of this method
-    public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
-        uint256? hashOfSecret, DateTime? expiryDateOverride, DateTime? investmentStartDate, byte patternIndex = 0)
-    {
-        if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
-        {
-            throw new InvalidOperationException("Only type Invest can use this method");
-        }
-
-        var parameters = FundingParameters.CreateForInvest(projectInfo, investorKey, 0, hashOfSecret);
-        parameters.InvestmentStartDate = investmentStartDate;
-        parameters.ExpiryDateOverride = expiryDateOverride;
-        parameters.PatternIndex = patternIndex;
-
-        return BuildProjectScriptsForStage(projectInfo, parameters, stageIndex);
-    }
-
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, FundingParameters parameters, int stageIndex)
     {
         parameters.Validate(projectInfo, stageIndex);
