@@ -1,13 +1,8 @@
-using AngorApp.UI.Sections.Browse;
-using AngorApp.UI.Sections.Founder;
-using AngorApp.UI.Sections.Home;
-using AngorApp.UI.Sections.Portfolio;
-using AngorApp.UI.Sections.Settings;
+using AngorApp.UI.Sections.New;
 using AngorApp.UI.Sections.Wallet.Main;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using Zafiro.UI;
-using Zafiro.UI.Navigation;
+using Zafiro.Avalonia.Controls.Shell;
 using Zafiro.UI.Navigation.Sections;
 
 namespace AngorApp.Composition.Registrations.Sections;
@@ -17,34 +12,24 @@ public static class Sections
     // Registers application sections for the shell
     public static IServiceCollection AddAppSections(this IServiceCollection services, ILogger logger)
     {
-        services.AddSingleton<IEnumerable<ISection>>(provider =>
+        services.AddSingleton<IDictionary<string, ISection>>(provider => new Dictionary<string, ISection>
         {
-            var homeSection = CreateContentSection<IHomeSectionViewModel>(provider, "Home", new Icon("svg:/Assets/angor-icon.svg"), new SectionGroup("Home"));
-            var dynamicHome = new DynamicContentSection<IHomeSectionViewModel>(homeSection)
+            ["home"] = new SimpleSection()
             {
-                NarrowVisibility = false,
-                WideVisibility = true,
-                WideSortOrder = 0,
-                NarrowSortOrder = 100,
-            };
-            
-            return
-            [
-                dynamicHome,
-                // CreateContentSection<IWalletSectionViewModel>(provider, "Wallet", new Icon("svg:/Assets/wallet.svg"), new SectionGroup("Home", "")),
-                // CreateContentSection<IBrowseSectionViewModel>(provider, "Browse", new Icon("svg:/Assets/browse.svg"), new SectionGroup("Investor", "Investor")),
-                // CreateContentSection<IPortfolioSectionViewModel>(provider, "Portfolio", new Icon("svg:/Assets/portfolio.svg"), new SectionGroup("Investor", "Investor")),
-                // CreateContentSection<IFounderSectionViewModel>(provider, "Founder", new Icon("svg:/Assets/user.svg"), new SectionGroup("Founder", "Founder")),
-                //CreateContentSection<ISettingsSectionViewModel>(provider, "Settings", new Icon("svg:/Assets/settings.svg")),
-            ];
+                ContentValue = new HomeView(),
+                FriendlyName = "Home",
+                Name = "Home",
+                Icon = new Icon("fa-home"),
+                SortOrder = 0,
+            },
+            ["wallet"] = new LazySection<IWalletSectionViewModel>("Wallet", new SectionGroup(), new Icon("svg:/Assets/wallet.svg"), () => provider.GetService<IWalletSectionViewModel>()), 
+            // CreateContentSection<IWalletSectionViewModel>(provider, "Wallet", new Icon("svg:/Assets/wallet.svg"), new SectionGroup("Home", "")),
+            // CreateContentSection<IBrowseSectionViewModel>(provider, "Browse", new Icon("svg:/Assets/browse.svg"), new SectionGroup("Investor", "Investor")),
+            // CreateContentSection<IPortfolioSectionViewModel>(provider, "Portfolio", new Icon("svg:/Assets/portfolio.svg"), new SectionGroup("Investor", "Investor")),
+            // CreateContentSection<IFounderSectionViewModel>(provider, "Founder", new Icon("svg:/Assets/user.svg"), new SectionGroup("Founder", "Founder")),
+            //CreateContentSection<ISettingsSectionViewModel>(provider, "Settings", new Icon("svg:/Assets/settings.svg")),
         });
-        
-        return services;
-    }
 
-    private static ContentSection<T> CreateContentSection<T>(IServiceProvider provider, string name, Icon icon, SectionGroup? sectionGroup = null) where T : class
-    {
-        var content = Observable.Defer(() => Observable.Return(provider.GetRequiredService<T>()));
-        return new ContentSection<T>(name, content, icon, navigator => navigator.Go(typeof(T)), sectionGroup);
+        return services;
     }
 }

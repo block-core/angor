@@ -11,6 +11,7 @@ using AngorApp.Core;
 using AngorApp.Composition.Registrations.Sections;
 using AngorApp.Composition.Registrations.Services;
 using AngorApp.Composition.Registrations.ViewModels;
+using AngorApp.UI.NewShell;
 using AngorApp.UI.Sections.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -20,7 +21,7 @@ namespace AngorApp.Composition;
 
 public static class CompositionRoot
 {
-    public static IMainViewModel CreateMainViewModel(Control topLevelView, string profileName)
+    public static IShellViewModel CreateMainViewModel(Control topLevelView, string profileName)
     {
         var services = new ServiceCollection();
         var applicationStorage = new ApplicationStorage();
@@ -67,7 +68,7 @@ public static class CompositionRoot
         var serviceProvider = services.BuildServiceProvider();
         serviceProvider.GetRequiredService<INetworkService>().AddSettingsIfNotExist();
 
-        return serviceProvider.GetRequiredService<IMainViewModel>();
+        return serviceProvider.GetRequiredService<IShellViewModel>();
     }
 
 

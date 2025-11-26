@@ -3,6 +3,7 @@
 
     <FluentTheme />
     <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
+    <StyleInclude Source="avares://Zafiro.Avalonia.Dialogs/Styles.axaml" />
 
     <StyleInclude Source="Custom/EnhancedButton.axaml" />
 

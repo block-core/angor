@@ -31,7 +31,7 @@ public partial class App : Application
 
         this.Connect(
             () => new Shell(),
-            view => new ShellViewModelSample(),
+            view => CompositionRoot.CreateMainViewModel(view, profileName),
             () => new MainWindow());
 
         base.OnFrameworkInitializationCompleted();

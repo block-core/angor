@@ -1,20 +1,23 @@
-using AngorApp.UI.Sections.Browse;
-using AngorApp.UI.Sections.Home;
+using AngorApp.UI.Sections.New;
+using AngorApp.UI.Sections.Wallet.Main;
+using Microsoft.Extensions.DependencyInjection;
+using Zafiro.Avalonia.Controls.Shell;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Navigation.Sections;
 
 namespace AngorApp.UI.NewShell;
 
-public class ShellViewModel : ReactiveObject, IShellViewModel
+public partial class ShellViewModel : ReactiveObject, IShellViewModel
 {
-    public ShellViewModel()
+    public ShellViewModel(IDictionary<string, ISection> sections)
     {
-        this.SidebarSections = new SectionsBuilder()
-            .Add<HomeSectionViewModel>("Home", "fa-home")
-            .Build();
+        SidebarSections = [sections["home"], sections["wallet"]];
+        Navigator = new SimpleNavigator(this.WhenAnyValue(sample => sample.SelectedSection).WhereNotNull());
     }
-
+    
     public IEnumerable<ISection> SidebarSections { get; }
-    public ISection SelectedSection { get; set; }
     public INavigator Navigator { get; }
+
+    [Reactive]
+    private ISection selectedSection;
 }
