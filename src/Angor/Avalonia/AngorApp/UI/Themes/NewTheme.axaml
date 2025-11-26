@@ -9,6 +9,7 @@
         <SolidColorBrush x:Key="Border" Color="#E8E8E8" />
         <SolidColorBrush x:Key="Text" Color="#6B7280" />
         <SolidColorBrush x:Key="Accent" Color="#2D5A3D" />
+        <SolidColorBrush x:Key="Strong" Color="#0A0A0A" />
         <SolidColorBrush x:Key="HoverBackground" Color="#E9E9E9" />
         <SolidColorBrush x:Key="SelectedBackground" Color="White" />
     </Styles.Resources>
@@ -56,9 +57,28 @@
         <Setter Property="BorderBrush" Value="{StaticResource Border}" />
     </Style>
 
+    <Style Selector="TextBlock">
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    
+    <Style Selector="TextBlock.Center">
+        <Setter Property="TextAlignment" Value="Center" />
+    </Style>
+    
     <Style Selector="TextBlock.Title">
-        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontSize" Value="25" />
         <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    
+    <Style Selector="TextBlock.Subtitle">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontWeight" Value="SemiLight" />
+    </Style>
+    
+    <Style Selector="TextBlock.TitleStrong">
+        <Setter Property="FontSize" Value="25" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{StaticResource Strong}" />
     </Style>
     
     <Design.PreviewWith>

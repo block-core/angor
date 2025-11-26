@@ -1,3 +1,4 @@
+using AngorApp.UI.Sections.New;
 using Zafiro.Avalonia.Controls.Shell;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Navigation.Sections;
@@ -10,7 +11,7 @@ public partial class ShellViewModelSample : ReactiveObject, IShellViewModel
     {
         var home = new SimpleSection()
         {
-            ContentValue = "Content 1",
+            ContentValue = new HomeView(),
             FriendlyName = "Home",
             Name = "Home",
             Icon = new Icon("fa-home"),

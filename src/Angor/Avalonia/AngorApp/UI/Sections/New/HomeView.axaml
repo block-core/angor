@@ -5,16 +5,34 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.UI.Sections.New.HomeView">
 
+    <UserControl.Resources>
+        <StreamGeometry x:Key="BitcoinSymbol">M 23.638 14.904 C 22.036 21.334 15.525 25.244 9.096 23.64 C 2.67 22.05 -1.244 15.525 0.362 9.105 C 1.962 2.67 8.475 -1.243 14.9 0.358 C 21.33 1.963 25.242 8.473 23.638 14.906 V 14.904 Z M 17.288 10.291 C 17.528 8.701 16.314 7.841 14.648 7.261 L 15.188 5.108 L 13.873 4.778 L 13.348 6.885 C 13.003 6.798 12.643 6.718 12.284 6.635 L 12.81 4.508 L 11.49 4.178 L 10.95 6.343 C 10.665 6.276 10.385 6.211 10.11 6.143 L 8.295 5.693 L 7.945 7.1 S 8.92 7.325 8.9 7.336 C 9.435 7.472 9.53 7.822 9.515 8.102 L 8.038 14.022 C 7.963 14.188 7.798 14.428 7.424 14.336 C 7.439 14.356 6.464 14.096 6.464 14.096 L 5.804 15.606 L 7.514 16.032 L 8.444 16.274 L 7.904 18.464 L 9.224 18.791 L 9.764 16.621 C 10.124 16.721 10.469 16.811 10.814 16.894 L 10.304 19.048 L 11.624 19.378 L 12.169 17.188 C 14.409 17.615 16.099 17.445 16.809 15.414 C 17.379 13.777 16.779 12.834 15.592 12.218 C 16.446 12.025 17.092 11.458 17.272 10.288 H 17.282 Z M 14.278 14.511 C 13.874 16.151 11.121 15.261 10.228 15.041 L 10.948 12.141 C 11.844 12.371 14.705 12.811 14.278 14.511 Z M 14.688 10.271 C 14.318 11.761 12.026 11.006 11.283 10.821 L 11.937 8.181 C 12.681 8.361 15.074 8.705 14.687 10.265 V 10.271 Z</StreamGeometry>
+        <StreamGeometry x:Key="Lightning">M 13 10 V 3 L 4 14 H 11 V 21 L 20 10 H 13 Z</StreamGeometry>
+    </UserControl.Resources>
+
     <BalancedWrapGrid>
         <Border Classes="Regular" Height="500">
-            <StackPanel>
-                <TextBlock Classes="Title">Fund Projects</TextBlock>
-                <TextBlock Classes="Title">Fund Projects</TextBlock>
-                <TextBlock Classes="Title">Fund Projects</TextBlock>
+            <StackPanel Classes="HugeGap" VerticalAlignment="Center">
+                <PathIcon Height="96" Width="96" Foreground="{StaticResource Accent}" Data="{StaticResource BitcoinSymbol}" />
+                <TextBlock Classes="TitleStrong Center">Fund Projects</TextBlock>
+                <TextBlock Classes="Subtitle Center">Discover and fund innovative Bitcoin Projects</TextBlock>
             </StackPanel>
         </Border>
         <Border Classes="Regular">
-            <Button />
+            <StackPanel Classes="HugeGap" VerticalAlignment="Center">
+                <PathIcon Foreground="Transparent" Height="96" Width="96" Data="{StaticResource Lightning}">
+                    <PathIcon.Styles>
+                        <Style Selector="PathIcon Path">
+                            <Setter Property="Margin" Value="1.2" />
+                            <Setter Property="Stroke" Value="{StaticResource Accent}" />
+                            <Setter Property="StrokeThickness" Value="1.2" />
+                            <Setter Property="StrokeJoin" Value="Round"></Setter>
+                        </Style>
+                    </PathIcon.Styles>
+                </PathIcon>
+                <TextBlock Classes="TitleStrong Center">Fund Projects</TextBlock>
+                <TextBlock Classes="Subtitle Center">Discover and fund innovative Bitcoin Projects</TextBlock>
+            </StackPanel>
         </Border>
     </BalancedWrapGrid>
 </UserControl>
