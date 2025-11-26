@@ -40,7 +40,8 @@ builder.Services.AddScoped<NavMenuState>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<ICurrencyRateService, CurrencyRateService>();
 builder.Services.AddScoped<IFeatureFlagService, FeatureFlagService>();
-//builder.Services.AddScoped<IIndexerService, IndexerService>();
+builder.Services.AddScoped<IAngorIndexerService, MempoolIndexerAngorApi>();
+builder.Services.AddScoped<MempoolIndexerMappers>();
 builder.Services.AddScoped<IIndexerService, MempoolSpaceIndexerApi>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
 
