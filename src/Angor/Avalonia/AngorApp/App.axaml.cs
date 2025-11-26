@@ -6,6 +6,7 @@ using Zafiro.Avalonia.Icons;
 using Zafiro.Avalonia.Misc;
 using Humanizer.Configuration;
 using AngorApp.Localization;
+using AngorApp.UI.NewShell;
 using AngorApp.UI.Shared;
 
 namespace AngorApp;
@@ -29,8 +30,8 @@ public partial class App : Application
         var profileName = GetProfileName(lifetime?.Args);
 
         this.Connect(
-            () => new MainView(),
-            view => CompositionRoot.CreateMainViewModel(view, profileName),
+            () => new Shell(),
+            view => new ShellViewModelSample(),
             () => new MainWindow());
 
         base.OnFrameworkInitializationCompleted();

@@ -11,9 +11,6 @@
     </Design.DataContext>
 
     <UserControl.Styles>
-        <Style Selector=":is(UserControl)">
-            <Setter Property="Foreground" Value="#6B7280" />
-        </Style>
         <Style Selector="SectionStripGroupHeader">
             <Setter Property="Foreground" Value="#2D5A3D" />
             <Setter Property="FontFamily" Value="Sans Serif" />
@@ -25,7 +22,7 @@
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Padding" Value="8" />
             <Setter Property="Margin" Value="10" />
-            <Setter Property="Foreground" Value="#6B7280" />
+            <Setter Property="Foreground" Value="{StaticResource Text}" />
             <Setter Property="ClipToBounds" Value="False"></Setter>
             <Setter Property="BorderThickness" Value="1" />
         </Style>
@@ -46,26 +43,19 @@
         <!-- <Svg Margin="24" Height="32" Width="32" Path="/Assets/logo.svg"  HorizontalAlignment="Center" /> -->
         <SectionStrip Grid.Row="1" SelectedSection="{Binding SelectedSection}" IconSize="24" Width="200" HorizontalAlignment="Left" Sections="{Binding SidebarSections}" />
         <DockPanel Grid.Row="1" Grid.Column="1">
-            <DockPanel Margin="0 0 20 20">
-                <DockPanel DockPanel.Dock="Top" Margin="20">
+            <DockPanel Margin="0 20 20 20" VerticalSpacing="20">
+                <DockPanel DockPanel.Dock="Top" HorizontalSpacing="20">
                     <TextBlock FontWeight="Bold" VerticalAlignment="Center" FontSize="20" Text="{Binding SelectedSection.FriendlyName}" />
-                    <StackPanel HorizontalAlignment="Right" Spacing="20" Orientation="Horizontal">
-                        <ComboBox />
-                        <EnhancedButton Icon="{Icon fa-sun}" />
-                        <EnhancedButton Icon="{Icon fa-cog}" />
+                    <StackPanel HorizontalAlignment="Right"  Spacing="20" Orientation="Horizontal">
+                        <ComboBox VerticalAlignment="Center" />
+                        <EnhancedButton Tint="White" BorderThickness="1" Icon="{Icon fa-sun}" />
+                        <EnhancedButton Tint="White" BorderThickness="1" Icon="{Icon fa-cog}" />
                     </StackPanel>
                 </DockPanel>
-                <Border CornerRadius="10" BorderBrush="#E8E8E8" BorderThickness="2" Background="White" />
+                <Border Classes="Regular">
+                    <Frame Navigator="{Binding Navigator}" />
+                </Border>
             </DockPanel>
         </DockPanel>
-        <!-- <DockPanel Background="Aquamarine" Grid.Row="0" Grid.Column="1"> -->
-        <!--     <TextBlock FontWeight="Bold" VerticalAlignment="Center" FontSize="20" Text="{Binding SelectedSection.FriendlyName}" /> -->
-        <!--     <StackPanel HorizontalAlignment="Right" Background="Red" Orientation="Horizontal"> -->
-        <!--         <ComboBox /> -->
-        <!--         <Button /> -->
-        <!--         <Button /> -->
-        <!--     </StackPanel> -->
-        <!-- </DockPanel> -->
-        <!-- <Border Margin="0 0 20 20" Grid.Row="1" Grid.Column="1" CornerRadius="10" BorderBrush="#E8E8E8" BorderThickness="2"  Background="White" /> -->
     </DockPanel>
 </UserControl>

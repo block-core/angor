@@ -19,7 +19,7 @@ public static class Sections
     {
         services.AddSingleton<IEnumerable<ISection>>(provider =>
         {
-            var homeSection = CreateContentSection<IHomeSectionViewModel>(provider, "Home", new Icon("svg:/Assets/angor-icon.svg"), new SectionGroup("Home", ""));
+            var homeSection = CreateContentSection<IHomeSectionViewModel>(provider, "Home", new Icon("svg:/Assets/angor-icon.svg"), new SectionGroup("Home"));
             var dynamicHome = new DynamicContentSection<IHomeSectionViewModel>(homeSection)
             {
                 NarrowVisibility = false,

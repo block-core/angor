@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.UI.Sections.New.HomeView">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="24" />
+        </Style>
+        <Style Selector="TextBlock.Title">
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+    </UserControl.Styles>
+
+    <BalancedWrapGrid>
+        <Border Classes="Regular" Height="500">
+            <StackPanel>
+                <TextBlock Classes="Title">Fund Projects</TextBlock>
+                <TextBlock Classes="Title">Fund Projects</TextBlock>
+                <TextBlock Classes="Title">Fund Projects</TextBlock>
+            </StackPanel>
+        </Border>
+        <Border Classes="Regular">
+            <Button />
+        </Border>
+    </BalancedWrapGrid>
+</UserControl>

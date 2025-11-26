@@ -1,4 +1,31 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
     <FluentTheme />
+    
+    <Styles.Resources>
+        <SolidColorBrush x:Key="Background" Color="{DynamicResource RegionColor}" />
+        <SolidColorBrush x:Key="Overbackground" Color="{DynamicResource SystemChromeWhiteColor}" />
+        <SolidColorBrush x:Key="Border" Color="#E8E8E8" />
+        <SolidColorBrush x:Key="Text" Color="#6B7280" />
+    </Styles.Resources>
+
+    <Style Selector=":is(UserControl)">
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+    </Style>
+    
+    <Style Selector="Border.Regular">
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="Padding" Value="20" />
+        <Setter Property="BorderBrush" Value="{StaticResource Border}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Background" Value="{StaticResource Overbackground}" />
+    </Style>
+    
+    <Design.PreviewWith>
+        <Border Classes="Regular" Width="200" Height="200">
+            <TextBlock>HOLA</TextBlock>
+        </Border>
+    </Design.PreviewWith>
+
 </Styles>
