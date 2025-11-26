@@ -553,10 +553,10 @@ namespace Angor.Test.Protocol
         }
 
         [Theory]
-        [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]
-        public void InvestorTransaction_NoPenalty_Test(int stageIndex)
+        [InlineData(3)]
+        public void InvestorTransaction_NoPenalty_Test(int startStageNumber)
         {
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
@@ -616,7 +616,7 @@ namespace Angor.Test.Protocol
                     .ToList();
 
                 var investorRecoverFundsNoPenalty = _investorTransactionActions.RecoverRemainingFundsWithOutPenalty(
-                    investorInvTrx.ToHex(), projectInvestmentInfo, stageIndex,
+                    investorInvTrx.ToHex(), projectInvestmentInfo, startStageNumber,
                     investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
                     Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation, partSecrets
                 );
@@ -761,7 +761,7 @@ namespace Angor.Test.Protocol
             var investor1Expierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(
                 investorInvTrx.ToHex(),
                 projectInvestmentInfo,
-                1, 
+                1,
                 investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
                 Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation);
 
@@ -853,10 +853,10 @@ namespace Angor.Test.Protocol
                 Version = 2,
                 ProjectType = ProjectType.Fund,
                 TargetAmount = 0,
-                PenaltyDays = 30,
+                PenaltyDays = 0,
+                StartDate = new DateTime(2025, 2, 1, 0, 0, 0, DateTimeKind.Utc),
+                ExpiryDate = new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc),
                 PenaltyThreshold = Money.Coins(1).Satoshi, // Set threshold at 1 BTC
-                StartDate = DateTime.UtcNow.AddDays(-1),
-                ExpiryDate = DateTime.UtcNow.AddYears(1),
                 FounderKey = _derivationOperations.DeriveFounderKey(words, 1),
                 FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, _derivationOperations.DeriveFounderKey(words, 1)),
                 ProjectSeeders = new ProjectSeeders(),
@@ -923,17 +923,20 @@ namespace Angor.Test.Protocol
             var investor2IsAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInfo, PenaltyThresholdHelper.GetTotalInvestmentAmount(investor2Trx));
             Assert.True(investor2IsAboveThreshold, "Investor 2 should be above threshold (1.5 BTC > 1 BTC)");
 
-            // Step 3: Investor 1 recovers stage 1 immediately (no penalty, no founder approval needed)
+            // Step 3: Investor 1 recovers stage 2 and 3 immediately (no penalty, no founder approval needed)
             var investor1RecoverStage1 = _investorTransactionActions.RecoverEndOfProjectFunds(
                 investor1Trx.ToHex(),
                 projectInfo,
-                1, // Stage 1
+                2, // Stage 1
                 investor1ReceiveAddress,
                 Encoders.Hex.EncodeData(investor1PrivateKey),
                 _expectedFeeEstimation);
 
             Assert.NotNull(investor1RecoverStage1);
             Assert.NotNull(investor1RecoverStage1.Transaction);
+            Assert.True(investor1RecoverStage1.Transaction.Outputs.Count == 1);
+            Assert.True(investor1RecoverStage1.Transaction.Inputs.Count == 2);
+
             TransactionValidation.ThanTheTransactionHasNoErrors(investor1RecoverStage1.Transaction,
                 investor1Trx.Outputs.AsCoins().Where(c => c.Amount > 0));
 
@@ -970,7 +973,6 @@ namespace Angor.Test.Protocol
                 coins.Add(new Blockcore.NBitcoin.Coin(indexedTxOut));
                 coins.Add(new Blockcore.NBitcoin.Coin(Blockcore.NBitcoin.uint256.Zero, 0, new Blockcore.NBitcoin.Money(1000),
                     new Script("4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
-
             }
 
             investor2SignedRecoveryTrx.Inputs.Add(new Blockcore.Consensus.TransactionInfo.TxIn(
@@ -992,14 +994,14 @@ namespace Angor.Test.Protocol
             TransactionValidation.ThanTheTransactionHasNoErrors(investor2RecoverStage1.Transaction,
                 investor2SignedRecoveryTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
 
-            // Step 9: Founder spends stages 2 and 3 from both investments
+            // Step 9: Founder spends stages 1 both investments
             var allInvestmentHexes = new[] { investor1Trx.ToHex(), investor2Trx.ToHex() };
 
-            // Founder spends Stage 1
+            // Founder spends Stage 1 from each trx
             var founderSpendStage2 = _founderTransactionActions.SpendFounderStage(
                     projectInfo,
                     allInvestmentHexes,
-                    1,
+                    new int[] { 1, 1 },
                     founderReceiveAddress,
                     Encoders.Hex.EncodeData(founderKey.ToBytes()),
                     _expectedFeeEstimation);
@@ -1009,6 +1011,96 @@ namespace Angor.Test.Protocol
             TransactionValidation.ThanTheTransactionHasNoErrors(founderSpendStage2.Transaction,
                   allInvestmentHexes.SelectMany(hex =>
              network.CreateTransaction(hex).Outputs.AsCoins().Where(c => c.Amount > 0)));
+        }
+
+        [Fact]
+        public void SubscribeTransaction_FounderStage1_InvestorStages2And3_Test()
+        {
+            DerivationOperations derivationOperations = new DerivationOperations(new HdOperations(),
+                new NullLogger<DerivationOperations>(), _networkConfiguration.Object);
+
+            var network = Networks.Bitcoin.Testnet();
+            var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
+
+            var founderKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
+            var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, _derivationOperations.DeriveFounderKey(words, 1));
+            var founderReceiveAddress = new Key().PubKey.ScriptPubKey;
+
+            var projectInvestmentInfo = new ProjectInfo
+            {
+                Version = 2,
+                ProjectType = ProjectType.Subscribe,
+                TargetAmount = 0,
+                PenaltyDays = 0,
+                StartDate = DateTime.UtcNow.AddDays(-1),
+                FounderKey = derivationOperations.DeriveFounderKey(words, 1),
+                FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, derivationOperations.DeriveFounderKey(words, 1)),
+                ProjectSeeders = new ProjectSeeders(),
+                DynamicStagePatterns = new List<DynamicStagePattern>
+                {
+                    new DynamicStagePattern
+                    {
+                        PatternId = 0,
+                        Name            = "3-Month Subscribe (1st of month)",
+                        Frequency       = StageFrequency.Monthly,
+                        StageCount      = 3,
+                        PayoutDayType   = PayoutDayType.SpecificDayOfMonth,
+                        PayoutDay       = 1
+                   }
+                }
+            };
+            projectInvestmentInfo.ProjectIdentifier = derivationOperations.DeriveAngorKey(angorRootKey, projectInvestmentInfo.FounderKey);
+
+            var investorKey = new Key();
+            var investorChangeKey = new Key();
+            var investorReceiveCoinsKey = new Key();
+
+            InvestorContext investorContext = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
+
+            investorContext.InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes());
+            investorContext.ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString();
+
+            long investmentAmount = Money.Coins(0.3m).Satoshi;
+            var investmentStartDate = new DateTime(2025, 2, 1, 0, 0, 0, DateTimeKind.Utc);
+
+            var investorParameters = FundingParameters.CreateForSubscribe(
+                    projectInvestmentInfo,
+                    investorContext.InvestorKey,
+                    investmentAmount,
+                    0,
+                    investmentStartDate);
+
+            var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, investorParameters);
+
+            Assert.NotNull(investorInvTrx);
+
+            var founderSpendStage1 = _founderTransactionActions.SpendFounderStage(
+                    projectInvestmentInfo,
+                    new[] { investorInvTrx.ToHex() },
+                    1,
+                    founderReceiveAddress,
+                    Encoders.Hex.EncodeData(founderKey.ToBytes()),
+                    _expectedFeeEstimation);
+
+            Assert.NotNull(founderSpendStage1);
+            Assert.NotNull(founderSpendStage1.Transaction);
+
+            TransactionValidation.ThanTheTransactionHasNoErrors(founderSpendStage1.Transaction,
+                investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
+
+            var investor1RecoverStage2 = _investorTransactionActions.RecoverEndOfProjectFunds(
+                investorInvTrx.ToHex(),
+                projectInvestmentInfo,
+                2,
+                investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
+                Encoders.Hex.EncodeData(investorKey.ToBytes()),
+                _expectedFeeEstimation);
+
+            Assert.NotNull(investor1RecoverStage2);
+            Assert.NotNull(investor1RecoverStage2.Transaction);
+
+            TransactionValidation.ThanTheTransactionHasNoErrors(investor1RecoverStage2.Transaction,
+                    investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
         }
     }
 }

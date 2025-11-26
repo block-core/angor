@@ -144,3 +144,13 @@ csharp_new_line_between_method_declaration_parameters = true
 
 # Force each argument on its own line
 csharp_new_line_between_method_call_arguments = true
+
+# Parameter alignment and wrapping
+csharp_wrap_arguments_style = wrap_if_long
+csharp_indent_invocation_parms = true
+csharp_indent_nested_for_stmt = true
+csharp_indent_nested_foreach_stmt = true
+csharp_indent_nested_while_stmt = true
+csharp_indent_nested_lock_stmt = true
+csharp_indent_nested_using_stmt = true
+csharp_indent_nested_fixed_stmt = true

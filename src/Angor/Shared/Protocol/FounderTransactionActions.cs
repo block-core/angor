@@ -298,7 +298,9 @@ public class FounderTransactionActions : IFounderTransactionActions
 
         var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, network.CreateTransaction(investorTrxHash));
 
-        var stageOutput = trx.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 1);
+        var stageOutput = trx.Outputs.AsIndexedOutputs()
+          .Where(txout => txout.TxOut.ScriptPubKey.IsScriptType(ScriptType.Taproot))
+          .ElementAt(stageNumber - 1);
 
         spendingTransaction.Outputs[0].Value += stageOutput.TxOut.Value;
 

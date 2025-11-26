@@ -154,10 +154,10 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         return new TransactionInfo { Transaction = transaction, TransactionFee = fee };
     }
 
-    public TransactionInfo RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex,
+    public TransactionInfo RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int startStageNumber,
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation)
     {
-        return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, stageIndex,
+        return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, startStageNumber,
             investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             projectScripts =>
             {
@@ -177,13 +177,13 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             });
     }
 
-    public TransactionInfo RecoverRemainingFundsWithOutPenalty(string transactionHex, ProjectInfo projectInfo, int stageIndex,
+    public TransactionInfo RecoverRemainingFundsWithOutPenalty(string transactionHex, ProjectInfo projectInfo, int startStageNumber,
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation,
         IEnumerable<byte[]> seederSecrets)
     {
         var secrets = seederSecrets.Select(_ => new Key(_));
 
-        return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, stageIndex,
+        return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, startStageNumber,
             investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             _ =>
             {

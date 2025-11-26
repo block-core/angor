@@ -100,7 +100,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
     {
         var spendingScript = _investmentScriptBuilder.GetInvestorPenaltyTransactionScript(
             investorKey,
-          penaltyDays);
+            penaltyDays);
 
         var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
 

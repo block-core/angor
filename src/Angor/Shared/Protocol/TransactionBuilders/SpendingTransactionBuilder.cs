@@ -21,7 +21,7 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
     }
 
     public TransactionInfo BuildRecoverInvestorRemainingFundsInProject(string investmentTransactionHex, ProjectInfo projectInfo,
-        int startStageIndex, string receiveAddress, string privateKey, FeeRate feeRate,
+        int startStageNumber, string receiveAddress, string privateKey, FeeRate feeRate,
         Func<ProjectScripts, WitScript> buildWitScriptWithSigPlaceholder,
         Func<WitScript, TaprootSignature, WitScript> addSignatureToWitScript)
     {
@@ -32,7 +32,9 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
 
         var spendingTrx = nbitcoinNetwork.CreateTransaction();
 
-        var (fundingParameters, investmentTrxOutputs) = GetInvestorTransactionData(investmentTransactionHex, startStageIndex, projectInfo);
+        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, network.CreateTransaction(investmentTransactionHex));
+
+        var investmentTrxOutputs = GetInvestorTransactionData(investmentTransactionHex, startStageNumber, projectInfo);
 
         // Determine the effective expiry date
         // If expiryDateOverride is provided, use it; otherwise, use the project's standard ExpiryDate
@@ -50,7 +52,7 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         //Need to add the script sig to calculate the fee correctly
         spendingTrx.Inputs.AddRange(investmentTrxOutputs.Select((_, i) =>
          {
-             var currentStageIndex = i + startStageIndex;
+             var currentStageIndex = i + startStageNumber - 1;
 
              ProjectScripts scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, currentStageIndex);
 
@@ -104,27 +106,20 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         return new TransactionInfo { Transaction = transaction, TransactionFee = feeToReduce };
     }
 
-    private (FundingParameters fundingParameters, List<IndexedTxOut> investmentTrxOutputs) GetInvestorTransactionData(
-    string investorTrxHash, int spendingStartStage, ProjectInfo projectInfo)
+    private List<IndexedTxOut> GetInvestorTransactionData(string investorTrxHash, int spendingStartStageNumber, ProjectInfo projectInfo)
     {
         var network = _networkConfiguration.GetNetwork();
-
-        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, network.CreateTransaction(investorTrxHash));
 
         // We'll use the NBitcoin lib because its a taproot spend
         var nbitcoinNetwork = NetworkMapper.Map(network);
 
         var trx = NBitcoin.Transaction.Parse(investorTrxHash, nbitcoinNetwork);
-        var opretunOutput = trx.Outputs.AsIndexedOutputs().ElementAt(1);
-
-        var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(
-                   new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
         var investmentTrxOutputs = trx.Outputs.AsIndexedOutputs()
             .Where(utxo => utxo.TxOut.ScriptPubKey.IsScriptType(ScriptType.Taproot))
-            .Skip(spendingStartStage)
+            .Skip(spendingStartStageNumber - 1)
             .ToList();
 
-        return (fundingParameters, investmentTrxOutputs);
+        return investmentTrxOutputs;
     }
 }
