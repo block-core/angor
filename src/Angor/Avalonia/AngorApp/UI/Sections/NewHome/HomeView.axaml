@@ -15,7 +15,7 @@
             <StackPanel Classes="HugeGap" VerticalAlignment="Center">
                 <PathIcon Height="96" Width="96" Foreground="{StaticResource Accent}" Data="{StaticResource BitcoinSymbol}" />
                 <TextBlock Classes="TitleStrong Center">Fund Projects</TextBlock>
-                <TextBlock Classes="Subtitle Center">Discover and fund innovative Bitcoin Projects</TextBlock>
+                <TextBlock Classes="Subtitle Center">Discover and fund innovative Bitcoin projects on the Angor platform.</TextBlock>
                 <EnhancedButton Icon="{Icon fa-search}" Content="Find projects" Classes="Center" />
             </StackPanel>
         </Border>
@@ -32,7 +32,7 @@
                     </PathIcon.Styles>
                 </PathIcon>
                 <TextBlock Classes="TitleStrong Center">Fund Projects</TextBlock>
-                <TextBlock Classes="Subtitle Center">Discover and fund innovative Bitcoin Projects</TextBlock>
+                <TextBlock Classes="Subtitle Center">Create and launch your own projects to raise funding from the Bitcoin community.</TextBlock>
                 <BalancedWrapGrid>
                     <EnhancedButton Content="Launch a Project" Classes="Center Primary" />
                     <EnhancedButton Content="Try a Test Project" Classes="Center Secondary" />

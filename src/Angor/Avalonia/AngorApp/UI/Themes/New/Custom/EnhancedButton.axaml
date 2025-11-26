@@ -8,7 +8,7 @@
             <StackPanel Spacing="10">
                 <EnhancedButton Width="400"
                                 BorderBrush="Red"
-                                BorderThickness="1"
+                                BorderThickness="5"
                                 Background="LightBlue"
                                 HorizontalContentAlignment="Left" Icon="{Icon fa-wallet}" Content="This is the new button">
                 </EnhancedButton>

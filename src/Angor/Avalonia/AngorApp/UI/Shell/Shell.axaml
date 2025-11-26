@@ -10,6 +10,27 @@
     <Design.DataContext>
         <newShell:ShellViewModelSample />
     </Design.DataContext>
+    
+    <UserControl.Styles>
+        <Style Selector="EnhancedButton.Widget">
+            <Setter Property="Background" Value="{StaticResource Overbackground}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{StaticResource Text}" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Height" Value="42" />
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="{StaticResource Overbackground}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Border}" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Height" Value="42"></Setter>
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{StaticResource Text}" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="FontWeight" Value="Bold"></Setter>
+        </Style>
+    </UserControl.Styles>
 
     <DockPanel>
         <!-- <Svg Margin="24" Height="32" Width="32" Path="/Assets/logo.svg"  HorizontalAlignment="Center" /> -->
@@ -18,10 +39,12 @@
             <DockPanel Margin="0 20 20 20" VerticalSpacing="20">
                 <DockPanel DockPanel.Dock="Top" HorizontalSpacing="20">
                     <TextBlock FontWeight="Bold" VerticalAlignment="Center" FontSize="20" Text="{Binding SelectedSection.FriendlyName}" />
-                    <StackPanel HorizontalAlignment="Right"  Spacing="20" Orientation="Horizontal">
-                        <ComboBox VerticalAlignment="Center" />
-                        <!-- <EnhancedButton Tint="White" BorderThickness="1" Icon="{Icon fa-sun}" /> -->
-                        <!-- <EnhancedButton Tint="White" BorderThickness="1" Icon="{Icon fa-cog}" /> -->
+                    <StackPanel HorizontalAlignment="Right"  Spacing="16" Orientation="Horizontal">
+                        <ComboBox VerticalAlignment="Center">
+                            <ComboBoxItem Content="HOLA " />
+                        </ComboBox>
+                        <EnhancedButton Classes="Widget" Icon="{Icon fa-sun}" />
+                        <EnhancedButton Classes="Widget" Icon="{Icon fa-cog}" />
                     </StackPanel>
                 </DockPanel>
                 <Border Classes="Regular">
