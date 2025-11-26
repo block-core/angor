@@ -758,10 +758,12 @@ namespace Angor.Test.Protocol
             Assert.False(isAboveThreshold, "Investment should be below the penalty threshold");
 
             // Test RecoverEndOfProjectFunds - this should use StartDate as expiry date override
-            var investor1Expierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(investorInvTrx.ToHex(),
-           projectInvestmentInfo,
-             1, investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
-             Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation);
+            var investor1Expierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(
+                investorInvTrx.ToHex(),
+                projectInvestmentInfo,
+                1, 
+                investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
+                Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation);
 
             Assert.NotNull(investor1Expierytrx);
 
@@ -836,7 +838,7 @@ namespace Angor.Test.Protocol
 
         [Fact]
         public void SpendFundMonthlyBelowAndAboveThreshold()
-         {
+        {
             // Arrange
             var network = Networks.Bitcoin.Testnet();
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
@@ -890,11 +892,12 @@ namespace Angor.Test.Protocol
             // Act & Assert
 
             // Step 1: Create investment transaction for investor 1 (below threshold)
-            var investor1Parameters = ProjectParameters.CreateForDynamicProject(
-             Encoders.Hex.EncodeData(investor1Key.PubKey.ToBytes()),
-            investor1Amount,
-            0,
-            investor1StartDate);
+            var investor1Parameters = FundingParameters.CreateForFund(
+                projectInfo,
+                Encoders.Hex.EncodeData(investor1Key.PubKey.ToBytes()),
+                investor1Amount,
+                0, // patternIndex
+                investor1StartDate);
 
             var investor1Trx = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investor1Parameters);
             Assert.NotNull(investor1Trx);
@@ -903,15 +906,15 @@ namespace Angor.Test.Protocol
             var investor1IsAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInfo, PenaltyThresholdHelper.GetTotalInvestmentAmount(investor1Trx));
             Assert.False(investor1IsAboveThreshold, "Investor 1 should be below threshold (0.5 BTC < 1 BTC)");
 
-
             // todo ai: verify the scripts for each stage by calling DiscoverUsedScript on each stage witness script
 
             // Step 2: Create investment transaction for investor 2 (above threshold)
-            var investor2Parameters = ProjectParameters.CreateForDynamicProject(
-                Encoders.Hex.EncodeData(investor2Key.PubKey.ToBytes()),
-                investor2Amount,
-                0,
-                investor2StartDate);
+            var investor2Parameters = FundingParameters.CreateForFund(
+                    projectInfo,
+                    Encoders.Hex.EncodeData(investor2Key.PubKey.ToBytes()),
+                    investor2Amount,
+                    0, // patternIndex
+                    investor2StartDate);
 
             var investor2Trx = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investor2Parameters);
             Assert.NotNull(investor2Trx);
@@ -1004,8 +1007,8 @@ namespace Angor.Test.Protocol
             Assert.NotNull(founderSpendStage2);
             Assert.NotNull(founderSpendStage2.Transaction);
             TransactionValidation.ThanTheTransactionHasNoErrors(founderSpendStage2.Transaction,
-                   allInvestmentHexes.SelectMany(hex =>
-                  network.CreateTransaction(hex).Outputs.AsCoins().Where(c => c.Amount > 0)));
+                  allInvestmentHexes.SelectMany(hex =>
+             network.CreateTransaction(hex).Outputs.AsCoins().Where(c => c.Amount > 0)));
         }
     }
 }

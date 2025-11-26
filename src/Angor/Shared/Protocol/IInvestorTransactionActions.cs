@@ -6,7 +6,7 @@ namespace Angor.Shared.Protocol;
 public interface IInvestorTransactionActions
 {
     Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey, long totalInvestmentAmount);
-    Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, ProjectParameters parameters);
+    Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, FundingParameters parameters);
     Transaction BuildRecoverInvestorFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction);
     Transaction BuildUnfundedReleaseInvestorFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, string investorReleaseKey);
     TransactionInfo RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex, string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation);

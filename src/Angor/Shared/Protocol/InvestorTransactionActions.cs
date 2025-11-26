@@ -4,7 +4,6 @@ using Angor.Shared.Protocol.TransactionBuilders;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-//using Angor.Shared.Protocol;
 using Key = Blockcore.NBitcoin.Key;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 using WitScript = NBitcoin.WitScript;
@@ -37,11 +36,10 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
     public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey, long totalInvestmentAmount)
     {
-        // Legacy method - delegates to new parameter-based method with defaults
-        return CreateInvestmentTransaction(projectInfo, ProjectParameters.Create(investorKey, totalInvestmentAmount));
+        return CreateInvestmentTransaction(projectInfo, FundingParameters.CreateForInvest(projectInfo, investorKey, totalInvestmentAmount));
     }
 
-    public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, ProjectParameters parameters)
+    public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, FundingParameters parameters)
     {
         // Capture investment start date for dynamic projects
         var investmentStartDate = parameters.InvestmentStartDate ?? DateTime.UtcNow;
@@ -53,30 +51,10 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             investmentStartDate,
             parameters.PatternIndex);
 
-        // Determine the effective expiry date based on penalty threshold
-        var expiryDateOverride = GetExpiryDateOverride(projectInfo, parameters.TotalInvestmentAmount);
+        var stageCount = ProjectParametersHelper.GetStageCount(projectInfo, parameters);
 
-        // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
-        List<ProjectScripts> stagesScript;
-
-        if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
-        {
-            // Dynamic stages - use pattern to determine stage count
-            var pattern = projectInfo.DynamicStagePatterns[parameters.PatternIndex];
-
-            stagesScript = Enumerable.Range(0, pattern.StageCount)
-                     .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(
-                        projectInfo, parameters.InvestorKey, index, null, expiryDateOverride, investmentStartDate, parameters.PatternIndex))
-                    .ToList();
-        }
-        else
-        {
-            // Fixed stages - use predefined stages
-            stagesScript = Enumerable.Range(0, projectInfo.Stages.Count)
-                   .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(
-                         projectInfo, parameters.InvestorKey, index, null, expiryDateOverride))
-                    .ToList();
-        }
+        List<ProjectScripts> stagesScript = Enumerable.Range(0, stageCount).Select(index =>
+                   _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, parameters, index)).ToList();
 
         return _investmentTransactionBuilder.BuildInvestmentTransaction(
              projectInfo, opreturnScript, stagesScript, parameters.TotalInvestmentAmount);
@@ -86,14 +64,9 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
-        // Calculate the investment amount from the transaction
-        var totalInvestmentAmount = PenaltyThresholdHelper.GetTotalInvestmentAmount(investmentTransaction);
+        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, investmentTransaction);
 
-        // Determine expiry date override based on investment amount using centralized logic
-        var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
-
-        // Generate scripts with the appropriate expiry date
-        var scripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, null, expiryDateOverride);
+        var scripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageIndex);
 
         var witScriptInfo = new Blockcore.Consensus.TransactionInfo.WitScript(Blockcore.Consensus.ScriptInfo.Script.FromHex(witScript));
         var executeScript = new Blockcore.Consensus.ScriptInfo.Script(witScriptInfo[witScriptInfo.PushCount - 2]);
@@ -332,21 +305,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var key = new NBitcoin.Key(Encoders.Hex.DecodeData(investorPrivateKey));
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
-        // Extract dynamic stage info for Fund/Subscribe projects
-        DateTime? investmentStartDate = null;
-        byte patternIndex = 0;
-
-        if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
-        {
-            var dynamicStageInfo = _projectScriptsBuilder.GetDynamicStageInfoFromOpReturnScript(
-              investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
-
-            if (dynamicStageInfo != null)
-            {
-                investmentStartDate = dynamicStageInfo.GetInvestmentStartDate();
-                patternIndex = dynamicStageInfo.PatternId;
-            }
-        }
+        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, investmentTransaction);
 
         // Count Taproot outputs to determine stage count
         var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
@@ -356,29 +315,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
         for (var stageIndex = 0; stageIndex < outputs.Length; stageIndex++)
         {
-            ProjectScripts scriptStages;
-
-            if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
-            {
-                // Dynamic stages - pass investment start date and pattern index
-                scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(
-                        projectInfo,
-                        investorKey,
-                        stageIndex,
-                        secretHash,
-                        null, // expiryDateOverride
-                        investmentStartDate,
-                        patternIndex);
-            }
-            else
-            {
-                // Fixed stages - use original method
-                scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(
-                       projectInfo,
-                       investorKey,
-                       stageIndex,
-                       secretHash);
-            }
+            ProjectScripts scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageIndex); 
 
             var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Recover);
 
@@ -393,10 +330,10 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
             recoveryTransaction.Inputs[stageIndex].WitScript = new Blockcore.Consensus.TransactionInfo.WitScript(
                     new WitScript(
-                   Op.GetPushOp(investorSignature.ToBytes()),
-                      Op.GetPushOp(TaprootSignature.Parse(founderSignatures.Signatures.First(f => f.StageIndex == stageIndex).Signature).ToBytes()),
-               Op.GetPushOp(scriptStages.Recover.ToBytes()),
-                         Op.GetPushOp(controlBlock.ToBytes())).ToBytes());
+                        Op.GetPushOp(investorSignature.ToBytes()),
+                        Op.GetPushOp(TaprootSignature.Parse(founderSignatures.Signatures.First(f => f.StageIndex == stageIndex).Signature).ToBytes()),
+                        Op.GetPushOp(scriptStages.Recover.ToBytes()),
+                        Op.GetPushOp(controlBlock.ToBytes())).ToBytes());
         }
 
         return recoveryTransaction;
@@ -413,21 +350,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var pubkey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey();
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
-        // Extract dynamic stage info for Fund/Subscribe projects
-        DateTime? investmentStartDate = null;
-        byte patternIndex = 0;
-
-        if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
-        {
-            var dynamicStageInfo = _projectScriptsBuilder.GetDynamicStageInfoFromOpReturnScript(
-       investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
-
-            if (dynamicStageInfo != null)
-            {
-                investmentStartDate = dynamicStageInfo.GetInvestmentStartDate();
-                patternIndex = dynamicStageInfo.PatternId;
-            }
-        }
+        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, investmentTransaction);
 
         // Count Taproot outputs to determine stage count
         var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
@@ -438,29 +361,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         bool validationgPassed = true;
         for (var stageIndex = 0; stageIndex < outputs.Length; stageIndex++)
         {
-            ProjectScripts scriptStages;
-
-            if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
-            {
-                // Dynamic stages - pass investment start date and pattern index
-                scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(
-                     projectInfo,
-                     investorKey,
-                     stageIndex,
-                     secretHash,
-                     null, // expiryDateOverride
-                     investmentStartDate,
-                     patternIndex);
-            }
-            else
-            {
-                // Fixed stages - use original method
-                scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(
-                        projectInfo,
-                        investorKey,
-                        stageIndex,
-                        secretHash);
-            }
+            ProjectScripts scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageIndex);
 
             var tapScript = new NBitcoin.Script(scriptStages.Recover.ToBytes()).ToTapScript(TapLeafVersion.C0);
             var execData = new TaprootExecutionData(stageIndex, tapScript.LeafHash) { SigHash = sigHash };

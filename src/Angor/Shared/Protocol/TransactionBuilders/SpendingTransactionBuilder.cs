@@ -33,11 +33,11 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
 
         var spendingTrx = nbitcoinNetwork.CreateTransaction();
 
-        var (investorKey, secretHash, investmentTrxOutputs, investmentStartDate, patternIndex) = GetInvestorTransactionData(investmentTransactionHex, startStageIndex, projectInfo);
+        var (fundingParameters, investmentTrxOutputs) = GetInvestorTransactionData(investmentTransactionHex, startStageIndex, projectInfo);
 
         // Determine the effective expiry date
         // If expiryDateOverride is provided, use it; otherwise, use the project's standard ExpiryDate
-        var effectiveExpiryDate = expiryDateOverride ?? projectInfo.ExpiryDate;
+        var effectiveExpiryDate = fundingParameters.ExpiryDateOverride ?? projectInfo.ExpiryDate;
 
         // Step 1 - the time lock
         // we must set the locktime to be ahead of the current block time
@@ -46,36 +46,14 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
 
         // Step 2 - build the transaction outputs and inputs without signing using fake sigs for fee estimation
         spendingTrx.Outputs.Add(investmentTrxOutputs.Sum(_ => _.TxOut.Value), NBitcoin.BitcoinAddress.Create(receiveAddress, nbitcoinNetwork));
+        
 
         //Need to add the script sig to calculate the fee correctly
         spendingTrx.Inputs.AddRange(investmentTrxOutputs.Select((_, i) =>
          {
              var currentStageIndex = i + startStageIndex;
 
-             // Build project scripts with support for dynamic stages
-             ProjectScripts scriptStages;
-             if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
-             {
-                 // Dynamic stages - pass investment start date and pattern index
-                 scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(
-                    projectInfo,
-                    investorKey,
-                    currentStageIndex,
-                    secretHash,
-                    expiryDateOverride,
-                    investmentStartDate,
-                    patternIndex);
-             }
-             else
-             {
-                 // Fixed stages - use original method
-                 scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(
-                        projectInfo,
-                        investorKey,
-                        currentStageIndex,
-                        secretHash,
-                        expiryDateOverride);
-             }
+             ProjectScripts scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, currentStageIndex);
 
              var witScript = new WitScript(buildWitScriptWithSigPlaceholder(scriptStages).Pushes);
 
@@ -127,10 +105,12 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         return new TransactionInfo { Transaction = transaction, TransactionFee = feeToReduce };
     }
 
-    private (string investorKey, uint256? secretHash, List<IndexedTxOut> investmentTrxOutputs, DateTime? investmentStartDate, byte patternIndex) GetInvestorTransactionData(
+    private (FundingParameters fundingParameters, List<IndexedTxOut> investmentTrxOutputs) GetInvestorTransactionData(
     string investorTrxHash, int spendingStartStage, ProjectInfo projectInfo)
     {
         var network = _networkConfiguration.GetNetwork();
+
+        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, network.CreateTransaction(investorTrxHash));
 
         // We'll use the NBitcoin lib because its a taproot spend
         var nbitcoinNetwork = NetworkMapper.Map(network);
@@ -141,27 +121,11 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(
                    new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
 
-        // Extract dynamic stage info if this is a Fund/Subscribe project
-        DateTime? investmentStartDate = null;
-        byte patternIndex = 0;
-
-        if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
-        {
-            var dynamicStageInfo = _projectScriptsBuilder.GetDynamicStageInfoFromOpReturnScript(
-                new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
-
-            if (dynamicStageInfo != null)
-            {
-                investmentStartDate = dynamicStageInfo.GetInvestmentStartDate();
-                patternIndex = dynamicStageInfo.PatternId;
-            }
-        }
-
         var investmentTrxOutputs = trx.Outputs.AsIndexedOutputs()
             .Where(utxo => utxo.TxOut.ScriptPubKey.IsScriptType(ScriptType.Taproot))
             .Skip(spendingStartStage)
             .ToList();
 
-        return (investorKey, secretHash, investmentTrxOutputs, investmentStartDate, patternIndex);
+        return (fundingParameters, investmentTrxOutputs);
     }
 }

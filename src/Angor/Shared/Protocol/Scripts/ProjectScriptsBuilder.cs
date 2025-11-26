@@ -91,14 +91,14 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
             if (patternIndex >= projectInfo.DynamicStagePatterns.Count)
             {
                 throw new ArgumentOutOfRangeException(nameof(patternIndex), 
-     $"Pattern index {patternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
+                    $"Pattern index {patternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
             }
 
             // Use the specified pattern
             var pattern = projectInfo.DynamicStagePatterns[patternIndex];
             var dynamicInfo = DynamicStageInfo.FromPattern(pattern, investmentStartDate.Value, patternIndex);
 
- ops.Add(Op.GetPushOp(dynamicInfo.ToBytes()));
+            ops.Add(Op.GetPushOp(dynamicInfo.ToBytes()));
         }
 
         return new Script(ops);

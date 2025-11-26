@@ -33,94 +33,83 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         });
     }
 
+    // todo get rid of this method
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
-      uint256? hashOfSecret, DateTime? expiryDateOverride = null)
+        uint256? hashOfSecret, DateTime? expiryDateOverride = null)
     {
+        if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
+        {
+            throw new InvalidOperationException("Only type Invest can use this method");
+        }
+
         return BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, hashOfSecret, expiryDateOverride, null, 0);
     }
 
+    // todo get rid of this method
     public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, string investorKey, int stageIndex,
         uint256? hashOfSecret, DateTime? expiryDateOverride, DateTime? investmentStartDate, byte patternIndex = 0)
     {
-        // Calculate stage release date based on project type
+        if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
+        {
+            throw new InvalidOperationException("Only type Invest can use this method");
+        }
+
+        var parameters = FundingParameters.CreateForInvest(projectInfo, investorKey, 0, hashOfSecret);
+        parameters.InvestmentStartDate = investmentStartDate;
+        parameters.ExpiryDateOverride = expiryDateOverride;
+        parameters.PatternIndex = patternIndex;
+
+        return BuildProjectScriptsForStage(projectInfo, parameters, stageIndex);
+    }
+
+    public ProjectScripts BuildProjectScriptsForStage(ProjectInfo projectInfo, FundingParameters parameters, int stageIndex)
+    {
+        parameters.Validate(projectInfo, stageIndex);
+
         DateTime stageReleaseDate;
 
         if (projectInfo.ProjectType == ProjectType.Invest)
         {
-            // Fixed stages - use predefined dates
-            if (stageIndex >= projectInfo.Stages.Count)
-            {
-                throw new ArgumentOutOfRangeException(nameof(stageIndex), $"Stage index {stageIndex} is out of range. Project has {projectInfo.Stages.Count} stages.");
-            }
-
             stageReleaseDate = projectInfo.Stages[stageIndex].ReleaseDate;
         }
-        else // Fund or Subscribe
+        else
         {
-            // Dynamic stages - calculate from investment start date and pattern
-            if (!investmentStartDate.HasValue)
-            {
-                throw new ArgumentException("investmentStartDate is required for Fund/Subscribe projects", nameof(investmentStartDate));
-            }
-
-            if (!projectInfo.DynamicStagePatterns.Any())
-            {
-                throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
-            }
-
-            // Validate pattern index
-            if (patternIndex >= projectInfo.DynamicStagePatterns.Count)
-            {
-                throw new ArgumentOutOfRangeException(nameof(patternIndex), $"Pattern index {patternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
-            }
-
-            // Use the specified pattern
-            var pattern = projectInfo.DynamicStagePatterns[patternIndex];
-
-            // Validate stage index
-            if (stageIndex >= pattern.StageCount)
-            {
-                throw new ArgumentOutOfRangeException(nameof(stageIndex), $"Stage index {stageIndex} is out of range. Pattern has {pattern.StageCount} stages.");
-            }
-
-            // Calculate the stage release date
-            stageReleaseDate = CalculateDynamicStageReleaseDate(investmentStartDate.Value, pattern, stageIndex);
+            var pattern = projectInfo.DynamicStagePatterns[parameters.PatternIndex];
+            stageReleaseDate = CalculateDynamicStageReleaseDate(parameters.InvestmentStartDate.Value, pattern, stageIndex);
         }
 
-        // regular investor pre-co-sign with founder to gets funds with penalty
         var recoveryOps = new List<Op>
         {
             Op.GetPushOp(new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey().ToBytes()),
             OpcodeType.OP_CHECKSIGVERIFY,
-            Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+            Op.GetPushOp(new NBitcoin.PubKey(parameters.InvestorKey).GetTaprootFullPubKey().ToBytes()),
         };
 
-        var secretHashOps = hashOfSecret == null
-         ? new List<Op> { OpcodeType.OP_CHECKSIG }
-            : new List<Op>
-                {
-                    OpcodeType.OP_CHECKSIGVERIFY,
-                    OpcodeType.OP_HASH256,
-                    Op.GetPushOp(new uint256(hashOfSecret).ToBytes()),
-                    OpcodeType.OP_EQUAL
-                };
+        var secretHashOps = parameters.HashOfSecret == null
+           ? new List<Op> { OpcodeType.OP_CHECKSIG }
+          : new List<Op>
+            {
+                OpcodeType.OP_CHECKSIGVERIFY,
+                OpcodeType.OP_HASH256,
+                Op.GetPushOp(new uint256(parameters.HashOfSecret).ToBytes()),
+                OpcodeType.OP_EQUAL
+            };
 
         recoveryOps.AddRange(secretHashOps);
 
-        var seeders = hashOfSecret == null && projectInfo.ProjectSeeders.SecretHashes.Any()
-            ? _seederScriptTreeBuilder.BuildSeederScriptTree(investorKey,
-                   projectInfo.ProjectSeeders.Threshold,
-                   projectInfo.ProjectSeeders.SecretHashes).ToList()
+        var seeders = parameters.HashOfSecret == null && projectInfo.ProjectSeeders.SecretHashes.Any()
+            ? _seederScriptTreeBuilder.BuildSeederScriptTree(parameters.InvestorKey,
+                projectInfo.ProjectSeeders.Threshold,
+                projectInfo.ProjectSeeders.SecretHashes).ToList()
             : new List<Script>();
 
-        // Use the override expiry date if provided, otherwise use the project's expiry date
-        var effectiveExpiryDate = expiryDateOverride ?? projectInfo.ExpiryDate;
+        var effectiveExpiryDate = parameters.ExpiryDateOverride ?? projectInfo.ExpiryDate;
 
         return new()
         {
             Founder = GetFounderSpendScript(projectInfo.FounderKey, stageReleaseDate),
             Recover = new Script(recoveryOps),
-            EndOfProject = GetEndOfProjectInvestorSpendScript(investorKey, effectiveExpiryDate),
+            EndOfProject = GetEndOfProjectInvestorSpendScript(parameters.InvestorKey, effectiveExpiryDate),
             Seeders = seeders
         };
     }
@@ -130,41 +119,29 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         return DynamicStageCalculator.CalculateDynamicStageReleaseDate(investmentStartDate, pattern, stageIndex);
     }
 
-    private static DateTime CalculateNextMonthlyPayoutDate(DateTime startDate, StageFrequency frequency, int dayOfMonth, int stageIndex)
-    {
-        return DynamicStageCalculator.CalculateMonthlyPayoutDate(startDate, frequency, dayOfMonth, stageIndex);
-    }
-
-    private static DateTime CalculateNextWeeklyPayoutDate(DateTime startDate, StageFrequency frequency, int dayOfWeek, int stageIndex)
-    {
-        return DynamicStageCalculator.CalculateWeeklyPayoutDate(startDate, frequency, dayOfWeek, stageIndex);
-    }
-
     private static Script GetFounderSpendScript(string founderKey, DateTime stageReleaseDate)
     {
         long locktimeFounder = Utils.DateTimeToUnixTime(stageReleaseDate);
 
-        // founder gets funds after stage started
         return new Script(new List<Op>
         {
             Op.GetPushOp(new NBitcoin.PubKey(founderKey).GetTaprootFullPubKey().ToBytes()),
             OpcodeType.OP_CHECKSIGVERIFY,
             Op.GetPushOp(locktimeFounder),
             OpcodeType.OP_CHECKLOCKTIMEVERIFY
-      });
+        });
     }
 
     private static Script GetEndOfProjectInvestorSpendScript(string investorKey, DateTime projectExpieryDate)
     {
         long locktimeExpiery = Utils.DateTimeToUnixTime(projectExpieryDate);
 
-        // project ended and investor can collect remaining funds
         return new Script(new List<Op>
-         {
-                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
-                OpcodeType.OP_CHECKSIGVERIFY,
-                Op.GetPushOp(locktimeExpiery),
-                OpcodeType.OP_CHECKLOCKTIMEVERIFY
-         });
+        {
+            Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+            OpcodeType.OP_CHECKSIGVERIFY,
+            Op.GetPushOp(locktimeExpiery),
+            OpcodeType.OP_CHECKLOCKTIMEVERIFY
+        });
     }
 }
