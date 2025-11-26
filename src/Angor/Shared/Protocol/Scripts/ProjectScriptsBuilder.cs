@@ -19,37 +19,20 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
         return _derivationOperations.AngorKeyToScript(angorKey);
     }
 
-    public Script BuildInvestorInfoScript(string investorKey, ProjectInfo projectInfo, DateTime? investmentStartDate = null, byte patternIndex = 0)
+    public Script BuildInvestorInfoScript(ProjectInfo projectInfo, FundingParameters parameters)
     {
         var ops = new List<Op>
         {
             OpcodeType.OP_RETURN,
-            Op.GetPushOp(new PubKey(investorKey).ToBytes())
+            Op.GetPushOp(new PubKey(parameters.InvestorKey).ToBytes())
         };
 
         // For Fund/Subscribe projects, add dynamic stage info
         if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
         {
-            if (!investmentStartDate.HasValue)
-            {
-                throw new ArgumentException("Investment start date is required for Fund/Subscribe projects", nameof(investmentStartDate));
-            }
-
-            if (!projectInfo.DynamicStagePatterns.Any())
-            {
-                throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
-            }
-
-            // Validate pattern index
-            if (patternIndex >= projectInfo.DynamicStagePatterns.Count)
-            {
-                throw new ArgumentOutOfRangeException(nameof(patternIndex), 
-                $"Pattern index {patternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
-            }
-
             // Use the specified pattern
-            var pattern = projectInfo.DynamicStagePatterns[patternIndex];
-            var dynamicInfo = DynamicStageInfo.FromPattern(pattern, investmentStartDate.Value, patternIndex);
+            var pattern = projectInfo.DynamicStagePatterns[parameters.PatternIndex];
+            var dynamicInfo = DynamicStageInfo.FromPattern(pattern, parameters.InvestmentStartDate.Value, parameters.PatternIndex);
 
             ops.Add(Op.GetPushOp(dynamicInfo.ToBytes()));
         }
@@ -65,38 +48,21 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
             Op.GetPushOp(Encoders.Hex.DecodeData(nostrEventId)));
     }
 
-    public Script BuildSeederInfoScript(string investorKey, uint256 secretHash, ProjectInfo projectInfo, DateTime? investmentStartDate = null, byte patternIndex = 0)
+    public Script BuildSeederInfoScript(ProjectInfo projectInfo, FundingParameters parameters)
     {
         var ops = new List<Op>
         {
             OpcodeType.OP_RETURN,
-            Op.GetPushOp(new PubKey(investorKey).ToBytes()),
-            Op.GetPushOp(secretHash.ToBytes())
+            Op.GetPushOp(new PubKey(parameters.InvestorKey).ToBytes()),
+            Op.GetPushOp((parameters.HashOfSecret ?? new uint256(0)).ToBytes())
         };
 
         // For Fund/Subscribe projects, add dynamic stage info
         if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
         {
-            if (!investmentStartDate.HasValue)
-            {
-                throw new ArgumentException("Investment start date is required for Fund/Subscribe projects", nameof(investmentStartDate));
-            }
-
-            if (!projectInfo.DynamicStagePatterns.Any())
-            {
-                throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
-            }
-
-            // Validate pattern index
-            if (patternIndex >= projectInfo.DynamicStagePatterns.Count)
-            {
-                throw new ArgumentOutOfRangeException(nameof(patternIndex), 
-                    $"Pattern index {patternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
-            }
-
             // Use the specified pattern
-            var pattern = projectInfo.DynamicStagePatterns[patternIndex];
-            var dynamicInfo = DynamicStageInfo.FromPattern(pattern, investmentStartDate.Value, patternIndex);
+            var pattern = projectInfo.DynamicStagePatterns[parameters.PatternIndex];
+            var dynamicInfo = DynamicStageInfo.FromPattern(pattern, parameters.InvestmentStartDate.Value, parameters.PatternIndex);
 
             ops.Add(Op.GetPushOp(dynamicInfo.ToBytes()));
         }

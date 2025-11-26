@@ -41,15 +41,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
     public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, FundingParameters parameters)
     {
-        // Capture investment start date for dynamic projects
-        var investmentStartDate = parameters.InvestmentStartDate ?? DateTime.UtcNow;
-
-        // create the output and script of the investor pubkey script opreturn
-        var opreturnScript = _projectScriptsBuilder.BuildInvestorInfoScript(
-            parameters.InvestorKey,
-            projectInfo,
-            investmentStartDate,
-            parameters.PatternIndex);
+        var opreturnScript = _projectScriptsBuilder.BuildInvestorInfoScript(projectInfo, parameters);
 
         var stageCount = ProjectParametersHelper.GetStageCount(projectInfo, parameters);
 
@@ -165,16 +157,6 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     public TransactionInfo RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex,
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation)
     {
-        // Parse the investment transaction to calculate the total investment amount
-        var network = _networkConfiguration.GetNetwork();
-        var investmentTransaction = network.Consensus.ConsensusFactory.CreateTransaction(transactionHex);
-
-        // Calculate the investment amount from the transaction
-        var totalInvestmentAmount = PenaltyThresholdHelper.GetTotalInvestmentAmount(investmentTransaction);
-
-        // Determine the effective expiry date based on penalty threshold
-        var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
-
         return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, stageIndex,
             investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             projectScripts =>
@@ -192,8 +174,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
                 return new NBitcoin.WitScript(NBitcoin.Op.GetPushOp(sig.ToBytes()),
                     NBitcoin.Op.GetPushOp(scriptToExecute), NBitcoin.Op.GetPushOp(controlBlock));
-            },
-            expiryDateOverride);
+            });
     }
 
     public TransactionInfo RecoverRemainingFundsWithOutPenalty(string transactionHex, ProjectInfo projectInfo, int stageIndex,

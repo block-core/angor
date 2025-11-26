@@ -16,7 +16,7 @@ public class FundingParameters
     public Blockcore.NBitcoin.uint256? HashOfSecret { get; set; }
     public DateTime? ExpiryDateOverride { get; set; }
 
-    private FundingParameters() { }
+    public FundingParameters() { }
 
     public static FundingParameters CreateForInvest(
         ProjectInfo projectInfo,
