@@ -1,23 +1,18 @@
-using AngorApp.UI.Sections.New;
-using AngorApp.UI.Sections.Wallet.Main;
-using Microsoft.Extensions.DependencyInjection;
-using Zafiro.Avalonia.Controls.Shell;
-using Zafiro.UI.Navigation;
+using System.Linq;
 using Zafiro.UI.Navigation.Sections;
 
 namespace AngorApp.UI.NewShell;
 
 public partial class ShellViewModel : ReactiveObject, IShellViewModel
 {
-    public ShellViewModel(IDictionary<string, ISection> sections)
+    public ShellViewModel(IEnumerable<INavigationRoot> sections)
     {
-        SidebarSections = [sections["home"], sections["wallet"]];
-        Navigator = new SimpleNavigator(this.WhenAnyValue(sample => sample.SelectedSection).WhereNotNull());
+        var dict = sections.ToDictionary(root => root.Name, root => root);
+        SidebarSections = [dict["Home"]];
     }
     
-    public IEnumerable<ISection> SidebarSections { get; }
-    public INavigator Navigator { get; }
+    public IEnumerable<INavigationRoot> SidebarSections { get; }
 
     [Reactive]
-    private ISection selectedSection;
+    private INavigationRoot selectedSection;
 }

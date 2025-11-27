@@ -82,13 +82,13 @@
                             <PathIcon Foreground="{StaticResource Text}" Data="{StaticResource Sun}" />
                         </EnhancedButton.Icon>
                     </EnhancedButton>
-                    <EnhancedButton Classes="Widget" Icon="{Icon mdi-cog}" Command="{Binding GoToSettings}" />
+                    <EnhancedButton Classes="Widget" Icon="{Icon mdi-cog}" />
                 </StackPanel>
             </DockPanel>
         </DockPanel>
         <SectionStrip Classes="Nav" Grid.Row="1" SelectedSection="{Binding SelectedSection}" IconSize="24" Width="200" HorizontalAlignment="Left" Sections="{Binding SidebarSections}" />
         <Border Grid.Row="1" Grid.Column="1" Classes="Regular">
-            <Frame Navigator="{Binding Navigator}" />
+            <Frame Navigator="{Binding SelectedSection.Navigator}" />
         </Border>
     </Grid>
 </UserControl>

@@ -51,12 +51,10 @@ public partial class ShellViewModelSample : ReactiveObject, IShellViewModel
         };
 
         SidebarSections = [home, funds, find, funded, myProjects];
-        Navigator = new SimpleNavigator(this.WhenAnyValue(sample => sample.SelectedSection).WhereNotNull());
     }
     
-    public IEnumerable<ISection> SidebarSections { get; }
-    public INavigator Navigator { get; }
+    public IEnumerable<INavigationRoot> SidebarSections { get; }
 
     [Reactive]
-    private ISection selectedSection;
+    private INavigationRoot selectedSection;
 }

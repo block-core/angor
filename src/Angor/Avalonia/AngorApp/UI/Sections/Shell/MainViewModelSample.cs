@@ -6,7 +6,7 @@ namespace AngorApp.UI.Sections.Shell;
 public class MainViewModelSample : IMainViewModel
 {
     public ReactiveCommand<Unit, Unit> OpenHub { get; }
-    public IShell Shell { get; } = new ShellSample();
+    public IShell Shell { get; }
 
     public ISection SelectedSection { get; set; }
 
