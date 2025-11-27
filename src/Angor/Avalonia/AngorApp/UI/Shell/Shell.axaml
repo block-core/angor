@@ -82,7 +82,7 @@
                             <PathIcon Foreground="{StaticResource Text}" Data="{StaticResource Sun}" />
                         </EnhancedButton.Icon>
                     </EnhancedButton>
-                    <EnhancedButton Classes="Widget" Icon="{Icon mdi-cog}" />
+                    <EnhancedButton Classes="Widget" Icon="{Icon mdi-cog}" Command="{Binding GoToSettings}" />
                 </StackPanel>
             </DockPanel>
         </DockPanel>
