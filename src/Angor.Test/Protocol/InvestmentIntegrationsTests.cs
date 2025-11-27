@@ -995,22 +995,20 @@ namespace Angor.Test.Protocol
                 investor2SignedRecoveryTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
 
             // Step 9: Founder spends stages 1 both investments
-            var allInvestmentHexes = new[] { investor1Trx.ToHex(), investor2Trx.ToHex() };
+            var allInvestmentHexes = new StageTransactionInput[] { new StageTransactionInput(investor1Trx.ToHex(), 1), new StageTransactionInput(investor2Trx.ToHex(), 1) };
 
             // Founder spends Stage 1 from each trx
             var founderSpendStage2 = _founderTransactionActions.SpendFounderStage(
                     projectInfo,
                     allInvestmentHexes,
-                    new int[] { 1, 1 },
                     founderReceiveAddress,
                     Encoders.Hex.EncodeData(founderKey.ToBytes()),
                     _expectedFeeEstimation);
 
             Assert.NotNull(founderSpendStage2);
             Assert.NotNull(founderSpendStage2.Transaction);
-            TransactionValidation.ThanTheTransactionHasNoErrors(founderSpendStage2.Transaction,
-                  allInvestmentHexes.SelectMany(hex =>
-             network.CreateTransaction(hex).Outputs.AsCoins().Where(c => c.Amount > 0)));
+            TransactionValidation.ThanTheTransactionHasNoErrors(founderSpendStage2.Transaction, 
+                allInvestmentHexes.SelectMany(hex => network.CreateTransaction(hex.TransactionHex).Outputs.AsCoins().Where(c => c.Amount > 0)));
         }
 
         [Fact]

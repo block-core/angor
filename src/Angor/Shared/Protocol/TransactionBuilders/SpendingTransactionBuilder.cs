@@ -52,6 +52,9 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         //Need to add the script sig to calculate the fee correctly
         spendingTrx.Inputs.AddRange(investmentTrxOutputs.Select((_, i) =>
          {
+             // stage index is zero based so when calculating stage scripts
+             // we need to adjust the stage number accordingly and to the stage we
+             // spend from, e.g. startStageNumber = 3 means we spend from stage index 2
              var currentStageIndex = i + startStageNumber - 1;
 
              ProjectScripts scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, currentStageIndex);

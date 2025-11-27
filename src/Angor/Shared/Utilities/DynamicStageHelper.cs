@@ -1,4 +1,6 @@
-namespace Angor.Shared.Models;
+using Angor.Shared.Models;
+
+namespace Angor.Shared.Utilities;
 
 /// <summary>
 /// Helper class for working with dynamic stage patterns and epoch-based dates.

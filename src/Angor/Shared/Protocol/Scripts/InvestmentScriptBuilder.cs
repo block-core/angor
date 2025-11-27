@@ -1,4 +1,5 @@
 using Angor.Shared.Models;
+using Angor.Shared.Utilities;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
 

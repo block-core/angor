@@ -86,23 +86,15 @@ public class FounderTransactionActions : IFounderTransactionActions
     public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<string> investmentTransactionsHex, int stageNumber, Script founderRecieveAddress, string founderPrivateKey, FeeEstimation fee)
     {
         // For Invest projects, all transactions use the same stage number
-        var stageIndexes = Enumerable.Repeat(stageNumber, investmentTransactionsHex.Count()).ToList();
-        return SpendFounderStage(projectInfo, investmentTransactionsHex, stageIndexes, founderRecieveAddress, founderPrivateKey, fee);
+        var stageTransactionInputs = investmentTransactionsHex.Select(trx => new StageTransactionInput(trx, stageNumber)).ToList();
+        return SpendFounderStage(projectInfo, stageTransactionInputs, founderRecieveAddress, founderPrivateKey, fee);
     }
 
-    public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<string> investmentTransactionsHex, IEnumerable<int> stageNumbers, Script founderRecieveAddress, string founderPrivateKey, FeeEstimation fee)
+    public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<StageTransactionInput> stageTransactionInput, Script founderRecieveAddress, string founderPrivateKey, FeeEstimation fee)
     {
         var network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
         var spendingTransaction = nbitcoinNetwork.CreateTransaction();
-
-        var transactionList = investmentTransactionsHex.ToList();
-        var stageNumbersList = stageNumbers.ToList();
-
-        if (transactionList.Count != stageNumbersList.Count)
-        {
-            throw new ArgumentException($"Number of transactions ({transactionList.Count}) must match number of stage numbers ({stageNumbersList.Count})");
-        }
 
         // Step 1 - the time lock
         // we must set the locktime to be ahead of the current block time
@@ -112,16 +104,15 @@ public class FounderTransactionActions : IFounderTransactionActions
         if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
         {
             // Dynamic stages - find the latest expired stage release date from all investment transactions
-            stageReleaseDate = FindLatestExpiredStageReleaseDate(projectInfo, transactionList, stageNumbersList);
+            stageReleaseDate = FindLatestExpiredStageReleaseDate(projectInfo, stageTransactionInput);
         }
         else
         {
             // Fixed stages - use predefined stage release date (all transactions should have same stage number)
-            var stageNumber = stageNumbersList.First();
+            var stageNumber = stageTransactionInput.First().StageNumber;
             if (stageNumber < 1 || stageNumber > projectInfo.Stages.Count)
             {
-                throw new ArgumentOutOfRangeException(nameof(stageNumbers),
-                      $"Stage number {stageNumber} is out of range. Project has {projectInfo.Stages.Count} stages.");
+                throw new ArgumentOutOfRangeException(nameof(stageNumber), $"Stage number {stageNumber} is out of range. Project has {projectInfo.Stages.Count} stages.");
             }
 
             stageReleaseDate = projectInfo.Stages[stageNumber - 1].ReleaseDate;
@@ -133,9 +124,9 @@ public class FounderTransactionActions : IFounderTransactionActions
         spendingTransaction.Outputs.Add(NBitcoin.Money.Zero, new NBitcoin.Script(founderRecieveAddress.ToBytes()));
 
         var stageOutputs = new List<IndexedTxOut>();
-        for (int i = 0; i < transactionList.Count; i++)
+        foreach( var transactionList in stageTransactionInput)
         {
-            var output = AddInputToSpendingTransaction(projectInfo, stageNumbersList[i], transactionList[i], spendingTransaction);
+            var output = AddInputToSpendingTransaction(projectInfo, transactionList, spendingTransaction);
             stageOutputs.Add(output);
         }
 
@@ -197,15 +188,15 @@ public class FounderTransactionActions : IFounderTransactionActions
     /// This is needed for Fund/Subscribe projects where different investors may have different stage schedules.
     /// The founder can only spend a stage after ALL investors' stages have expired.
     /// </summary>
-    private DateTime FindLatestExpiredStageReleaseDate(ProjectInfo projectInfo, List<string> investmentTransactionsHex, List<int> stageNumbers)
+    private DateTime FindLatestExpiredStageReleaseDate(ProjectInfo projectInfo, IEnumerable<StageTransactionInput> stageTransactionInput)
     {
         var network = _networkConfiguration.GetNetwork();
         var latestReleaseDate = DateTime.MinValue;
 
-        for (int i = 0; i < investmentTransactionsHex.Count; i++)
+        foreach( StageTransactionInput input in stageTransactionInput ) 
         {
-            var investmentTrxHex = investmentTransactionsHex[i];
-            var stageNumber = stageNumbers[i];
+            var investmentTrxHex = input.TransactionHex;
+            var stageNumber = input.StageNumber;
 
             try
             {
@@ -283,44 +274,39 @@ public class FounderTransactionActions : IFounderTransactionActions
         // create the output and script of the investor pubkey script opreturn
         var angorFeeOutputScript = _projectScriptsBuilder.BuildFounderInfoScript(founderKey, keyType, nostrEventId);
         var founderOPReturnOutput = new Blockcore.Consensus.TransactionInfo.TxOut(
-            new Blockcore.NBitcoin.Money(0), angorFeeOutputScript);
+                new Blockcore.NBitcoin.Money(0), angorFeeOutputScript);
         projectStartTransaction.AddOutput(founderOPReturnOutput);
 
         return projectStartTransaction;
     }
 
-    private IndexedTxOut AddInputToSpendingTransaction(ProjectInfo projectInfo, int stageNumber, string investorTrxHash,
-         NBitcoin.Transaction spendingTransaction)
+    private IndexedTxOut AddInputToSpendingTransaction(ProjectInfo projectInfo, StageTransactionInput stageTransactionInput, NBitcoin.Transaction spendingTransaction)
     {
         var network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
-        NBitcoin.Transaction trx = NBitcoin.Transaction.Parse(investorTrxHash, nbitcoinNetwork);
+        NBitcoin.Transaction trx = NBitcoin.Transaction.Parse(stageTransactionInput.TransactionHex, nbitcoinNetwork);
 
-        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, network.CreateTransaction(investorTrxHash));
+        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, network.CreateTransaction(stageTransactionInput.TransactionHex));
 
         var stageOutput = trx.Outputs.AsIndexedOutputs()
           .Where(txout => txout.TxOut.ScriptPubKey.IsScriptType(ScriptType.Taproot))
-          .ElementAt(stageNumber - 1);
+          .ElementAt(stageTransactionInput.StageNumber - 1);
 
         spendingTransaction.Outputs[0].Value += stageOutput.TxOut.Value;
 
         var input = spendingTransaction.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null, new NBitcoin.Sequence(spendingTransaction.LockTime.Value));
 
-        //var (investorKey, secretHash) = GetProjectDetailsFromOpReturn(trx);
-
-        //var effectiveExpiryDate = fundingParameters.ExpiryDateOverride ?? projectInfo.ExpiryDate;
-
-        //DateTime? expiryDateOverride = PenaltyThresholdHelper.GetExpiryDateOverride(projectInfo, trx.GetTotalInvestmentAmount());
-
-        ProjectScripts scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageNumber - 1);
+        ProjectScripts scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageTransactionInput.StageNumber - 1);
 
         var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Founder);
 
         // use fake data for fee estimation
         var sigPlaceHolder = new byte[65];
 
-        input.WitScript = new WitScript(Op.GetPushOp(sigPlaceHolder), Op.GetPushOp(scriptStages.Founder.ToBytes()),
-                 Op.GetPushOp(controlBlock.ToBytes()));
+        input.WitScript = new WitScript(
+            Op.GetPushOp(sigPlaceHolder), 
+            Op.GetPushOp(scriptStages.Founder.ToBytes()),
+            Op.GetPushOp(controlBlock.ToBytes()));
 
         return stageOutput;
     }

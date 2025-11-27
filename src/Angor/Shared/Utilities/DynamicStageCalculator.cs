@@ -1,4 +1,6 @@
-namespace Angor.Shared.Models;
+using Angor.Shared.Models;
+
+namespace Angor.Shared.Utilities;
 
 /// <summary>
 /// Provides methods for calculating dynamic stage release dates based on various patterns.
