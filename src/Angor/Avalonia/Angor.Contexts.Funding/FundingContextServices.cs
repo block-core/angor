@@ -30,6 +30,7 @@ public static class FundingContextServices
         //services.AddSingleton<IProjectRepository, ProjectRepository>();
         services.AddScoped<IProjectService, DocumentProjectService>();
         services.AddSingleton<INostrDecrypter, NostrDecrypter>();
+        services.AddSingleton<IInvestmentHandshakeService, InvestmentHandshakeService>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateInvestment.CreateInvestmentTransactionHandler).Assembly));
         services.TryAddSingleton<ISerializer, Serializer>();
         services.TryAddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
