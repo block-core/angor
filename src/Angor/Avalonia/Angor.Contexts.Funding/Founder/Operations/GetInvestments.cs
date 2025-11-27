@@ -69,7 +69,7 @@ public static class GetInvestments
             }
 
             var investments = HandshakesResult.Value
-                .OrderByDescending(req => req.CreatedOn)
+                .OrderByDescending(req => req.RequestCreated)
                 .Select(conv => CreateInvestmentFromHandshake(conv, alreadyInvestedResult.Value, projectResult.Value))
                 .ToList();
 
