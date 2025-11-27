@@ -6,7 +6,7 @@ using Zafiro.UI.Shell.Utils;
 
 namespace AngorApp.UI.Sections.Wallet.Main;
 
-// [Section("Funds", icon: "fa-regular fa-credit-card")]
+[Section("Funds", icon: "fa-regular fa-credit-card", sortIndex: 1)]
 public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionViewModel, IDisposable
 {
     private readonly CompositeDisposable disposable = new();

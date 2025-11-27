@@ -8,7 +8,8 @@ public partial class ShellViewModel : ReactiveObject, IShellViewModel
     public ShellViewModel(IEnumerable<INavigationRoot> sections)
     {
         var dict = sections.ToDictionary(root => root.Name, root => root);
-        SidebarSections = [dict["Home"]];
+        SidebarSections = [dict["Home"], dict["Funds"], dict["Find Projects"]];
+        SelectedSection = dict["Home"];
     }
     
     public IEnumerable<INavigationRoot> SidebarSections { get; }

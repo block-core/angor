@@ -11,7 +11,7 @@ public partial class ShellViewModelSample : ReactiveObject, IShellViewModel
     {
         var home = new SimpleSection()
         {
-            ContentValue = new HomeView(),
+            ContentValue = new HomeSectionView(),
             FriendlyName = "Home",
             Name = "Home",
             Icon = new Icon("fa-home"),

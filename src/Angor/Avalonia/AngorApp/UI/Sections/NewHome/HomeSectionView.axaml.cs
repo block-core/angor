@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace AngorApp.UI.Sections.New;
 
-public partial class HomeView : UserControl
+public partial class HomeSectionView : UserControl
 {
-    public HomeView()
+    public HomeSectionView()
     {
         InitializeComponent();
     }
