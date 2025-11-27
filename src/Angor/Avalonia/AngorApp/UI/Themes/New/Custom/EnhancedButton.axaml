@@ -12,6 +12,13 @@
                                 Background="LightBlue"
                                 HorizontalContentAlignment="Left" Icon="{Icon fa-wallet}" Content="This is the new button">
                 </EnhancedButton>
+                <EnhancedButton Width="300"
+                                BorderBrush="#FFB81C"
+                                BorderThickness="2"
+                                Background="LightBlue"
+                                
+                                HorizontalContentAlignment="Left" Icon="{Icon fa-wallet}">
+                </EnhancedButton>
                
             </StackPanel>
         </Border>
@@ -28,63 +35,16 @@
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Template">
                 <ControlTemplate>
-                    <Panel HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
+                    <Panel>
                         <BackgroundOverlappingBorder x:Name="MainBorder" BorderThickness="{TemplateBinding BorderThickness}"
                                                      Padding="{TemplateBinding Padding}"
                                                      Background="{TemplateBinding Background}"
                                                      BorderBrush="{TemplateBinding BorderBrush}"
                                                      CornerRadius="{TemplateBinding CornerRadius}">
                             <SmartDockPanel HorizontalSpacing="{Binding $parent[EnhancedButton].Spacing}">
-                                <Panel VerticalAlignment="Center" x:Name="IconPanel">
-                                    <Panel.IsVisible>
-                                        <MultiBinding Converter="{x:Static BoolConverters.Or}">
-                                            <Binding Path="$parent[EnhancedButton].IsCommandRunning" />
-                                            <Binding Path="!!$parent[EnhancedButton].Icon" />
-                                        </MultiBinding>
-                                    </Panel.IsVisible>
-                                    <Panel.Width>
-                                        <MultiBinding Converter="{StaticResource PreferredHeightConverter}">
-                                            <Binding Path="#PART_ContentPresenter.Bounds.Height" />
-                                            <Binding Path="$parent[EnhancedButton].FontSize" />
-                                        </MultiBinding>
-                                    </Panel.Width>
-                                    <Panel.Height>
-                                        <MultiBinding Converter="{StaticResource PreferredHeightConverter}">
-                                            <Binding Path="#PART_ContentPresenter.Bounds.Height" />
-                                            <Binding Path="$parent[EnhancedButton].FontSize" />
-                                        </MultiBinding>
-                                    </Panel.Height>
-                                    <controls:ProgressRing IsActive="{Binding $parent[EnhancedButton].IsCommandRunning}"
-                                                           Foreground="{TemplateBinding Foreground}">
-                                        <controls:ProgressRing.Width>
-                                            <MultiBinding Converter="{StaticResource PreferredHeightConverter}">
-                                                <Binding Path="#PART_ContentPresenter.Bounds.Height" />
-                                                <Binding Path="$parent[EnhancedButton].FontSize" />
-                                            </MultiBinding>
-                                        </controls:ProgressRing.Width>
-                                        <controls:ProgressRing.Height>
-                                            <MultiBinding Converter="{StaticResource PreferredHeightConverter}">
-                                                <Binding Path="#PART_ContentPresenter.Bounds.Height" />
-                                                <Binding Path="$parent[EnhancedButton].FontSize" />
-                                            </MultiBinding>
-                                        </controls:ProgressRing.Height>
-                                    </controls:ProgressRing>
-                                    <Viewbox IsVisible="{Binding !$parent[EnhancedButton].IsCommandRunning}">
-                                        <Viewbox.Width>
-                                            <MultiBinding Converter="{StaticResource PreferredHeightConverter}">
-                                                <Binding Path="#PART_ContentPresenter.Bounds.Height" />
-                                                <Binding Path="$parent[EnhancedButton].FontSize" />
-                                            </MultiBinding>
-                                        </Viewbox.Width>
-                                        <Viewbox.Height>
-                                            <MultiBinding Converter="{StaticResource PreferredHeightConverter}">
-                                                <Binding Path="#PART_ContentPresenter.Bounds.Height" />
-                                                <Binding Path="$parent[EnhancedButton].FontSize" />
-                                            </MultiBinding>
-                                        </Viewbox.Height>
-                                        <ContentPresenter Content="{Binding $parent[EnhancedButton].Icon}" />
-                                    </Viewbox>
-                                </Panel>
+                                <ContentPresenter IsVisible="{Binding !!$self.Content}"
+                                                  VerticalAlignment="Center"
+                                                  Content="{TemplateBinding Icon}" />
                                 <ContentPresenter x:Name="PART_ContentPresenter"
                                                   IsVisible="{Binding !!$self.Content}"
                                                   VerticalAlignment="Center"

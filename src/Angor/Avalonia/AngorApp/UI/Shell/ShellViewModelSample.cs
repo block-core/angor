@@ -54,6 +54,7 @@ public partial class ShellViewModelSample : ReactiveObject, IShellViewModel
     }
     
     public IEnumerable<INavigationRoot> SidebarSections { get; }
+    public ReactiveCommand<Unit, INavigationRoot> GoToSections { get; set; }
 
     [Reactive]
     private INavigationRoot selectedSection;

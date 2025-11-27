@@ -28,6 +28,7 @@
             <Setter Property="Foreground" Value="{StaticResource Text}" />
             <Setter Property="Padding" Value="10" />
             <Setter Property="Height" Value="42" />
+            <Setter Property="Width" Value="42" />
         </Style>
         <Style Selector="ComboBox">
             <Setter Property="Background" Value="{StaticResource Overbackground}" />
@@ -82,7 +83,7 @@
                             <PathIcon Foreground="{StaticResource Text}" Data="{StaticResource Sun}" />
                         </EnhancedButton.Icon>
                     </EnhancedButton>
-                    <EnhancedButton Classes="Widget" Icon="{Icon mdi-cog}" />
+                    <EnhancedButton Classes="Widget" Icon="{Icon mdi-cog}" Command="{Binding GoToSections}" />
                 </StackPanel>
             </DockPanel>
         </DockPanel>
