@@ -102,8 +102,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
         var mock = new Mock<IInvestmentScriptBuilder>();
 
         mock.Setup(_ =>
-            _.BuildProjectScriptsForStage(projectInfo, investorKey, It.Is<int>(_ => _ < projectInfo.Stages.Count),
-                secretHash, null))
+            _.BuildProjectScriptsForStage(projectInfo, It.IsAny<FundingParameters>(), It.Is<int>(_ => _ < projectInfo.Stages.Count)))
             .Returns(expectedProjectScripts);
         
         var expectedFinalWitSig = GetRandomDataWitScript(3);

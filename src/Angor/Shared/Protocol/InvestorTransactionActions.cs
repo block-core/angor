@@ -4,12 +4,12 @@ using Angor.Shared.Protocol.TransactionBuilders;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-//using Angor.Shared.Protocol;
 using Key = Blockcore.NBitcoin.Key;
 using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 using WitScript = NBitcoin.WitScript;
 using Money = Blockcore.NBitcoin.Money;
 using SigHash = Blockcore.Consensus.ScriptInfo.SigHash;
+using Angor.Shared.Utilities;
 
 namespace Angor.Shared.Protocol;
 
@@ -34,34 +34,31 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         _networkConfiguration = networkConfiguration;
     }
 
-    public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey,
-        long totalInvestmentAmount)
+    public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey, long totalInvestmentAmount)
     {
-        // create the output and script of the investor pubkey script opreturn
-        var opreturnScript = _projectScriptsBuilder.BuildInvestorInfoScript(investorKey);
+        return CreateInvestmentTransaction(projectInfo, FundingParameters.CreateForInvest(projectInfo, investorKey, totalInvestmentAmount));
+    }
 
-        // Determine the effective expiry date based on penalty threshold
-        var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
+    public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, FundingParameters parameters)
+    {
+        var opreturnScript = _projectScriptsBuilder.BuildInvestorInfoScript(projectInfo, parameters);
 
-        // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
-        var stagesScript = Enumerable.Range(0, projectInfo.Stages.Count)
-            .Select(index => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, index, null, expiryDateOverride));
+        var stageCount = ProjectParametersHelper.GetStageCount(projectInfo, parameters);
 
-        return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript, totalInvestmentAmount);
+        List<ProjectScripts> stagesScript = Enumerable.Range(0, stageCount).Select(index =>
+                   _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, parameters, index)).ToList();
+
+        return _investmentTransactionBuilder.BuildInvestmentTransaction(
+             projectInfo, opreturnScript, stagesScript, parameters.TotalInvestmentAmount);
     }
 
     public ProjectScriptType DiscoverUsedScript(ProjectInfo projectInfo, Transaction investmentTransaction, int stageIndex, string witScript)
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
-        // Calculate the investment amount from the transaction
-        var totalInvestmentAmount = GetTotalInvestmentAmount(projectInfo, investmentTransaction);
+        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, investmentTransaction);
 
-        // Determine expiry date override based on investment amount using centralized logic
-        var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
-
-        // Generate scripts with the appropriate expiry date
-        var scripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, null, expiryDateOverride);
+        var scripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageIndex);
 
         var witScriptInfo = new Blockcore.Consensus.TransactionInfo.WitScript(Blockcore.Consensus.ScriptInfo.Script.FromHex(witScript));
         var executeScript = new Blockcore.Consensus.ScriptInfo.Script(witScriptInfo[witScriptInfo.PushCount - 2]);
@@ -157,20 +154,10 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         return new TransactionInfo { Transaction = transaction, TransactionFee = fee };
     }
 
-    public TransactionInfo RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int stageIndex,
+    public TransactionInfo RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int startStageNumber,
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation)
     {
-        // Parse the investment transaction to calculate the total investment amount
-        var network = _networkConfiguration.GetNetwork();
-        var investmentTransaction = network.Consensus.ConsensusFactory.CreateTransaction(transactionHex);
-
-        // Calculate the investment amount from the transaction
-        var totalInvestmentAmount = GetTotalInvestmentAmount(projectInfo, investmentTransaction);
-
-        // Determine the effective expiry date based on penalty threshold
-        var expiryDateOverride = GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
-        
-        return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, stageIndex,
+        return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, startStageNumber,
             investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             projectScripts =>
             {
@@ -187,21 +174,20 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
                 return new NBitcoin.WitScript(NBitcoin.Op.GetPushOp(sig.ToBytes()),
                     NBitcoin.Op.GetPushOp(scriptToExecute), NBitcoin.Op.GetPushOp(controlBlock));
-            },
-            expiryDateOverride);
+            });
     }
 
-    public TransactionInfo RecoverRemainingFundsWithOutPenalty(string transactionHex, ProjectInfo projectInfo, int stageIndex,
+    public TransactionInfo RecoverRemainingFundsWithOutPenalty(string transactionHex, ProjectInfo projectInfo, int startStageNumber,
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation,
         IEnumerable<byte[]> seederSecrets)
     {
         var secrets = seederSecrets.Select(_ => new Key(_));
-        
-        return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, stageIndex,
+
+        return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, startStageNumber,
             investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             _ =>
             {
-                var result = _taprootScriptBuilder.CreateControlSeederSecrets(_,   projectInfo.ProjectSeeders.Threshold,secrets.ToArray());
+                var result = _taprootScriptBuilder.CreateControlSeederSecrets(_, projectInfo.ProjectSeeders.Threshold, secrets.ToArray());
 
                 // use fake data for fee estimation
                 var fakeSig = new byte[64];
@@ -224,14 +210,14 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             {
                 var controBlock = new NBitcoin.Script(witScript[witScript.PushCount - 1]);
                 var scriptToExecute = new NBitcoin.Script(witScript[witScript.PushCount - 2]);
-                
+
                 List<Op> ops = new List<Op>();
 
                 // the last 3 items on the stack are the fakesig, script and controlblock anything before that is the secrets
 
                 ops.Add(Op.GetPushOp(sig.ToBytes()));
 
-                foreach (var oppush  in witScript.Pushes.Skip(1).Take(witScript.Pushes.Count() - 3))
+                foreach (var oppush in witScript.Pushes.Skip(1).Take(witScript.Pushes.Count() - 3))
                 {
                     ops.Add(Op.GetPushOp(oppush));
                 }
@@ -242,7 +228,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
                 return new NBitcoin.WitScript(ops.ToArray());
             });
     }
-    
+
     public Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, SignatureInfo founderSignatures, string investorPrivateKey)
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
@@ -259,18 +245,18 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var unsignedUnfundedReleaseTransaction = _investmentTransactionBuilder.BuildUpfrontUnfundedReleaseFundsTransaction(projectInfo, investmentTransaction, investorReleaseKey);
 
         var unfundedReleaseTransaction = AddSignaturesToRecoveryPathTransaction(projectInfo, investmentTransaction, unsignedUnfundedReleaseTransaction, founderSignatures, investorPrivateKey);
-        
+
         return unfundedReleaseTransaction;
     }
 
     public bool CheckInvestorRecoverySignatures(ProjectInfo projectInfo, Transaction investmentTransaction, SignatureInfo founderSignatures)
-     {
-         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
+    {
+        var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
         var unsignedRecoveryTransaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDays, investorKey);
 
         return CheckRecoverySignatures(projectInfo, investmentTransaction, unsignedRecoveryTransaction, founderSignatures);
-     }
+    }
 
     public bool CheckInvestorUnfundedReleaseSignatures(ProjectInfo projectInfo, Transaction investmentTransaction, SignatureInfo founderSignatures, string investorReleaseKey)
     {
@@ -279,62 +265,14 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         return CheckRecoverySignatures(projectInfo, investmentTransaction, unsignedUnfundedReleaseFundsTransaction, founderSignatures);
     }
 
-    private long GetTotalInvestmentAmount(ProjectInfo projectInfo, Transaction investmentTransaction)
-    {
-        var totalInvestmentAmount = investmentTransaction.Outputs.AsIndexedOutputs()
-            .Skip(2)
-            .Take(projectInfo.Stages.Count)
-            .Sum(output => output.TxOut.Value.Satoshi);
-
-        return totalInvestmentAmount;
-    }
-
-    public bool IsInvestmentAbovePenaltyThreshold(ProjectInfo projectInfo, Transaction investmentTransaction)
-    {
-        // Calculate the total investment amount from the transaction outputs
-        // Skip first 2 outputs (Angor fee and OP_RETURN) and sum the stage outputs
-        var totalInvestmentAmount = GetTotalInvestmentAmount(projectInfo, investmentTransaction);
-
-        // Use the overload that takes the amount directly
-        return IsInvestmentAbovePenaltyThreshold(projectInfo, totalInvestmentAmount);
-    }
-
-    /// <summary>
-    /// Determines if an investment amount is above the penalty threshold.
-    /// Returns true if investment is at or above the threshold (requires penalty + founder approval).
-    /// Returns false if investment is below threshold (no penalty, no approval needed) or if no threshold is set.
-    /// </summary>
     public bool IsInvestmentAbovePenaltyThreshold(ProjectInfo projectInfo, long investmentAmount)
     {
-        // If no penalty threshold is set, return true (by default all investments where above threshold)
-        if (!projectInfo.PenaltyThreshold.HasValue)
-        {
-            return true;
-        }
-
-        // Return true if investment is at or above the threshold (requires penalty + founder approval)
-        // Return false if investment is below threshold (no penalty, no approval needed)
-        return investmentAmount > projectInfo.PenaltyThreshold.Value;
+        return PenaltyThresholdHelper.IsInvestmentAbovePenaltyThreshold(projectInfo, investmentAmount);
     }
 
-    /// <summary>
-    /// Determines the effective expiry date based on the penalty threshold.
-    /// Returns StartDate for below-threshold investments (immediate access),
-    /// Returns null for at/above-threshold investments (uses standard ExpiryDate).
-    /// </summary>
     private DateTime? GetExpiryDateOverride(ProjectInfo projectInfo, long investmentAmount)
     {
-        // Use the centralized threshold check
-        if (!IsInvestmentAbovePenaltyThreshold(projectInfo, investmentAmount))
-        {
-            // Below threshold: immediate access via EndOfProject script (StartDate locktime)
-            // No penalty path needed, no founder approval required
-            return projectInfo.StartDate;
-        }
-        
-        // Above/at threshold: use standard ExpiryDate
-        // Requires penalty recovery path with founder approval
-        return null;
+        return PenaltyThresholdHelper.GetExpiryDateOverride(projectInfo, investmentAmount);
     }
 
     private Transaction AddSignaturesToRecoveryPathTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, Transaction recoveryTransaction, SignatureInfo founderSignatures, string investorPrivateKey)
@@ -348,15 +286,18 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var key = new NBitcoin.Key(Encoders.Hex.DecodeData(investorPrivateKey));
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
+        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, investmentTransaction);
+
+        // Count Taproot outputs to determine stage count
         var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
-            .Skip(2).Take(projectInfo.Stages.Count)
+            .Where(txout => txout.TxOut.ScriptPubKey.IsScriptType(NBitcoin.ScriptType.Taproot))
             .Select(_ => _.TxOut)
             .ToArray();
 
-        // todo: david change to Enumerable.Range 
-        for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
+        for (var stageIndex = 0; stageIndex < outputs.Length; stageIndex++)
         {
-            var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
+            ProjectScripts scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageIndex); 
+
             var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Recover);
 
             var tapScript = new NBitcoin.Script(scriptStages.Recover.ToBytes()).ToTapScript(TapLeafVersion.C0);
@@ -369,11 +310,11 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
 
             recoveryTransaction.Inputs[stageIndex].WitScript = new Blockcore.Consensus.TransactionInfo.WitScript(
-                new WitScript(
-                    Op.GetPushOp(investorSignature.ToBytes()),
-                    Op.GetPushOp(TaprootSignature.Parse(founderSignatures.Signatures.First(f => f.StageIndex == stageIndex).Signature).ToBytes()),
-                    Op.GetPushOp(scriptStages.Recover.ToBytes()),
-                    Op.GetPushOp(controlBlock.ToBytes())).ToBytes());
+                    new WitScript(
+                        Op.GetPushOp(investorSignature.ToBytes()),
+                        Op.GetPushOp(TaprootSignature.Parse(founderSignatures.Signatures.First(f => f.StageIndex == stageIndex).Signature).ToBytes()),
+                        Op.GetPushOp(scriptStages.Recover.ToBytes()),
+                        Op.GetPushOp(controlBlock.ToBytes())).ToBytes());
         }
 
         return recoveryTransaction;
@@ -390,16 +331,18 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var pubkey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey();
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
+        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, investmentTransaction);
+
+        // Count Taproot outputs to determine stage count
         var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
-            .Skip(2).Take(projectInfo.Stages.Count)
+            .Where(txout => txout.TxOut.ScriptPubKey.IsScriptType(NBitcoin.ScriptType.Taproot))
             .Select(_ => _.TxOut)
             .ToArray();
 
-        // todo: David change to Enumerable.Range 
         bool validationgPassed = true;
-        for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
+        for (var stageIndex = 0; stageIndex < outputs.Length; stageIndex++)
         {
-            var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
+            ProjectScripts scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageIndex);
 
             var tapScript = new NBitcoin.Script(scriptStages.Recover.ToBytes()).ToTapScript(TapLeafVersion.C0);
             var execData = new TaprootExecutionData(stageIndex, tapScript.LeafHash) { SigHash = sigHash };

@@ -1,11 +1,12 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
+using Angor.Shared.Utilities;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 using Op = Blockcore.Consensus.ScriptInfo.Op;
+using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
 using uint256 = Blockcore.NBitcoin.uint256;
 using WitScript = Blockcore.Consensus.TransactionInfo.WitScript;
 
@@ -33,19 +34,22 @@ public class SeederTransactionActions : ISeederTransactionActions
         _networkConfiguration = networkConfiguration;
     }
 
-    public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey,
-        uint256 investorSecretHash, long totalInvestmentAmount)
+    public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, string investorKey, uint256 investorSecretHash, long totalInvestmentAmount)
     {
-        // create the output and script of the investor pubkey script opreturn
-        var opreturnScript = _projectScriptsBuilder.BuildSeederInfoScript(investorKey, investorSecretHash);
+        return CreateInvestmentTransaction(projectInfo, FundingParameters.CreateForInvest(projectInfo, investorKey, totalInvestmentAmount, investorSecretHash));
+    }
 
-        // stages, this is an iteration over the stages to create the taproot spending script branches for each stage
-        var stagesScript = projectInfo.Stages
-            .Select((_,index) => _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo,
-                investorKey,index, investorSecretHash));
+    public Transaction CreateInvestmentTransaction(ProjectInfo projectInfo, FundingParameters parameters)
+    {
+        var opreturnScript = _projectScriptsBuilder.BuildSeederInfoScript(projectInfo, parameters);
+
+        var stageCount = ProjectParametersHelper.GetStageCount(projectInfo, parameters);
+
+        List<ProjectScripts> stagesScript = Enumerable.Range(0, stageCount).Select(index =>
+           _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, parameters, index)).ToList();
 
         return _investmentTransactionBuilder.BuildInvestmentTransaction(projectInfo, opreturnScript, stagesScript,
-            totalInvestmentAmount);
+            parameters.TotalInvestmentAmount);
     }
     
     public Transaction BuildRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, int penaltyDays,
@@ -66,19 +70,19 @@ public class SeederTransactionActions : ISeederTransactionActions
         var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
         var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
 
+        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, investmentTransaction);
 
         var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
-            .Skip(2).Take(projectInfo.Stages.Count)
+            .Where(txout => txout.TxOut.ScriptPubKey.IsScriptType(NBitcoin.ScriptType.Taproot))
             .Select(_ => _.TxOut)
             .ToArray();
 
         var key = new Key(Encoders.Hex.DecodeData(privateKey));
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
-        // todo: david change to Enumerable.Range 
         for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
         {
-            var projectScripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
+            var projectScripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageIndex);
 
             var controlBlock = _taprootScriptBuilder.CreateControlBlock(projectScripts, _ => _.Recover);
 

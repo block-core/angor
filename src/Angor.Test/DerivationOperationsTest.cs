@@ -26,7 +26,7 @@ namespace Angor.Test
         /// <summary>
         /// The `ScriptTDerivationOperationsTestest` class is a unit test class that tests the functionality of the `DerivationOperations` class.
         /// </summary>
-        public class ScriptTDerivationOperationsTestest
+        public class ScriptDerivationOperationsTestest
         {
             private readonly Mock<INetworkConfiguration> _networkConfiguration;
             private readonly ILogger<DerivationOperations> _logger;
@@ -37,7 +37,7 @@ namespace Angor.Test
                 FeeRate = 10000
             };
 
-            public ScriptTDerivationOperationsTestest()
+            public ScriptDerivationOperationsTestest()
             {
                 _networkConfiguration = new Mock<INetworkConfiguration>();
 

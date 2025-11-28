@@ -1,5 +1,6 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
+using Angor.Shared.Utilities;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
@@ -14,7 +15,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
     private readonly IInvestmentScriptBuilder _investmentScriptBuilder;
     private readonly ITaprootScriptBuilder _taprootScriptBuilder;
 
-    public InvestmentTransactionBuilder(INetworkConfiguration networkConfiguration, IProjectScriptsBuilder projectScriptsBuilder, 
+    public InvestmentTransactionBuilder(INetworkConfiguration networkConfiguration, IProjectScriptsBuilder projectScriptsBuilder,
         IInvestmentScriptBuilder investmentScriptBuilder, ITaprootScriptBuilder taprootScriptBuilder)
     {
         _networkConfiguration = networkConfiguration;
@@ -23,7 +24,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
         _taprootScriptBuilder = taprootScriptBuilder;
     }
 
-    public Transaction BuildInvestmentTransaction(ProjectInfo projectInfo, Script opReturnScript, 
+    public Transaction BuildInvestmentTransaction(ProjectInfo projectInfo, Script opReturnScript,
         IEnumerable<ProjectScripts> projectScripts, long totalInvestmentAmount)
     {
         var network = _networkConfiguration.GetNetwork();
@@ -33,7 +34,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
         // create the output and script of the project id 
         var angorFeeOutputScript = _projectScriptsBuilder.GetAngorFeeOutputScript(projectInfo.ProjectIdentifier);
         int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
-        long angorFee = (totalInvestmentAmount * angorFeePercentage) / 100; 
+        long angorFee = (totalInvestmentAmount * angorFeePercentage) / 100;
         var angorOutput = new TxOut(new Money(angorFee), angorFeeOutputScript);
         investmentTransaction.AddOutput(angorOutput);
 
@@ -45,31 +46,51 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
 
         var stagesScripts = projectScripts.Select(_ => _taprootScriptBuilder.CreateStage(network, _));
 
+        // Determine stage count and percentages based on project type
+        int stageCount = projectScripts.Count();
+        List<decimal> stagePercentages = new List<decimal>();
+
+        if (projectInfo.AllowDynamicStages)
+        {
+            // Dynamic stages (Fund/Subscribe) - equal distribution
+            decimal equalPercentage = 100m / stageCount;
+            stagePercentages.AddRange(Enumerable.Repeat(equalPercentage, stageCount));
+        }
+        else
+        {
+            // Fixed stages (Invest) - use predefined percentages
+            if (projectInfo.Stages == null || projectInfo.Stages.Count != stageCount)
+            {
+                throw new InvalidOperationException($"Stage count mismatch: expected {stageCount} stages, but ProjectInfo has {projectInfo.Stages?.Count ?? 0}");
+            }
+            stagePercentages.AddRange(projectInfo.Stages.Select(s => s.AmountToRelease));
+        }
+
         // Calculate amounts for each stage
         var stageAmounts = new List<long>();
         long totalAllocated = 0;
 
-        for (int i = 0; i < projectInfo.Stages.Count; i++)
+        for (int i = 0; i < stageCount; i++)
         {
             long stageAmount;
-            if (i == projectInfo.Stages.Count - 1) // Last stage gets remainder
+            if (i == stageCount - 1) // Last stage gets remainder
             {
                 stageAmount = totalInvestmentAmountAfterFee - totalAllocated;
             }
             else
             {
-                stageAmount = Convert.ToInt64(totalInvestmentAmountAfterFee * (projectInfo.Stages[i].AmountToRelease / 100));
+                stageAmount = Convert.ToInt64(totalInvestmentAmountAfterFee * (stagePercentages[i] / 100));
                 totalAllocated += stageAmount;
             }
             stageAmounts.Add(stageAmount);
         }
 
         var stagesOutputs = stagesScripts.Select((script, i) =>
-            new TxOut(new Money(stageAmounts[i]), new Script(script.ToBytes())));
+        new TxOut(new Money(stageAmounts[i]), new Script(script.ToBytes())));
 
         investmentTransaction.Outputs.AddRange(stagesOutputs);
 
-        if(investmentTransaction.TotalOut.Satoshi != totalInvestmentAmount)
+        if (investmentTransaction.TotalOut.Satoshi != totalInvestmentAmount)
             throw new InvalidOperationException($"Total output amount {investmentTransaction.TotalOut.Satoshi} does not match expected total investment amount {totalInvestmentAmount}.");
 
         return investmentTransaction;
@@ -82,10 +103,10 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
             penaltyDays);
 
         var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
-        
-        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2).Take(projectInfo.Stages.Count))
+
+        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Where(utxo => utxo.IsTaprooOutput()))
         {
-            transaction.Inputs.Add( new TxIn(output.ToOutPoint()));
+            transaction.Inputs.Add(new TxIn(output.ToOutPoint()));
 
             transaction.Outputs.Add(new TxOut(output.TxOut.Value, spendingScript.WitHash.ScriptPubKey));
         }
@@ -109,7 +130,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
 
         var transaction = _networkConfiguration.GetNetwork().CreateTransaction();
 
-        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2).Take(projectInfo.Stages.Count))
+        foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Where(utxo => utxo.IsTaprooOutput()))
         {
             transaction.Inputs.Add(new TxIn(output.ToOutPoint()));
 
