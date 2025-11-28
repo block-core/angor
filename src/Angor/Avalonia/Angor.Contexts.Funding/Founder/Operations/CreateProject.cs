@@ -99,7 +99,7 @@ internal static class CreateProjectConstants
                     return Result.Failure<TransactionDraft>(projectInfo.Error);
                 }
 
-                var transactionInfo = await CreatProjectTransaction(request.WalletId.Value, wallet.Value.ToWalletWords(),
+                var transactionInfo = await CreatProjectTransaction(request.WalletId, wallet.Value.ToWalletWords(),
                     request.SelectedFeeRate,
                     newProjectKeys.FounderKey, newProjectKeys.ProjectIdentifier, projectInfo.Value);
 
@@ -215,7 +215,7 @@ internal static class CreateProjectConstants
                 return await tsc.Task;
             }
 
-            private async Task<Result<TransactionInfo>> CreatProjectTransaction(string walletId, WalletWords words,
+            private async Task<Result<TransactionInfo>> CreatProjectTransaction(WalletId walletId, WalletWords words,
                 long selectedFee,
                 string founderKey,
                 string projectIdentifier, string projectInfoEventId)
@@ -240,7 +240,7 @@ internal static class CreateProjectConstants
                 return Result.Success(signedTransaction);
             }
 
-            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(string walletId)
+            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(WalletId walletId)
             {
                 try
                 {

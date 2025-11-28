@@ -19,8 +19,7 @@ public class TransactionHistory(
     {
         var accountBalanceInfo =
             await accountBalanceService
-                .RefreshAccountBalanceInfoAsync(walletId
-                    .Value);
+                .RefreshAccountBalanceInfoAsync(walletId);
 
         if (accountBalanceInfo.IsFailure)
             return Result.Failure<IEnumerable<string>>(accountBalanceInfo.Error);

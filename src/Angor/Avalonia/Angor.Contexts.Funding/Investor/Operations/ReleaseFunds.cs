@@ -51,7 +51,7 @@ public static class ReleaseFunds
                 return Result.Failure<ReleaseTransactionDraft>(words.Error);
             
             // Get account info from database
-            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId.Value);
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId);
             if (accountBalanceResult.IsFailure)
                 return Result.Failure<ReleaseTransactionDraft>(accountBalanceResult.Error);
             

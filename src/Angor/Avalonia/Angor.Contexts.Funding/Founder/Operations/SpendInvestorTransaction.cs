@@ -58,7 +58,7 @@ public static class SpendInvestorTransaction
             var investmentTransactions = await Task.WhenAll(tasks);
             founderContext.InvestmentTrasnactionsHex = investmentTransactions.Where(hex => hex != string.Empty).ToList();
             
-            var addressResult = await GetUnfundedReleaseAddress(request.WalletId.Value);
+            var addressResult = await GetUnfundedReleaseAddress(request.WalletId);
             if (addressResult.IsFailure) 
                 return Result.Failure<TransactionDraft>("Could not get an unfunded release address");
             
@@ -124,7 +124,7 @@ public static class SpendInvestorTransaction
             return Encoders.Hex.EncodeData(key.ToBytes());
         }
         
-        private async Task<Result<string>> GetUnfundedReleaseAddress(string walletId)
+        private async Task<Result<string>> GetUnfundedReleaseAddress(WalletId walletId)
         {
             var accountBalanceResult = await walletAccountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
             if (accountBalanceResult.IsFailure)

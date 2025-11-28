@@ -68,7 +68,7 @@ public class WalletAppService(
             }
 
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
-            var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId.Value);
+            var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
 
             if (accountBalanceInfo.IsFailure)
                 return Result.Failure<FeeAndSize>(accountBalanceInfo.Error);
@@ -114,7 +114,7 @@ public class WalletAppService(
                 return Result.Failure<Address>(sensitiveDataResult.Error);
             }
 
-            var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId.Value);
+            var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
 
             if (accountBalanceInfo.IsFailure)
                 return Result.Failure<Address>(accountBalanceInfo.Error);  
@@ -149,7 +149,7 @@ public class WalletAppService(
             var (seed, passphrase) = sensitiveDataResult.Value;
             
             var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
-            var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId.Value);
+            var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
 
             if (accountBalanceInfo.IsFailure)
                 return Result.Failure<TxId>(accountBalanceInfo.Error);
@@ -191,9 +191,33 @@ public class WalletAppService(
         }
     }
 
-    public Task<Result<WalletId>> CreateWallet(string name, string seedWords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
+    public async Task<Result<WalletId>> CreateWallet(string name, string seedWords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
     {
-        return walletFactory.CreateWallet(name ?? SingleWalletName, seedWords, passphrase, encryptionKey, network)
+        var wallet = await walletFactory.CreateWallet(name ?? SingleWalletName, seedWords, passphrase, encryptionKey, network);
+
+        if (wallet.IsFailure)
+            return Result.Failure<WalletId>(wallet.Error);
+
+        var accountInfoResult = await accountBalanceService.RefreshAccountBalanceInfoAsync(wallet.Value.Id);
+
+        if (accountInfoResult.IsFailure)
+            return Result.Failure<WalletId>(accountInfoResult.Error);
+        
+        return Result.Success(wallet.Value.Id);
+    }
+    
+    public Task<Result<WalletId>> CreateWallet(string name, string encryptionKey, BitcoinNetwork network)
+    {
+        if (string.IsNullOrEmpty(name))
+            name = network + " Wallet";
+        
+        var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
+        
+        var seedWords = mnemonic.ToString();
+        var passphrase = Maybe<string>.None;
+        
+        //No need to refresh the wallet as we create it from scratch here
+        return walletFactory.CreateWallet(name, seedWords, passphrase, encryptionKey, network)
             .Map(_ => _.Id);
     }
     
@@ -206,7 +230,18 @@ public class WalletAppService(
         }
 
         var wallets = walletsResult.Value.ToList();
-        wallets.RemoveAll(wallet => wallet.Id == walletId.Value);
+
+        var wallet = wallets.FirstOrDefault(w => w.Id == walletId.Value);
+        
+        if (wallet == null)
+            return Result.Failure("Wallet not found");
+        
+        var deleteAccountResult = await accountBalanceService.DeleteAccountBalanceInfoAsync(walletId);
+        
+        if (deleteAccountResult.IsFailure)
+            return Result.Failure(deleteAccountResult.Error);
+        
+        wallets.Remove(wallet);
 
         var saveResult = await walletStore.SaveAll(wallets);
         if (saveResult.IsFailure)

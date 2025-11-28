@@ -58,7 +58,7 @@ public static class CreateInvestment
                 if (transactionResult.IsFailure)
                     return Result.Failure<InvestmentDraft>(transactionResult.Error);
 
-                var signedTxResult = await SignTransaction(transactionRequest.WalletId.Value, walletWords, transactionResult.Value, transactionRequest.FeeRate.SatsPerKilobyte);
+                var signedTxResult = await SignTransaction(transactionRequest.WalletId, walletWords, transactionResult.Value, transactionRequest.FeeRate.SatsPerKilobyte);
                 if (signedTxResult.IsFailure)
                 {
                     return Result.Failure<InvestmentDraft>(signedTxResult.Error);
@@ -85,9 +85,10 @@ public static class CreateInvestment
             }
         }
 
-        private async Task<Result<TransactionInfo>> SignTransaction(string walletId, WalletWords walletWords, Transaction transaction,
+        private async Task<Result<TransactionInfo>> SignTransaction(WalletId walletId, WalletWords walletWords, Transaction transaction,
             long feerate)
         {
+            if (walletId == null) throw new ArgumentNullException(nameof(walletId));
             // Get account info from database
             var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
             if (accountBalanceResult.IsFailure)
