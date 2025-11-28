@@ -15,10 +15,9 @@ public class CreateProjectFlow(UIServices uiServices, INavigator navigator, IPro
 {
     public Task<Result<Maybe<string>>> CreateProject()
     {
-        var createWizardResult =
-            from wallet in walletContext.CurrentWallet.ToResult("A wallet is required to create a project")
-            from projectSeed in GetProjectSeed()
-            select CreateWizard(wallet, projectSeed);
+        var createWizardResult = from wallet in walletContext.GetDefaultWallet()
+            from seed in GetProjectSeed()
+            select CreateWizard(wallet, seed);
 
         return createWizardResult.Map(slimWizard => slimWizard.Navigate(navigator));
     }
