@@ -115,13 +115,13 @@ public partial class UIServices : ReactiveObject
     /// This allows for more flexible testing in development environments.
     /// </summary>
     /// <returns>True if debug mode is enabled and network is testnet; otherwise false.</returns>
-    public bool ShouldSkipProductionValidations()
+    public bool EnableProductionValidations()
     {
         var isDebugMode = IsDebugModeEnabled;
         var network = networkConfiguration.GetNetwork();
         var isTestnet = network.NetworkType == NetworkType.Testnet;
 
-        return isDebugMode && isTestnet;
+        return !(isDebugMode && isTestnet);
     }
 
     public IEnumerable<IFeeratePreset> FeeratePresets

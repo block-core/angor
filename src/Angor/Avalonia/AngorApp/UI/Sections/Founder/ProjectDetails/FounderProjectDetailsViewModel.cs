@@ -35,6 +35,13 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
 
     private static object CreateContent(ProjectId projectId, ProjectStatus status, IFounderAppService founderAppService, UIServices uiServices, IWalletContext walletContext)
     {
+        var enableProductionValidations = uiServices.EnableProductionValidations();
+
+        if(enableProductionValidations == false)
+        {
+            return new ApproveInvestmentsViewModel(projectId, founderAppService, uiServices, walletContext);
+        }
+
         return status switch
         {
             ProjectStatus.Failed => new ReleaseFundsViewModel(projectId, founderAppService, walletContext, uiServices),
