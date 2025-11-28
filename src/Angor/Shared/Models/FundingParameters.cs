@@ -111,9 +111,9 @@ public class FundingParameters
                 // Seeder with secret hash (Invest project)
                 secretHash = new uint256(ops[2].PushData);
             }
-            else if (ops[2].PushData?.Length == 7)
+            else if (ops[2].PushData?.Length == 4)
             {
-                // Dynamic stage info (Fund/Subscribe project)
+                // Dynamic stage info (Fund/Subscribe project) - 4 bytes
                 dynamicInfo = DynamicStageInfo.FromBytes(ops[2].PushData);
             }
         }

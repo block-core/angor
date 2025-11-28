@@ -32,7 +32,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
         {
             // Use the specified pattern
             var pattern = projectInfo.DynamicStagePatterns[parameters.PatternIndex];
-            var dynamicInfo = DynamicStageInfo.FromPattern(pattern, parameters.InvestmentStartDate.Value, parameters.PatternIndex);
+            var dynamicInfo = DynamicStageInfo.FromPattern(pattern, parameters);
 
             ops.Add(Op.GetPushOp(dynamicInfo.ToBytes()));
         }
@@ -62,7 +62,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
         {
             // Use the specified pattern
             var pattern = projectInfo.DynamicStagePatterns[parameters.PatternIndex];
-            var dynamicInfo = DynamicStageInfo.FromPattern(pattern, parameters.InvestmentStartDate.Value, parameters.PatternIndex);
+            var dynamicInfo = DynamicStageInfo.FromPattern(pattern, parameters);
 
             ops.Add(Op.GetPushOp(dynamicInfo.ToBytes()));
         }
@@ -99,7 +99,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
                 uint256 secretHash = new uint256(ops[2].PushData);
                 return (pubKey.ToHex(), secretHash);
             }
-            else if (ops[2].PushData?.Length == 7)
+            else if (ops[2].PushData?.Length == 4)
             {
                 // Dynamic stage info (no secret hash)
                 return (new PubKey(ops[1].PushData).ToHex(), null);
@@ -127,13 +127,13 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
         var ops = script.ToOps();
 
         // Check for dynamic stage info in different positions
-        if (ops.Count == 3 && ops[2].PushData?.Length == 7)
+        if (ops.Count == 3 && ops[2].PushData?.Length == 4)
         {
             // Investor with dynamic info: [OP_RETURN] [investor key] [dynamic info]
             return DynamicStageInfo.FromBytes(ops[2].PushData);
         }
 
-        if (ops.Count == 4 && ops[3].PushData?.Length == 7)
+        if (ops.Count == 4 && ops[3].PushData?.Length == 4)
         {
             // Seeder with dynamic info: [OP_RETURN] [investor key] [secret hash] [dynamic info]
             return DynamicStageInfo.FromBytes(ops[3].PushData);
