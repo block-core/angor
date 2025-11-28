@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              x:Class="AngorApp.App"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Light">
 
     <Application.Resources>
         <ResourceDictionary>

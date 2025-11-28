@@ -1,7 +1,7 @@
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Navigation.Sections;
 
-namespace AngorApp.UI.NewShell;
+namespace AngorApp.UI.Shell;
 
 public class SimpleNavigator : INavigator
 {

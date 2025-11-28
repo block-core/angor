@@ -6,11 +6,12 @@
              xmlns:new="clr-namespace:AngorApp.UI.Sections.New"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+             xmlns:shell="clr-namespace:AngorApp.UI.Shell"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
-             x:Class="AngorApp.UI.NewShell.Shell" x:DataType="newShell:IShellViewModel" Background="{StaticResource Background}">
+             x:Class="AngorApp.UI.NewShell.Shell" x:DataType="shell:IShellViewModel" Background="{StaticResource Background}">
 
     <Design.DataContext>
-        <newShell:ShellViewModelSample />
+        <shell:ShellViewModelSample />
     </Design.DataContext>
 
     <UserControl.Resources>

@@ -14,6 +14,7 @@ using AngorApp.UI.Sections.Portfolio.Recover;
 using AngorApp.UI.Sections.Settings;
 using AngorApp.UI.Sections.Shell;
 using AngorApp.UI.Shared.Controls.Common.FoundedProjectOptions;
+using AngorApp.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using IWalletSectionViewModel = AngorApp.UI.Sections.Wallet.Main.IWalletSectionViewModel;
 using WalletSectionViewModel = AngorApp.UI.Sections.Wallet.Main.WalletSectionViewModel;
