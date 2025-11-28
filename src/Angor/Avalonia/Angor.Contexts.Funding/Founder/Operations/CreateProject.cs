@@ -3,11 +3,9 @@ using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
-using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
-using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -52,7 +50,7 @@ internal static class CreateProjectConstants
                 ProjectSeedDto? newProjectKeys = request.ProjectSeedDto;
 
                 var transactionInfo = await CreateProjectTransaction(
-                      request.WalletId.Value,
+                      request.WalletId,
                       wallet.Value.ToWalletWords(),
                       request.SelectedFeeRate,
                       newProjectKeys.FounderKey,
@@ -76,7 +74,7 @@ internal static class CreateProjectConstants
             }
 
             private async Task<Result<TransactionInfo>> CreateProjectTransaction(
-                    string walletId,
+                    WalletId walletId,
                     WalletWords words,
                     long selectedFee,
                     string founderKey,
@@ -110,7 +108,7 @@ internal static class CreateProjectConstants
                 return Result.Success(signedTransaction);
             }
 
-            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(string walletId)
+            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(WalletId walletId)
             {
                 try
                 {
