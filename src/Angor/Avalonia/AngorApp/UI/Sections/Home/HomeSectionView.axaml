@@ -76,34 +76,34 @@
                         </Interaction.Behaviors>
                     </Card>
                 </BalancedWrapGrid>
-                <Card Header="The Angor Flow">
-                    <Card.HeaderTheme>
-                        <ControlTheme TargetType="TemplatedControl">
-                            <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
-                        </ControlTheme>
-                    </Card.HeaderTheme>
-                    <Card.Resources>
-                        <ControlTemplate x:Key="Mobile">
-                            <StackPanel Classes="SmallGap">
-                                <Image RenderOptions.BitmapInterpolationMode="None" Source="/Assets/flow.png" />
-                                <EdgePanel Content="Tap to see" VerticalAlignment="Top" HorizontalAlignment="Right">
-                                    <EdgePanel.StartContent>
-                                        <ui:Icon Source="fa-magnifying-glass" />
-                                    </EdgePanel.StartContent>
-                                </EdgePanel>
-                                <Interaction.Behaviors>
-                                    <TappedEventTrigger>
-                                        <InvokeCommandAction Command="{Binding GoToAngorFlow}" />
-                                    </TappedEventTrigger>
-                                </Interaction.Behaviors>
-                            </StackPanel>
-                        </ControlTemplate>
-                        <ControlTemplate x:Key="Desktop">
-                            <Svg MaxWidth="800" Path="/Assets/flow.svg" />
-                        </ControlTemplate>
-                    </Card.Resources>
-                    <ContentControl Template="{OnFormFactor Mobile={StaticResource Mobile}, Default={StaticResource Desktop}}" />
-                </Card>
+                <!-- <Card Header="The Angor Flow"> -->
+                <!--     <Card.HeaderTheme> -->
+                <!--         <ControlTheme TargetType="TemplatedControl"> -->
+                <!--             <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" /> -->
+                <!--         </ControlTheme> -->
+                <!--     </Card.HeaderTheme> -->
+                <!--     <Card.Resources> -->
+                <!--         <ControlTemplate x:Key="Mobile"> -->
+                <!--             <StackPanel Classes="SmallGap"> -->
+                <!--                 <Image RenderOptions.BitmapInterpolationMode="None" Source="/Assets/flow.png" /> -->
+                <!--                 <EdgePanel Content="Tap to see" VerticalAlignment="Top" HorizontalAlignment="Right"> -->
+                <!--                     <EdgePanel.StartContent> -->
+                <!--                         <ui:Icon Source="fa-magnifying-glass" /> -->
+                <!--                     </EdgePanel.StartContent> -->
+                <!--                 </EdgePanel> -->
+                <!--                 <Interaction.Behaviors> -->
+                <!--                     <TappedEventTrigger> -->
+                <!--                         <InvokeCommandAction Command="{Binding GoToAngorFlow}" /> -->
+                <!--                     </TappedEventTrigger> -->
+                <!--                 </Interaction.Behaviors> -->
+                <!--             </StackPanel> -->
+                <!--         </ControlTemplate> -->
+                <!--         <ControlTemplate x:Key="Desktop"> -->
+                <!--             <Svg MaxWidth="800" Path="/Assets/flow.svg" /> -->
+                <!--         </ControlTemplate> -->
+                <!--     </Card.Resources> -->
+                <!--     <ContentControl Template="{OnFormFactor Mobile={StaticResource Mobile}, Default={StaticResource Desktop}}" /> -->
+                <!-- </Card> -->
             </StackPanel>
         </ScrollViewer>
     </a:PageContainer>

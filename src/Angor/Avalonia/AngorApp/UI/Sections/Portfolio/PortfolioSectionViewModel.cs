@@ -7,9 +7,12 @@ using AngorApp.UI.Sections.Portfolio.Items;
 using AngorApp.UI.Sections.Portfolio.Penalties;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI.Navigation;
+using Zafiro.UI.Shell.Utils;
 
 namespace AngorApp.UI.Sections.Portfolio;
 
+[Section("Funded", icon: "fa-arrow-trend-up", sortIndex: 3)]
+[SectionGroup("INVESTOR")]
 public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewModel, IDisposable
 {
     private readonly CompositeDisposable disposable = new();

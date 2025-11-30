@@ -3,9 +3,12 @@ using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.Core.Factories;
 using AngorApp.UI.Sections.Browse.ProjectLookup;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.UI.Shell.Utils;
 
 namespace AngorApp.UI.Sections.Browse;
 
+[Section("Find Projects", icon: "fa-magnifying-glass", sortIndex: 2)]
+[SectionGroup("INVESTOR")]
 public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionViewModel, IDisposable
 {
     private readonly CompositeDisposable disposable = new();

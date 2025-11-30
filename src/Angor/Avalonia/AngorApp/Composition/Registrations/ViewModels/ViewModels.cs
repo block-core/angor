@@ -1,6 +1,7 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
 using AngorApp.Core.Factories;
+using AngorApp.UI.NewShell;
 using AngorApp.UI.Sections.Browse;
 using AngorApp.UI.Sections.Browse.Details;
 using AngorApp.UI.Sections.Browse.ProjectLookup;
@@ -13,6 +14,7 @@ using AngorApp.UI.Sections.Portfolio.Recover;
 using AngorApp.UI.Sections.Settings;
 using AngorApp.UI.Sections.Shell;
 using AngorApp.UI.Shared.Controls.Common.FoundedProjectOptions;
+using AngorApp.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using IWalletSectionViewModel = AngorApp.UI.Sections.Wallet.Main.IWalletSectionViewModel;
 using WalletSectionViewModel = AngorApp.UI.Sections.Wallet.Main.WalletSectionViewModel;
@@ -38,6 +40,7 @@ public static class ViewModels
                 .AddTransient<IFounderSectionViewModel, FounderSectionViewModel>()
                 .AddTransient<ISettingsSectionViewModel, SettingsSectionViewModel>()
                 .AddScoped<IPenaltiesViewModel, PenaltiesViewModel>()
-                .AddScoped<IRecoverViewModel, RecoverViewModel>();
+                .AddScoped<IRecoverViewModel, RecoverViewModel>()
+                .AddSingleton<IShellViewModel, ShellViewModel>();
     }
 }
