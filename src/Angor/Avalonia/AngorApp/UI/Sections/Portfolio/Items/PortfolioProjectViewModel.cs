@@ -21,8 +21,9 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
     {
         this.projectDto = projectDto;
 
-        var canCompleteInvestment = this.WhenAnyValue(x => x.InvestmentStatus).Select(x => x == InvestmentStatus.PendingFounderSignatures);
-        
+        var canCompleteInvestment = this.WhenAnyValue(x => x.InvestmentStatus).Select(x => x == InvestmentStatus.FounderSignaturesReceived);
+        var canCancelInvestment = this.WhenAnyValue(x => x.InvestmentStatus).Select(x => x != InvestmentStatus.Invested);
+
         CompleteInvestment = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => investmentAppService.ConfirmInvestment(projectDto.InvestmentId, wallet.Id, new ProjectId(projectDto.Id))), canCompleteInvestment)
             .Enhance()
             .DisposeWith(disposable);
@@ -45,6 +46,25 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
 
         InvestmentStatus = projectDto.InvestmentStatus;
         GoToManageFunds = ReactiveCommand.CreateFromTask(() => navigator.Go(() => new ManageInvestorProjectViewModel(new ProjectId(projectDto.Id), investmentAppService, uiServices, walletContext, sharedCommands))).Enhance().DisposeWith(disposable);
+
+        // cancel investment command
+        CancelInvestment = ReactiveCommand.CreateFromTask(() => investmentAppService.CancelInvestment(walletContext.CurrentWallet.Value.Id, new ProjectId(projectDto.Id), projectDto.InvestmentId), canCancelInvestment)
+            .Enhance()
+            .DisposeWith(disposable);
+
+        CancelInvestment
+          .HandleErrorsWith(uiServices.NotificationService, "Failed to cancel investment")
+          .DisposeWith(disposable);
+
+        CancelInvestment.Successes()
+           .SelectMany(async _ =>
+           {
+               // todo: jose - refresh the portfolio list after canceling an investment
+               await uiServices.Dialog.ShowMessage("Investment canceled", $"Your investment in \"{projectDto.Name}\" has been canceled.");
+               return Unit.Default;
+           })
+           .Subscribe()
+           .DisposeWith(disposable);
     }
 
     public string Name => projectDto.Name;
@@ -55,6 +75,8 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
     public FounderStatus FounderStatus => FounderStatus.Approved;
     public Uri LogoUri => projectDto.LogoUri;
     public IEnhancedCommand<Result> CompleteInvestment { get; }
+    public IEnhancedCommand<Result> CancelInvestment { get; }
+
     public IAmountUI Invested { get; }
     public IEnhancedCommand GoToManageFunds { get; }
 

@@ -83,6 +83,36 @@ public class PortfolioService(
             : Result.Failure("Failed to save investment record");
     }
 
+    public async Task<Result> RemoveInvestmentRecordAsync(string walletId, InvestmentRecord investment)
+    {
+        var investmentsResult = await GetByWalletId(walletId);
+        if (investmentsResult.IsFailure)
+            return Result.Failure(investmentsResult.Error);
+
+        var investments = investmentsResult.Value ?? new InvestmentRecords();
+        var existingInvestment = investments.ProjectIdentifiers.FirstOrDefault(i => i.ProjectIdentifier == investment.ProjectIdentifier);
+
+        if (existingInvestment == null)
+            return Result.Success(); // Nothing to remove
+
+        // todo: check if we have already published the trx,
+        // if it was already published we should not allow removal
+
+        investments.ProjectIdentifiers.Remove(existingInvestment);
+
+        var doc = new InvestmentRecordsDocument
+        {
+            WalletId = walletId,
+            Investments = investments.ProjectIdentifiers
+        };
+
+        var savedLocally = await documentCollection.UpsertAsync(document => document.WalletId, doc);
+
+        return savedLocally.IsSuccess
+            ? Result.Success()
+            : Result.Failure("Failed to save investment record");
+    }
+
     private async Task<Result<bool>> PushInvestmentsRecordsToRelayAsync(string walletId, InvestmentRecords investments)
     {
         // // Encrypt and send the investments

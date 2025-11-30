@@ -14,6 +14,7 @@ public class PortfolioProjectSample : IPortfolioProjectViewModel
     public FounderStatus FounderStatus { get; set; }
     public Uri LogoUri { get; set; }
     public IEnhancedCommand<Result> CompleteInvestment { get; }
+    public IEnhancedCommand<Result> CancelInvestment { get; }
     public bool IsInvestmentCompleted { get; set; }
     public IAmountUI Invested { get; } = new AmountUI(123000);
     public IEnhancedCommand GoToManageFunds { get; }
