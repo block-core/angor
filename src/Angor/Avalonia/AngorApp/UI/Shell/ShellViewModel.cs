@@ -6,7 +6,7 @@ namespace AngorApp.UI.NewShell;
 
 public partial class ShellViewModel : ReactiveObject, IShellViewModel
 {
-    public ShellViewModel(IEnumerable<INavigationRoot> sections)
+    public ShellViewModel(IEnumerable<ISection> sections)
     {
         var dict = sections.ToDictionary(root => root.Name, root => root);
         SidebarSections = [
@@ -21,10 +21,10 @@ public partial class ShellViewModel : ReactiveObject, IShellViewModel
         GoToSections = ReactiveCommand.Create(() => SelectedSection = dict["Settings"]);
     }
 
-    public ReactiveCommand<Unit, INavigationRoot> GoToSections { get; set; }
+    public ReactiveCommand<Unit, ISection> GoToSections { get; set; }
 
-    public IEnumerable<INavigationRoot> SidebarSections { get; }
+    public IEnumerable<ISection> SidebarSections { get; }
 
     [Reactive]
-    private INavigationRoot selectedSection;
+    private ISection selectedSection;
 }

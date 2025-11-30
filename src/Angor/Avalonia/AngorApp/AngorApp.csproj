@@ -1,52 +1,52 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-  </PropertyGroup>
-  <ItemGroup>
-    <AvaloniaResource Include="Assets/**" />
-    <!-- Link theme-specific app icons located at the solution root to our Assets folder -->
-    <AvaloniaResource Include="../angor-app-icon-light.png">
-      <Link>Assets/angor-app-icon-light.png</Link>
-    </AvaloniaResource>
-    <AvaloniaResource Include="../angor-app-icon-dark.png">
-      <Link>Assets/angor-app-icon-dark.png</Link>
-    </AvaloniaResource>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="AsyncImageLoader.Avalonia" />
-    <PackageReference Include="Avalonia" />
-    <PackageReference Include="ReactiveUI.Avalonia" />
-    <PackageReference Include="Avalonia.Themes.Fluent" />
-    <PackageReference Include="Avalonia.Fonts.Inter" />
-    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
-    <PackageReference Include="CSharpFunctionalExtensions" />
-    <PackageReference Include="Humanizer.Core" />
-    <PackageReference Include="PanAndZoom" />
-    <PackageReference Include="QRCoder" />
-    <PackageReference Include="Serilog.Extensions.Logging" />
-    <PackageReference Include="Serilog.Sinks.Console" />
-    <PackageReference Include="Serilog.Sinks.File" />
-    <ProjectReference Include="../../../../../Zafiro.Avalonia/src/Zafiro.Avalonia.Icons.Svg/Zafiro.Avalonia.Icons.Svg.csproj" />
-    <ProjectReference Include="../../../../../Zafiro/src/Zafiro/Zafiro.csproj" />
-    <ProjectReference Include="../../../../../Zafiro.Avalonia/src/Zafiro.Avalonia.Generators/Zafiro.Avalonia.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="../../../../../Zafiro.Avalonia/src/Zafiro.Avalonia.Icons.Projektanker/Zafiro.Avalonia.Icons.Projektanker.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="../Angor.Contexts.Integration.WalletFunding/Angor.Contexts.Integration.WalletFunding.csproj" />
-    <ProjectReference Include="../AngorApp.Model/AngorApp.Model.csproj" />
-    <ProjectReference Include="../Angor.Contexts.Wallet/Angor.Contexts.Wallet.csproj" />
-    <ProjectReference Include="../Angor.Contexts.Funding/Angor.Contexts.Funding.csproj" />
-    <ProjectReference Include="..\Angor.Data.Documents.LiteDb\Angor.Data.Documents.LiteDb.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <AdditionalFiles Include="**/*.axaml" />
-  </ItemGroup>
-  <PropertyGroup>
-    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)generated</CompilerGeneratedFilesOutputPath>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    </PropertyGroup>
+    <ItemGroup>
+        <AvaloniaResource Include="Assets/**"/>
+        <!-- Link theme-specific app icons located at the solution root to our Assets folder -->
+        <AvaloniaResource Include="../angor-app-icon-light.png">
+            <Link>Assets/angor-app-icon-light.png</Link>
+        </AvaloniaResource>
+        <AvaloniaResource Include="../angor-app-icon-dark.png">
+            <Link>Assets/angor-app-icon-dark.png</Link>
+        </AvaloniaResource>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="AsyncImageLoader.Avalonia"/>
+        <PackageReference Include="Avalonia"/>
+        <PackageReference Include="ReactiveUI.Avalonia"/>
+        <PackageReference Include="Avalonia.Themes.Fluent"/>
+        <PackageReference Include="Avalonia.Fonts.Inter"/>
+        <PackageReference Include="AvaloniaUI.DiagnosticsSupport"/>
+        <PackageReference Include="CSharpFunctionalExtensions"/>
+        <PackageReference Include="Humanizer.Core"/>
+        <PackageReference Include="PanAndZoom"/>
+        <PackageReference Include="QRCoder"/>
+        <PackageReference Include="Serilog.Extensions.Logging"/>
+        <PackageReference Include="Serilog.Sinks.Console"/>
+        <PackageReference Include="Serilog.Sinks.File"/>
+        <PackageReference Include="Zafiro.Avalonia.Icons.Svg"/>
+        <PackageReference Include="Zafiro.Avalonia.Generators"/>
+        <PackageReference Include="Zafiro"/>
+        <PackageReference Include="Zafiro.Avalonia.Icons.Projektanker"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="../Angor.Contexts.Integration.WalletFunding/Angor.Contexts.Integration.WalletFunding.csproj"/>
+        <ProjectReference Include="../AngorApp.Model/AngorApp.Model.csproj"/>
+        <ProjectReference Include="../Angor.Contexts.Wallet/Angor.Contexts.Wallet.csproj"/>
+        <ProjectReference Include="../Angor.Contexts.Funding/Angor.Contexts.Funding.csproj"/>
+        <ProjectReference Include="..\Angor.Data.Documents.LiteDb\Angor.Data.Documents.LiteDb.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <AdditionalFiles Include="**/*.axaml"/>
+    </ItemGroup>
+    <PropertyGroup>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)generated</CompilerGeneratedFilesOutputPath>
+    </PropertyGroup>
 </Project>

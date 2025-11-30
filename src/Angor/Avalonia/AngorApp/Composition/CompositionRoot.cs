@@ -8,15 +8,11 @@ using Angor.Data.Documents.LiteDb.Extensions;
 using Angor.Shared;
 using Angor.Shared.Services;
 using AngorApp.Core;
-using AngorApp.Composition.Registrations.Sections;
 using AngorApp.Composition.Registrations.Services;
 using AngorApp.Composition.Registrations.ViewModels;
-using AngorApp.UI.NewShell;
-using AngorApp.UI.Sections.Shell;
 using AngorApp.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using Zafiro.UI.Navigation;
 
 namespace AngorApp.Composition;
 
@@ -56,7 +52,7 @@ public static class CompositionRoot
             .AddViewModels()
             .AddUIServices(topLevelView, profileContext, applicationStorage);
         
-        services.AddNavigator(logger);
+        services.AddAnnotatedSections(logger);
         services.AddSecurityContext();
         RegisterWalletServices(services, logger, network);
         FundingContextServices.Register(services, logger);
