@@ -333,43 +333,41 @@
                             </div>
                         </div>
 
-                        <div class="modal-footer border-0 pt-0">
-                            <div class="d-flex flex-column flex-md-row justify-content-between w-100">
+                        <div class="modal-footer border-0">
+                            <div class="wallet-footer-actions">
                                 @if ((network.NetworkType == NetworkType.Testnet) && currentStep == 2 && isNewWallet)
                                 {
-                                    <div class="order-1 order-md-0">
-                                        <button class="btn btn-border-warning w-100 w-md-auto" @onclick="SkipVerification">
-                                            Skip Verification
-                                        </button>
-                                    </div>
-                                    <div class="d-flex flex-column flex-md-row gap-2 order-0 order-md-1">
+                                    <div class="wallet-next-back">
                                         @if (currentStep > 1)
                                         {
-                                            <button class="btn btn-border order-1 order-md-0" @onclick="PreviousStep">Back</button>
+                                            <button class="btn btn-border" @onclick="PreviousStep">Back</button>
                                         }
-                                        <button class="btn btn-border-success order-0 order-md-1" @onclick="NextStep" disabled="@(!CanProceedToNextStep())">
+                                        <button class="btn btn-border-success" @onclick="NextStep" disabled="@(!CanProceedToNextStep())">
                                             Next
                                         </button>
                                     </div>
+                                    <button class="btn btn-border-warning wallet-skip" @onclick="SkipVerification">
+                                        Skip Verification
+                                    </button>
                                 }
                                 else
                                 {
-                                    <div class="d-flex flex-column flex-md-row justify-content-md-end w-100 gap-2">
+                                    <div class="wallet-next-back justify-content-md-end">
                                         @if (currentStep > 1)
                                         {
-                                            <button class="btn btn-border order-1 order-md-0" @onclick="PreviousStep">Back</button>
+                                            <button class="btn btn-border" @onclick="PreviousStep">Back</button>
                                         }
 
                                         @if (currentStep < totalSteps)
                                         {
-                                            <button class="btn btn-border-success order-0 order-md-1" @onclick="NextStep"
+                                            <button class="btn btn-border-success" @onclick="NextStep"
                                                     disabled="@(!CanProceedToNextStep())">
                                                 Next
                                             </button>
                                         }
                                         else
                                         {
-                                            <button class="btn btn-border-success order-0 order-md-1" @onclick="CreateWalletAsync"
+                                            <button class="btn btn-border-success" @onclick="CreateWalletAsync"
                                                     disabled="@(!CanCreateWallet())">
                                                 @if (createWalletSpinner)
                                                 {
@@ -433,7 +431,7 @@
                             </div>
                         </div>
 
-                        <div class="modal-footer border-0 pt-0">
+                        <div class="modal-footer border-0">
                             <button class="btn btn-border-success w-100 w-md-auto" @onclick="ShowWords" disabled="@createWalletSpinner">
                                 @if (createWalletSpinner)
                                 {
@@ -599,7 +597,7 @@ else
                                 }
                             </div>
 
-                            <div class="modal-footer border-0 pt-0">
+                            <div class="modal-footer border-0">
                                 <button class="btn btn-border-danger btn-sm" @onclick="ShowWords" data-cy="wallet-words-in-popup">View Seed</button>
                             </div>
                         </div>
@@ -863,7 +861,7 @@ else
                                         }
                                     </div>
 
-                                    <div class="modal-footer border-0 pt-0">
+                                    <div class="modal-footer border-0">
                                         <div class="d-flex flex-column flex-md-row justify-content-end gap-2 w-100">
                                             <button class="btn btn-border order-3 order-md-1" @onclick="ShowTransactionJson">
                                                 View Details
