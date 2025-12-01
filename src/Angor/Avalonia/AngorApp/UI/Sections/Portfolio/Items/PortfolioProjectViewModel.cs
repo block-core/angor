@@ -59,7 +59,6 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
         CancelInvestment.Successes()
            .SelectMany(async _ =>
            {
-               // todo: jose - refresh the portfolio list after canceling an investment
                await uiServices.Dialog.ShowMessage("Investment canceled", $"Your investment in \"{projectDto.Name}\" has been canceled.");
                return Unit.Default;
            })

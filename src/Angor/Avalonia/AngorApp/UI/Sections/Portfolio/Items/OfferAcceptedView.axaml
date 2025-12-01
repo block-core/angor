@@ -38,10 +38,10 @@
                     <Bold>Good news!</Bold> The founder has accepted your investment request. Complete it to finalize the investment process.
                 </TextBlock>
             </EdgePanel>
-            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
-                <EnhancedButton Command="{Binding CompleteInvestment}" HorizontalAlignment="Center">Complete investment</EnhancedButton>
-                <EnhancedButton Command="{Binding CancelInvestment}" HorizontalAlignment="Center">Cancel investment</EnhancedButton>
-            </StackPanel>
+            <WrapPanel ItemSpacing="10" LineSpacing="10"  HorizontalAlignment="Center">
+                <Button Command="{Binding CompleteInvestment}" HorizontalAlignment="Center">Complete investment</Button>
+                <Button Command="{Binding CancelInvestment}" HorizontalAlignment="Center">Cancel investment</Button>
+            </WrapPanel>
         </StackPanel>
     </OverlayBorder>
 
