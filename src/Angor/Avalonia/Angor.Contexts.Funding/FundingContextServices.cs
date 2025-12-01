@@ -1,4 +1,5 @@
 ﻿using Angor.Contexts.CrossCutting;
+using Angor.Contexts.CrossCutting.MediatR;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Investor;
 using Angor.Contexts.Funding.Investor.Domain;
@@ -13,6 +14,7 @@ using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
 using Angor.Shared.Services;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
@@ -31,7 +33,11 @@ public static class FundingContextServices
         services.AddScoped<IProjectService, DocumentProjectService>();
         services.AddSingleton<INostrDecrypter, NostrDecrypter>();
         services.AddSingleton<IInvestmentHandshakeService, InvestmentHandshakeService>();
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateInvestment.CreateInvestmentTransactionHandler).Assembly));
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(CreateInvestment.CreateInvestmentTransactionHandler).Assembly);
+            cfg.AddOpenBehavior(typeof(UnhandledExceptionBehavior<,>));
+        });
         services.TryAddSingleton<ISerializer, Serializer>();
         services.TryAddSingleton<IRelaySubscriptionsHandling, RelaySubscriptionsHandling>();
         services.TryAddSingleton<IRelayService, RelayService>();
