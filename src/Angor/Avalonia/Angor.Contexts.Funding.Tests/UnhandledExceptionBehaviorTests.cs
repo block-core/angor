@@ -42,4 +42,23 @@ public class UnhandledExceptionBehaviorTests
             throw new InvalidOperationException("boom");
         }
     }
+
+    [Fact]
+    public async Task When_handler_returning_Result_throws_returns_failure_result_with_prefix()
+    {
+        var result = await mediator.Send(new BoomRequestResult());
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().StartWith("Angor API failed:");
+    }
+
+    public record BoomRequestResult : IRequest<Result>;
+
+    private class BoomHandlerResult : IRequestHandler<BoomRequestResult, Result>
+    {
+        public Task<Result> Handle(BoomRequestResult request, CancellationToken cancellationToken)
+        {
+            throw new InvalidOperationException("boom");
+        }
+    }
 }
