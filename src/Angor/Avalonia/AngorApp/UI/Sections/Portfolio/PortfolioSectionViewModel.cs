@@ -6,6 +6,7 @@ using AngorApp.Core;
 using AngorApp.UI.Sections.Portfolio.Items;
 using AngorApp.UI.Sections.Portfolio.Penalties;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.Reactive;
 using Zafiro.UI.Navigation;
 
 namespace AngorApp.UI.Sections.Portfolio;
@@ -29,6 +30,14 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
         investedProjectsHelper = LoadPortfolio.Successes().ToProperty(this, x => x.InvestedProjects).DisposeWith(disposable);
         
         GoToPenalties = ReactiveCommand.Create(navigator.Go<IPenaltiesViewModel>);
+
+        // Loads the Portfolio whenever CancelInvestment is executed on children
+        LoadPortfolio.Successes()
+            .Select(projects => projects.Select(project => project.CancelInvestment).Merge())
+            .Switch()
+            .ToSignal()
+            .InvokeCommand(LoadPortfolio)
+            .DisposeWith(disposable);
 
         IsLoading = LoadPortfolio.IsExecuting;
     }
