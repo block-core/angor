@@ -384,6 +384,13 @@ public class MempoolSpaceIndexerApi : IIndexerService
             // Confirmations = null,
             Fee = x.Fee,
             // HasWitness = null,
+            Timestamp = x.Status.BlockTime,
+            TransactionId = x.Txid,
+            TransactionIndex = null,
+            Version = (uint)x.Version,
+            VirtualSize = x.Size,
+            Weight = x.Weight,
+            LockTime = x.Locktime.ToString(),
             Inputs = x.Vin.Select((vin, i) => new QueryTransactionInput
             {
                 // CoinBase = null,
@@ -392,29 +399,21 @@ public class MempoolSpaceIndexerApi : IIndexerService
                 InputIndex = vin.Vout,
                 InputTransactionId = vin.Txid,
                 WitScript = new WitScript(vin.Witness.Select(s => Encoders.Hex.DecodeData(s)).ToArray()).ToScript()
-                     .ToHex(),
+                        .ToHex(),
                 SequenceLock = vin.Sequence.ToString(),
                 ScriptSig = vin.Scriptsig,
                 ScriptSigAsm = vin.Asm
             }).ToList(),
-            LockTime = x.Locktime.ToString(),
-            Outputs = x.Vout.Select((vout, i) =>
-       new QueryTransactionOutput
-       {
-           Address = vout.ScriptpubkeyAddress,
-           Balance = vout.Value,
-           Index = i,
-           ScriptPubKey = vout.Scriptpubkey,
-           OutputType = vout.ScriptpubkeyType,
-           ScriptPubKeyAsm = vout.ScriptpubkeyAsm,
-           SpentInTransaction = spends?.ElementAtOrDefault(i)?.Txid ?? string.Empty
-       }).ToList(),
-            Timestamp = x.Status.BlockTime,
-            TransactionId = x.Txid,
-            TransactionIndex = null,
-            Version = (uint)x.Version,
-            VirtualSize = x.Size,
-            Weight = x.Weight
+            Outputs = x.Vout.Select((vout, i) => new QueryTransactionOutput
+            {
+                Address = vout.ScriptpubkeyAddress,
+                Balance = vout.Value,
+                Index = i,
+                ScriptPubKey = vout.Scriptpubkey,
+                OutputType = vout.ScriptpubkeyType,
+                ScriptPubKeyAsm = vout.ScriptpubkeyAsm,
+                SpentInTransaction = spends?.ElementAtOrDefault(i)?.Txid ?? string.Empty
+            }).ToList()
         };
     }
 
