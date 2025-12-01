@@ -1,20 +1,14 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using System.Threading.Tasks;
-using Angor.Shared;
-using Blockcore.Networks;
 using AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.UI.Sections.Founder.CreateProject.Stages.Creator;
-using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
-using AngorApp.UI.Shared.Services;
 using DynamicData;
 using DynamicData.Aggregation;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Reactive;
-using Zafiro.UI.Commands;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.Stages;
 
@@ -22,7 +16,7 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
 {
     private readonly CompositeDisposable disposable = new();
     private readonly BehaviorSubject<DateTime?> endDateSubject;
-    private readonly bool skipValidation;
+    private readonly bool enableProductionValidations;
 
     public IEnhancedCommand AddStage { get; }
 
@@ -30,8 +24,7 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
 
     public StagesViewModel(IObservable<DateTime?> endDateChanges, UIServices uiServices)
     {
-        // Skip production validations only if debug mode is enabled AND we're on testnet
-        skipValidation = uiServices.ShouldSkipProductionValidations();
+        enableProductionValidations = uiServices.EnableProductionValidations();
 
         endDateSubject = new BehaviorSubject<DateTime?>(null);
         endDateChanges.Subscribe(endDateSubject);
@@ -81,7 +74,7 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
         this.ValidationRule(stagesSource.CountChanged, b => b > 0, _ => "Project must have at least one funding stage.").DisposeWith(disposable);
 
         // Production only: At least 3 stages required
-        if (!skipValidation)
+        if (enableProductionValidations)
         {
             this.ValidationRule(stagesSource.CountChanged, b => b >= 3, _ => "Project must have at least 3 funding stages.").DisposeWith(disposable);
         }
