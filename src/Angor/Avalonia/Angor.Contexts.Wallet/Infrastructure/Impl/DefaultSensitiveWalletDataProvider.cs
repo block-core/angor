@@ -4,7 +4,8 @@ using CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Wallet.Infrastructure.Impl;
 
-public class DefaultSensitiveWalletDataProvider(ISensitiveWalletDataProvider provider, IWalletEncryption walletEncryption, IWalletStore walletStore) : ISensitiveWalletDataProvider
+// A provider wrapper that tries to decrypt with the default encryption password before delegating to the inner provider.
+public class FrictionlessSensitiveDataProvider(ISensitiveWalletDataProvider provider, IWalletEncryption walletEncryption, IWalletStore walletStore) : ISensitiveWalletDataProvider
 {
     public Task<Result<(string seed, Maybe<string> passphrase)>> RequestSensitiveData(WalletId walletId)
     {
