@@ -19,7 +19,7 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 
         enableProductionValidations = uiServices.EnableProductionValidations();
 
-        if(enableProductionValidations)
+        if (enableProductionValidations)
         {
             // todo: when fund and subscribe are implemented there is no limit to investment period
             IsInsideInvestmentPeriod = DateTime.Now <= project.FundingEndDate;

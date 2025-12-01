@@ -1,20 +1,14 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using System.Threading.Tasks;
-using Angor.Shared;
-using Blockcore.Networks;
 using AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.UI.Sections.Founder.CreateProject.Stages.Creator;
-using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
-using AngorApp.UI.Shared.Services;
 using DynamicData;
 using DynamicData.Aggregation;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Reactive;
-using Zafiro.UI.Commands;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.Stages;
 
@@ -30,7 +24,6 @@ public class StagesViewModel : ReactiveValidationObject, IStagesViewModel
 
     public StagesViewModel(IObservable<DateTime?> endDateChanges, UIServices uiServices)
     {
-        // Skip production validations only if debug mode is enabled AND we're on testnet
         enableProductionValidations = uiServices.EnableProductionValidations();
 
         endDateSubject = new BehaviorSubject<DateTime?>(null);
