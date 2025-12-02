@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <PackageReference Include="CSharpFunctionalExtensions" />
+      <PackageReference Include="System.Security.Cryptography.ProtectedData" />
     </ItemGroup>
 
     <ItemGroup>
