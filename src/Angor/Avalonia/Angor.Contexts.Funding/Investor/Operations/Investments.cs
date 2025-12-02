@@ -44,7 +44,10 @@ public static class Investments
             if (lookup.IsFailure)
                 return Result.Failure<IEnumerable<InvestedProjectDto>>("Failed to retrieve projects: " + lookup.Error);
 
-            var investmentLookupTasks = lookup.Value.ToList().Select(async project =>
+            var investmentLookupTasks = lookup.Value
+                .ToList()
+                .OrderByDescending(x => x.StartingDate)
+                .Select(async project =>
             {
                 try
                 {
