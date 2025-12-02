@@ -119,18 +119,14 @@ public static class GetInvestorProjectRecovery
             if (lookup.IsFailure)
                 return Result.Failure<InvestorProjectRecoveryDto>(lookup.Error);
             
-            var penaltyExpieryDate =
-                Utils.UnixTimeToDateTime(transactionInfo.Timestamp).AddDays(projectInfo.PenaltyDays);
+            var penaltyExpieryDate = Utils.UnixTimeToDateTime(transactionInfo.Timestamp).AddDays(projectInfo.PenaltyDays);
 
             if (!string.IsNullOrEmpty(lookup.Value.RecoveryTransactionId))
             {
-                var recoveryTransaction =
-                    await transactionService.GetTransactionInfoByIdAsync(lookup.Value.RecoveryTransactionId);
+                var recoveryTransaction = await transactionService.GetTransactionInfoByIdAsync(lookup.Value.RecoveryTransactionId);
                 if (recoveryTransaction != null)
-                    penaltyExpieryDate = Utils.UnixTimeToDateTime(recoveryTransaction.Timestamp)
-                        .AddDays(projectInfo.PenaltyDays);
+                    penaltyExpieryDate = Utils.UnixTimeToDateTime(recoveryTransaction.Timestamp).AddDays(projectInfo.PenaltyDays);
             }
-
 
             var tasks = stageItems.Select(item => CheckTransactionSpendingAsync(transactionInfo, item, lookup, penaltyExpieryDate,
                 investmentTransaction, projectInfo));

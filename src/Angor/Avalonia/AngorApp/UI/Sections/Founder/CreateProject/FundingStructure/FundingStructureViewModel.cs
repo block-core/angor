@@ -31,7 +31,7 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
 
     private void AddValidations(UIServices uiServices)
     {
-        enableProductionValidations = uiServices.ShouldSkipProductionValidations();
+        enableProductionValidations = uiServices.EnableProductionValidations();
 
         // Always ON 
         this.ValidationRule(x => x.Sats, x => x is not null, _ => "Target amount is required.").DisposeWith(disposable);

@@ -1,7 +1,6 @@
 using System.Reactive.Disposables;
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using AngorApp.Model.Projects;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Claim;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
@@ -35,6 +34,13 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
 
     private static object CreateContent(ProjectId projectId, ProjectStatus status, IFounderAppService founderAppService, UIServices uiServices, IWalletContext walletContext)
     {
+        var enableProductionValidations = uiServices.EnableProductionValidations();
+
+        if(enableProductionValidations == false)
+        {
+            return new ApproveInvestmentsViewModel(projectId, founderAppService, uiServices, walletContext);
+        }
+
         return status switch
         {
             ProjectStatus.Failed => new ReleaseFundsViewModel(projectId, founderAppService, walletContext, uiServices),

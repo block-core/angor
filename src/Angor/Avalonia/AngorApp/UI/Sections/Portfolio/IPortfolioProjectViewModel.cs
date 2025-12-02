@@ -16,6 +16,7 @@ public interface IPortfolioProjectViewModel
     public Uri LogoUri { get; }
     public double Progress => Target.Sats == 0 ? 0 : Raised.Sats / (double)Target.Sats;
     public IEnhancedCommand<Result> CompleteInvestment { get; }
+    public IEnhancedCommand<Result> CancelInvestment { get; }
     public bool IsInvestmentCompleted { get; }
     public IAmountUI Invested { get; }
     public IEnhancedCommand GoToManageFunds { get; }

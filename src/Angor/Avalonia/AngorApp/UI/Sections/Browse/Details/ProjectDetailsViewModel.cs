@@ -7,15 +7,28 @@ namespace AngorApp.UI.Sections.Browse.Details;
 public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 {
     private readonly FullProject project;
+    private bool enableProductionValidations;
 
     public ProjectDetailsViewModel(
         FullProject project,
         IProjectInvestCommandFactory investCommandFactory,
-        Func<ProjectId, IFoundedProjectOptionsViewModel> foundedProjectOptionsFactory)
+        Func<ProjectId, IFoundedProjectOptionsViewModel> foundedProjectOptionsFactory,
+        UIServices uiServices)
     {
         this.project = project;
 
-        IsInsideInvestmentPeriod = DateTime.Now <= project.FundingEndDate;
+        enableProductionValidations = uiServices.EnableProductionValidations();
+
+        if (enableProductionValidations)
+        {
+            // todo: when fund and subscribe are implemented there is no limit to investment period
+            IsInsideInvestmentPeriod = DateTime.Now <= project.FundingEndDate;
+        }
+        else
+        {
+            IsInsideInvestmentPeriod = true;
+        }
+
         Invest = investCommandFactory.Create(project, IsInsideInvestmentPeriod);
         FoundedProjectOptions = foundedProjectOptionsFactory(project.ProjectId);
     }

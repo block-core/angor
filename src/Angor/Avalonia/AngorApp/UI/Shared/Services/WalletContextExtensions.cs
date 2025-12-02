@@ -9,18 +9,18 @@ public static class WalletContextExtensions
             .Map(func);
     }
 
-    public static Task<Result<T>> RequiresWallet<T>(this IWalletContext walletContext, Func<IWallet, Task<Result<T>>> func)
+    public static Task<Result<T>> RequiresWallet<T>(this IWalletContext walletContext, Func<IWallet, Task<Result<T>>> resultFactory)
     {
         return walletContext.CurrentWallet
             .ToResult("Please, create a wallet first")
-            .Map(func);
+            .Bind(resultFactory);
     }
     
-    public static async Task<Result> RequiresWallet(this IWalletContext walletContext, Func<IWallet, Task<Result>> func)
+    public static async Task<Result> RequiresWallet(this IWalletContext walletContext, Func<IWallet, Task<Result>> resultFactory)
     {
         return await walletContext.CurrentWallet
             .ToResult("Please, create a wallet first")
-            .Map(func);
+            .Bind(resultFactory);
     }
     
     public static Task<Result<T>> RequiresWallet<T>(this IWalletContext walletContext, Func<IWallet, Task<T>> func)

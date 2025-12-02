@@ -21,6 +21,11 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
         return mediator.Send(new RequestInvestmentSignatures.RequestFounderSignaturesRequest(sourceWalletId, projectId, draft));
     }
 
+    public Task<Result> CancelInvestment(WalletId sourceWalletId, ProjectId projectId, string investmentId)
+    {
+        return mediator.Send(new CancelInvestmentSignatures.CancelInvestmentSignaturesRequest(sourceWalletId, projectId, investmentId));
+    }
+
     public Task<Result<IEnumerable<InvestedProjectDto>>> GetInvestorProjects(WalletId walletId)
     {
         return mediator.Send(new Investments.InvestmentsPortfolioRequest(walletId));

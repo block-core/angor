@@ -1,36 +1,26 @@
 ﻿using Angor.Contexts.CrossCutting;
-using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
-using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Contexts.Funding.Projects.Operations;
-using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using CSharpFunctionalExtensions;
 using MediatR;
-using Zafiro.CSharpFunctionalExtensions;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
 public class ProjectAppService(
-    IProjectService projectService, IMediator mediator)
+    IMediator mediator)
     : IProjectAppService
 {
-    public async Task<Result<IEnumerable<ProjectDto>>> Latest()
-    {
-        return await projectService.LatestAsync().Map(t => t.AsEnumerable()).MapEach(project => project.ToDto());
-    }
+    public Task<Result<IEnumerable<ProjectDto>>> Latest() =>
+        mediator.Send(new ProjectQueries.LatestProjectsRequest());
 
-    public Task<Result<Maybe<ProjectDto>>> TryGet(ProjectId projectId)
-    {
-        return projectService.TryGetAsync(projectId).Map(maybe => maybe.Map(project => project.ToDto()));
-    }
+    public Task<Result<Maybe<ProjectDto>>> TryGet(ProjectId projectId) =>
+        mediator.Send(new ProjectQueries.TryGetProjectRequest(projectId));
 
-    public Task<Result<ProjectDto>> Get(ProjectId projectId)
-    {
-        return projectService.GetAsync(projectId).Map(project => project.ToDto());
-    }
+    public Task<Result<ProjectDto>> Get(ProjectId projectId) =>
+        mediator.Send(new ProjectQueries.GetProjectRequest(projectId));
 
     public Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(WalletId walletId)
     {

@@ -11,6 +11,7 @@ public interface IInvestmentAppService
 {
     Task<Result<InvestmentDraft>> CreateInvestmentDraft(WalletId sourceWalletId, ProjectId projectId, Amount amount, DomainFeerate feerate);
     Task<Result<Guid>> SubmitInvestment(WalletId sourceWalletId, ProjectId projectId, InvestmentDraft draft);
+    Task<Result> CancelInvestment(WalletId sourceWalletId, ProjectId projectId, string investmentId);
     Task<Result<IEnumerable<InvestedProjectDto>>> GetInvestorProjects(WalletId walletId);
     Task<Result> ConfirmInvestment(string investmentId, WalletId walletId, ProjectId projectId);
     Task<Result<IEnumerable<PenaltiesDto>>> GetPenalties(WalletId walletId);

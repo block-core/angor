@@ -8,4 +8,5 @@ public interface IPortfolioService
 {
     Task<Result<InvestmentRecords>> GetByWalletId(string walletId);
     Task<Result> AddOrUpdate(string walletId, InvestmentRecord investment);
+    Task<Result> RemoveInvestmentRecordAsync(string walletId, InvestmentRecord investment);
 }

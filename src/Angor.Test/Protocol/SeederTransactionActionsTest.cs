@@ -48,21 +48,20 @@ public class SeederTransactionActionsTest : AngorTestData
 
             var investorKey = Encoders.Hex.EncodeData( new Key().PubKey.ToBytes());
             var investorSecret = Hashes.Hash256( new Key().ToBytes());
-            // create the investment transaction
 
             var expectedOpReturnScript = new Key().ScriptPubKey;
 
-            _projectScriptsBuilder.Setup(_ => _.BuildSeederInfoScript(investorKey,investorSecret))
-                .Returns(expectedOpReturnScript);
+            _projectScriptsBuilder.Setup(_ => _.BuildSeederInfoScript(projectInvestmentInfo, It.IsAny<FundingParameters>()))
+              .Returns(expectedOpReturnScript);
 
-            var expectedTransaction = new Transaction { Inputs = { new TxIn(new Key().ScriptPubKey) } };
-            
-            _investmentTransactionBuilder.Setup(_ => _.BuildInvestmentTransaction(It.IsAny<ProjectInfo>(), expectedOpReturnScript,
-                    It.IsAny<IEnumerable<ProjectScripts>>(), It.IsAny<long>()))
+                var expectedTransaction = new Transaction { Inputs = { new TxIn(new Key().ScriptPubKey) } };
+        
+       _investmentTransactionBuilder.Setup(_ => _.BuildInvestmentTransaction(It.IsAny<ProjectInfo>(), expectedOpReturnScript,
+              It.IsAny<IEnumerable<ProjectScripts>>(), It.IsAny<long>()))
                 .Returns(expectedTransaction);
 
             var seederInvestmentTransaction = _sut.CreateInvestmentTransaction(projectInvestmentInfo, investorKey, investorSecret,
-                projectInvestmentInfo.TargetAmount);
+         projectInvestmentInfo.TargetAmount);
 
             Assert.Same(expectedTransaction,seederInvestmentTransaction);
         }
@@ -82,8 +81,8 @@ public class SeederTransactionActionsTest : AngorTestData
         var projectScriptList = projectInvestmentInfo.Stages.Select(_ => expectedProjectScripts)
             .ToList();
 
-        _investmentScriptBuilder.Setup(_ => _.BuildProjectScriptsForStage(projectInvestmentInfo, investorKey,
-                It.Is<int>(_ => _ < projectInvestmentInfo.Stages.Count), investorSecret, null))
+        _investmentScriptBuilder.Setup(_ => _.BuildProjectScriptsForStage(projectInvestmentInfo, It.IsAny<FundingParameters>(),
+                It.Is<int>(_ => _ < projectInvestmentInfo.Stages.Count)))
             .Returns(expectedProjectScripts);
         
         var expectedTransaction = new Transaction { Inputs = { new TxIn(new Key().ScriptPubKey) } };
