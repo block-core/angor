@@ -14,8 +14,9 @@ public static class Security
         services.AddSingleton<IWalletSecurityContext, WalletSecurityContext>();
         services.AddSingleton<IWalletEncryption, AesWalletEncryption>();
         services.AddSingleton<IPassphraseProvider, PassphraseProviderAdapter>();
-        services.AddSingleton<IEncryptionKeyStore, WindowsWalletEncryptionKeyStore>();
-        services.AddSingleton<IPasswordProvider, LocalPasswordProvider>();
+        //services.AddSingleton<IEncryptionKeyStore, WindowsWalletEncryptionKeyStore>();
+        //services.AddSingleton<IPasswordProvider, LocalPasswordProvider>();
+        services.AddSingleton<IPasswordProvider, PasswordProviderAdapter>();
         return services;
     }
 }
