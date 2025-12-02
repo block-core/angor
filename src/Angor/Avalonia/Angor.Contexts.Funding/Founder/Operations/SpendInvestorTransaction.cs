@@ -68,7 +68,7 @@ public static class SpendInvestorTransaction
                 founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript,
                 founderKey, request.SelectedFee); 
             
-            //var response = await walletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
+            var response = await walletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
 
             return Result.Success(new TransactionDraft
             {
