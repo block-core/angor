@@ -1,9 +1,12 @@
-using System.Diagnostics;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
+using Angor.Shared.Utilities;
 using Blockcore.NBitcoin.DataEncoders;
+using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using System.Diagnostics;
+using static NBitcoin.Scripting.OutputDescriptor;
 //using Angor.Shared.Protocol;
 using IndexedTxOut = NBitcoin.IndexedTxOut;
 using Key = NBitcoin.Key;
@@ -24,7 +27,7 @@ public class FounderTransactionActions : IFounderTransactionActions
     private readonly IProjectScriptsBuilder _projectScriptsBuilder;
     private readonly IInvestmentScriptBuilder _investmentScriptBuilder;
     private readonly ITaprootScriptBuilder _taprootScriptBuilder;
-    
+
     public FounderTransactionActions(ILogger<FounderTransactionActions> logger, INetworkConfiguration networkConfiguration, IProjectScriptsBuilder projectScriptsBuilder, IInvestmentScriptBuilder investmentScriptBuilder, ITaprootScriptBuilder taprootScriptBuilder)
     {
         _logger = logger;
@@ -34,29 +37,31 @@ public class FounderTransactionActions : IFounderTransactionActions
         _taprootScriptBuilder = taprootScriptBuilder;
     }
 
-    public SignatureInfo SignInvestorRecoveryTransactions(ProjectInfo projectInfo, string investmentTrxHex, 
+    public SignatureInfo SignInvestorRecoveryTransactions(ProjectInfo projectInfo, string investmentTrxHex,
         Transaction recoveryTransaction, string founderPrivateKey)
     {
-        var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
+        var network = _networkConfiguration.GetNetwork();
+        var nbitcoinNetwork = NetworkMapper.Map(network);
         var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
         var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTrxHex, nbitcoinNetwork);
 
         var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
         const TaprootSigHash sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
+        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, network.CreateTransaction(investmentTrxHex));
+
         var (investorKey, secretHash) = GetProjectDetailsFromOpReturn(nbitcoinInvestmentTransaction);
-        
+
         var outputs = nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
-            .Skip(2).Take(projectInfo.Stages.Count)
+            .Where(txout => txout.TxOut.ScriptPubKey.IsScriptType(ScriptType.Taproot))
             .Select(_ => _.TxOut)
             .ToArray();
 
         SignatureInfo info = new SignatureInfo { ProjectIdentifier = projectInfo.ProjectIdentifier };
 
-        // todo: david change to Enumerable.Range 
-        for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
+        for (var stageIndex = 0; stageIndex < outputs.Length; stageIndex++)
         {
-            var scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, stageIndex, secretHash);
+            ProjectScripts scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageIndex);
 
             var tapScript = new NBitcoin.Script(scriptStages.Recover.ToBytes()).ToTapScript(TapLeafVersion.C0);
             var execData = new TaprootExecutionData(stageIndex, tapScript.LeafHash) { SigHash = sigHash };
@@ -78,36 +83,56 @@ public class FounderTransactionActions : IFounderTransactionActions
         return info;
     }
 
-    /// <summary>
-    /// Allow the founder to spend the coins in a stage after the timelock has passed
-    /// </summary>
-    /// <exception cref="Exception"></exception>
-    public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<string> investmentTransactionsHex, int stageNumber, Script founderRecieveAddress, string founderPrivateKey,
-        FeeEstimation fee)
+    public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<string> investmentTransactionsHex, int stageNumber, Script founderRecieveAddress, string founderPrivateKey, FeeEstimation fee)
+    {
+        // For Invest projects, all transactions use the same stage number
+        var stageTransactionInputs = investmentTransactionsHex.Select(trx => new StageTransactionInput(trx, stageNumber)).ToList();
+        return SpendFounderStage(projectInfo, stageTransactionInputs, founderRecieveAddress, founderPrivateKey, fee);
+    }
+
+    public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<StageTransactionInput> stageTransactionInput, Script founderRecieveAddress, string founderPrivateKey, FeeEstimation fee)
     {
         var network = _networkConfiguration.GetNetwork();
-        
-        // We'll use the NBitcoin lib because its a taproot spend
         var nbitcoinNetwork = NetworkMapper.Map(network);
-
         var spendingTransaction = nbitcoinNetwork.CreateTransaction();
-        
+
         // Step 1 - the time lock
         // we must set the locktime to be ahead of the current block time
         // and ahead of the cltv otherwise the trx wont get accepted in the chain
-        spendingTransaction.LockTime = Utils.DateTimeToUnixTime(projectInfo.Stages[stageNumber - 1].ReleaseDate.AddMinutes(1));
+        DateTime stageReleaseDate;
+
+        if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
+        {
+            // Dynamic stages - find the latest expired stage release date from all investment transactions
+            stageReleaseDate = FindLatestExpiredStageReleaseDate(projectInfo, stageTransactionInput);
+        }
+        else
+        {
+            // Fixed stages - use predefined stage release date (all transactions should have same stage number)
+            var stageNumber = stageTransactionInput.First().StageNumber;
+            if (stageNumber < 1 || stageNumber > projectInfo.Stages.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(stageNumber), $"Stage number {stageNumber} is out of range. Project has {projectInfo.Stages.Count} stages.");
+            }
+
+            stageReleaseDate = projectInfo.Stages[stageNumber - 1].ReleaseDate;
+        }
+
+        spendingTransaction.LockTime = Utils.DateTimeToUnixTime(stageReleaseDate.AddMinutes(1));
 
         // Step 2 - build the transaction outputs and inputs without signing using fake sigs for fee estimation
         spendingTransaction.Outputs.Add(NBitcoin.Money.Zero, new NBitcoin.Script(founderRecieveAddress.ToBytes()));
 
-        var stageOutputs = investmentTransactionsHex
-            .Select(trxHex => NBitcoin.Transaction.Parse(trxHex, nbitcoinNetwork))
-            .Select(trx => AddInputToSpendingTransaction(projectInfo, stageNumber, trx, spendingTransaction))
-            .ToList();
+        var stageOutputs = new List<IndexedTxOut>();
+        foreach( var transactionList in stageTransactionInput)
+        {
+            var output = AddInputToSpendingTransaction(projectInfo, transactionList, spendingTransaction);
+            stageOutputs.Add(output);
+        }
 
         var txSize = spendingTransaction.GetVirtualSize();
         var minimumFee = new FeeRate(Money.Satoshis(1100)).GetFee(txSize); //1000 sats per kilobyte
-        
+
         var totalFee = nbitcoinNetwork
             .CreateTransactionBuilder()
             .AddCoins(stageOutputs.Select(_ => _.ToCoin()))
@@ -121,7 +146,7 @@ public class FounderTransactionActions : IFounderTransactionActions
         var trxData = spendingTransaction.PrecomputeTransactionData(stageOutputs.Select(_ => _.TxOut).ToArray());
         const TaprootSigHash sigHash = TaprootSigHash.All;
         var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
-        
+
         var inputIndex = 0;
         foreach (var input in spendingTransaction.Inputs)
         {
@@ -140,7 +165,7 @@ public class FounderTransactionActions : IFounderTransactionActions
 
             // todo: throw a proper exception
             Debug.Assert(key.CreateTaprootKeyPair().PubKey.VerifySignature(hash, sig.SchnorrSignature));
-            
+
             input.WitScript = new WitScript(
                 Op.GetPushOp(sig.ToBytes()),
                 Op.GetPushOp(scriptToExecute.ToBytes()),
@@ -152,21 +177,96 @@ public class FounderTransactionActions : IFounderTransactionActions
         }
 
         _logger.LogInformation($"signed spendingTransaction hex {spendingTransaction.ToHex()}");
-        
+
         var finalTrx = network.CreateTransaction(spendingTransaction.ToHex());
 
-        return new TransactionInfo {Transaction = finalTrx, TransactionFee = totalFee};
+        return new TransactionInfo { Transaction = finalTrx, TransactionFee = totalFee };
     }
 
-    public Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis, short keyType,  string nostrEventId)
+    /// <summary>
+    /// Finds the latest (most recent) expired stage release date from all investment transactions.
+    /// This is needed for Fund/Subscribe projects where different investors may have different stage schedules.
+    /// The founder can only spend a stage after ALL investors' stages have expired.
+    /// </summary>
+    private DateTime FindLatestExpiredStageReleaseDate(ProjectInfo projectInfo, IEnumerable<StageTransactionInput> stageTransactionInput)
+    {
+        var network = _networkConfiguration.GetNetwork();
+        var latestReleaseDate = DateTime.MinValue;
+
+        foreach( StageTransactionInput input in stageTransactionInput ) 
+        {
+            var investmentTrxHex = input.TransactionHex;
+            var stageNumber = input.StageNumber;
+
+            try
+            {
+                // Parse the investment transaction
+                var investmentTrx = network.CreateTransaction(investmentTrxHex);
+
+                // Create funding parameters from the transaction to get investment start date and pattern
+                var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, network.CreateTransaction(investmentTrxHex));
+
+                // Validate that we have the required data for dynamic stages
+                if (!fundingParameters.InvestmentStartDate.HasValue)
+                {
+                    _logger.LogWarning($"Investment transaction {investmentTrx.GetHash()} does not have an InvestmentStartDate. Skipping.");
+                    continue;
+                }
+
+                if (projectInfo.DynamicStagePatterns == null || !projectInfo.DynamicStagePatterns.Any())
+                {
+                    throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
+                }
+
+                if (fundingParameters.PatternIndex >= projectInfo.DynamicStagePatterns.Count)
+                {
+                    _logger.LogWarning($"Investment transaction {investmentTrx.GetHash()} has invalid PatternIndex {fundingParameters.PatternIndex}. Skipping.");
+                    continue;
+                }
+
+                // Get the pattern for this investment
+                var pattern = projectInfo.DynamicStagePatterns[fundingParameters.PatternIndex];
+
+                // Calculate the release date for the specified stage (stageNumber is 1-based, so subtract 1)
+                var stageIndex = stageNumber - 1;
+                var stageReleaseDate = DynamicStageCalculator.CalculateDynamicStageReleaseDate(
+                    fundingParameters.InvestmentStartDate.Value,
+                    pattern,
+                    stageIndex);
+
+                // Track the latest (most recent) release date
+                if (stageReleaseDate > latestReleaseDate)
+                {
+                    latestReleaseDate = stageReleaseDate;
+                    _logger.LogInformation($"Found later stage release date: {stageReleaseDate:yyyy-MM-dd HH:mm:ss} from transaction {investmentTrx.GetHash()} stage {stageNumber}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error processing investment transaction for stage release date calculation. Skipping this transaction.");
+                continue;
+            }
+        }
+
+        if (latestReleaseDate == DateTime.MinValue)
+        {
+            throw new InvalidOperationException("Could not determine stage release date from any investment transaction. No valid transactions found.");
+        }
+
+        _logger.LogInformation($"Latest expired stage release date: {latestReleaseDate:yyyy-MM-dd HH:mm:ss}");
+
+        return latestReleaseDate;
+    }
+
+    public Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis, short keyType, string nostrEventId)
     {
         var projectStartTransaction = _networkConfiguration.GetNetwork()
             .Consensus.ConsensusFactory.CreateTransaction();
-        
+
         // create the output and script of the project id
         var investorInfoOutput = new Blockcore.Consensus.TransactionInfo.TxOut(
             new Blockcore.NBitcoin.Money(angorFeeSatoshis), angorKey);
-        
+
         projectStartTransaction.AddOutput(investorInfoOutput);
 
         // todo: here we should add the hash of the project data as opreturn
@@ -174,44 +274,49 @@ public class FounderTransactionActions : IFounderTransactionActions
         // create the output and script of the investor pubkey script opreturn
         var angorFeeOutputScript = _projectScriptsBuilder.BuildFounderInfoScript(founderKey, keyType, nostrEventId);
         var founderOPReturnOutput = new Blockcore.Consensus.TransactionInfo.TxOut(
-            new Blockcore.NBitcoin.Money(0), angorFeeOutputScript);
+                new Blockcore.NBitcoin.Money(0), angorFeeOutputScript);
         projectStartTransaction.AddOutput(founderOPReturnOutput);
 
         return projectStartTransaction;
     }
 
-    private IndexedTxOut AddInputToSpendingTransaction(ProjectInfo projectInfo, int stageNumber, NBitcoin.Transaction trx,
-         NBitcoin.Transaction spendingTransaction)
-     {
-         var stageOutput = trx.Outputs.AsIndexedOutputs().ElementAt(stageNumber + 1);
+    private IndexedTxOut AddInputToSpendingTransaction(ProjectInfo projectInfo, StageTransactionInput stageTransactionInput, NBitcoin.Transaction spendingTransaction)
+    {
+        var network = _networkConfiguration.GetNetwork();
+        var nbitcoinNetwork = NetworkMapper.Map(network);
+        NBitcoin.Transaction trx = NBitcoin.Transaction.Parse(stageTransactionInput.TransactionHex, nbitcoinNetwork);
 
-         spendingTransaction.Outputs[0].Value += stageOutput.TxOut.Value;
+        var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, network.CreateTransaction(stageTransactionInput.TransactionHex));
 
-         var input = spendingTransaction.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), 
-             null, null, new NBitcoin.Sequence(spendingTransaction.LockTime.Value));
+        var stageOutput = trx.Outputs.AsIndexedOutputs()
+          .Where(txout => txout.TxOut.ScriptPubKey.IsScriptType(ScriptType.Taproot))
+          .ElementAt(stageTransactionInput.StageNumber - 1);
 
-         var (investorKey, secretHash) = GetProjectDetailsFromOpReturn(trx);
+        spendingTransaction.Outputs[0].Value += stageOutput.TxOut.Value;
 
-         var scriptStages =  _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, investorKey, 
-             stageNumber - 1, secretHash);
+        var input = spendingTransaction.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null, new NBitcoin.Sequence(spendingTransaction.LockTime.Value));
 
-         var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Founder);
-         
-         // use fake data for fee estimation
-         var sigPlaceHolder = new byte[65];
+        ProjectScripts scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageTransactionInput.StageNumber - 1);
 
-         input.WitScript = new WitScript(Op.GetPushOp(sigPlaceHolder), Op.GetPushOp(scriptStages.Founder.ToBytes()),
-             Op.GetPushOp(controlBlock.ToBytes()));
-         
-         return stageOutput;
-     }
+        var controlBlock = _taprootScriptBuilder.CreateControlBlock(scriptStages, _ => _.Founder);
 
-     private (string investorKey, uint256? secretHash) GetProjectDetailsFromOpReturn(NBitcoin.Transaction investmentTransaction)
-     {
-         var opretunOutput = investmentTransaction.Outputs.AsIndexedOutputs().ElementAt(1);
+        // use fake data for fee estimation
+        var sigPlaceHolder = new byte[65];
 
-         return
-             _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(
-                 new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
-     }
+        input.WitScript = new WitScript(
+            Op.GetPushOp(sigPlaceHolder), 
+            Op.GetPushOp(scriptStages.Founder.ToBytes()),
+            Op.GetPushOp(controlBlock.ToBytes()));
+
+        return stageOutput;
+    }
+
+    private (string investorKey, uint256? secretHash) GetProjectDetailsFromOpReturn(NBitcoin.Transaction investmentTransaction)
+    {
+        var opretunOutput = investmentTransaction.Outputs.AsIndexedOutputs().ElementAt(1);
+
+        return
+            _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(
+                new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
+    }
 }
