@@ -14,7 +14,6 @@ using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using static Angor.Contexts.Funding.Founder.Operations.CreateProjectConstants.CreateProject;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
@@ -72,14 +71,6 @@ public static class SpendFounderStageTransaction
                 founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript,
                 founderKey, request.SelectedFee); 
             
-            var response = await walletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
-
-            if (!response.Success)
-            {
-                logger.LogDebug("Failed to publish transaction for Project {ProjectName} (WalletId: {WalletId}): {Message}", project.Value.Name, request.WalletId, response.Message);
-                return Result.Failure<TransactionDraft>(response.Message);
-            }
-
             return Result.Success(new TransactionDraft
             {
                 SignedTxHex = signedTransaction.Transaction.ToHex(),

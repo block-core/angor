@@ -61,8 +61,7 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
           },
           model =>
           {
-              // todo this is a temporary fix until the founder database is created
-              return Result.Success(Guid.Empty) //founderAppService.SubmitTransactionFromDraft(wallet.Value.Id, model.Model)
+              return founderAppService.SubmitTransactionFromDraft(wallet.Value.Id, model.Model)
                .Tap(_ => uiServices.Dialog.ShowOk("Success", "Founder claim transaction submitted successfully"))
                .Map(_ => Guid.Empty);
           },
