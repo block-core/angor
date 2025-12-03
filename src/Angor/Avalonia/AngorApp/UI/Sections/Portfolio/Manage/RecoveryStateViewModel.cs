@@ -66,39 +66,57 @@ public sealed record RecoveryStateViewModel
 
     private Task<Maybe<Guid>> Recover(RecoveryStateViewModel recoveryStateViewModel)
     {
-        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
+        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
+        fr =>
         {
             return investmentAppService.BuildRecoverInvestorFunds(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr))
-                .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
-        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId, Project.ProjectId, model.Model)
+            .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
+        }, 
+        model => 
+        {
+            return investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId, Project.ProjectId, model.Model)
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds recovery transaction has been submitted successfully"))
-            .Map(_ => Guid.Empty), uiServices);
+            .Map(_ => Guid.Empty);
+        }, 
+        uiServices);
 
         return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
     }
     
     private Task<Maybe<Guid>> Claim(RecoveryStateViewModel recoveryStateViewModel)
     {
-        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
+        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
+        fr =>
         {
             return investmentAppService.BuildClaimInvestorEndOfProjectFunds(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr))
                 .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
-        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId, Project.ProjectId, model.Model)
+        }, 
+        model => 
+        {
+            return investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId, Project.ProjectId, model.Model)
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
-            .Map(_ => Guid.Empty), uiServices);
+            .Map(_ => Guid.Empty);
+        }, 
+        uiServices);
 
         return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
     }
     
     private Task<Maybe<Guid>> Release(RecoveryStateViewModel recoveryStateViewModel)
     {
-        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(fr =>
+        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
+        fr =>
         {
             return investmentAppService.BuildReleaseInvestorFunds(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr))
                 .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
-        }, model => investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId, Project.ProjectId, model.Model)
-            .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
-            .Map(_ => Guid.Empty), uiServices);
+        }, 
+        model =>
+        {
+            return investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId, Project.ProjectId, model.Model)
+                .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
+                .Map(_ => Guid.Empty);
+        }, 
+        uiServices);
 
         return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
     }
