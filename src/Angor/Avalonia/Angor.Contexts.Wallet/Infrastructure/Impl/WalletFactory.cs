@@ -17,10 +17,12 @@ public class WalletFactory(
     IDerivationOperations derivationOperations, 
     INetworkConfiguration networkConfiguration,
     IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
-    IWalletEncryption walletEncryption)
+    IWalletEncryption walletEncryption,
+    IAutoPasswordStore passwordStore)
     : IWalletFactory
 {
-    public async Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
+    public async Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase,
+        Maybe<string> encryptionKey, BitcoinNetwork network)
     {
         // Derive the wallet ID from the master public key (xpub) hash
         var walletWords = new WalletWords { Words = seedwords, Passphrase = passphrase.GetValueOrDefault() };
@@ -38,8 +40,13 @@ public class WalletFactory(
             RequiresPassphrase = passphrase.HasValue,
             SeedWords = seedwords//
         };
+
+        if (encryptionKey.HasNoValue) {
+            var newPassword = await passwordStore.GetOrCreatePasswordAsync(walletId);
+            encryptionKey = newPassword;
+        }
         
-        var saveResult = await SaveEncryptedWalletToStoreAsync(name, encryptionKey, walletData, walletId);
+        var saveResult = await SaveEncryptedWalletToStoreAsync(name, encryptionKey.Value, walletData, walletId);
 
         if (saveResult.IsFailure)
             return Result.Failure<Domain.Wallet>(saveResult.Error);

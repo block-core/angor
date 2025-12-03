@@ -19,7 +19,8 @@ public class WalletAppService(
     IPsbtOperations psbtOperations,
     ITransactionHistory transactionHistory,
     IHttpClientFactory httpClientFactory,
-    IWalletAccountBalanceService accountBalanceService)
+    IWalletAccountBalanceService accountBalanceService,
+    IAutoPasswordStore autoPasswordStore)
     : IWalletAppService
 {
     //public static readonly WalletId SingleWalletId = new("8E3C5250-4E26-4A13-8075-0A189AEAF793");
@@ -206,18 +207,16 @@ public class WalletAppService(
         return Result.Success(wallet.Value.Id);
     }
     
-    public Task<Result<WalletId>> CreateWallet(string name, string encryptionKey, BitcoinNetwork network)
+    public Task<Result<WalletId>> CreateWallet(string name, string? encryptionKey, BitcoinNetwork network)
     {
         if (string.IsNullOrEmpty(name))
             name = network + " Wallet";
-        
-        var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
-        
-        var seedWords = mnemonic.ToString();
+
+        var seedWords = GenerateRandomSeedwords();
         var passphrase = Maybe<string>.None;
-        
+
         //No need to refresh the wallet as we create it from scratch here
-        return walletFactory.CreateWallet(name, seedWords, passphrase, encryptionKey, network)
+        return walletFactory.CreateWallet(name, seedWords, passphrase, Maybe<string>.From(encryptionKey), network) 
             .Map(_ => _.Id);
     }
     
@@ -250,6 +249,9 @@ public class WalletAppService(
         }
 
         sensitiveWalletDataProvider.RemoveSensitiveData(walletId);
+        
+        // Delete auto-generated password
+        await autoPasswordStore.DeletePasswordAsync(walletId);
 
         return Result.Success();
     }

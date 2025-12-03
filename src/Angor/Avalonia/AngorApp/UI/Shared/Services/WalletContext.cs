@@ -4,6 +4,7 @@ using System.Reactive.Subjects;
 using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Wallet.Application;
 using Angor.Contexts.Wallet.Domain;
+using Angor.Contexts.Wallet.Infrastructure.Interfaces;
 using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;
 
@@ -13,15 +14,17 @@ public sealed class WalletContext : IWalletContext, IDisposable
 {
     private readonly IWalletAppService walletAppService;
     private readonly IWalletProvider walletProvider;
+    private readonly IPasswordProvider passwordProvider;
     private readonly Func<BitcoinNetwork> bitcoinNetwork;
     private readonly CompositeDisposable disposable = new();
     private readonly SourceCache<IWallet, WalletId> sourceCache = new(wallet => wallet.Id);
     private readonly BehaviorSubject<Maybe<IWallet>> current = new(Maybe<IWallet>.None);
 
-    public WalletContext(IWalletAppService walletAppService, IWalletProvider walletProvider, Func<BitcoinNetwork> bitcoinNetwork)
+    public WalletContext(IWalletAppService walletAppService, IWalletProvider walletProvider, IPasswordProvider passwordProvider, Func<BitcoinNetwork> bitcoinNetwork)
     {
         this.walletAppService = walletAppService;
         this.walletProvider = walletProvider;
+        this.passwordProvider = passwordProvider;
         this.bitcoinNetwork = bitcoinNetwork;
         LoadInitialWallets(walletAppService, walletProvider, sourceCache).DisposeWith(disposable);
 
@@ -69,21 +72,18 @@ public sealed class WalletContext : IWalletContext, IDisposable
         return Result.Success();
     }
 
-    public Task<Result<IWallet>> GetDefaultWallet()
+    public async Task<Result<IWallet>> GetDefaultWallet()
     {
         if (CurrentWallet.HasValue)
         {
-            return Task.FromResult(Result.Success(CurrentWallet.Value));
+            return Result.Success(CurrentWallet.Value);
         }
         
-        return walletAppService.CreateWallet("<default>",  GetUniqueId(), bitcoinNetwork())
-            .Bind(id => walletProvider.Get(id))
-            .Tap(id => sourceCache.AddOrUpdate(id));
-    }
+        var result = await walletAppService.CreateWallet("<default>", null, bitcoinNetwork());
 
-    private string GetUniqueId()
-    {
-        return "DEFAULT";
+        return await result
+            .Bind(id => walletProvider.Get(id))
+            .Tap(wallet => sourceCache.AddOrUpdate(wallet));
     }
 
     public void Dispose()

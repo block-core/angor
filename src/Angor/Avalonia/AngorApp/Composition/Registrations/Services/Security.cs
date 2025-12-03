@@ -1,7 +1,6 @@
 using Angor.Contexts.CrossCutting;
 using Angor.Contexts.Wallet.Infrastructure.Impl;
 using Angor.Contexts.Wallet.Infrastructure.Interfaces;
-using AngorApp.Model.Wallet.Password;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AngorApp.Composition.Registrations.Services;
@@ -14,9 +13,20 @@ public static class Security
         services.AddSingleton<IWalletSecurityContext, WalletSecurityContext>();
         services.AddSingleton<IWalletEncryption, AesWalletEncryption>();
         services.AddSingleton<IPassphraseProvider, PassphraseProviderAdapter>();
-        //services.AddSingleton<IEncryptionKeyStore, WindowsWalletEncryptionKeyStore>();
-        //services.AddSingleton<IPasswordProvider, LocalPasswordProvider>();
-        services.AddSingleton<IPasswordProvider, PasswordProviderAdapter>();
+        
+        // Register platform-specific auto password store
+#if WINDOWS
+        services.AddSingleton<IAutoPasswordStore, Angor.Contexts.Integration.WalletFunding.PasswordStore.WindowsAutoPasswordStore>();
+#elif ANDROID
+        services.AddSingleton<IAutoPasswordStore, AngorApp.Android.PasswordStore.AndroidAutoPasswordStore>();
+#elif IOS
+        services.AddSingleton<IAutoPasswordStore, Angor.Contexts.Integration.WalletFunding.PasswordStore.IosAutoPasswordStore>();
+#else
+        // Linux and other platforms
+        services.AddSingleton<IAutoPasswordStore, Angor.Contexts.Integration.WalletFunding.PasswordStore.LinuxAutoPasswordStore>();
+#endif
+        
+        services.AddSingleton<IPasswordProvider, AutoPasswordProvider>();
         return services;
     }
 }
