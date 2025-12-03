@@ -37,7 +37,8 @@ public static class WalletContextServices
         services.AddSingleton<IWalletFactory, WalletFactory>();
         services.AddSingleton<IWalletOperations, WalletOperations>();
         services.AddSingleton<IPsbtOperations, PsbtOperations>();
-        services.TryAddSingleton<ISensitiveWalletDataProvider, SensitiveWalletDataProvider>();
+        services.AddSingleton<SensitiveWalletDataProvider>();
+        services.TryAddSingleton<ISensitiveWalletDataProvider>(provider => ActivatorUtilities.CreateInstance<FrictionlessSensitiveDataProvider>(provider, provider.GetRequiredService<SensitiveWalletDataProvider>()));
         services.AddSingleton<IWalletStore, WalletStore>();
         services.AddSingleton<ITransactionHistory, TransactionHistory>();
         services.TryAddSingleton<IWalletAccountBalanceService, WalletAccountBalanceService>();
