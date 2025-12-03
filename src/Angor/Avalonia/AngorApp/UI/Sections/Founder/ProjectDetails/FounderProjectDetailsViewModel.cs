@@ -36,8 +36,11 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
     {
         var enableProductionValidations = uiServices.EnableProductionValidations();
 
-        if(enableProductionValidations == false)
+        if (enableProductionValidations == false)
         {
+            if(status == ProjectStatus.Succeeded)
+                return new ClaimFundsViewModel(projectId, founderAppService, uiServices, walletContext);
+
             return new ApproveInvestmentsViewModel(projectId, founderAppService, uiServices, walletContext);
         }
 

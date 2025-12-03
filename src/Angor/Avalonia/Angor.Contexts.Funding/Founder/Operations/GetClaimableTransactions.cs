@@ -28,6 +28,7 @@ public static class GetClaimableTransactions
                 new ClaimableTransactionDto()
                 {
                     StageId = x.StageIndex,
+                    StageNumber = x.StageIndex + 1,
                     Amount = new Amount(item.Amount),
                     InvestorAddress = item.InvestorPublicKey,
                     ClaimStatus = item.SpentType switch

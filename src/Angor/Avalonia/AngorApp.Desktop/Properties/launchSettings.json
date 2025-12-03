@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "AngorApp.Desktop (Default)": {
+      "commandName": "Project",
+      "commandLineArgs": "--profile=Default"
+    },
+    "AngorApp.Desktop (User1)": {
+      "commandName": "Project",
+      "commandLineArgs": "--profile=User1"
+    },
+  "AngorApp.Desktop (User2)": {
+      "commandName": "Project",
+      "commandLineArgs": "--profile=User2"
+    }
+  }
+}

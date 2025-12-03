@@ -56,7 +56,7 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
 
     private IEnumerable<IClaimableStage> CreateStage(IEnumerable<ClaimableTransactionDto> claimableTransactionDto)
     {
-        return claimableTransactionDto.GroupBy(dto => dto.StageId)
+        return claimableTransactionDto.GroupBy(dto => dto.StageNumber)
             .Select(IClaimableStage (group) =>
             {
                 var claimableTransactions = group.Select(IClaimableTransaction (dto) => new ClaimableTransaction(dto)).ToList();

@@ -13,14 +13,16 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Microsoft.Extensions.Logging;
+using static Angor.Contexts.Funding.Founder.Operations.CreateProjectConstants.CreateProject;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
-public static class SpendInvestorTransaction
+public static class SpendFounderStageTransaction
 {
-    public record SpendInvestorTransactionRequest(WalletId WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<TransactionDraft>>;
+    public record SpendFounderStageTransactionRequest(WalletId WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<TransactionDraft>>;
 
-    public class SpendInvestorTransactionHandler(
+    public class SpendFounderStageTransactionHandler(
         IFounderTransactionActions founderTransactionActions,
         INetworkConfiguration networkConfiguration,
         IAngorIndexerService angorIndexerService,
@@ -29,10 +31,12 @@ public static class SpendInvestorTransaction
         ISeedwordsProvider seedwordsProvider,
         ITransactionService transactionService,
         IWalletAccountBalanceService walletAccountBalanceService,
-        IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection
-    ) : IRequestHandler<SpendInvestorTransactionRequest, Result<TransactionDraft>>
+        IWalletOperations walletOperations,
+        IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
+        ILogger<SpendFounderStageTransactionHandler> logger
+    ) : IRequestHandler<SpendFounderStageTransactionRequest, Result<TransactionDraft>>
     {
-        public async Task<Result<TransactionDraft>> Handle(SpendInvestorTransactionRequest request, CancellationToken cancellationToken)
+        public async Task<Result<TransactionDraft>> Handle(SpendFounderStageTransactionRequest request, CancellationToken cancellationToken)
         {
             var groupedByStage = request.ToSpend.GroupBy(x => x.StageId).ToList();
             if (groupedByStage.Count > 1)
@@ -68,7 +72,13 @@ public static class SpendInvestorTransaction
                 founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript,
                 founderKey, request.SelectedFee); 
             
-            //var response = await walletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
+            var response = await walletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
+
+            if (!response.Success)
+            {
+                logger.LogDebug("Failed to publish transaction for Project {ProjectName} (WalletId: {WalletId}): {Message}", project.Value.Name, request.WalletId, response.Message);
+                return Result.Failure<TransactionDraft>(response.Message);
+            }
 
             return Result.Success(new TransactionDraft
             {
