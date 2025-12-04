@@ -1,8 +1,6 @@
 using System.IO;
 using Angor.Contexts.CrossCutting;
-using Angor.Shared;
 using AngorApp.Core;
-using AngorApp.UI.Sections.Shell;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +9,6 @@ using Zafiro.Avalonia.Dialogs.Implementations;
 using Zafiro.Avalonia.Misc;
 using Zafiro.Avalonia.Services;
 using Zafiro.Settings;
-using Zafiro.UI.Navigation;
 using Zafiro.UI.Shell;
 
 namespace AngorApp.Composition.Registrations.Services;
@@ -34,8 +31,6 @@ public static class UIServicesRegistration
                 var adornerLayer = AdornerLayer.GetAdornerLayer(mainView);
                 return adornerLayer!;
             }))
-            .AddSingleton(sp => new ShellProperties("Angor", content => GetHeader(content, sp)))
-            .AddSingleton<IShell, Shell>()
             .AddSingleton<ISectionActions, SectionActions>()
             .AddSingleton<IWalletContext, WalletContext>()
             .AddSingleton<IValidations, Validations>()
@@ -58,19 +53,6 @@ public static class UIServicesRegistration
             ApplicationUtils.SafeAreaPadding.BindTo(managedNotificationManager, manager => manager.Margin);
             return managedNotificationManager;
         });
-    }
-    private static IObservable<object?> GetHeader(object content, IServiceProvider sp)
-    {
-        if (content is INavigator navigator)
-        {
-            var config = sp.GetRequiredService<INetworkConfiguration>();
-            var network = config.GetNetwork();
-            var uiServices = sp.GetRequiredService<UIServices>();
-            
-            return navigator.Content.Select(content => new HeaderViewModel(navigator.Back, content, network, uiServices, config));
-        }
-        
-        return Observable.Return("");
     }
 
     private static string CreateSettingsFilePath(IApplicationStorage storage, ProfileContext profileContext)

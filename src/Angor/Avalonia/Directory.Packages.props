@@ -27,7 +27,7 @@
     <PackageVersion Include="MediatR" Version="12.5.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
     <PackageVersion Include="PanAndZoom" Version="11.3.6" />
     <PackageVersion Include="QRCoder" Version="1.6.0" />
@@ -46,15 +46,15 @@
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="Serilog.Sinks.XUnit" Version="3.0.19" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
-    <PackageVersion Include="Zafiro" Version="41.2.5" />
-    <PackageVersion Include="Zafiro.Avalonia" Version="42.0.1" />
-    <PackageVersion Include="Zafiro.Avalonia.Generators" Version="42.0.1" />
-    <PackageVersion Include="Zafiro.Avalonia.Icons.Projektanker" Version="42.0.1" />
-    <PackageVersion Include="Zafiro.Avalonia.Icons.Svg" Version="42.0.1" />
+    <PackageVersion Include="Zafiro" Version="44.0.0" />
+    <PackageVersion Include="Zafiro.Avalonia" Version="42.0.6" />
+    <PackageVersion Include="Zafiro.Avalonia.Generators" Version="44.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia.Icons.Projektanker" Version="44.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia.Icons.Svg" Version="44.0.1" />
     <PackageVersion Include="Zafiro.FileSystem" Version="41.2.3" />
-    <PackageVersion Include="Zafiro.UI" Version="41.2.5" />
+    <PackageVersion Include="Zafiro.UI" Version="41.2.6" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="42.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="44.0.1" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />
     <PackageVersion Include="FluentAssertions.Reactive" Version="0.2.0" />

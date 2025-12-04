@@ -5,7 +5,6 @@
         <LangVersion>latest</LangVersion>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     </PropertyGroup>
-
     <ItemGroup>
         <AvaloniaResource Include="Assets/**"/>
         <!-- Link theme-specific app icons located at the solution root to our Assets folder -->
@@ -16,7 +15,6 @@
             <Link>Assets/angor-app-icon-dark.png</Link>
         </AvaloniaResource>
     </ItemGroup>
-
     <ItemGroup>
         <PackageReference Include="AsyncImageLoader.Avalonia"/>
         <PackageReference Include="Avalonia"/>
@@ -30,29 +28,21 @@
         <PackageReference Include="QRCoder"/>
         <PackageReference Include="Serilog.Extensions.Logging"/>
         <PackageReference Include="Serilog.Sinks.Console"/>
-        <PackageReference Include="Serilog.Sinks.File" />
-        <PackageReference Include="Zafiro"/>
-        <PackageReference Include="Zafiro.Avalonia"/>
+        <PackageReference Include="Serilog.Sinks.File"/>
+        <PackageReference Include="Zafiro.Avalonia.Icons.Svg"/>
         <PackageReference Include="Zafiro.Avalonia.Generators"/>
-        <PackageReference Include="Zafiro.Avalonia.Icons.Projektanker" />
-        <PackageReference Include="Zafiro.Avalonia.Icons.Svg" />
+        <PackageReference Include="Zafiro"/>
+        <PackageReference Include="Zafiro.Avalonia.Icons.Projektanker"/>
     </ItemGroup>
-
     <ItemGroup>
         <ProjectReference Include="../Angor.Contexts.Integration.WalletFunding/Angor.Contexts.Integration.WalletFunding.csproj"/>
         <ProjectReference Include="../AngorApp.Model/AngorApp.Model.csproj"/>
         <ProjectReference Include="../Angor.Contexts.Wallet/Angor.Contexts.Wallet.csproj"/>
         <ProjectReference Include="../Angor.Contexts.Funding/Angor.Contexts.Funding.csproj"/>
-        <ProjectReference Include="..\Angor.Data.Documents.LiteDb\Angor.Data.Documents.LiteDb.csproj" />
+        <ProjectReference Include="../Angor.Data.Documents.LiteDb/Angor.Data.Documents.LiteDb.csproj"/>
     </ItemGroup>
-
-    <ItemGroup>
-        <AdditionalFiles Include="**/*.axaml"/>
-    </ItemGroup>
-
     <PropertyGroup>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)generated</CompilerGeneratedFilesOutputPath>
     </PropertyGroup>
-
 </Project>

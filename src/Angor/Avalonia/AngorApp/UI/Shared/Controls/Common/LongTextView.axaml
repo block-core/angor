@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:common="clr-namespace:AngorApp.Model.Common;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.Model.Common.LongTextView" x:DataType="common:LongTextViewModel">
+             x:Class="AngorApp.UI.Shared.Controls.Common.LongTextView" x:DataType="common:LongTextViewModel">
     
     <Design.DataContext>
         <common:LongTextViewModel Text="THIS IS VERY LONG TEXT THIS IS VERY LONG TEXT THIS IS VERY LONG TEXT THIS IS VERY LONG TEXT THIS IS VERY LONG TEXT THIS IS VERY LONG TEXT "></common:LongTextViewModel>

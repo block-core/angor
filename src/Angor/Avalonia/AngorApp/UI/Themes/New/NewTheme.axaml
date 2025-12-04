@@ -1,0 +1,279 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <FluentTheme />
+    <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
+    <StyleInclude Source="avares://Zafiro.Avalonia.Dialogs/Styles.axaml" />
+    <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
+
+    <StyleInclude Source="Custom/EnhancedButton.axaml" />
+    <StyleInclude Source="Custom/Buttons.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/Styles.axaml" />
+
+    <StyleInclude Source="/UI/Shared/Styles/Styles.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/Pane.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/AmountControl.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/List.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/IconLabel.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/ProjectCard.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/Feerate/FeerateSelector.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/ErrorSummary.axaml" />
+    <StyleInclude Source="/UI/Sections/Wallet/CreateAndImport/Steps/SeedWordsGeneration/SeedWordList.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/PageContainer.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/Badge.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/Cards.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/TextBox.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/OverlayBorder.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/CalendarDatePicker.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/TextBlock.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/ToggleButton.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/FlyoutPresenter.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/Button.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/Automation.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/SlimDataGrid.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/HeaderedContainer.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/EdgePanel.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/Border.axaml" />
+
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <Color x:Key="Background">#F9F9F9</Color>
+                    <Color x:Key="Overbackground">White</Color>
+                    <Color x:Key="Border">#19000000</Color>
+                    <Color x:Key="Text">#6B7280</Color>
+                    <Color x:Key="Accent">#2D5A3D</Color>
+                    <Color x:Key="Logo">#2D5A3D</Color>
+                    <Color x:Key="Strong">#0A0A0A</Color>
+                    <Color x:Key="HoverBackground">#E9E9E9</Color>
+                    <Color x:Key="SelectedBackground">White</Color>
+                    <BoxShadows x:Key="SectionShadow">0 0 30 0 LightGray</BoxShadows>
+                    
+                    <SolidColorBrush x:Key="RegularButtonForeground" Color="{StaticResource HoverBackground}" />
+                    <SolidColorBrush x:Key="RegularButtonBackground" Color="{StaticResource Strong}" />
+                    <SolidColorBrush x:Key="RegularButtonBorder"     Color="{StaticResource Strong}" />
+                    
+                    <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource HoverBackground}" />
+                    <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource Accent}" />
+                    <SolidColorBrush x:Key="AccentButtonBorder"     Color="{StaticResource Accent}" />
+                    
+                    <SolidColorBrush x:Key="AlternateButtonForeground" Color="{StaticResource Accent}" />
+                    <SolidColorBrush x:Key="AlternateButtonBackground" Color="{StaticResource HoverBackground}" />
+                    <SolidColorBrush x:Key="AlternateButtonBorder"     Color="{StaticResource Strong}" />
+                    
+                    <SolidColorBrush x:Key="WhiteButtonForeground" Color="{StaticResource Strong}" />
+                    <SolidColorBrush x:Key="WhiteButtonBackground" Color="{StaticResource HoverBackground}" />
+                    <SolidColorBrush x:Key="WhiteButtonBorder"     Color="{StaticResource Strong}" />
+
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <Color x:Key="Background">#0A0A0A</Color>
+                    <Color x:Key="Overbackground">#B31A1A1A</Color>
+                    <Color x:Key="Border">#19FFFFFF</Color>
+                    <Color x:Key="Text">#A0A0A0</Color>
+                    <Color x:Key="Accent">#E5E8E1</Color>
+                    <Color x:Key="Logo">#5FAF78</Color>
+                    <Color x:Key="Strong">#FAFAFA</Color>
+                    <Color x:Key="HoverBackground">#3A3A3A</Color>
+                    <Color x:Key="SelectedBackground">#202020</Color>
+                    <BoxShadows x:Key="SectionShadow">0 0 0 0 Transparent</BoxShadows>
+                    
+                    <SolidColorBrush x:Key="RegularButtonForeground" Color="{StaticResource Strong}" />
+                    <LinearGradientBrush x:Key="RegularButtonBackground" Opacity="0.5">
+                        <GradientStops>
+                            <GradientStop Offset="0" Color="{StaticResource Border}" />
+                            <GradientStop Offset="1" Color="{StaticResource Overbackground}" />
+                        </GradientStops>
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="RegularButtonBorder"     Color="{StaticResource Border}" />
+                    
+                    <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource HoverBackground}" />
+                    <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource Accent}" />
+                    <SolidColorBrush x:Key="AccentButtonBorder"     Color="{StaticResource Border}" />
+                    
+                    <SolidColorBrush x:Key="AlternateButtonForeground" Color="{StaticResource Accent}" />
+                    <SolidColorBrush x:Key="AlternateButtonBackground" Color="{StaticResource HoverBackground}" />
+                    <SolidColorBrush x:Key="AlternateButtonBorder"     Color="{StaticResource Strong}" />
+                    
+                    <SolidColorBrush x:Key="WhiteButtonForeground" Color="{StaticResource Strong}" />
+                    <SolidColorBrush x:Key="WhiteButtonBackground" Color="{StaticResource Overbackground}" />
+                    <SolidColorBrush x:Key="WhiteButtonBorder"     Color="{StaticResource Border}" />
+                    
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="Icons.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <Style Selector=":is(UserControl)">
+        <Setter Property="Foreground" Value="{DynamicResource Text}" />
+    </Style>
+
+    <Style Selector="Border.Regular">
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="Padding" Value="20" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background" Value="{DynamicResource Overbackground}" />
+    </Style>
+
+    <Style Selector="SectionStrip.Nav SectionStripGroupHeader">
+        <Setter Property="Foreground" Value="{DynamicResource Logo}" />
+        <Setter Property="FontFamily" Value="Sans Serif" />
+        <Setter Property="FontWeight" Value="SemiLight" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="Margin" Value="10" />
+    </Style>
+
+    <Style Selector="SectionStrip.Nav SectionStripItem">
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="Margin" Value="10" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource Text}" />
+        <Setter Property="ClipToBounds" Value="False" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style Selector="SectionStrip.Nav SectionStripItem:pointerover">
+        <Setter Property="Background" Value="{DynamicResource HoverBackground}" />
+    </Style>
+
+    <Style Selector="SectionStrip.Nav SectionStripItem:selected">
+        <Setter Property="Background" Value="{DynamicResource SelectedBackground}" />
+        <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+    </Style>
+
+    <Style Selector="SectionStrip.Nav SectionStripItem:selected Border">
+        <Setter Property="BoxShadow" Value="{DynamicResource SectionShadow}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
+    </Style>
+
+    <Style Selector="TextBlock">
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style Selector="TextBlock.Label">
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource Text}" />
+    </Style>
+
+    <Style Selector="Run.Label">
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource Text}" />
+    </Style>
+
+    <Style Selector="Run.Thin">
+        <Setter Property="FontWeight" Value="SemiLight" />
+        <Setter Property="Foreground" Value="{DynamicResource Text}" />
+    </Style>
+
+    <Style Selector=":is(TemplatedControl).Center">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.Center">
+        <Setter Property="TextAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.Title">
+        <Setter Property="FontSize" Value="25" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <Style Selector="TextBlock.Subtitle">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontWeight" Value="SemiLight" />
+    </Style>
+
+    <Style Selector="TextBlock.TitleStrong">
+        <Setter Property="FontSize" Value="25" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource Strong}" />
+    </Style>
+    
+    <Style Selector="EnhancedButton">
+        <Setter Property="Foreground" Value="{DynamicResource RegularButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource RegularButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource RegularButtonBorder}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <Style Selector="EnhancedButton.Regular">
+        <Setter Property="Foreground" Value="{DynamicResource RegularButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource RegularButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource RegularButtonBorder}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="24 12" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <Style Selector="EnhancedButton.Accent">
+        <Setter Property="Foreground" Value="{DynamicResource AccentButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorder}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="24 12" />
+    </Style>
+
+    <Style Selector="EnhancedButton.AccentInverted">
+        <Setter Property="Foreground" Value="{DynamicResource AlternateButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource AlternateButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AlternateButtonBorder}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="24 12" />
+    </Style>
+
+    <Style Selector="EnhancedButton.White">
+        <Setter Property="Foreground" Value="{DynamicResource WhiteButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource WhiteButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WhiteButtonBorder}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="24 12" />
+    </Style>
+
+    <Style Selector="StackPanel.HugeGap">
+        <Setter Property="Spacing" Value="20" />
+    </Style>
+
+    <Design.PreviewWith>
+        <WrapPanel>
+            <ThemeVariantScope RequestedThemeVariant="Light">
+                <StackPanel Spacing="20">
+                    <Border Classes="Regular" Width="200" Height="200">
+                        <TextBlock>HOLA</TextBlock>
+                    </Border>
+                    <EnhancedButton Content="Regular" />
+                    <EnhancedButton Content="Accent" Classes="Accent" />
+                    <EnhancedButton Content="AccentInverted" Classes="AccentInverted" />
+                    <EnhancedButton Content="White" Classes="White" />
+                </StackPanel>
+            </ThemeVariantScope>
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+                <StackPanel Spacing="20">
+                    <Border Classes="Regular" Width="200" Height="200">
+                        <TextBlock>HOLA</TextBlock>
+                    </Border>
+                    <EnhancedButton Content="Regular" />
+                    <EnhancedButton Content="Accent" Classes="Accent" />
+                    <EnhancedButton Content="AccentInverted" Classes="AccentInverted" />
+                    <EnhancedButton Content="White" Classes="White" />
+                </StackPanel>
+            </ThemeVariantScope>
+        </WrapPanel>
+    </Design.PreviewWith>
+
+</Styles>
