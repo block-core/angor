@@ -14,15 +14,15 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 
 public static class StartNewProject
 {
-    public sealed record StartNewProjectRequest(WalletId WalletId) : IRequest<Result<ProjectSeedDto>>;
+    public sealed record GetNewProjectKeysRequest(WalletId WalletId) : IRequest<Result<ProjectSeedDto>>;
 
-    internal sealed class StartNewProjectHandler(
+    internal sealed class FindNextAvailableProjectKeysHandler(
         IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
         IAngorIndexerService angorIndexerService,
-        ILogger<StartNewProjectHandler> logger)
-        : IRequestHandler<StartNewProjectRequest, Result<ProjectSeedDto>>
+        ILogger<FindNextAvailableProjectKeysHandler> logger)
+        : IRequestHandler<GetNewProjectKeysRequest, Result<ProjectSeedDto>>
     {
-        public async Task<Result<ProjectSeedDto>> Handle(StartNewProjectRequest request, CancellationToken cancellationToken)
+        public async Task<Result<ProjectSeedDto>> Handle(GetNewProjectKeysRequest request, CancellationToken cancellationToken)
         {
             var storedKeysResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.ToString());
             if (storedKeysResult.IsFailure || storedKeysResult.Value is null)
