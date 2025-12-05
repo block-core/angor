@@ -2,6 +2,7 @@
 
 @using System.Text.Json
 @using Angor.Client.Models
+@using Angor.Client.Services.Branta.V2
 @using Angor.Client.Shared
 @using Angor.Client.Storage
 @using Angor.Shared
@@ -24,6 +25,7 @@
 @inject IEncryptionService _encryptionService
 @inject IClipboardService ClipboardService
 @inject IWalletUIService _walletUIService
+@inject BrantaClient _brantaClient
 
 @inherits BaseComponent
 
@@ -671,7 +673,7 @@ else
                                         <Icon IconName="paste" Height="24" Width="24"/>
                                     </span>
 
-                                    <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" placeholder="Enter address">
+                                    <input type="text" class="form-control" id="sendToAddress" @bind="_sendInfo.SendToAddress" @bind:event="oninput" @onchange="VerifyWithBrantaAsync" placeholder="Enter address">
 
 
                                     <span role="button" class="btn btn-border-danger btn-sm" @onclick="ClearAddress">
@@ -679,6 +681,25 @@ else
                                     </span>
                                 </div>
                             </div>
+
+                            @if (ShowBrantaVerification && _sendInfo.SendToAddress != String.Empty)
+                            {
+                                @if (BrantaPayments.Any())
+                                {
+                                    <div>Address Verified by Branta!</div>
+                                    @foreach (var payment in BrantaPayments)
+                                    {
+                                        <div style="display: flex; flex-direction: row; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                            <img src="@payment.PlatformLogoUrl" height="50" />
+                                            <div>@payment.Platform</div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted">Branta verified payment not found.</p>
+                                }
+                            }
 
                             <div class="mb-3">
                                 <label for="sendAmount" class="form-label">Amount</label>
@@ -1122,6 +1143,9 @@ else
             _sendInfo.SendAmount = Money.Coins(value).Satoshi;
         }
     }
+
+    private bool ShowBrantaVerification = false;
+    private List<Services.Branta.V2.Payment> BrantaPayments = [];
 
     private void SetMaxInvestment()
     {
@@ -2090,5 +2114,18 @@ else
         StateHasChanged();
     }
 
+    private async Task VerifyWithBrantaAsync(ChangeEventArgs args)
+    {
+        if (_sendInfo.SendToAddress == String.Empty)
+        {
+            BrantaPayments = [];
+            ShowBrantaVerification = false;
+            StateHasChanged();
+            return;
+        }
 
+        BrantaPayments = await _brantaClient.GetPaymentsAsync(_sendInfo.SendToAddress);
+        ShowBrantaVerification = true;
+        StateHasChanged();
+    }
 }
