@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
+using Angor.Client.Services.Branta.V2;
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -73,6 +74,11 @@ builder.Services.AddScoped<IconService>();
 builder.Services.AddScoped<IWalletUIService, WalletUIService>();
 
 builder.Services.AddScoped<IMessageService, MessageService>();
+
+builder.Services.AddHttpClient<BrantaClient>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:3000");
+});
 
 // to change culture dynamically during startup,
 // set <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
