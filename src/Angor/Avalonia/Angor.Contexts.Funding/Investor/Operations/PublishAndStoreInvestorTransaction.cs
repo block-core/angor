@@ -11,7 +11,6 @@ public static class PublishAndStoreInvestorTransaction
 {
     public record PublishAndStoreInvestorTransactionRequest(string? WalletId, Shared.ProjectId? ProjectId, Shared.TransactionDraft TransactionDraft) : IRequest<Result<string>>;
 
-    //TODO refresh the account info after publishing the transaction after the merge of penalty threshold is in
     public class Handler(IIndexerService indexerService, IPortfolioService portfolioService) : IRequestHandler<PublishAndStoreInvestorTransactionRequest, Result<string>>
     {
         public async Task<Result<string>> Handle(PublishAndStoreInvestorTransactionRequest request, CancellationToken cancellationToken)
