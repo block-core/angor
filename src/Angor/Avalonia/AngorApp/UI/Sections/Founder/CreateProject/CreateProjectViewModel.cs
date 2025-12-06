@@ -31,12 +31,12 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
     private readonly UIServices uiServices;
 
     public CreateProjectViewModel(
-     IWallet wallet,
-    CreateProjectFlow.ProjectSeed projectSeed,
-   UIServices uiServices,
-     IProjectAppService projectAppService,
-    IFounderAppService founderAppService,
-       ILogger<CreateProjectViewModel> logger)
+            IWallet wallet,
+            CreateProjectFlow.ProjectSeed projectSeed,
+            UIServices uiServices,
+            IProjectAppService projectAppService,
+            IFounderAppService founderAppService,
+            ILogger<CreateProjectViewModel> logger)
     {
         this.projectAppService = projectAppService;
         this.founderAppService = founderAppService;
@@ -81,7 +81,7 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         // should check if profile/info already exist before creating new ones?
 
         // Step 1: Create Nostr Profile
-        uiServices.NotificationService.Show($"create project profile");
+        uiServices.Dialog.ShowMessage($"create project profile", $"create project profile");
         logger.LogInformation("[CreateProject] Step 1: Creating Nostr profile for project {ProjectName}", dto.ProjectName);
         var profileResult = await projectAppService.CreateProjectProfile(wallet.Id, dto);
 
@@ -95,7 +95,7 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         logger.LogInformation("[CreateProject] Nostr profile created successfully. Event ID: {EventId}", profileResult.Value);
 
         // Step 2: Create Project Info on Nostr
-        uiServices.NotificationService.Show($"create project info");
+        uiServices.Dialog.ShowMessage($"create project info", $"create project info");
         logger.LogInformation("[CreateProject] Step 2: Creating project info on Nostr for project {ProjectName}", dto.ProjectName);
         var projectInfoResult = await projectAppService.CreateProjectInfo(wallet.Id, dto, profileResult.Value.FounderKeys);
 
@@ -119,11 +119,11 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
                 var result = await projectAppService.CreateProject(wallet.Id, feerate, dto, projectInfoEventId, profileResult.Value.FounderKeys);
                 return result.Map(draft =>
                 {
-                     transactionId = draft.TransactionId;
-                     ITransactionDraftViewModel viewModel = new TransactionDraftViewModel(draft, uiServices);
-                     return viewModel;
+                    transactionId = draft.TransactionId;
+                    ITransactionDraftViewModel viewModel = new TransactionDraftViewModel(draft, uiServices);
+                    return viewModel;
                 });
-             },
+            },
            model =>
            {
                // Use FounderAppService to publish the transaction
@@ -135,16 +135,14 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
                           logger.LogInformation("[CreateProject] Project created successfully: {TransactionId}", txId);
                       })
                   .Map(_ => Guid.Empty); // Convert string result to Guid for the previewer
-            },
+           },
             uiServices);
 
-        var dialogRes = await uiServices.Dialog.ShowAndGetResult(
-           transactionDraftPreviewerViewModel, "Review Project Creation",
-             s => s.CommitDraft.Enhance("Create Project"));
+        var dialogRes = await uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Review Project Creation", s => s.CommitDraft.Enhance("Create Project"));
 
         return dialogRes.HasValue
                     ? Result.Success(transactionId ?? "Unknown")
-                    : Result.Failure<string>("Project creation was cancelled");
+                    : Result.Failure<string>("Project creation was canceled");
     }
 
     public IEnhancedCommand<Result<string>> Create { get; }
