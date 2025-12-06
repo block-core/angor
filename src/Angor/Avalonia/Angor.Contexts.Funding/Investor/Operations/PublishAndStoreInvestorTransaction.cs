@@ -59,17 +59,21 @@ public static class PublishAndStoreInvestorTransaction
                 .FirstOrDefault(i => i.ProjectIdentifier == projectId);
 
             // Handle each draft type
-            switch (draft) {
+            switch (draft) 
+            {
                 case InvestmentDraft investmentDraft:
-                    if (investment != null) {
+                    if (investment != null) 
+                    {
                         // Update existing investment record
                         investment.InvestmentTransactionHash = draft.TransactionId;
                         investment.InvestmentTransactionHex = draft.SignedTxHex;
                         investment.InvestorPubKey = investmentDraft.InvestorKey;
                     }
-                    else {
+                    else 
+                    {
                         // Create new investment record
-                        investment = new InvestmentRecord {
+                        investment = new InvestmentRecord 
+                        {
                             InvestmentTransactionHash = draft.TransactionId,
                             InvestmentTransactionHex = draft.SignedTxHex,
                             InvestorPubKey = investmentDraft.InvestorKey,

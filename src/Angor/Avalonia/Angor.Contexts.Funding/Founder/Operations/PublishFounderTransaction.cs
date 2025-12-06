@@ -13,7 +13,8 @@ public static class PublishFounderTransaction
     {
         public async Task<Result<string>> Handle(PublishFounderTransactionRequest request, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(request.TransactionDraft.SignedTxHex)) {
+            if (string.IsNullOrEmpty(request.TransactionDraft.SignedTxHex)) 
+            {
                 return Result.Failure<string>("Transaction signature cannot be empty");
             }
 
@@ -22,7 +23,8 @@ public static class PublishFounderTransaction
 
             var errorMessage = await indexerService.PublishTransactionAsync(request.TransactionDraft.SignedTxHex);
 
-            if (!string.IsNullOrEmpty(errorMessage)) {
+            if (!string.IsNullOrEmpty(errorMessage)) 
+            {
                 return Result.Failure<string>(errorMessage);
             }
 
