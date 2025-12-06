@@ -27,6 +27,10 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
         try
         {
+            // todo: temporary
+            if (project.Value.ProjectType != ProjectType.Invest)
+                return Result.Success(new List<StageData>().AsEnumerable());
+
             var stageDataList = project.Value.Stages
                 .Select(x => new StageData
                 {

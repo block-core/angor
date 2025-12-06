@@ -21,7 +21,22 @@ public static class ProjectStatistics
             {
                 return Result.Failure<ProjectStatisticsDto>(stagesInformation.Error);
             }
-            
+
+            if (stagesInformation.Value.Any() == false)
+            {
+                return Result.Success(new ProjectStatisticsDto
+                {
+                    TotalStages = 1,
+                    NextStage = new NextStageDto
+                    {
+                        DaysUntilRelease = 0,
+                        PercentageToRelease = 0,
+                        ReleaseDate = DateTime.UtcNow,
+                        StageIndex = 0
+                    }
+                });
+            }
+
             return Result.Try(() => CalculateTotalValues(stagesInformation.Value.ToList()));
         }
         

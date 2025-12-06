@@ -1,54 +1,99 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:c="clr-namespace:AngorApp.UI.Shared.Controls"
-             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:fundingStructure="clr-namespace:AngorApp.UI.Sections.Founder.CreateProject.FundingStructure"
-             mc:Ignorable="d" d:DesignWidth="800"
-             x:Class="AngorApp.UI.Sections.Founder.CreateProject.FundingStructure.FundingStructure"
-             x:DataType="fundingStructure:IFundingStructureViewModel">
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:c="clr-namespace:AngorApp.UI.Shared.Controls"
+			 xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+			 xmlns:fundingStructure="clr-namespace:AngorApp.UI.Sections.Founder.CreateProject.FundingStructure"
+			 xmlns:models="clr-namespace:Angor.Shared.Models;assembly=Angor.Shared"
+			 mc:Ignorable="d" d:DesignWidth="800"
+			 x:Class="AngorApp.UI.Sections.Founder.CreateProject.FundingStructure.FundingStructure"
+			 x:DataType="fundingStructure:IFundingStructureViewModel">
 
-    <Design.DataContext>
-        <fundingStructure:FundingStructureViewModelSample
-            PenaltyDays="30" FundingStartDate="10/1/2025" Sats="10000001" />
-    </Design.DataContext>
+	<Design.DataContext>
+		<fundingStructure:FundingStructureViewModelSample
+		PenaltyDays="30" FundingStartDate="10/1/2025" Sats="10000001" />
+	</Design.DataContext>
 
-    <UserControl.Styles>
-        <StyleInclude Source="../Common.axaml" />
-    </UserControl.Styles>
+	<UserControl.Styles>
+		<StyleInclude Source="../Common.axaml" />
+	</UserControl.Styles>
 
-    <Card Header="Funding Structure">
-        <Card.HeaderEndContent>
-            <c:ErrorSummary Errors="{Binding Errors}" />
-        </Card.HeaderEndContent>
-        <Card.HeaderStartContent>
-            <ui:Icon Source="svg:/Assets/clock-square.svg" />
-        </Card.HeaderStartContent>
-        <StackPanel Classes="BigGap">
-            <Card Classes="Transparent" Header="Target Amount" Subheader="Minimum BTC this project is trying to raise">
-                <c:AmountControl Satoshis="{Binding Sats, Mode=TwoWay}" />
-            </Card>
-            <Card Classes="Transparent" Header="Penalty Threshold" Subheader="Minimum investment amount (in satoshis) to avoid penalty deductions">
-                <c:AmountControl Satoshis="{Binding PenaltyThreshold, Mode=TwoWay}" />
-            </Card>
-            <BalancedWrapGrid>
-                <Card Classes="Transparent" Header="Funding Start" Subheader="When the investment period begins (automatically set today)">
-                    <TextBox VerticalAlignment="Bottom" IsReadOnly="True" Watermark="Funding start" Text="{Binding FundingStartDate, StringFormat='d'}" />
-                </Card>
-                <Card Classes="Transparent" Header="Funding End" Subheader="When the investment period ends">
-                    <CalendarDatePicker VerticalAlignment="Bottom" Watermark="Funding end" SelectedDate="{Binding FundingEndDate}" />
-                </Card>
-            </BalancedWrapGrid>
-            <BalancedWrapGrid>
-                <Card Classes="Transparent" Header="Penalty Days" Subheader="Days to lock funds for departing investors">
-                    <TextBox TextInputOptions.ContentType="Number" Watermark="Penalty days" Text="{Binding PenaltyDays}" />
-                </Card>
-                <Card Classes="Transparent" Header="Emergency Expiry" Subheader="Emergency date for fund release">
-                    <CalendarDatePicker AutomationProperties.AutomationId="EmergencyExpiry" IsEnabled="False" SelectedDate="{Binding ExpiryDate}" />
-                </Card>
-            </BalancedWrapGrid>
-        </StackPanel>
-    </Card>
+	<Card Header="Funding Structure">
+		<Card.HeaderEndContent>
+			<c:ErrorSummary Errors="{Binding Errors}" />
+		</Card.HeaderEndContent>
+		<Card.HeaderStartContent>
+			<ui:Icon Source="svg:/Assets/clock-square.svg" />
+		</Card.HeaderStartContent>
+		<StackPanel Classes="BigGap">
+			<!-- Project Type Selector -->
+			<Card Classes="Transparent" Header="Project Type" Subheader="Choose the funding model for your project">
+				<ComboBox SelectedItem="{Binding ProjectType}">
+					<models:ProjectType>Invest</models:ProjectType>
+					<models:ProjectType>Fund</models:ProjectType>
+				</ComboBox>
+			</Card>
+
+			<!-- Target Amount - Only shown for Invest type -->
+			<Card Classes="Transparent"
+				  Header="Target Amount"
+				  Subheader="Minimum BTC this project is trying to raise"
+				  IsVisible="{Binding ProjectType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:ProjectType.Invest}}">
+				<c:AmountControl Satoshis="{Binding Sats, Mode=TwoWay}" />
+			</Card>
+
+			<Card Classes="Transparent" Header="Penalty Threshold" Subheader="Minimum investment amount (in satoshis) to avoid penalty deductions">
+				<c:AmountControl Satoshis="{Binding PenaltyThreshold, Mode=TwoWay}" />
+			</Card>
+
+			<!-- Invest-specific fields -->
+			<BalancedWrapGrid IsVisible="{Binding ProjectType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:ProjectType.Invest}}">
+				<Card Classes="Transparent" Header="Funding Start" Subheader="When the investment period begins (automatically set today)">
+					<TextBox VerticalAlignment="Bottom" IsReadOnly="True" Watermark="Funding start" Text="{Binding FundingStartDate, StringFormat='d'}" />
+				</Card>
+				<Card Classes="Transparent" Header="Funding End" Subheader="When the investment period ends">
+					<CalendarDatePicker VerticalAlignment="Bottom" Watermark="Funding end" SelectedDate="{Binding FundingEndDate}" />
+				</Card>
+			</BalancedWrapGrid>
+
+			<!-- Fund-specific fields -->
+			<StackPanel Classes="BigGap" IsVisible="{Binding ProjectType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:ProjectType.Fund}}">
+				<Card Classes="Transparent" Header="Funding Patterns" Subheader="Select one or more subscription/funding patterns">
+					<ItemsControl ItemsSource="{Binding SelectableDynamicStagePatterns}">
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<CheckBox Margin="0,5"
+										  IsChecked="{Binding IsSelected, Mode=TwoWay}">
+									<StackPanel Orientation="Vertical">
+										<TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+										<TextBlock Text="{Binding Description}"
+												   FontSize="11"
+												   TextWrapping="Wrap"
+												   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+									</StackPanel>
+								</CheckBox>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+				</Card>
+
+				<Card Classes="Transparent" Header="Payout Day" Subheader="Day of the month for payments (1-31)">
+					<TextBox TextInputOptions.ContentType="Number"
+							 Watermark="Enter day (1-31)"
+							 Text="{Binding PayoutDay}" />
+				</Card>
+			</StackPanel>
+
+			<BalancedWrapGrid>
+				<Card Classes="Transparent" Header="Penalty Days" Subheader="Days to lock funds for departing investors">
+					<TextBox TextInputOptions.ContentType="Number" Watermark="Penalty days" Text="{Binding PenaltyDays}" />
+				</Card>
+				<Card Classes="Transparent" Header="Emergency Expiry" Subheader="Emergency date for fund release">
+					<CalendarDatePicker AutomationProperties.AutomationId="EmergencyExpiry" IsEnabled="False" SelectedDate="{Binding ExpiryDate}" />
+				</Card>
+			</BalancedWrapGrid>
+		</StackPanel>
+	</Card>
 
 </UserControl>
