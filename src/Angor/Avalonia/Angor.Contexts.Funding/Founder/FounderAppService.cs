@@ -30,5 +30,5 @@ public class FounderAppService(IMediator mediator) : IFounderAppService
         mediator.Send(new ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest(walletId, projectId, investorAddresses));
     
     public Task<Result<string>> SubmitTransactionFromDraft(WalletId walletId, TransactionDraft draft) => 
-        mediator.Send(new PublishTransaction.PublishTransactionRequest(null, null, draft));
+        mediator.Send(new PublishFounderTransaction.PublishFounderTransactionRequest(draft));
 }
