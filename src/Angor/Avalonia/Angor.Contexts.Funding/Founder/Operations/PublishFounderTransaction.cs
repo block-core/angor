@@ -9,7 +9,6 @@ public static class PublishFounderTransaction
 {
     public record PublishFounderTransactionRequest(TransactionDraft TransactionDraft) : IRequest<Result<string>>;
 
-    //TODO refresh the account info after publishing the transaction
     public class Handler(IIndexerService indexerService) : IRequestHandler<PublishFounderTransactionRequest, Result<string>>
     {
         public async Task<Result<string>> Handle(PublishFounderTransactionRequest request, CancellationToken cancellationToken)
