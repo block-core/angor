@@ -1,5 +1,6 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Shared;
+using Angor.Shared.Models;
 using AngorApp.Model.Projects;
 
 namespace AngorApp.UI.Sections.Browse.Details;
@@ -15,7 +16,7 @@ public class FullProjectSample : IFullProject
         new StageSample() { Amount = 123, Index = 0, RatioOfTotal = 0.25m, ReleaseDate = DateTime.Now.AddDays(3) },
         new StageSample() { Amount = 123, Index = 1, RatioOfTotal = 0.25m, ReleaseDate = DateTime.Now.AddDays(6) },
         new StageSample() { Amount = 123, Index = 2, RatioOfTotal = 0.5m, ReleaseDate = DateTime.Now.AddDays(12) }
-    ];
+  ];
     public string Name { get; } = "Cruzada21 - VEINTIUNO.LAT";
     public TimeSpan PenaltyDuration { get; } = TimeSpan.FromDays(90);
     public IAmountUI? PenaltyThreshold { get; } = new AmountUI(50000000); // 0.5 BTC in satoshis
@@ -39,4 +40,9 @@ public class FullProjectSample : IFullProject
     public NextStageDto? NextStage { get; }
     public int SpentTransactions { get; set; }
     public string FounderPubKey { get; } = "some npub key";
+    
+ // New properties for Fund/Subscribe support
+    public int Version { get; } = 2;
+    public ProjectType ProjectType { get; } = ProjectType.Invest;
+    public List<DynamicStagePattern> DynamicStagePatterns { get; } = new();
 }

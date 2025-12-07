@@ -1,5 +1,6 @@
 ﻿using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
+using Angor.Shared.Models;
 
 namespace Angor.Contexts.Funding.Projects.Application.Dtos;
 
@@ -18,5 +19,10 @@ public record ProjectDto
     public string NostrNpubKeyHex { get; set; }
     public Uri? InformationUri { get; set; }
     public List<StageDto> Stages { get; set; }
-    public string FounderPubKey { get; set; }   // TODO: Populate FounderPubKey property
+    public string FounderPubKey { get; set; }
+    
+    // New fields for Fund/Subscribe support
+    public int Version { get; set; } = 2;
+    public ProjectType ProjectType { get; set; } = ProjectType.Invest;
+    public List<DynamicStagePattern> DynamicStagePatterns { get; set; } = new();
 }

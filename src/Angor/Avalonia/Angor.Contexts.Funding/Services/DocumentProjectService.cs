@@ -39,7 +39,7 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
              ? projectResult.Value.Select(item => item).ToList() : [];
 
             if (ids.Length == localLookup.Count)
-                return Result.Success(localLookup.AsEnumerable()); //all ids are in the local database, return them
+                return Result.Success(localLookup.OrderByDescending(p => p.StartingDate).AsEnumerable()); //all ids are in the local database, return them
 
             var tasks = stringIds
                    .Except(localLookup.Select(p => p.Id.Value)) //ids that are not in the local database
@@ -53,7 +53,7 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
                  .ToList();
 
             if (indexerResults.Count == 0)
-                return Result.Success(localLookup.AsEnumerable());
+                return Result.Success(localLookup.OrderByDescending(p => p.StartingDate).AsEnumerable());
 
             var nostrEventIds = indexerResults.Select(r => r!.NostrEventId).ToArray();
             var projectInfo = await ProjectInfos(nostrEventIds);
@@ -104,7 +104,7 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
                          };
                      });
 
-            var response = lookupList.Where(p => p != null).Select(p => p!).ToList();
+            var response = lookupList.Where(p => p != null).Select(p => p!).OrderByDescending(p => p.StartingDate).ToList();
 
             if (!response.Any())
                 return Result.Failure<IEnumerable<Project>>("No projects found");
