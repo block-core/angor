@@ -149,17 +149,5 @@
         <Setter Property="MaxColumnWidth" Value="450" />
     </Style>
 
-    <Style Selector="Frame">
-        <Setter Property="BackButtonContent">
-            <Setter.Value>
-                <Template>
-                    <DockPanel HorizontalSpacing="8">
-                        <ContentControl Content="{Icon fa-angle-left}" />
-                        <TextBlock VerticalAlignment="Center">Back</TextBlock>
-                    </DockPanel>
-                </Template>
-            </Setter.Value>
-        </Setter>
-    </Style>
 
 </Styles>

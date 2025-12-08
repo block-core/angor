@@ -6,7 +6,7 @@ namespace AngorApp.UI.Sections.Browse.Details;
 
 public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 {
-    private readonly FullProject project;
+    private readonly IFullProject project;
     private bool enableProductionValidations;
 
     public ProjectDetailsViewModel(
