@@ -1,4 +1,5 @@
 using Angor.Contexts.CrossCutting;
+using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
@@ -20,7 +21,7 @@ public static class CreateProjectInfo
     public record CreateProjectInfoRequest(
         WalletId WalletId, 
         CreateProjectDto Project,
-        FounderKeys FounderKeys) : IRequest<Result<CreateProjectInfoResponse>>; // Returns project info event ID
+        ProjectSeedDto ProjectSeedDto) : IRequest<Result<CreateProjectInfoResponse>>; // Returns project info event ID
 
     public record CreateProjectInfoResponse(
         string EventId);
@@ -36,15 +37,15 @@ public static class CreateProjectInfo
     {
         public async Task<Result<CreateProjectInfoResponse>> Handle(CreateProjectInfoRequest request, CancellationToken cancellationToken)
         {
-            if (request.FounderKeys == null)
+            if (request.ProjectSeedDto == null)
             {
                 logger.LogDebug("FounderKeys is null in CreateProjectRequest for WalletId {WalletId}.", request.WalletId);
                 return Result.Failure<CreateProjectInfoResponse>("FounderKeys cannot be null.");
             }
 
             var wallet = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
-         
-            FounderKeys? newProjectKeys = request.FounderKeys;
+
+            ProjectSeedDto? newProjectKeys = request.ProjectSeedDto;
           
             var nostrPrivateKey = await derivationOperations.DeriveProjectNostrPrivateKeyAsync(wallet.Value.ToWalletWords(), newProjectKeys.FounderKey);
             var nostrKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
@@ -60,7 +61,7 @@ public static class CreateProjectInfo
             return Result.Success(new CreateProjectInfoResponse(projectInfoResult.Value));
         }
 
-        private async Task<Result<string>> CreateProjectInfoOnNostr(string nostrKeyHex, CreateProjectDto project, FounderKeys founderKeys)
+        private async Task<Result<string>> CreateProjectInfoOnNostr(string nostrKeyHex, CreateProjectDto project, ProjectSeedDto founderKeys)
         {
             var tsc = new TaskCompletionSource<Result<string>>();
 

@@ -1,4 +1,5 @@
 using Angor.Contexts.CrossCutting;
+using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
@@ -6,9 +7,9 @@ using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
+using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Messages.Metadata;
@@ -19,12 +20,12 @@ namespace Angor.Contexts.Funding.Founder.Operations;
 public static class CreateProjectProfile
 {
     public record CreateProjectProfileRequest(
-        WalletId WalletId, 
+        WalletId WalletId,
+        ProjectSeedDto ProjectSeedDto,
         CreateProjectDto Project) : IRequest<Result<CreateProjectProfileResponse>>; // Returns Nostr event ID
 
     public record CreateProjectProfileResponse(
-        string EventId,
-        FounderKeys FounderKeys);
+        string EventId);
 
     public class CreateProjectProfileHandler(
                 ISeedwordsProvider seedwordsProvider,
@@ -39,36 +40,7 @@ public static class CreateProjectProfile
         {
             var wallet = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
 
-            // Try to get from storage (read-only, no fallback derivation)
-            var storedKeysResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.ToString());
-
-            if (storedKeysResult.IsFailure || storedKeysResult.Value == null)
-            {
-                logger.LogDebug("Project keys not found in storage for WalletId {WalletId}. Result: {Result}", request.WalletId, storedKeysResult);
-                return Result.Failure<CreateProjectProfileResponse>("Project keys not found in storage. Please load founder projects first.");
-            }
-
-            // Use stored keys directly
-            var founderKeysList = storedKeysResult.Value.Keys;
-            FounderKeys? newProjectKeys = null;
-
-            // Find first available project slot that hasn't been used yet
-            foreach (var founderKeys in founderKeysList)
-            {
-                var project = await angorIndexerService.GetProjectByIdAsync(founderKeys.ProjectIdentifier);
-
-                if (project != null)
-                    continue;
-
-                newProjectKeys = founderKeys;
-                break;
-            }
-
-            if (newProjectKeys == null)
-            {
-                logger.LogDebug("Failed to find available project slot for WalletId {WalletId}. All project keys are already in use.", request.WalletId);
-                return Result.Failure<CreateProjectProfileResponse>("Failed to find available project slot. All project keys are already in use.");
-            }
+            ProjectSeedDto newProjectKeys = request.ProjectSeedDto;
 
             var nostrPrivateKey = await derivationOperations.DeriveProjectNostrPrivateKeyAsync(wallet.Value.ToWalletWords(), newProjectKeys.FounderKey);
             var nostrKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
@@ -82,7 +54,7 @@ public static class CreateProjectProfile
                 return Result.Failure<CreateProjectProfileResponse>(profileCreateResult.Error);
             }
 
-            return Result.Success(new CreateProjectProfileResponse(profileCreateResult.Value, newProjectKeys));
+            return Result.Success(new CreateProjectProfileResponse(profileCreateResult.Value));
         }
 
         private async Task<Result<string>> CreateNostrProfileAsync(string nostrKey, CreateProjectDto project)

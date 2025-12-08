@@ -16,5 +16,6 @@ public interface IFounderAppService
     Task<Result<IEnumerable<ReleaseableTransactionDto>>> GetReleasableTransactions(WalletId walletId, ProjectId projectId);
     Task<Result> ReleaseInvestorTransactions(WalletId walletId, ProjectId projectId, IEnumerable<string> investorAddresses);
     
+    Task<Result<ProjectSeedDto>> CreateNewProjectKeysAsync(WalletId walletId);
     Task<Result<string>> SubmitTransactionFromDraft(WalletId walletId, TransactionDraft draft);
 }

@@ -80,10 +80,24 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         // todo add support for redundancy in all 3 steps, maybe we
         // should check if profile/info already exist before creating new ones?
 
-        // Step 1: Create Nostr Profile
-        uiServices.Dialog.ShowMessage($"create project profile", $"create project profile");
-        logger.LogInformation("[CreateProject] Step 1: Creating Nostr profile for project {ProjectName}", dto.ProjectName);
-        var profileResult = await projectAppService.CreateProjectProfile(wallet.Id, dto);
+        // Step 1: Create project keys
+        uiServices.Dialog.ShowMessage($"create project keys", $"create project keys");
+        logger.LogInformation("[CreateNewProjectKeys] Step 1: create keys for a project {ProjectName}", dto.ProjectName);
+        var projectKeys = await founderAppService.CreateNewProjectKeysAsync(wallet.Id);
+
+        if (projectKeys.IsFailure)
+        {
+            logger.LogError("[CreateNewProjectKeys] Failed to create Nostr profile: {Error}", projectKeys.Error);
+            uiServices.NotificationService.Show($"Failed to create keys for a project: {projectKeys.Error}", "Project Key Creation Failed");
+            return Result.Failure<string>(projectKeys.Error);
+        }
+
+        logger.LogInformation("[CreateNewProjectKeys] Nostr keys created successfully. Event ID: {EventId}", projectKeys.Value);
+
+        // Step 2: Create Nostr Profile
+        uiServices.Dialog.ShowMessage($"create project keys", $"create project keys");
+        logger.LogInformation("[CreateNewProjectKeys] Step 2: creating keys for project {ProjectName}", dto.ProjectName);
+        var profileResult = await projectAppService.CreateProjectProfile(wallet.Id, projectKeys.Value, dto);
 
         if (profileResult.IsFailure)
         {
@@ -94,10 +108,10 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
 
         logger.LogInformation("[CreateProject] Nostr profile created successfully. Event ID: {EventId}", profileResult.Value);
 
-        // Step 2: Create Project Info on Nostr
+        // Step 3: Create Project Info on Nostr
         uiServices.Dialog.ShowMessage($"create project info", $"create project info");
-        logger.LogInformation("[CreateProject] Step 2: Creating project info on Nostr for project {ProjectName}", dto.ProjectName);
-        var projectInfoResult = await projectAppService.CreateProjectInfo(wallet.Id, dto, profileResult.Value.FounderKeys);
+        logger.LogInformation("[CreateProject] Step 3: Creating project info on Nostr for project {ProjectName}", dto.ProjectName);
+        var projectInfoResult = await projectAppService.CreateProjectInfo(wallet.Id, dto, projectKeys.Value);
 
         if (projectInfoResult.IsFailure)
         {
@@ -110,13 +124,13 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         projectInfoEventId = projectInfoResult.Value.EventId;
         logger.LogInformation("[CreateProject] Project info created successfully. Event ID: {EventId}", projectInfoEventId);
 
-        // Step 3: Show Transaction Preview and Create Transaction
-        logger.LogInformation("[CreateProject] Step 3: Creating blockchain transaction for project {ProjectName}", dto.ProjectName);
+        // Step 4: Show Transaction Preview and Create Transaction
+        logger.LogInformation("[CreateProject] Step 4: Creating blockchain transaction for project {ProjectName}", dto.ProjectName);
 
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
             async feerate =>
             {
-                var result = await projectAppService.CreateProject(wallet.Id, feerate, dto, projectInfoEventId, profileResult.Value.FounderKeys);
+                var result = await projectAppService.CreateProject(wallet.Id, feerate, dto, projectInfoEventId, projectKeys.Value);
                 return result.Map(draft =>
                 {
                     transactionId = draft.TransactionId;

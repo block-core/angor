@@ -1,4 +1,5 @@
 ﻿using Angor.Contexts.CrossCutting;
+using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Founder.Operations;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
@@ -30,19 +31,19 @@ public class ProjectAppService(
         return mediator.Send(new GetFounderProjects.GetFounderProjectsRequest(walletId));
     }
     
-    public Task<Result<CreateProjectProfileResponse>> CreateProjectProfile(WalletId walletId, CreateProjectDto project)
+    public Task<Result<CreateProjectProfileResponse>> CreateProjectProfile(WalletId walletId, ProjectSeedDto projectSeedDto, CreateProjectDto project)
     {
-        return mediator.Send(new CreateProjectProfile.CreateProjectProfileRequest(walletId, project));
+        return mediator.Send(new CreateProjectProfile.CreateProjectProfileRequest(walletId, projectSeedDto, project));
     }
 
-    public Task<Result<CreateProjectInfoResponse>> CreateProjectInfo(WalletId walletId, CreateProjectDto project, FounderKeys FounderKeys)
+    public Task<Result<CreateProjectInfoResponse>> CreateProjectInfo(WalletId walletId, CreateProjectDto project, ProjectSeedDto projectSeedDto)
     {
-        return mediator.Send(new CreateProjectInfo.CreateProjectInfoRequest(walletId, project, FounderKeys));
+        return mediator.Send(new CreateProjectInfo.CreateProjectInfoRequest(walletId, project, projectSeedDto));
     }
     
-    public Task<Result<TransactionDraft>> CreateProject(WalletId walletId, long selectedFee, CreateProjectDto project, string projectInfoEventId, FounderKeys FounderKeys)
+    public Task<Result<TransactionDraft>> CreateProject(WalletId walletId, long selectedFee, CreateProjectDto project, string projectInfoEventId, ProjectSeedDto projectSeedDto)
     {
-        return mediator.Send(new CreateProjectConstants.CreateProject.CreateProjectRequest(walletId, selectedFee, project, projectInfoEventId, FounderKeys));
+        return mediator.Send(new CreateProjectConstants.CreateProject.CreateProjectRequest(walletId, selectedFee, project, projectInfoEventId, projectSeedDto));
     }
 
     public Task<Result<ProjectStatisticsDto>> GetProjectStatistics(ProjectId projectId)

@@ -1,4 +1,5 @@
 using Angor.Contexts.CrossCutting;
+using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
@@ -26,7 +27,7 @@ internal static class CreateProjectConstants
                 long SelectedFeeRate,
                 CreateProjectDto Project,
                 string ProjectInfoEventId,
-                FounderKeys FounderKeys) // Event ID from CreateProjectInfo
+                ProjectSeedDto ProjectSeedDto) // Event ID from CreateProjectInfo
                 : IRequest<Result<TransactionDraft>>;
 
         public class CreateProjectHandler(
@@ -43,15 +44,15 @@ internal static class CreateProjectConstants
         {
             public async Task<Result<TransactionDraft>> Handle(CreateProjectRequest request, CancellationToken cancellationToken)
             {
-                if (request.FounderKeys == null)
+                if (request.ProjectSeedDto == null)
                 {
                     logger.LogDebug("FounderKeys is null in CreateProjectRequest for WalletId {WalletId}.", request.WalletId);
                     return Result.Failure<TransactionDraft>("FounderKeys cannot be null.");
                 }
 
                 var wallet = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
-                
-                FounderKeys? newProjectKeys = request.FounderKeys;
+
+                ProjectSeedDto? newProjectKeys = request.ProjectSeedDto;
 
                 var transactionInfo = await CreateProjectTransaction(
                       request.WalletId.Value,
