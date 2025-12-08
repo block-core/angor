@@ -5,6 +5,7 @@ using AngorApp.Core;
 using AngorApp.UI.Sections.Founder.CreateProject;
 using AngorApp.UI.Sections.Founder.CreateProject.ProjectCreated;
 using Microsoft.Extensions.Logging;
+using Zafiro.Avalonia.Controls.Wizards.Slim;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Wizards.Slim;
 using Zafiro.UI.Wizards.Slim.Builder;
