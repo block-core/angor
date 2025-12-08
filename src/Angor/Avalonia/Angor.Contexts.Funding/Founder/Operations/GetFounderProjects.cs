@@ -30,7 +30,9 @@ public static class GetFounderProjects
             if (projects.IsFailure)
                 return Result.Failure<IEnumerable<ProjectDto>>(projects.Error);
 
-            var dtoList = projects.Value.Select(p => p.ToDto());
+            var dtoList = projects.Value
+                .OrderByDescending(p => p.StartingDate)
+                .Select(p => p.ToDto());
             
             return Result.Success(dtoList);
         }

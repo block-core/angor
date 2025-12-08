@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 using System.Reactive.Disposables;
+using Angor.Contexts.Funding.Founder.Dtos;
 using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject;
@@ -45,7 +46,7 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
             var feerateSelector = new FeerateSelectionViewModel(uiServices);
             var feerate = uiServices.Dialog.ShowAndGetResult(feerateSelector, "Select the feerate", f => f.IsValid, viewModel => viewModel.Feerate!.Value);
             return feerate.ToResult("Choosing a feerate is mandatory")
-                .Bind(fr => DoCreateProject(wallet, this.ToDto(), fr))
+                .Bind(fr => DoCreateProject(wallet, this.ToDto(), fr,projectSeed))
                 .TapError(error =>
                 {
                     logger.LogDebug("[CreateProject] Failed to create project: {Error}\nWalletId: {WalletId}, Dto: {@Dto}", error, wallet.Id.Value, this.ToDto());
@@ -56,9 +57,12 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
 
     public IEnhancedCommand<Result<string>> Create { get; }
 
-    private async Task<Result<string>> DoCreateProject(IWallet wallet, CreateProjectDto dto, long feeRate)
+    private async Task<Result<string>> DoCreateProject(IWallet wallet, CreateProjectDto dto, long feeRate,
+        CreateProjectFlow.ProjectSeed projectSeed)
     {
-        var result = await projectAppService.CreateProject(wallet.Id, feeRate, dto);
+        var result = await projectAppService.CreateProject(wallet.Id, feeRate, dto,
+            new ProjectSeedDto(projectSeed.FounderKey, projectSeed.FounderRecoveryKey, projectSeed.NostrPubKey,
+                projectSeed.ProjectIdentifier));
         if(result.IsSuccess)
             return Result.Success(result.Value.TransactionId); //TODO Jose, need to fix this when the changes are implemented in the UI
         logger.LogDebug("[CreateProject] Service returned failure: {Error}\nWalletId: {WalletId}, Dto: {@Dto}", result.Error, wallet.Id.Value, dto);

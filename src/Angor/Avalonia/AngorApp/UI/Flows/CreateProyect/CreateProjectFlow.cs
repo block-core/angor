@@ -1,3 +1,5 @@
+using Angor.Contexts.CrossCutting;
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.Core;
 using AngorApp.UI.Sections.Founder.CreateProject;
@@ -10,14 +12,16 @@ using Zafiro.UI.Wizards.Slim.Builder;
 
 namespace AngorApp.UI.Flows.CreateProject;
 
-public class CreateProjectFlow(UIServices uiServices, INavigator navigator, IProjectAppService projectAppService, SharedCommands commands, IWalletContext walletContext, ILogger<CreateProjectViewModel> logger)
+public class CreateProjectFlow(UIServices uiServices, INavigator navigator, IProjectAppService projectAppService, SharedCommands commands, IWalletContext walletContext, ILogger<CreateProjectViewModel> logger,
+    IFounderAppService founderAppService)
     : ICreateProjectFlow
 {
     public Task<Result<Maybe<string>>> CreateProject()
     {
-        var createWizardResult = from wallet in walletContext.GetDefaultWallet()
-            from seed in GetProjectSeed()
-            select CreateWizard(wallet, seed);
+        var createWizardResult =
+            from wallet in walletContext.GetDefaultWallet()
+            from projectSeed in GetProjectSeed(wallet.Id)
+            select CreateWizard(wallet, projectSeed);
 
         return createWizardResult.Map(slimWizard => slimWizard.Navigate(navigator));
     }
@@ -32,11 +36,11 @@ public class CreateProjectFlow(UIServices uiServices, INavigator navigator, IPro
         return wizard;
     }
 
-    private static async Task<Result<ProjectSeed>> GetProjectSeed()
+    private Task<Result<ProjectSeed>> GetProjectSeed(WalletId walletId)
     {
-        // TODO: Implement real project seed generation logic
-        return Result.Success(new ProjectSeed("123456789abcdef123456789abcdef123456789abcdef123456789abcdef"));
+         return founderAppService.StartNewProjectAsync(walletId)
+             .Map(seed => new ProjectSeed(seed.FounderKey, seed.FounderRecoveryKey, seed.NostrPubKey, seed.ProjectIdentifier));
     }
 
-    public record ProjectSeed(string NostrPubKey);
+    public record ProjectSeed(string FounderKey, string FounderRecoveryKey, string NostrPubKey, string ProjectIdentifier);
 }
