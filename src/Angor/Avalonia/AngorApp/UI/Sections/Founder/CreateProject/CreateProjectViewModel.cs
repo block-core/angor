@@ -10,6 +10,7 @@ using AngorApp.UI.Sections.Founder.CreateProject.Profile;
 using AngorApp.UI.Sections.Founder.CreateProject.Stages;
 using AngorApp.UI.Sections.Shell;
 using AngorApp.UI.Shared.Controls.Common;
+using AngorApp.UI.Shared.Services;
 using AngorApp.UI.TransactionDrafts;
 using AngorApp.UI.TransactionDrafts.DraftTypes;
 using AngorApp.UI.TransactionDrafts.DraftTypes.Base;
@@ -82,21 +83,21 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
 
         // Step 1: Create project keys
         uiServices.Dialog.ShowMessage($"create project keys", $"create project keys");
-        logger.LogInformation("[CreateNewProjectKeys] Step 1: create keys for a project {ProjectName}", dto.ProjectName);
+        logger.LogInformation("[CreateProject] Step 1: create keys for a project {ProjectName}", dto.ProjectName);
         var projectKeys = await founderAppService.CreateNewProjectKeysAsync(wallet.Id);
 
         if (projectKeys.IsFailure)
         {
-            logger.LogError("[CreateNewProjectKeys] Failed to create Nostr profile: {Error}", projectKeys.Error);
+            logger.LogError("[CreateProject] Failed to create Nostr profile: {Error}", projectKeys.Error);
             uiServices.NotificationService.Show($"Failed to create keys for a project: {projectKeys.Error}", "Project Key Creation Failed");
             return Result.Failure<string>(projectKeys.Error);
         }
 
-        logger.LogInformation("[CreateNewProjectKeys] Nostr keys created successfully. Event ID: {EventId}", projectKeys.Value);
+        logger.LogInformation("[CreateProject] Nostr keys created successfully. Event ID: {EventId}", projectKeys.Value);
 
         // Step 2: Create Nostr Profile
-        uiServices.Dialog.ShowMessage($"create project keys", $"create project keys");
-        logger.LogInformation("[CreateNewProjectKeys] Step 2: creating keys for project {ProjectName}", dto.ProjectName);
+        uiServices.Dialog.ShowMessage($"create project profile", $"create project profile");
+        logger.LogInformation("[CreateProfile] Step 2: creating profile for project {ProjectName}", dto.ProjectName);
         var profileResult = await projectAppService.CreateProjectProfile(wallet.Id, projectKeys.Value, dto);
 
         if (profileResult.IsFailure)
@@ -120,6 +121,8 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
             // TODO: Consider rollback of profile creation if needed
             return Result.Failure<string>(projectInfoResult.Error);
         }
+
+        // todo: Jose add a way to close the dialog
 
         projectInfoEventId = projectInfoResult.Value.EventId;
         logger.LogInformation("[CreateProject] Project info created successfully. Event ID: {EventId}", projectInfoEventId);
