@@ -10,6 +10,7 @@ using System.Reactive.Threading.Tasks;
 using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared.Protocol;
+using Angor.Shared.Utilities;
 using Stage = Angor.Shared.Models.Stage;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -27,62 +28,166 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
         try
         {
-            // todo: temporary
-            if (project.Value.ProjectType != ProjectType.Invest)
-                return Result.Success(new List<StageData>().AsEnumerable());
-
-            var stageDataList = project.Value.Stages
-                .Select(x => new StageData
-                {
-                    Stage = new Stage() { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal },
-                    StageIndex = x.Index,
-                    Items = []
-                }).ToList();
-
             var projectInvestments = await angorIndexerService.GetInvestmentsAsync(projectId);
 
             if (projectInvestments.Count == 0)
-                return Result.Success(stageDataList.AsEnumerable());
+                return Result.Success(new List<StageData>().AsEnumerable());
 
-            var investmentsResult = await GetProjectInvestmentsTransactionsAsync(projectInvestments);
-
-            if (investmentsResult.IsFailure)
-                return Result.Failure<IEnumerable<StageData>>("Failed to retrieve investment transactions: " + investmentsResult.Error);
-
-            foreach (var stage in stageDataList)
+            // Handle based on project type
+            return project.Value.ProjectType switch
             {
-
-                var tasks = investmentsResult.Value.Select(tuple =>
-                    (output: tuple.trxInfo?.Outputs.First(outp => outp.Index == stage.StageIndex + 2)
-                    ?? null,
-                     transaction: tuple.trx, index: stage.StageIndex))
-                    .Select(x => CheckSpentFund(x.output, x.transaction, project.Value.ToProjectInfo(), x.index));
-
-                var results = await Task.WhenAll(tasks);
-
-                var combinedResult = results.Combine();
-
-                if (combinedResult.IsFailure)
-                    return Result.Failure<IEnumerable<StageData>>("Failed to process investment transactions: " +
-                                                                  combinedResult.Error);
-
-                stage.Items = combinedResult.Value.ToList();
-
-                foreach (var item in stage.Items)
-                {
-                    item.InvestorPublicKey = projectInvestments
-                        .First(p => p.TransactionId == item.Trxid)
-                        .InvestorPublicKey;
-                }
-            }
-
-            return Result.Success(stageDataList.AsEnumerable());
+                ProjectType.Invest => await ScanInvestTypeInvestments(project.Value, projectInvestments),
+                ProjectType.Fund or ProjectType.Subscribe => await ScanDynamicTypeInvestments(project.Value, projectInvestments),
+                _ => Result.Failure<IEnumerable<StageData>>("Unknown project type")
+            };
         }
         catch (Exception e)
         {
             //TODO add logging
             return Result.Failure<IEnumerable<StageData>>(e.Message);
         }
+    }
+
+    private async Task<Result<IEnumerable<StageData>>> ScanInvestTypeInvestments(Project project, List<ProjectInvestment> projectInvestments)
+    {
+        var stageDataList = project.Stages
+            .Select(x => new StageData
+            {
+                Stage = new Stage() { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal },
+                StageIndex = x.Index,
+                Items = [],
+                IsDynamic = false // Invest projects have fixed stages
+            }).ToList();
+
+        var investmentsResult = await GetProjectInvestmentsTransactionsAsync(projectInvestments);
+
+        if (investmentsResult.IsFailure)
+            return Result.Failure<IEnumerable<StageData>>("Failed to retrieve investment transactions: " + investmentsResult.Error);
+
+        foreach (var stage in stageDataList)
+        {
+            var tasks = investmentsResult.Value.Select(tuple =>
+                (output: tuple.trxInfo?.Outputs.First(outp => outp.Index == stage.StageIndex + 2)
+                ?? null,
+                 transaction: tuple.trx, index: stage.StageIndex))
+                .Select(x => CheckSpentFund(x.output, x.transaction, project.ToProjectInfo(), x.index));
+
+            var results = await Task.WhenAll(tasks);
+
+            var combinedResult = results.Combine();
+
+            if (combinedResult.IsFailure)
+                return Result.Failure<IEnumerable<StageData>>("Failed to process investment transactions: " +
+                                                              combinedResult.Error);
+
+            stage.Items = combinedResult.Value.ToList();
+
+            foreach (var item in stage.Items)
+            {
+                item.InvestorPublicKey = projectInvestments
+                    .First(p => p.TransactionId == item.Trxid)
+                    .InvestorPublicKey;
+            }
+        }
+
+        return Result.Success(stageDataList.AsEnumerable());
+    }
+
+    private async Task<Result<IEnumerable<StageData>>> ScanDynamicTypeInvestments(Project project, List<ProjectInvestment> projectInvestments)
+    {
+        var investmentsResult = await GetProjectInvestmentsTransactionsAsync(projectInvestments);
+
+        if (investmentsResult.IsFailure)
+            return Result.Failure<IEnumerable<StageData>>("Failed to retrieve investment transactions: " + investmentsResult.Error);
+
+        var stageGroups = new Dictionary<(int index, DateTime releaseDate), List<(StageDataTrx trx, string investorPubKey)>>();
+
+        foreach (var (trx, trxInfo) in investmentsResult.Value)
+        {
+            if (trxInfo == null)
+                continue;
+
+            var investment = projectInvestments.FirstOrDefault(p => p.TransactionId == trx.GetHash().ToString());
+            if (investment == null)
+                continue;
+
+            var fundingParams = FundingParameters.CreateFromTransaction(project.ToProjectInfo(), trx);
+
+            if (fundingParams.InvestmentStartDate == null || fundingParams.PatternIndex >= project.DynamicStagePatterns.Count)
+                continue;
+
+            var pattern = project.DynamicStagePatterns[fundingParams.PatternIndex];
+            var stageCount = fundingParams.StageCountOverride ?? pattern.StageCount;
+
+            // Calculate percentage per stage for this investment (equal split)
+            var percentagePerStage = 100m / stageCount;
+
+            var taprootOutputs = trx.Outputs.AsIndexedOutputs()
+                .Where(txout => txout.TxOut.ScriptPubKey.IsTaprooOutput())
+                .Select(_ => _.TxOut)
+                .ToArray();
+
+            for (int stageIndex = 0; stageIndex < Math.Min(stageCount, taprootOutputs.Length); stageIndex++)
+            {
+                var output = taprootOutputs[stageIndex];
+
+                var qouts = trxInfo.Outputs.ElementAt(stageIndex);
+
+                var releaseDate = DynamicStageCalculator.CalculateDynamicStageReleaseDate(
+                    fundingParams.InvestmentStartDate.Value,
+                    pattern,
+                    stageIndex);
+
+                var stageDataResult = await CheckSpentFund(qouts, trx, project.ToProjectInfo(), stageIndex);
+
+                if (stageDataResult.IsFailure)
+                    continue;
+
+                var stageData = stageDataResult.Value;
+                stageData.InvestorPublicKey = investment.InvestorPublicKey;
+                stageData.DynamicReleaseDate = releaseDate;
+                stageData.PatternIndex = fundingParams.PatternIndex;
+                stageData.InvestmentStartDate = fundingParams.InvestmentStartDate;
+                stageData.StageIndex = stageIndex;
+                stageData.AmountPercentage = percentagePerStage;
+
+                var key = (stageIndex, releaseDate.Date);
+                if (!stageGroups.ContainsKey(key))
+                {
+                    stageGroups[key] = new List<(StageDataTrx, string)>();
+                }
+
+                stageGroups[key].Add((stageData, investment.InvestorPublicKey));
+            }
+        }
+
+        var stageDataList = stageGroups
+                .OrderBy(kvp => kvp.Key.releaseDate)
+                .ThenBy(kvp => kvp.Key.index)
+                .Select(kvp =>
+                {
+                    var (index, releaseDate) = kvp.Key;
+                    var items = kvp.Value;
+
+                    // For the StageData aggregate, percentage doesn't make sense since different
+                    // investments can have different patterns. Leave it at 0 or calculate weighted average if needed.
+                    decimal amountPercentage = 0;
+
+                    return new StageData
+                    {
+                        StageIndex = index,
+                        IsDynamic = true, // Mark as dynamic stage
+                        Stage = new Stage
+                        {
+                            ReleaseDate = releaseDate,
+                            AmountToRelease = amountPercentage
+                        },
+                        Items = items.Select(i => i.trx).ToList()
+                    };
+                })
+                .ToList();
+
+        return Result.Success(stageDataList.AsEnumerable());
     }
 
     private async Task<Result<IList<(Transaction trx, QueryTransaction? trxInfo)>>> GetProjectInvestmentsTransactionsAsync(
@@ -173,89 +278,89 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
         return Result.Success(item);
     }
-    
+
     public async Task<Result<InvestmentSpendingLookup>> ScanInvestmentSpends(ProjectInfo project, string transactionId)
+    {
+        var trxInfo = await transactionService.GetTransactionInfoByIdAsync(transactionId);
+
+        if (trxInfo == null)
+            return Result.Failure<InvestmentSpendingLookup>("Transaction not found");
+
+        var trxHex = await transactionService.GetTransactionHexByIdAsync(transactionId);
+        var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(trxHex);
+
+        var response = new InvestmentSpendingLookup
         {
-            var trxInfo = await transactionService.GetTransactionInfoByIdAsync(transactionId);
+            TransactionId = transactionId,
+            ProjectIdentifier = project.ProjectIdentifier
+        };
 
-            if (trxInfo == null)
-                return Result.Failure<InvestmentSpendingLookup>("Transaction not found");
+        for (int stageIndex = 0; stageIndex < project.Stages.Count; stageIndex++)
+        {
+            var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
 
-            var trxHex = await transactionService.GetTransactionHexByIdAsync(transactionId);
-            var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(trxHex);
-
-            var response = new InvestmentSpendingLookup
+            if (!string.IsNullOrEmpty(output.SpentInTransaction))
             {
-                TransactionId = transactionId,
-                ProjectIdentifier = project.ProjectIdentifier
-            };
-            
-            for (int stageIndex = 0; stageIndex < project.Stages.Count; stageIndex++)
-            {
-                var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
+                var spentInfo = await transactionService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
 
-                if (!string.IsNullOrEmpty(output.SpentInTransaction))
+                if (spentInfo == null)
+                    continue;
+
+                var spentInput = spentInfo.Inputs.FirstOrDefault(input =>
+                    (input.InputTransactionId == transactionId) &&
+                    (input.InputIndex == output.Index));
+
+                if (spentInput != null) //TODO move the script discovery to another class
                 {
-                    var spentInfo = await transactionService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+                    var scriptType = investorTransactionActions.DiscoverUsedScript(project,
+                        investmentTransaction, stageIndex, spentInput.WitScript);
 
-                    if (spentInfo == null)
-                        continue;
-
-                    var spentInput = spentInfo.Inputs.FirstOrDefault(input =>
-                        (input.InputTransactionId == transactionId) &&
-                        (input.InputIndex == output.Index));
-
-                    if (spentInput != null) //TODO move the script discovery to another class
+                    switch (scriptType.ScriptType)
                     {
-                        var scriptType = investorTransactionActions.DiscoverUsedScript(project,
-                            investmentTransaction, stageIndex, spentInput.WitScript);
-
-                        switch (scriptType.ScriptType)
+                        case ProjectScriptTypeEnum.Founder:
                         {
-                            case ProjectScriptTypeEnum.Founder:
-                            {
-                                // check the next stage
-                                continue;
-                            }
+                            // check the next stage
+                            continue;
+                        }
 
-                            case ProjectScriptTypeEnum.EndOfProject:
-                            {
-                                response.EndOfProjectTransactionId = output.SpentInTransaction;
+                        case ProjectScriptTypeEnum.EndOfProject:
+                        {
+                            response.EndOfProjectTransactionId = output.SpentInTransaction;
+                            return response;
+                        }
+
+                        case ProjectScriptTypeEnum.InvestorWithPenalty:
+                        {
+                            response.RecoveryTransactionId = output.SpentInTransaction;
+                            var totalsats = trxInfo.Outputs.SkipLast(1).Sum(s => s.Balance);
+                            response.AmountInRecovery = totalsats;
+
+                            var spentRecoveryInfo =
+                                await transactionService.GetTransactionInfoByIdAsync(response.RecoveryTransactionId);
+
+                            if (spentRecoveryInfo == null)
                                 return response;
-                            }
 
-                            case ProjectScriptTypeEnum.InvestorWithPenalty:
+                            if (spentRecoveryInfo.Outputs.SkipLast(1)
+                                .Any(_ => !string.IsNullOrEmpty(_.SpentInTransaction)))
                             {
-                                response.RecoveryTransactionId = output.SpentInTransaction;
-                                var totalsats = trxInfo.Outputs.SkipLast(1).Sum(s => s.Balance);
-                                response.AmountInRecovery = totalsats;
-
-                                var spentRecoveryInfo =
-                                    await transactionService.GetTransactionInfoByIdAsync(response.RecoveryTransactionId);
-
-                                if (spentRecoveryInfo == null) 
-                                    return response;
-                                
-                                if (spentRecoveryInfo.Outputs.SkipLast(1)
-                                    .Any(_ => !string.IsNullOrEmpty(_.SpentInTransaction)))
-                                {
-                                    response.RecoveryReleaseTransactionId = spentRecoveryInfo.Outputs
-                                        .First(_ => !string.IsNullOrEmpty(_.SpentInTransaction)).SpentInTransaction;
-                                }
-
-                                return response;
+                                response.RecoveryReleaseTransactionId = spentRecoveryInfo.Outputs
+                                    .First(_ => !string.IsNullOrEmpty(_.SpentInTransaction)).SpentInTransaction;
                             }
 
-                            case ProjectScriptTypeEnum.InvestorNoPenalty:
-                            {
-                                response.UnfundedReleaseTransactionId = output.SpentInTransaction;
-                                return response;
-                            }
+                            return response;
+                        }
+
+                        case ProjectScriptTypeEnum.InvestorNoPenalty:
+                        {
+                            response.UnfundedReleaseTransactionId = output.SpentInTransaction;
+                            return response;
                         }
                     }
                 }
             }
-
-            return response;
         }
+
+        return response;
+    }
 }

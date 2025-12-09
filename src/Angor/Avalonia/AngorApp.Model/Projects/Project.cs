@@ -1,3 +1,5 @@
+using Angor.Shared.Models;
+
 namespace AngorApp.Model.Projects;
 
 public class Project : IProject
@@ -18,6 +20,10 @@ public class Project : IProject
     public DateTime EndDate { get; set; }
     public int TotalInvestors { get; set; }
     public IAmountUI TotalRaised { get; set; }
+
+    public int Version { get; set; } = 2;
+    public ProjectType ProjectType { get; set; } = ProjectType.Invest;
+    public List<DynamicStagePattern> DynamicStagePatterns { get; set; } = new();
 
     public override string ToString()
     {

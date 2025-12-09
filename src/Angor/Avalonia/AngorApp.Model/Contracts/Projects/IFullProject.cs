@@ -38,4 +38,5 @@ public interface IFullProject
     int Version { get; }
     ProjectType ProjectType { get; }
     List<DynamicStagePattern> DynamicStagePatterns { get; }
+    List<DynamicStageDto>? DynamicStages { get; }
 }
