@@ -1,10 +1,7 @@
-using System;
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Platform;
 using Avalonia.Styling;
 
-namespace AngorApp.UI.Sections.Shell;
+namespace AngorApp.UI.Shell;
 
 public partial class MainWindow : Window
 {
