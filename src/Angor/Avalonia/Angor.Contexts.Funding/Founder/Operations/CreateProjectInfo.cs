@@ -65,67 +65,50 @@ public static class CreateProjectInfo
         {
             var tsc = new TaskCompletionSource<Result<string>>();
 
-            ProjectInfo projectInfo;
+            // Create base ProjectInfo with common properties
+            var projectInfo = new ProjectInfo
+            {
+                ProjectType = project.ProjectType,
+                FounderKey = founderKeys.FounderKey,
+                FounderRecoveryKey = founderKeys.FounderRecoveryKey,
+                NostrPubKey = founderKeys.NostrPubKey,
+                ProjectIdentifier = founderKeys.ProjectIdentifier,
+                StartDate = project.StartDate
+            };
 
+            // Set type-specific properties
             switch (project.ProjectType)
             {
                 case ProjectType.Invest:
                     {
-                        projectInfo = new ProjectInfo
+                        projectInfo.EndDate = project.EndDate ?? throw new InvalidOperationException("End date is required for Invest projects");
+                        projectInfo.ExpiryDate = project.ExpiryDate ?? project.Stages.OrderByDescending(x => x.startDate).First().startDate.AddMonths(2).ToDateTime(TimeOnly.MinValue);
+                        projectInfo.PenaltyDays = project.PenaltyDays;
+                        projectInfo.PenaltyThreshold = project.PenaltyThreshold;
+                        projectInfo.TargetAmount = project.TargetAmount.Sats;
+                        projectInfo.Stages = project.Stages.Select(stage => new Stage
                         {
-                            ProjectType = ProjectType.Invest,
-                            FounderKey = founderKeys.FounderKey,
-                            EndDate = project.EndDate ?? throw new InvalidOperationException("End date is required for Invest projects"),
-                            StartDate = project.StartDate,
-                            ExpiryDate = project.ExpiryDate ?? project.Stages.OrderByDescending(x => x.startDate).First().startDate.AddMonths(2).ToDateTime(TimeOnly.MinValue),
-                            FounderRecoveryKey = founderKeys.FounderRecoveryKey,
-                            NostrPubKey = founderKeys.NostrPubKey,
-                            PenaltyDays = project.PenaltyDays,
-                            PenaltyThreshold = project.PenaltyThreshold,
-                            ProjectIdentifier = founderKeys.ProjectIdentifier,
-                            TargetAmount = project.TargetAmount.Sats,
-                            Stages = project.Stages.Select(stage => new Stage
-                            {
-                                AmountToRelease = stage.PercentageOfTotal,
-                                ReleaseDate = stage.startDate.ToDateTime(TimeOnly.MinValue),
-                            }).ToList()
-                        };
+                            AmountToRelease = stage.PercentageOfTotal,
+                            ReleaseDate = stage.startDate.ToDateTime(TimeOnly.MinValue),
+                        }).ToList();
                         break;
                     }
 
                 case ProjectType.Fund:
                     {
-                        projectInfo = new ProjectInfo
-                        {
-                            ProjectType = ProjectType.Fund,
-                            FounderKey = founderKeys.FounderKey,
-                            StartDate = project.StartDate,
-                            ExpiryDate = project.StartDate.AddMonths(6),
-                            FounderRecoveryKey = founderKeys.FounderRecoveryKey,
-                            NostrPubKey = founderKeys.NostrPubKey,
-                            PenaltyDays = project.PenaltyDays,
-                            PenaltyThreshold = project.PenaltyThreshold,
-                            ProjectIdentifier = founderKeys.ProjectIdentifier,
-                            DynamicStagePatterns = project.SelectedPatterns ?? throw new InvalidOperationException("Selected patterns are required for Fund projects"),
-                            Stages = new List<Stage>()
-                        };
+                        projectInfo.ExpiryDate = project.StartDate.AddMonths(6);
+                        projectInfo.PenaltyDays = project.PenaltyDays;
+                        projectInfo.PenaltyThreshold = project.PenaltyThreshold;
+                        projectInfo.DynamicStagePatterns = project.SelectedPatterns ?? throw new InvalidOperationException("Selected patterns are required for Fund projects");
+                        projectInfo.Stages = new List<Stage>();
                         break;
                     }
 
                 case ProjectType.Subscribe:
                     {
-                        projectInfo = new ProjectInfo
-                        {
-                            ProjectType = ProjectType.Subscribe,
-                            FounderKey = founderKeys.FounderKey,
-                            StartDate = project.StartDate,
-                            ExpiryDate = project.StartDate.AddMonths(6),
-                            FounderRecoveryKey = founderKeys.FounderRecoveryKey,
-                            NostrPubKey = founderKeys.NostrPubKey,
-                            ProjectIdentifier = founderKeys.ProjectIdentifier,
-                            DynamicStagePatterns = project.SelectedPatterns ?? throw new InvalidOperationException("Selected patterns are required for Subscribe projects"),
-                            Stages = new List<Stage>()
-                        };
+                        projectInfo.ExpiryDate = project.StartDate.AddMonths(6);
+                        projectInfo.DynamicStagePatterns = project.SelectedPatterns ?? throw new InvalidOperationException("Selected patterns are required for Subscribe projects");
+                        projectInfo.Stages = new List<Stage>();
                         break;
                     }
 

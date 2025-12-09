@@ -35,10 +35,7 @@ internal static class CreateProjectConstants
                 IDerivationOperations derivationOperations,
                 IFounderTransactionActions founderTransactionActions,
                 IWalletOperations walletOperations,
-                IAngorIndexerService angorIndexerService,
-                INetworkConfiguration networkConfiguration,
                 IWalletAccountBalanceService walletAccountBalanceService,
-                IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
                 ILogger<CreateProjectHandler> logger
                 ) : IRequestHandler<CreateProjectRequest, Result<TransactionDraft>>
         {
