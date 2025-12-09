@@ -14,9 +14,11 @@ using AngorApp.UI.Sections.Wallet.CreateAndImport;
 using ReactiveUI;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.UI.Shell.Utils;
 
 namespace AngorApp.UI.Sections.Settings;
 
+[Section("Settings")]
 public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSectionViewModel
 {
     [Reactive]
