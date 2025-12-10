@@ -1,16 +1,16 @@
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Services;
+using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
+using Angor.Shared.Protocol;
 using Angor.Shared.Services;
+using Angor.Shared.Utilities;
 using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
-using Angor.Contexts.Funding.Services;
-using Angor.Contexts.Funding.Shared;
-using Angor.Shared.Protocol;
-using Angor.Shared.Utilities;
 using Stage = Angor.Shared.Models.Stage;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
@@ -116,18 +116,18 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
             if (fundingParams.InvestmentStartDate == null || fundingParams.PatternIndex >= project.DynamicStagePatterns.Count)
                 continue;
 
-            var pattern = project.DynamicStagePatterns[fundingParams.PatternIndex];
-            var stageCount = fundingParams.StageCountOverride ?? pattern.StageCount;
-
-            // Calculate percentage per stage for this investment (equal split)
-            var percentagePerStage = 100m / stageCount;
-
             var taprootOutputs = trx.Outputs.AsIndexedOutputs()
                 .Where(txout => txout.TxOut.ScriptPubKey.IsTaprooOutput())
                 .Select(_ => _.TxOut)
                 .ToArray();
 
-            for (int stageIndex = 0; stageIndex < Math.Min(stageCount, taprootOutputs.Length); stageIndex++)
+            var pattern = project.DynamicStagePatterns[fundingParams.PatternIndex];
+            var stageCount = taprootOutputs.Length;
+
+            // Calculate percentage per stage for this investment (equal split)
+            var percentagePerStage = 100m / stageCount;
+
+            for (int stageIndex = 0; stageIndex < stageCount; stageIndex++)
             {
                 var output = taprootOutputs[stageIndex];
 
@@ -216,16 +216,18 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
         var network = networkConfiguration.GetNetwork();
 
-        var stageIndexInTransaction = stageIndex + 2;
+        var taprootOutputs = investmentTransaction.Outputs.AsIndexedOutputs()
+               .Where(txout => txout.TxOut.ScriptPubKey.IsTaprooOutput())
+               .ToArray();
 
-        var txOut = investmentTransaction.Outputs[stageIndexInTransaction];
+        var txOut = taprootOutputs.ElementAt(stageIndex);
 
         var item = new StageDataTrx
         {
             Trxid = investmentTransaction.GetHash().ToString(),
-            Outputindex = stageIndexInTransaction,
-            OutputAddress = txOut.ScriptPubKey.WitHash.GetAddress(network).ToString(),
-            Amount = txOut.Value.Satoshi
+            Outputindex = (int)txOut.N,
+            OutputAddress = txOut.TxOut.ScriptPubKey.WitHash.GetAddress(network).ToString(),
+            Amount = txOut.TxOut.Value.Satoshi
         };
 
         if (!string.IsNullOrEmpty(output.SpentInTransaction))

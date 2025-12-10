@@ -30,6 +30,7 @@ public static class GetClaimableTransactions
                     StageId = x.StageIndex,
                     StageNumber = x.StageIndex + 1,
                     Amount = new Amount(item.Amount),
+                    DynamicReleaseDate = item.DynamicReleaseDate,
                     InvestorAddress = item.InvestorPublicKey,
                     ClaimStatus = item.SpentType switch
                     {

@@ -5,6 +5,7 @@ using Angor.Contexts.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
+using Angor.Shared.Utilities;
 using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 using MediatR;
@@ -118,7 +119,7 @@ public static class GetInvestments
             }
 
             var transaction = networkConfiguration.GetNetwork().CreateTransaction(Handshake.InvestmentTransactionHex);
-            var amount = GetAmount(transaction, project);
+            var amount = transaction.GetTotalInvestmentAmount();
     
             var investmentStatus = DetermineInvestmentStatus(Handshake, alreadyInvested);
     
@@ -134,14 +135,6 @@ public static class GetInvestments
         private Task<Result<List<ProjectInvestment>>> LookupCurrentInvestments(GetInvestmentsRequest request)
         {
             return Result.Try(() => angorIndexerService.GetInvestmentsAsync(request.ProjectId.Value));
-        }
-
-        private static long GetAmount(Transaction transaction, Project project)
-        {
-            return transaction.Outputs.AsIndexedOutputs()
-                .Skip(2)
-                .Take(project.Stages.Count())
-                .Sum(x => x.TxOut.Value.Satoshi);
         }
     }
 }
