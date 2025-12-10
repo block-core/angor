@@ -9,8 +9,11 @@
              d:DesignWidth="300"
              x:Class="AngorApp.UI.Flows.SendWalletMoney.AddressAndAmount.AddressAndAmountView" 
              x:DataType="ad:IAddressAndAmountViewModel">
-    
-    <Design.DataContext>
+	<UserControl.Resources>
+		<controls:UrlToBitmapConverter x:Key="UrlToBitmapConverter" />
+	</UserControl.Resources>
+
+	<Design.DataContext>
         <ad:AddressAndAmountViewModelSample />
     </Design.DataContext>
 
@@ -25,7 +28,36 @@
                 </TextBox.InnerLeftContent>
             </TextBox>
         </Card>
-        <Card Header="Enter amount to send:" Subheader="{Binding WalletBalance.BtcString, StringFormat='Available balance: {0}'}">
+
+		<Panel IsVisible="{Binding ShowBrantaVerification}">
+			<Panel IsVisible="{Binding Address, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+				<StackPanel>
+					<StackPanel IsVisible="{Binding BrantaPaymentsFound}">
+						<TextBlock Text="Address Verified by Branta!" Classes="Success" Margin="0 5" />
+						<ItemsControl ItemsSource="{Binding BrantaPayments}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal" Spacing="10" Margin="0 0 0 5">
+										<Image Source="{Binding PlatformLogoUrl, Converter={StaticResource UrlToBitmapConverter}}"
+											   Height="50" Width="50" />
+										<TextBlock Text="{Binding Platform}" VerticalAlignment="Center" />
+									</StackPanel>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</StackPanel>
+
+					<TextBlock Text="Branta verified payment not found."
+							  IsVisible="{Binding !BrantaPaymentsFound}" />
+				</StackPanel>
+			</Panel>
+		</Panel>
+
+		<Panel IsVisible="{Binding BrantaLoading}">
+					<TextBlock Text="Branta Verifcation Loading..." />
+		</Panel>
+
+		<Card Header="Enter amount to send:" Subheader="{Binding WalletBalance.BtcString, StringFormat='Available balance: {0}'}">
             
             <controls:AmountControl Padding="0" Satoshis="{Binding Amount}">
                 <Interaction.Behaviors>
