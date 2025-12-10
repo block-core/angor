@@ -1,6 +1,8 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Contexts.Funding.Services;
 using Angor.Contexts.Funding.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
@@ -12,7 +14,7 @@ public static class ProjectStatistics
 {
     public record ProjectStatsRequest(ProjectId ProjectId) : IRequest<Result<ProjectStatisticsDto>>;
 
-    public class ProjectStatsHandler(IProjectInvestmentsService projectInvestmentsService) : IRequestHandler<ProjectStatsRequest, Result<ProjectStatisticsDto>>
+    public class ProjectStatsHandler(IProjectInvestmentsService projectInvestmentsService, IProjectService projectService) : IRequestHandler<ProjectStatsRequest, Result<ProjectStatisticsDto>>
     {
         public async Task<Result<ProjectStatisticsDto>> Handle(ProjectStatsRequest request, CancellationToken cancellationToken)
         {
@@ -23,11 +25,13 @@ public static class ProjectStatistics
                 return Result.Failure<ProjectStatisticsDto>(stagesInformation.Error);
             }
 
-            return Result.Try(() => CalculateTotalValues(stagesInformation.Value.ToList()));
+            var project = await projectService.GetAsync(request.ProjectId);
+            return Result.Try(() => CalculateTotalValues(stagesInformation.Value.ToList(), project.Value.ToProjectInfo()));
         }
 
-        private static ProjectStatisticsDto CalculateTotalValues(List<StageData> stagesInformation)
+        private static ProjectStatisticsDto CalculateTotalValues(List<StageData> stagesInformation, ProjectInfo projectInfo)
         {
+
             if (!stagesInformation.Any())
             {
                 return new ProjectStatisticsDto
@@ -41,28 +45,28 @@ public static class ProjectStatistics
             var isDynamicProject = stagesInformation.Any(s => s.IsDynamic);
 
             var nextStage = stagesInformation
-                    .Where(stage => stage.Stage.ReleaseDate > DateTime.UtcNow)
-                    .OrderBy(stage => stage.Stage.ReleaseDate)
-                    .FirstOrDefault();
+                .Where(stage => stage.StageDate > DateTime.UtcNow)
+                .OrderBy(stage => stage.StageDate)
+                .FirstOrDefault();
 
             var currentStage = stagesInformation
-                .OrderBy(x => x.Stage.ReleaseDate)
-                .LastOrDefault(stage => stage.Stage.ReleaseDate <= DateTime.UtcNow);
+                .OrderBy(x => x.StageDate)
+                .LastOrDefault(stage => stage.StageDate <= DateTime.UtcNow);
 
-            currentStage ??= stagesInformation.OrderBy(x => x.Stage.ReleaseDate).FirstOrDefault();
+            currentStage ??= stagesInformation.OrderBy(x => x.StageDate).FirstOrDefault();
 
             var dto = new ProjectStatisticsDto
             {
-                TotalStages = CalculateTotalStages(stagesInformation, isDynamicProject),
+                TotalStages = stagesInformation.Count
             };
 
             if (currentStage != null)
             {
                 dto.NextStage = new NextStageDto
                 {
-                    PercentageToRelease = CalculateStagePercentage(currentStage, isDynamicProject),
-                    ReleaseDate = currentStage.Stage.ReleaseDate,
-                    DaysUntilRelease = nextStage != null ? (nextStage.Stage.ReleaseDate - DateTime.UtcNow).Days : 0,
+                    PercentageToRelease = CalculateStagePercentage(currentStage, isDynamicProject, projectInfo),
+                    ReleaseDate = currentStage.StageDate,
+                    DaysUntilRelease = nextStage != null ? (nextStage.StageDate - DateTime.UtcNow).Days : 0,
                     StageIndex = nextStage != null ? stagesInformation.IndexOf(nextStage) : stagesInformation.Count - 1,
                 };
             }
@@ -74,7 +78,7 @@ public static class ProjectStatistics
                 var availableInvestedAmount = stage.Items.Where(c => !c.IsSpent).Sum(c => c.Amount);
                 var spentStageAmount = stage.Items.Where(c => c.IsSpent).Sum(c => c.Amount);
                 var spentStageTransactions = stage.Items.Count(c => c.IsSpent);
-                var daysUntilRelease = stage.Stage.ReleaseDate.Date < DateTime.UtcNow.Date ? 0 : (stage.Stage.ReleaseDate.Date - DateTime.UtcNow.Date).Days;
+                var daysUntilRelease = stage.StageDate.Date < DateTime.UtcNow.Date ? 0 : (stage.StageDate.Date - DateTime.UtcNow.Date).Days;
 
                 dto.TotalInvested += investedAmount;
                 dto.AvailableBalance += availableInvestedAmount;
@@ -100,12 +104,12 @@ public static class ProjectStatistics
         private static List<DynamicStageDto> MapDynamicStages(List<StageData> stages)
         {
             return stages
-                    .OrderBy(s => s.Stage.ReleaseDate)
+                    .OrderBy(s => s.StageDate)
                     .ThenBy(s => s.StageIndex)
                     .Select(stage => new DynamicStageDto
                     {
                         StageIndex = stage.StageIndex,
-                        ReleaseDate = stage.Stage.ReleaseDate,
+                        ReleaseDate = stage.StageDate,
                         TotalAmount = stage.TotalAmount,
                         TransactionCount = stage.Items.Count,
                         UnspentTransactionCount = stage.Items.Count(i => !i.IsSpent),
@@ -114,46 +118,29 @@ public static class ProjectStatistics
                     .ToList();
         }
 
-        private static int CalculateTotalStages(List<StageData> stages, bool isDynamic)
+        private static decimal CalculateStagePercentage(StageData stage, bool isDynamic, ProjectInfo projectInfo)
         {
             if (!isDynamic)
-                return stages.Count != 0 ? stages.Count : 1;
+            {
+                // For fixed stages, calculate percentage from items if available
+                if (!stage.Items.Any())
+                    return 0;
 
-            return stages
-                    .SelectMany(s => s.Items)
-                    .GroupBy(i => i.Trxid)
-                    .Select(g => g.Max(i => i.StageIndex) + 1)
-                    .DefaultIfEmpty(0)
-                    .Max();
-        }
 
-        private static decimal CalculateStagePercentage(StageData stage, bool isDynamic)
-        {
-            if (!isDynamic)
-                return stage.Stage.AmountToRelease;
+                return projectInfo.Stages.ElementAt(stage.StageIndex).AmountToRelease;
+            }
 
-            if (!stage.Items.Any())
-                return 0;
-
-            var totalAmount = stage.Items.Sum(i => i.Amount);
-            if (totalAmount == 0)
-                return 0;
-
-            var weightedPercentage = stage.Items
-                    .Where(i => i.AmountPercentage.HasValue)
-                    .Sum(i => (i.Amount / (decimal)totalAmount) * i.AmountPercentage.Value);
-
-            return weightedPercentage;
+            return 0;
         }
 
         private static int CalculateUniqueInvestors(List<StageData> stages)
         {
             return stages
-                    .SelectMany(s => s.Items)
-                    .Where(i => !string.IsNullOrEmpty(i.InvestorPublicKey))
-                    .Select(i => i.InvestorPublicKey)
-                    .Distinct()
-                    .Count();
+                .SelectMany(s => s.Items)
+                .Where(i => !string.IsNullOrEmpty(i.InvestorPublicKey))
+                .Select(i => i.InvestorPublicKey)
+                .Distinct()
+                .Count();
         }
     }
 }
