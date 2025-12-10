@@ -1,0 +1,17 @@
+using CSharpFunctionalExtensions;
+using Zafiro.UI.Commands;
+
+namespace AngorApp.UI.Sections.Founder.CreateProject.Moonshot;
+
+public interface IImportFromMoonshotViewModel
+{
+    string? EventId { get; set; }
+
+    bool IsLoading { get; }
+
+    string? ErrorMessage { get; }
+
+    IEnhancedCommand<Result<MoonshotProjectData>> Import { get; }
+
+    IObservable<bool> IsValid { get; }
+}

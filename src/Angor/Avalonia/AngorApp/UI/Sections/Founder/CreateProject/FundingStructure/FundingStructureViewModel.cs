@@ -5,6 +5,7 @@ using Angor.Shared.Models;
 using System.Linq;
 using ReactiveUI;
 using System.Collections.ObjectModel;
+using AngorApp.UI.Sections.Founder.CreateProject.Moonshot;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 
@@ -186,4 +187,33 @@ public partial class FundingStructureViewModel : ReactiveValidationObject, IFund
     public ObservableCollection<SelectableDynamicStagePattern> SelectableDynamicStagePatterns { get; }
     public ObservableCollection<DynamicStagePattern> SelectedPatterns { get; }
     public ICollection<string> Errors { get; }
+
+    public void ApplyMoonshotData(MoonshotProjectData moonshotData)
+    {
+        if (moonshotData == null)
+            return;
+
+        if (moonshotData.ProjectType.Equals("fund", StringComparison.OrdinalIgnoreCase))
+        {
+            ProjectType = ProjectType.Fund;
+        }
+
+        if (long.TryParse(moonshotData.PenaltyThreshold, out var penaltyThreshold))
+        {
+            PenaltyThreshold = penaltyThreshold;
+        }
+
+        if (moonshotData.FundingPattern != null)
+        {
+            PayoutDay = moonshotData.FundingPattern.ReleaseDay;
+
+            // Select the appropriate funding pattern based on duration
+            var duration = moonshotData.FundingPattern.Duration;
+            foreach (var pattern in SelectableDynamicStagePatterns)
+            {
+                // Match the pattern by stage count (duration)
+                pattern.IsSelected = pattern.StageCount == duration;
+            }
+        }
+    }
 }

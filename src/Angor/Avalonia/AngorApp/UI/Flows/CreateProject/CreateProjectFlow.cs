@@ -4,6 +4,7 @@ using Angor.Contexts.Funding.Founder.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.Core;
 using AngorApp.UI.Sections.Founder.CreateProject;
+using AngorApp.UI.Sections.Founder.CreateProject.Moonshot;
 using AngorApp.UI.Sections.Founder.CreateProject.ProjectCreated;
 using Microsoft.Extensions.Logging;
 using Zafiro.Avalonia.Controls.Wizards.Slim;
@@ -18,6 +19,7 @@ public class CreateProjectFlow(
     INavigator navigator,
     IProjectAppService projectAppService,
     IFounderAppService founderAppService,
+    IMoonshotService moonshotService,
     SharedCommands commands,
     IWalletContext walletContext,
     ILogger<CreateProjectViewModel> logger)
@@ -35,7 +37,7 @@ public class CreateProjectFlow(
     private SlimWizard<string> CreateWizard(IWallet wallet, ProjectSeedDto projectSeed)
     {
         var wizard = WizardBuilder
-            .StartWith(() => new CreateProjectViewModel(wallet, projectSeed, uiServices, projectAppService, founderAppService, logger), "Create Project").NextCommand(model => model.Create)
+            .StartWith(() => new CreateProjectViewModel(wallet, projectSeed, uiServices, projectAppService, founderAppService, moonshotService, logger), "Create Project").NextCommand(model => model.Create)
             .Then(transactionId => new ProjectCreatedViewModel(transactionId, commands), "Success").Next((_, projectId) => projectId, "Close").Always()
             .WithCompletionFinalStep();
 

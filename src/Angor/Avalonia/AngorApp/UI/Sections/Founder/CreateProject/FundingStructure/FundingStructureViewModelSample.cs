@@ -6,6 +6,7 @@ using ReactiveUI.Validation.Helpers;
 using Angor.Shared.Models;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using AngorApp.UI.Sections.Founder.CreateProject.Moonshot;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 
@@ -29,14 +30,14 @@ public partial class FundingStructureViewModelSample : ReactiveValidationObject,
         this.ValidationRule(x => x.PenaltyThreshold, x => x is null or >= 0, "Should be greater than or equal to 0").DisposeWith(disposable);
 
         targetAmountHelper = this.WhenAnyValue(model => model.Sats)
-        .WhereNotNull()
-         .Select(l => new AmountUI(l.Value))
-        .ToProperty(this, model => model.TargetAmount);
+            .WhereNotNull()
+            .Select(l => new AmountUI(l.Value))
+            .ToProperty(this, model => model.TargetAmount);
 
         errorsHelper = this.ValidationContext.ValidationStatusChange
-             .Select(state => state.Text.ToList())
-      .StartWith(this.ValidationContext.Text.ToList())
-      .ToProperty(this, model => model.Errors);
+            .Select(state => state.Text.ToList())
+            .StartWith(this.ValidationContext.Text.ToList())
+            .ToProperty(this, model => model.Errors);
     }
 
     public IObservable<bool> IsValid { get; set; } = Observable.Return(true);
@@ -55,5 +56,10 @@ public partial class FundingStructureViewModelSample : ReactiveValidationObject,
     {
         disposable.Dispose();
         base.Dispose(disposing);
+    }
+
+    public void ApplyMoonshotData(MoonshotProjectData moonshotData)
+    {
+        // No-op for sample
     }
 }

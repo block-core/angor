@@ -3,20 +3,27 @@ using System.Reactive.Disposables;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Angor.Contexts.Funding.Founder.Dtos;
+using Angor.Shared.Models;
 using AngorApp.UI.Flows;
 using AngorApp.UI.Flows.CreateProject;
 using AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
+using AngorApp.UI.Sections.Founder.CreateProject.Moonshot;
 using AngorApp.UI.Shared.Services;
+using CSharpFunctionalExtensions;
 using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
+using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.UI.Commands;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.Profile;
 
 public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewModel, IHaveErrors
 {
     private readonly UIServices uiServices;
+    private readonly IMoonshotService _moonshotService;
+    private readonly Action<MoonshotProjectData>? _onMoonshotImported;
     private readonly CompositeDisposable disposable = new();
     [Reactive] private string? avatarUri;
     [Reactive] private string? bannerUri;
@@ -26,9 +33,15 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
     [Reactive] private string? nip05Username;
     [Reactive] private string? lightningAddress;
 
-    public ProfileViewModel(ProjectSeedDto projectSeed, UIServices uiServices)
+    public ProfileViewModel(
+        ProjectSeedDto projectSeed,
+        UIServices uiServices,
+        IMoonshotService moonshotService,
+        Action<MoonshotProjectData>? onMoonshotImported = null)
     {
         this.uiServices = uiServices;
+        _moonshotService = moonshotService;
+        _onMoonshotImported = onMoonshotImported;
 #if DEBUG
         AvatarUri = "https://picsum.photos/170/170";
         BannerUri = "https://picsum.photos/800/312";
@@ -66,15 +79,62 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
         this.ValidationRule(x => x.LightningAddress, isValidLightningAddress, x => x.IsSuccess, error => error.Error).DisposeWith(disposable);
 
         Errors = new ErrorSummarizer(ValidationContext).DisposeWith(disposable).Errors;
+
+        // Import from Moonshot command
+        ImportFromMoonshot = ReactiveCommand.CreateFromTask(ExecuteImportFromMoonshot).Enhance();
     }
+
+    private async Task<Result> ExecuteImportFromMoonshot()
+    {
+        var importViewModel = new ImportFromMoonshotViewModel(_moonshotService);
+
+        // ShowAndGetResult returns Maybe<TValue> where TValue is the unwrapped success value from the command
+        // The Import command returns Result<MoonshotProjectData>
+        // The dialog shows an error if the Result fails, and returns Maybe<MoonshotProjectData>
+        Maybe<MoonshotProjectData> dialogResult = await uiServices.Dialog.ShowAndGetResult(
+                  importViewModel,
+                  "Import from Moonshot",
+                  vm => vm.Import.Enhance("Import"));
+
+        if (!dialogResult.HasValue)
+        {
+            return Result.Failure("Import cancelled");
+        }
+
+        MoonshotProjectData moonshotData = dialogResult.Value;
+
+        // Populate fields from Moonshot data
+        ProjectName = moonshotData.Moonshot.Title;
+        Description = moonshotData.Moonshot.Content;
+
+        // Store Moonshot data for FundingStructure to access
+        LastImportedMoonshotData = moonshotData;
+
+        // Notify FundingStructureViewModel about the imported data
+        _onMoonshotImported?.Invoke(moonshotData);
+
+        uiServices.NotificationService.Show($"Imported project: {moonshotData.Moonshot.Title}", "Import Successful");
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Gets the last imported Moonshot data for use by FundingStructureViewModel.
+    /// </summary>
+    public MoonshotProjectData? LastImportedMoonshotData { get; private set; }
+
+    /// <summary>
+    /// Gets the command to import from Moonshot.
+    /// </summary>
+    public IEnhancedCommand<Result> ImportFromMoonshot { get; }
 
     private IObservable<Result<bool>> IsValidImage(Expression<Func<ProfileViewModel, string?>> expression)
     {
         return this.WhenAnyValue(expression)
-            .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
-            .Select(uri => Observable.FromAsync(() => uiServices.Validations.IsImage(uri)))
-            .Switch()
-            .ObserveOn(RxApp.MainThreadScheduler);
+                .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
+                .Select(uri => Observable.FromAsync(() => uiServices.Validations.IsImage(uri)))
+                .Switch()
+                .ObserveOn(RxApp.MainThreadScheduler);
     }
 
     public ICollection<string> Errors { get; }
