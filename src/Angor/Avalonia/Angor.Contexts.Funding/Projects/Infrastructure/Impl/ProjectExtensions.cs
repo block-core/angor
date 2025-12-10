@@ -28,27 +28,50 @@ public static class ProjectExtensions
                 Index = stage.Index,
                 RatioOfTotal = stage.RatioOfTotal,
                 ReleaseDate = stage.ReleaseDate,
-            }).ToList()
+            }).ToList(),
+            
+            // New fields for Fund/Subscribe support
+            Version = project.Version,
+            ProjectType = project.ProjectType,
+            DynamicStagePatterns = project.DynamicStagePatterns ?? new List<DynamicStagePattern>()
         };
     }
-    
+  
     public static ProjectInfo ToProjectInfo(this Project project)
     {
         return new ProjectInfo
         {
+            // Version and ProjectType
+            Version = project.Version,
+            ProjectType = project.ProjectType,
+   
+            // Core project identification
+            FounderKey = project.FounderKey,
+            FounderRecoveryKey = project.FounderRecoveryKey,
+            ProjectIdentifier = project.Id.Value,
+            NostrPubKey = project.NostrPubKey,
+         
+            // Dates
+            StartDate = project.StartingDate,
+            EndDate = project.EndDate,
+            ExpiryDate = project.ExpiryDate,
+      
+            // Penalties
+            PenaltyDays = project.PenaltyDuration.Days,
+            PenaltyThreshold = project.PenaltyThreshold,
+          
+            // Funding details
             TargetAmount = project.TargetAmount,
+   
+            // Stages (for Invest projects)
             Stages = project.Stages.Select(stage => new Stage
             {
                 ReleaseDate = stage.ReleaseDate,
                 AmountToRelease = stage.RatioOfTotal,
             }).ToList(),
-            FounderKey = project.FounderKey,
-            FounderRecoveryKey = project.FounderRecoveryKey,
-            PenaltyDays = project.PenaltyDuration.Days,
-            PenaltyThreshold = project.PenaltyThreshold,
-            ProjectIdentifier = project.Id.Value,
-            StartDate = project.StartingDate,
-            ExpiryDate = project.ExpiryDate,
+      
+            // Dynamic patterns (for Fund/Subscribe projects)
+            DynamicStagePatterns = project.DynamicStagePatterns ?? new List<DynamicStagePattern>()
         };
     }
 }

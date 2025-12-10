@@ -1,6 +1,7 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Domain;
 using Angor.Contexts.Funding.Shared;
+using Angor.Shared.Models;
 using Zafiro.Avalonia.Controls;
 using AngorApp.Model.Amounts;
 
@@ -12,12 +13,20 @@ public class FullProject(ProjectDto info, ProjectStatisticsDto stats) : IFullPro
 
     public ProjectId ProjectId => info.Id;
     public IAmountUI TargetAmount => new AmountUI(info.TargetAmount);
-    public IEnumerable<IStage> Stages => info.Stages.Select(IStage (dto) => new Stage()
+    public IEnumerable<IStage> Stages => info.Stages.Any() 
+        ? info.Stages.Select(IStage (dto) => new Stage()
     {
         Amount = dto.Amount,
         Index = dto.Index,
         ReleaseDate = dto.ReleaseDate,
         RatioOfTotal = dto.RatioOfTotal
+    }) 
+        : stats.DynamicStages.Select(IStage (dto) => new Stage()
+    {
+        Amount = dto.TotalAmount,
+        Index = dto.StageIndex,
+        ReleaseDate = dto.ReleaseDate,
+        RatioOfTotal = 0
     });
 
     public IAmountUI AvailableBalance => new AmountUI(stats.AvailableBalance);
@@ -43,4 +52,10 @@ public class FullProject(ProjectDto info, ProjectStatisticsDto stats) : IFullPro
     public string ShortDescription => info.ShortDescription;
     public Uri? Banner => info.Banner;
     public string FounderPubKey => info.FounderPubKey;
+    
+    // New properties for Fund/Subscribe support
+    public int Version => info.Version;
+    public ProjectType ProjectType => info.ProjectType;
+    public List<DynamicStagePattern> DynamicStagePatterns => info.DynamicStagePatterns;
+    public List<DynamicStageDto>? DynamicStages => stats.DynamicStages;
 }

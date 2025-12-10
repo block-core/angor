@@ -12,4 +12,5 @@ public class ProjectStatisticsDto
     public int AvailableTransactions => TotalTransactions - SpentTransactions;
     public long SpentAmount { get; set; }
     public int? TotalInvestors { get; set; }
+    public List<DynamicStageDto>? DynamicStages { get; set; }
 }

@@ -37,7 +37,7 @@
                                         <design:DesignTimeAmount Sats="300000" />
                                     </claim:ClaimableTransactionSample.Amount>
                                 </claim:ClaimableTransactionSample>
-                                <claim:ClaimableTransactionSample ClaimStatus="Unspent" Address="bc1qexampleaddress5">
+                                <claim:ClaimableTransactionSample ClaimStatus="Locked" Address="bc1qexampleaddress5">
                                     <claim:ClaimableTransactionSample.Amount>
                                         <design:DesignTimeAmount Sats="34412344" />
                                     </claim:ClaimableTransactionSample.Amount>
@@ -150,6 +150,10 @@
                                                         <Style Selector="controls|Badge[Tag=Unspent]">
                                                             <Setter Property="Color" Value="Green" />
                                                             <Setter Property="Content" Value="Unspent" />
+                                                        </Style>
+                                                        <Style Selector="controls|Badge[Tag=Locked]">
+                                                            <Setter Property="Color" Value="Gray" />
+                                                            <Setter Property="Content" Value="Locked" />
                                                         </Style>
                                                     </controls:Badge.Styles>
                                                 </controls:Badge>

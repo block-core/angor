@@ -1,4 +1,5 @@
 using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Shared.Models;
 
 namespace Angor.Contexts.Funding.Projects.Application.Dtos;
 
@@ -15,6 +16,7 @@ public class CreateProjectDto
     public string? Nip57 { get; init; }
     
     // Properties for the project information
+    public ProjectType ProjectType { get; init; } = ProjectType.Invest;
     public required long? Sats { get; init; }
     public required DateTime StartDate { get; init;}
     public DateTime? EndDate { get; init; }
@@ -23,6 +25,10 @@ public class CreateProjectDto
     public required int PenaltyDays { get; set; }
     public long? PenaltyThreshold { get; init; }
     public required IEnumerable<CreateProjectStageDto> Stages { get; init; }
+    
+    // For Fund and Subscribe types - support multiple patterns
+    public List<DynamicStagePattern>? SelectedPatterns { get; init; }
+    public int? PayoutDay { get; init; }
 }
 
 public record CreateProjectStageDto(DateOnly startDate, decimal PercentageOfTotal);

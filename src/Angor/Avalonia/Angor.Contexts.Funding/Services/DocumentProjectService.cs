@@ -18,7 +18,7 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
     {
         return TryGetAsync(id).Bind(maybe => maybe.ToResult($"Project with id {id} not found"));
     }
-    
+
     public Task<Result<Maybe<Project>>> TryGetAsync(ProjectId id)
     {
         return GetAllAsync(id).Map(x => x.TryFirst());
@@ -36,24 +36,24 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
             var projectResult = await collection.FindByIdsAsync(stringIds);
 
             var localLookup = projectResult.IsSuccess && projectResult.Value.Any()//check the results from the local database
-              ? projectResult.Value.Select(item => item).ToList() : [];
+             ? projectResult.Value.Select(item => item).ToList() : [];
 
             if (ids.Length == localLookup.Count)
-                return Result.Success(localLookup.AsEnumerable()); //all ids are in the local database, return them
+                return Result.Success(localLookup.OrderByDescending(p => p.StartingDate).AsEnumerable()); //all ids are in the local database, return them
 
             var tasks = stringIds
-             .Except(localLookup.Select(p => p.Id.Value)) //ids that are not in the local database
+                   .Except(localLookup.Select(p => p.Id.Value)) //ids that are not in the local database
                    .Select(id => Result.Try(() => angorIndexerService.GetProjectByIdAsync(id)));
 
             var results = await Task.WhenAll(tasks).WaitAsync(TimeSpan.FromSeconds(10));
 
             var indexerResults = results //TODO log the failures, we don't need an all or nothing approach here
-             .Where(r => r is { IsSuccess: true, Value: not null })
-                     .Select(r => r.Value!)
-              .ToList();
+                 .Where(r => r is { IsSuccess: true, Value: not null })
+                 .Select(r => r.Value!)
+                 .ToList();
 
             if (indexerResults.Count == 0)
-                return Result.Success(localLookup.AsEnumerable());
+                return Result.Success(localLookup.OrderByDescending(p => p.StartingDate).AsEnumerable());
 
             var nostrEventIds = indexerResults.Select(r => r!.NostrEventId).ToArray();
             var projectInfo = await ProjectInfos(nostrEventIds);
@@ -65,41 +65,46 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
                 return Result.Failure<IEnumerable<Project>>("Project metadata not found in relay");
 
             var lookupList = indexerResults.Select(data =>
-          {
-              var info = projectInfo.Value.FirstOrDefault(i => i.FounderKey == data.FounderKey);
-              if (info is null)
-                  return null;
-              var metadata = metadataResult.Value.FirstOrDefault(m => m.Npub == info.NostrPubKey)?.NostrMetadata;
-              if (metadata is null)
-                  return null;
+                     {
+                         var info = projectInfo.Value.FirstOrDefault(i => i.FounderKey == data.FounderKey);
+                         if (info is null)
+                             return null;
+                         var metadata = metadataResult.Value.FirstOrDefault(m => m.Npub == info.NostrPubKey)?.NostrMetadata;
+                         if (metadata is null)
+                             return null;
 
-              return new Project
-              {
-                  Id = new ProjectId(info.ProjectIdentifier),
-                  FounderKey = info.FounderKey,
-                  ExpiryDate = info.ExpiryDate,
-                  FounderRecoveryKey = info.FounderRecoveryKey,
-                  NostrPubKey = info.NostrPubKey,
-                  PenaltyDuration = TimeSpan.FromDays(info.PenaltyDays),
-                  PenaltyThreshold = info.PenaltyThreshold,
-                  TargetAmount = info.TargetAmount,
-                  Stages = info.Stages.Select((stage, i) => new Stage
-                  {
-                      Index = i,
-                      ReleaseDate = stage.ReleaseDate,
-                      RatioOfTotal = stage.AmountToRelease
-                  }),
-                  StartingDate = info.StartDate,
-                  EndDate = info.EndDate,
-                  Banner = TryGetUri(metadata.Banner),
-                  InformationUri = TryGetUri(metadata.Website),
-                  Picture = TryGetUri(metadata.Picture),
-                  Name = metadata.Name,
-                  ShortDescription = metadata.About
-              };
-          });
+                         return new Project
+                         {
+                             Id = new ProjectId(info.ProjectIdentifier),
+                             FounderKey = info.FounderKey,
+                             ExpiryDate = info.ExpiryDate,
+                             FounderRecoveryKey = info.FounderRecoveryKey,
+                             NostrPubKey = info.NostrPubKey,
+                             PenaltyDuration = TimeSpan.FromDays(info.PenaltyDays),
+                             PenaltyThreshold = info.PenaltyThreshold,
+                             TargetAmount = info.TargetAmount,
+                             Stages = info.Stages.Select((stage, i) => new Stage
+                             {
+                                 Index = i,
+                                 ReleaseDate = stage.ReleaseDate,
+                                 RatioOfTotal = stage.AmountToRelease
+                             }),
+                             StartingDate = info.StartDate,
+                             EndDate = info.EndDate,
+                             Banner = TryGetUri(metadata.Banner),
+                             InformationUri = TryGetUri(metadata.Website),
+                             Picture = TryGetUri(metadata.Picture),
+                             Name = metadata.Name,
+                             ShortDescription = metadata.About,
 
-            var response = lookupList.Where(p => p != null).Select(p => p!).ToList();
+                             // New properties from ProjectInfo
+                             Version = info.Version,
+                             ProjectType = info.ProjectType,
+                             DynamicStagePatterns = info.DynamicStagePatterns ?? new List<DynamicStagePattern>()
+                         };
+                     });
+
+            var response = lookupList.Where(p => p != null).Select(p => p!).OrderByDescending(p => p.StartingDate).ToList();
 
             if (!response.Any())
                 return Result.Failure<IEnumerable<Project>>("No projects found");
@@ -124,13 +129,13 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
         var projectIds = top30.Value.Select(p => new ProjectId(p.ProjectIdentifier)).ToArray();
         return await GetAllAsync(projectIds);
     }
-    
-    
+
+
     private Uri? TryGetUri(string uriString)
     {
         return Uri.TryCreate(uriString, UriKind.Absolute, out var uri) ? uri : null;
     }
-    
+
     private Task<Result<IEnumerable<ProjectInfo>>> ProjectInfos(IEnumerable<string> eventIds)
     {
         return Task.Run(async () =>
@@ -146,22 +151,22 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
 
             // Race between completion and timeout
             var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(10000, cts.Token));
-        
+
             if (completedTask == tcs.Task)
                 return Result.Success(results.AsEnumerable());
-        
+
             return Result.Failure<IEnumerable<ProjectInfo>>("Timeout waiting for project info");
         });
     }
 
-    private Task<Result<IEnumerable<ProjectMetadataWithNpub>>> ProjectMetadatas( IEnumerable<string> npubs)
+    private Task<Result<IEnumerable<ProjectMetadataWithNpub>>> ProjectMetadatas(IEnumerable<string> npubs)
     {
         var projectMetadatas = Observable.Create<ProjectMetadataWithNpub>(observer =>
         {
             relayService.LookupNostrProfileForNPub(
-                (npub, nostrMetadata) => observer.OnNext(new ProjectMetadataWithNpub(npub, nostrMetadata)),
-                observer.OnCompleted,
-                npubs.Where(x => x != null).ToArray());
+                   (npub, nostrMetadata) => observer.OnNext(new ProjectMetadataWithNpub(npub, nostrMetadata)),
+                        observer.OnCompleted,
+               npubs.Where(x => x != null).ToArray());
 
             return Disposable.Empty;
         }).Timeout(TimeSpan.FromSeconds(30));
@@ -175,7 +180,7 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
         public ProjectMetadata NostrMetadata { get; }
         public ProjectMetadataWithNpub(string npub, ProjectMetadata nostrMetadata)
         {
-            Npub = npub; 
+            Npub = npub;
             NostrMetadata = nostrMetadata;
         }
     }

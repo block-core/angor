@@ -1,5 +1,6 @@
 using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Shared;
+using Angor.Shared.Models;
 using AngorApp.Model.Projects;
 
 namespace AngorApp.UI.Sections.Browse.Details;
@@ -39,4 +40,10 @@ public class FullProjectSample : IFullProject
     public NextStageDto? NextStage { get; }
     public int SpentTransactions { get; set; }
     public string FounderPubKey { get; } = "some npub key";
+    
+    // New properties for Fund/Subscribe support
+    public int Version { get; } = 2;
+    public ProjectType ProjectType { get; } = ProjectType.Invest;
+    public List<DynamicStagePattern> DynamicStagePatterns { get; } = new();
+    public List<DynamicStageDto>? DynamicStages { get; } = null;
 }

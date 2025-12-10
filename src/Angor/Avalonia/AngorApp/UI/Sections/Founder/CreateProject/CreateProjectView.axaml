@@ -8,10 +8,12 @@
              xmlns:stages="clr-namespace:AngorApp.UI.Sections.Founder.CreateProject.Stages"
              xmlns:p="clr-namespace:AngorApp.UI.Sections.Founder.CreateProject.Preview"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:models="clr-namespace:Angor.Shared.Models;assembly=Angor.Shared"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="800"
              Container.Name="Root" Container.Sizing="Width"
              x:Class="AngorApp.UI.Sections.Founder.CreateProject.CreateProjectView"
-             x:DataType="cp:ICreateProjectViewModel">
+             x:DataType="cp:ICreateProjectViewModel"
+             x:Name="CreateProjectRoot">
 
     <Design.DataContext>
         <cp:CreateProjectViewModelSample>
@@ -48,7 +50,8 @@
                 <StackPanel Spacing="10">
                     <profile:ProfileView DataContext="{Binding ProfileViewModel}" />
                     <fundingStructure:FundingStructure DataContext="{Binding FundingStructureViewModel}" />
-                    <stages:StagesView DataContext="{Binding StagesViewModel}" />
+                    <stages:StagesView DataContext="{Binding StagesViewModel}" 
+                        IsVisible="{Binding #CreateProjectRoot.DataContext.FundingStructureViewModel.ProjectType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:ProjectType.Invest}}" />
                 </StackPanel>
             </ScrollViewer>
         </DockPanel>

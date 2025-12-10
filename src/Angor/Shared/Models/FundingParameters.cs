@@ -145,7 +145,7 @@ public class FundingParameters
             TotalInvestmentAmount = totalInvestmentAmount,
             InvestmentStartDate = dynamicInfo?.GetInvestmentStartDate(),
             PatternIndex = dynamicInfo?.PatternId ?? 0,
-            StageCountOverride = dynamicInfo?.StageCount,
+            StageCountOverride = dynamicInfo?.StageCount > 0 ? dynamicInfo.StageCount : (int?)null,
             HashOfSecret = secretHash,
             ExpiryDateOverride = expiryDateOverride
         };

@@ -9,4 +9,6 @@ public record ClaimableTransactionDto
     public required string InvestorAddress { get; init; }
     public required Amount Amount { get; init; }
     public ClaimStatus ClaimStatus { get; set; }
+    public DateTime? DynamicReleaseDate { get; set; }
+
 }

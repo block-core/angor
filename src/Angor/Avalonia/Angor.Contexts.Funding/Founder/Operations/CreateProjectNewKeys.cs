@@ -12,17 +12,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Angor.Contexts.Funding.Founder.Operations;
 
-public static class StartNewProject
+public static class CreateProjectNewKeys
 {
-    public sealed record GetNewProjectKeysRequest(WalletId WalletId) : IRequest<Result<ProjectSeedDto>>;
+    public sealed record CreateProjectNewKeysRequest(WalletId WalletId) : IRequest<Result<ProjectSeedDto>>;
 
     internal sealed class FindNextAvailableProjectKeysHandler(
         IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
         IAngorIndexerService angorIndexerService,
         ILogger<FindNextAvailableProjectKeysHandler> logger)
-        : IRequestHandler<GetNewProjectKeysRequest, Result<ProjectSeedDto>>
+        : IRequestHandler<CreateProjectNewKeysRequest, Result<ProjectSeedDto>>
     {
-        public async Task<Result<ProjectSeedDto>> Handle(GetNewProjectKeysRequest request, CancellationToken cancellationToken)
+        public async Task<Result<ProjectSeedDto>> Handle(CreateProjectNewKeysRequest request, CancellationToken cancellationToken)
         {
             var storedKeysResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.ToString());
             if (storedKeysResult.IsFailure || storedKeysResult.Value is null)

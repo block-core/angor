@@ -29,7 +29,10 @@ public static class ProjectExtensions
                 .ToList(),
             PenaltyDuration = dto.PenaltyDuration,
             TargetAmount = new AmountUI(dto.TargetAmount),
-            StartDate = dto.FundingStartDate
+            StartDate = dto.FundingStartDate,
+            Version = dto.Version,
+            ProjectType = dto.ProjectType,
+            DynamicStagePatterns = dto.DynamicStagePatterns
         };
     }
 }
