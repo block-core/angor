@@ -56,20 +56,6 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
 
     private IEnumerable<IClaimableStage> CreateStage(IEnumerable<ClaimableTransactionDto> claimableTransactionDto)
     {
-        claimableTransactionDto = claimableTransactionDto.ToList();
-
-        // todo: temporary code to disable the claim button
-        foreach (var stage in claimableTransactionDto)
-        {
-            if (stage.DynamicReleaseDate != null)
-            {
-                if (DateTime.UtcNow < stage.DynamicReleaseDate)
-                {
-                    stage.ClaimStatus = ClaimStatus.Pending;
-                }
-            }
-        }
-
         return claimableTransactionDto.GroupBy(dto => dto.StageNumber)
             .Select(IClaimableStage (group) =>
             {

@@ -5,6 +5,7 @@ public enum ClaimStatus
     Invalid = 0,
     Unspent,
     Pending,
+    Locked,
     SpentByFounder,
     WithdrawByInvestor
 }
