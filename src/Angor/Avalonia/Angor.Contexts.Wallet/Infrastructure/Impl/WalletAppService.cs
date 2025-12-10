@@ -252,7 +252,7 @@ public class WalletAppService(
             
             if (!response.IsSuccessStatusCode)
             {
-                return Result.Failure($"Faucet request failed: {response.ReasonPhrase}");
+                return Result.Failure($"Faucet request failed: {response.ReasonPhrase} - {response.Content.ReadAsStringAsync()?.Result}");
             }
 
             return Result.Success();

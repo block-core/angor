@@ -54,7 +54,9 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
         ReceiveAddress = GetReceiveAddress.Successes().Publish().RefCount();
         
         GetTestCoins = ReactiveCommand.CreateFromTask(RequestTestCoins).Enhance().DisposeWith(disposable);
-        
+
+        GetTestCoins.HandleErrorsWith(notificationService, "Cannot get test coins");
+
         CanGetTestCoins = networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet;
     }
 
@@ -71,7 +73,7 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
     public IEnhancedCommand<Result<IEnumerable<IBroadcastedTransaction>>> Load { get; }
     public ReadOnlyObservableCollection<IBroadcastedTransaction> History { get; }
-    public IEnhancedCommand GetTestCoins { get; }
+    public IEnhancedCommand<Result> GetTestCoins { get; }
 
     public Result IsAddressValid(string address)
     {

@@ -15,5 +15,5 @@ public interface IWallet
     IEnhancedCommand Send { get; }
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
     public Task<Result<string>> GenerateReceiveAddress();
-    public IEnhancedCommand GetTestCoins { get; }
+    public IEnhancedCommand<Result> GetTestCoins { get; }
 }
