@@ -72,7 +72,7 @@ public static class RequestInvestmentSignatures
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
             var project = projectResult.Value;
 
-            var sendSignatureResult = await SendSignatureRequest(request.WalletId.Value, walletWords, project, strippedInvestmentTransaction.ToHex());
+            var sendSignatureResult = await SendSignatureRequest(request.WalletId, walletWords, project, strippedInvestmentTransaction.ToHex());
 
             if (sendSignatureResult.IsFailure)
             {
@@ -93,7 +93,7 @@ public static class RequestInvestmentSignatures
             return Result.Success(Guid.Empty);
         }
 
-        private async Task<Result<(DateTime createdTime,string eventId)>> SendSignatureRequest(string walletId, WalletWords walletWords, Project project, string signedTransactionHex)
+        private async Task<Result<(DateTime createdTime,string eventId)>> SendSignatureRequest(WalletId walletId, WalletWords walletWords, Project project, string signedTransactionHex)
         {
             try
             {
@@ -134,7 +134,7 @@ public static class RequestInvestmentSignatures
             }
         }
 
-        private async Task<Result<string>> GetUnfundedReleaseAddress(string walletId)
+        private async Task<Result<string>> GetUnfundedReleaseAddress(WalletId walletId)
         {
             // Get account info from database
             var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);

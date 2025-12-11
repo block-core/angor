@@ -103,7 +103,7 @@ public static class CreateInvestment
 
                 // Sign the transaction
                 var signedTxResult = await SignTransaction(
-                        transactionRequest.WalletId.Value,
+                        transactionRequest.WalletId,
                         walletWords,
                         transactionResult.Value,
                         transactionRequest.FeeRate.SatsPerKilobyte);
@@ -232,11 +232,12 @@ public static class CreateInvestment
         }
 
         private async Task<Result<TransactionInfo>> SignTransaction(
-                string walletId,
+                WalletId walletId,
                 WalletWords walletWords,
                 Transaction transaction,
                 long feerate)
         {
+            if (walletId == null) throw new ArgumentNullException(nameof(walletId));
             // Get account info from database
             var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
             if (accountBalanceResult.IsFailure)

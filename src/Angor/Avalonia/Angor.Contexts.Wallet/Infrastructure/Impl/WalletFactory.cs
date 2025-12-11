@@ -67,17 +67,13 @@ public class WalletFactory(
             .Bind(wallets => walletStore.SaveAll(wallets));
     }
 
-    private async Task<Result> CreateAccountBalanceInfoAsync(AccountInfo accountInfo,WalletId walletId)
+    private Task<Result> CreateAccountBalanceInfoAsync(AccountInfo accountInfo,WalletId walletId)
     {
         // Create initial account balance info
         var accountBalanceInfo = new AccountBalanceInfo();
         accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, []);
 
-        var saveToDbResult = await accountBalanceService.SaveAccountBalanceInfoAsync(walletId.Value, accountBalanceInfo);
-        if (saveToDbResult.IsFailure)
-            return Result.Failure(saveToDbResult.Error);
-        
-        return await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId.Value);
+        return accountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo);
     }
 
     private async Task<Result> CreateFounderKeyCollectionAsync(WalletWords walletWords, WalletId walletId)
