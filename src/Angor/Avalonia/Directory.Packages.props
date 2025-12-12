@@ -15,6 +15,7 @@
     <PackageVersion Include="Avalonia.iOS" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Browser" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Branta" Version="0.0.1" />
     <PackageVersion Include="ReactiveUI.Avalonia" Version="11.3.8" />
     <PackageVersion Include="Svg.Controls.Skia.Avalonia" Version="11.3.6.2" />
     <PackageVersion Include="AsyncImageLoader.Avalonia" Version="3.3.0" />
