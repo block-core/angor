@@ -24,25 +24,25 @@ public static class GetClaimableTransactions
                 return Result.Failure<IEnumerable<ClaimableTransactionDto>>(resultList.Error);
             }
 
-            var list = resultList.Value.SelectMany(x => x.Items
+            var list = resultList.Value.SelectMany(stageData => stageData.Items
                     .Select<StageDataTrx, ClaimableTransactionDto>(item =>
                        new ClaimableTransactionDto()
                        {
-                           StageId = x.StageIndex,
-                           StageNumber = x.StageIndex + 1,
+                           StageId = stageData.StageIndex,
+                           StageNumber = stageData.StageIndex + 1,
                            Amount = new Amount(item.Amount),
-                           DynamicReleaseDate = item.DynamicReleaseDate,
+                           DynamicReleaseDate = stageData.IsDynamic ? stageData.StageDate : null,
                            InvestorAddress = item.InvestorPublicKey,
-                           ClaimStatus = DetermineClaimStatus(item),
+                           ClaimStatus = DetermineClaimStatus(item, stageData),
                        }));
 
             return Result.Success(list);
         }
 
-        private static ClaimStatus DetermineClaimStatus(StageDataTrx item)
+        private static ClaimStatus DetermineClaimStatus(StageDataTrx item, StageData stageData)
         {
-            // Check if stage has a dynamic release date that hasn't been reached yet
-            if (item.DynamicReleaseDate.HasValue && item.DynamicReleaseDate.Value > DateTime.UtcNow)
+            // Check if stage release date hasn't been reached yet (works for both dynamic and fixed stages)
+            if (stageData.StageDate > DateTime.UtcNow)
             {
                 return ClaimStatus.Locked;
             }

@@ -9,9 +9,6 @@ using Angor.Shared.Services;
 using Angor.Shared.Utilities;
 using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
-using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
-using Stage = Angor.Shared.Models.Stage;
 
 namespace Angor.Contexts.Funding.Projects.Infrastructure.Impl;
 
@@ -51,18 +48,21 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
     private async Task<Result<IEnumerable<StageData>>> ScanInvestTypeInvestments(Project project, List<ProjectInvestment> projectInvestments)
     {
         var stageDataList = project.Stages
-            .Select(x => new StageData
-            {
-                Stage = new Stage() { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal },
-                StageIndex = x.Index,
-                Items = [],
-                IsDynamic = false // Invest projects have fixed stages
-            }).ToList();
+         .Select(x => new StageData
+         {
+             Stage = new Angor.Shared.Models.Stage() { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal },
+             StageDate = x.ReleaseDate,
+             StageIndex = x.Index,
+             Items = [],
+             IsDynamic = false // Invest projects have fixed stages
+         }).ToList();
 
         var investmentsResult = await GetProjectInvestmentsTransactionsAsync(projectInvestments);
 
         if (investmentsResult.IsFailure)
             return Result.Failure<IEnumerable<StageData>>("Failed to retrieve investment transactions: " + investmentsResult.Error);
+
+        ProjectInfo projectInfo = project.ToProjectInfo();
 
         foreach (var stage in stageDataList)
         {
@@ -70,7 +70,7 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                 (output: tuple.trxInfo?.Outputs.First(outp => outp.Index == stage.StageIndex + 2)
                 ?? null,
                  transaction: tuple.trx, index: stage.StageIndex))
-                .Select(x => CheckSpentFund(x.output, x.transaction, project.ToProjectInfo(), x.index));
+                .Select(x => CheckSpentFund(x.output, x.transaction, projectInfo, x.index));
 
             var results = await Task.WhenAll(tasks);
 
@@ -100,7 +100,8 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
         if (investmentsResult.IsFailure)
             return Result.Failure<IEnumerable<StageData>>("Failed to retrieve investment transactions: " + investmentsResult.Error);
 
-        var stageGroups = new Dictionary<(int index, DateTime releaseDate), List<(StageDataTrx trx, string investorPubKey)>>();
+        // Dictionary to group stages by their release date
+        var stagesByDate = new Dictionary<DateTime, StageData>();
 
         foreach (var (trx, trxInfo) in investmentsResult.Value)
         {
@@ -129,69 +130,54 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
             for (int stageIndex = 0; stageIndex < stageCount; stageIndex++)
             {
-                var output = taprootOutputs[stageIndex];
-
                 var qouts = trxInfo.Outputs.ElementAt(stageIndex);
 
                 var releaseDate = DynamicStageCalculator.CalculateDynamicStageReleaseDate(
-                    fundingParams.InvestmentStartDate.Value,
-                    pattern,
-                    stageIndex);
+                        fundingParams.InvestmentStartDate.Value,
+                        pattern,
+                        stageIndex);
 
                 var stageDataResult = await CheckSpentFund(qouts, trx, project.ToProjectInfo(), stageIndex);
 
                 if (stageDataResult.IsFailure)
                     continue;
 
-                var stageData = stageDataResult.Value;
-                stageData.InvestorPublicKey = investment.InvestorPublicKey;
-                stageData.DynamicReleaseDate = releaseDate;
-                stageData.PatternIndex = fundingParams.PatternIndex;
-                stageData.InvestmentStartDate = fundingParams.InvestmentStartDate;
-                stageData.StageIndex = stageIndex;
-                stageData.AmountPercentage = percentagePerStage;
+                var stageDataTrx = stageDataResult.Value;
+                stageDataTrx.InvestorPublicKey = investment.InvestorPublicKey;
+                stageDataTrx.DynamicReleaseDate = releaseDate;
+                stageDataTrx.PatternIndex = fundingParams.PatternIndex;
+                stageDataTrx.InvestmentStartDate = fundingParams.InvestmentStartDate;
+                stageDataTrx.StageIndex = stageIndex;
+                stageDataTrx.AmountPercentage = percentagePerStage;
 
-                var key = (stageIndex, releaseDate.Date);
-                if (!stageGroups.ContainsKey(key))
+                // Group by release date - if a StageData for this date already exists, add the trx to its items
+                var releaseDateKey = releaseDate.Date; // Use date only to group by day
+                if (stagesByDate.TryGetValue(releaseDateKey, out var existingStageData))
                 {
-                    stageGroups[key] = new List<(StageDataTrx, string)>();
+                    existingStageData.Items.Add(stageDataTrx);
                 }
-
-                stageGroups[key].Add((stageData, investment.InvestorPublicKey));
+                else
+                {
+                    stagesByDate[releaseDateKey] = new StageData
+                    {
+                        StageIndex = stageIndex,
+                        StageDate = releaseDate,
+                        IsDynamic = true,
+                        Items = [stageDataTrx]
+                    };
+                }
             }
         }
 
-        var stageDataList = stageGroups
-                .OrderBy(kvp => kvp.Key.releaseDate)
-                .ThenBy(kvp => kvp.Key.index)
-                .Select(kvp =>
-                {
-                    var (index, releaseDate) = kvp.Key;
-                    var items = kvp.Value;
+        // Order by date for consistent ordering
+        var orderedList = stagesByDate.Values
+            .OrderBy(s => s.StageDate)
+            .ToList();
 
-                    // For the StageData aggregate, percentage doesn't make sense since different
-                    // investments can have different patterns. Leave it at 0 or calculate weighted average if needed.
-                    decimal amountPercentage = 0;
-
-                    return new StageData
-                    {
-                        StageIndex = index,
-                        IsDynamic = true, // Mark as dynamic stage
-                        Stage = new Stage
-                        {
-                            ReleaseDate = releaseDate,
-                            AmountToRelease = amountPercentage
-                        },
-                        Items = items.Select(i => i.trx).ToList()
-                    };
-                })
-                .ToList();
-
-        return Result.Success(stageDataList.AsEnumerable());
+        return Result.Success<IEnumerable<StageData>>(orderedList);
     }
 
-    private async Task<Result<IList<(Transaction trx, QueryTransaction? trxInfo)>>> GetProjectInvestmentsTransactionsAsync(
-        List<ProjectInvestment> projectInvestments)
+    private async Task<Result<IList<(Transaction trx, QueryTransaction? trxInfo)>>> GetProjectInvestmentsTransactionsAsync(List<ProjectInvestment> projectInvestments)
     {
         var network = networkConfiguration.GetNetwork();
 
@@ -314,8 +300,7 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
                 if (spentInput != null) //TODO move the script discovery to another class
                 {
-                    var scriptType = investorTransactionActions.DiscoverUsedScript(project,
-                        investmentTransaction, stageIndex, spentInput.WitScript);
+                    var scriptType = investorTransactionActions.DiscoverUsedScript(project, investmentTransaction, stageIndex, spentInput.WitScript);
 
                     switch (scriptType.ScriptType)
                     {
