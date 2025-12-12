@@ -57,7 +57,7 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
           feerate =>
           {
               return founderAppService.Spend(wallet.Value.Id, new DomainFeerate(feerate), projectId, toSpend)
-                .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
+                .Map(ITransactionDraftViewModel (response) => new TransactionDraftViewModel(response.TransactionDraft, uiServices));
           },
           model =>
           {

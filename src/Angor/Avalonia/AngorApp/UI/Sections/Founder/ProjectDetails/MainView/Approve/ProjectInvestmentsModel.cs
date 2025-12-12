@@ -40,7 +40,7 @@ public partial class ApproveInvestmentsViewModel : ReactiveObject, IApproveInves
     private Task<Result<(IWallet wallet, IEnumerable<Investment> investments)>> GetWalletInvestments(ProjectId projectId, IWallet wallet)
     {
         var investments = founderAppService.GetInvestments(wallet.Id, projectId);
-        return investments.Map(x => (wallet, investments: x));
+        return investments.Map(x => (wallet, investments: x.Investments));
     }
 
     private async Task<bool> Approve(ProjectId projectId, IWallet wallet, Investment investment)

@@ -15,29 +15,31 @@ namespace Angor.Sdk.Funding.Founder.Operations;
 
 public static class GetInvestments
 {
-    public class GetInvestmentsRequest(WalletId walletId, ProjectId projectId) : IRequest<Result<IEnumerable<Investment>>>
+    public class GetInvestmentsRequest(WalletId walletId, ProjectId projectId) : IRequest<Result<GetInvestmentsResponse>>
     {
         public WalletId WalletId { get; } = walletId;
         public ProjectId ProjectId { get; } = projectId;
     }
 
+    public record GetInvestmentsResponse(IEnumerable<Investment> Investments);
+
     public class GetInvestmentsHandler(
         IAngorIndexerService angorIndexerService,
         IProjectService projectService,
         INetworkConfiguration networkConfiguration,
-        IInvestmentHandshakeService HandshakeService) : IRequestHandler<GetInvestmentsRequest, Result<IEnumerable<Investment>>>
+        IInvestmentHandshakeService HandshakeService) : IRequestHandler<GetInvestmentsRequest, Result<GetInvestmentsResponse>>
     {
-        public Task<Result<IEnumerable<Investment>>> Handle(GetInvestmentsRequest request, CancellationToken cancellationToken)
+        public Task<Result<GetInvestmentsResponse>> Handle(GetInvestmentsRequest request, CancellationToken cancellationToken)
         {
             return GetInvestments(request);
         }
 
-        private async Task<Result<IEnumerable<Investment>>> GetInvestments(GetInvestmentsRequest request)
+        private async Task<Result<GetInvestmentsResponse>> GetInvestments(GetInvestmentsRequest request)
         {
             var projectResult = await projectService.GetAsync(request.ProjectId);
             if (projectResult.IsFailure)
             {
-                return Result.Failure<IEnumerable<Investment>>(projectResult.Error);
+                return Result.Failure<GetInvestmentsResponse>(projectResult.Error);
             }
 
             var nostrPubKey = projectResult.Value.NostrPubKey;
@@ -50,7 +52,7 @@ public static class GetInvestments
 
             if (syncResult.IsFailure)
             {
-                return Result.Failure<IEnumerable<Investment>>(syncResult.Error);
+                return Result.Failure<GetInvestmentsResponse>(syncResult.Error);
             }
 
             // Get Handshakes from database
@@ -60,13 +62,13 @@ public static class GetInvestments
 
             if (HandshakesResult.IsFailure)
             {
-                return Result.Failure<IEnumerable<Investment>>(HandshakesResult.Error);
+                return Result.Failure<GetInvestmentsResponse>(HandshakesResult.Error);
             }
 
             var alreadyInvestedResult = await LookupCurrentInvestments(request);
             if (alreadyInvestedResult.IsFailure)
             {
-                return Result.Failure<IEnumerable<Investment>>(alreadyInvestedResult.Error);
+                return Result.Failure<GetInvestmentsResponse>(alreadyInvestedResult.Error);
             }
 
             var investments = HandshakesResult.Value
@@ -74,7 +76,7 @@ public static class GetInvestments
                 .Select(conv => CreateInvestmentFromHandshake(conv, alreadyInvestedResult.Value, projectResult.Value))
                 .ToList();
 
-            return Result.Success<IEnumerable<Investment>>(investments);
+            return Result.Success(new GetInvestmentsResponse(investments));
         }
         
         private InvestmentStatus DetermineInvestmentStatus(

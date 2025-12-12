@@ -115,26 +115,26 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         logger.LogInformation("[CreateProject] Step 3: Creating blockchain transaction for project {ProjectName}", dto.ProjectName);
 
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
-           async feerate =>
+async feerate =>
            {
-               var result = await projectAppService.CreateProject(wallet.Id, feerate, dto, projectInfoEventId, projectSeed);
-               return result.Map(draft =>
-                       {
-                           transactionId = draft.TransactionId;
-                           ITransactionDraftViewModel viewModel = new TransactionDraftViewModel(draft, uiServices);
-                           return viewModel;
-                       });
-           },
-          model =>
+        var result = await projectAppService.CreateProject(wallet.Id, feerate, dto, projectInfoEventId, projectSeed);
+       return result.Map(response =>
+           {
+  transactionId = response.TransactionDraft.TransactionId;
+     ITransactionDraftViewModel viewModel = new TransactionDraftViewModel(response.TransactionDraft, uiServices);
+             return viewModel;
+          });
+ },
+   model =>
           {
-              // Use FounderAppService to publish the transaction
-              return founderAppService.SubmitTransactionFromDraft(wallet.Id, model.Model)
-               .Tap(txId =>
-            {
-                transactionId = txId;
-                uiServices.NotificationService.Show("Project created successfully!", "Success");
-                logger.LogInformation("[CreateProject] Project created successfully: {TransactionId}", txId);
-            })
+      // Use FounderAppService to publish the transaction
+   return founderAppService.SubmitTransactionFromDraft(wallet.Id, model.Model)
+      .Tap(response =>
+ {
+       transactionId = response.TransactionId;
+    uiServices.NotificationService.Show("Project created successfully!", "Success");
+   logger.LogInformation("[CreateProject] Project created successfully: {TransactionId}", response.TransactionId);
+ })
           .Map(_ => Guid.Empty); // Convert string result to Guid for the previewer
           },
           uiServices);

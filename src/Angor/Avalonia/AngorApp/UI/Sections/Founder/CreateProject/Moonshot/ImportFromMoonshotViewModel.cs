@@ -61,9 +61,10 @@ public partial class ImportFromMoonshotViewModel : ReactiveValidationObject, IIm
             if (result.IsFailure)
             {
                 ErrorMessage = result.Error;
+                return Result.Failure<MoonshotProjectData>(result.Error);
             }
 
-            return result;
+            return Result.Success(result.Value.MoonshotProjectData);
         }
         finally
         {

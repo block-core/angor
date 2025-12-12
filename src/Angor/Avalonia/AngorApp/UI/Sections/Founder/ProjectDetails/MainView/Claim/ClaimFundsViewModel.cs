@@ -51,7 +51,7 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
     {
         return founderAppService
             .GetClaimableTransactions(wallet.Id, projectId)
-            .Map(CreateStage);
+            .Map(response => CreateStage(response.Transactions));
     }
 
     private IEnumerable<IClaimableStage> CreateStage(IEnumerable<ClaimableTransactionDto> claimableTransactionDto)

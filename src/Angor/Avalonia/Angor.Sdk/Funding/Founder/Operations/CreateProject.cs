@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Angor.Sdk.Funding.Founder.Operations;
 
-internal static class CreateProjectConstants
+public static class CreateProjectConstants
 {
     public static class CreateProject
     {
@@ -26,7 +26,9 @@ internal static class CreateProjectConstants
                 CreateProjectDto Project,
                 string ProjectInfoEventId,
                 ProjectSeedDto ProjectSeedDto) // Event ID from CreateProjectInfo
-                : IRequest<Result<TransactionDraft>>;
+                : IRequest<Result<CreateProjectResponse>>;
+
+        public record CreateProjectResponse(TransactionDraft TransactionDraft);
 
         public class CreateProjectHandler(
                 ISeedwordsProvider seedwordsProvider,
@@ -35,14 +37,14 @@ internal static class CreateProjectConstants
                 IWalletOperations walletOperations,
                 IWalletAccountBalanceService walletAccountBalanceService,
                 ILogger<CreateProjectHandler> logger
-                ) : IRequestHandler<CreateProjectRequest, Result<TransactionDraft>>
+                ) : IRequestHandler<CreateProjectRequest, Result<CreateProjectResponse>>
         {
-            public async Task<Result<TransactionDraft>> Handle(CreateProjectRequest request, CancellationToken cancellationToken)
+            public async Task<Result<CreateProjectResponse>> Handle(CreateProjectRequest request, CancellationToken cancellationToken)
             {
                 if (request.ProjectSeedDto == null)
                 {
                     logger.LogDebug("FounderKeys is null in CreateProjectRequest for WalletId {WalletId}.", request.WalletId);
-                    return Result.Failure<TransactionDraft>("FounderKeys cannot be null.");
+                    return Result.Failure<CreateProjectResponse>("FounderKeys cannot be null.");
                 }
 
                 var wallet = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
@@ -60,17 +62,17 @@ internal static class CreateProjectConstants
                 if (transactionInfo.IsFailure)
                 {
                     logger.LogDebug("Failed to create project transaction for Project {ProjectName} (WalletId: {WalletId}): {Error}", request.Project.ProjectName, request.WalletId.Value, transactionInfo.Error);
-                    return Result.Failure<TransactionDraft>(transactionInfo.Error);
+                    return Result.Failure<CreateProjectResponse>(transactionInfo.Error);
                 }
 
                 // Return the transaction draft without publishing
                 // Publishing will be handled by FounderAppService.SubmitTransactionFromDraft
-                return Result.Success(new TransactionDraft
+                return Result.Success(new CreateProjectResponse(new TransactionDraft
                 {
                     SignedTxHex = transactionInfo.Value.Transaction.ToHex(),
                     TransactionId = transactionInfo.Value.Transaction.GetHash().ToString(),
                     TransactionFee = new Amount(transactionInfo.Value.TransactionFee)
-                });
+                }));
             }
 
             private async Task<Result<TransactionInfo>> CreateProjectTransaction(

@@ -11,17 +11,19 @@ namespace Angor.Sdk.Funding.Founder.Operations;
 
 public static class GetClaimableTransactions
 {
-    public record GetClaimableTransactionsRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ClaimableTransactionDto>>>;
+    public record GetClaimableTransactionsRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<GetClaimableTransactionsResponse>>;
 
-    public class GetClaimableTransactionsHandler(IProjectInvestmentsService projectInvestmentsService) : IRequestHandler<GetClaimableTransactionsRequest, Result<IEnumerable<ClaimableTransactionDto>>>
+    public record GetClaimableTransactionsResponse(IEnumerable<ClaimableTransactionDto> Transactions);
+
+    public class GetClaimableTransactionsHandler(IProjectInvestmentsService projectInvestmentsService) : IRequestHandler<GetClaimableTransactionsRequest, Result<GetClaimableTransactionsResponse>>
     {
-        public async Task<Result<IEnumerable<ClaimableTransactionDto>>> Handle(GetClaimableTransactionsRequest request, CancellationToken cancellationToken)
+        public async Task<Result<GetClaimableTransactionsResponse>> Handle(GetClaimableTransactionsRequest request, CancellationToken cancellationToken)
         {
             var resultList = await projectInvestmentsService.ScanFullInvestments(request.ProjectId.Value);
 
             if (resultList.IsFailure)
             {
-                return Result.Failure<IEnumerable<ClaimableTransactionDto>>(resultList.Error);
+                return Result.Failure<GetClaimableTransactionsResponse>(resultList.Error);
             }
 
             var list = resultList.Value.SelectMany(stageData => stageData.Items
@@ -36,7 +38,7 @@ public static class GetClaimableTransactions
                            ClaimStatus = DetermineClaimStatus(item, stageData),
                        }));
 
-            return Result.Success(list);
+            return Result.Success(new GetClaimableTransactionsResponse(list));
         }
 
         private static ClaimStatus DetermineClaimStatus(StageDataTrx item, StageData stageData)

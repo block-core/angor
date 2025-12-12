@@ -24,6 +24,7 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
         projectsCollection = RefreshableCollection.Create(
                 () => walletContext.RequiresWallet(wallet => projectAppService
                     .GetFounderProjects(wallet.Id)
+                    .Map(response => response.Projects)
                     .MapEach(projectViewModelFactory)),
                 project => project.Id)
             .DisposeWith(disposable);

@@ -11,16 +11,20 @@ namespace Angor.Sdk.Funding.Founder.Operations;
 
 public static class GetFounderProjects
 {
+    public record GetFounderProjectsRequest(WalletId WalletId) : IRequest<Result<GetFounderProjectsResponse>>;
+
+    public record GetFounderProjectsResponse(IEnumerable<ProjectDto> Projects);
+
     public class GetFounderProjectsHandler(
         IProjectService projectService,
-        IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection) : IRequestHandler<GetFounderProjectsRequest, Result<IEnumerable<ProjectDto>>>
+        IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection) : IRequestHandler<GetFounderProjectsRequest, Result<GetFounderProjectsResponse>>
     {
-        public async Task<Result<IEnumerable<ProjectDto>>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
+        public async Task<Result<GetFounderProjectsResponse>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
         {
             var storageResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.Value);
 
             if (storageResult.IsFailure || storageResult.Value == null)
-                return Result.Failure<IEnumerable<ProjectDto>>(storageResult.IsFailure ? storageResult.Error
+                return Result.Failure<GetFounderProjectsResponse>(storageResult.IsFailure ? storageResult.Error
                     : "No projects found for the given wallet.");
             
             var keys = storageResult.Value!.Keys.Select(k => new ProjectId(k.ProjectIdentifier));
@@ -28,15 +32,13 @@ public static class GetFounderProjects
             var projects = await projectService.GetAllAsync(keys.ToArray());
             
             if (projects.IsFailure)
-                return Result.Failure<IEnumerable<ProjectDto>>(projects.Error);
+                return Result.Failure<GetFounderProjectsResponse>(projects.Error);
 
             var dtoList = projects.Value
                 .OrderByDescending(p => p.StartingDate)
                 .Select(p => p.ToDto());
             
-            return Result.Success(dtoList);
+            return Result.Success(new GetFounderProjectsResponse(dtoList));
         }
     }
-
-    public record GetFounderProjectsRequest(WalletId WalletId) : IRequest<Result<IEnumerable<ProjectDto>>>;
 }

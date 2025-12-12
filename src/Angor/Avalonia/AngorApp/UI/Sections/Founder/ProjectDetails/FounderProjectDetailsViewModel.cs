@@ -46,7 +46,7 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
                 
         }).GetAwaiter().GetResult();
 
-        if(investmentRequests.Value.Any(_ => _.Status == InvestmentStatus.PendingFounderSignatures))
+        if(investmentRequests.Value.Investments.Any(_ => _.Status == InvestmentStatus.PendingFounderSignatures))
         {
             return new ApproveInvestmentsViewModel(projectId, founderAppService, uiServices, walletContext);
         }

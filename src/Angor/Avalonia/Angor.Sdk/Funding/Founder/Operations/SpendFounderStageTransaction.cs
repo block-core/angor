@@ -19,7 +19,9 @@ namespace Angor.Sdk.Funding.Founder.Operations;
 
 public static class SpendFounderStageTransaction
 {
-    public record SpendFounderStageTransactionRequest(WalletId WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<TransactionDraft>>;
+    public record SpendFounderStageTransactionRequest(WalletId WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<SpendFounderStageTransactionResponse>>;
+
+    public record SpendFounderStageTransactionResponse(TransactionDraft TransactionDraft);
 
     public class SpendFounderStageTransactionHandler(
         IFounderTransactionActions founderTransactionActions,
@@ -33,13 +35,13 @@ public static class SpendFounderStageTransaction
         IWalletOperations walletOperations,
         IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
         ILogger<SpendFounderStageTransactionHandler> logger
-    ) : IRequestHandler<SpendFounderStageTransactionRequest, Result<TransactionDraft>>
+    ) : IRequestHandler<SpendFounderStageTransactionRequest, Result<SpendFounderStageTransactionResponse>>
     {
-        public async Task<Result<TransactionDraft>> Handle(SpendFounderStageTransactionRequest request, CancellationToken cancellationToken)
+        public async Task<Result<SpendFounderStageTransactionResponse>> Handle(SpendFounderStageTransactionRequest request, CancellationToken cancellationToken)
         {
             var groupedByStage = request.ToSpend.GroupBy(x => x.StageId).ToList();
             if (groupedByStage.Count > 1)
-                return Result.Failure<TransactionDraft>("You can only spend one stage at a time.");
+                return Result.Failure<SpendFounderStageTransactionResponse>("You can only spend one stage at a time.");
             
             var selectedStageId = groupedByStage.First().Key;
             var network = networkConfiguration.GetNetwork();
@@ -47,12 +49,12 @@ public static class SpendFounderStageTransaction
             var project = await projectService.GetAsync(request.ProjectId);
             if (project.IsFailure)
             {
-                return Result.Failure<TransactionDraft>(project.Error);
+                return Result.Failure<SpendFounderStageTransactionResponse>(project.Error);
             }
             
             var founderKey = await GetProjectFounderKeyAsync(request.WalletId.Value, request.ProjectId.Value);
             if (founderKey == null)
-                return Result.Failure<TransactionDraft>("Project keys not found in storage. Please load founder projects first.");
+                return Result.Failure<SpendFounderStageTransactionResponse>("Project keys not found in storage. Please load founder projects first.");
             
             var founderContext = new FounderContext { ProjectInfo = project.Value.ToProjectInfo(), ProjectSeeders = new ProjectSeeders() };
 
@@ -63,7 +65,7 @@ public static class SpendFounderStageTransaction
             
             var addressResult = await GetUnfundedReleaseAddress(request.WalletId);
             if (addressResult.IsFailure) 
-                return Result.Failure<TransactionDraft>("Could not get an unfunded release address");
+                return Result.Failure<SpendFounderStageTransactionResponse>("Could not get an unfunded release address");
             
             var addressScript = BitcoinAddress.Create(addressResult.Value, network).ScriptPubKey;
             
@@ -71,12 +73,12 @@ public static class SpendFounderStageTransaction
                 founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript,
                 founderKey, request.SelectedFee); 
             
-            return Result.Success(new TransactionDraft
+            return Result.Success(new SpendFounderStageTransactionResponse(new TransactionDraft
             {
                 SignedTxHex = signedTransaction.Transaction.ToHex(),
                 TransactionFee = new Amount(signedTransaction.TransactionFee),
                 TransactionId = signedTransaction.Transaction.GetHash().ToString()
-            });
+            }));
 
             //TODO handle the caching of pending transactions properly
             // // add all outptus to the pending list

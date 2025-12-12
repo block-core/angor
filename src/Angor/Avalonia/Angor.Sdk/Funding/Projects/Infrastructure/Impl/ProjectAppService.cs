@@ -10,6 +10,7 @@ using CSharpFunctionalExtensions;
 using MediatR;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectInfo;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectProfile;
+using static Angor.Sdk.Funding.Founder.Operations.CreateProjectConstants.CreateProject;
 
 namespace Angor.Sdk.Funding.Projects.Infrastructure.Impl;
 
@@ -18,7 +19,7 @@ public class ProjectAppService(
     : IProjectAppService
 {
     public Task<Result<IEnumerable<ProjectDto>>> Latest() =>
-        mediator.Send(new ProjectQueries.LatestProjectsRequest());
+ mediator.Send(new ProjectQueries.LatestProjectsRequest());
 
     public Task<Result<Maybe<ProjectDto>>> TryGet(ProjectId projectId) =>
         mediator.Send(new ProjectQueries.TryGetProjectRequest(projectId));
@@ -26,22 +27,22 @@ public class ProjectAppService(
     public Task<Result<ProjectDto>> Get(ProjectId projectId) =>
         mediator.Send(new ProjectQueries.GetProjectRequest(projectId));
 
-    public Task<Result<IEnumerable<ProjectDto>>> GetFounderProjects(WalletId walletId)
+    public Task<Result<GetFounderProjects.GetFounderProjectsResponse>> GetFounderProjects(WalletId walletId)
     {
         return mediator.Send(new GetFounderProjects.GetFounderProjectsRequest(walletId));
     }
     
     public Task<Result<CreateProjectProfileResponse>> CreateProjectProfile(WalletId walletId, ProjectSeedDto projectSeedDto, CreateProjectDto project)
     {
-        return mediator.Send(new CreateProjectProfile.CreateProjectProfileRequest(walletId, projectSeedDto, project));
+  return mediator.Send(new CreateProjectProfile.CreateProjectProfileRequest(walletId, projectSeedDto, project));
     }
 
     public Task<Result<CreateProjectInfoResponse>> CreateProjectInfo(WalletId walletId, CreateProjectDto project, ProjectSeedDto projectSeedDto)
-    {
-        return mediator.Send(new CreateProjectInfo.CreateProjectInfoRequest(walletId, project, projectSeedDto));
+ {
+return mediator.Send(new CreateProjectInfo.CreateProjectInfoRequest(walletId, project, projectSeedDto));
     }
     
-    public Task<Result<TransactionDraft>> CreateProject(WalletId walletId, long selectedFee, CreateProjectDto project, string projectInfoEventId, ProjectSeedDto projectSeedDto)
+    public Task<Result<CreateProjectResponse>> CreateProject(WalletId walletId, long selectedFee, CreateProjectDto project, string projectInfoEventId, ProjectSeedDto projectSeedDto)
     {
         return mediator.Send(new CreateProjectConstants.CreateProject.CreateProjectRequest(walletId, selectedFee, project, projectInfoEventId, projectSeedDto));
     }
