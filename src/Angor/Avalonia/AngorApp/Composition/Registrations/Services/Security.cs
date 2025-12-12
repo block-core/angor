@@ -1,6 +1,6 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Wallet.Infrastructure.Impl;
-using Angor.Contexts.Wallet.Infrastructure.Interfaces;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Infrastructure.Impl;
+using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using AngorApp.Model.Wallet.Password;
 using Microsoft.Extensions.DependencyInjection;
 

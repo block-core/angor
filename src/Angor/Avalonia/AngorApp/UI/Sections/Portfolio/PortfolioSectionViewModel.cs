@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Windows.Input;
-using Angor.Contexts.Funding.Investor;
+using Angor.Sdk.Funding.Investor;
 using AngorApp.Core;
 using AngorApp.UI.Sections.Portfolio.Items;
 using AngorApp.UI.Sections.Portfolio.Penalties;

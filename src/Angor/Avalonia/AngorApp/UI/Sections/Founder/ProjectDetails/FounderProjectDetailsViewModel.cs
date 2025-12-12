@@ -1,13 +1,13 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Claim;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
 using Zafiro.CSharpFunctionalExtensions;
-using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
+using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 
 namespace AngorApp.UI.Sections.Founder.ProjectDetails;
 

@@ -1,9 +1,9 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Funding.Investor.Domain;
-using Angor.Contexts.Funding.Investor.Operations;
-using Angor.Contexts.Funding.Projects.Domain;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.Contexts.Funding.Services;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor.Domain;
+using Angor.Sdk.Funding.Investor.Operations;
+using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Sdk.Funding.Services;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;

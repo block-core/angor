@@ -1,4 +1,4 @@
-using Angor.Contexts.Funding.Investor.Dtos;
+using Angor.Sdk.Funding.Investor.Dtos;
 
 namespace AngorApp.UI.Sections.Portfolio.Manage;
 

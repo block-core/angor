@@ -1,4 +1,4 @@
-using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
+using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 
 namespace AngorApp.UI.Sections.Founder;
 

@@ -1,4 +1,4 @@
-using Angor.Contexts.Wallet.Infrastructure.Interfaces;
+using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 
 namespace Angor.Contexts.Wallet.Tests.Infrastructure.TestDoubles;
 

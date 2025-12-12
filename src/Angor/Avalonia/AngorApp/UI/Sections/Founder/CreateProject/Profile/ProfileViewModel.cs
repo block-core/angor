@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using System.Reactive.Disposables;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Dtos;
 using AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.UI.Sections.Founder.CreateProject.Moonshot;
 using ReactiveUI.Validation.Extensions;
@@ -82,7 +82,7 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
         // ShowAndGetResult returns Maybe<TValue> where TValue is the unwrapped success value from the command
         // The Import command returns Result<MoonshotProjectData>
         // The dialog shows an error if the Result fails, and returns Maybe<MoonshotProjectData>
-        Maybe<Angor.Contexts.Funding.Founder.Dtos.MoonshotProjectData> dialogResult = await uiServices.Dialog.ShowAndGetResult(
+        Maybe<Angor.Sdk.Funding.Founder.Dtos.MoonshotProjectData> dialogResult = await uiServices.Dialog.ShowAndGetResult(
                   importViewModel,
                   "Import from Moonshot",
                   vm => vm.Import.Enhance("Import"));
@@ -92,7 +92,7 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
             return Result.Failure("Import cancelled");
         }
 
-        Angor.Contexts.Funding.Founder.Dtos.MoonshotProjectData moonshotData = dialogResult.Value;
+        Angor.Sdk.Funding.Founder.Dtos.MoonshotProjectData moonshotData = dialogResult.Value;
 
         // Populate fields from Moonshot data
         ProjectName = moonshotData.Moonshot.Title;
@@ -112,7 +112,7 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
     /// <summary>
     /// Gets the last imported Moonshot data for use by FundingStructureViewModel.
     /// </summary>
-    public Angor.Contexts.Funding.Founder.Dtos.MoonshotProjectData? LastImportedMoonshotData { get; private set; }
+    public Angor.Sdk.Funding.Founder.Dtos.MoonshotProjectData? LastImportedMoonshotData { get; private set; }
 
     /// <summary>
     /// Gets the command to import from Moonshot.

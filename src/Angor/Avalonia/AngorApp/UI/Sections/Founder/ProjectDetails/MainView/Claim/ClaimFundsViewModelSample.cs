@@ -1,4 +1,4 @@
-using Angor.Contexts.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder.Dtos;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Claim;

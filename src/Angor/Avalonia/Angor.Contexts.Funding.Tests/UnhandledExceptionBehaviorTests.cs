@@ -1,4 +1,4 @@
-using Angor.Contexts.CrossCutting.MediatR;
+using Angor.Sdk.Common.MediatR;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
 using MediatR;

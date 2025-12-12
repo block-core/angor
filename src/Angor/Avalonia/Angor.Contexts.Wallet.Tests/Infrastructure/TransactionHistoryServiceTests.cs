@@ -1,6 +1,6 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Wallet.Domain;
-using Angor.Contexts.Wallet.Infrastructure.Impl.History;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Domain;
+using Angor.Sdk.Wallet.Infrastructure.Impl.History;
 using Angor.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;

@@ -1,9 +1,9 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Founder.Domain;
-using Angor.Contexts.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Domain;
+using Angor.Sdk.Funding.Founder.Operations;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve;

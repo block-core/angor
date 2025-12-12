@@ -1,6 +1,6 @@
 using System.Reactive.Disposables;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Dtos;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 

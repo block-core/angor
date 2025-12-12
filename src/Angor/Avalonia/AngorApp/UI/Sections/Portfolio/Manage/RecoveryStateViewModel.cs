@@ -1,10 +1,10 @@
 using System.Linq;
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Investor.Dtos;
-using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Shared.TransactionDrafts;
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Dtos;
+using Angor.Sdk.Funding.Shared;
+using Angor.Sdk.Funding.Shared.TransactionDrafts;
+using Angor.Sdk.Wallet.Domain;
 using AngorApp.Core;
 using AngorApp.UI.TransactionDrafts;
 using AngorApp.UI.TransactionDrafts.DraftTypes;

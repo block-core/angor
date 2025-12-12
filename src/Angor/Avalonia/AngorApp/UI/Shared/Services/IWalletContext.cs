@@ -1,5 +1,5 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Domain;
 using DynamicData;
 
 namespace AngorApp.UI.Shared.Services;

@@ -1,7 +1,7 @@
 using System.Reactive.Disposables;
-using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Shared.TransactionDrafts;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Shared;
+using Angor.Sdk.Funding.Shared.TransactionDrafts;
 using AngorApp.Core;
 using AngorApp.UI.TransactionDrafts;
 using AngorApp.UI.TransactionDrafts.DraftTypes;

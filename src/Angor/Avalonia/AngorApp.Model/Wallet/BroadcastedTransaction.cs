@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Wallet.Domain;
 using AngorApp.Model.Contracts.Amounts;
 using AngorApp.Model.Contracts.Wallet;
 using AngorApp.Model.Amounts;

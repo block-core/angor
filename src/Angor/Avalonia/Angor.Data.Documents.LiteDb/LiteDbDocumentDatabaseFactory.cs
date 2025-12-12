@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Angor.Contexts.CrossCutting;
+using Angor.Sdk.Common;
 using Angor.Data.Documents.Interfaces;
 using Microsoft.Extensions.Logging;
 

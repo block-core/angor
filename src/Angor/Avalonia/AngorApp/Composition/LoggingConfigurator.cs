@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Angor.Contexts.CrossCutting;
+using Angor.Sdk.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;

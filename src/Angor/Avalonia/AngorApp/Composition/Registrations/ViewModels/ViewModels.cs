@@ -1,5 +1,5 @@
-using Angor.Contexts.Funding.Projects.Application.Dtos;
-using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
+using Angor.Sdk.Funding.Projects.Application.Dtos;
+using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 using AngorApp.Core.Factories;
 using AngorApp.UI.Sections.Browse;
 using AngorApp.UI.Sections.Browse.Details;

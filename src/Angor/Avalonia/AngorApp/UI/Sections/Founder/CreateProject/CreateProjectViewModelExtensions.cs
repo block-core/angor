@@ -1,6 +1,6 @@
 using System.Linq;
-using Angor.Contexts.Funding.Projects.Application.Dtos;
-using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Sdk.Funding.Projects.Application.Dtos;
+using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Shared.Models;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject;

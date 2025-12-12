@@ -1,4 +1,4 @@
-using Angor.Contexts.Wallet.Application;
+using Angor.Sdk.Wallet.Application;
 using AngorApp.Model.Contracts.Flows;
 using AngorApp.UI.Shared.Controls.Common.Success;
 using Zafiro.Avalonia.Dialogs.Wizards.Slim;

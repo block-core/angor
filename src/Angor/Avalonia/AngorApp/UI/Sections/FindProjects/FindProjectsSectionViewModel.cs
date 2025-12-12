@@ -1,5 +1,5 @@
 using System.Reactive.Disposables;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.UI.Sections.Browse.Details;
 using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;

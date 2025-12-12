@@ -1,9 +1,9 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Funding;
-using Angor.Contexts.Integration.WalletFunding;
-using Angor.Contexts.Wallet;
-using Angor.Contexts.Wallet.Domain;
-using Angor.Contexts.Wallet.Infrastructure.Impl;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding;
+using Angor.Sdk.Integration;
+using Angor.Sdk.Wallet;
+using Angor.Sdk.Wallet.Domain;
+using Angor.Sdk.Wallet.Infrastructure.Impl;
 using Angor.Data.Documents.LiteDb.Extensions;
 using Angor.Shared;
 using Angor.Shared.Services;

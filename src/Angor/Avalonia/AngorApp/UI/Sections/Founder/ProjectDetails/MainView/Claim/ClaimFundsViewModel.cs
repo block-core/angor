@@ -1,10 +1,10 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Founder.Dtos;
-using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Shared;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Shared;
 using AngorApp.UI.Shared.Services;
 using ReactiveUI.SourceGenerators;
 using Zafiro.CSharpFunctionalExtensions;

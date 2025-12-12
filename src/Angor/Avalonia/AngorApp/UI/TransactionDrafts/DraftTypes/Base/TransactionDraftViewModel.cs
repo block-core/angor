@@ -1,4 +1,4 @@
-using TransactionDraft = Angor.Contexts.Funding.Shared.TransactionDraft;
+using TransactionDraft = Angor.Sdk.Funding.Shared.TransactionDraft;
 using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.UI.TransactionDrafts.DraftTypes.Base;

@@ -1,8 +1,8 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Tests.TestDoubles;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Shared;
+using Angor.Sdk.Funding.Tests.TestDoubles;
 using Angor.Shared;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.DependencyInjection;

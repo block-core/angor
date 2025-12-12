@@ -1,6 +1,6 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Tests.TestDoubles;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Shared;
+using Angor.Sdk.Funding.Tests.TestDoubles;
 using Angor.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
