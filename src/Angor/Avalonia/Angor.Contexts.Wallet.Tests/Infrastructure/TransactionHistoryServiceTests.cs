@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Xunit.Abstractions;
 
-namespace Angor.Contexts.Wallet.Tests.Infrastructure;
+namespace Angor.Sdk.Wallet.Tests.Infrastructure;
 
 public class TransactionHistoryServiceTests(ITestOutputHelper outputHelper)
 {

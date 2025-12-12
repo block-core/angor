@@ -9,7 +9,7 @@ using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using Moq;
 
-namespace Angor.Contexts.Funding.Tests.Investor.Operations;
+namespace Angor.Sdk.Funding.Tests.Investor.Operations;
 
 public class GetPenaltiesTests
 {

@@ -4,7 +4,7 @@ using Angor.Sdk.Wallet.Infrastructure.Impl;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Wallet.Tests.Infrastructure.TestDoubles;
+namespace Angor.Sdk.Wallet.Tests.Infrastructure.TestDoubles;
 
 public class TestSensitiveWalletDataProvider : ISensitiveWalletDataProvider
 {

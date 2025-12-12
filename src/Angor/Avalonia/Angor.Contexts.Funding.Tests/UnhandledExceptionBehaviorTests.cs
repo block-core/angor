@@ -4,7 +4,7 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Angor.Contexts.Funding.Tests;
+namespace Angor.Sdk.Funding.Tests;
 
 public class UnhandledExceptionBehaviorTests
 {

@@ -7,7 +7,7 @@ using Angor.Sdk.Wallet.Tests.Infrastructure.TestDoubles;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 
-namespace Angor.Contexts.Wallet.Tests.Infrastructure;
+namespace Angor.Sdk.Wallet.Tests.Infrastructure;
 
 public class WalletAppServiceTests(ITestOutputHelper output)
 {

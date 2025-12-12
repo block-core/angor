@@ -8,9 +8,9 @@ using CSharpFunctionalExtensions;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Xunit.Abstractions;
-using Amount = Angor.Contexts.Funding.Projects.Domain.Amount;
+using Amount = Angor.Sdk.Funding.Projects.Domain.Amount;
 
-namespace Angor.Contexts.Funding.Tests;
+namespace Angor.Sdk.Funding.Tests;
 
 using Draft = Shared.TransactionDrafts.InvestmentDraft;
 

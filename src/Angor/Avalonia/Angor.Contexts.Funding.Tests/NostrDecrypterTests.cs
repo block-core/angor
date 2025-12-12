@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Xunit.Abstractions;
 
-namespace Angor.Contexts.Funding.Tests;
+namespace Angor.Sdk.Funding.Tests;
 
 public class NostrDecrypterTests(ITestOutputHelper output)
 {

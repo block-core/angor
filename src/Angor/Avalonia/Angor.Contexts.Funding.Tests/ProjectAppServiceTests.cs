@@ -1,4 +1,4 @@
-﻿using Angor.Sdk.Common;
+using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Funding.Tests.TestDoubles;
@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Xunit.Abstractions;
 
-namespace Angor.Contexts.Funding.Tests;
+namespace Angor.Sdk.Funding.Tests;
 
 public class ProjectAppServiceTests(ITestOutputHelper output)
 {
