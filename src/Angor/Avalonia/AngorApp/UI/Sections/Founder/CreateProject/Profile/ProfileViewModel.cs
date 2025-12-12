@@ -10,11 +10,11 @@ using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.Profile;
 
-public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewModel, IHaveErrors
+public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewModel
 {
     private readonly UIServices uiServices;
     private readonly IFounderAppService _founderAppService;
-    private readonly Action<Angor.Contexts.Funding.Founder.Dtos.MoonshotProjectData>? _onMoonshotImported;
+    private readonly Action<MoonshotProjectData>? _onMoonshotImported;
     private readonly CompositeDisposable disposable = new();
     [Reactive] private string? avatarUri;
     [Reactive] private string? bannerUri;
@@ -28,7 +28,7 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
         ProjectSeedDto projectSeed,
         UIServices uiServices,
         IFounderAppService founderAppService,
-        Action<Angor.Contexts.Funding.Founder.Dtos.MoonshotProjectData>? onMoonshotImported = null)
+        Action<MoonshotProjectData>? onMoonshotImported = null)
     {
         this.uiServices = uiServices;
         _founderAppService = founderAppService;
