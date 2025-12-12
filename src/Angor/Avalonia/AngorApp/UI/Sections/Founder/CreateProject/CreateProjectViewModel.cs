@@ -1,17 +1,11 @@
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Founder.Dtos;
-using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.Shared;
 using Angor.Shared.Models;
-using AngorApp.UI.Flows.CreateProject;
 using AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
-using AngorApp.UI.Sections.Founder.CreateProject.Moonshot;
 using AngorApp.UI.Sections.Founder.CreateProject.Preview;
 using AngorApp.UI.Sections.Founder.CreateProject.Profile;
 using AngorApp.UI.Sections.Founder.CreateProject.Stages;
-using AngorApp.UI.Shared.Controls.Common;
-using AngorApp.UI.Shared.Services;
 using AngorApp.UI.TransactionDrafts;
 using AngorApp.UI.TransactionDrafts.DraftTypes;
 using AngorApp.UI.TransactionDrafts.DraftTypes.Base;
@@ -39,7 +33,6 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         UIServices uiServices,
         IProjectAppService projectAppService,
         IFounderAppService founderAppService,
-        IMoonshotService moonshotService,
         ILogger<CreateProjectViewModel> logger)
     {
         this.projectAppService = projectAppService;
@@ -57,7 +50,7 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         ProfileViewModel = new ProfileViewModel(
             projectSeed, 
             uiServices, 
-            moonshotService,
+            founderAppService,
             onMoonshotImported: moonshotData => FundingStructureViewModel.ApplyMoonshotData(moonshotData))
             .DisposeWith(disposable);
 

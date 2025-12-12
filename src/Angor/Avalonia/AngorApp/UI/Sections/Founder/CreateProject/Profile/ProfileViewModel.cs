@@ -1,29 +1,20 @@
 using System.Linq.Expressions;
 using System.Reactive.Disposables;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Founder.Dtos;
-using Angor.Shared.Models;
-using AngorApp.UI.Flows;
-using AngorApp.UI.Flows.CreateProject;
 using AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.UI.Sections.Founder.CreateProject.Moonshot;
-using AngorApp.UI.Shared.Services;
-using CSharpFunctionalExtensions;
-using ReactiveUI.SourceGenerators;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.Avalonia.Dialogs;
-using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.UI.Commands;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.Profile;
 
 public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewModel, IHaveErrors
 {
     private readonly UIServices uiServices;
-    private readonly IMoonshotService _moonshotService;
-    private readonly Action<MoonshotProjectData>? _onMoonshotImported;
+    private readonly IFounderAppService _founderAppService;
+    private readonly Action<Angor.Contexts.Funding.Founder.Dtos.MoonshotProjectData>? _onMoonshotImported;
     private readonly CompositeDisposable disposable = new();
     [Reactive] private string? avatarUri;
     [Reactive] private string? bannerUri;
@@ -36,11 +27,11 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
     public ProfileViewModel(
         ProjectSeedDto projectSeed,
         UIServices uiServices,
-        IMoonshotService moonshotService,
-        Action<MoonshotProjectData>? onMoonshotImported = null)
+        IFounderAppService founderAppService,
+        Action<Angor.Contexts.Funding.Founder.Dtos.MoonshotProjectData>? onMoonshotImported = null)
     {
         this.uiServices = uiServices;
-        _moonshotService = moonshotService;
+        _founderAppService = founderAppService;
         _onMoonshotImported = onMoonshotImported;
 #if DEBUG
         AvatarUri = "https://picsum.photos/170/170";
@@ -86,12 +77,12 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
 
     private async Task<Result> ExecuteImportFromMoonshot()
     {
-        var importViewModel = new ImportFromMoonshotViewModel(_moonshotService);
+        var importViewModel = new ImportFromMoonshotViewModel(_founderAppService);
 
         // ShowAndGetResult returns Maybe<TValue> where TValue is the unwrapped success value from the command
         // The Import command returns Result<MoonshotProjectData>
         // The dialog shows an error if the Result fails, and returns Maybe<MoonshotProjectData>
-        Maybe<MoonshotProjectData> dialogResult = await uiServices.Dialog.ShowAndGetResult(
+        Maybe<Angor.Contexts.Funding.Founder.Dtos.MoonshotProjectData> dialogResult = await uiServices.Dialog.ShowAndGetResult(
                   importViewModel,
                   "Import from Moonshot",
                   vm => vm.Import.Enhance("Import"));
@@ -101,7 +92,7 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
             return Result.Failure("Import cancelled");
         }
 
-        MoonshotProjectData moonshotData = dialogResult.Value;
+        Angor.Contexts.Funding.Founder.Dtos.MoonshotProjectData moonshotData = dialogResult.Value;
 
         // Populate fields from Moonshot data
         ProjectName = moonshotData.Moonshot.Title;
@@ -113,7 +104,7 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
         // Notify FundingStructureViewModel about the imported data
         _onMoonshotImported?.Invoke(moonshotData);
 
-        uiServices.NotificationService.Show($"Imported project: {moonshotData.Moonshot.Title}", "Import Successful");
+        await uiServices.NotificationService.Show($"Imported project: {moonshotData.Moonshot.Title}", "Import Successful");
 
         return Result.Success();
     }
@@ -121,7 +112,7 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
     /// <summary>
     /// Gets the last imported Moonshot data for use by FundingStructureViewModel.
     /// </summary>
-    public MoonshotProjectData? LastImportedMoonshotData { get; private set; }
+    public Angor.Contexts.Funding.Founder.Dtos.MoonshotProjectData? LastImportedMoonshotData { get; private set; }
 
     /// <summary>
     /// Gets the command to import from Moonshot.

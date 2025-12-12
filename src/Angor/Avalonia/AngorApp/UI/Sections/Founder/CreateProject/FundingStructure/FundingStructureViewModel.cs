@@ -3,9 +3,8 @@ using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 using Angor.Shared.Models;
 using System.Linq;
-using ReactiveUI;
 using System.Collections.ObjectModel;
-using AngorApp.UI.Sections.Founder.CreateProject.Moonshot;
+using Angor.Contexts.Funding.Founder.Dtos;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 

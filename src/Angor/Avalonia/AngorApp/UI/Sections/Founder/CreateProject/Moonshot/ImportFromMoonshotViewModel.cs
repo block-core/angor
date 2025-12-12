@@ -1,27 +1,23 @@
-using System;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using CSharpFunctionalExtensions;
-using ReactiveUI;
-using ReactiveUI.SourceGenerators;
+using Angor.Contexts.Funding.Founder;
+using Angor.Contexts.Funding.Founder.Dtos;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
-using Zafiro.UI.Commands;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.Moonshot;
 
 public partial class ImportFromMoonshotViewModel : ReactiveValidationObject, IImportFromMoonshotViewModel, IDisposable
 {
-    private readonly IMoonshotService _moonshotService;
+    private readonly IFounderAppService _founderAppService;
     private readonly CompositeDisposable _disposable = new();
 
     [Reactive] private string? eventId;
     [Reactive] private bool isLoading;
     [Reactive] private string? errorMessage;
 
-    public ImportFromMoonshotViewModel(IMoonshotService moonshotService)
+    public ImportFromMoonshotViewModel(IFounderAppService founderAppService)
     {
-        _moonshotService = moonshotService;
+        _founderAppService = founderAppService;
 
         // Validation rules
         this.ValidationRule(x => x.EventId, 
@@ -60,7 +56,7 @@ public partial class ImportFromMoonshotViewModel : ReactiveValidationObject, IIm
 
         try
         {
-            var result = await _moonshotService.GetMoonshotProjectAsync(EventId.Trim());
+            var result = await _founderAppService.GetMoonshotProject(EventId.Trim());
 
             if (result.IsFailure)
             {

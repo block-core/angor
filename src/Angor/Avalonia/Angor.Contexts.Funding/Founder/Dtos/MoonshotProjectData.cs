@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace AngorApp.UI.Sections.Founder.CreateProject.Moonshot;
+namespace Angor.Contexts.Funding.Founder.Dtos;
 
 public class MoonshotProjectData
 {
@@ -67,3 +67,4 @@ public class FundingPatternInfo
     [JsonPropertyName("releaseDay")]
     public int ReleaseDay { get; set; }
 }
+

@@ -1,5 +1,5 @@
+using Angor.Contexts.Funding.Founder.Dtos;
 using AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
-using AngorApp.UI.Sections.Founder.CreateProject.Moonshot;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.Profile;
