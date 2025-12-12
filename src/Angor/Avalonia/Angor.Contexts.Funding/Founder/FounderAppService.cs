@@ -34,4 +34,7 @@ public class FounderAppService(IMediator mediator) : IFounderAppService
     
     public Task<Result<string>> SubmitTransactionFromDraft(WalletId walletId, TransactionDraft draft) => 
         mediator.Send(new PublishFounderTransaction.PublishFounderTransactionRequest(draft));
+
+    public Task<Result<MoonshotProjectData>> GetMoonshotProject(string eventId) =>
+        mediator.Send(new GetMoonshotProject.GetMoonshotProjectRequest(eventId));
 }

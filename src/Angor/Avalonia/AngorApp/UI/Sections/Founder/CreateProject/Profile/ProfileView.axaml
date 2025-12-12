@@ -14,7 +14,16 @@
 
     <Card Header="Project Profile" HeaderStartContent="{Icon fa-briefcase}">
         <Card.HeaderEndContent>
-            <controls:ErrorSummary Errors="{Binding Errors}" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Command="{Binding ImportFromMoonshot}"
+                        ToolTip.Tip="Import project details from Moonshot">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <ContentControl IconOptions.Size="16" Content="{Icon mdi-rocket-launch}" />
+                        <TextBlock Text="Import" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <controls:ErrorSummary Errors="{Binding Errors}" />
+            </StackPanel>
         </Card.HeaderEndContent>
         <StackPanel Classes="BigGap">
             <BalancedWrapGrid MinItemWidth="200">

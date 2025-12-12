@@ -18,4 +18,5 @@ public interface IFounderAppService
     
     Task<Result<ProjectSeedDto>> CreateNewProjectKeysAsync(WalletId walletId);
     Task<Result<string>> SubmitTransactionFromDraft(WalletId walletId, TransactionDraft draft);
+    Task<Result<MoonshotProjectData>> GetMoonshotProject(string eventId);
 }

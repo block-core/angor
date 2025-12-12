@@ -1,6 +1,6 @@
-using ReactiveUI.Validation.Collections;
 using Angor.Shared.Models;
 using System.Collections.ObjectModel;
+using Angor.Contexts.Funding.Founder.Dtos;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 
@@ -25,4 +25,11 @@ public interface IFundingStructureViewModel
     
     IAmountUI TargetAmount { get; }
     ICollection<string> Errors { get; }
+    
+    /// <summary>
+    /// Applies imported Moonshot project data to the funding structure.
+    /// Sets ProjectType to Fund and populates penaltyThreshold and payoutDay.
+    /// </summary>
+    /// <param name="moonshotData">The imported Moonshot project data.</param>
+    void ApplyMoonshotData(MoonshotProjectData moonshotData);
 }

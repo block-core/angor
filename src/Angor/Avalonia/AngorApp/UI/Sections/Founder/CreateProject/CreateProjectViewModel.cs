@@ -1,16 +1,11 @@
 using Angor.Contexts.Funding.Founder;
 using Angor.Contexts.Funding.Founder.Dtos;
-using Angor.Contexts.Funding.Projects.Application.Dtos;
 using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.Shared;
 using Angor.Shared.Models;
-using AngorApp.UI.Flows.CreateProject;
 using AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.UI.Sections.Founder.CreateProject.Preview;
 using AngorApp.UI.Sections.Founder.CreateProject.Profile;
 using AngorApp.UI.Sections.Founder.CreateProject.Stages;
-using AngorApp.UI.Shared.Controls.Common;
-using AngorApp.UI.Shared.Services;
 using AngorApp.UI.TransactionDrafts;
 using AngorApp.UI.TransactionDrafts.DraftTypes;
 using AngorApp.UI.TransactionDrafts.DraftTypes.Base;
@@ -50,7 +45,14 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         FundingStructureViewModel = new FundingStructureViewModel(uiServices).DisposeWith(disposable);
         var endDateChanges = FundingStructureViewModel.WhenAnyValue(x => x.FundingEndDate);
         StagesViewModel = new StagesViewModel(endDateChanges, uiServices).DisposeWith(disposable);
-        ProfileViewModel = new ProfileViewModel(projectSeed, uiServices).DisposeWith(disposable);
+
+        // Pass a callback to ProfileViewModel that applies Moonshot data to FundingStructureViewModel
+        ProfileViewModel = new ProfileViewModel(
+            projectSeed, 
+            uiServices, 
+            founderAppService,
+            onMoonshotImported: moonshotData => FundingStructureViewModel.ApplyMoonshotData(moonshotData))
+            .DisposeWith(disposable);
 
         StagesViewModel.LastStageDate
             .Select(date => date?.AddDays(60))
