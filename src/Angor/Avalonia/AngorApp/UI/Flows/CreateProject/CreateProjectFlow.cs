@@ -1,7 +1,7 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Founder.Dtos;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.Core;
 using AngorApp.UI.Sections.Founder.CreateProject;
 using AngorApp.UI.Sections.Founder.CreateProject.ProjectCreated;

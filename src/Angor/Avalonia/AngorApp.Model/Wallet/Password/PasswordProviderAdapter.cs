@@ -1,6 +1,6 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Wallet.Domain;
-using Angor.Contexts.Wallet.Infrastructure.Interfaces;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Domain;
+using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI;

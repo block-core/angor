@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Windows.Input;
-using Angor.Contexts.Funding.Investor;
+using Angor.Sdk.Funding.Investor;
 using AngorApp.Model.Common;
 using AngorApp.UI.Sections.Portfolio.Recover;
 using DynamicData;

@@ -1,10 +1,10 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Wallet.Domain;
-using Angor.Contexts.Wallet.Infrastructure.Impl;
-using Angor.Contexts.Wallet.Infrastructure.Interfaces;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Domain;
+using Angor.Sdk.Wallet.Infrastructure.Impl;
+using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Wallet.Tests.Infrastructure.TestDoubles;
+namespace Angor.Sdk.Wallet.Tests.Infrastructure.TestDoubles;
 
 public class TestSensitiveWalletDataProvider : ISensitiveWalletDataProvider
 {

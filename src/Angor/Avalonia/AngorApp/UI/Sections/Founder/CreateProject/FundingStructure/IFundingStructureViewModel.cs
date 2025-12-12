@@ -1,6 +1,6 @@
 using Angor.Shared.Models;
 using System.Collections.ObjectModel;
-using Angor.Contexts.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder.Dtos;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 

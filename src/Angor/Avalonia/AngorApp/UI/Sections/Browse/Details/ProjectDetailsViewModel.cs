@@ -1,4 +1,4 @@
-using Angor.Contexts.Funding.Shared;
+using Angor.Sdk.Funding.Shared;
 using AngorApp.Core.Factories;
 using AngorApp.UI.Shared.Controls.Common.FoundedProjectOptions;
 

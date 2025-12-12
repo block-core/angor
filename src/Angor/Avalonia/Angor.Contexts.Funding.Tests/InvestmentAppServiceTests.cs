@@ -1,16 +1,16 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Tests.TestDoubles;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Shared;
+using Angor.Sdk.Funding.Tests.TestDoubles;
 using Angor.Shared;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Xunit.Abstractions;
-using Amount = Angor.Contexts.Funding.Projects.Domain.Amount;
+using Amount = Angor.Sdk.Funding.Projects.Domain.Amount;
 
-namespace Angor.Contexts.Funding.Tests;
+namespace Angor.Sdk.Funding.Tests;
 
 using Draft = Shared.TransactionDrafts.InvestmentDraft;
 

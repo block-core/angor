@@ -1,9 +1,9 @@
-using Angor.Contexts.CrossCutting;
+using Angor.Sdk.Common;
 using Angor.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Contexts.Funding.Tests.TestDoubles;
+namespace Angor.Sdk.Funding.Tests.TestDoubles;
 
 public class TestingSeedwordsProvider : ISeedwordsProvider
 {

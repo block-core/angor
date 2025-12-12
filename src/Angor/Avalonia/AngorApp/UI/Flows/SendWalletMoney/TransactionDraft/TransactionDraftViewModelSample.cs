@@ -1,4 +1,4 @@
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Wallet.Domain;
 using AngorApp.UI.Shared.Controls.Feerate;
 using Preset = AngorApp.UI.Shared.Controls.Feerate.Preset;
 

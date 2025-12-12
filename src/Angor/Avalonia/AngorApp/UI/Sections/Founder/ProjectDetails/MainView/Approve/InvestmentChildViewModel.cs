@@ -1,6 +1,6 @@
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Founder.Domain;
-using Angor.Contexts.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Domain;
+using Angor.Sdk.Funding.Founder.Operations;
 using ReactiveUI.SourceGenerators;
 
 namespace AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve;

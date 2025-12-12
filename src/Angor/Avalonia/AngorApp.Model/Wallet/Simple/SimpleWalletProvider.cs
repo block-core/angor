@@ -1,6 +1,6 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Wallet.Application;
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Application;
+using Angor.Sdk.Wallet.Domain;
 using Angor.Shared;
 using AngorApp.Model.Contracts.Flows;
 using AngorApp.Model.Contracts.Wallet;

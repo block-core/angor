@@ -4,7 +4,7 @@ using ReactiveUI.Validation.Helpers;
 using Angor.Shared.Models;
 using System.Linq;
 using System.Collections.ObjectModel;
-using Angor.Contexts.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder.Dtos;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 

@@ -23,7 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Angor.Contexts.Funding\Angor.Contexts.Funding.csproj" />
+      <ProjectReference Include="..\Angor.Sdk\Angor.Sdk.csproj" />
     </ItemGroup>
 
 </Project>

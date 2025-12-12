@@ -1,14 +1,14 @@
 using System.Linq;
 using System.Reactive.Disposables;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Founder.Domain;
-using Angor.Contexts.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Domain;
+using Angor.Sdk.Funding.Founder.Operations;
 using AngorApp.UI.Shared.Services;
 using ReactiveUI;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
-using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
+using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 
 namespace AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve;
 

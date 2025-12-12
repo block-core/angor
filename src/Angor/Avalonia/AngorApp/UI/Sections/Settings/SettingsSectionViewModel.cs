@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
-using Angor.Contexts.Wallet.Infrastructure.Impl;
-using Angor.Contexts.Wallet.Infrastructure.Interfaces;
+using Angor.Sdk.Wallet.Infrastructure.Impl;
+using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;

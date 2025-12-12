@@ -1,7 +1,7 @@
 using System.Reactive.Disposables;
-using Angor.Contexts.Funding.Projects.Application.Dtos;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
+using Angor.Sdk.Funding.Projects.Application.Dtos;
+using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
+using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI.Shell.Utils;
 

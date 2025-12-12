@@ -1,7 +1,7 @@
 using System;
 using System.Reactive.Linq;
-using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Shared;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Shared;
 using AngorApp.Core;
 using AngorApp.UI.Sections.Portfolio;
 using AngorApp.UI.Sections.Portfolio.Items;

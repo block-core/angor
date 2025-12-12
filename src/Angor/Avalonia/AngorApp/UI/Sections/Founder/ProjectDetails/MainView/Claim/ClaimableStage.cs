@@ -1,6 +1,6 @@
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Founder.Dtos;
-using Angor.Contexts.Funding.Shared;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Shared;
 using AngorApp.UI.TransactionDrafts;
 using AngorApp.UI.TransactionDrafts.DraftTypes;
 using AngorApp.UI.TransactionDrafts.DraftTypes.Base;

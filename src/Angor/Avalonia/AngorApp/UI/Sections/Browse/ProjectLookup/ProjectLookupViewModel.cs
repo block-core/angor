@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Windows.Input;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.Contexts.Funding.Shared;
+using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Sdk.Funding.Shared;
 using AngorApp.Core;
 using AngorApp.Core.Factories;
 using Serilog;

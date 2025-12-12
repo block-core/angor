@@ -1,9 +1,9 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Wallet.Application;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Application;
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Wallet.Domain;
 using Angor.Shared;
 using AngorApp.Model.Contracts.Amounts;
 using AngorApp.Model.Contracts.Flows;

@@ -1,5 +1,5 @@
 using System.Windows.Input;
-using Angor.Contexts.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder.Dtos;
 using AngorApp.UI.Sections.Portfolio.Items;
 
 namespace AngorApp.UI.Sections.Portfolio;

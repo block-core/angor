@@ -1,5 +1,5 @@
-using Angor.Contexts.Wallet.Application;
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Wallet.Application;
+using Angor.Sdk.Wallet.Domain;
 using AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.CreateWelcome;
 using AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.EncryptionPassword;
 using AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.Passphrase.Create;

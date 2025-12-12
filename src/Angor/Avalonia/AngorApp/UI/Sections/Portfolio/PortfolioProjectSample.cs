@@ -1,4 +1,4 @@
-using Angor.Contexts.Funding.Founder;
+using Angor.Sdk.Funding.Founder;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.UI.Sections.Portfolio;

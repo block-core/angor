@@ -1,5 +1,5 @@
 using System.Linq;
-using Angor.Contexts.Funding.Projects.Application.Dtos;
+using Angor.Sdk.Funding.Projects.Application.Dtos;
 using AngorApp.Model.Projects;
 
 namespace AngorApp.UI.Sections.Browse;

@@ -1,5 +1,5 @@
 using System.Reactive.Linq;
-using Angor.Contexts.CrossCutting;
+using Angor.Sdk.Common;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Client;
 using Nostr.Client.Communicator;
@@ -7,7 +7,7 @@ using Nostr.Client.Requests;
 using Serilog;
 using Xunit.Abstractions;
 
-namespace Angor.Contexts.Funding.Tests;
+namespace Angor.Sdk.Funding.Tests;
 
 public class NostrQueryClientTests(ITestOutputHelper output)
 {

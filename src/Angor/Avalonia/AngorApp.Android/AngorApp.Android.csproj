@@ -36,7 +36,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Angor.Contexts.CrossCutting\Angor.Contexts.CrossCutting.csproj" />
+        <ProjectReference Include="..\Angor.Sdk\Angor.Sdk.csproj" />
         <ProjectReference Include="..\AngorApp\AngorApp.csproj" />
     </ItemGroup>
 </Project>
