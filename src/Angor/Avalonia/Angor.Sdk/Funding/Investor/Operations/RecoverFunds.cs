@@ -22,83 +22,85 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 
 public static class RecoverFunds
 {
-    public record RecoverFundsRequest(WalletId WalletId, ProjectId ProjectId,DomainFeerate SelectedFeeRate) : IRequest<Result<RecoveryTransactionDraft>>;
+    public record RecoverFundsRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<RecoverFundsResponse>>;
+    
+    public record RecoverFundsResponse(RecoveryTransactionDraft TransactionDraft);
     
     public class RecoverFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
         IProjectService projectService, IInvestorTransactionActions investorTransactionActions,
-        IPortfolioService investmentService, INetworkConfiguration networkConfiguration,
-        IWalletOperations walletOperations, ISignService signService,
-        IEncryptionService decrypter, ISerializer serializer, ITransactionService transactionService,
-        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<RecoverFundsRequest, Result<RecoveryTransactionDraft>>
-    {
-        public async Task<Result<RecoveryTransactionDraft>> Handle(RecoverFundsRequest request, CancellationToken cancellationToken)
+   IPortfolioService investmentService, INetworkConfiguration networkConfiguration,
+  IWalletOperations walletOperations, ISignService signService,
+   IEncryptionService decrypter, ISerializer serializer, ITransactionService transactionService,
+ IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<RecoverFundsRequest, Result<RecoverFundsResponse>>
+  {
+  public async Task<Result<RecoverFundsResponse>> Handle(RecoverFundsRequest request, CancellationToken cancellationToken)
         {
-            var words = await provider.GetSensitiveData(request.WalletId.Value);
-            if (words.IsFailure)
-                return Result.Failure<RecoveryTransactionDraft>(words.Error);
+    var words = await provider.GetSensitiveData(request.WalletId.Value);
+  if (words.IsFailure)
+          return Result.Failure<RecoverFundsResponse>(words.Error);
             
-            // Get account info from database
-            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId);
-            if (accountBalanceResult.IsFailure)
-                return Result.Failure<RecoveryTransactionDraft>(accountBalanceResult.Error);
-            
-            var accountInfo = accountBalanceResult.Value.AccountInfo;
-            
+    // Get account info from database
+         var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId);
+    if (accountBalanceResult.IsFailure)
+     return Result.Failure<RecoverFundsResponse>(accountBalanceResult.Error);
+     
+   var accountInfo = accountBalanceResult.Value.AccountInfo;
+   
             var project = await projectService.GetAsync(request.ProjectId);
-            if (project.IsFailure)
-                return Result.Failure<RecoveryTransactionDraft>(project.Error);
-            var investments = await investmentService.GetByWalletId(request.WalletId.Value);
-            if (investments.IsFailure)
-                return Result.Failure<RecoveryTransactionDraft>(investments.Error);
-            
-            var investment = investments.Value.ProjectIdentifiers.FirstOrDefault(p => p.ProjectIdentifier == request.ProjectId.Value);
-            if (investment is null)
-                return Result.Failure<RecoveryTransactionDraft>("No investment found for this project");
-            
-            var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey);
+ if (project.IsFailure)
+     return Result.Failure<RecoverFundsResponse>(project.Error);
+     var investments = await investmentService.GetByWalletId(request.WalletId.Value);
+if (investments.IsFailure)
+      return Result.Failure<RecoverFundsResponse>(investments.Error);
+     
+    var investment = investments.Value.ProjectIdentifiers.FirstOrDefault(p => p.ProjectIdentifier == request.ProjectId.Value);
+      if (investment is null)
+  return Result.Failure<RecoverFundsResponse>("No investment found for this project");
+          
+    var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey);
 
-            var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(investment.InvestmentTransactionHex);
-            
-            var signatureLookup = await LookupFounderSignatures(request.WalletId.Value, project.Value, investment.RequestEventTime.Value, investment.RequestEventId, 
-                investmentTransaction);
+    var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(investment.InvestmentTransactionHex);
+  
+    var signatureLookup = await LookupFounderSignatures(request.WalletId.Value, project.Value, investment.RequestEventTime.Value, investment.RequestEventId, 
+      investmentTransaction);
 
-            if (signatureLookup.IsFailure)
-                return Result.Failure<RecoveryTransactionDraft>(signatureLookup.Error ?? "Could not retrieve founder signatures");
-            if (signatureLookup.Value is null)
-                return Result.Failure<RecoveryTransactionDraft>("No founder signatures found");
-            
-            
-            var unsignedRecoveryTransaction = investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project.Value.ToProjectInfo(), investmentTransaction, signatureLookup.Value, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+  if (signatureLookup.IsFailure)
+    return Result.Failure<RecoverFundsResponse>(signatureLookup.Error ?? "Could not retrieve founder signatures");
+     if (signatureLookup.Value is null)
+return Result.Failure<RecoverFundsResponse>("No founder signatures found");
+         
+          
+      var unsignedRecoveryTransaction = investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project.Value.ToProjectInfo(), investmentTransaction, signatureLookup.Value, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
 
+   
+       var transactionInfo = await transactionService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
+
+  if (transactionInfo is null)
+  return Result.Failure<RecoverFundsResponse>("Could not find transaction info");
+
+    transactionInfo.Outputs.ForEach((output, i) =>
+     {
+     if (i < 2 || string.IsNullOrEmpty(output.SpentInTransaction))
+     return;
+
+     unsignedRecoveryTransaction.Inputs.RemoveAt(i - 2);
+            unsignedRecoveryTransaction.Outputs.RemoveAt(i - 2);
+  });
+         
+    var changeAddress = accountInfo.GetNextChangeReceiveAddress();
+  if (changeAddress == null)
+      return Result.Failure<RecoverFundsResponse>("Could not get a change address");
             
-            var transactionInfo = await transactionService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
+       // add fee to the recovery trx
+ var recoveryTransaction = walletOperations.AddFeeAndSignTransaction(changeAddress, unsignedRecoveryTransaction, words.Value.ToWalletWords(), accountInfo, request.SelectedFeeRate.SatsPerKilobyte);
 
-            if (transactionInfo is null)
-                return Result.Failure<RecoveryTransactionDraft>("Could not find transaction info");
-
-            transactionInfo.Outputs.ForEach((output, i) =>
-            {
-                if (i < 2 || string.IsNullOrEmpty(output.SpentInTransaction))
-                    return;
-
-                unsignedRecoveryTransaction.Inputs.RemoveAt(i - 2);
-                unsignedRecoveryTransaction.Outputs.RemoveAt(i - 2);
-            });
-            
-            var changeAddress = accountInfo.GetNextChangeReceiveAddress();
-            if (changeAddress == null)
-                return Result.Failure<RecoveryTransactionDraft>("Could not get a change address");
-            
-            // add fee to the recovery trx
-            var recoveryTransaction = walletOperations.AddFeeAndSignTransaction(changeAddress, unsignedRecoveryTransaction, words.Value.ToWalletWords(), accountInfo, request.SelectedFeeRate.SatsPerKilobyte);
-
-            return Result.Success(new RecoveryTransactionDraft
-            {
-                SignedTxHex = recoveryTransaction.Transaction.ToHex(),
-                TransactionFee = new Amount(recoveryTransaction.TransactionFee),
-                TransactionId = recoveryTransaction.Transaction.GetHash().ToString()
-            });
-        }
+          return Result.Success(new RecoverFundsResponse(new RecoveryTransactionDraft
+        {
+     SignedTxHex = recoveryTransaction.Transaction.ToHex(),
+TransactionFee = new Amount(recoveryTransaction.TransactionFee),
+  TransactionId = recoveryTransaction.Transaction.GetHash().ToString()
+     }));
+ }
         
         private async Task<Result<SignatureInfo?>> LookupFounderSignatures(string walletId, Project project, DateTime createdAt, string eventId,
             Transaction investment)

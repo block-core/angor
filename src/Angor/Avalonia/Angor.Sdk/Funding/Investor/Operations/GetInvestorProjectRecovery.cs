@@ -19,7 +19,9 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 
 public static class GetInvestorProjectRecovery
 {
-    public record GetInvestorProjectRecoveryRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<InvestorProjectRecoveryDto>>;
+    public record GetInvestorProjectRecoveryRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<GetInvestorProjectRecoveryResponse>>;
+
+    public record GetInvestorProjectRecoveryResponse(InvestorProjectRecoveryDto RecoveryData);
 
     public class Handler(
         IProjectService projectService,
@@ -29,39 +31,43 @@ public static class GetInvestorProjectRecovery
         IInvestorTransactionActions investorTransactionActions,
         IProjectInvestmentsService projectInvestmentsService,
         ITransactionService transactionService
-    ) : IRequestHandler<GetInvestorProjectRecoveryRequest, Result<InvestorProjectRecoveryDto>>
+    ) : IRequestHandler<GetInvestorProjectRecoveryRequest, Result<GetInvestorProjectRecoveryResponse>>
     {
-        public async Task<Result<InvestorProjectRecoveryDto>> Handle(GetInvestorProjectRecoveryRequest request,
+        public async Task<Result<GetInvestorProjectRecoveryResponse>> Handle(GetInvestorProjectRecoveryRequest request,
             CancellationToken cancellationToken)
         {
             var project = await projectService.GetAsync(request.ProjectId);
 
             if (project.IsFailure)
-                return Result.Failure<InvestorProjectRecoveryDto>(project.Error);
+                return Result.Failure<GetInvestorProjectRecoveryResponse>(project.Error);
             
             var investments = await investmentService.GetByWalletId(request.WalletId.Value);
 
             if (investments.IsFailure)
-                return Result.Failure<InvestorProjectRecoveryDto>(investments.Error);
+                return Result.Failure<GetInvestorProjectRecoveryResponse>(investments.Error);
 
             if (investments.Value.ProjectIdentifiers.Count == 0)
-                return Result.Failure<InvestorProjectRecoveryDto>("No investments found for this wallet");
+                return Result.Failure<GetInvestorProjectRecoveryResponse>("No investments found for this wallet");
             
             var investmentRecord = investments.Value.ProjectIdentifiers
                 .FirstOrDefault(x => x.ProjectIdentifier == request.ProjectId.Value);
             
             if (investmentRecord == null)
-                return Result.Failure<InvestorProjectRecoveryDto>("No investments found for this project");
+                return Result.Failure<GetInvestorProjectRecoveryResponse>("No investments found for this project");
 
             var investmentDetails = await FindInvestments(project.Value, investmentRecord.InvestorPubKey);
             
             if (investmentDetails.IsFailure)
-                return Result.Failure<InvestorProjectRecoveryDto>(investmentDetails.Error);
+                return Result.Failure<GetInvestorProjectRecoveryResponse>(investmentDetails.Error);
             
             if (!investmentDetails.Value.Item2.Any())
-                return Result.Failure<InvestorProjectRecoveryDto>("No investment stages found for this project");
+                return Result.Failure<GetInvestorProjectRecoveryResponse>("No investment stages found for this project");
 
-            return await CheckSpentFund(investmentDetails.Value.Item2.ToList(), investmentDetails.Value.Item1, project.Value);
+            var checkResult = await CheckSpentFund(investmentDetails.Value.Item2.ToList(), investmentDetails.Value.Item1, project.Value);
+                
+            return checkResult.IsSuccess 
+               ? Result.Success(new GetInvestorProjectRecoveryResponse(checkResult.Value))
+             : Result.Failure<GetInvestorProjectRecoveryResponse>(checkResult.Error);
         }
 
 

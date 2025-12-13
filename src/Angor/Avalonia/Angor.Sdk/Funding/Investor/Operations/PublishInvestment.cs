@@ -20,7 +20,9 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 
 public static class PublishInvestment
 {
-    public record PublishInvestmentRequest(string InvestmentId, WalletId WalletId, ProjectId ProjectId) : IRequest<Result>{}
+    public record PublishInvestmentRequest(string InvestmentId, WalletId WalletId, ProjectId ProjectId) : IRequest<Result<PublishInvestmentResponse>>;
+
+    public record PublishInvestmentResponse();
 
     public class PublishInvestmentHandler(
         INetworkConfiguration networkConfiguration,
@@ -33,28 +35,28 @@ public static class PublishInvestment
         IProjectService projectService,
         IWalletOperations walletOperations,
         IPortfolioService  investmentService,
-        ILogger logger) : IRequestHandler<PublishInvestmentRequest, Result>
+        ILogger logger) : IRequestHandler<PublishInvestmentRequest, Result<PublishInvestmentResponse>>
     {
-        public async Task<Result> Handle(PublishInvestmentRequest request, CancellationToken cancellationToken)
+        public async Task<Result<PublishInvestmentResponse>> Handle(PublishInvestmentRequest request, CancellationToken cancellationToken)
         {
             var projectResult = await projectService.GetAsync(request.ProjectId);
 
             if (projectResult.IsFailure)
-                return projectResult;
+                return Result.Failure<PublishInvestmentResponse>(projectResult.Error);
 
             var portfolio = await investmentService.GetByWalletId(request.WalletId.Value);
             
             if (portfolio.IsFailure)
-                return Result.Failure(portfolio.Error);
+                return Result.Failure<PublishInvestmentResponse>(portfolio.Error);
             
             var investmentRecord = portfolio.Value.ProjectIdentifiers
                 .FirstOrDefault(x => x.ProjectIdentifier == request.ProjectId.Value);
             
             if (investmentRecord?.InvestmentTransactionHex == null || investmentRecord.RequestEventId == null || investmentRecord.RequestEventTime == null)
-                return Result.Failure("The investment transaction was not found in storage");
+                return Result.Failure<PublishInvestmentResponse>("The investment transaction was not found in storage");
 
             if (investmentRecord.InvestmentTransactionHash != request.InvestmentId)
-                return Result.Failure("Failed to find the investment transaction with the given ID");
+                return Result.Failure<PublishInvestmentResponse>("Failed to find the investment transaction with the given ID");
             
             var transactionInfo = new TransactionInfo()
             {
@@ -67,9 +69,13 @@ public static class PublishInvestment
                 projectResult.Value.NostrPubKey);
 
             if (validate.IsFailure)
-                return validate;
+                return Result.Failure<PublishInvestmentResponse>(validate.Error);
             
-            return await PublishSignedTransactionAsync(transactionInfo);
+            var publishResult = await PublishSignedTransactionAsync(transactionInfo);
+            
+            return publishResult.IsSuccess 
+                ? Result.Success(new PublishInvestmentResponse())
+                : Result.Failure<PublishInvestmentResponse>(publishResult.Error);
         }
 
 

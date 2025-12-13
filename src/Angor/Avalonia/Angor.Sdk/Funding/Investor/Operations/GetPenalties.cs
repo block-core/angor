@@ -21,7 +21,9 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 
 public class GetPenalties
 {
-    public record GetPenaltiesRequest(WalletId WalletId) : IRequest<Result<IEnumerable<PenaltiesDto>>>;
+    public record GetPenaltiesRequest(WalletId WalletId) : IRequest<Result<GetPenaltiesResponse>>;
+
+    public record GetPenaltiesResponse(IEnumerable<PenaltiesDto> Penalties);
 
     public class GetPenaltiesHandler(
         IPortfolioService investmentService,
@@ -29,16 +31,16 @@ public class GetPenalties
         IRelayService relayService,
         ITransactionService transactionService,
         IProjectInvestmentsService investmentsService)
-        : IRequestHandler<GetPenaltiesRequest, Result<IEnumerable<PenaltiesDto>>>
+        : IRequestHandler<GetPenaltiesRequest, Result<GetPenaltiesResponse>>
     {
 
-        public async Task<Result<IEnumerable<PenaltiesDto>>> Handle(GetPenaltiesRequest request,
+        public async Task<Result<GetPenaltiesResponse>> Handle(GetPenaltiesRequest request,
             CancellationToken cancellationToken)
         {
             var penaltyProjects = await FetchInvestedProjects(request.WalletId.Value);
 
             if (penaltyProjects.IsFailure)
-                return Result.Failure<IEnumerable<PenaltiesDto>>(penaltyProjects.Error);
+                return Result.Failure<GetPenaltiesResponse>(penaltyProjects.Error);
 
             var penaltyList = penaltyProjects.Value.ToList();
 
@@ -46,7 +48,7 @@ public class GetPenalties
             
             await RefreshPenalties(penaltyList);
 
-            return Result.Success(penaltyList.ToList().Select(p => new PenaltiesDto
+            var penalties = penaltyList.ToList().Select(p => new PenaltiesDto
             {
                 ProjectIdentifier = p.ProjectIdentifier,
                 InvestorPubKey = p.InvestorPubKey,
@@ -62,7 +64,9 @@ public class GetPenalties
                 // RecoveryTransactionId = p.RecoveryTransactionId,
                 // RecoveryReleaseTransactionId = p.RecoveryReleaseTransactionId,
                 // UnfundedReleaseTransactionId = p.UnfundedReleaseTransactionId,
-            }));
+            });
+            
+            return Result.Success(new GetPenaltiesResponse(penalties));
         }
 
         public async Task<Result<IEnumerable<LookupInvestment>>> FetchInvestedProjects(string walletId)
