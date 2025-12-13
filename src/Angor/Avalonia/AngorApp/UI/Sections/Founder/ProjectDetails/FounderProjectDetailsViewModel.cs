@@ -2,7 +2,8 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Angor.Sdk.Funding.Founder;
-using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Sdk.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Projects;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Claim;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
@@ -41,12 +42,12 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
         // this is an ugly hack to bypass the static object in the method signature
         var investmentRequests = Task.Run(async () => 
         {
-            var a = await founderAppService.GetInvestments(walletContext.CurrentWallet.Value.Id, projectId);
+            var a = await founderAppService.GetInvestments(new GetInvestments.GetInvestmentsRequest(walletContext.CurrentWallet.Value.Id, projectId));
             return a;
                 
         }).GetAwaiter().GetResult();
 
-        if(investmentRequests.Value.Any(_ => _.Status == InvestmentStatus.PendingFounderSignatures))
+        if(investmentRequests.Value.Investments.Any(_ => _.Status == InvestmentStatus.PendingFounderSignatures))
         {
             return new ApproveInvestmentsViewModel(projectId, founderAppService, uiServices, walletContext);
         }

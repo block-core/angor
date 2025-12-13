@@ -1,5 +1,6 @@
 using System.Reactive.Disposables;
-using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Projects.Operations;
 using AngorApp.Core.Factories;
 using AngorApp.UI.Sections.Browse.ProjectLookup;
 using Zafiro.CSharpFunctionalExtensions;
@@ -38,7 +39,8 @@ public partial class BrowseSectionViewModel : ReactiveObject, IBrowseSectionView
 
     private static Func<Task<Result<IEnumerable<IProjectViewModel>>>> GetProjects(IProjectAppService projectService, IProjectViewModelFactory projectViewModelFactory)
     {
-        return () => projectService.Latest()
+        return () => projectService.Latest(new LatestProjects.LatestProjectsRequest())
+            .Map(response => response.Projects)
             .MapEach(dto => dto.ToProject())
             .MapEach(projectViewModelFactory.Create);
     }

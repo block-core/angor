@@ -1,4 +1,4 @@
-namespace Angor.Sdk.Funding.Projects.Application.Dtos;
+namespace Angor.Sdk.Funding.Projects.Dtos;
 
 public class NextStageDto
 {

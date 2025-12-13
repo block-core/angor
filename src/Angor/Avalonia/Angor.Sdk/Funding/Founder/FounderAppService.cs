@@ -11,30 +11,21 @@ namespace Angor.Sdk.Funding.Founder;
 
 public class FounderAppService(IMediator mediator) : IFounderAppService
 {
-    public Task<Result<IEnumerable<Investment>>> GetInvestments(WalletId walletId, ProjectId projectId) => 
-        mediator.Send(new GetInvestments.GetInvestmentsRequest(walletId, projectId));
+    public Task<Result<GetInvestments.GetInvestmentsResponse>> GetInvestments(GetInvestments.GetInvestmentsRequest request) => mediator.Send(request);
 
-    public Task<Result> ApproveInvestment(WalletId walletId, ProjectId projectId, Investment investment) => 
-        mediator.Send(new ApproveInvestment.ApproveInvestmentRequest(walletId, projectId, investment));
+    public Task<Result<ApproveInvestment.ApproveInvestmentResponse>> ApproveInvestment(ApproveInvestment.ApproveInvestmentRequest request) => mediator.Send(request);
     
-    public Task<Result<TransactionDraft>> Spend(WalletId walletId, DomainFeerate fee, ProjectId projectId, IEnumerable<SpendTransactionDto> toSpend) => 
-        mediator.Send(new SpendFounderStageTransaction.SpendFounderStageTransactionRequest(walletId, projectId, new FeeEstimation { FeeRate = fee.SatsPerVByte }, toSpend));
+    public Task<Result<SpendFounderStageTransaction.SpendFounderStageTransactionResponse>> Spend(SpendFounderStageTransaction.SpendFounderStageTransactionRequest request) => mediator.Send(request);
 
-    public Task<Result<IEnumerable<ClaimableTransactionDto>>> GetClaimableTransactions(WalletId walletId, ProjectId projectId) => 
-        mediator.Send(new GetClaimableTransactions.GetClaimableTransactionsRequest(walletId, projectId));
+    public Task<Result<GetClaimableTransactions.GetClaimableTransactionsResponse>> GetClaimableTransactions(GetClaimableTransactions.GetClaimableTransactionsRequest request) => mediator.Send(request);
     
-    public Task<Result<IEnumerable<ReleaseableTransactionDto>>> GetReleasableTransactions(WalletId walletId, ProjectId projectId) => 
-        mediator.Send(new GetReleaseableTransactions.GetReleaseableTransactionsRequest(walletId, projectId));
+    public Task<Result<GetReleaseableTransactions.GetReleaseableTransactionsResponse>> GetReleasableTransactions(GetReleaseableTransactions.GetReleaseableTransactionsRequest request) => mediator.Send(request);
 
-    public Task<Result> ReleaseInvestorTransactions(WalletId walletId, ProjectId projectId, IEnumerable<string> investorAddresses) => 
-        mediator.Send(new ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest(walletId, projectId, investorAddresses));
+    public Task<Result<ReleaseInvestorTransaction.ReleaseInvestorTransactionResponse>> ReleaseInvestorTransactions(ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest request) => mediator.Send(request);
     
-    public Task<Result<ProjectSeedDto>> CreateNewProjectKeysAsync(WalletId walletId) =>
-        mediator.Send(new CreateProjectNewKeys.CreateProjectNewKeysRequest(walletId));
+    public Task<Result<CreateProjectNewKeys.CreateProjectNewKeysResponse>> CreateNewProjectKeysAsync(CreateProjectNewKeys.CreateProjectNewKeysRequest request) => mediator.Send(request);
     
-    public Task<Result<string>> SubmitTransactionFromDraft(WalletId walletId, TransactionDraft draft) => 
-        mediator.Send(new PublishFounderTransaction.PublishFounderTransactionRequest(draft));
+    public Task<Result<PublishFounderTransaction.PublishFounderTransactionResponse>> SubmitTransactionFromDraft(PublishFounderTransaction.PublishFounderTransactionRequest request) => mediator.Send(request);
 
-    public Task<Result<MoonshotProjectData>> GetMoonshotProject(string eventId) =>
-        mediator.Send(new GetMoonshotProject.GetMoonshotProjectRequest(eventId));
+    public Task<Result<GetMoonshotProject.GetMoonshotProjectResponse>> GetMoonshotProject(GetMoonshotProject.GetMoonshotProjectRequest request) => mediator.Send(request);
 }

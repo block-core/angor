@@ -3,6 +3,7 @@ using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Shared;
 using AngorApp.UI.Shared.Services;
@@ -50,8 +51,8 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
     private Task<Result<IEnumerable<IClaimableStage>>> GetClaimableStages(IWallet wallet)
     {
         return founderAppService
-            .GetClaimableTransactions(wallet.Id, projectId)
-            .Map(CreateStage);
+            .GetClaimableTransactions(new GetClaimableTransactions.GetClaimableTransactionsRequest(wallet.Id, projectId))
+            .Map(response => CreateStage(response.Transactions));
     }
 
     private IEnumerable<IClaimableStage> CreateStage(IEnumerable<ClaimableTransactionDto> claimableTransactionDto)

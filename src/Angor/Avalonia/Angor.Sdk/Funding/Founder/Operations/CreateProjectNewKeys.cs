@@ -14,21 +14,23 @@ namespace Angor.Sdk.Funding.Founder.Operations;
 
 public static class CreateProjectNewKeys
 {
-    public sealed record CreateProjectNewKeysRequest(WalletId WalletId) : IRequest<Result<ProjectSeedDto>>;
+    public sealed record CreateProjectNewKeysRequest(WalletId WalletId) : IRequest<Result<CreateProjectNewKeysResponse>>;
+
+    public sealed record CreateProjectNewKeysResponse(ProjectSeedDto ProjectSeedDto);
 
     internal sealed class FindNextAvailableProjectKeysHandler(
         IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
         IAngorIndexerService angorIndexerService,
         ILogger<FindNextAvailableProjectKeysHandler> logger)
-        : IRequestHandler<CreateProjectNewKeysRequest, Result<ProjectSeedDto>>
+        : IRequestHandler<CreateProjectNewKeysRequest, Result<CreateProjectNewKeysResponse>>
     {
-        public async Task<Result<ProjectSeedDto>> Handle(CreateProjectNewKeysRequest request, CancellationToken cancellationToken)
+        public async Task<Result<CreateProjectNewKeysResponse>> Handle(CreateProjectNewKeysRequest request, CancellationToken cancellationToken)
         {
             var storedKeysResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.ToString());
             if (storedKeysResult.IsFailure || storedKeysResult.Value is null)
             {
                 logger.LogDebug("Project keys not found for WalletId {WalletId}", request.WalletId);
-                return Result.Failure<ProjectSeedDto>("Project keys not found. Load founder projects first.");
+                return Result.Failure<CreateProjectNewKeysResponse>("Project keys not found. Load founder projects first.");
             }
 
             FounderKeys? available = null;
@@ -45,14 +47,14 @@ public static class CreateProjectNewKeys
             if (available is null)
             {
                 logger.LogDebug("No free project slot for WalletId {WalletId}", request.WalletId);
-                return Result.Failure<ProjectSeedDto>("No available project slot.");
+                return Result.Failure<CreateProjectNewKeysResponse>("No available project slot.");
             }
 
-            return Result.Success(new ProjectSeedDto(
+            return Result.Success(new CreateProjectNewKeysResponse(new ProjectSeedDto(
                 available.FounderKey,
                 available.FounderRecoveryKey,
                 available.NostrPubKey,
-                available.ProjectIdentifier));
+                available.ProjectIdentifier)));
         }
     }
 }

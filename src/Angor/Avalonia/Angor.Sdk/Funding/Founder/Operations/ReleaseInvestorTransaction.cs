@@ -1,7 +1,7 @@
 using System.Text;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Domain;
-using Angor.Sdk.Funding.Projects.Infrastructure.Impl;
+using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
@@ -17,19 +17,21 @@ namespace Angor.Sdk.Funding.Founder.Operations;
 
 public static class ReleaseInvestorTransaction
 {
-    public record ReleaseInvestorTransactionRequest(WalletId WalletId, ProjectId ProjectId, IEnumerable<string> InvestmentsEventIds) : IRequest<Result>;
+    public record ReleaseInvestorTransactionRequest(WalletId WalletId, ProjectId ProjectId, IEnumerable<string> InvestmentsEventIds) : IRequest<Result<ReleaseInvestorTransactionResponse>>;
+
+    public record ReleaseInvestorTransactionResponse();
 
     public class ReleaseInvestorTransactionHandler(ISignService signService, IProjectService projectService,
         INostrDecrypter nostrDecrypter, ISerializer serializer, IDerivationOperations derivationOperations,
         IInvestorTransactionActions investorTransactionActions, INetworkConfiguration networkConfiguration,
         IFounderTransactionActions founderTransactionActions, IEncryptionService encryptionService,
-        ISeedwordsProvider seedwordsProvider) : IRequestHandler<ReleaseInvestorTransactionRequest, Result>
+        ISeedwordsProvider seedwordsProvider) : IRequestHandler<ReleaseInvestorTransactionRequest, Result<ReleaseInvestorTransactionResponse>>
     {
-        public async Task<Result> Handle(ReleaseInvestorTransactionRequest request, CancellationToken cancellationToken)
+        public async Task<Result<ReleaseInvestorTransactionResponse>> Handle(ReleaseInvestorTransactionRequest request, CancellationToken cancellationToken)
         {
             var projectResult = await projectService.GetAsync(request.ProjectId);
             if (projectResult.IsFailure)
-                return Result.Failure(projectResult.Error);
+                return Result.Failure<ReleaseInvestorTransactionResponse>(projectResult.Error);
             
             var requests = await FetchSignatureRequestsAsync(projectResult.Value.NostrPubKey, request.InvestmentsEventIds.ToList());
 
@@ -39,7 +41,7 @@ public static class ReleaseInvestorTransaction
             
             var wordsResult = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
             if (wordsResult.IsFailure)
-                return Result.Failure(wordsResult.Error);
+                return Result.Failure<ReleaseInvestorTransactionResponse>(wordsResult.Error);
 
             var key = derivationOperations.DeriveFounderRecoveryPrivateKey(wordsResult.Value.ToWalletWords(),
                 projectResult.Value.FounderKey);
@@ -59,7 +61,9 @@ public static class ReleaseInvestorTransaction
                     failedSignatures.AppendLine(result.Error);;
             }
             
-            return failedSignatures.Length > 0 ? Result.Failure(failedSignatures.ToString()) : Result.Success();
+            return failedSignatures.Length > 0 
+                ? Result.Failure<ReleaseInvestorTransactionResponse>(failedSignatures.ToString()) 
+                : Result.Success(new ReleaseInvestorTransactionResponse());
         }
         
         

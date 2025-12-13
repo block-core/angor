@@ -1,5 +1,6 @@
 using System.Reactive.Disposables;
-using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Projects.Operations;
 using AngorApp.UI.Sections.Browse.Details;
 using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;
@@ -43,7 +44,8 @@ namespace AngorApp.UI.Sections.FindProjects
             // Ideally, the ProjectDto could have everything we need.
             // This way, a single call will be enough and the performance will increase drastically. 
             return projectAppService
-                .Latest()
+                .Latest(new LatestProjects.LatestProjectsRequest())
+                .Map(response => response.Projects)
                 .TraverseSequentially(dto => projectAppService.GetProjectStatistics(dto.Id)
                     .Map(statistics => new FindProjectItem(dto, statistics, projectAppService, detailsFactory, navigator)));
         }

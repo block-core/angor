@@ -14,7 +14,9 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 
 public static class Investments
 {
-    public record InvestmentsPortfolioRequest(WalletId WalletId) : IRequest<Result<IEnumerable<InvestedProjectDto>>>;
+    public record InvestmentsPortfolioRequest(WalletId WalletId) : IRequest<Result<InvestmentsPortfolioResponse>>;
+    
+    public record InvestmentsPortfolioResponse(IEnumerable<InvestedProjectDto> Projects);
     
     public class InvestmentsPortfolioHandler(
         IAngorIndexerService angorIndexerService,
@@ -23,18 +25,18 @@ public static class Investments
         IInvestmentHandshakeService HandshakeService,
         INetworkConfiguration networkConfiguration,
         ILogger<InvestmentsPortfolioHandler> logger
-    ) : IRequestHandler<InvestmentsPortfolioRequest,Result<IEnumerable<InvestedProjectDto>>>
+    ) : IRequestHandler<InvestmentsPortfolioRequest, Result<InvestmentsPortfolioResponse>>
     {
 
-        public async Task<Result<IEnumerable<InvestedProjectDto>>> Handle(InvestmentsPortfolioRequest request, CancellationToken cancellationToken)
+        public async Task<Result<InvestmentsPortfolioResponse>> Handle(InvestmentsPortfolioRequest request, CancellationToken cancellationToken)
         {
             var investmentRecordsLookup = await investmentService.GetByWalletId(request.WalletId.Value);
 
             if (investmentRecordsLookup.IsFailure)
-                return Result.Failure<IEnumerable<InvestedProjectDto>>("Failed to retrieve investment records: " + investmentRecordsLookup.Error);
+                return Result.Failure<InvestmentsPortfolioResponse>("Failed to retrieve investment records: " + investmentRecordsLookup.Error);
             
             if (investmentRecordsLookup.Value.ProjectIdentifiers.Count == 0)
-                return Result.Success(Enumerable.Empty<InvestedProjectDto>());
+                return Result.Success(new InvestmentsPortfolioResponse(Enumerable.Empty<InvestedProjectDto>()));
 
             var ids = investmentRecordsLookup.Value.ProjectIdentifiers
                 .Select(id => new ProjectId(id.ProjectIdentifier)).ToArray();
@@ -42,7 +44,7 @@ public static class Investments
             var lookup = await projectService.GetAllAsync(ids);
             
             if (lookup.IsFailure)
-                return Result.Failure<IEnumerable<InvestedProjectDto>>("Failed to retrieve projects: " + lookup.Error);
+                return Result.Failure<InvestmentsPortfolioResponse>("Failed to retrieve projects: " + lookup.Error);
 
             var investmentLookupTasks = lookup.Value
                 .ToList()
@@ -163,7 +165,11 @@ public static class Investments
             });
             
             var results = await Task.WhenAll(investmentLookupTasks);
-            return results.Combine();
+            var combined = results.Combine();
+            
+            return combined.IsSuccess 
+               ? Result.Success(new InvestmentsPortfolioResponse(combined.Value))
+                 : Result.Failure<InvestmentsPortfolioResponse>(combined.Error);
         }
         
         private static InvestmentStatus DetermineInvestmentStatus(InvestmentHandshake Handshake)

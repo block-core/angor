@@ -12,17 +12,19 @@ namespace Angor.Sdk.Funding.Founder.Operations;
 
 public static class GetReleaseableTransactions
 {
-    public record GetReleaseableTransactionsRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<IEnumerable<ReleaseableTransactionDto>>>;
+    public record GetReleaseableTransactionsRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<GetReleaseableTransactionsResponse>>;
+
+    public record GetReleaseableTransactionsResponse(IEnumerable<ReleaseableTransactionDto> Transactions);
 
     public class GetClaimableTransactionsHandler(ISignService signService, IProjectService projectService,
-        INostrDecrypter nostrDecrypter, ISerializer serializer) : IRequestHandler<GetReleaseableTransactionsRequest, Result<IEnumerable<ReleaseableTransactionDto>>>
+        INostrDecrypter nostrDecrypter, ISerializer serializer) : IRequestHandler<GetReleaseableTransactionsRequest, Result<GetReleaseableTransactionsResponse>>
     {
-        public async Task<Result<IEnumerable<ReleaseableTransactionDto>>> Handle(GetReleaseableTransactionsRequest request, CancellationToken cancellationToken)
+        public async Task<Result<GetReleaseableTransactionsResponse>> Handle(GetReleaseableTransactionsRequest request, CancellationToken cancellationToken)
         {
             
             var projectResult = await projectService.GetAsync(request.ProjectId);
             if (projectResult.IsFailure)
-                return Result.Failure<IEnumerable<ReleaseableTransactionDto>>(projectResult.Error);
+                return Result.Failure<GetReleaseableTransactionsResponse>(projectResult.Error);
             
             var requests = await FetchSignatureRequestsAsync(projectResult.Value.NostrPubKey);
             
@@ -42,7 +44,7 @@ public static class GetReleaseableTransactions
                 InvestmentEventId = x.SignRecoveryRequestEventId
             });
                 
-            return Result.Success(list);
+            return Result.Success(new GetReleaseableTransactionsResponse(list));
         }
         
 

@@ -11,19 +11,21 @@ namespace Angor.Sdk.Funding.Founder.Operations;
 
 public static class GetMoonshotProject
 {
-    public sealed record GetMoonshotProjectRequest(string EventId) : IRequest<Result<MoonshotProjectData>>;
+    public sealed record GetMoonshotProjectRequest(string EventId) : IRequest<Result<GetMoonshotProjectResponse>>;
+
+    public sealed record GetMoonshotProjectResponse(MoonshotProjectData MoonshotProjectData);
 
     internal sealed class GetMoonshotProjectHandler(
         INostrCommunicationFactory communicationFactory,
         INetworkService networkService,
         ILogger<GetMoonshotProjectHandler> logger)
-        : IRequestHandler<GetMoonshotProjectRequest, Result<MoonshotProjectData>>
+        : IRequestHandler<GetMoonshotProjectRequest, Result<GetMoonshotProjectResponse>>
     {
-        public async Task<Result<MoonshotProjectData>> Handle(GetMoonshotProjectRequest request, CancellationToken cancellationToken)
+        public async Task<Result<GetMoonshotProjectResponse>> Handle(GetMoonshotProjectRequest request, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(request.EventId))
             {
-                return Result.Failure<MoonshotProjectData>("Event ID cannot be empty.");
+                return Result.Failure<GetMoonshotProjectResponse>("Event ID cannot be empty.");
             }
 
             // Clean the event ID (remove any whitespace)
@@ -33,7 +35,7 @@ public static class GetMoonshotProject
             {
                 var nostrClient = communicationFactory.GetOrCreateClient(networkService);
 
-                var tcs = new TaskCompletionSource<Result<MoonshotProjectData>>();
+                var tcs = new TaskCompletionSource<Result<GetMoonshotProjectResponse>>();
                 var subscriptionId = Guid.NewGuid().ToString("N");
                 var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
 
@@ -42,7 +44,7 @@ public static class GetMoonshotProject
                 {
                     if (!tcs.Task.IsCompleted)
                     {
-                        tcs.TrySetResult(Result.Failure<MoonshotProjectData>("Timeout waiting for Nostr event."));
+                        tcs.TrySetResult(Result.Failure<GetMoonshotProjectResponse>("Timeout waiting for Nostr event."));
                     }
                 });
 
@@ -57,7 +59,7 @@ public static class GetMoonshotProject
                             {
                                 if (response.Event?.Content == null)
                                 {
-                                    tcs.TrySetResult(Result.Failure<MoonshotProjectData>("Event content is empty."));
+                                    tcs.TrySetResult(Result.Failure<GetMoonshotProjectResponse>("Event content is empty."));
                                     return;
                                 }
 
@@ -68,22 +70,22 @@ public static class GetMoonshotProject
 
                                 if (moonshotData == null)
                                 {
-                                    tcs.TrySetResult(Result.Failure<MoonshotProjectData>("Failed to parse Moonshot data."));
+                                    tcs.TrySetResult(Result.Failure<GetMoonshotProjectResponse>("Failed to parse Moonshot data."));
                                     return;
                                 }
 
-                                tcs.TrySetResult(Result.Success(moonshotData));
+                                tcs.TrySetResult(Result.Success(new GetMoonshotProjectResponse(moonshotData)));
                             }
                             catch (JsonException ex)
                             {
                                 logger.LogError(ex, "Failed to deserialize Moonshot event content");
-                                tcs.TrySetResult(Result.Failure<MoonshotProjectData>($"Failed to parse event content: {ex.Message}"));
+                                tcs.TrySetResult(Result.Failure<GetMoonshotProjectResponse>($"Failed to parse event content: {ex.Message}"));
                             }
                         },
                         ex =>
                         {
                             logger.LogError(ex, "Error receiving Nostr event");
-                            tcs.TrySetResult(Result.Failure<MoonshotProjectData>($"Error receiving event: {ex.Message}"));
+                            tcs.TrySetResult(Result.Failure<GetMoonshotProjectResponse>($"Error receiving event: {ex.Message}"));
                         });
 
                 // Subscribe to EOSE to know when no more events will come
@@ -97,7 +99,7 @@ public static class GetMoonshotProject
                         {
                             if (!tcs.Task.IsCompleted)
                             {
-                                tcs.TrySetResult(Result.Failure<MoonshotProjectData>($"Event not found with ID: {eventId}"));
+                                tcs.TrySetResult(Result.Failure<GetMoonshotProjectResponse>($"Event not found with ID: {eventId}"));
                             }
                         });
                     });
@@ -126,7 +128,7 @@ public static class GetMoonshotProject
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to fetch Moonshot project with event ID: {EventId}", eventId);
-                return Result.Failure<MoonshotProjectData>($"Failed to fetch Moonshot project: {ex.Message}");
+                return Result.Failure<GetMoonshotProjectResponse>($"Failed to fetch Moonshot project: {ex.Message}");
             }
         }
     }

@@ -1,5 +1,6 @@
 using System.Reactive.Disposables;
 using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Funding.Shared.TransactionDrafts;
 using AngorApp.Core;
@@ -37,9 +38,9 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
     private Task<Result<RecoveryStateViewModel>> GetRecoveryStateViewModel(IWallet wallet, SharedCommands sharedCommands)
     {
         return investmentAppService
-            .GetInvestorProjectRecovery(wallet.Id, projectId)
-            .Map(dto => new RecoveryStateViewModel(wallet.Id, dto, sharedCommands, investmentAppService, uiServices));
-    }
+       .GetInvestorProjectRecovery(new GetInvestorProjectRecovery.GetInvestorProjectRecoveryRequest(wallet.Id, projectId))
+            .Map(response => new RecoveryStateViewModel(wallet.Id, response.RecoveryData, sharedCommands, investmentAppService, uiServices));
+  }
 
     public IEnhancedCommand ViewTransaction { get; }
     public IEnhancedCommand<Result<RecoveryStateViewModel>> Load { get; }

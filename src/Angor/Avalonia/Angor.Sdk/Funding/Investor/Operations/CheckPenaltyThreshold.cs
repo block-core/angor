@@ -1,5 +1,5 @@
+using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Domain;
-using Angor.Sdk.Funding.Projects.Infrastructure.Impl;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Protocol;
@@ -10,14 +10,16 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 
 public static class CheckPenaltyThreshold
 {
-    public record CheckPenaltyThresholdRequest(ProjectId ProjectId, Amount Amount) : IRequest<Result<bool>>;
+    public record CheckPenaltyThresholdRequest(ProjectId ProjectId, Amount Amount) : IRequest<Result<CheckPenaltyThresholdResponse>>;
+
+    public record CheckPenaltyThresholdResponse(bool IsAboveThreshold);
 
     public class CheckPenaltyThresholdHandler(
         IProjectService projectService,
         IInvestorTransactionActions investorTransactionActions) 
-        : IRequestHandler<CheckPenaltyThresholdRequest, Result<bool>>
+        : IRequestHandler<CheckPenaltyThresholdRequest, Result<CheckPenaltyThresholdResponse>>
     {
-        public async Task<Result<bool>> Handle(CheckPenaltyThresholdRequest request, CancellationToken cancellationToken)
+        public async Task<Result<CheckPenaltyThresholdResponse>> Handle(CheckPenaltyThresholdRequest request, CancellationToken cancellationToken)
         {
             try
             {
@@ -25,7 +27,7 @@ public static class CheckPenaltyThreshold
                 var projectResult = await projectService.GetAsync(request.ProjectId);
                 if (projectResult.IsFailure)
                 {
-                    return Result.Failure<bool>(projectResult.Error);
+                    return Result.Failure<CheckPenaltyThresholdResponse>(projectResult.Error);
                 }
 
                 var projectInfo = projectResult.Value.ToProjectInfo();
@@ -35,11 +37,11 @@ public static class CheckPenaltyThreshold
                     projectInfo, 
                     request.Amount.Sats);
 
-                return Result.Success(isAboveThreshold);
+                return Result.Success(new CheckPenaltyThresholdResponse(isAboveThreshold));
             }
             catch (Exception ex)
             {
-                return Result.Failure<bool>($"Error checking penalty threshold: {ex.Message}");
+                return Result.Failure<CheckPenaltyThresholdResponse>($"Error checking penalty threshold: {ex.Message}");
             }
         }
     }

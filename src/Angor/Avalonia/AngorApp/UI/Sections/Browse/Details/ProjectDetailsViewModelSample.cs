@@ -1,4 +1,4 @@
-using Angor.Sdk.Funding.Projects.Application.Dtos;
+using Angor.Sdk.Funding.Projects.Dtos;
 using AngorApp.Model.Projects;
 using AngorApp.UI.Shared.Controls.Common.FoundedProjectOptions;
 

@@ -1,5 +1,6 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor.Dtos;
+using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Funding.Shared.TransactionDrafts;
@@ -9,20 +10,20 @@ namespace Angor.Sdk.Funding.Investor;
 
 public interface IInvestmentAppService
 {
-    Task<Result<InvestmentDraft>> CreateInvestmentDraft(WalletId sourceWalletId, ProjectId projectId, Amount amount, DomainFeerate feerate, byte? patternIndex = null, DateTime? investmentStartDate = null);
-    Task<Result<Guid>> SubmitInvestment(WalletId sourceWalletId, ProjectId projectId, InvestmentDraft draft);
-    Task<Result> CancelInvestment(WalletId sourceWalletId, ProjectId projectId, string investmentId);
-    Task<Result<IEnumerable<InvestedProjectDto>>> GetInvestorProjects(WalletId walletId);
-    Task<Result> ConfirmInvestment(string investmentId, WalletId walletId, ProjectId projectId);
-    Task<Result<IEnumerable<PenaltiesDto>>> GetPenalties(WalletId walletId);
+    Task<Result<CreateInvestment.CreateInvestmentTransactionResponse>> CreateInvestmentDraft(CreateInvestment.CreateInvestmentTransactionRequest request);
+    Task<Result<RequestInvestmentSignatures.RequestFounderSignaturesResponse>> SubmitInvestment(RequestInvestmentSignatures.RequestFounderSignaturesRequest request);
+    Task<Result<CancelInvestmentSignatures.CancelInvestmentSignaturesResponse>> CancelInvestment(CancelInvestmentSignatures.CancelInvestmentSignaturesRequest request);
+    Task<Result<Investments.InvestmentsPortfolioResponse>> GetInvestorProjects(Investments.InvestmentsPortfolioRequest request);
+    Task<Result<PublishInvestment.PublishInvestmentResponse>> ConfirmInvestment(PublishInvestment.PublishInvestmentRequest request);
+    Task<Result<GetPenalties.GetPenaltiesResponse>> GetPenalties(GetPenalties.GetPenaltiesRequest request);
 
     // Methods for Investor - Manage funds
-    Task<Result<InvestorProjectRecoveryDto>> GetInvestorProjectRecovery(WalletId walletId, ProjectId projectId);
-    Task<Result<RecoveryTransactionDraft>> BuildRecoverInvestorFunds(WalletId walletId, ProjectId projectId, DomainFeerate feerate);
-    Task<Result<ReleaseTransactionDraft>> BuildReleaseInvestorFunds(WalletId walletId, ProjectId projectId, DomainFeerate feerate);
-    Task<Result<EndOfProjectTransactionDraft>> BuildClaimInvestorEndOfProjectFunds(WalletId walletId, ProjectId projectId, DomainFeerate feerate);
+    Task<Result<GetInvestorProjectRecovery.GetInvestorProjectRecoveryResponse>> GetInvestorProjectRecovery(GetInvestorProjectRecovery.GetInvestorProjectRecoveryRequest request);
+    Task<Result<RecoverFunds.RecoverFundsResponse>> BuildRecoverInvestorFunds(RecoverFunds.RecoverFundsRequest request);
+    Task<Result<ReleaseFunds.ReleaseFundsResponse>> BuildReleaseInvestorFunds(ReleaseFunds.ReleaseFundsRequest request);
+    Task<Result<ClaimEndOfProject.ClaimEndOfProjectResponse>> BuildClaimInvestorEndOfProjectFunds(ClaimEndOfProject.ClaimEndOfProjectRequest request);
 
-    Task<Result<string>> SubmitTransactionFromDraft(WalletId walletId, ProjectId projectId, TransactionDraft draft);
+    Task<Result<PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionResponse>> SubmitTransactionFromDraft(PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest request);
 
-    Task<Result<bool>> IsInvestmentAbovePenaltyThreshold(ProjectId projectId, Amount amount);
+    Task<Result<CheckPenaltyThreshold.CheckPenaltyThresholdResponse>> IsInvestmentAbovePenaltyThreshold(CheckPenaltyThreshold.CheckPenaltyThresholdRequest request);
 }

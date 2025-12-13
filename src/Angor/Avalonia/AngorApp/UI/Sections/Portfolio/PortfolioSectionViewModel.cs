@@ -2,6 +2,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Windows.Input;
 using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Operations;
 using AngorApp.Core;
 using AngorApp.UI.Sections.Portfolio.Items;
 using AngorApp.UI.Sections.Portfolio.Penalties;
@@ -47,9 +48,10 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
 
     private static Task<Result<ICollection<IPortfolioProjectViewModel>>> GetInvestedProjects(IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator, IWalletContext walletContext, IWallet wallet, SharedCommands sharedCommands)
     {
-        return investmentAppService.GetInvestorProjects(wallet.Id)
-            .MapEach(IPortfolioProjectViewModel (dto) => new PortfolioProjectViewModel(dto, investmentAppService, uiServices, navigator, walletContext, sharedCommands))
-            .Map<IEnumerable<IPortfolioProjectViewModel>, ICollection<IPortfolioProjectViewModel>>(models => models.ToList());
+        return investmentAppService.GetInvestorProjects(new Investments.InvestmentsPortfolioRequest(wallet.Id))
+    .Map(response => response.Projects)
+       .MapEach(IPortfolioProjectViewModel (dto) => new PortfolioProjectViewModel(dto, investmentAppService, uiServices, navigator, walletContext, sharedCommands))
+   .Map<IEnumerable<IPortfolioProjectViewModel>, ICollection<IPortfolioProjectViewModel>>(models => models.ToList());
     }
 
     public IEnhancedCommand<Result<ICollection<IPortfolioProjectViewModel>>> LoadPortfolio { get; }

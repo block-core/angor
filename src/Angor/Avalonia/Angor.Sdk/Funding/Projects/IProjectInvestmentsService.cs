@@ -3,7 +3,7 @@ using Angor.Shared.Models;
 using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
+namespace Angor.Sdk.Funding.Projects;
 
 public interface IProjectInvestmentsService
 {

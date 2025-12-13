@@ -1,5 +1,5 @@
 using Angor.Sdk.Funding.Founder;
-using Angor.Sdk.Funding.Projects.Infrastructure.Impl;
+using Angor.Sdk.Funding.Investor;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.UI.Sections.Portfolio;

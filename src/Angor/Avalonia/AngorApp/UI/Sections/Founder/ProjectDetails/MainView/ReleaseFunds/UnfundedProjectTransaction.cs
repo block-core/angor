@@ -1,6 +1,7 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Shared;
 using AngorApp.UI.Shared.Services;
@@ -18,13 +19,19 @@ public class UnfundedProjectTransaction : IUnfundedProjectTransaction
         Approved = dto.Approved;
         InvestmentEventId = dto.InvestmentEventId;
 
-        Release = ReactiveCommand.CreateFromTask(() => UserFlow.PromptAndNotify(() => founderAppService.ReleaseInvestorTransactions(new WalletId(walletId), projectId, [InvestmentEventId]), uiServices,
-                "Are you sure you want to release these funds?",
-                "Confirm Release",
-                "Success fully released",
-                "Released",
-                e => $"Cannot release the funds {e}"))
-            .Enhance();
+        Release = ReactiveCommand.CreateFromTask(() => UserFlow.PromptAndNotify(
+        async () =>
+          {
+              var result = await founderAppService.ReleaseInvestorTransactions(new ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest(new WalletId(walletId), projectId, [InvestmentEventId]));
+              return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
+          },
+        uiServices,
+        "Are you sure you want to release these funds?",
+        "Confirm Release",
+        "Success fully released",
+        "Released",
+        e => $"Cannot release the funds {e}"))
+        .Enhance();
     }
 
     public DateTime Arrived { get; }

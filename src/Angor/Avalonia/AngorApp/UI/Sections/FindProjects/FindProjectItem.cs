@@ -1,5 +1,5 @@
-using Angor.Sdk.Funding.Projects.Application.Dtos;
-using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Shared;
 using AngorApp.UI.Sections.Browse.Details;
 using Zafiro.UI.Navigation;
