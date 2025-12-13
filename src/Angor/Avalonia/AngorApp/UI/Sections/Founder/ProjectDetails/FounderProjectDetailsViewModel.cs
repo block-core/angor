@@ -3,7 +3,7 @@ using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Operations;
-using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Sdk.Funding.Projects;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Claim;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;

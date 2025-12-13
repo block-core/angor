@@ -1,6 +1,5 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Dtos;
-using Angor.Sdk.Funding.Projects.Application.Dtos;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
@@ -14,6 +13,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Messages.Metadata;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectInfo;
+using Angor.Sdk.Funding.Projects.Dtos;
 
 namespace Angor.Sdk.Funding.Founder.Operations;
 

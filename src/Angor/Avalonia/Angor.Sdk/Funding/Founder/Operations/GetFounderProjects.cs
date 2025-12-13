@@ -1,11 +1,11 @@
 using Angor.Sdk.Common;
-using Angor.Sdk.Funding.Projects.Application.Dtos;
-using Angor.Sdk.Funding.Projects.Infrastructure.Impl;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Projects.Dtos;
 
 namespace Angor.Sdk.Funding.Founder.Operations;
 

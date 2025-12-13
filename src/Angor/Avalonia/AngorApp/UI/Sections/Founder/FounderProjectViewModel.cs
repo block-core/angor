@@ -1,7 +1,7 @@
-using Angor.Sdk.Funding.Projects.Application.Dtos;
 using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 using AngorApp.UI.Sections.Founder.ProjectDetails;
 using Zafiro.UI.Navigation;
+using Angor.Sdk.Funding.Projects.Dtos;
 
 namespace AngorApp.UI.Sections.Founder;
 

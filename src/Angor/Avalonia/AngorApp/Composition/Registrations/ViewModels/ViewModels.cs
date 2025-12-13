@@ -1,4 +1,3 @@
-using Angor.Sdk.Funding.Projects.Application.Dtos;
 using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 using AngorApp.Core.Factories;
 using AngorApp.UI.Sections.Browse;
@@ -16,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using IWalletSectionViewModel = AngorApp.UI.Sections.Wallet.Main.IWalletSectionViewModel;
 using ShellViewModel = AngorApp.UI.Shell.ShellViewModel;
 using WalletSectionViewModel = AngorApp.UI.Sections.Wallet.Main.WalletSectionViewModel;
+using Angor.Sdk.Funding.Projects.Dtos;
 
 namespace AngorApp.Composition.Registrations.ViewModels;
 

@@ -1,5 +1,4 @@
 using Angor.Sdk.Funding.Investor.Operations;
-using Angor.Sdk.Funding.Projects.Infrastructure.Impl;
 using CSharpFunctionalExtensions;
 
 namespace Angor.Sdk.Funding.Investor.Domain;

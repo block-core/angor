@@ -1,9 +1,10 @@
-using Angor.Sdk.Funding.Projects.Application.Dtos;
+using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Shared.Models;
 using Stage = Angor.Shared.Models.Stage;
 
-namespace Angor.Sdk.Funding.Projects.Infrastructure.Impl;
+namespace Angor.Sdk.Funding.Projects;
 
 public static class ProjectExtensions
 {

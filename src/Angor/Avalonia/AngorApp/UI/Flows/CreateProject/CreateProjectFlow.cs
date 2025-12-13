@@ -2,7 +2,7 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Founder.Operations;
-using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
+using Angor.Sdk.Funding.Projects;
 using AngorApp.Core;
 using AngorApp.UI.Sections.Founder.CreateProject;
 using AngorApp.UI.Sections.Founder.CreateProject.ProjectCreated;

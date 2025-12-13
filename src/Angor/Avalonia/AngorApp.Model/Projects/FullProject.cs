@@ -1,9 +1,9 @@
-using Angor.Sdk.Funding.Projects.Application.Dtos;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
 using Zafiro.Avalonia.Controls;
 using AngorApp.Model.Amounts;
+using Angor.Sdk.Funding.Projects.Dtos;
 
 namespace AngorApp.Model.Projects;
 

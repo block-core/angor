@@ -1,7 +1,7 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Dtos;
-using Angor.Sdk.Funding.Projects.Application.Dtos;
 using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;

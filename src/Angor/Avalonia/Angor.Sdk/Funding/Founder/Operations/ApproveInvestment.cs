@@ -1,5 +1,5 @@
 using Angor.Sdk.Common;
-using Angor.Sdk.Funding.Projects.Infrastructure.Impl;
+using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;

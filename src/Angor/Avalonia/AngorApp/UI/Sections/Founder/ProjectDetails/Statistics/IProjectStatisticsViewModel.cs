@@ -1,4 +1,4 @@
-using Angor.Sdk.Funding.Projects.Application.Dtos;
+using Angor.Sdk.Funding.Projects.Dtos;
 
 namespace AngorApp.UI.Sections.Founder.ProjectDetails.Statistics;
 

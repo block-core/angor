@@ -1,22 +1,23 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Founder.Operations;
-using Angor.Sdk.Funding.Projects.Application.Dtos;
 using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Sdk.Funding.Projects.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectInfo;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectProfile;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectConstants.CreateProject;
+using Angor.Sdk.Funding.Projects.Dtos;
 
-namespace Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
+namespace Angor.Sdk.Funding.Projects;
 
 public interface IProjectAppService
 {
-    Task<Result<IEnumerable<ProjectDto>>> Latest();
-    Task<Result<Maybe<ProjectDto>>> TryGet(ProjectId projectId);
-    Task<Result<ProjectDto>> Get(ProjectId projectId);
+    Task<Result<LatestProjects.LatestProjectsResponse>> Latest(LatestProjects.LatestProjectsRequest request);
+    Task<Result<TryGetProject.TryGetProjectResponse>> TryGet(TryGetProject.TryGetProjectRequest request);
+    Task<Result<GetProject.GetProjectResponse>> Get(GetProject.GetProjectRequest request);
     Task<Result<GetFounderProjects.GetFounderProjectsResponse>> GetFounderProjects(WalletId walletId);
     Task<Result<CreateProjectProfileResponse>> CreateProjectProfile(WalletId walletId, ProjectSeedDto projectSeedDto, CreateProjectDto project);
     Task<Result<CreateProjectInfoResponse>> CreateProjectInfo(WalletId walletId, CreateProjectDto project, ProjectSeedDto projectSeedDto);
