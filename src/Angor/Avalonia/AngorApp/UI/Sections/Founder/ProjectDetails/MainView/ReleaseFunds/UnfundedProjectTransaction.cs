@@ -1,6 +1,7 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Shared;
 using AngorApp.UI.Shared.Services;
@@ -21,7 +22,7 @@ public class UnfundedProjectTransaction : IUnfundedProjectTransaction
         Release = ReactiveCommand.CreateFromTask(() => UserFlow.PromptAndNotify(
         async () =>
           {
-              var result = await founderAppService.ReleaseInvestorTransactions(new WalletId(walletId), projectId, [InvestmentEventId]);
+              var result = await founderAppService.ReleaseInvestorTransactions(new ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest(new WalletId(walletId), projectId, [InvestmentEventId]));
               return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
           },
         uiServices,

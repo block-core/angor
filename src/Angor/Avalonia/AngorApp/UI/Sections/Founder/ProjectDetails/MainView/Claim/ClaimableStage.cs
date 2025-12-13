@@ -1,6 +1,8 @@
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Shared;
+using Angor.Shared.Models;
 using AngorApp.UI.TransactionDrafts;
 using AngorApp.UI.TransactionDrafts.DraftTypes;
 using AngorApp.UI.TransactionDrafts.DraftTypes.Base;
@@ -56,12 +58,16 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
           feerate =>
           {
-              return founderAppService.Spend(wallet.Value.Id, new DomainFeerate(feerate), projectId, toSpend)
+              return founderAppService.Spend(new SpendFounderStageTransaction.SpendFounderStageTransactionRequest(
+                 wallet.Value.Id, 
+                projectId, 
+               new FeeEstimation { FeeRate = feerate }, 
+               toSpend))
                 .Map(ITransactionDraftViewModel (response) => new TransactionDraftViewModel(response.TransactionDraft, uiServices));
           },
           model =>
           {
-              return founderAppService.SubmitTransactionFromDraft(wallet.Value.Id, model.Model)
+              return founderAppService.SubmitTransactionFromDraft(new PublishFounderTransaction.PublishFounderTransactionRequest(model.Model))
                .Tap(_ => uiServices.Dialog.ShowOk("Success", "Founder claim transaction submitted successfully"))
                .Map(_ => Guid.Empty);
           },

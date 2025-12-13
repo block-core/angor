@@ -1,6 +1,7 @@
 using System.Reactive.Disposables;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder.Operations;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 
@@ -56,7 +57,7 @@ public partial class ImportFromMoonshotViewModel : ReactiveValidationObject, IIm
 
         try
         {
-            var result = await _founderAppService.GetMoonshotProject(EventId.Trim());
+            var result = await _founderAppService.GetMoonshotProject(new GetMoonshotProject.GetMoonshotProjectRequest(EventId.Trim()));
 
             if (result.IsFailure)
             {

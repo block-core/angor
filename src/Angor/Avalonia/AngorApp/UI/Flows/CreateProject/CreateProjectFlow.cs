@@ -1,6 +1,7 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.Core;
 using AngorApp.UI.Sections.Founder.CreateProject;
@@ -44,7 +45,7 @@ public class CreateProjectFlow(
 
     private async Task<Result<ProjectSeedDto>> GetProjectSeed(WalletId walletId)
     {
-        var result = await founderAppService.CreateNewProjectKeysAsync(walletId);
+        var result = await founderAppService.CreateNewProjectKeysAsync(new CreateProjectNewKeys.CreateProjectNewKeysRequest(walletId));
         return result.Map(response => response.ProjectSeedDto);
     }
 }

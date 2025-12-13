@@ -2,6 +2,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Claim;
@@ -41,7 +42,7 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
         // this is an ugly hack to bypass the static object in the method signature
         var investmentRequests = Task.Run(async () => 
         {
-            var a = await founderAppService.GetInvestments(walletContext.CurrentWallet.Value.Id, projectId);
+            var a = await founderAppService.GetInvestments(new GetInvestments.GetInvestmentsRequest(walletContext.CurrentWallet.Value.Id, projectId));
             return a;
                 
         }).GetAwaiter().GetResult();

@@ -1,5 +1,6 @@
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Shared.Models;
 using AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
@@ -80,7 +81,7 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
     {
         var dto = this.ToDto();
         string? transactionId = null;
-        string? projectInfoEventId = null;
+  string? projectInfoEventId = null;
 
         // Step 1: Create Nostr Profile
         uiServices.Dialog.ShowMessage($"create project profile", $"create project profile");
@@ -89,9 +90,9 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
 
         if (profileResult.IsFailure)
         {
-            logger.LogError("[CreateProject] Failed to create Nostr profile: {Error}", profileResult.Error);
-            uiServices.NotificationService.Show($"Failed to create project profile: {profileResult.Error}", "Profile Creation Failed");
-            return Result.Failure<string>(profileResult.Error);
+       logger.LogError("[CreateProject] Failed to create Nostr profile: {Error}", profileResult.Error);
+     uiServices.NotificationService.Show($"Failed to create project profile: {profileResult.Error}", "Profile Creation Failed");
+      return Result.Failure<string>(profileResult.Error);
         }
 
         logger.LogInformation("[CreateProject] Nostr profile created successfully. Event ID: {EventId}", profileResult.Value);
@@ -99,13 +100,13 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         // Step 2: Create Project Info on Nostr
         uiServices.Dialog.ShowMessage($"create project info", $"create project info");
         logger.LogInformation("[CreateProject] Step 2: Creating project info on Nostr for project {ProjectName}", dto.ProjectName);
-        var projectInfoResult = await projectAppService.CreateProjectInfo(wallet.Id, dto, projectSeed);
+var projectInfoResult = await projectAppService.CreateProjectInfo(wallet.Id, dto, projectSeed);
 
         if (projectInfoResult.IsFailure)
         {
-            logger.LogError("[CreateProject] Failed to create project info: {Error}", projectInfoResult.Error);
+      logger.LogError("[CreateProject] Failed to create project info: {Error}", projectInfoResult.Error);
             uiServices.NotificationService.Show($"Failed to create project info: {projectInfoResult.Error}", "Project Info Creation Failed");
-            return Result.Failure<string>(projectInfoResult.Error);
+   return Result.Failure<string>(projectInfoResult.Error);
         }
 
         projectInfoEventId = projectInfoResult.Value.EventId;
@@ -115,34 +116,34 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         logger.LogInformation("[CreateProject] Step 3: Creating blockchain transaction for project {ProjectName}", dto.ProjectName);
 
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
-async feerate =>
-           {
-        var result = await projectAppService.CreateProject(wallet.Id, feerate, dto, projectInfoEventId, projectSeed);
-       return result.Map(response =>
-           {
+         async feerate =>
+       {
+    var result = await projectAppService.CreateProject(wallet.Id, feerate, dto, projectInfoEventId, projectSeed);
+        return result.Map(response =>
+                {
   transactionId = response.TransactionDraft.TransactionId;
-     ITransactionDraftViewModel viewModel = new TransactionDraftViewModel(response.TransactionDraft, uiServices);
-             return viewModel;
-          });
- },
-   model =>
-          {
-      // Use FounderAppService to publish the transaction
-   return founderAppService.SubmitTransactionFromDraft(wallet.Id, model.Model)
-      .Tap(response =>
+            ITransactionDraftViewModel viewModel = new TransactionDraftViewModel(response.TransactionDraft, uiServices);
+  return viewModel;
+    });
+   },
+        model =>
  {
-       transactionId = response.TransactionId;
-    uiServices.NotificationService.Show("Project created successfully!", "Success");
-   logger.LogInformation("[CreateProject] Project created successfully: {TransactionId}", response.TransactionId);
- })
-          .Map(_ => Guid.Empty); // Convert string result to Guid for the previewer
-          },
-          uiServices);
+                // Use FounderAppService to publish the transaction
+  return founderAppService.SubmitTransactionFromDraft(new PublishFounderTransaction.PublishFounderTransactionRequest(model.Model))
+      .Tap(response =>
+    {
+          transactionId = response.TransactionId;
+         uiServices.NotificationService.Show("Project created successfully!", "Success");
+    logger.LogInformation("[CreateProject] Project created successfully: {TransactionId}", response.TransactionId);
+          })
+ .Map(_ => Guid.Empty); // Convert string result to Guid for the previewer
+    },
+uiServices);
 
         var dialogRes = await uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Review Project Creation", s => s.CommitDraft.Enhance("Create Project"));
 
         return dialogRes.HasValue
-            ? Result.Success(transactionId ?? "Unknown")
+        ? Result.Success(transactionId ?? "Unknown")
             : Result.Failure<string>("Project creation was canceled");
     }
 
