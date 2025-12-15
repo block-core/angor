@@ -31,13 +31,16 @@ jobs:
             nuget-${{ runner.os }}-
       
       - name: Restore dependencies
-        run: dotnet restore ${{ env.SOLUTION_PATH }}
+        working-directory: ${{ env.AVALONIA_DIR }}
+        run: dotnet restore Angor.Avalonia.sln
       
       - name: Build
-        run: dotnet build ${{ env.SOLUTION_PATH }} --no-restore -c Release
+        working-directory: ${{ env.AVALONIA_DIR }}
+        run: dotnet build Angor.Avalonia.sln --no-restore -c Release
       
       - name: Test
-        run: dotnet test ${{ env.SOLUTION_PATH }} --no-build -c Release --verbosity normal --collect:"XPlat Code Coverage"
+        working-directory: ${{ env.AVALONIA_DIR }}
+        run: dotnet test Angor.Avalonia.sln --no-build -c Release --verbosity normal --collect:"XPlat Code Coverage"
       
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
