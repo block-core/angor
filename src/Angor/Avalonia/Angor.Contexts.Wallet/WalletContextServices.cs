@@ -49,9 +49,7 @@ public static class WalletContextServices
     
     private static void RegisterLogger(ServiceCollection services, ILogger logger)
     {
-        var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        services.TryAddSingleton(loggerFactory);
-        services.AddLogging(builder => builder.AddSerilog());
+        services.TryAddSingleton<ILoggerFactory>(sp => LoggerFactory.Create(builder => builder.AddSerilog(logger)));
         services.TryAddSingleton(logger);
     }
 }
