@@ -14,9 +14,10 @@ on:
 env:
   DOTNET_VERSION_APP: '9.0.x'
   DOTNET_VERSION_TOOL: '10.0.x'
-  SOLUTION_PATH: 'Angor.Avalonia.sln'
-  DESKTOP_PROJECT: 'AngorApp.Desktop/AngorApp.Desktop.csproj'
-  ANDROID_PROJECT: 'AngorApp.Android/AngorApp.Android.csproj'
+  SOLUTION_PATH: 'src/Angor/Avalonia/Angor.Avalonia.sln'
+  AVALONIA_DIR: 'src/Angor/Avalonia'
+  DESKTOP_PROJECT: 'src/Angor/Avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj'
+  ANDROID_PROJECT: 'src/Angor/Avalonia/AngorApp.Android/AngorApp.Android.csproj'
   APP_NAME: 'Angor'
   APP_ID: 'io.blockcore.angor'
   VENDOR: 'Blockcore'

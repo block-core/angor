@@ -8,7 +8,8 @@ on:
 
 env:
   DOTNET_VERSION: '9.0.x'
-  SOLUTION_PATH: 'Angor.Avalonia.sln'
+  SOLUTION_PATH: 'src/Angor/Avalonia/Angor.Avalonia.sln'
+  AVALONIA_DIR: 'src/Angor/Avalonia'
 
 jobs:
   build-and-test:
@@ -66,6 +67,7 @@ jobs:
             nuget-${{ runner.os }}-
       
       - name: Publish Desktop (Linux x64)
+        working-directory: ${{ env.AVALONIA_DIR }}
         run: |
           dotnet publish AngorApp.Desktop/AngorApp.Desktop.csproj \
             -c Release \
@@ -97,6 +99,7 @@ jobs:
             nuget-${{ runner.os }}-
       
       - name: Build Android (unsigned)
+        working-directory: ${{ env.AVALONIA_DIR }}
         run: |
           dotnet build AngorApp.Android/AngorApp.Android.csproj \
             -c Release \
