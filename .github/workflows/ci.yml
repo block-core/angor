@@ -42,9 +42,12 @@ jobs:
         working-directory: ${{ env.AVALONIA_DIR }}
         run: dotnet build AngorApp.Desktop/AngorApp.Desktop.csproj --no-restore -c Release
       
-      - name: Test
+      - name: Test Angor.Sdk.Tests
         working-directory: ${{ env.AVALONIA_DIR }}
         run: dotnet test Angor.Sdk.Tests/Angor.Sdk.Tests.csproj -c Release --verbosity normal --collect:"XPlat Code Coverage"
+      
+      - name: Test Angor.Test
+        run: dotnet test src/Angor.Test/Angor.Test.csproj -c Release --verbosity normal --collect:"XPlat Code Coverage"
       
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
