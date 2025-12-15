@@ -149,6 +149,12 @@ public class ProjectService(
         return GetProjects(() => Result.Try(() => angorIndexerService.GetProjectsAsync(null, 20)).Map(list => list.AsEnumerable()));
     }
 
+    public Task<Result<IEnumerable<Project>>> LatestFromNostrAsync()
+    {
+     // This class is obsolete - use DocumentProjectService instead
+        throw new NotSupportedException("This class is obsolete. Use DocumentProjectService for LatestFromNostrAsync functionality.");
+    }
+
     public Task<Result<Maybe<Project>>> TryGet(ProjectId projectId)
     {
         return GetSingle(projectId);

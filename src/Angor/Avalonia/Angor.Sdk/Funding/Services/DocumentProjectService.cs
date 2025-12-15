@@ -10,10 +10,11 @@ using Stage = Angor.Sdk.Funding.Projects.Domain.Stage;
 
 namespace Angor.Sdk.Funding.Services;
 
-public class DocumentProjectService(IGenericDocumentCollection<Project> collection, IRelayService relayService,
+public class DocumentProjectService(
+  IGenericDocumentCollection<Project> collection,
+    IRelayService relayService,
     IAngorIndexerService angorIndexerService) : IProjectService
 {
-
     public Task<Result<Project>> GetAsync(ProjectId id)
     {
         return TryGetAsync(id).Bind(maybe => maybe.ToResult($"Project with id {id} not found"));
@@ -130,6 +131,80 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
         return await GetAllAsync(projectIds);
     }
 
+    public async Task<Result<IEnumerable<Project>>> LatestFromNostrAsync()
+    {
+        // Step 1: Query Nostr relays for the latest 30 kind 3030 events
+        var nostrProjectsResult = await QueryLatestNostrProjectEventsAsync(30);
+        if (nostrProjectsResult.IsFailure)
+            return Result.Failure<IEnumerable<Project>>(nostrProjectsResult.Error);
+
+        var nostrProjects = nostrProjectsResult.Value.ToList();
+        if (!nostrProjects.Any())
+            return Result.Failure<IEnumerable<Project>>("No projects found in Nostr relays");
+
+        // Step 2: Validate each project exists on-chain sequentially
+        var validatedProjectIds = new List<ProjectId>();
+        foreach (var projectInfo in nostrProjects)
+        {
+            if (string.IsNullOrEmpty(projectInfo.ProjectIdentifier))
+                continue;
+
+            try
+            {
+                var indexerData = await angorIndexerService.GetProjectByIdAsync(projectInfo.ProjectIdentifier);
+                if (indexerData != null)
+                {
+                    validatedProjectIds.Add(new ProjectId(projectInfo.ProjectIdentifier));
+                }
+                // Projects not found on-chain are silently filtered out (potential spam)
+            }
+            catch
+            {
+                // Skip projects that fail validation
+            }
+        }
+
+        if (!validatedProjectIds.Any())
+            return Result.Failure<IEnumerable<Project>>("No valid on-chain projects found from Nostr events");
+
+        // Step 3: Use existing GetAllAsync to fetch full project data with caching
+        return await GetAllAsync(validatedProjectIds.ToArray());
+    }
+
+    private Task<Result<IEnumerable<ProjectInfo>>> QueryLatestNostrProjectEventsAsync(int limit)
+    {
+        return Task.Run(async () =>
+              {
+                  using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                  var tcs = new TaskCompletionSource<List<ProjectInfo>>();
+                  var results = new List<ProjectInfo>();
+                  var processedProjectIds = new HashSet<string>();
+
+                  void OnNext(ProjectInfo info)
+                  {
+                      // Deduplicate by project identifier
+                      if (!string.IsNullOrEmpty(info.ProjectIdentifier) && processedProjectIds.Add(info.ProjectIdentifier))
+                      {
+                          results.Add(info);
+                      }
+                  }
+
+                  void OnCompleted() => tcs.TrySetResult(results);
+
+                  relayService.LookupLatestProjects<ProjectInfo>(OnNext, OnCompleted, limit);
+
+                  // Race between completion and timeout
+                  var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(10), cts.Token));
+
+                  if (completedTask == tcs.Task)
+                      return Result.Success(results.AsEnumerable());
+
+                  // On timeout, return whatever we collected
+                  return results.Any()
+                        ? Result.Success(results.AsEnumerable())
+                        : Result.Failure<IEnumerable<ProjectInfo>>("Timeout waiting for Nostr project events");
+              });
+    }
 
     private Uri? TryGetUri(string uriString)
     {
