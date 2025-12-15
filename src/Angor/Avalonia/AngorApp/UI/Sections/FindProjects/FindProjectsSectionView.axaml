@@ -28,10 +28,10 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Margin="10" Classes="Regular Item Activatable">
+                            <Border Margin="10" Classes="Panel Elevated Interactive">
                                 <StackPanel Classes="BigGap">
                                     <a:AdvancedImage CornerRadius="10 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140" Source="{Binding BannerUrl}" />
-                                    <Border Height="60" Width="60" Margin="0 -50 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource Background}">
+                                    <Border Height="60" Width="60" Margin="0 -50 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource AppBackground}">
                                         <a:AdvancedImage Source="{Binding LogoUrl}" />
                                     </Border>
                                     <TextBlock Classes="Header" DockPanel.Dock="Top" Text="{Binding Name}" />
@@ -44,7 +44,7 @@
                                         <TextBlock Text="Target" />
                                         <TextBlock HorizontalAlignment="Right" Text="{Binding FundingTarget.DecimalString}" MaxLines="2" TextWrapping="Wrap" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
                                     </Grid>
-                                    <ProgressBar Foreground="{StaticResource ProgressBrush}" Background="{DynamicResource Background}" Height="8" Value="{Binding FundingRaised.Sats}" Maximum="{Binding FundingTarget.Sats}" />
+                                    <ProgressBar Foreground="{DynamicResource ProgressBrush}" Background="{DynamicResource AppBackground}" Height="8" Value="{Binding FundingRaised.Sats}" Maximum="{Binding FundingTarget.Sats}" />
                                 </StackPanel>
 
                                 <Interaction.Behaviors>

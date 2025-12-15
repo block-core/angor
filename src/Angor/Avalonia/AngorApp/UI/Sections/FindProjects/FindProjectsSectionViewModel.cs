@@ -46,7 +46,7 @@ namespace AngorApp.UI.Sections.FindProjects
             return projectAppService
                 .Latest(new LatestProjects.LatestProjectsRequest())
                 .Map(response => response.Projects)
-                .TraverseSequentially(dto => projectAppService.GetProjectStatistics(dto.Id)
+                .MapSequentially(dto => projectAppService.GetProjectStatistics(dto.Id)
                     .Map(statistics => new FindProjectItem(dto, statistics, projectAppService, detailsFactory, navigator)));
         }
 

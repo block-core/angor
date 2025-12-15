@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:wizard="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.WelcomeView" x:DataType="wizard:WelcomeViewModel">
+    <StackPanel HorizontalAlignment="Center" Classes="HugeGap" MaxWidth="768" >
+        <PathIcon Foreground="Transparent" Height="48" Width="48" Data="{StaticResource Lightning}">
+            <PathIcon.Styles>
+                <Style Selector="PathIcon Path">
+                    <Setter Property="Margin" Value="1.2" />
+                    <Setter Property="Stroke" Value="{DynamicResource Brand}" />
+                    <Setter Property="StrokeThickness" Value="1.8" />
+                    <Setter Property="StrokeJoin" Value="Round" />
+                </Style>
+            </PathIcon.Styles>
+        </PathIcon>
+        <TextBlock Classes="Title Strong" HorizontalAlignment="Center">Welcome</TextBlock>
+        <TextBlock HorizontalAlignment="Center">Create and launch your project to raise funding from the Bitcoin community.</TextBlock>
+        <Border Margin="30 0" Background="{DynamicResource Translucid}" Classes="Panel" HorizontalAlignment="Center">
+            <TextBlock>
+                A small fee is required to prevent spam and will be paid when you submit your project for deployment.
+            </TextBlock>
+        </Border>
+        <EnhancedButton HorizontalAlignment="Center" Command="{Binding Start}" Margin="20" Classes="Accent">Start</EnhancedButton>
+    </StackPanel>
+
+</UserControl>

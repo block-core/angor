@@ -9,8 +9,7 @@
 
     <StyleInclude Source="Custom/EnhancedButton.axaml" />
     <StyleInclude Source="Custom/Buttons.axaml" />
-    <StyleInclude Source="/UI/Shared/Styles/Styles.axaml" />
-
+    <StyleInclude Source="Custom/ListBox.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/Styles.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/Pane.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/AmountControl.axaml" />
@@ -40,130 +39,180 @@
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Default">
-                    <Color x:Key="Background">#F9F9F9</Color>
-                    <Color x:Key="Overbackground">White</Color>
-                    <Color x:Key="Border">#19000000</Color>
-                    <Color x:Key="Text">#6B7280</Color>
-                    <Color x:Key="Accent">#2D5A3D</Color>
-                    <Color x:Key="Logo">#2D5A3D</Color>
-                    <Color x:Key="Strong">#0A0A0A</Color>
-                    <Color x:Key="HoverBackground">#E9E9E9</Color>
-                    <Color x:Key="SelectedBackground">White</Color>
-                    <Color x:Key="CardBackground">White</Color>
+                    <Color x:Key="AppBackground">#F9F9F9</Color>
+                    <Color x:Key="Surface">White</Color>
+                    <Color x:Key="Stroke">#19000000</Color>
+                    <Color x:Key="TextMuted">#6B7280</Color>
+                    <Color x:Key="TextStrong">#0A0A0A</Color>
+                    <Color x:Key="Brand">#2D5A3D</Color>
+                    <Color x:Key="Highlight">#2D5A3D</Color>
+                    <Color x:Key="BitcoinAccent">#F7931A</Color>
+                    <Color x:Key="SurfaceHover">#E9E9E9</Color>
+                    <Color x:Key="SurfaceSelected">White</Color>
+                    <Color x:Key="CardSurface">White</Color>
+                    <Color x:Key="SurfaceSubtle">#E5E7EB</Color>
+                    <Color x:Key="SurfaceSubtler">#FAF9F6</Color>
+
+                    <LinearGradientBrush x:Key="ProgressBrush">
+                        <GradientStops>
+                            <GradientStop Offset="0" Color="#2D5A3D" />
+                            <GradientStop Offset="1" Color="#4A8F5F" />
+                        </GradientStops>
+                    </LinearGradientBrush>
 
                     <BoxShadows x:Key="SectionShadow">0 0 30 0 LightGray</BoxShadows>
                     <BoxShadows x:Key="ItemShadow">0 0 20 0 LightGray</BoxShadows>
                     <BoxShadows x:Key="ItemShadowBig">0 5 25 0 LightGray</BoxShadows>
 
-                    <SolidColorBrush x:Key="RegularButtonForeground" Color="{StaticResource HoverBackground}" />
-                    <SolidColorBrush x:Key="RegularButtonBackground" Color="{StaticResource Strong}" />
-                    <SolidColorBrush x:Key="RegularButtonBorder" Color="{StaticResource Strong}" />
+                    <SolidColorBrush x:Key="PrimaryButtonForeground" Color="{StaticResource SurfaceHover}" />
+                    <SolidColorBrush x:Key="PrimaryButtonBackground" Color="{StaticResource TextStrong}" />
+                    <SolidColorBrush x:Key="PrimaryButtonBorder" Color="{StaticResource TextStrong}" />
 
-                    <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource HoverBackground}" />
-                    <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource Accent}" />
-                    <SolidColorBrush x:Key="AccentButtonBorder" Color="{StaticResource Accent}" />
+                    <SolidColorBrush x:Key="SecondaryButtonForeground" Color="{StaticResource TextStrong}" />
+                    <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{StaticResource SurfaceHover}" />
+                    <SolidColorBrush x:Key="SecondaryButtonBorder" Color="{StaticResource TextStrong}" />
 
-                    <SolidColorBrush x:Key="AlternateButtonForeground" Color="{StaticResource Accent}" />
-                    <SolidColorBrush x:Key="AlternateButtonBackground" Color="{StaticResource HoverBackground}" />
-                    <SolidColorBrush x:Key="AlternateButtonBorder" Color="{StaticResource Strong}" />
-
-                    <SolidColorBrush x:Key="WhiteButtonForeground" Color="{StaticResource Strong}" />
-                    <SolidColorBrush x:Key="WhiteButtonBackground" Color="{StaticResource HoverBackground}" />
-                    <SolidColorBrush x:Key="WhiteButtonBorder" Color="{StaticResource Strong}" />
-
+                    <LinearGradientBrush x:Key="Translucid" Opacity="0.5">
+                        <GradientStops>
+                            <GradientStop Color="#1A2D5A3D" Offset="0" />
+                            <GradientStop Color="#0D2D5A3D" Offset="1" />
+                        </GradientStops>
+                    </LinearGradientBrush>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
-                    <Color x:Key="Background">#0A0A0A</Color>
-                    <Color x:Key="Overbackground">#B31A1A1A</Color>
-                    <Color x:Key="Border">#19FFFFFF</Color>
-                    <Color x:Key="Text">#A0A0A0</Color>
-                    <Color x:Key="Accent">#E5E8E1</Color>
-                    <Color x:Key="Logo">#5FAF78</Color>
-                    <Color x:Key="Strong">#FAFAFA</Color>
-                    <Color x:Key="HoverBackground">#3A3A3A</Color>
-                    <Color x:Key="SelectedBackground">#202020</Color>
-                    <Color x:Key="CardBackground">#2A2A2A</Color>
+                    <Color x:Key="AppBackground">#0A0A0A</Color>
+                    <Color x:Key="Surface">#B31A1A1A</Color>
+                    <Color x:Key="Stroke">#19FFFFFF</Color>
+                    <Color x:Key="TextMuted">#A0A0A0</Color>
+                    <Color x:Key="TextStrong">#FAFAFA</Color>
+                    <Color x:Key="Brand">#5FAF78</Color>
+                    <Color x:Key="Highlight">#E5E8E1</Color>
+                    <Color x:Key="BitcoinAccent">#F7931A</Color>
+                    <Color x:Key="SurfaceHover">#3A3A3A</Color>
+                    <Color x:Key="SurfaceSelected">#202020</Color>
+                    <Color x:Key="CardSurface">#2A2A2A</Color>
+                    <Color x:Key="SurfaceSubtle">#333333</Color>
+                    <Color x:Key="SurfaceSubtler">#0A0A0A</Color>
+                    
+                    <SolidColorBrush x:Key="Translucid" Color="#0A0A0A" />
+
+                    <LinearGradientBrush x:Key="ProgressBrush">
+                        <GradientStops>
+                            <GradientStop Offset="0" Color="{StaticResource Brand}" />
+                            <GradientStop Offset="1" Color="#7DCE96" />
+                        </GradientStops>
+                    </LinearGradientBrush>
+
                     <BoxShadows x:Key="SectionShadow">0 0 0 0 Transparent</BoxShadows>
                     <BoxShadows x:Key="ItemShadow">0 0 0 0 LightGray</BoxShadows>
                     <BoxShadows x:Key="ItemShadowBig">0 0 0 0 LightGray</BoxShadows>
 
-                    <SolidColorBrush x:Key="RegularButtonForeground" Color="{StaticResource Strong}" />
-                    <LinearGradientBrush x:Key="RegularButtonBackground" Opacity="0.5">
+                    <SolidColorBrush x:Key="PrimaryButtonForeground" Color="{StaticResource TextStrong}" />
+                    <LinearGradientBrush x:Key="PrimaryButtonBackground" Opacity="0.5">
                         <GradientStops>
-                            <GradientStop Offset="0" Color="{StaticResource Border}" />
-                            <GradientStop Offset="1" Color="{StaticResource Overbackground}" />
+                            <GradientStop Offset="0" Color="{StaticResource Stroke}" />
+                            <GradientStop Offset="1" Color="{StaticResource Surface}" />
                         </GradientStops>
                     </LinearGradientBrush>
-                    <SolidColorBrush x:Key="RegularButtonBorder" Color="{StaticResource Border}" />
+                    <SolidColorBrush x:Key="PrimaryButtonBorder" Color="{StaticResource Stroke}" />
 
-                    <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource HoverBackground}" />
+                    <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource SurfaceHover}" />
                     <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource Accent}" />
-                    <SolidColorBrush x:Key="AccentButtonBorder" Color="{StaticResource Border}" />
+                    <SolidColorBrush x:Key="AccentButtonBorder" Color="{StaticResource Stroke}" />
 
-                    <SolidColorBrush x:Key="AlternateButtonForeground" Color="{StaticResource Accent}" />
-                    <SolidColorBrush x:Key="AlternateButtonBackground" Color="{StaticResource HoverBackground}" />
-                    <SolidColorBrush x:Key="AlternateButtonBorder" Color="{StaticResource Strong}" />
-
-                    <SolidColorBrush x:Key="WhiteButtonForeground" Color="{StaticResource Strong}" />
-                    <SolidColorBrush x:Key="WhiteButtonBackground" Color="{StaticResource Overbackground}" />
-                    <SolidColorBrush x:Key="WhiteButtonBorder" Color="{StaticResource Border}" />
+                    <SolidColorBrush x:Key="SecondaryButtonForeground" Color="{StaticResource TextStrong}" />
+                    <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{StaticResource Surface}" />
+                    <SolidColorBrush x:Key="SecondaryButtonBorder" Color="{StaticResource Stroke}" />
 
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
+            
+            <Color x:Key="Accent">#2D5A3D</Color>
+            
+            <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource SurfaceHover}" />
+            <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource Accent}" />
+            <SolidColorBrush x:Key="AccentButtonBorder" Color="{StaticResource Accent}" />
+
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <ControlTheme x:Key="OrangeTextBoxTheme"
+                          TargetType="TextBox"
+                          BasedOn="{StaticResource {x:Type TextBox}}">
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+                <Setter Property="Background" Value="{DynamicResource Surface}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+                <Setter Property="Padding" Value="14 12" />
+                <Style Selector="^ /template/ Border#PART_BorderElement">
+                    <Setter Property="Transitions">
+                        <Transitions>
+                            <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
+                            <BrushTransition Property="Background" Duration="0:0:0.2" />
+                        </Transitions>
+                    </Setter>
+                </Style>
+            </ControlTheme>
+
+            <ControlTheme x:Key="WizardSectionCard" TargetType="Card" BasedOn="{StaticResource {x:Type Card}}">
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <Border CornerRadius="12"
+                                BorderThickness="1"
+                                BorderBrush="{DynamicResource Stroke}"
+                                Background="{DynamicResource Surface}">
+                            <DockPanel>
+                                <Border DockPanel.Dock="Top"
+                                        Background="{DynamicResource AppBackground}"
+                                        BorderBrush="{DynamicResource Stroke}"
+                                        BorderThickness="0 0 0 1"
+                                        Padding="24 16">
+                                    <ContentPresenter HorizontalAlignment="Left"
+                                                      VerticalAlignment="Center"
+                                                      Content="{TemplateBinding Header}">
+                                        <ContentPresenter.Styles>
+                                            <Style Selector="ContentPresenter">
+                                                <Setter Property="TextElement.FontSize" Value="{StaticResource FontSizeNormal}" />
+                                                <Setter Property="TextElement.FontWeight" Value="Bold" />
+                                                <Setter Property="TextElement.Foreground" Value="{DynamicResource TextStrong}" />
+                                            </Style>
+                                        </ContentPresenter.Styles>
+                                    </ContentPresenter>
+                                </Border>
+
+                                <Border Padding="24">
+                                    <ContentPresenter Content="{TemplateBinding Content}" />
+                                </Border>
+                            </DockPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Setter>
+            </ControlTheme>
+
+            <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="{DynamicResource BitcoinAccent}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="{DynamicResource SurfaceHover}" />
+            <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
+
         </ResourceDictionary>
-
-        <LinearGradientBrush x:Key="ProgressBrush">
-            <GradientStops>
-                <GradientStop Offset="0" Color="#2D5A3D" />
-                <GradientStop Offset="0" Color="#4A8F5F" />
-            </GradientStops>
-        </LinearGradientBrush>
-
-        <x:Double x:Key="TinyGap">5</x:Double>
-        <x:Double x:Key="SmallGap">10</x:Double>
-        <x:Double x:Key="RegularGap">12</x:Double>
-        <x:Double x:Key="BigGap">20</x:Double>
-        <x:Double x:Key="HugeGap">40</x:Double>
-
     </Styles.Resources>
 
-    <Style Selector="StackPanel.HugeGap">
-        <Setter Property="Spacing" Value="{StaticResource BigGap}" />
-    </Style>
-
-    <Style Selector="StackPanel.BigGap">
-        <Setter Property="Spacing" Value="{StaticResource BigGap}" />
-    </Style>
-
-    <Style Selector="StackPanel.RegularGap">
-        <Setter Property="Spacing" Value="{StaticResource RegularGap}" />
-    </Style>
-
-    <Style Selector="StackPanel.SmallGap">
-        <Setter Property="Spacing" Value="{StaticResource SmallGap}" />
-    </Style>
-
-    <Style Selector="StackPanel.TinyGap">
-        <Setter Property="Spacing" Value="{StaticResource TinyGap}" />
-    </Style>
-
     <Style Selector=":is(UserControl)">
-        <Setter Property="Foreground" Value="{DynamicResource Text}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
     </Style>
 
-    <Style Selector="Border.Regular">
+    <Style Selector="Border.Panel">
         <Setter Property="CornerRadius" Value="20" />
         <Setter Property="Padding" Value="20" />
-        <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Background" Value="{DynamicResource Overbackground}" />
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
     </Style>
 
     <Style Selector="SectionStrip.Nav SectionStripGroupHeader">
-        <Setter Property="Foreground" Value="{DynamicResource Logo}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brand}" />
         <Setter Property="FontFamily" Value="Sans Serif" />
         <Setter Property="FontWeight" Value="SemiLight" />
         <Setter Property="FontSize" Value="18" />
@@ -176,54 +225,55 @@
         <Setter Property="Padding" Value="8" />
         <Setter Property="Margin" Value="10" />
         <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="Foreground" Value="{DynamicResource Text}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
         <Setter Property="ClipToBounds" Value="False" />
         <Setter Property="BorderThickness" Value="1" />
     </Style>
 
     <Style Selector="SectionStrip.Nav SectionStripItem:pointerover">
-        <Setter Property="Background" Value="{DynamicResource HoverBackground}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
     </Style>
 
     <Style Selector="SectionStrip.Nav SectionStripItem:selected">
-        <Setter Property="Background" Value="{DynamicResource SelectedBackground}" />
-        <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceSelected}" />
+        <Setter Property="Foreground" Value="{DynamicResource Highlight}" />
     </Style>
 
     <Style Selector="SectionStrip.Nav SectionStripItem:selected Border">
         <Setter Property="BoxShadow" Value="{DynamicResource SectionShadow}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
     </Style>
 
     <Style Selector="TextBlock">
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
-    <Style Selector="TextBlock.Label">
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="Foreground" Value="{DynamicResource Text}" />
-    </Style>
-
     <Style Selector="Run.Label">
         <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="Foreground" Value="{DynamicResource Text}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
     </Style>
 
     <Style Selector="Run.Thin">
         <Setter Property="FontWeight" Value="SemiLight" />
-        <Setter Property="Foreground" Value="{DynamicResource Text}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
     </Style>
 
     <Style Selector=":is(TemplatedControl).Center">
         <Setter Property="HorizontalAlignment" Value="Center" />
     </Style>
 
-    <Style Selector="TextBlock.Center">
-        <Setter Property="TextAlignment" Value="Center" />
-    </Style>
-
     <Style Selector="TextBlock.Title">
         <Setter Property="FontSize" Value="25" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <Style Selector="TextBlock.Regular">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="SemiLight" />
+    </Style>
+
+    <Style Selector="TextBlock.Big">
+        <Setter Property="FontSize" Value="18" />
         <Setter Property="FontWeight" Value="Bold" />
     </Style>
 
@@ -232,15 +282,21 @@
         <Setter Property="FontWeight" Value="SemiLight" />
     </Style>
 
-    <Style Selector="TextBlock.TitleStrong">
-        <Setter Property="FontSize" Value="25" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="Foreground" Value="{DynamicResource Strong}" />
-    </Style>
-
     <Style Selector="TextBlock.Strong">
         <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="Foreground" Value="{DynamicResource Strong}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+    </Style>
+
+    <Style Selector="TextBlock.Bold">
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <Style Selector="TextBlock.Tiny">
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <Style Selector="TextBlock.Thin">
+        <Setter Property="FontWeight" Value="Thin" />
     </Style>
 
     <Style Selector="TextBlock.Header">
@@ -248,81 +304,53 @@
         <Setter Property="FontSize" Value="18" />
         <Setter Property="TextWrapping" Value="NoWrap" />
         <Setter Property="TextTrimming" Value="{x:Static TextTrimming.CharacterEllipsis}" />
-        <Setter Property="Foreground" Value="{DynamicResource Strong}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
     </Style>
 
     <Style Selector="EnhancedButton">
-        <Setter Property="Foreground" Value="{DynamicResource RegularButtonForeground}" />
-        <Setter Property="Background" Value="{DynamicResource RegularButtonBackground}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource RegularButtonBorder}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBorder}" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="CornerRadius" Value="10" />
         <Setter Property="BorderThickness" Value="2" />
     </Style>
-
-    <Style Selector="EnhancedButton.Regular">
-        <Setter Property="Foreground" Value="{DynamicResource RegularButtonForeground}" />
-        <Setter Property="Background" Value="{DynamicResource RegularButtonBackground}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource RegularButtonBorder}" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="CornerRadius" Value="10" />
+    
+    <Style Selector="EnhancedButton.Primary">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBorder}" />
         <Setter Property="Padding" Value="24 12" />
-        <Setter Property="BorderThickness" Value="2" />
     </Style>
 
     <Style Selector="EnhancedButton.Accent">
         <Setter Property="Foreground" Value="{DynamicResource AccentButtonForeground}" />
         <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
         <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorder}" />
-        <Setter Property="BorderThickness" Value="2" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="24 12" />
+    </Style>
+    
+    <Style Selector="EnhancedButton.Secondary">
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource SecondaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SecondaryButtonBorder}" />
         <Setter Property="Padding" Value="24 12" />
     </Style>
 
-    <Style Selector="EnhancedButton.AccentInverted">
-        <Setter Property="Foreground" Value="{DynamicResource AlternateButtonForeground}" />
-        <Setter Property="Background" Value="{DynamicResource AlternateButtonBackground}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource AlternateButtonBorder}" />
-        <Setter Property="BorderThickness" Value="2" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="CornerRadius" Value="10" />
+    <Style Selector="EnhancedButton.Outline">
         <Setter Property="Padding" Value="24 12" />
-    </Style>
-
-    <Style Selector="EnhancedButton.White">
-        <Setter Property="Foreground" Value="{DynamicResource WhiteButtonForeground}" />
-        <Setter Property="Background" Value="{DynamicResource WhiteButtonBackground}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource WhiteButtonBorder}" />
-        <Setter Property="BorderThickness" Value="2" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="Padding" Value="24 12" />
-    </Style>
-
-    <Style Selector="EnhancedButton.Hollow">
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="Padding" Value="24 12" />
-        <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Foreground" Value="{DynamicResource WhiteButtonForeground}" />
-        <Setter Property="Background" Value="{DynamicResource Overbackground}" />
-    </Style>
-
-    <Style Selector="StackPanel.HugeGap">
-        <Setter Property="Spacing" Value="20" />
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
     </Style>
 
     <Style Selector="controls|ProgressRing">
-        <Setter Property="Foreground" Value="{DynamicResource Logo}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brand}" />
     </Style>
 
-    <Style Selector="Loading controls|ProgressRing">
-        <Setter Property="Foreground" Value="{DynamicResource Logo}" />
-    </Style>
-
-    <Style Selector="Border.Item">
-        <Setter Property="Background" Value="{DynamicResource CardBackground}" />
+    <Style Selector="Border.Elevated">
+        <Setter Property="Background" Value="{DynamicResource CardSurface}" />
         <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
         <Setter Property="Transitions">
             <Transitions>
@@ -330,10 +358,10 @@
             </Transitions>
         </Setter>
     </Style>
-    <Style Selector="Border.Item:pointerover">
+    <Style Selector="Border.Elevated:pointerover">
         <Setter Property="BoxShadow" Value="{DynamicResource ItemShadowBig}" />
     </Style>
-    <Style Selector="Border.Activatable">
+    <Style Selector="Border.Interactive">
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Transitions">
             <Transitions>
@@ -342,17 +370,23 @@
         </Setter>
         <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
     </Style>
-    <Style Selector="Border.Activatable:pointerover">
+    <Style Selector="Border.Interactive:pointerover">
         <Setter Property="RenderTransform" Value="translate(0px, -3px)" />
     </Style>
-    
+
+    <Style Selector="HeaderedContainer.Title /template/ ContentControl#Header">
+        <Setter Property="FontSize" Value="25" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+    </Style>
+
     <Style Selector="Frame">
         <Setter Property="Template">
             <ControlTemplate>
                 <DockPanel VerticalSpacing="25">
                     <EnhancedButton Command="{Binding $parent[Frame].Navigator.Back}"
                                     x:Name="BackButton"
-                                    Classes="Hollow"
+                                    Classes="Outline"
                                     DockPanel.Dock="Top"
                                     Content="{TemplateBinding BackButtonContent}">
                         <Button.IsVisible>
@@ -378,32 +412,68 @@
         </Setter>
     </Style>
 
+    <!-- Wizard HeaderedContainer Styles -->
+    <Style Selector="HeaderedContainer.WizardSection">
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
+        <Setter Property="HeaderBackground" Value="{DynamicResource Translucid}" />
+        <Setter Property="HeaderPadding" Value="24 12" />
+        <Setter Property="ContentPadding" Value="24 24" />
+    </Style>
+
+    <!-- Wizard HeaderedContainer Styles -->
+    <Style Selector="HeaderedContainer.WizardHighlight">
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BitcoinAccent}" />
+        <Setter Property="Background" Value="#14F7931A" />
+        <Setter Property="HeaderPadding" Value="24 12" />
+        <Setter Property="ContentPadding" Value="24 24" />
+    </Style>
+
+    <Style Selector="HeaderedContainer.WizardHighlight">
+        <Setter Property="Foreground" Value="{DynamicResource BitcoinAccent}" />
+    </Style>
+
+    <Style Selector="HeaderedContainer.WizardHighlight EdgePanel ContentControl#EndContent">
+        <Setter Property="Foreground" Value="{DynamicResource BitcoinAccent}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+    </Style>
 
     <Design.PreviewWith>
-        <WrapPanel>
+        <WrapPanel ItemWidth="300">
             <ThemeVariantScope RequestedThemeVariant="Light">
-                <StackPanel Spacing="20">
-                    <Border Classes="Regular" Width="200" Height="200">
-                        <TextBlock>HOLA</TextBlock>
-                    </Border>
-                    <EnhancedButton Content="Regular" />
-                    <EnhancedButton Content="Accent" Classes="Accent" />
-                    <EnhancedButton Content="AccentInverted" Classes="AccentInverted" />
-                    <EnhancedButton Content="White" Classes="White" />
-                    <EnhancedButton Content="Hollow" Classes="Hollow" />
-                </StackPanel>
+                <Border Padding="20">
+                    <StackPanel Spacing="20">
+                        <Border Classes="Panel" Width="200" Height="200">
+                            <TextBlock>HOLA</TextBlock>
+                        </Border>
+                        <EnhancedButton Content="Secondary" Classes="Secondary" />
+                        <EnhancedButton Content="Accent" Classes="Accent" />
+                        <EnhancedButton Content="Outline" Classes="Outline" />
+                        <TextBox Theme="{StaticResource OrangeTextBoxTheme}" Text="SOMETHING" />
+                        <HeaderedContainer Header="Header" Content="Content" Classes="WizardSection" />
+                        <HeaderedContainer Header="Header" Content="Content" Classes="WizardHighlight" />
+                    </StackPanel>
+                </Border>
             </ThemeVariantScope>
             <ThemeVariantScope RequestedThemeVariant="Dark">
-                <StackPanel Spacing="20">
-                    <Border Classes="Regular" Width="200" Height="200">
-                        <TextBlock>HOLA</TextBlock>
-                    </Border>
-                    <EnhancedButton Content="Regular" />
-                    <EnhancedButton Content="Accent" Classes="Accent" />
-                    <EnhancedButton Content="AccentInverted" Classes="AccentInverted" />
-                    <EnhancedButton Content="White" Classes="White" />
-                    <EnhancedButton Content="Hollow" Classes="Hollow" />
-                </StackPanel>
+                <Border Background="Black" Padding="20">
+                    <StackPanel Spacing="20">
+                        <Border Classes="Panel" Width="200" Height="200">
+                            <TextBlock>HOLA</TextBlock>
+                        </Border>
+                        <EnhancedButton Content="Secondary" Classes="Secondary" />
+                        <EnhancedButton Content="Accent" Classes="Accent" />
+                        <EnhancedButton Content="Outline" Classes="Outline" />
+                        <TextBox Theme="{StaticResource OrangeTextBoxTheme}" Text="SOMETHING" />
+                        <HeaderedContainer Header="Header" Content="Content" Classes="WizardSection" />
+                        <HeaderedContainer Header="Header" Content="Content" Classes="WizardHighlight" />
+                    </StackPanel>
+                </Border>
             </ThemeVariantScope>
             <controls:ProgressRing />
         </WrapPanel>

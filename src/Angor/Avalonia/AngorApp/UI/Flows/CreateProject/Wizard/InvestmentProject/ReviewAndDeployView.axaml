@@ -1,0 +1,138 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:steps="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.ReviewAndDeployView" x:DataType="steps:ReviewAndDeployViewModel">
+
+    <UserControl.Resources>
+
+        <ControlTheme x:Key="ExpanderSection" TargetType="Expander" BasedOn="{StaticResource {x:Type Expander}}">
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="{DynamicResource Translucid}" />
+            <Style Selector="^ /template/ ToggleButton">
+                <Setter Property="Background" Value="{DynamicResource Translucid}" />
+            </Style>
+        </ControlTheme>
+
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Expander EdgePanel">
+            <Setter Property="Background" Value="{DynamicResource SurfaceSubtler}"></Setter>
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="CornerRadius" Value="10"></Setter>
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style Selector="HeaderedContainer.WizardSection">
+            <Setter Property="Background" Value="{DynamicResource Translucid}" />
+        </Style>
+
+        <Style Selector="Border.Icon ContentControl">
+            <Setter Property="Foreground">White</Setter>
+        </Style>
+        <Style Selector="Border.Icon">
+            <Setter Property="Height">40</Setter>
+            <Setter Property="Width">40</Setter>
+            <Setter Property="CornerRadius">10</Setter>
+        </Style>
+        <Style Selector="Border.Accent">
+            <Setter Property="Background" Value="{DynamicResource Accent}" />
+        </Style>
+        <Style Selector="Border.Orange">
+            <Setter Property="Background" Value="{DynamicResource BitcoinAccent}" />
+        </Style>
+        <Style Selector="HeaderedContainer ContentPresenter#Header DockPanel">
+            <Setter Property="HorizontalSpacing" Value="16" />
+        </Style>
+        <Style Selector="HeaderedContainer DockPanel">
+            <Setter Property="HorizontalSpacing" Value="12" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel Classes="BigGap" MaxWidth="766">
+            <HeaderedContainer Classes="WizardSection">
+                <HeaderedContainer.Header>
+                    <DockPanel>
+                        <Border Classes="Icon Accent">
+                            <ContentControl Content="{Icon fa-user}" />
+                        </Border>
+                        <TextBlock VerticalAlignment="Center">Project Profile</TextBlock>
+                    </DockPanel>
+                </HeaderedContainer.Header>
+                <StackPanel Classes="BigGap">
+                    <EdgePanel StartContent="Name" EndContent="Not set" />
+                    <EdgePanel StartContent="About" EndContent="Not set" />
+                    <EdgePanel StartContent="Website" EndContent="Not set" />
+                </StackPanel>
+            </HeaderedContainer>
+
+            <HeaderedContainer Classes="WizardHighlight">
+                <HeaderedContainer.Header>
+                    <DockPanel>
+                        <Border Classes="Icon Orange">
+                            <ContentControl Content="{Icon fa-bitcoin}" />
+                        </Border>
+                        <TextBlock VerticalAlignment="Center">Funding Configuration</TextBlock>
+                    </DockPanel>
+                </HeaderedContainer.Header>
+                <StackPanel Classes="BigGap">
+                    <EdgePanel StartContent="Target Amount" EndContent="0.25 BTC" />
+                    <EdgePanel StartContent="Start Date" EndContent="25/11/2025" />
+                    <EdgePanel StartContent="End Date" EndContent="Not set" />
+                    <EdgePanel StartContent="Penalty Days" EndContent="66 days" />
+                </StackPanel>
+            </HeaderedContainer>
+            <HeaderedContainer Classes="WizardSection">
+                <HeaderedContainer.Header>
+                    <DockPanel>
+                        <Border Classes="Icon Accent">
+                            <ContentControl Content="{Icon fa-regular fa-clipboard}" />
+                        </Border>
+                        <TextBlock VerticalAlignment="Center">Funding Stages</TextBlock>
+                    </DockPanel>
+                </HeaderedContainer.Header>
+            </HeaderedContainer>
+            <Expander Theme="{StaticResource ExpanderSection}">
+                <Expander.Header>
+                    <Panel Height="68">
+                        <TextBlock VerticalAlignment="Center" Classes="Bold">Public Keys &amp; IDs (Advanced)</TextBlock>
+                        <EnhancedButton VerticalAlignment="Center" Classes="Accent" Padding="16 8" Content="Download" HorizontalAlignment="Right" />
+                    </Panel>
+                </Expander.Header>
+                <StackPanel Classes="BigGap">
+                    <HeaderedContainer Header="Project ID">
+                        <EdgePanel StartContent="{Icon mdi-cloud-upload-outline}" EndContent="{Icon fa-regular fa-copy}" Content="0240cedf78fa3bb00a67fcddec93ac916b51c3c9704a1ba22705070d7471c9a542" />
+                    </HeaderedContainer>
+                    <HeaderedContainer Header="Founder Key">
+                        <EdgePanel StartContent="{Icon fa-key}" EndContent="{Icon fa-regular fa-copy}" Content="0240cedf78fa3bb00a67fcddec93ac916b51c3c9704a1ba22705070d7471c9a542" />
+                    </HeaderedContainer>
+                    <HeaderedContainer Header="Recovery Key">
+                        <EdgePanel StartContent="{Icon fa-arrows-rotate}" EndContent="{Icon fa-regular fa-copy}" Content="0240cedf78fa3bb00a67fcddec93ac916b51c3c9704a1ba22705070d7471c9a542" />
+                    </HeaderedContainer>
+                    <HeaderedContainer Header="Nostr Public Key (npub)">
+                        <EdgePanel StartContent="{Icon fa-user}" EndContent="{Icon fa-regular fa-copy}" Content="0240cedf78fa3bb00a67fcddec93ac916b51c3c9704a1ba22705070d7471c9a542" />
+                    </HeaderedContainer>
+                    <HeaderedContainer Header="NIP-05">
+                        <EdgePanel StartContent="{Icon fa-user}" EndContent="{Icon fa-regular fa-copy}" Content="0240cedf78fa3bb00a67fcddec93ac916b51c3c9704a1ba22705070d7471c9a542" />
+                    </HeaderedContainer>
+                </StackPanel>
+            </Expander>
+            <HeaderedContainer Classes="WizardSection" Foreground="{DynamicResource Accent}" Background="{DynamicResource Translucid}">
+                <StackPanel Margin="30" MaxWidth="500" Classes="BigGap">
+                    <Border Width="64" Height="64" HorizontalAlignment="Center" Padding="20" CornerRadius="40" Background="{DynamicResource Accent}">
+                        <PathIcon Foreground="White" Height="32" Width="32" Data="{StaticResource AngorLogo}" />
+                    </Border>
+                    <TextBlock Classes="Strong Big Center">Ready to deploy</TextBlock>
+                    <TextBlock TextAlignment="Center">Please review all information carefully. Once deployed only profile information can be changed. Your project will be live on bitcoin MainNet.</TextBlock>
+                </StackPanel>
+            </HeaderedContainer>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,358 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:steps="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject"
+             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.FundingConfigurationView" x:DataType="steps:IFundingConfigurationViewModel">
+
+    <Design.DataContext>
+        <steps:FundingConfigurationViewModelSample />
+    </Design.DataContext>
+
+
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        
+        <Style Selector="TextBox">
+            <Setter Property="Theme" Value="{StaticResource OrangeTextBoxTheme}" />
+        </Style>
+
+        <Style Selector="TextBlock.FormLabel">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+
+        <Style Selector="TextBlock.Muted">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+
+        <Style Selector="TextBlock.AccentHint">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+            <Setter Property="Foreground" Value="{DynamicResource BitcoinAccent}" />
+        </Style>
+
+        <Style Selector="CalendarDatePicker.FundingConfigInput">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+        </Style>
+
+        <Style Selector="CalendarDatePicker.FundingConfigInput:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        </Style>
+
+        <Style Selector="CalendarDatePicker.FundingConfigInput:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource BitcoinAccent}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style Selector="CalendarDatePicker.FundingConfigInput:focus-within">
+            <Setter Property="BorderBrush" Value="{DynamicResource BitcoinAccent}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style Selector="CalendarDatePicker.FundingConfigInput /template/ TextBox#PART_TextBox">
+            <Setter Property="Theme" Value="{StaticResource OrangeTextBoxTheme}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+            <Setter Property="Padding" Value="14 12" />
+        </Style>
+
+        <Style Selector="TextBox.AmountInput">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <Style Selector="TextBlock.AmountUnitInline">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+
+        <Style Selector="Border.HelpBadge">
+            <Setter Property="Background" Value="{DynamicResource BitcoinAccent}" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="8 3" />
+            <Setter Property="TextElement.Foreground" Value="White" />
+            <Setter Property="TextElement.FontSize" Value="{StaticResource FontSizeSmall}" />
+            <Setter Property="TextElement.FontWeight" Value="Bold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="16 14" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset:checked">
+            <Setter Property="Background" Value="{DynamicResource Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset TextBlock.AmountValue">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset TextBlock.AmountUnit">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+            <Setter Property="Opacity" Value="0.8" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset:checked TextBlock.AmountValue">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset:checked TextBlock.AmountUnit">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Opacity" Value="0.85" />
+        </Style>
+
+        <Style Selector="TextBlock.DaysValue">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+
+        <Style Selector="ListBox.DurationPresets">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <Style Selector="ListBox.DurationPresets ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+
+            <Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+
+            <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+        </Style>
+
+        <Style Selector="Border.DurationPresetBorder">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="14 8" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="TextElement.FontWeight" Value="Bold" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+
+        <Style Selector="ListBox.DurationPresets ListBoxItem:pointerover Border.DurationPresetBorder">
+            <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+        </Style>
+
+        <Style Selector="ListBox.DurationPresets ListBoxItem:selected Border.DurationPresetBorder">
+            <Setter Property="Background" Value="{DynamicResource Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+            <Setter Property="TextElement.Foreground" Value="White" />
+        </Style>
+
+        <Style Selector="ListBox.DurationPresets ListBoxItem:selected:pointerover Border.DurationPresetBorder">
+            <Setter Property="Background" Value="{DynamicResource Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+            <Setter Property="TextElement.Foreground" Value="White" />
+            <Setter Property="Opacity" Value="0.92" />
+        </Style>
+
+      
+    </UserControl.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}" MaxWidth="766">
+            <TextBlock Classes="Subtitle">Configure your funding target, window, and project nature.</TextBlock>
+
+            <!-- Target amount (highlighted) -->
+            <HeaderedContainer Classes="WizardHighlight">
+                <StackPanel Classes="BigGap">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Width="28"
+                                Height="28"
+                                CornerRadius="999"
+                                Background="{DynamicResource BitcoinAccent}"
+                                VerticalAlignment="Center">
+                            <PathIcon Width="16"
+                                      Height="16"
+                                      Foreground="White"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Data="{StaticResource BitcoinSymbol}" />
+                        </Border>
+                        <TextBlock VerticalAlignment="Center"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrong}">
+                            Set your target funding amount
+                        </TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Spacing="10">
+                        <HeaderedContainer>
+                            <HeaderedContainer.Header>
+                                <TextBlock Classes="FormLabel">Target Amount (BTC) *</TextBlock>
+                            </HeaderedContainer.Header>
+
+                            <TextBox Classes="InvestmentProject FundingConfigInput AmountInput"
+                                     Text="0,25"
+                                     TextInputOptions.ContentType="Number"
+                                     Watermark="0.00">
+                                <TextBox.InnerRightContent>
+                                    <TextBlock Classes="AmountUnitInline"
+                                               VerticalAlignment="Center"
+                                               Margin="0 0 12 0">
+                                        BTC
+                                    </TextBlock>
+                                </TextBox.InnerRightContent>
+                            </TextBox>
+                        </HeaderedContainer>
+
+                        <TextBlock Classes="AccentHint">The minimum amount your project needs to raise</TextBlock>
+                    </StackPanel>
+
+                    <ListBox ItemsSource="{Binding AmountPresets}"
+                             HorizontalAlignment="Right"
+                             Background="Transparent"
+                             ItemContainerTheme="{StaticResource Buttonized}">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <BalancedWrapGrid />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel HorizontalAlignment="Center" Classes="TinyGap">
+                                    <TextBlock Classes="Center Bold" Text="{Binding  Btc}" />
+                                    <TextBlock Classes="Center Tiny" Text="BTC" />
+                                </StackPanel>
+                            </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+            </HeaderedContainer>
+
+            <!-- Fundraising window -->
+            <HeaderedContainer Classes="WizardSection">
+                <HeaderedContainer.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock>Fundraising Window</TextBlock>
+                        <Border Classes="HelpBadge">
+                            <TextBlock>Help</TextBlock>
+                        </Border>
+                    </StackPanel>
+                </HeaderedContainer.Header>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="24" RowDefinitions="Auto">
+                    <StackPanel Grid.Column="0" Spacing="8">
+                        <HeaderedContainer>
+                            <HeaderedContainer.Header>
+                                <TextBlock Classes="FormLabel">Start Date</TextBlock>
+                            </HeaderedContainer.Header>
+                            <TextBox IsReadOnly="True"
+                                     Text="25/11/2025" />
+                        </HeaderedContainer>
+                        <TextBlock Classes="Muted">Automatically set to today</TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Spacing="8">
+                        <HeaderedContainer>
+                            <HeaderedContainer.Header>
+                                <TextBlock Classes="FormLabel">End Date *</TextBlock>
+                            </HeaderedContainer.Header>
+                            <CalendarDatePicker Classes="FundingConfigInput" Watermark="dd/mm/aaaa" />
+                        </HeaderedContainer>
+
+                        <TextBlock Classes="Muted">Must be before first stage (chosen on next screen)</TextBlock>
+
+                        <ListBox ItemContainerTheme="{StaticResource ButtonizedWhite}" Background="Transparent">
+                            <ListBox.ItemsSource>
+                                <collections:ArrayList>
+                                    <x:Int32>1</x:Int32>
+                                    <x:Int32>2</x:Int32>
+                                    <x:Int32>3</x:Int32>
+                                </collections:ArrayList>
+                            </ListBox.ItemsSource>
+
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <BalancedWrapGrid  />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="x:Int32">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Classes="TinyGap">
+                                        <TextBlock Classes="Center Bold Tiny">
+                                            <TextBlock.Inlines>
+                                                <Run Text="{Binding}" />
+                                                <Run Text="{Binding Converter={x:Static controls:AngorConverters.MonthLabel}}" />
+                                            </TextBlock.Inlines>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Grid>
+            </HeaderedContainer>
+
+            <!-- Project nature (penalty) -->
+            <HeaderedContainer Classes="WizardSection">
+                <HeaderedContainer.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock>Project Nature (Penalty)</TextBlock>
+                        <Border Classes="HelpBadge">
+                            <TextBlock>Help</TextBlock>
+                        </Border>
+                    </StackPanel>
+                </HeaderedContainer.Header>
+
+                <StackPanel Spacing="16">
+                    <Panel>
+                        <TextBlock Classes="Muted" Text="Experimental" />
+                        <TextBlock Classes="Muted" Text="High Value" HorizontalAlignment="Right" />
+                    </Panel>
+
+                    <Slider x:Name="PenaltyDays" Minimum="30" Maximum="180" Value="30" Foreground="{DynamicResource Accent}" Background="{DynamicResource Stroke}">
+                        <Slider.Resources>
+                            <SolidColorBrush x:Key="SliderThumbBackground" Color="{DynamicResource Accent}" />
+                            <x:Double x:Key="SliderHorizontalThumbWidth">24</x:Double>
+                            <x:Double x:Key="SliderHorizontalThumbHeight" >24</x:Double>
+                            <x:Double x:Key="SliderTrackThemeHeight" >4</x:Double>
+                            <CornerRadius x:Key="SliderThumbCornerRadius" >12</CornerRadius>
+                        </Slider.Resources>
+                    </Slider>
+
+                    <TextBlock Classes="Strong Big" HorizontalAlignment="Center" Text="{Binding #PenaltyDays.Value, StringFormat='{}{0:0} days'}" />
+                </StackPanel>
+            </HeaderedContainer>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,85 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <StyleInclude Source="NewTheme.LocalOnly.axaml" />
+
+    <Style Selector="WrapPanel">
+        <Setter Property="ItemSpacing" Value="12" />
+    </Style>
+    
+    <Design.PreviewWith>
+        <WrapPanel ItemWidth="1024">
+            <ThemeVariantScope RequestedThemeVariant="Light">
+                <Border Padding="24" Background="{DynamicResource AppBackground}">
+                    <StackPanel Spacing="16">
+                        <TextBlock Classes="Title">Text Styles</TextBlock>
+                        <TextBlock Classes="Subtitle">NewTheme (local-only) – reference sheet</TextBlock>
+
+                        <Border Classes="Panel">
+                            <StackPanel Spacing="16">
+                                <Grid ColumnDefinitions="200,*,260" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                                      ColumnSpacing="16" RowSpacing="12">
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Classes="Strong">Style</TextBlock>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Classes="Strong">Example</TextBlock>
+                                    <TextBlock Grid.Row="0" Grid.Column="2" Classes="Strong">Usage</TextBlock>
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Classes="Strong">TextBlock.Title</TextBlock>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Classes="Title">Page Title</TextBlock>
+                                    <TextBlock Grid.Row="1" Grid.Column="2" Classes="Regular">Top-level headings (pages, screens, dialogs).</TextBlock>
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Classes="Strong">TextBlock.Header</TextBlock>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Classes="Header" Width="260">Section header with a long title that trims</TextBlock>
+                                    <TextBlock Grid.Row="2" Grid.Column="2" Classes="Regular">Section titles inside a page; use when space is limited.</TextBlock>
+
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Classes="Strong">TextBlock.Big</TextBlock>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Classes="Big">Emphasized text</TextBlock>
+                                    <TextBlock Grid.Row="3" Grid.Column="2" Classes="Regular">Primary emphasis (key values, totals, callouts).</TextBlock>
+
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Classes="Strong">TextBlock.Subtitle</TextBlock>
+                                    <TextBlock Grid.Row="4" Grid.Column="1" Classes="Subtitle">Supporting subtitle</TextBlock>
+                                    <TextBlock Grid.Row="4" Grid.Column="2" Classes="Regular">Secondary headings, intro lines, or brief summaries.</TextBlock>
+
+                                    <TextBlock Grid.Row="5" Grid.Column="0" Classes="Strong">TextBlock.Regular</TextBlock>
+                                    <TextBlock Grid.Row="5" Grid.Column="1" Classes="Regular">Body text paragraph example.</TextBlock>
+                                    <TextBlock Grid.Row="5" Grid.Column="2" Classes="Regular">Default body copy for descriptions and longer content.</TextBlock>
+
+                                    <TextBlock Grid.Row="6" Grid.Column="0" Classes="Strong">TextBlock.Strong</TextBlock>
+                                    <TextBlock Grid.Row="6" Grid.Column="1" Classes="Strong">Strong emphasis</TextBlock>
+                                    <TextBlock Grid.Row="6" Grid.Column="2" Classes="Regular">Inline emphasis inside regular text (labels, key parts).</TextBlock>
+
+                                    <TextBlock Grid.Row="7" Grid.Column="0" Classes="Strong">Run.Label / Run.Thin</TextBlock>
+                                    <TextBlock Grid.Row="7" Grid.Column="1">
+                                        <Run Classes="Label" Text="Label: " />
+                                        <Run Classes="Thin" Text="Value or helper text (inline runs)." />
+                                    </TextBlock>
+                                    <TextBlock Grid.Row="7" Grid.Column="2" Classes="Regular">Inline styling within a single TextBlock sentence.</TextBlock>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+                <Border Padding="24" Background="{DynamicResource AppBackground}">
+                    <StackPanel Spacing="16">
+                        <TextBlock Classes="Title">Text Styles</TextBlock>
+                        <TextBlock Classes="Subtitle">Dark variant preview</TextBlock>
+
+                        <Border Classes="Panel">
+                            <StackPanel Spacing="12">
+                                <TextBlock Classes="Header">Header</TextBlock>
+                                <TextBlock Classes="Regular">
+                                    <Run Classes="Label" Text="Label: " />
+                                    <Run Classes="Thin" Text="Body copy can mix inline runs for emphasis." />
+                                </TextBlock>
+                                <TextBlock Classes="Strong">Strong text uses TextStrong color.</TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+        </WrapPanel>
+    </Design.PreviewWith>
+</Styles>
