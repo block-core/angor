@@ -29,5 +29,22 @@
       <ProjectReference Include="..\Angor.Sdk\Angor.Sdk.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Wallet\Infrastructure\WalletAppServiceTests.cs" />
+      <Compile Remove="Wallet\Infrastructure\TransactionHistoryServiceTests.cs" />
+      <Compile Remove="Wallet\Infrastructure\TestDoubles\TestSensitiveWalletDataProvider.cs" />
+      <Compile Remove="Wallet\Infrastructure\TestDoubles\TestSecurityContext.cs" />
+      <Compile Remove="Funding\UnhandledExceptionBehaviorTests.cs" />
+      <Compile Remove="Funding\ProjectAppServiceTests.cs" />
+      <Compile Remove="Funding\NostrQueryClientTests.cs" />
+      <Compile Remove="Funding\NostrDecrypterTests.cs" />
+      <Compile Remove="Funding\InvestmentAppServiceTests.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Funding\TestDoubles\" />
+      <Folder Include="Wallet\Infrastructure\TestDoubles\" />
+    </ItemGroup>
+
 </Project>
 

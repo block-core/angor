@@ -26,5 +26,29 @@
         <ProjectReference Include="..\Angor.Data.Documents\Angor.Data.Documents.csproj" />
     </ItemGroup>
     
+    <ItemGroup>
+      <Compile Remove="Application\Responses\Founder\SpendFounderStageTransactionResponse.cs" />
+      <Compile Remove="Application\Responses\Founder\ReleaseInvestorTransactionResponse.cs" />
+      <Compile Remove="Application\Responses\Founder\PublishFounderTransactionResponse.cs" />
+      <Compile Remove="Application\Responses\Founder\GetReleaseableTransactionsResponse.cs" />
+      <Compile Remove="Application\Responses\Founder\GetMoonshotProjectResponse.cs" />
+      <Compile Remove="Application\Responses\Founder\GetInvestmentsResponse.cs" />
+      <Compile Remove="Application\Responses\Founder\GetClaimableTransactionsResponse.cs" />
+      <Compile Remove="Application\Requests\Founder\SpendFounderStageTransactionRequest.cs" />
+      <Compile Remove="Application\Requests\Founder\ReleaseInvestorTransactionRequest.cs" />
+      <Compile Remove="Application\Requests\Founder\PublishFounderTransactionRequest.cs" />
+      <Compile Remove="Application\Requests\Founder\GetReleaseableTransactionsRequest.cs" />
+      <Compile Remove="Application\Requests\Founder\GetMoonshotProjectRequest.cs" />
+      <Compile Remove="Application\Requests\Founder\GetInvestmentsRequest.cs" />
+      <Compile Remove="Application\Requests\Founder\GetClaimableTransactionsRequest.cs" />
+      <Compile Remove="Application\Requests\Founder\CreateProjectNewKeysRequest.cs" />
+      <Compile Remove="Application\IFounderAppService.cs" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Application\Requests\Founder\" />
+      <Folder Include="Application\Responses\Founder\" />
+    </ItemGroup>
+    
 </Project>
 
