@@ -1,5 +1,4 @@
 using Angor.Sdk.Funding.Projects.Domain;
-using Angor.Sdk.Funding.Projects.Infrastructure.Interfaces;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
@@ -10,7 +9,7 @@ using Angor.Shared.Utilities;
 using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Sdk.Funding.Projects.Infrastructure.Impl;
+namespace Angor.Sdk.Funding.Projects;
 
 public class ProjectInvestmentsService(IProjectService projectService, INetworkConfiguration networkConfiguration,
     IAngorIndexerService angorIndexerService, IInvestorTransactionActions investorTransactionActions,
@@ -295,8 +294,8 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                     continue;
 
                 var spentInput = spentInfo.Inputs.FirstOrDefault(input =>
-                    (input.InputTransactionId == transactionId) &&
-                    (input.InputIndex == output.Index));
+                    input.InputTransactionId == transactionId &&
+                    input.InputIndex == output.Index);
 
                 if (spentInput != null) //TODO move the script discovery to another class
                 {

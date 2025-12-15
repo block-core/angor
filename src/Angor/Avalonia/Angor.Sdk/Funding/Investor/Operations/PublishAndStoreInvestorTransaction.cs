@@ -9,30 +9,32 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 
 public static class PublishAndStoreInvestorTransaction
 {
-    public record PublishAndStoreInvestorTransactionRequest(string? WalletId, Shared.ProjectId? ProjectId, Shared.TransactionDraft TransactionDraft) : IRequest<Result<string>>;
+    public record PublishAndStoreInvestorTransactionRequest(string? WalletId, Shared.ProjectId? ProjectId, Shared.TransactionDraft TransactionDraft) : IRequest<Result<PublishAndStoreInvestorTransactionResponse>>;
 
-    public class Handler(IIndexerService indexerService, IPortfolioService portfolioService) : IRequestHandler<PublishAndStoreInvestorTransactionRequest, Result<string>>
+    public record PublishAndStoreInvestorTransactionResponse(string TransactionId);
+
+    public class Handler(IIndexerService indexerService, IPortfolioService portfolioService) : IRequestHandler<PublishAndStoreInvestorTransactionRequest, Result<PublishAndStoreInvestorTransactionResponse>>
     {
-        public async Task<Result<string>> Handle(PublishAndStoreInvestorTransactionRequest request, CancellationToken cancellationToken)
+        public async Task<Result<PublishAndStoreInvestorTransactionResponse>> Handle(PublishAndStoreInvestorTransactionRequest request, CancellationToken cancellationToken)
         {
             // Validate required parameters
             if (string.IsNullOrEmpty(request.WalletId))
-                return Result.Failure<string>("WalletId is required for investor transactions");
+                return Result.Failure<PublishAndStoreInvestorTransactionResponse>("WalletId is required for investor transactions");
 
             if (request.ProjectId is null)
-                return Result.Failure<string>("ProjectId is required for investor transactions");
+                return Result.Failure<PublishAndStoreInvestorTransactionResponse>("ProjectId is required for investor transactions");
 
             if (string.IsNullOrEmpty(request.TransactionDraft.SignedTxHex))
-                return Result.Failure<string>("Transaction signature cannot be empty");
+                return Result.Failure<PublishAndStoreInvestorTransactionResponse>("Transaction signature cannot be empty");
 
             if (cancellationToken.IsCancellationRequested)
-                return Result.Failure<string>("Operation was cancelled");
+                return Result.Failure<PublishAndStoreInvestorTransactionResponse>("Operation was cancelled");
 
             // Publish the transaction
             var errorMessage = await indexerService.PublishTransactionAsync(request.TransactionDraft.SignedTxHex);
 
             if (!string.IsNullOrEmpty(errorMessage))
-                return Result.Failure<string>(errorMessage);
+                return Result.Failure<PublishAndStoreInvestorTransactionResponse>(errorMessage);
 
             // Update or create the investment record with the transaction ID
             var updateResult = await UpdateInvestmentRecordWithTransaction(
@@ -41,9 +43,9 @@ public static class PublishAndStoreInvestorTransaction
                 request.TransactionDraft);
 
             if (updateResult.IsFailure)
-                return Result.Failure<string>(updateResult.Error);
+                return Result.Failure<PublishAndStoreInvestorTransactionResponse>(updateResult.Error);
 
-            return Result.Success(request.TransactionDraft.TransactionId);
+            return Result.Success(new PublishAndStoreInvestorTransactionResponse(request.TransactionDraft.TransactionId));
         }
 
         private async Task<Result> UpdateInvestmentRecordWithTransaction(

@@ -1,6 +1,6 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Domain;
-using Angor.Sdk.Funding.Projects.Infrastructure.Impl;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Funding.Shared.TransactionDrafts;
@@ -23,7 +23,9 @@ public static class CreateInvestment
             DomainFeerate FeeRate,
             byte? PatternIndex = null, // Required for Fund/Subscribe
             DateTime? InvestmentStartDate = null) // Required for Fund/Subscribe, defaults to now
-        : IRequest<Result<InvestmentDraft>>;
+        : IRequest<Result<CreateInvestmentTransactionResponse>>;
+
+    public record CreateInvestmentTransactionResponse(InvestmentDraft InvestmentDraft);
 
     public class CreateInvestmentTransactionHandler(
             IProjectService projectService,
@@ -33,9 +35,9 @@ public static class CreateInvestment
             IDerivationOperations derivationOperations,
             IWalletAccountBalanceService walletAccountBalanceService,
             ILogger<CreateInvestmentTransactionHandler> logger)
-        : IRequestHandler<CreateInvestmentTransactionRequest, Result<InvestmentDraft>>
+        : IRequestHandler<CreateInvestmentTransactionRequest, Result<CreateInvestmentTransactionResponse>>
     {
-        public async Task<Result<InvestmentDraft>> Handle(CreateInvestmentTransactionRequest transactionRequest, CancellationToken cancellationToken)
+        public async Task<Result<CreateInvestmentTransactionResponse>> Handle(CreateInvestmentTransactionRequest transactionRequest, CancellationToken cancellationToken)
         {
             try
             {
@@ -44,7 +46,7 @@ public static class CreateInvestment
                 if (projectResult.IsFailure)
                 {
                     logger.LogWarning("Failed to get project {ProjectId}: {Error}", transactionRequest.ProjectId, projectResult.Error);
-                    return Result.Failure<InvestmentDraft>(projectResult.Error);
+                    return Result.Failure<CreateInvestmentTransactionResponse>(projectResult.Error);
                 }
 
                 var project = projectResult.Value;
@@ -54,7 +56,7 @@ public static class CreateInvestment
                 if (sensitiveDataResult.IsFailure)
                 {
                     logger.LogWarning("Failed to get wallet data for {WalletId}: {Error}", transactionRequest.WalletId, sensitiveDataResult.Error);
-                    return Result.Failure<InvestmentDraft>(sensitiveDataResult.Error);
+                    return Result.Failure<CreateInvestmentTransactionResponse>(sensitiveDataResult.Error);
                 }
 
                 var walletWords = sensitiveDataResult.Value.ToWalletWords();
@@ -76,7 +78,7 @@ public static class CreateInvestment
                 if (fundingParametersResult.IsFailure)
                 {
                     logger.LogWarning("Failed to create funding parameters for project {ProjectId}: {Error}", transactionRequest.ProjectId, fundingParametersResult.Error);
-                    return Result.Failure<InvestmentDraft>(fundingParametersResult.Error);
+                    return Result.Failure<CreateInvestmentTransactionResponse>(fundingParametersResult.Error);
                 }
 
                 var fundingParameters = fundingParametersResult.Value;
@@ -89,7 +91,7 @@ public static class CreateInvestment
                 catch (Exception ex)
                 {
                     logger.LogWarning("Funding parameters validation failed for project {ProjectId}: {Error}", transactionRequest.ProjectId, ex.Message);
-                    return Result.Failure<InvestmentDraft>($"Invalid funding parameters: {ex.Message}");
+                    return Result.Failure<CreateInvestmentTransactionResponse>($"Invalid funding parameters: {ex.Message}");
                 }
 
                 // Create investment transaction using FundingParameters
@@ -98,7 +100,7 @@ public static class CreateInvestment
                 if (transactionResult.IsFailure)
                 {
                     logger.LogWarning("Failed to create investment transaction for project {ProjectId}: {Error}", transactionRequest.ProjectId, transactionResult.Error);
-                    return Result.Failure<InvestmentDraft>(transactionResult.Error);
+                    return Result.Failure<CreateInvestmentTransactionResponse>(transactionResult.Error);
                 }
 
                 // Sign the transaction
@@ -111,7 +113,7 @@ public static class CreateInvestment
                 if (signedTxResult.IsFailure)
                 {
                     logger.LogWarning("Failed to sign transaction for project {ProjectId}: {Error}", transactionRequest.ProjectId, signedTxResult.Error);
-                    return Result.Failure<InvestmentDraft>(signedTxResult.Error);
+                    return Result.Failure<CreateInvestmentTransactionResponse>(signedTxResult.Error);
                 }
 
                 // Calculate fees
@@ -122,19 +124,19 @@ public static class CreateInvestment
 
                 logger.LogInformation("Investment transaction created successfully for project {ProjectId}, TxId: {TxId}, Amount: {Amount}", transactionRequest.ProjectId, trxId, transactionRequest.Amount.Sats);
 
-                return new InvestmentDraft(investorKey)
+                return Result.Success(new CreateInvestmentTransactionResponse(new InvestmentDraft(investorKey)
                 {
                     TransactionFee = new Amount(minerFee + angorFee),
                     MinerFee = new Amount(minerFee),
                     AngorFee = new Amount(angorFee),
                     SignedTxHex = signedTxHex,
                     TransactionId = trxId,
-                };
+                }));
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error creating investment transaction for project {ProjectId}", transactionRequest.ProjectId);
-                return Result.Failure<InvestmentDraft>($"Error creating investment transaction: {ex.Message}");
+                return Result.Failure<CreateInvestmentTransactionResponse>($"Error creating investment transaction: {ex.Message}");
             }
         }
 

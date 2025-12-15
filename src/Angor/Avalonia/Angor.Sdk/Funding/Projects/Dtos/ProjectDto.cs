@@ -2,7 +2,7 @@ using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
 
-namespace Angor.Sdk.Funding.Projects.Application.Dtos;
+namespace Angor.Sdk.Funding.Projects.Dtos;
 
 public record ProjectDto
 {

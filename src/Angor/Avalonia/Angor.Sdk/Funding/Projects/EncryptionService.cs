@@ -4,7 +4,7 @@ using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 
-namespace Angor.Sdk.Funding.Projects.Infrastructure.Impl;
+namespace Angor.Sdk.Funding.Projects;
 
 public class EncryptionService : IEncryptionService
 {

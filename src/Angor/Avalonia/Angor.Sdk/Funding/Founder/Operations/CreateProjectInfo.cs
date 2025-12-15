@@ -1,6 +1,5 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Dtos;
-using Angor.Sdk.Funding.Projects.Application.Dtos;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
@@ -13,6 +12,7 @@ using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Stage = Angor.Shared.Models.Stage;
+using Angor.Sdk.Funding.Projects.Dtos;
 
 namespace Angor.Sdk.Funding.Founder.Operations;
 

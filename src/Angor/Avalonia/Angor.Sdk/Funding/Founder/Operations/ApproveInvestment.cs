@@ -1,5 +1,5 @@
 using Angor.Sdk.Common;
-using Angor.Sdk.Funding.Projects.Infrastructure.Impl;
+using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
@@ -16,7 +16,9 @@ namespace Angor.Sdk.Funding.Founder.Operations;
 
 public static class ApproveInvestment
 {
-    public record ApproveInvestmentRequest(WalletId WalletId, ProjectId ProjectId, Investment InvestmentRequest) : IRequest<Result>;
+    public record ApproveInvestmentRequest(WalletId WalletId, ProjectId ProjectId, Investment InvestmentRequest) : IRequest<Result<ApproveInvestmentResponse>>;
+
+    public record ApproveInvestmentResponse();
 
     public class ApproveInvestmentHandler(
         IProjectService projectService,
@@ -27,9 +29,9 @@ public static class ApproveInvestment
         ISerializer serializer,
         INetworkConfiguration networkConfiguration,
         IInvestorTransactionActions investorTransactionActions,
-        IFounderTransactionActions founderTransactionActions) : IRequestHandler<ApproveInvestmentRequest, Result>
+        IFounderTransactionActions founderTransactionActions) : IRequestHandler<ApproveInvestmentRequest, Result<ApproveInvestmentResponse>>
     {
-        public async Task<Result> Handle(ApproveInvestmentRequest request, CancellationToken cancellationToken)
+        public async Task<Result<ApproveInvestmentResponse>> Handle(ApproveInvestmentRequest request, CancellationToken cancellationToken)
         {
             var signatureItem = new SignatureItem()
             {
@@ -45,7 +47,10 @@ public static class ApproveInvestment
                 from project in projectService.GetAsync(request.ProjectId)
                 select PerformSignatureApproval(signatureItem, walletWords.ToWalletWords(), project.ToProjectInfo());
             
-            return approvalResult;
+            if (approvalResult.IsFailure)
+                return Result.Failure<ApproveInvestmentResponse>(approvalResult.Error);
+    
+            return Result.Success(new ApproveInvestmentResponse());
         }
 
         private Task<Result> PerformSignatureApproval(SignatureItem signature, WalletWords words, ProjectInfo projectInfo)

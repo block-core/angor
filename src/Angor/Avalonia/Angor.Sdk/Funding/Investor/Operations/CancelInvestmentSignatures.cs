@@ -20,17 +20,14 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 
 public static class CancelInvestmentSignatures
 {
-    public class CancelInvestmentSignaturesRequest(WalletId walletId, ProjectId projectId, string investmentId) : IRequest<Result>
-    {
-        public ProjectId ProjectId { get; } = projectId;
-        public string InvestmentId { get; } = investmentId;
-        public WalletId WalletId { get; } = walletId;
-    }
+    public record CancelInvestmentSignaturesRequest(WalletId WalletId, ProjectId ProjectId, string InvestmentId) : IRequest<Result<CancelInvestmentSignaturesResponse>>;
+
+    public record CancelInvestmentSignaturesResponse();
 
     public class CancelInvestmentSignaturesHandler(
-        IPortfolioService portfolioService) : IRequestHandler<CancelInvestmentSignaturesRequest, Result>
+        IPortfolioService portfolioService) : IRequestHandler<CancelInvestmentSignaturesRequest, Result<CancelInvestmentSignaturesResponse>>
     {
-        public async Task<Result> Handle(CancelInvestmentSignaturesRequest request, CancellationToken cancellationToken)
+        public async Task<Result<CancelInvestmentSignaturesResponse>> Handle(CancelInvestmentSignaturesRequest request, CancellationToken cancellationToken)
         {
             var investmentRecords = await portfolioService.GetByWalletId(request.WalletId.Value);
 
@@ -38,14 +35,14 @@ public static class CancelInvestmentSignatures
                 .FirstOrDefault(r => r.ProjectIdentifier == request.ProjectId.Value && r.InvestmentTransactionHash == request.InvestmentId);
 
             if (record == null)
-                return Result.Failure<string>("Investment record not found.");
+                return Result.Failure<CancelInvestmentSignaturesResponse>("Investment record not found.");
 
             var res = await portfolioService.RemoveInvestmentRecordAsync(request.WalletId.Value, record);
 
             if (res.IsFailure)
-                return Result.Failure<string>(res.Error);
+                return Result.Failure<CancelInvestmentSignaturesResponse>(res.Error);
 
-            return Result.Success();
+            return Result.Success(new CancelInvestmentSignaturesResponse());
         }
     }
 }
