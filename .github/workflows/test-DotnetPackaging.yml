@@ -40,9 +40,6 @@ jobs:
       - name: Install dotnetpackager Tool
         run: dotnet tool install -g DotnetPackaging.Tool
       
-      - name: Restore global.json
-        run: Move-Item "global.json.backup" "global.json"
-      
       - name: Verify tool installation
         run: dotnet tool list -g
       
@@ -57,6 +54,10 @@ jobs:
             --version 0.0.1 `
             --vendor "Blockcore" `
             --self-contained
+      
+      - name: Restore global.json
+        if: always()
+        run: Move-Item "global.json.backup" "global.json" -ErrorAction SilentlyContinue
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -90,9 +91,6 @@ jobs:
       - name: Install dotnetpackager Tool
         run: dotnet tool install -g DotnetPackaging.Tool
       
-      - name: Restore global.json
-        run: mv global.json.backup global.json
-      
       - name: Verify tool installation
         run: dotnetpackager --help
       
@@ -105,6 +103,10 @@ jobs:
             --application-name "${{ env.APP_NAME }}" \
             --version 0.0.1 \
             --self-contained
+      
+      - name: Restore global.json
+        if: always()
+        run: mv global.json.backup global.json || true
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -138,9 +140,6 @@ jobs:
       - name: Install dotnetpackager Tool
         run: dotnet tool install -g DotnetPackaging.Tool
       
-      - name: Restore global.json
-        run: mv global.json.backup global.json
-      
       - name: Verify tool installation
         run: dotnetpackager --help
       
@@ -152,6 +151,10 @@ jobs:
             --output artifacts/Angor-test-osx-x64.dmg \
             --application-name "${{ env.APP_NAME }}" \
             --self-contained
+      
+      - name: Restore global.json
+        if: always()
+        run: mv global.json.backup global.json || true
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
