@@ -119,6 +119,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Rename global.json
+        run: mv global.json global.json.backup
+      
       - name: Setup .NET 9 (App)
         uses: actions/setup-dotnet@v4
         with:
@@ -133,9 +136,6 @@ jobs:
         run: |
           dotnet --list-sdks
           dotnet --version
-      
-      - name: Rename global.json
-        run: mv global.json global.json.backup
       
       - name: Install dotnetpackager Tool
         run: dotnet tool install -g DotnetPackaging.Tool
