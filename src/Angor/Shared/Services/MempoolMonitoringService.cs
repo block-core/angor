@@ -9,7 +9,7 @@ public class MempoolMonitoringService : IMempoolMonitoringService
     private readonly ILogger<MempoolMonitoringService> _logger;
 
     // Hardcoded configuration - will be moved to configuration later
-    private readonly TimeSpan _pollingInterval = TimeSpan.FromSeconds(10);
+    private readonly TimeSpan _pollingInterval = TimeSpan.FromSeconds(2);
 
     public MempoolMonitoringService(
         IIndexerService indexerService,
@@ -73,6 +73,8 @@ public class MempoolMonitoringService : IMempoolMonitoringService
                 }
 
                 // Wait before next poll
+                _logger.LogDebug("No sufficient funds detected yet. Waiting {PollingInterval} seconds before next poll...", 
+                    _pollingInterval.TotalSeconds);
                 await Task.Delay(_pollingInterval, cancellationToken);
             }
             catch (OperationCanceledException)
@@ -84,6 +86,8 @@ public class MempoolMonitoringService : IMempoolMonitoringService
                 _logger.LogWarning(ex, "Error while monitoring address {Address}: {Error}", address, ex.Message);
                 
                 // Continue monitoring despite errors, but wait before retry
+                _logger.LogDebug("Error occurred. Waiting {PollingInterval} seconds before retry...", 
+                    _pollingInterval.TotalSeconds);
                 await Task.Delay(_pollingInterval, cancellationToken);
             }
         }

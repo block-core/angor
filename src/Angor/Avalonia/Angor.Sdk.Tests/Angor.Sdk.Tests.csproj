@@ -42,7 +42,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Funding\TestDoubles\" />
       <Folder Include="Wallet\Infrastructure\TestDoubles\" />
     </ItemGroup>
 
