@@ -80,7 +80,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION_TOOL }}
       
       - name: Install DotNetPackaging Tool
-        run: dotnet tool install --global DotnetPackaging.Tool
+        run: dotnet tool install -g DotnetPackaging.Tool
       
       - name: Create Windows x64 Installer
         run: |
@@ -130,7 +130,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION_TOOL }}
       
       - name: Install DotNetPackaging Tool
-        run: dotnet tool install --global DotnetPackaging.Tool
+        run: dotnet tool install -g DotnetPackaging.Tool
       
       - name: Create Linux x64 .deb
         run: |
@@ -194,7 +194,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION_TOOL }}
       
       - name: Install DotNetPackaging Tool
-        run: dotnet tool install --global DotnetPackaging.Tool
+        run: dotnet tool install -g DotnetPackaging.Tool
       
       - name: Create macOS x64 .dmg
         run: |
