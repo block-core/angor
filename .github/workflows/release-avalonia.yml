@@ -54,7 +54,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION_APP }}
       
       - name: Restore dependencies
-        run: dotnet restore Angor.Avalonia.sln
+        run: dotnet restore AngorApp.Desktop/AngorApp.Desktop.csproj
       
       - name: Build
         run: dotnet build AngorApp.Desktop/AngorApp.Desktop.csproj --no-restore -c Release
