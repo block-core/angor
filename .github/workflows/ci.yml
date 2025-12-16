@@ -97,6 +97,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       
       - name: Install Android workload
+        working-directory: ${{ env.AVALONIA_DIR }}
         run: dotnet workload install android
       
       - name: Cache NuGet packages
