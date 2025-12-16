@@ -104,46 +104,7 @@ jobs:
             --version 0.0.1 \
             --self-contained
       
-      - name: Restore global.json
-        if: always()
-        run: mv global.json.backup global.json || true
-      
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-test
-          path: artifacts/*
-
-  test-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Rename global.json
-        run: mv global.json global.json.backup
-      
-      - name: Setup .NET 9 (App)
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-      
-      - name: Setup .NET 10 (Tool)
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION_TOOL }}
-      
-      - name: Verify .NET versions
-        run: |
-          dotnet --list-sdks
-          dotnet --version
-      
-      - name: Install dotnetpackager Tool
-        run: dotnet tool install -g DotnetPackaging.Tool
-      
-      - name: Verify tool installation
-        run: dotnetpackager --help
-      
-      - name: Test macOS x64 .dmg build
+      - name: Test macOS x64 .dmg build (cross-compile)
         run: |
           dotnetpackager dmg from-project \
             --project ${{ env.DESKTOP_PROJECT }} \
@@ -159,5 +120,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macos-test
+          name: linux-test
           path: artifacts/*
