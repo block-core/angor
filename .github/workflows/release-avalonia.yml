@@ -212,6 +212,8 @@ jobs:
   build-android:
     runs-on: ubuntu-latest
     needs: [prepare, test]
+    env:
+      HAS_SIGNING_SECRETS: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v4
       
@@ -228,12 +230,12 @@ jobs:
         run: dotnet workload install android
       
       - name: Decode keystore
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        if: env.HAS_SIGNING_SECRETS == 'true'
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android.keystore
       
       - name: Build signed APK
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        if: env.HAS_SIGNING_SECRETS == 'true'
         run: |
           dotnet publish ${{ env.ANDROID_PROJECT }} \
             -c Release \
@@ -248,7 +250,7 @@ jobs:
             -o artifacts/
       
       - name: Build unsigned APK
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 == '' }}
+        if: env.HAS_SIGNING_SECRETS != 'true'
         run: |
           dotnet publish ${{ env.ANDROID_PROJECT }} \
             -c Release \
