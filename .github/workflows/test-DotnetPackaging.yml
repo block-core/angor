@@ -28,15 +28,20 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION_TOOL }}
-          include-prerelease: true
       
       - name: Verify .NET versions
         run: |
           dotnet --list-sdks
           dotnet --version
       
+      - name: Rename global.json
+        run: Move-Item "global.json" "global.json.backup"
+      
       - name: Install DotNetPackaging Tool
-        run: dotnet tool install -g DotnetPackaging.Tool --verbosity detailed
+        run: dotnet tool install -g DotnetPackaging.Tool
+      
+      - name: Restore global.json
+        run: Move-Item "global.json.backup" "global.json"
       
       - name: Verify tool installation
         run: dotnetpackaging --help
@@ -73,15 +78,20 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION_TOOL }}
-          include-prerelease: true
       
       - name: Verify .NET versions
         run: |
           dotnet --list-sdks
           dotnet --version
       
+      - name: Rename global.json
+        run: mv global.json global.json.backup
+      
       - name: Install DotNetPackaging Tool
-        run: dotnet tool install -g DotnetPackaging.Tool --verbosity detailed
+        run: dotnet tool install -g DotnetPackaging.Tool
+      
+      - name: Restore global.json
+        run: mv global.json.backup global.json
       
       - name: Verify tool installation
         run: dotnetpackaging --help
@@ -116,15 +126,20 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION_TOOL }}
-          include-prerelease: true
       
       - name: Verify .NET versions
         run: |
           dotnet --list-sdks
           dotnet --version
       
+      - name: Rename global.json
+        run: mv global.json global.json.backup
+      
       - name: Install DotNetPackaging Tool
-        run: dotnet tool install -g DotnetPackaging.Tool --verbosity detailed
+        run: dotnet tool install -g DotnetPackaging.Tool
+      
+      - name: Restore global.json
+        run: mv global.json.backup global.json
       
       - name: Verify tool installation
         run: dotnetpackaging --help
