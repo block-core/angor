@@ -215,15 +215,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Rename global.json
+        run: mv global.json global.json.backup
+      
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       
-      - name: Rename global.json
-        run: mv global.json global.json.backup
-      
       - name: Install Android workload
+        working-directory: ${{ env.AVALONIA_DIR }}
         run: dotnet workload install android
       
       - name: Decode keystore
