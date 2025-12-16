@@ -228,10 +228,12 @@ jobs:
         run: dotnet workload install android
       
       - name: Decode keystore
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android.keystore
       
       - name: Build signed APK
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         run: |
           dotnet publish ${{ env.ANDROID_PROJECT }} \
             -c Release \
@@ -243,6 +245,16 @@ jobs:
             -p:AndroidSigningKeyAlias=${{ secrets.ANDROID_KEY_ALIAS }} \
             -p:AndroidSigningKeyPass=${{ secrets.ANDROID_KEY_PASS }} \
             -p:AndroidSigningStorePass=${{ secrets.ANDROID_STORE_PASS }} \
+            -o artifacts/
+      
+      - name: Build unsigned APK
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 == '' }}
+        run: |
+          dotnet publish ${{ env.ANDROID_PROJECT }} \
+            -c Release \
+            -f net9.0-android \
+            -p:ApplicationDisplayVersion=${{ needs.prepare.outputs.version }} \
+            -p:ApplicationVersion=${{ github.run_number }} \
             -o artifacts/
       
       - name: Rename APK
