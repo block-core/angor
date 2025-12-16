@@ -13,6 +13,7 @@ on:
 
 env:
   DOTNET_VERSION: '9.0.x'
+  DOTNET_VERSION_TOOL: '10.0.x'
   SOLUTION_PATH: 'src/Angor/Avalonia/Angor.Avalonia.sln'
   AVALONIA_DIR: 'src/Angor/Avalonia'
   DESKTOP_PROJECT: 'src/Angor/Avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj'
@@ -118,10 +119,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup .NET
+      - name: Setup .NET 9 (App)
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Setup .NET 10 (Tool)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION_TOOL }}
       
       - name: Install DotNetPackaging Tool
         run: dotnet tool install -g DotnetPackaging.Tool
@@ -177,10 +183,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup .NET
+      - name: Setup .NET 9 (App)
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Setup .NET 10 (Tool)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION_TOOL }}
       
       - name: Install DotNetPackaging Tool
         run: dotnet tool install -g DotnetPackaging.Tool
