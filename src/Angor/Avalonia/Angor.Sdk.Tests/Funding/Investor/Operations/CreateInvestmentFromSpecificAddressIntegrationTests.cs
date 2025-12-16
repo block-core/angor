@@ -182,7 +182,7 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
         // Act
         var actTask =  _sut.Handle(request, CancellationToken.None);
         
-        await Task.Delay(10000); // Wait a bit before funding to ensure monitoring is active
+        await Task.Delay(100); // Wait a bit before funding to ensure monitoring is active
         
         // Fund the address using the miner wallet
         var fundingTxId = await minerFaucet.FundAddressAsync(
@@ -190,6 +190,7 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
             60000000, // 0.6 BTC
             10); // 10 sat/vB fee
 
+        // Wait for the handler to complete after detecting the funds
         var result = await actTask;
         
         _output.WriteLine($"✅ Funding transaction published: {fundingTxId}");
@@ -225,54 +226,6 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
         // Manual verification step: Check the transaction on Angor explorer
         _output.WriteLine($"\nPlease manually verify the transaction at:");
         _output.WriteLine($"https://signet.angor.online/tx/{txId}");
-    }
-
-    [Fact(Skip = "Integration test - requires Angornet setup. Run manually.")]
-    public async Task VerifyInvestmentTransaction_ChecksOutputsCorrectly()
-    {
-        // This test verifies that an investment transaction has the correct outputs
-        // Run this AFTER the CreateAndPublishInvestment test succeeds
-
-        var txId = "YOUR_TRANSACTION_ID_HERE"; // Replace with actual txId from previous test
-
-        _output.WriteLine($"Manual Verification Steps:");
-        _output.WriteLine($"1. Go to: https://signet.angor.online/tx/{txId}");
-        _output.WriteLine($"2. Verify the transaction has inputs from the funding address");
-        _output.WriteLine($"3. Verify there are investment outputs (taproot or OP_RETURN)");
-        _output.WriteLine($"4. Check that total fees are reasonable");
-        _output.WriteLine($"5. Confirm transaction is confirmed in a block");
-        
-        // Placeholder assertion
-        Assert.True(true, "This test requires manual verification");
-        
-        await Task.CompletedTask;
-    }
-
-    [Fact(Skip = "Integration test - requires Angornet (signet) funds. Run manually when you have signet bitcoins.")]
-    public async Task EndToEnd_CreateMonitorAndPublish_WorksWithRealMempool()
-    {
-        // This is a full end-to-end test that:
-        // 1. Creates a funding address
-        // 2. Monitors mempool for funds (you need to send signet BTC manually)
-        // 3. Creates and signs the investment transaction
-        // 4. Publishes to Angornet (signet)
-        // 5. Verifies it's in mempool
-
-        // Arrange
-        var words = new WalletWords { Words = TestWalletWords, Passphrase = TestWalletPassphrase };
-        var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(words);
-        await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
-        var fundingAddress = accountInfo.AddressesInfo.First();
-
-        _output.WriteLine($"📍 Send signet BTC to: {fundingAddress.Address}");
-        _output.WriteLine($"You can get signet BTC from: https://signetfaucet.com/");
-        _output.WriteLine($"Or use Angor faucet (if available)");
-        _output.WriteLine($"Waiting for funds...");
-
-        // TODO: Implement real mempool monitoring
-        // For now, this test documents the expected flow
-
-        Assert.True(true, "This test is a documentation of the expected integration flow");
     }
 
     private Project CreateTestProject()
