@@ -1,4 +1,4 @@
-name: Test DotnetPackaging Tool
+name: Test dotnetpackager Tool
 
 on:
   push:
@@ -37,18 +37,18 @@ jobs:
       - name: Rename global.json
         run: Move-Item "global.json" "global.json.backup"
       
-      - name: Install DotNetPackaging Tool
+      - name: Install dotnetpackager Tool
         run: dotnet tool install -g DotnetPackaging.Tool
       
       - name: Restore global.json
         run: Move-Item "global.json.backup" "global.json"
       
       - name: Verify tool installation
-        run: dotnetpackaging --help
+        run: dotnet tool list -g
       
       - name: Test Windows x64 build
         run: |
-          dotnetpackaging exe from-project `
+          dotnetpackager exe from-project `
             --project ${{ env.DESKTOP_PROJECT }} `
             --arch x64 `
             --output artifacts/Angor-test-win-x64-Setup.exe `
@@ -87,18 +87,18 @@ jobs:
       - name: Rename global.json
         run: mv global.json global.json.backup
       
-      - name: Install DotNetPackaging Tool
+      - name: Install dotnetpackager Tool
         run: dotnet tool install -g DotnetPackaging.Tool
       
       - name: Restore global.json
         run: mv global.json.backup global.json
       
       - name: Verify tool installation
-        run: dotnetpackaging --help
+        run: dotnetpackager --help
       
       - name: Test Linux x64 .deb build
         run: |
-          dotnetpackaging deb from-project \
+          dotnetpackager deb from-project \
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch x64 \
             --output artifacts/angor_0.0.1_amd64.deb \
@@ -135,18 +135,18 @@ jobs:
       - name: Rename global.json
         run: mv global.json global.json.backup
       
-      - name: Install DotNetPackaging Tool
+      - name: Install dotnetpackager Tool
         run: dotnet tool install -g DotnetPackaging.Tool
       
       - name: Restore global.json
         run: mv global.json.backup global.json
       
       - name: Verify tool installation
-        run: dotnetpackaging --help
+        run: dotnetpackager --help
       
       - name: Test macOS x64 .dmg build
         run: |
-          dotnetpackaging dmg from-project \
+          dotnetpackager dmg from-project \
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch x64 \
             --output artifacts/Angor-test-osx-x64.dmg \
