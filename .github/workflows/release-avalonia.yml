@@ -78,6 +78,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION_TOOL }}
+          include-prerelease: true
       
       - name: Install DotNetPackaging Tool
         run: dotnet tool install -g DotnetPackaging.Tool
@@ -128,6 +129,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION_TOOL }}
+          include-prerelease: true
       
       - name: Install DotNetPackaging Tool
         run: dotnet tool install -g DotnetPackaging.Tool
@@ -192,6 +194,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION_TOOL }}
+          include-prerelease: true
       
       - name: Install DotNetPackaging Tool
         run: dotnet tool install -g DotnetPackaging.Tool
