@@ -42,6 +42,9 @@ jobs:
   # Run tests
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/Angor/Avalonia
     steps:
       - uses: actions/checkout@v4
       
@@ -51,13 +54,13 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION_APP }}
       
       - name: Restore dependencies
-        run: dotnet restore ${{ env.SOLUTION_PATH }}
+        run: dotnet restore Angor.Avalonia.sln
       
       - name: Build
-        run: dotnet build ${{ env.SOLUTION_PATH }} --no-restore -c Release
+        run: dotnet build AngorApp.Desktop/AngorApp.Desktop.csproj --no-restore -c Release
       
       - name: Test
-        run: dotnet test ${{ env.SOLUTION_PATH }} --no-build -c Release --verbosity normal
+        run: dotnet test Angor.Sdk.Tests/Angor.Sdk.Tests.csproj -c Release --verbosity normal
 
   # Build Windows installer (.exe)
   build-windows:
@@ -230,6 +233,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION_APP }}
       
       - name: Install Android workload
+        working-directory: ${{ env.AVALONIA_DIR }}
         run: dotnet workload install android
       
       - name: Decode keystore
