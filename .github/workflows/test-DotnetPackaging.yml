@@ -8,7 +8,7 @@ on:
 
 env:
   DOTNET_VERSION: '9.0.x'
-  DOTNET_VERSION_TOOL: '10.0.x'
+  DOTNET_VERSION_TOOL: '10.0.101'
   AVALONIA_DIR: 'src/Angor/Avalonia'
   DESKTOP_PROJECT: 'src/Angor/Avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj'
   APP_NAME: 'Angor'
@@ -36,7 +36,7 @@ jobs:
           dotnet --version
       
       - name: Install DotNetPackaging Tool
-        run: dotnet tool install -g DotnetPackaging.Tool --version 9.0.4 --verbosity detailed
+        run: dotnet tool install -g DotnetPackaging.Tool --verbosity detailed
       
       - name: Verify tool installation
         run: dotnetpackaging --help
@@ -81,7 +81,7 @@ jobs:
           dotnet --version
       
       - name: Install DotNetPackaging Tool
-        run: dotnet tool install -g DotnetPackaging.Tool --version 9.0.4 --verbosity detailed
+        run: dotnet tool install -g DotnetPackaging.Tool --verbosity detailed
       
       - name: Verify tool installation
         run: dotnetpackaging --help
@@ -124,7 +124,7 @@ jobs:
           dotnet --version
       
       - name: Install DotNetPackaging Tool
-        run: dotnet tool install -g DotnetPackaging.Tool --version 9.0.4 --verbosity detailed
+        run: dotnet tool install -g DotnetPackaging.Tool --verbosity detailed
       
       - name: Verify tool installation
         run: dotnetpackaging --help
