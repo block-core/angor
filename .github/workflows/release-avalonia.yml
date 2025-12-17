@@ -238,8 +238,11 @@ jobs:
       
       - name: Rename APK
         run: |
-          mv artifacts/*.apk artifacts/Angor-${{ needs.prepare.outputs.version }}.apk || true
-          mv artifacts/*-Signed.apk artifacts/Angor-${{ needs.prepare.outputs.version }}.apk || true
+          # Find the APK file and rename it (there should be only one)
+          APK_FILE=$(find artifacts -name "*.apk" -type f | head -1)
+          if [ -n "$APK_FILE" ]; then
+            mv "$APK_FILE" artifacts/Angor-${{ needs.prepare.outputs.version }}.apk
+          fi
       
       - name: Cleanup keystore
         if: always()
