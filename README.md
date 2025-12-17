@@ -23,9 +23,39 @@ For more details:
   
 ## How to Use Angor?
 
-Angor is available on web, (and desktop, mobile in the future). The web app can be installed as a PWA (Progressive Web App) to provide an app-like experience on supported devices.
+Angor is available on web, desktop, mobile, and Android. The web app can be installed as a PWA (Progressive Web App) to provide an app-like experience on supported devices.
 
-You can access Angor online at [https://angor.io/](https://angor.io/), or download the app directly from this repository for local use.
+You can access Angor online at [https://angor.io/](https://angor.io/), or download the app directly from the [Releases](https://github.com/block-core/angor/releases) page.
+
+### Downloads
+
+| Platform | Download |
+|----------|----------|
+| Windows | `.exe` installer (x64, arm64) |
+| Linux | `.deb` package, `.AppImage` (x64, arm64) |
+| macOS | `.dmg` disk image (x64, arm64) |
+| Android | `.apk` (unsigned, sideload) |
+
+## Releasing
+
+To create a new release:
+
+1. **Tag a version**: Push a tag starting with `v` (e.g., `v1.0.0`)
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+2. **Automatic build**: The `release-avalonia.yml` workflow will:
+   - Run tests
+   - Build installers for all platforms (Windows, Linux, macOS, Android)
+   - Create a GitHub Release with all artifacts
+
+3. **Manual trigger**: You can also trigger a release manually from the Actions tab using `workflow_dispatch`
+
+### Version Format
+- Release: `v1.0.0` → Creates a full release
+- Pre-release: `v1.0.0-beta` or `v1.0.0-rc1` → Creates a pre-release
 
 ## Contributing
 
