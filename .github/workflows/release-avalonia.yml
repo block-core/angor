@@ -238,19 +238,25 @@ jobs:
       
       - name: Rename APK
         run: |
+          # List what we have
+          ls -la artifacts/*.apk || true
+          
           # Prefer the signed APK, fallback to unsigned
-          if [ -f artifacts/*-Signed.apk ]; then
-            mv artifacts/*-Signed.apk artifacts/Angor-${{ needs.prepare.outputs.version }}.apk
-            rm -f artifacts/*.apk 2>/dev/null || true
-            mv artifacts/Angor-${{ needs.prepare.outputs.version }}.apk artifacts/Angor-${{ needs.prepare.outputs.version }}.apk
+          SIGNED_APK=$(find artifacts -name "*-Signed.apk" -type f | head -1)
+          if [ -n "$SIGNED_APK" ]; then
+            # Remove unsigned APKs first, then rename signed
+            find artifacts -name "*.apk" ! -name "*-Signed.apk" -delete
+            mv "$SIGNED_APK" artifacts/Angor-${{ needs.prepare.outputs.version }}.apk
           else
+            # No signed APK, use whatever we have
             APK_FILE=$(find artifacts -name "*.apk" -type f | head -1)
             if [ -n "$APK_FILE" ]; then
               mv "$APK_FILE" artifacts/Angor-${{ needs.prepare.outputs.version }}.apk
             fi
           fi
-          # Remove any other APK files
-          find artifacts -name "*.apk" ! -name "Angor-${{ needs.prepare.outputs.version }}.apk" -delete
+          
+          # Show final result
+          ls -la artifacts/*.apk || true
       
       - name: Cleanup keystore
         if: always()
