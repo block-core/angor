@@ -50,4 +50,11 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     => mediator.Send(request);
 
     #endregion
+
+    #region Methods for monitoring external funding
+
+    public Task<Result<MonitorAddressForFunds.MonitorAddressForFundsResponse>> MonitorAddressForFunds(MonitorAddressForFunds.MonitorAddressForFundsRequest request)
+        => mediator.Send(request);
+
+    #endregion
 }

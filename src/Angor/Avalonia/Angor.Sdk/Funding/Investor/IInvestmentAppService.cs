@@ -26,4 +26,11 @@ public interface IInvestmentAppService
     Task<Result<PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionResponse>> SubmitTransactionFromDraft(PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest request);
 
     Task<Result<CheckPenaltyThreshold.CheckPenaltyThresholdResponse>> IsInvestmentAbovePenaltyThreshold(CheckPenaltyThreshold.CheckPenaltyThresholdRequest request);
+
+    // Methods for monitoring external funding
+    /// <summary>
+    /// Monitors a specific address for incoming funds from an external wallet.
+    /// Stores the request to DB, monitors the mempool, updates account info when funds are detected, and saves to DB.
+    /// </summary>
+    Task<Result<MonitorAddressForFunds.MonitorAddressForFundsResponse>> MonitorAddressForFunds(MonitorAddressForFunds.MonitorAddressForFundsRequest request);
 }

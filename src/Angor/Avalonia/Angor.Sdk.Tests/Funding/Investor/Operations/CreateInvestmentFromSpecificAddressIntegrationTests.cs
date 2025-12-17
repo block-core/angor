@@ -23,7 +23,7 @@ using Xunit.Abstractions;
 namespace Angor.Sdk.Tests.Funding.Investor.Operations;
 
 /// <summary>
-/// Integration tests for CreateInvestmentFromSpecificAddress handler.
+/// Integration tests for CreateInvestment handler with FundingAddress parameter.
 /// These tests actually publish transactions to Angornet (Bitcoin Signet) and verify they are correctly spent.
 /// 
 /// IMPORTANT: These tests require:
@@ -38,13 +38,14 @@ namespace Angor.Sdk.Tests.Funding.Investor.Operations;
 public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
 {
     private readonly Network _network;
+    private readonly NetworkConfiguration _networkConfiguration;
     private readonly WalletOperations _walletOperations;
     private readonly DerivationOperations _derivationOperations;
     private readonly Mock<IProjectService> _mockProjectService;
     private readonly Mock<ISeedwordsProvider> _mockSeedwordsProvider;
     private readonly Mock<IWalletAccountBalanceService> _mockWalletAccountBalanceService;
     private readonly IIndexerService _realIndexerService;
-    private readonly CreateInvestmentFromSpecificAddress.CreateInvestmentFromSpecificAddressHandler _sut;
+    private readonly CreateInvestment.CreateInvestmentTransactionHandler _sut;
     private readonly ITestOutputHelper _output;
 
     // Test wallet words - ONLY FOR ANGORNET (SIGNET)!
@@ -56,15 +57,15 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
         _output = output;
         
         // Setup network - Use Angornet (Bitcoin Signet)
-        var networkConfiguration = new NetworkConfiguration();
-        networkConfiguration.SetNetwork(new Angornet());
-        _network = networkConfiguration.GetNetwork();
+        _networkConfiguration = new NetworkConfiguration();
+        _networkConfiguration.SetNetwork(new Angornet());
+        _network = _networkConfiguration.GetNetwork();
 
         // Create derivation operations first (needed by indexer)
         _derivationOperations = new DerivationOperations(
             new HdOperations(),
             new NullLogger<DerivationOperations>(),
-            networkConfiguration);
+            _networkConfiguration);
 
         // Setup REAL indexer service using MempoolSpaceIndexerApi for Angornet
         // Create real HttpClientFactory implementation
@@ -73,7 +74,7 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
         // Create real NetworkService implementation
         var networkService = new TestNetworkService(
             new SettingsUrl { Name = "Angornet", Url = "https://signet.angor.online" },
-            networkConfiguration);
+            _networkConfiguration);
 
         _realIndexerService = new MempoolSpaceIndexerApi(
             new NullLogger<MempoolSpaceIndexerApi>(),
@@ -86,42 +87,36 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
             _realIndexerService,
             new HdOperations(),
             new NullLogger<WalletOperations>(),
-            networkConfiguration);
+            _networkConfiguration);
 
         var investorTransactionActions = new InvestorTransactionActions(
             new NullLogger<InvestorTransactionActions>(),
             new InvestmentScriptBuilder(new SeederScriptTreeBuilder()),
             new ProjectScriptsBuilder(_derivationOperations),
-            new SpendingTransactionBuilder(networkConfiguration, 
+            new SpendingTransactionBuilder(_networkConfiguration, 
                 new ProjectScriptsBuilder(_derivationOperations), 
                 new InvestmentScriptBuilder(new SeederScriptTreeBuilder())),
-            new InvestmentTransactionBuilder(networkConfiguration, 
+            new InvestmentTransactionBuilder(_networkConfiguration, 
                 new ProjectScriptsBuilder(_derivationOperations), 
                 new InvestmentScriptBuilder(new SeederScriptTreeBuilder()), 
                 new TaprootScriptBuilder()),
             new TaprootScriptBuilder(),
-            networkConfiguration);
+            _networkConfiguration);
 
         // Setup mocks for non-critical services (project metadata, wallet data)
         _mockProjectService = new Mock<IProjectService>();
         _mockSeedwordsProvider = new Mock<ISeedwordsProvider>();
         _mockWalletAccountBalanceService = new Mock<IWalletAccountBalanceService>();
-        
-        // Use REAL mempool monitoring service for integration tests
-        var realMempoolService = new MempoolMonitoringService(
-            _realIndexerService,
-            new NullLogger<MempoolMonitoringService>());
 
-        // Create the handler
-        _sut = new CreateInvestmentFromSpecificAddress.CreateInvestmentFromSpecificAddressHandler(
+        // Create the handler - now using CreateInvestment.CreateInvestmentTransactionHandler
+        _sut = new CreateInvestment.CreateInvestmentTransactionHandler(
             _mockProjectService.Object,
             investorTransactionActions,
             _mockSeedwordsProvider.Object,
             _walletOperations,
             _derivationOperations,
             _mockWalletAccountBalanceService.Object,
-            realMempoolService, // ← Using REAL service, not mock!
-            new NullLogger<CreateInvestmentFromSpecificAddress.CreateInvestmentFromSpecificAddressHandler>());
+            new NullLogger<CreateInvestment.CreateInvestmentTransactionHandler>());
     }
 
     [Fact]
@@ -148,13 +143,7 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
             .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
             .ReturnsAsync(Result.Success((TestWalletWords, Maybe<string>.None)));
 
-        var accountBalance = new AccountBalanceInfo();
-        accountBalance.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
-        _mockWalletAccountBalanceService
-            .Setup(x => x.GetAccountBalanceInfoAsync(It.IsAny<WalletId>()))
-            .ReturnsAsync(Result.Success(accountBalance));
-
-        // Use the Angornet miner faucet to automatically fund the address
+        // Use the Angornet miner faucet to fund the address first
         _output.WriteLine(new string('=', 80));
         _output.WriteLine("💰 Using Angornet Miner Faucet to fund test address");
         _output.WriteLine($"   Target Address: {fundingAddress.Address}");
@@ -167,35 +156,44 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
             _network,
             new NullLogger<AngornetMinerFaucet>());
         
-        // The REAL mempool monitoring service will detect the funds on Angornet
-        // No mocking - this is a real integration test!
-
-        var request = new CreateInvestmentFromSpecificAddress.CreateInvestmentFromSpecificAddressRequest(
-            walletId,
-            project.Id,
-            new Amount(50000000), // 0.5 BTC investment
-            new DomainFeerate(10000), // 10 sat/vB
-            fundingAddress.Address,
-            null,
-            null);
-
-        // Act
-        var actTask =  _sut.Handle(request, CancellationToken.None);
-        
-        await Task.Delay(100); // Wait a bit before funding to ensure monitoring is active
-        
         // Fund the address using the miner wallet
         var fundingTxId = await minerFaucet.FundAddressAsync(
             fundingAddress.Address,
             60000000, // 0.6 BTC
             10); // 10 sat/vB fee
 
-        // Wait for the handler to complete after detecting the funds
-        var result = await actTask;
-        
         _output.WriteLine($"✅ Funding transaction published: {fundingTxId}");
         _output.WriteLine($"   Explorer: https://signet.angor.online/tx/{fundingTxId}");
-        _output.WriteLine("\nWaiting for mempool monitoring to detect the funds...");
+        _output.WriteLine("\nWaiting for funds to appear in mempool...");
+
+        // Wait for the transaction to be visible in the mempool/blockchain
+        await Task.Delay(5000);
+
+        // Refresh account info to get the newly funded UTXO
+        await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+
+        // Setup account balance mock with actual UTXO data
+        var allUtxos = accountInfo.AllAddresses()
+            .SelectMany(a => a.UtxoData)
+            .ToList();
+        var accountBalance = new AccountBalanceInfo();
+        accountBalance.UpdateAccountBalanceInfo(accountInfo, allUtxos);
+        _mockWalletAccountBalanceService
+            .Setup(x => x.GetAccountBalanceInfoAsync(It.IsAny<WalletId>()))
+            .ReturnsAsync(Result.Success(accountBalance));
+
+        // Create request with FundingAddress - this uses the new CreateInvestment handler
+        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+            walletId,
+            project.Id,
+            new Amount(50000000), // 0.5 BTC investment
+            new DomainFeerate(10000), // 10 sat/vB
+            null, // PatternIndex - not needed for Invest projects
+            null, // InvestmentStartDate - not needed for Invest projects
+            fundingAddress.Address); // FundingAddress - use specific address
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
         
         // Assert - Transaction creation
         var error = result.IsFailure ? result.Error : string.Empty;
