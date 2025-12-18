@@ -68,4 +68,34 @@ public class AccountInfo
 
         return false;
     }
+
+    /// <summary>
+    /// Adds new UTXOs to the specified address, avoiding duplicates.
+    /// </summary>
+    /// <param name="address">The address to add UTXOs to</param>
+    /// <param name="newUtxos">The list of new UTXOs to add</param>
+    /// <returns>The number of UTXOs actually added (excluding duplicates)</returns>
+    public int AddNewUtxos(string address, List<UtxoData> newUtxos)
+    {
+        var addressInfo = AllAddresses().FirstOrDefault(a => a.Address == address);
+        
+        if (addressInfo == null)
+            return 0;
+
+        var addedCount = 0;
+        foreach (var utxo in newUtxos)
+        {
+            // Check if UTXO already exists to avoid duplicates
+            var existingUtxo = addressInfo.UtxoData
+                .FirstOrDefault(u => u.outpoint.ToString() == utxo.outpoint.ToString());
+
+            if (existingUtxo == null)
+            {
+                addressInfo.UtxoData.Add(utxo);
+                addedCount++;
+            }
+        }
+
+        return addedCount;
+    }
 }

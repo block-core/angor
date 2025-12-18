@@ -108,10 +108,11 @@ public static class MonitorAddressForFunds
                     detectedUtxos.Count, request.Address, totalAmount);
 
                 // Update account info with the new UTXOs
-                await UpdateAccountInfoWithNewUtxos(accountInfo, request.Address, detectedUtxos);
+                var addedCount = accountInfo.AddNewUtxos(request.Address, detectedUtxos);
+                logger.LogDebug("Added {AddedCount} new UTXO(s) to address {Address}", addedCount, request.Address);
 
                 // Save the updated account info
-                var saveResult = await SaveAccountInfo(request.WalletId, accountInfo, detectedUtxos);
+                var saveResult = await SaveAccountInfo(request.WalletId, accountBalanceResult.Value);
                 if (saveResult.IsFailure)
                 {
                     logger.LogWarning("Failed to save account info: {Error}", saveResult.Error);
@@ -140,46 +141,23 @@ public static class MonitorAddressForFunds
             }
         }
 
-        private Task UpdateAccountInfoWithNewUtxos(AccountInfo accountInfo, string address, List<UtxoData> newUtxos)
-        {
-            // Find the address info and update it with the new UTXOs
-            var addressInfo = accountInfo.AllAddresses().FirstOrDefault(a => a.Address == address);
-            
-            if (addressInfo != null)
-            {
-                foreach (var utxo in newUtxos)
-                {
-                    // Check if UTXO already exists to avoid duplicates
-                    var existingUtxo = addressInfo.UtxoData
-                        .FirstOrDefault(u => u.outpoint.ToString() == utxo.outpoint.ToString());
-
-                    if (existingUtxo == null)
-                    {
-                        addressInfo.UtxoData.Add(utxo);
-                        logger.LogDebug("Added UTXO {Outpoint} to address {Address}", 
-                            utxo.outpoint, address);
-                    }
-                }
-            }
-
-            return Task.CompletedTask;
-        }
-
-        private Task<Result> SaveAccountInfo(WalletId walletId, AccountInfo accountInfo, List<UtxoData> detectedUtxos)
+        private async Task<Result> SaveAccountInfo(WalletId walletId, AccountBalanceInfo accountBalanceInfo)
         {
             try
             {
-                // The wallet account balance service should handle persisting this
-                // For now, we rely on the caller to persist the account info if needed
-                logger.LogDebug("Account info updated with {Count} new UTXO(s) for wallet {WalletId}", 
-                    detectedUtxos.Count, walletId.Value);
-
-                return Task.FromResult(Result.Success());
+                var result = await walletAccountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo);
+                
+                if (result.IsSuccess)
+                {
+                    logger.LogDebug("Account info saved successfully for wallet {WalletId}", walletId.Value);
+                }
+                
+                return result;
             }
             catch (Exception ex)
             {
                 logger.LogWarning(ex, "Error saving account info for wallet {WalletId}", walletId.Value);
-                return Task.FromResult(Result.Failure($"Error saving account info: {ex.Message}"));
+                return Result.Failure($"Error saving account info: {ex.Message}");
             }
         }
     }

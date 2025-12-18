@@ -429,6 +429,278 @@ public class MonitorAddressForFundsTests
             Times.Once);
     }
 
+    [Fact]
+    public async Task Handle_WhenFundsDetected_AddsNewUtxosToAccountInfo()
+    {
+        // Arrange
+        var walletId = new WalletId(Guid.NewGuid().ToString());
+        var address = "tb1qtestaddutxos";
+        var requiredAmount = new Amount(100000);
+
+        var accountInfo = CreateAccountInfoWithAddress(address);
+        var accountBalanceInfo = new AccountBalanceInfo();
+        accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
+
+        _mockWalletAccountBalanceService
+            .Setup(x => x.GetAccountBalanceInfoAsync(It.IsAny<WalletId>()))
+            .ReturnsAsync(Result.Success(accountBalanceInfo));
+
+        _mockWalletAccountBalanceService
+            .Setup(x => x.SaveAccountBalanceInfoAsync(It.IsAny<WalletId>(), It.IsAny<AccountBalanceInfo>()))
+            .ReturnsAsync(Result.Success());
+
+        var expectedUtxos = new List<UtxoData>
+        {
+            CreateUtxoData(address, 150000, "txid1", 0),
+            CreateUtxoData(address, 75000, "txid2", 1)
+        };
+
+        _mockMempoolMonitoringService
+            .Setup(x => x.MonitorAddressForFundsAsync(
+                address,
+                requiredAmount.Sats,
+                It.IsAny<TimeSpan>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedUtxos);
+
+        var request = new MonitorAddressForFunds.MonitorAddressForFundsRequest(
+            walletId,
+            address,
+            requiredAmount,
+            TimeSpan.FromMinutes(5));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        // Verify that UTXOs were added to the account info
+        var addressInfo = accountInfo.AllAddresses().First(a => a.Address == address);
+        Assert.Equal(2, addressInfo.UtxoData.Count);
+        Assert.Equal(150000, addressInfo.UtxoData[0].value);
+        Assert.Equal(75000, addressInfo.UtxoData[1].value);
+    }
+
+    [Fact]
+    public async Task Handle_WhenFundsDetected_WithZeroTimeout_AddsNewUtxosToAccountInfo()
+    {
+        // Arrange
+        var walletId = new WalletId(Guid.NewGuid().ToString());
+        var address = "tb1qtestzerotimeout";
+        var requiredAmount = new Amount(100000);
+
+        var accountInfo = CreateAccountInfoWithAddress(address);
+        var accountBalanceInfo = new AccountBalanceInfo();
+        accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
+
+        _mockWalletAccountBalanceService
+            .Setup(x => x.GetAccountBalanceInfoAsync(It.IsAny<WalletId>()))
+            .ReturnsAsync(Result.Success(accountBalanceInfo));
+
+        _mockWalletAccountBalanceService
+            .Setup(x => x.SaveAccountBalanceInfoAsync(It.IsAny<WalletId>(), It.IsAny<AccountBalanceInfo>()))
+            .ReturnsAsync(Result.Success());
+
+        // Create expected UTXOs that the indexer will return (blockIndex = 0 means mempool)
+        var expectedUtxos = new List<UtxoData>
+        {
+            CreateUtxoData(address, 150000, "txid1", 0),
+            CreateUtxoData(address, 75000, "txid2", 1)
+        };
+
+        // Mock the IIndexerService to return UTXOs immediately
+        var mockIndexerService = new Mock<IIndexerService>();
+        mockIndexerService
+            .Setup(x => x.FetchUtxoAsync(address, It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(expectedUtxos);
+
+        // Create a real MempoolMonitoringService with the mocked indexer
+        var realMempoolMonitoringService = new MempoolMonitoringService(
+            mockIndexerService.Object,
+            new NullLogger<MempoolMonitoringService>());
+
+        // Create handler with real MempoolMonitoringService
+        var handlerWithRealMonitoring = new MonitorAddressForFunds.MonitorAddressForFundsHandler(
+            realMempoolMonitoringService,
+            _mockWalletAccountBalanceService.Object,
+            new NullLogger<MonitorAddressForFunds.MonitorAddressForFundsHandler>());
+
+        // Use a small positive timeout (1 second) since the monitoring service loop
+        // requires timeout > 0 to execute at least once
+        var request = new MonitorAddressForFunds.MonitorAddressForFundsRequest(
+            walletId,
+            address,
+            requiredAmount,
+            TimeSpan.FromSeconds(1));
+
+        // Act
+        var result = await handlerWithRealMonitoring.Handle(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, $"Expected success but got: {(result.IsFailure ? result.Error : "N/A")}");
+        // Verify that UTXOs were added to the account info
+        var addressInfo = accountInfo.AllAddresses().First(a => a.Address == address);
+        Assert.Equal(2, addressInfo.UtxoData.Count);
+        Assert.Equal(150000, addressInfo.UtxoData[0].value);
+        Assert.Equal(75000, addressInfo.UtxoData[1].value);
+
+        // Verify the indexer service was called
+        mockIndexerService.Verify(
+            x => x.FetchUtxoAsync(address, It.IsAny<int>(), It.IsAny<int>()),
+            Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task Handle_WhenFundsDetected_SavesAccountInfoViaService()
+    {
+        // Arrange
+        var walletId = new WalletId(Guid.NewGuid().ToString());
+        var address = "tb1qtestsaveservice";
+        var requiredAmount = new Amount(100000);
+
+        var accountInfo = CreateAccountInfoWithAddress(address);
+        var accountBalanceInfo = new AccountBalanceInfo();
+        accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
+
+        _mockWalletAccountBalanceService
+            .Setup(x => x.GetAccountBalanceInfoAsync(It.IsAny<WalletId>()))
+            .ReturnsAsync(Result.Success(accountBalanceInfo));
+
+        _mockWalletAccountBalanceService
+            .Setup(x => x.SaveAccountBalanceInfoAsync(walletId, It.IsAny<AccountBalanceInfo>()))
+            .ReturnsAsync(Result.Success());
+
+        var expectedUtxos = new List<UtxoData>
+        {
+            CreateUtxoData(address, 150000, "txid1", 0)
+        };
+
+        _mockMempoolMonitoringService
+            .Setup(x => x.MonitorAddressForFundsAsync(
+                address,
+                requiredAmount.Sats,
+                It.IsAny<TimeSpan>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedUtxos);
+
+        var request = new MonitorAddressForFunds.MonitorAddressForFundsRequest(
+            walletId,
+            address,
+            requiredAmount,
+            TimeSpan.FromMinutes(5));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        _mockWalletAccountBalanceService.Verify(
+            x => x.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WhenSaveAccountInfoFails_StillReturnsSuccess()
+    {
+        // Arrange - the handler should not fail if saving fails, just log a warning
+        var walletId = new WalletId(Guid.NewGuid().ToString());
+        var address = "tb1qtestsavefailure";
+        var requiredAmount = new Amount(100000);
+
+        var accountInfo = CreateAccountInfoWithAddress(address);
+        var accountBalanceInfo = new AccountBalanceInfo();
+        accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
+
+        _mockWalletAccountBalanceService
+            .Setup(x => x.GetAccountBalanceInfoAsync(It.IsAny<WalletId>()))
+            .ReturnsAsync(Result.Success(accountBalanceInfo));
+
+        _mockWalletAccountBalanceService
+            .Setup(x => x.SaveAccountBalanceInfoAsync(It.IsAny<WalletId>(), It.IsAny<AccountBalanceInfo>()))
+            .ReturnsAsync(Result.Failure("Database error"));
+
+        var expectedUtxos = new List<UtxoData>
+        {
+            CreateUtxoData(address, 150000, "txid1", 0)
+        };
+
+        _mockMempoolMonitoringService
+            .Setup(x => x.MonitorAddressForFundsAsync(
+                address,
+                requiredAmount.Sats,
+                It.IsAny<TimeSpan>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedUtxos);
+
+        var request = new MonitorAddressForFunds.MonitorAddressForFundsRequest(
+            walletId,
+            address,
+            requiredAmount,
+            TimeSpan.FromMinutes(5));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert - should still succeed even if save fails
+        Assert.True(result.IsSuccess);
+        Assert.Equal(150000, result.Value.TotalAmount.Sats);
+    }
+
+    [Fact]
+    public async Task Handle_WhenDuplicateUtxosDetected_DoesNotAddDuplicates()
+    {
+        // Arrange
+        var walletId = new WalletId(Guid.NewGuid().ToString());
+        var address = "tb1qtestduplicates";
+        var requiredAmount = new Amount(100000);
+
+        // Create account info with an existing UTXO
+        var existingUtxo = CreateUtxoData(address, 50000, "existingtxid", 0);
+        var accountInfo = CreateAccountInfoWithAddress(address);
+        accountInfo.AllAddresses().First(a => a.Address == address).UtxoData.Add(existingUtxo);
+
+        var accountBalanceInfo = new AccountBalanceInfo();
+        accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
+
+        _mockWalletAccountBalanceService
+            .Setup(x => x.GetAccountBalanceInfoAsync(It.IsAny<WalletId>()))
+            .ReturnsAsync(Result.Success(accountBalanceInfo));
+
+        _mockWalletAccountBalanceService
+            .Setup(x => x.SaveAccountBalanceInfoAsync(It.IsAny<WalletId>(), It.IsAny<AccountBalanceInfo>()))
+            .ReturnsAsync(Result.Success());
+
+        // Return both the existing UTXO and a new one
+        var detectedUtxos = new List<UtxoData>
+        {
+            CreateUtxoData(address, 50000, "existingtxid", 0), // Duplicate
+            CreateUtxoData(address, 100000, "newtxid", 0)      // New
+        };
+
+        _mockMempoolMonitoringService
+            .Setup(x => x.MonitorAddressForFundsAsync(
+                address,
+                requiredAmount.Sats,
+                It.IsAny<TimeSpan>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(detectedUtxos);
+
+        var request = new MonitorAddressForFunds.MonitorAddressForFundsRequest(
+            walletId,
+            address,
+            requiredAmount,
+            TimeSpan.FromMinutes(5));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        var addressInfo = accountInfo.AllAddresses().First(a => a.Address == address);
+        // Should have 2 UTXOs: the original existing one + the new one (duplicate not added again)
+        Assert.Equal(2, addressInfo.UtxoData.Count);
+    }
+
     #region Helper Methods
 
     private AccountInfo CreateAccountInfoWithAddress(string address)
