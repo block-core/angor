@@ -58,6 +58,14 @@ public class NetworkConfiguration : INetworkConfiguration
     {
         if (currentNetwork.NetworkType == NetworkType.Mainnet)
         {
+            if (currentNetwork.Name == "Liquid")
+            {
+                return new List<SettingsUrl>
+                {
+                    new SettingsUrl { Name = "", Url = "https://liquid.angor.online", IsPrimary = true },
+                };
+            }
+
             return new List<SettingsUrl>
             {
                 new SettingsUrl { Name = "", Url = "https://indexer.angor.io", IsPrimary = false },
@@ -127,6 +135,14 @@ public class NetworkConfiguration : INetworkConfiguration
     {
         if (currentNetwork.NetworkType == NetworkType.Mainnet)
         {
+            if (currentNetwork.Name == "Liquid")
+            {
+                return new List<SettingsUrl>
+                {
+                    new SettingsUrl { Name = "", Url = "https://liquid.angor.online", IsPrimary = true },
+                };
+            }
+
             return new List<SettingsUrl>
             {
                 new SettingsUrl { Name = "", Url = "https://explorer.angor.io", IsPrimary = false },
@@ -187,6 +203,7 @@ public class NetworkConfiguration : INetworkConfiguration
             "Signet" => "00000000020f01e33f91b6c7c5d3a3f8",
             "Regtest" => "0f9195cbdb894feda6ee07798e0d597d",
             "Angornet" => "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+            "Liquid" => "d767f204777d8ebd0825f4f26c3d773c0d3f40268dc6afb3632a0fcbd49fde45",
             _ => throw new NotSupportedException($"Network type {currentNetwork.NetworkType.ToString()} is not supported")
         };
     }
@@ -200,6 +217,7 @@ public class NetworkConfiguration : INetworkConfiguration
             "00000000020f01e33f91b6c7c5d3a3f8" => "Signet",
             "0f9195cbdb894feda6ee07798e0d597d" => "Regtest",
             "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6" => "Angornet",
+            "d767f204777d8ebd0825f4f26c3d773c0d3f40268dc6afb3632a0fcbd49fde45" => "Liquid",
             _ => "Unknown"
         };
     }
@@ -224,6 +242,7 @@ public class NetworkConfiguration : INetworkConfiguration
             {
                 {"HW_Support", false}
             },
+            "Liquid" => new() {},
             _ => throw new NotSupportedException($"Network type {currentNetwork.NetworkType.ToString()} is not supported")
         };
     }
