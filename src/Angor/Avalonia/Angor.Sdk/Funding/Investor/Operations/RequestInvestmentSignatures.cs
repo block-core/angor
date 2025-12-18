@@ -23,7 +23,7 @@ public static class RequestInvestmentSignatures
     public record RequestFounderSignaturesRequest(WalletId WalletId, ProjectId ProjectId, InvestmentDraft Draft) : IRequest<Result<RequestFounderSignaturesResponse>>;
 
     public record RequestFounderSignaturesResponse(Guid InvestmentId);
-    
+
     public class RequestFounderSignaturesHandler(
         IProjectService projectService,
         ISeedwordsProvider seedwordsProvider,
@@ -52,13 +52,13 @@ public static class RequestInvestmentSignatures
                 return Result.Failure<RequestFounderSignaturesResponse>(projectResult.Error);
             }
 
-            var (investorKey,_) = projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(strippedInvestmentTransaction.Outputs[1].ScriptPubKey);
-            
-            var existingInvestment = await Result.Try(() => angorIndexerService.GetInvestmentAsync(request.ProjectId.Value,investorKey));
+            var (investorKey, _) = projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(strippedInvestmentTransaction.Outputs[1].ScriptPubKey);
+
+            var existingInvestment = await Result.Try(() => angorIndexerService.GetInvestmentAsync(request.ProjectId.Value, investorKey));
 
             if (existingInvestment is { IsSuccess: true, Value: not null })
                 return Result.Failure<RequestFounderSignaturesResponse>("An investment with the same key already exists on the blockchain.");
-            
+
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
 
             if (sensitiveDataResult.IsFailure)
@@ -75,7 +75,7 @@ public static class RequestInvestmentSignatures
             {
                 return Result.Failure<RequestFounderSignaturesResponse>(sendSignatureResult.Error);
             }
-            
+
             await portfolioService.AddOrUpdate(request.WalletId.Value, new InvestmentRecord
             {
                 InvestmentTransactionHash = transactionId,
@@ -86,11 +86,14 @@ public static class RequestInvestmentSignatures
                 RequestEventId = sendSignatureResult.Value.eventId,
                 RequestEventTime = sendSignatureResult.Value.createdTime,
             });
-            
+
+            // Reserve UTXOs used in this investment transaction
+            await ReserveUtxosForInvestment(request.WalletId, request.Draft.SignedTxHex);
+
             return Result.Success(new RequestFounderSignaturesResponse(Guid.Empty));
         }
 
-        private async Task<Result<(DateTime createdTime,string eventId)>> SendSignatureRequest(WalletId walletId, WalletWords walletWords, Project project, string signedTransactionHex)
+        private async Task<Result<(DateTime createdTime, string eventId)>> SendSignatureRequest(WalletId walletId, WalletWords walletWords, Project project, string signedTransactionHex)
         {
             try
             {
@@ -102,9 +105,9 @@ public static class RequestInvestmentSignatures
 
                 if (releaseAddressResult.IsFailure)
                 {
-                    return Result.Failure<(DateTime,string)>(releaseAddressResult.Error);
+                    return Result.Failure<(DateTime, string)>(releaseAddressResult.Error);
                 }
-                
+
                 var releaseAddress = releaseAddressResult.Value;
 
                 var signRecoveryRequest = new SignRecoveryRequest
@@ -115,7 +118,7 @@ public static class RequestInvestmentSignatures
                 };
 
                 var serializedRecoveryRequest = serializer.Serialize(signRecoveryRequest);
-                
+
                 var encryptedContent = await encryptionService.EncryptNostrContentAsync(
                     investorNostrPrivateKeyHex,
                     nostrPubKey,
@@ -123,11 +126,11 @@ public static class RequestInvestmentSignatures
 
                 var (time, id) = signService.RequestInvestmentSigs(encryptedContent, investorNostrPrivateKeyHex, project.NostrPubKey, _ => { });
 
-                return Result.Success((time,id));
+                return Result.Success((time, id));
             }
             catch (Exception ex)
             {
-                return Result.Failure<(DateTime,string)>($"Error while sending the signature request {ex.Message}");
+                return Result.Failure<(DateTime, string)>($"Error while sending the signature request {ex.Message}");
             }
         }
 
@@ -137,7 +140,7 @@ public static class RequestInvestmentSignatures
             var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
             if (accountBalanceResult.IsFailure)
                 return Result.Failure<string>(accountBalanceResult.Error);
-            
+
             var accountInfo = accountBalanceResult.Value.AccountInfo;
 
             var address = accountInfo.GetNextReceiveAddress();
@@ -145,6 +148,29 @@ public static class RequestInvestmentSignatures
                 return Result.Failure<string>("Could not get the unfunded release address");
 
             return Result.Success(address);
+        }
+
+        private async Task ReserveUtxosForInvestment(WalletId walletId, string signedTxHex)
+        {
+            var network = networkConfiguration.GetNetwork();
+            var transaction = network.CreateTransaction(signedTxHex);
+
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
+            if (accountBalanceResult.IsFailure)
+                return;
+
+            var accountBalanceInfo = accountBalanceResult.Value;
+
+            foreach (var input in transaction.Inputs)
+            {
+                var outpointString = input.PrevOut.ToString();
+                if (!accountBalanceInfo.AccountInfo.UtxoReservedForInvestment.Contains(outpointString))
+                {
+                    accountBalanceInfo.AccountInfo.UtxoReservedForInvestment.Add(outpointString);
+                }
+            }
+
+            await walletAccountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo);
         }
     }
 }

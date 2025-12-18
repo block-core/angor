@@ -10,6 +10,8 @@ public interface IWallet
 {
     public ReadOnlyObservableCollection<IBroadcastedTransaction> History { get; }
     IAmountUI Balance { get; }
+    IAmountUI UnconfirmedBalance { get; }
+    IAmountUI ReservedBalance { get; }
     Result IsAddressValid(string address);
     WalletId Id { get; }
     IEnhancedCommand Send { get; }
