@@ -135,6 +135,94 @@ public class WalletOperations : IWalletOperations
         }
     }
 
+    public TransactionInfo AddInputsFromAddressAndSignTransaction(string fundingAddress, string changeAddress,
+        Transaction transaction, WalletWords walletWords, AccountInfo accountInfo, long feeRate)
+    {
+        Network network = _networkConfiguration.GetNetwork();
+
+        // Find UTXOs only for the specified funding address
+        var addressInfo = accountInfo.AllAddresses()
+            .FirstOrDefault(a => a.Address == fundingAddress);
+
+        if (addressInfo == null)
+            throw new ApplicationException($"Address {fundingAddress} not found in account");
+
+        var availableUtxos = addressInfo.UtxoData
+            .Where(u => !u.PendingSpent && 
+                        !accountInfo.UtxoReservedForInvestment.Contains(u.outpoint.ToString()))
+            .Select(u => new UtxoDataWithPath { HdPath = addressInfo.HdPath, UtxoData = u })
+            .ToList();
+
+        if (!availableUtxos.Any())
+            throw new ApplicationException($"No available UTXOs found for address {fundingAddress}");
+
+        // Calculate required amount (outputs + estimated fee)
+        long outputsTotal = (long)transaction.Outputs.Sum(_ => _.Value);
+        var estimatedSize = transaction.GetVirtualSize(4) + (availableUtxos.Count * 68); // Estimate with inputs
+        var estimatedFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(estimatedSize);
+        long requiredAmount = outputsTotal + estimatedFee;
+
+        // Select UTXOs from the specific address (use all available)
+        long totalAvailable = availableUtxos.Sum(u => u.UtxoData.value);
+
+        if (totalAvailable < requiredAmount)
+            throw new ApplicationException(
+                $"Insufficient funds in address {fundingAddress}. Required: {requiredAmount} sats ({Money.Satoshis(requiredAmount).ToUnit(MoneyUnit.BTC):F8} BTC), Available: {totalAvailable} sats ({Money.Satoshis(totalAvailable).ToUnit(MoneyUnit.BTC):F8} BTC)");
+
+        var coins = GetUnspentOutputsForTransaction(walletWords, availableUtxos);
+
+        if (coins.coins == null || !coins.coins.Any())
+            throw new ApplicationException("Failed to get coins for the funding address");
+
+        // Clone transaction
+        var clonedTransaction = network.CreateTransaction(transaction.ToHex());
+
+        // Add inputs
+        foreach (var coin in coins.coins)
+        {
+            if (clonedTransaction.Inputs.Any(x => x.PrevOut == coin.Outpoint))
+                continue;
+            var txin = new TxIn(coin.Outpoint, null);
+            txin.WitScript = new WitScript(Op.GetPushOp(new byte[72]), Op.GetPushOp(new byte[33]));
+            clonedTransaction.AddInput(txin);
+        }
+
+        // Calculate actual fee
+        var totalSize = clonedTransaction.GetVirtualSize(4);
+        var totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize);
+
+        // Calculate change
+        var changeAmount = totalAvailable - outputsTotal - totalFee;
+        
+        // Add change output if above dust threshold
+        if (changeAmount > 294) // Dust threshold
+        {
+            clonedTransaction.AddOutput(Money.Satoshis(changeAmount), 
+                BitcoinAddress.Create(changeAddress, network).ScriptPubKey);
+        }
+        else if (changeAmount > 0)
+        {
+            totalFee += changeAmount; // Add dust to fee
+        }
+        else if (changeAmount < 0)
+        {
+            throw new ApplicationException($"Insufficient funds after fee calculation. Short by {Math.Abs(changeAmount)} sats");
+        }
+
+        // Sign inputs
+        var index = 0;
+        foreach (var coin in coins.coins)
+        {
+            var key = coins.keys[index];
+            var input = clonedTransaction.Inputs.Single(p => p.PrevOut == coin.Outpoint);
+            var signature = clonedTransaction.SignInput(network, key, coin, SigHash.All);
+            input.WitScript = new WitScript(Op.GetPushOp(signature.ToBytes()), Op.GetPushOp(key.PubKey.ToBytes()));
+            index++;
+        }
+
+        return new TransactionInfo { Transaction = clonedTransaction, TransactionFee = totalFee };
+    }
+
     public TransactionInfo AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {

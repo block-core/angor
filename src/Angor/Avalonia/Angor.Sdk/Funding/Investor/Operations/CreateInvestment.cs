@@ -22,7 +22,8 @@ public static class CreateInvestment
             Amount Amount,
             DomainFeerate FeeRate,
             byte? PatternIndex = null, // Required for Fund/Subscribe
-            DateTime? InvestmentStartDate = null) // Required for Fund/Subscribe, defaults to now
+            DateTime? InvestmentStartDate = null, // Required for Fund/Subscribe, defaults to now
+            string? FundingAddress = null) // Optional: If provided, only use UTXOs from this specific address
         : IRequest<Result<CreateInvestmentTransactionResponse>>;
 
     public record CreateInvestmentTransactionResponse(InvestmentDraft InvestmentDraft);
@@ -103,12 +104,32 @@ public static class CreateInvestment
                     return Result.Failure<CreateInvestmentTransactionResponse>(transactionResult.Error);
                 }
 
-                // Sign the transaction
-                var signedTxResult = await SignTransaction(
+                // Sign the transaction - use specific address if provided, otherwise auto-select
+                Result<TransactionInfo> signedTxResult;
+
+                if (!string.IsNullOrEmpty(transactionRequest.FundingAddress))
+                {
+                    logger.LogInformation("Using specific funding address {FundingAddress} for investment in project {ProjectId}", 
+                        transactionRequest.FundingAddress, transactionRequest.ProjectId);
+                    
+                    signedTxResult = await SignTransactionFromAddress(
+                        transactionRequest.WalletId,
+                        transactionRequest.FundingAddress,
+                        walletWords,
+                        transactionResult.Value,
+                        transactionRequest.FeeRate.SatsPerKilobyte);
+                }
+                else
+                {
+                    logger.LogInformation("Auto-selecting funding address for investment in project {ProjectId}", 
+                        transactionRequest.ProjectId);
+                    
+                    signedTxResult = await SignTransaction(
                         transactionRequest.WalletId,
                         walletWords,
                         transactionResult.Value,
                         transactionRequest.FeeRate.SatsPerKilobyte);
+                }
 
                 if (signedTxResult.IsFailure)
                 {
@@ -265,6 +286,74 @@ public static class CreateInvestment
                                                                  walletWords,
                                                                  accountInfo,
                                                                  feerate));
+
+            return signedTransactionResult;
+        }
+
+        private async Task<Result<TransactionInfo>> SignTransactionFromAddress(
+                WalletId walletId,
+                string fundingAddress,
+                WalletWords walletWords,
+                Transaction transaction,
+                long feerate)
+        {
+            if (walletId == null) throw new ArgumentNullException(nameof(walletId));
+            if (string.IsNullOrEmpty(fundingAddress)) throw new ArgumentNullException(nameof(fundingAddress));
+
+            // Get account info from database
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
+            if (accountBalanceResult.IsFailure)
+            {
+                return Result.Failure<TransactionInfo>(accountBalanceResult.Error);
+            }
+
+            var accountInfo = accountBalanceResult.Value.AccountInfo;
+
+            // Validate the funding address exists in the wallet
+            var addressInfo = accountInfo.AllAddresses()
+                .FirstOrDefault(a => a.Address == fundingAddress);
+
+            if (addressInfo == null)
+            {
+                logger.LogWarning("Funding address {FundingAddress} not found in wallet {WalletId}", 
+                    fundingAddress, walletId);
+                return Result.Failure<TransactionInfo>(
+                    $"Funding address {fundingAddress} not found in wallet. Please ensure the address belongs to this wallet.");
+            }
+
+            // Check if address has available UTXOs (not reserved)
+            var availableUtxos = addressInfo.UtxoData
+                .Where(u => !accountInfo.UtxoReservedForInvestment.Contains(u.outpoint.ToString()))
+                .ToList();
+
+            if (!availableUtxos.Any())
+            {
+                logger.LogWarning("No available UTXOs on funding address {FundingAddress}", fundingAddress);
+                return Result.Failure<TransactionInfo>(
+                    $"No available UTXOs on funding address {fundingAddress}. The address may have no funds or all UTXOs are reserved for other investments.");
+            }
+
+            logger.LogInformation("Found {Count} available UTXO(s) totaling {TotalAmount} sats on address {FundingAddress}",
+                availableUtxos.Count, availableUtxos.Sum(u => u.value), fundingAddress);
+
+            var changeAddressResult = Result.Try(() => accountInfo.GetNextChangeReceiveAddress())
+                .Ensure(s => !string.IsNullOrEmpty(s), "Change address cannot be empty");
+
+            if (changeAddressResult.IsFailure)
+            {
+                return Result.Failure<TransactionInfo>(changeAddressResult.Error);
+            }
+
+            var changeAddress = changeAddressResult.Value!;
+
+            var signedTransactionResult = Result.Try(() =>
+                walletOperations.AddInputsFromAddressAndSignTransaction(
+                    fundingAddress,
+                    changeAddress,
+                    transaction,
+                    walletWords,
+                    accountInfo,
+                    feerate));
 
             return signedTransactionResult;
         }

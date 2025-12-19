@@ -65,6 +65,7 @@ public static class FundingContextServices
         services.TryAddSingleton<IProjectInvestmentsService, ProjectInvestmentsService>();
         services.TryAddSingleton<ITransactionService,TransactionService>();
         services.TryAddSingleton<IWalletAccountBalanceService, WalletAccountBalanceService>();
+        services.TryAddSingleton<IMempoolMonitoringService, MempoolMonitoringService>();
         
         //services.AddHttpClient();
         
