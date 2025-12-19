@@ -119,7 +119,7 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
             new NullLogger<CreateInvestment.CreateInvestmentTransactionHandler>());
     }
 
-    [Fact]
+    [Fact(Skip = "Integration test - requires Angornet (Bitcoin Signet) access and real funds. Run manually.")]
     public async Task CreateAndPublishInvestment_WithRealAngornetFunds_PublishesSuccessfully()
     {
         // Arrange

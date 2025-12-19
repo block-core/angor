@@ -95,7 +95,7 @@ public class MonitorAddressForFundsIntegrationTests : IDisposable
             new NullLogger<MonitorAddressForFunds.MonitorAddressForFundsHandler>());
     }
 
-    [Fact]
+    [Fact(Skip = "Integration test - requires Angornet (Bitcoin Signet) access and real funds. Run manually.")]
     public async Task MonitorAddressForFunds_WhenFundsSentToAddress_DetectsFundsSuccessfully()
     {
         // Arrange
@@ -193,7 +193,7 @@ public class MonitorAddressForFundsIntegrationTests : IDisposable
         }
     }
 
-    [Fact]
+    [Fact(Skip = "Integration test - requires Angornet (Bitcoin Signet) access. Run manually.")]
     public async Task MonitorAddressForFunds_WhenAddressNotInWallet_ReturnsFailure()
     {
         // Arrange
@@ -232,7 +232,7 @@ public class MonitorAddressForFundsIntegrationTests : IDisposable
         _output.WriteLine($"✅ Expected failure received: {result.Error}");
     }
 
-    [Fact]
+    [Fact(Skip = "Integration test - requires Angornet (Bitcoin Signet) access. Run manually.")]
     public async Task MonitorAddressForFunds_WhenCancelled_ReturnsFailure()
     {
         // Arrange
