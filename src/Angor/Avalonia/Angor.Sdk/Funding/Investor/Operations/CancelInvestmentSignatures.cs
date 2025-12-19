@@ -25,7 +25,9 @@ public static class CancelInvestmentSignatures
     public record CancelInvestmentSignaturesResponse();
 
     public class CancelInvestmentSignaturesHandler(
-        IPortfolioService portfolioService) : IRequestHandler<CancelInvestmentSignaturesRequest, Result<CancelInvestmentSignaturesResponse>>
+        IPortfolioService portfolioService,
+        INetworkConfiguration networkConfiguration,
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<CancelInvestmentSignaturesRequest, Result<CancelInvestmentSignaturesResponse>>
     {
         public async Task<Result<CancelInvestmentSignaturesResponse>> Handle(CancelInvestmentSignaturesRequest request, CancellationToken cancellationToken)
         {
@@ -37,12 +39,38 @@ public static class CancelInvestmentSignatures
             if (record == null)
                 return Result.Failure<CancelInvestmentSignaturesResponse>("Investment record not found.");
 
+            // Release reserved UTXOs before removing the investment record
+            if (!string.IsNullOrEmpty(record.InvestmentTransactionHex))
+            {
+                await ReleaseReservedUtxos(request.WalletId, record.InvestmentTransactionHex);
+            }
+
             var res = await portfolioService.RemoveInvestmentRecordAsync(request.WalletId.Value, record);
 
             if (res.IsFailure)
                 return Result.Failure<CancelInvestmentSignaturesResponse>(res.Error);
 
             return Result.Success(new CancelInvestmentSignaturesResponse());
+        }
+
+        private async Task ReleaseReservedUtxos(WalletId walletId, string signedTxHex)
+        {
+            var network = networkConfiguration.GetNetwork();
+            var transaction = network.CreateTransaction(signedTxHex);
+
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
+            if (accountBalanceResult.IsFailure)
+                return;
+
+            var accountBalanceInfo = accountBalanceResult.Value;
+
+            foreach (var input in transaction.Inputs)
+            {
+                var outpointString = input.PrevOut.ToString();
+                accountBalanceInfo.AccountInfo.UtxoReservedForInvestment.Remove(outpointString);
+            }
+
+            await walletAccountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo);
         }
     }
 }

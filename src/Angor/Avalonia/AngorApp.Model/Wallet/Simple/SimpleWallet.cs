@@ -27,6 +27,8 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     private readonly IWalletAppService walletAppService;
     private readonly IDialog dialog;
     [ObservableAsProperty] private IAmountUI balance = new AmountUI(0);
+    [ObservableAsProperty] private IAmountUI unconfirmedBalance = new AmountUI(0);
+    [ObservableAsProperty] private IAmountUI reservedBalance = new AmountUI(0);
     private readonly CompositeDisposable disposable = new();
 
     public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, IDialog dialog, INotificationService notificationService, INetworkConfiguration networkConfiguration)
@@ -40,10 +42,27 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
         Load = transactionCollection.Refresh;
         Load.HandleErrorsWith(notificationService, "Cannot load wallet info");
 
-        balanceHelper = transactionCollection.Changes
-            .Sum(transaction => transaction.Balance.Sats)
-            .Select(sats => new AmountUI(sats))
+        // Subscribe to Load command success to update all balances from AccountBalanceInfo
+        var balanceUpdates = Load.Successes()
+            .SelectMany(_ => Observable.FromAsync(() => walletAppService.GetAccountBalanceInfo(id)))
+            .Where(r => r.IsSuccess)
+            .Select(r => r.Value)
+            .Publish()
+            .RefCount();
+
+        balanceHelper = balanceUpdates
+            .Select(info => new AmountUI(info.TotalBalance))
             .ToProperty(this, x => x.Balance)
+            .DisposeWith(disposable);
+
+        unconfirmedBalanceHelper = balanceUpdates
+            .Select(info => new AmountUI(info.TotalUnconfirmedBalance))
+            .ToProperty(this, x => x.UnconfirmedBalance)
+            .DisposeWith(disposable);
+
+        reservedBalanceHelper = balanceUpdates
+            .Select(info => new AmountUI(info.TotalBalanceReserved))
+            .ToProperty(this, x => x.ReservedBalance)
             .DisposeWith(disposable);
 
         History = transactionCollection.Items;
