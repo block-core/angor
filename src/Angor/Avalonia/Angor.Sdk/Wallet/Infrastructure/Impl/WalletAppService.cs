@@ -57,6 +57,11 @@ public class WalletAppService(
         return GetTransactions(walletId).Map(txns => txns.Sum(x => x.GetBalance().Sats)).Map(l => new Balance(l));
     }
 
+    public Task<Result<AccountBalanceInfo>> GetAccountBalanceInfo(WalletId walletId)
+    {
+        return accountBalanceService.GetAccountBalanceInfoAsync(walletId);
+    }
+
     public async Task<Result<FeeAndSize>> EstimateFeeAndSize(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate)
     {
         try

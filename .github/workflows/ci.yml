@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  SOLUTION_PATH: 'src/Angor/Avalonia/Angor.Avalonia.sln'
+  AVALONIA_DIR: 'src/Angor/Avalonia'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+      
+      - name: Restore dependencies
+        working-directory: ${{ env.AVALONIA_DIR }}
+        run: |
+          dotnet restore Angor.Avalonia.sln \
+            /p:ExcludeAndroid=true \
+            --ignore-failed-sources || \
+          dotnet restore AngorApp.Desktop/AngorApp.Desktop.csproj
+      
+      - name: Build
+        working-directory: ${{ env.AVALONIA_DIR }}
+        run: dotnet build AngorApp.Desktop/AngorApp.Desktop.csproj --no-restore -c Release
+      
+      - name: Test Angor.Sdk.Tests
+        working-directory: ${{ env.AVALONIA_DIR }}
+        run: dotnet test Angor.Sdk.Tests/Angor.Sdk.Tests.csproj -c Release --verbosity normal --collect:"XPlat Code Coverage"
+      
+      - name: Test Angor.Test
+        run: dotnet test src/Angor.Test/Angor.Test.csproj -c Release --verbosity normal --collect:"XPlat Code Coverage"
+      
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: '**/TestResults/**/coverage.cobertura.xml'
+          if-no-files-found: ignore
+
+  # Validate that packaging works (without creating full installers)
+  validate-desktop-build:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+      
+      - name: Publish Desktop (Linux x64)
+        working-directory: ${{ env.AVALONIA_DIR }}
+        run: |
+          dotnet publish AngorApp.Desktop/AngorApp.Desktop.csproj \
+            -c Release \
+            -r linux-x64 \
+            --self-contained \
+            -o publish/linux-x64
+
+  validate-android-build:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Install Android workload
+        working-directory: ${{ env.AVALONIA_DIR }}
+        run: dotnet workload install android
+      
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-android-${{ hashFiles('**/Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-android-
+            nuget-${{ runner.os }}-
+      
+      - name: Build Android (unsigned)
+        working-directory: ${{ env.AVALONIA_DIR }}
+        run: |
+          dotnet build AngorApp.Android/AngorApp.Android.csproj \
+            -c Release \
+            -f net9.0-android

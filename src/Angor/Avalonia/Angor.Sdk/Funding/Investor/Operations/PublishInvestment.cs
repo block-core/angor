@@ -34,7 +34,8 @@ public static class PublishInvestment
         ISeedwordsProvider seedwordsProvider,
         IProjectService projectService,
         IWalletOperations walletOperations,
-        IPortfolioService  investmentService,
+        IPortfolioService investmentService,
+        IWalletAccountBalanceService walletAccountBalanceService,
         ILogger logger) : IRequestHandler<PublishInvestmentRequest, Result<PublishInvestmentResponse>>
     {
         public async Task<Result<PublishInvestmentResponse>> Handle(PublishInvestmentRequest request, CancellationToken cancellationToken)
@@ -72,12 +73,72 @@ public static class PublishInvestment
                 return Result.Failure<PublishInvestmentResponse>(validate.Error);
             
             var publishResult = await PublishSignedTransactionAsync(transactionInfo);
-            
-            return publishResult.IsSuccess 
-                ? Result.Success(new PublishInvestmentResponse())
-                : Result.Failure<PublishInvestmentResponse>(publishResult.Error);
+
+            if (publishResult.IsFailure)
+                return Result.Failure<PublishInvestmentResponse>(publishResult.Error);
+
+            // After successful broadcast, update UTXO state
+            await UpdateUtxoStateAfterPublish(request.WalletId, transactionInfo);
+    
+            return Result.Success(new PublishInvestmentResponse());
         }
 
+        private async Task UpdateUtxoStateAfterPublish(WalletId walletId, TransactionInfo transactionInfo)
+        {
+            var network = networkConfiguration.GetNetwork();
+            var transaction = transactionInfo.Transaction;
+
+            var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
+            if (accountBalanceResult.IsFailure)
+                return;
+
+            var accountBalanceInfo = accountBalanceResult.Value;
+            var accountInfo = accountBalanceInfo.AccountInfo;
+            var transactionHash = transaction.GetHash().ToString();
+
+            // Remove from reserved and mark as pending spent (following WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction pattern)
+            var inputs = transaction.Inputs.Select(input => input.PrevOut.ToString()).ToList();
+
+            foreach (var utxoData in accountInfo.AllUtxos())
+            {
+                // Find all spent inputs to mark them as spent
+                if (inputs.Contains(utxoData.outpoint.ToString()))
+                    utxoData.PendingSpent = true;
+            }
+
+            // Remove from UtxoReservedForInvestment
+            foreach (var input in transaction.Inputs)
+            {
+                var outpointString = input.PrevOut.ToString();
+                accountInfo.UtxoReservedForInvestment.Remove(outpointString);
+            }
+
+            // Collect change outputs as pending receive UTXOs
+            var accountChangeAddresses = accountInfo.ChangeAddressesInfo.Select(x => x.Address).ToList();
+            var pendingReceiveUtxos = new List<UtxoData>();
+
+            foreach (var output in transaction.Outputs.AsIndexedOutputs())
+            {
+                var address = output.TxOut.ScriptPubKey.GetDestinationAddress(network)?.ToString();
+
+                if (address != null && accountChangeAddresses.Contains(address))
+                {
+                    pendingReceiveUtxos.Add(new UtxoData
+                    {
+                        address = address,
+                        scriptHex = output.TxOut.ScriptPubKey.ToHex(),
+                        outpoint = new Outpoint(transactionHash, (int)output.N),
+                        blockIndex = 0,
+                        value = output.TxOut.Value
+                    });
+                }
+            }
+
+            // Add pending receive UTXOs to AccountPendingReceive
+            accountBalanceInfo.AccountPendingReceive.AddRange(pendingReceiveUtxos);
+
+            await walletAccountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo);
+        }
 
         private async Task<Result<(TransactionInfo transaction, DateTime createTime, string evenbId)>>
             GetInvestmentTransactionFromSignatureRequestAsync(string transactionHash, string senderPubKey,

@@ -19,6 +19,8 @@ public class WalletSample : IWallet
     ]);
 
     public IAmountUI Balance { get; } = new AmountUI(5_0000_0000);
+    public IAmountUI UnconfirmedBalance { get; } = new AmountUI(1_0000_0000);
+    public IAmountUI ReservedBalance { get; } = new AmountUI(5000_0000);
 
     public async Task<Result<ITransactionDraft>> CreateDraft(long amount, string address, long feerate)
     {

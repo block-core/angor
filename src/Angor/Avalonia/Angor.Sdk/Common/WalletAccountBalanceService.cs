@@ -49,12 +49,35 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
         if (updateResult.IsFailure)
             return Result.Failure<AccountBalanceInfo>(updateResult.Error);
         
-        accountBalanceInfo.UpdateAccountBalanceInfo(accountBalanceInfo.AccountInfo, []);
+        // Clean up pending receive UTXOs that have been confirmed
+        CleanupConfirmedPendingReceiveUtxos(accountBalanceInfo);
+        
+        // Pass the actual pending receive UTXOs instead of empty list
+        accountBalanceInfo.UpdateAccountBalanceInfo(accountBalanceInfo.AccountInfo, accountBalanceInfo.AccountPendingReceive);
         
         var upsertResult = await collection.UpsertAsync(x => x.WalletId,
             new WalletAccountBalanceInfo { WalletId = walletId.Value, AccountBalanceInfo = accountBalanceInfo });
 
         return !upsertResult.IsFailure ? Result.Success(accountBalanceInfo) : Result.Failure<AccountBalanceInfo>(upsertResult.Error);
+    }
+
+    /// <summary>
+    /// Removes pending receive UTXOs that have been confirmed (now appear in actual UTXO data)
+    /// </summary>
+    private void CleanupConfirmedPendingReceiveUtxos(AccountBalanceInfo accountBalanceInfo)
+    {
+        if (accountBalanceInfo.AccountPendingReceive.Count == 0)
+            return;
+
+        // Get all confirmed UTXOs from the account
+        var confirmedOutpoints = accountBalanceInfo.AccountInfo.AllUtxos()
+                .Where(u => u.blockIndex > 0)
+                .Select(u => u.outpoint.ToString())
+                .ToHashSet();
+
+        // Remove pending receive UTXOs that are now confirmed
+        accountBalanceInfo.AccountPendingReceive.RemoveAll(pending => 
+            confirmedOutpoints.Contains(pending.outpoint.ToString()));
     }
 
     public async Task<Result<IEnumerable<AccountBalanceInfo>>> GetAllAccountBalancesAsync()
