@@ -145,6 +145,18 @@
             storage.DeleteAccountInfo(oldName);
         }
 
+        // Handle LiquidTestnet as well for backwards compatibility
+        if (networkName?.ToLower() == "liquidtestnet")
+        {
+            var oldName = networkName;
+            networkName = "Liquid"; // Defaulting to Liquid mainnet for now
+
+            _networkStorage.SetNetwork(networkName);
+            var accountInfo = storage.GetAccountInfo(oldName);
+            storage.SetAccountInfo(networkName, accountInfo);
+            storage.DeleteAccountInfo(oldName);
+        }
+
         _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower());
 
         SetNetworkText();
