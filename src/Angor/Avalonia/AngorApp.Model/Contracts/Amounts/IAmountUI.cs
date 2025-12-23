@@ -8,7 +8,7 @@ public interface IAmountUI
     
     public string BtcString => $"{Btc:0.00 000 000} " + Symbol;
 
-    private decimal Btc => Sats / (decimal)1_0000_0000;
+    public decimal Btc => Sats / (decimal)1_0000_0000;
 
     public string DecimalString => $"{Btc:G} {Symbol}";
     public string RoundedDecimalString => $"{Btc:N2} {Symbol}";

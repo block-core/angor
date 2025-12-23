@@ -1,0 +1,254 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:steps="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject"
+             xmlns:shared="clr-namespace:AngorApp.UI.Shared.Controls"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="650"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.ProjectImagesView" x:DataType="steps:ProjectImagesViewModel">
+    <UserControl.Resources>
+        <x:Double x:Key="BannerHeight">220</x:Double>
+        <x:Double x:Key="AvatarSize">120</x:Double>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style Selector="TextBlock.Muted">
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+
+        <Style Selector="TextBlock.Title">
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+            <Setter Property="FontSize" Value="{StaticResource FontSizeLarge}" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <Style Selector="TextBlock.Subtitle">
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+            <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        </Style>
+
+        <Style Selector="StackPanel.PageContent">
+            <Setter Property="Spacing" Value="{StaticResource BigGap}" />
+            <Setter Property="MaxWidth" Value="820" />
+        </Style>
+
+        <Style Selector="Button.UploadAction">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="18 12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+            <Setter Property="TextElement.FontWeight" Value="Bold" />
+        </Style>
+
+        <Style Selector="Button.UploadAction:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+        </Style>
+
+        <Style Selector="Button.UploadAction StackPanel">
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="Spacing" Value="10" />
+        </Style>
+
+        <Style Selector="Button.UploadAction ContentControl">
+            <Setter Property="IconOptions.Size" Value="16" />
+        </Style>
+
+        <Style Selector="Button.UploadAction TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="OverlayBorder.ImagePreviewCard">
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+        </Style>
+
+        <Style Selector="Border.BannerArea">
+            <Setter Property="Height" Value="{StaticResource BannerHeight}" />
+            <Setter Property="CornerRadius" Value="14 14 0 0" />
+            <Setter Property="ClipToBounds" Value="True" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Border.BannerPlaceholder">
+            <Setter Property="Background" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="CornerRadius" Value="14 14 0 0" />
+        </Style>
+
+        <Style Selector="Border.BannerPattern">
+            <Setter Property="Background" Value="{DynamicResource Stroke}" />
+            <Setter Property="Opacity" Value="0.03" />
+            <Setter Property="CornerRadius" Value="14 14 0 0" />
+        </Style>
+
+        <Style Selector="Border.BannerHoverOverlay">
+            <Setter Property="Background" Value="#80000000" />
+            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="CornerRadius" Value="14 14 0 0" />
+        </Style>
+
+        <Style Selector="Border.BannerArea:pointerover Border.BannerHoverOverlay">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+
+        <Style Selector="Border.ImageHintBadge">
+            <Setter Property="Padding" Value="10 6" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="#B0000000" />
+        </Style>
+
+        <Style Selector="TextBlock.ImageHintBadgeText">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+        </Style>
+
+        <Style Selector="Border.BannerBadge">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Margin" Value="16" />
+        </Style>
+
+        <Style Selector="Border.AvatarBadge">
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+            <Setter Property="Margin" Value="18 0 0 -14" />
+        </Style>
+
+        <Style Selector="Border.PreviewBody">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+            <Setter Property="Padding" Value="28" />
+        </Style>
+
+        <Style Selector="StackPanel.ProjectMeta">
+            <Setter Property="Margin" Value="0 44 0 0" />
+            <Setter Property="Spacing" Value="10" />
+        </Style>
+
+        <Style Selector="Border.AvatarArea">
+            <Setter Property="Width" Value="{StaticResource AvatarSize}" />
+            <Setter Property="Height" Value="{StaticResource AvatarSize}" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Margin" Value="24 140 0 0" />
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="BoxShadow" Value="0 10 30 0 #22000000" />
+        </Style>
+
+        <Style Selector="Border.AvatarInner">
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="Background" Value="{DynamicResource AppBackground}" />
+        </Style>
+
+        <Style Selector="ContentControl.AvatarIcon">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="IconOptions.Size" Value="34" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+
+        <Style Selector="Border.AvatarHoverOverlay">
+            <Setter Property="Background" Value="#70000000" />
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+
+        <Style Selector="Border.AvatarArea:pointerover Border.AvatarHoverOverlay">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+
+        <Style Selector="Border.AvatarCameraButton">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+            <Setter Property="BoxShadow" Value="0 8 16 0 #22000000" />
+        </Style>
+
+        <Style Selector="ContentControl.AvatarCameraIcon">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="IconOptions.Size" Value="18" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Classes="PageContent" Margin="30">
+            <TextBlock Classes="Subtitle">Upload your project's banner and profile images.</TextBlock>
+
+            <OverlayBorder Classes="ImagePreviewCard">
+                <Grid>
+                    <Grid RowDefinitions="Auto,Auto">
+                        <!-- Banner -->
+                        <Border Classes="BannerArea" Grid.Row="0">
+                            <Grid>
+                                <Border Classes="BannerPlaceholder" />
+                                <Border Classes="BannerPattern" />
+
+                                <Border Classes="BannerHoverOverlay">
+                                    <Button Classes="UploadAction">
+                                        <StackPanel>
+                                            <ContentControl Content="{Icon fa-image}" />
+                                            <TextBlock>Upload Banner</TextBlock>
+                                        </StackPanel>
+                                    </Button>
+                                </Border>
+
+                                <Border Classes="ImageHintBadge BannerBadge">
+                                    <TextBlock Classes="ImageHintBadgeText">820×312px recommended</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Body -->
+                        <Border Classes="PreviewBody" Grid.Row="1">
+                            <StackPanel Classes="ProjectMeta">
+                                <TextBlock Classes="Title"
+                                           Text="{Binding NewProject.Name, Converter={x:Static shared:AngorConverters.FallbackIfNullOrEmpty}, ConverterParameter='Your Project Name', FallbackValue='Your Project Name'}" />
+                                <TextBlock Classes="Muted"
+                                           Text="{Binding NewProject.Description, Converter={x:Static shared:AngorConverters.FallbackIfNullOrEmpty}, ConverterParameter='Your project description will appear here...', FallbackValue='Your project description will appear here...'}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Avatar (overlapping) -->
+                    <Border Classes="AvatarArea">
+                        <Grid>
+                            <Border Classes="AvatarInner" />
+                            <ContentControl Classes="AvatarIcon" Content="{Icon fa-user}" />
+
+                            <Border Classes="AvatarHoverOverlay">
+                                <Grid>
+                                    <Border Classes="AvatarCameraButton">
+                                        <ContentControl Classes="AvatarCameraIcon" Content="{Icon fa-camera}" />
+                                    </Border>
+
+                                    <Border Classes="ImageHintBadge AvatarBadge">
+                                        <TextBlock Classes="ImageHintBadgeText">170×170px</TextBlock>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </OverlayBorder>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:steps="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.ProjectProfileView" x:DataType="steps:ProjectProfileViewModel">
+    
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        
+        <Style Selector="TextBox">
+            <Setter Property="Theme" Value="{StaticResource OrangeTextBoxTheme}" />
+        </Style>
+
+        <Style Selector="TextBlock.FormLabel">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+
+        <Style Selector="TextBlock.Counter">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+
+     
+
+    </UserControl.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}" MaxWidth="766">
+            <TextBlock Classes="Subtitle">Tell us about your project and what you're building.</TextBlock>
+
+            <HeaderedContainer Classes="WizardSection" Header="What's the project called?">
+                <StackPanel Classes="SmallGap">
+                    <HeaderedContainer>
+                        <HeaderedContainer.Header>
+                            <TextBlock Classes="FormLabel">Project Name *</TextBlock>
+                        </HeaderedContainer.Header>
+                        <Grid>
+                            <TextBox x:Name="ProjectNameTextBox"
+                                     MaxLength="200"
+                                     Watermark="Enter the name of your project"
+                                     Text="{Binding NewProject.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                            <TextBlock Classes="Counter"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Bottom"
+                                       Margin="0 0 12 10"
+                                       Text="{Binding ElementName=ProjectNameTextBox, Path=Text.Length, StringFormat={}{0}/200}" />
+                        </Grid>
+                    </HeaderedContainer>
+                </StackPanel>
+            </HeaderedContainer>
+
+            <HeaderedContainer Classes="WizardSection" Header="Tell us about it">
+                <StackPanel Classes="SmallGap">
+                    <HeaderedContainer>
+                        <HeaderedContainer.Header>
+                            <TextBlock Classes="FormLabel">About *</TextBlock>
+                        </HeaderedContainer.Header>
+                        <Grid>
+                            <TextBox x:Name="AboutTextBox"
+                                     Classes="InvestmentProject ProjectProfile"
+                                     MinHeight="140"
+                                     MaxLength="400"
+                                     TextInputOptions.Multiline="True"
+                                     TextWrapping="Wrap"
+                                     Watermark="Provide a brief description of the project"
+                                     Text="{Binding NewProject.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                            <TextBlock Classes="Counter"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Bottom"
+                                       Margin="0 0 12 10"
+                                       Text="{Binding ElementName=AboutTextBox, Path=Text.Length, StringFormat={}{0}/400}" />
+                        </Grid>
+                    </HeaderedContainer>
+                </StackPanel>
+            </HeaderedContainer>
+
+            <HeaderedContainer Classes="WizardSection" Header="Do you have a website?">
+                <StackPanel Classes="SmallGap">
+                    <HeaderedContainer>
+                        <HeaderedContainer.Header>
+                            <TextBlock Classes="FormLabel">Project Website</TextBlock>
+                        </HeaderedContainer.Header>
+                        <TextBox Classes="InvestmentProject ProjectProfile"
+                                 TextInputOptions.ContentType="Url"
+                                 Watermark="https://example.com"
+                                 Text="{Binding NewProject.Website, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                    </HeaderedContainer>
+                </StackPanel>
+            </HeaderedContainer>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

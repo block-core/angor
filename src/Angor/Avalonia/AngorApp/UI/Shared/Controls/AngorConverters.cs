@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Diagnostics;
 using System.Text.Json;
 using Angor.Shared.Utilities;
@@ -41,6 +42,12 @@ public static class AngorConverters
         return offset.Value.ToString("d");
     });
 
+    public static readonly FuncValueConverter<int, string> MonthLabel = new(value =>
+    {
+        var label = value == 1 ? "month" : "month".Pluralize();
+        return label.Humanize(LetterCasing.Title);
+    });
+
     public static FuncValueConverter<string, SvgImage> StringToQRCode { get; } = new(s =>
     {
         Debug.Assert(s != null, nameof(s) + " != null");
@@ -59,4 +66,20 @@ public static class AngorConverters
     }));
 
     public static IValueConverter HexToNpub { get;} = new FuncValueConverter<string?, string?>(s => s == null ? null : NostrConversionHelper.ConvertHexToNpub(s));
+
+    public static IValueConverter FallbackIfNullOrEmpty { get; } = new FallbackIfNullOrEmptyConverter();
+
+    private sealed class FallbackIfNullOrEmptyConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            var fallback = parameter?.ToString() ?? string.Empty;
+            return value is string s && !string.IsNullOrWhiteSpace(s) ? s : fallback;
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return value;
+        }
+    }
 }

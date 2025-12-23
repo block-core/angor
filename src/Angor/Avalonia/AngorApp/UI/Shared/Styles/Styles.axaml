@@ -115,7 +115,7 @@
     </Style>
 
     <Style Selector="StackPanel.HugeGap">
-        <Setter Property="Spacing" Value="{StaticResource BigGap}" />
+        <Setter Property="Spacing" Value="{StaticResource HugeGap}" />
     </Style>
 
     <Style Selector="StackPanel.BigGap">
