@@ -13,7 +13,7 @@
         <dt:ProjectDetailsViewModelSample />
     </Design.DataContext>
 
-    <ScrollViewer>
+    <controls:ScrollableView ContentPadding="0">
         <StackPanel Container.Name="Root" Container.Sizing="Width">
             <av:AdvancedImage Stretch="UniformToFill" Source="{Binding Project.Banner}">
                 <av:AdvancedImage.Styles>
@@ -77,5 +77,5 @@
                 </StackPanel>
             </controls:PageContainer>
         </StackPanel>
-    </ScrollViewer>
+    </controls:ScrollableView>
 </UserControl>

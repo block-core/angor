@@ -1,8 +1,5 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-        xmlns:zconv="clr-namespace:Zafiro.Avalonia.Converters">
-    
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.PreviewWith>
         <Border Padding="20">
             <StackPanel Spacing="10">
@@ -16,16 +13,13 @@
                                 BorderBrush="#FFB81C"
                                 BorderThickness="2"
                                 Background="LightBlue"
-                                
                                 HorizontalContentAlignment="Left" Icon="{Icon fa-wallet}">
                 </EnhancedButton>
-               
             </StackPanel>
         </Border>
     </Design.PreviewWith>
 
     <Styles.Resources>
-        <PreferredHeightConverter x:Key="PreferredHeightConverter" />
         <ControlTheme TargetType="EnhancedButton" x:Key="{x:Type EnhancedButton}">
             <Setter Property="Spacing" Value="8" />
             <Setter Property="HorizontalAlignment" Value="Left" />
@@ -44,10 +38,12 @@
                             <SmartDockPanel HorizontalSpacing="{Binding $parent[EnhancedButton].Spacing}">
                                 <ContentPresenter IsVisible="{Binding !!$self.Content}"
                                                   VerticalAlignment="Center"
+                                                  x:Name="IconPresenter"
                                                   Content="{TemplateBinding Icon}" />
-                                <ContentPresenter x:Name="PART_ContentPresenter"
+                                <ContentPresenter x:Name="ContentPresenter"
                                                   IsVisible="{Binding !!$self.Content}"
                                                   VerticalAlignment="Center"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                   Content="{TemplateBinding Content}"
                                                   ContentTemplate="{TemplateBinding ContentTemplate}" />
                             </SmartDockPanel>

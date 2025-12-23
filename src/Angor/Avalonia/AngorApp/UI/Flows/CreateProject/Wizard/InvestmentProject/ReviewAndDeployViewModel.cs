@@ -2,9 +2,14 @@ using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model;
 
 namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
 {
-    public class ReviewAndDeployViewModel : IHaveTitle
+    public interface IReviewAndDeployViewModel
     {
-        public NewProject NewProject { get; }
+        INewProject NewProject { get; }
+    }
+
+    public class ReviewAndDeployViewModel : IHaveTitle, IReviewAndDeployViewModel
+    {
+        public INewProject NewProject { get; }
 
         public ReviewAndDeployViewModel(NewProject newProject)
         {
