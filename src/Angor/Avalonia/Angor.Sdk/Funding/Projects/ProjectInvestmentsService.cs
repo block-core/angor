@@ -15,7 +15,7 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
     IAngorIndexerService angorIndexerService, IInvestorTransactionActions investorTransactionActions,
     ITransactionService transactionService) : IProjectInvestmentsService
 {
-    public async Task<Result<IEnumerable<StageData>>> ScanFullInvestments(string projectId)
+    public async Task<Result<IEnumerable<StageData>>> ScanInvestments(string projectId)
     {
         var project = await projectService.GetAsync(new ProjectId(projectId));
 

@@ -18,13 +18,13 @@ using MediatR;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 
-public static class RequestInvestmentSignatures
+public static class RequestInvestmentApproval
 {
-    public record RequestFounderSignaturesRequest(WalletId WalletId, ProjectId ProjectId, InvestmentDraft Draft) : IRequest<Result<RequestFounderSignaturesResponse>>;
+    public record RequestInvestmentApprovalRequest(WalletId WalletId, ProjectId ProjectId, InvestmentDraft Draft) : IRequest<Result<RequestInvestmentApprovalResponse>>;
 
-    public record RequestFounderSignaturesResponse(Guid InvestmentId);
+    public record RequestInvestmentApprovalResponse(Guid InvestmentId);
 
-    public class RequestFounderSignaturesHandler(
+    public class RequestInvestmentApprovalHandler(
         IProjectService projectService,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations,
@@ -35,9 +35,9 @@ public static class RequestInvestmentSignatures
         IPortfolioService portfolioService,
         IProjectScriptsBuilder projectScriptsBuilder,
         IAngorIndexerService angorIndexerService,
-        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<RequestFounderSignaturesRequest, Result<RequestFounderSignaturesResponse>>
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<RequestInvestmentApprovalRequest, Result<RequestInvestmentApprovalResponse>>
     {
-        public async Task<Result<RequestFounderSignaturesResponse>> Handle(RequestFounderSignaturesRequest request, CancellationToken cancellationToken)
+        public async Task<Result<RequestInvestmentApprovalResponse>> Handle(RequestInvestmentApprovalRequest request, CancellationToken cancellationToken)
         {
             var txnHex = request.Draft.SignedTxHex;
             var network = networkConfiguration.GetNetwork();
@@ -49,7 +49,7 @@ public static class RequestInvestmentSignatures
 
             if (projectResult.IsFailure)
             {
-                return Result.Failure<RequestFounderSignaturesResponse>(projectResult.Error);
+                return Result.Failure<RequestInvestmentApprovalResponse>(projectResult.Error);
             }
 
             var (investorKey, _) = projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(strippedInvestmentTransaction.Outputs[1].ScriptPubKey);
@@ -57,13 +57,13 @@ public static class RequestInvestmentSignatures
             var existingInvestment = await Result.Try(() => angorIndexerService.GetInvestmentAsync(request.ProjectId.Value, investorKey));
 
             if (existingInvestment is { IsSuccess: true, Value: not null })
-                return Result.Failure<RequestFounderSignaturesResponse>("An investment with the same key already exists on the blockchain.");
+                return Result.Failure<RequestInvestmentApprovalResponse>("An investment with the same key already exists on the blockchain.");
 
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
 
             if (sensitiveDataResult.IsFailure)
             {
-                return Result.Failure<RequestFounderSignaturesResponse>(sensitiveDataResult.Error);
+                return Result.Failure<RequestInvestmentApprovalResponse>(sensitiveDataResult.Error);
             }
 
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
@@ -73,7 +73,7 @@ public static class RequestInvestmentSignatures
 
             if (sendSignatureResult.IsFailure)
             {
-                return Result.Failure<RequestFounderSignaturesResponse>(sendSignatureResult.Error);
+                return Result.Failure<RequestInvestmentApprovalResponse>(sendSignatureResult.Error);
             }
 
             await portfolioService.AddOrUpdate(request.WalletId.Value, new InvestmentRecord
@@ -90,7 +90,7 @@ public static class RequestInvestmentSignatures
             // Reserve UTXOs used in this investment transaction
             await ReserveUtxosForInvestment(request.WalletId, request.Draft.SignedTxHex);
 
-            return Result.Success(new RequestFounderSignaturesResponse(Guid.Empty));
+            return Result.Success(new RequestInvestmentApprovalResponse(Guid.Empty));
         }
 
         private async Task<Result<(DateTime createdTime, string eventId)>> SendSignatureRequest(WalletId walletId, WalletWords walletWords, Project project, string signedTransactionHex)

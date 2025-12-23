@@ -7,7 +7,7 @@ namespace Angor.Sdk.Funding.Projects;
 
 public interface IProjectInvestmentsService
 {
-    Task<Result<IEnumerable<StageData>>> ScanFullInvestments(string projectId);
+    Task<Result<IEnumerable<StageData>>> ScanInvestments(string projectId);
 
     Task<Result<StageDataTrx>> CheckSpentFund(QueryTransactionOutput output, Transaction investmentTransaction,
         ProjectInfo projectInfo,

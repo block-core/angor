@@ -119,7 +119,7 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
         }
     }
 
-    public async Task<Result<IEnumerable<Project>>> LatestAsync()
+    public async Task<Result<IEnumerable<Project>>> GetLatestAsync()
     {
         var top30 = await Result.Try(() => angorIndexerService.GetProjectsAsync(null, 30));
 

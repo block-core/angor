@@ -16,7 +16,7 @@ public static class ProjectStatistics
     {
         public async Task<Result<ProjectStatisticsDto>> Handle(ProjectStatsRequest request, CancellationToken cancellationToken)
         {
-            var stagesInformation = await projectInvestmentsService.ScanFullInvestments(request.ProjectId.Value);
+            var stagesInformation = await projectInvestmentsService.ScanInvestments(request.ProjectId.Value);
 
             if (stagesInformation.IsFailure)
             {

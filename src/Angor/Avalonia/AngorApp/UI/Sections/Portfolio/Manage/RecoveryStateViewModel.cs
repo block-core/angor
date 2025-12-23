@@ -75,7 +75,7 @@ public sealed record RecoveryStateViewModel
         }, 
         model => 
         {
-            return investmentAppService.SubmitTransactionFromDraft(new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model))
+            return investmentAppService.PublishTransaction(new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model))
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds recovery transaction has been submitted successfully"))
             .Map(_ => Guid.Empty);
         }, 
@@ -94,8 +94,8 @@ public sealed record RecoveryStateViewModel
         }, 
         model => 
         {
-            return investmentAppService.SubmitTransactionFromDraft(new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model))
-            .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
+ return investmentAppService.PublishTransaction(new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model))
+      .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
             .Map(_ => Guid.Empty);
         }, 
         uiServices);
@@ -105,17 +105,17 @@ public sealed record RecoveryStateViewModel
     
     private Task<Maybe<Guid>> Release(RecoveryStateViewModel recoveryStateViewModel)
     {
-        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
-        fr =>
+    var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
+      fr =>
         {
-            return investmentAppService.BuildReleaseInvestorFunds(new ReleaseFunds.ReleaseFundsRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
-                .Map(ITransactionDraftViewModel (response) => new TransactionDraftViewModel(response.TransactionDraft, uiServices));
+     return investmentAppService.BuildReleaseInvestorFunds(new ReleaseFunds.ReleaseFundsRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
+          .Map(ITransactionDraftViewModel (response) => new TransactionDraftViewModel(response.TransactionDraft, uiServices));
         }, 
-        model =>
-        {
-            return investmentAppService.SubmitTransactionFromDraft(new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model))
-                .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
-                .Map(_ => Guid.Empty);
+   model =>
+ {
+         return investmentAppService.PublishTransaction(new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model))
+  .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
+    .Map(_ => Guid.Empty);
         }, 
         uiServices);
 

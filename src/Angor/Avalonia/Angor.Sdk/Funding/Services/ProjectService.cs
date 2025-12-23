@@ -144,7 +144,7 @@ public class ProjectService(
         return Get(ids);
     }
 
-    public Task<Result<IEnumerable<Project>>> LatestAsync()
+    public Task<Result<IEnumerable<Project>>> GetLatestAsync()
     {
         return GetProjects(() => Result.Try(() => angorIndexerService.GetProjectsAsync(null, 20)).Map(list => list.AsEnumerable()));
     }

@@ -10,43 +10,43 @@ using MediatR;
 
 namespace Angor.Sdk.Funding.Founder.Operations;
 
-public static class GetReleaseableTransactions
+public static class GetReleasableTransactions
 {
-    public record GetReleaseableTransactionsRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<GetReleaseableTransactionsResponse>>;
+    public record GetReleasableTransactionsRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<GetReleasableTransactionsResponse>>;
 
-    public record GetReleaseableTransactionsResponse(IEnumerable<ReleaseableTransactionDto> Transactions);
+    public record GetReleasableTransactionsResponse(IEnumerable<ReleasableTransactionDto> Transactions);
 
-    public class GetClaimableTransactionsHandler(ISignService signService, IProjectService projectService,
-        INostrDecrypter nostrDecrypter, ISerializer serializer) : IRequestHandler<GetReleaseableTransactionsRequest, Result<GetReleaseableTransactionsResponse>>
+    public class GetReleasableTransactionsHandler(ISignService signService, IProjectService projectService,
+        INostrDecrypter nostrDecrypter, ISerializer serializer) : IRequestHandler<GetReleasableTransactionsRequest, Result<GetReleasableTransactionsResponse>>
     {
-        public async Task<Result<GetReleaseableTransactionsResponse>> Handle(GetReleaseableTransactionsRequest request, CancellationToken cancellationToken)
+        public async Task<Result<GetReleasableTransactionsResponse>> Handle(GetReleasableTransactionsRequest request, CancellationToken cancellationToken)
         {
-            
+
             var projectResult = await projectService.GetAsync(request.ProjectId);
             if (projectResult.IsFailure)
-                return Result.Failure<GetReleaseableTransactionsResponse>(projectResult.Error);
-            
+                return Result.Failure<GetReleasableTransactionsResponse>(projectResult.Error);
+
             var requests = await FetchSignatureRequestsAsync(projectResult.Value.NostrPubKey);
-            
+
             var items = requests.ToList();
-            
+
             var decryptResult = DecryptMessages(request.WalletId.Value, request.ProjectId, items);
             var approvalTask = FetchFounderApprovalsSignaturesAsync(projectResult.Value.NostrPubKey, items);
             var releaseTask = FetchFounderReleaseSignaturesAsync(projectResult.Value.NostrPubKey, items);
-            
-            await Task.WhenAll(approvalTask, releaseTask,decryptResult);
 
-            var list = requests.Select(x => new ReleaseableTransactionDto
+            await Task.WhenAll(approvalTask, releaseTask, decryptResult);
+
+            var list = requests.Select(x => new ReleasableTransactionDto
             {
                 Approved = x.ApprovaleTime,
                 Arrived = x.InvestmentRequestTime,
                 Released = x.ReleaseSignaturesTime,
                 InvestmentEventId = x.SignRecoveryRequestEventId
             });
-                
-            return Result.Success(new GetReleaseableTransactionsResponse(list));
+
+            return Result.Success(new GetReleasableTransactionsResponse(list));
         }
-        
+
 
 
         public Task<IEnumerable<SignatureReleaseItem>> FetchSignatureRequestsAsync(string projectNostrPubKey)
@@ -107,10 +107,10 @@ public static class GetReleaseableTransactions
 
                     if (sigResJson.IsFailure)
                         continue;
-                    
+
                     var testingValidity = serializer.Deserialize<SignRecoveryRequest>(sigResJson.Value);
-                    
-                    if (testingValidity is not null && 
+
+                    if (testingValidity is not null &&
                         testingValidity.ProjectIdentifier == projectId.Value &&
                         !string.IsNullOrWhiteSpace(testingValidity.InvestmentTransactionHex) &&
                         !string.IsNullOrWhiteSpace(testingValidity.UnfundedReleaseAddress))
@@ -123,7 +123,7 @@ public static class GetReleaseableTransactions
                     signatureReleaseItem.SignRecoveryRequestEventId = null; // should we remove the item instead?
                 }
             }
-            
+
             return Result.Success();
         }
 
@@ -150,10 +150,10 @@ public static class GetReleaseableTransactions
                 {
                     tcs.SetResult();
                 });
-            
+
             return tcs.Task;
         }
-        
+
         private Task FetchFounderApprovalsSignaturesAsync(string nostrPubKey, List<SignatureReleaseItem> signaturesReleaseItems)
         {
             var tcs = new TaskCompletionSource();
@@ -183,7 +183,7 @@ public static class GetReleaseableTransactions
                 {
                     tcs.SetResult();
                 });
-            
+
             return tcs.Task;
         }
     }

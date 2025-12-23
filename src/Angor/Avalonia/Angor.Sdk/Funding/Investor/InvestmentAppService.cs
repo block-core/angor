@@ -14,7 +14,7 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     public Task<Result<CreateInvestment.CreateInvestmentTransactionResponse>> CreateInvestmentDraft(CreateInvestment.CreateInvestmentTransactionRequest request)
         => mediator.Send(request);
 
-    public Task<Result<RequestInvestmentSignatures.RequestFounderSignaturesResponse>> SubmitInvestment(RequestInvestmentSignatures.RequestFounderSignaturesRequest request)
+    public Task<Result<RequestInvestmentApproval.RequestInvestmentApprovalResponse>> RequestInvestmentApproval(RequestInvestmentApproval.RequestInvestmentApprovalRequest request)
         => mediator.Send(request);
 
     public Task<Result<CancelInvestmentSignatures.CancelInvestmentSignaturesResponse>> CancelInvestment(CancelInvestmentSignatures.CancelInvestmentSignaturesRequest request)
@@ -23,14 +23,14 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     public Task<Result<Investments.InvestmentsPortfolioResponse>> GetInvestorProjects(Investments.InvestmentsPortfolioRequest request)
         => mediator.Send(request);
 
-  public Task<Result<PublishInvestment.PublishInvestmentResponse>> ConfirmInvestment(PublishInvestment.PublishInvestmentRequest request)
+  public Task<Result<PublishInvestment.PublishInvestmentResponse>> PublishInvestment(PublishInvestment.PublishInvestmentRequest request)
    => mediator.Send(request);
 
     public Task<Result<GetPenalties.GetPenaltiesResponse>> GetPenalties(GetPenalties.GetPenaltiesRequest request)
     => mediator.Send(request);
 
-    public Task<Result<CheckPenaltyThreshold.CheckPenaltyThresholdResponse>> IsInvestmentAbovePenaltyThreshold(CheckPenaltyThreshold.CheckPenaltyThresholdRequest request)
-        => mediator.Send(request);
+    public Task<Result<CheckPenaltyThreshold.CheckPenaltyThresholdResponse>> CheckPenaltyThreshold(CheckPenaltyThreshold.CheckPenaltyThresholdRequest request)
+      => mediator.Send(request);
 
     #region Methods for Investor/Manage funds. Remove this region ASAP. It's only for clarity.
 
@@ -41,13 +41,13 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
         => mediator.Send(request);
 
     public Task<Result<ReleaseFunds.ReleaseFundsResponse>> BuildReleaseInvestorFunds(ReleaseFunds.ReleaseFundsRequest request)
-        => mediator.Send(request);
+   => mediator.Send(request);
 
     public Task<Result<ClaimEndOfProject.ClaimEndOfProjectResponse>> BuildClaimInvestorEndOfProjectFunds(ClaimEndOfProject.ClaimEndOfProjectRequest request)
 => mediator.Send(request);
 
-    public Task<Result<PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionResponse>> SubmitTransactionFromDraft(PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest request)
-    => mediator.Send(request);
+    public Task<Result<PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionResponse>> PublishTransaction(PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest request)
+ => mediator.Send(request);
 
     #endregion
 

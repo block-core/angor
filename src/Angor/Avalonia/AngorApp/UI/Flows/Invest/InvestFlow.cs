@@ -39,8 +39,8 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
 
     private Task<Result<bool>> IsAboveThreshold(ProjectId projectId, long investmentAmount)
     {
-        return investmentAppService.IsInvestmentAbovePenaltyThreshold(new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(projectId, new Angor.Sdk.Funding.Projects.Domain.Amount(investmentAmount)))
-         .Map(response => response.IsAboveThreshold);
+        return investmentAppService.CheckPenaltyThreshold(new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(projectId, new Angor.Sdk.Funding.Projects.Domain.Amount(investmentAmount)))
+    .Map(response => response.IsAboveThreshold);
     }
 
     private static IEnhancedCommand<Result<string>> InvestCommand(IEnhancedCommand<Result<Guid>> command, bool isAboveThreshold)
@@ -54,14 +54,14 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
 
     private TransactionDraftPreviewerViewModel CreateDraft(
             WalletId walletId,
-            FullProject fullProject,
+   FullProject fullProject,
             long satsToInvest,
-            bool isAboveThreshold,
-            byte? patternIndex)
+       bool isAboveThreshold,
+    byte? patternIndex)
     {
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
               feerate =>
-           {
+   {
                var amount = new Angor.Sdk.Funding.Projects.Domain.Amount(satsToInvest);
 
                // Pass pattern index and investment start date for Fund/Subscribe projects
@@ -79,31 +79,31 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
                return viewModel;
            },
             async draft =>
-           {
-               // Get the actual draft model from the view model
-               var investmentDraft = (InvestmentDraft)draft.Model;
+     {
+ // Get the actual draft model from the view model
+      var investmentDraft = (InvestmentDraft)draft.Model;
 
-               if (!isAboveThreshold)
-               {
-                   // Below threshold: directly publish the transaction and store in portfolio (no founder approval needed)
-                   var publishResult = await investmentAppService.SubmitTransactionFromDraft(
-                    new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(walletId.Value, fullProject.ProjectId, investmentDraft));
+    if (!isAboveThreshold)
+   {
+         // Below threshold: directly publish the transaction and store in portfolio (no founder approval needed)
+   var publishResult = await investmentAppService.PublishTransaction(
+        new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(walletId.Value, fullProject.ProjectId, investmentDraft));
 
-                   // Return a GUID representing the transaction (use a hash or placeholder)
-                   return publishResult.IsSuccess // todo: change this pointless guid
-                       ? Result.Success(Guid.NewGuid()) // Transaction was published directly
-                     : Result.Failure<Guid>(publishResult.Error);
-               }
-               else
-               {
+  // Return a GUID representing the transaction (use a hash or placeholder)
+          return publishResult.IsSuccess // todo: change this pointless guid
+       ? Result.Success(Guid.NewGuid()) // Transaction was published directly
+                 : Result.Failure<Guid>(publishResult.Error);
+        }
+       else
+       {
                    // Above/at threshold: request founder signatures (penalty path)
-                   var result = await investmentAppService.SubmitInvestment(new RequestInvestmentSignatures.RequestFounderSignaturesRequest(walletId, fullProject.ProjectId, investmentDraft));
-                   return result.Map(response => response.InvestmentId);
-               }
-           },
-            uiServices)
-            {
-                Amount = new AmountUI(satsToInvest)
+   var result = await investmentAppService.RequestInvestmentApproval(new RequestInvestmentApproval.RequestInvestmentApprovalRequest(walletId, fullProject.ProjectId, investmentDraft));
+      return result.Map(response => response.InvestmentId);
+   }
+   },
+      uiServices)
+    {
+   Amount = new AmountUI(satsToInvest)
             };
 
         return transactionDraftPreviewerViewModel;

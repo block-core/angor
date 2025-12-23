@@ -19,7 +19,7 @@ public static class GetClaimableTransactions
     {
         public async Task<Result<GetClaimableTransactionsResponse>> Handle(GetClaimableTransactionsRequest request, CancellationToken cancellationToken)
         {
-            var resultList = await projectInvestmentsService.ScanFullInvestments(request.ProjectId.Value);
+            var resultList = await projectInvestmentsService.ScanInvestments(request.ProjectId.Value);
 
             if (resultList.IsFailure)
             {

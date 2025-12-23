@@ -13,7 +13,7 @@ public interface IFounderAppService
     Task<Result<ApproveInvestment.ApproveInvestmentResponse>> ApproveInvestment(ApproveInvestment.ApproveInvestmentRequest request);
     Task<Result<SpendFounderStageTransaction.SpendFounderStageTransactionResponse>> Spend(SpendFounderStageTransaction.SpendFounderStageTransactionRequest request);
     Task<Result<GetClaimableTransactions.GetClaimableTransactionsResponse>> GetClaimableTransactions(GetClaimableTransactions.GetClaimableTransactionsRequest request);
-    Task<Result<GetReleaseableTransactions.GetReleaseableTransactionsResponse>> GetReleasableTransactions(GetReleaseableTransactions.GetReleaseableTransactionsRequest request);
+    Task<Result<GetReleasableTransactions.GetReleasableTransactionsResponse>> GetReleasableTransactions(GetReleasableTransactions.GetReleasableTransactionsRequest request);
     Task<Result<ReleaseInvestorTransaction.ReleaseInvestorTransactionResponse>> ReleaseInvestorTransactions(ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest request);
   
     Task<Result<CreateProjectNewKeys.CreateProjectNewKeysResponse>> CreateNewProjectKeysAsync(CreateProjectNewKeys.CreateProjectNewKeysRequest request);

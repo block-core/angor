@@ -1,6 +1,6 @@
 namespace Angor.Sdk.Funding.Founder.Dtos;
 
-public record ReleaseableTransactionDto
+public record ReleasableTransactionDto
 {
     public DateTime? Released { get; init; }
     public required DateTime Arrived { get; init; }
