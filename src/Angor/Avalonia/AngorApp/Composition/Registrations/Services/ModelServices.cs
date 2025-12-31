@@ -4,7 +4,6 @@ using AngorApp.UI.Flows.Invest;
 using AngorApp.UI.Flows.SendWalletMoney;
 using AngorApp.UI.Sections.Wallet.CreateAndImport;
 using AngorApp.UI.Shared.Controls.Feerate;
-using Branta.V2.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AngorApp.Composition.Registrations.Services;
@@ -22,7 +21,6 @@ public static class ModelServices
             .AddSingleton<InvestFlow>()
             .AddSingleton<WalletCreationWizard>()
             .AddSingleton<IFeeCalculator, FeeCalculatorDesignTime>()
-            .AddSingleton<WalletImportWizard>()
-            .ConfigureBrantaServices();
+            .AddSingleton<WalletImportWizard>();
     }
 }
