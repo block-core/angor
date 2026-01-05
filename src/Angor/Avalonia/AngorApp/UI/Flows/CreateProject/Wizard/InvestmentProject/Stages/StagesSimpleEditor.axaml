@@ -1,0 +1,109 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:model="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model"
+             xmlns:stages="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages.StagesSimpleEditor">
+    <UserControl.Styles>
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="FontWeight" Value="Bold"></Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Classes="BigGap">
+        <HeaderedContainer Classes="WizardSection">
+            <HeaderedContainer.Header>
+                <TextBlock>Project length</TextBlock>
+            </HeaderedContainer.Header>
+            <HeaderedContainer Header="Duration">
+                <StackPanel Classes="BigGap">
+                    <DockPanel HorizontalSpacing="10">
+                        <ComboBox SelectedIndex="0" DisplayMemberBinding="{Binding Title, DataType=model:TaggedTimespan}" DockPanel.Dock="Right" VerticalAlignment="Center">
+                            <ComboBox.ItemsSource>
+                                <collections:ArrayList>
+                                    <model:TaggedTimespan Title="Months" TimeSpan="30:00:00:00" />
+                                    <model:TaggedTimespan Title="Weeks" TimeSpan="7:00:00:00" />
+                                    <model:TaggedTimespan Title="Days" TimeSpan="1:00:00:00" />
+                                </collections:ArrayList>
+                            </ComboBox.ItemsSource>
+                        </ComboBox>
+                        <TextBox />
+                    </DockPanel>
+                    <ListBox ItemContainerTheme="{StaticResource ButtonizedWhite}" Background="Transparent">
+                        <ListBox.ItemsSource>
+                            <collections:ArrayList>
+                                <x:Int32>3</x:Int32>
+                                <x:Int32>6</x:Int32>
+                                <x:Int32>12</x:Int32>
+                                <x:Int32>18</x:Int32>
+                                <x:Int32>24</x:Int32>
+                            </collections:ArrayList>
+                        </ListBox.ItemsSource>
+
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel ItemSpacing="10" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="x:Int32">
+                                <TextBlock Classes="Bold" TextAlignment="Center">
+                                    <TextBlock.Inlines>
+                                        <Run Text="{Binding}" />
+                                        <Run Text="{Binding Converter={x:Static controls:AngorConverters.MonthLabel}}" />
+                                    </TextBlock.Inlines>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+
+            </HeaderedContainer>
+        </HeaderedContainer>
+        <HeaderedContainer Classes="WizardSection">
+            <HeaderedContainer.Header>
+                <TextBlock>How often do you need funding released?</TextBlock>
+            </HeaderedContainer.Header>
+
+            <ListBox ItemContainerTheme="{StaticResource ButtonizedWhite}" Background="Transparent">
+                <ListBox.ItemsSource>
+                    <collections:ArrayList>
+                        <model:TaggedTimespan Title="Weekly" TimeSpan="7:00:00:00" />
+                        <model:TaggedTimespan Title="Monthly" TimeSpan="30:00:00:00" />
+                        <model:TaggedTimespan Title="Bi-Monthly" TimeSpan="60:00:00:00" />
+                        <model:TaggedTimespan Title="Quarterly" TimeSpan="120:00:00:00" />
+                    </collections:ArrayList>
+                </ListBox.ItemsSource>
+
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel ItemSpacing="10" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="model:TaggedTimespan">
+                        <TextBlock Classes="Bold" TextAlignment="Center" Text="{Binding Title}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </HeaderedContainer>
+        <EnhancedButton HorizontalAlignment="Stretch" Classes="Accent" HorizontalContentAlignment="Center">Generate Stages</EnhancedButton>
+        
+        <stages:StagesCard />
+        
+    </StackPanel>
+
+</UserControl>

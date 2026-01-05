@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:steps="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.ProjectProfileView" x:DataType="steps:ProjectProfileViewModel">
     
@@ -10,10 +11,6 @@
     <UserControl.Styles>
         <Style Selector="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap" />
-        </Style>
-        
-        <Style Selector="TextBox">
-            <Setter Property="Theme" Value="{StaticResource OrangeTextBoxTheme}" />
         </Style>
 
         <Style Selector="TextBlock.FormLabel">
@@ -30,8 +27,8 @@
 
     </UserControl.Styles>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}" MaxWidth="766">
+    <controls:ScrollableView MaxContentWidth="766">
+        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}">
             <TextBlock Classes="Subtitle">Tell us about your project and what you're building.</TextBlock>
 
             <HeaderedContainer Classes="WizardSection" Header="What's the project called?">
@@ -96,5 +93,6 @@
                 </StackPanel>
             </HeaderedContainer>
         </StackPanel>
-    </ScrollViewer>
+    </controls:ScrollableView>
 </UserControl>
+

@@ -189,8 +189,8 @@
         </Style>
     </UserControl.Styles>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Classes="PageContent" Margin="30">
+    <shared:ScrollableView ContentPadding="30" MaxContentWidth="820">
+        <StackPanel Classes="PageContent">
             <TextBlock Classes="Subtitle">Upload your project's banner and profile images.</TextBlock>
 
             <OverlayBorder Classes="ImagePreviewCard">
@@ -250,5 +250,6 @@
                 </Grid>
             </OverlayBorder>
         </StackPanel>
-    </ScrollViewer>
+    </shared:ScrollableView>
 </UserControl>
+

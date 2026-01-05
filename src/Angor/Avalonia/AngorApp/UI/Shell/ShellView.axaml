@@ -10,29 +10,7 @@
     <Design.DataContext>
         <shell:ShellViewModelSample />
     </Design.DataContext>
-
-    <UserControl.Styles>
-        <Style Selector="EnhancedButton.Widget">
-            <Setter Property="Background" Value="{DynamicResource Surface}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
-            <Setter Property="Padding" Value="10" />
-        </Style>
-        <Style Selector="ComboBox">
-            <Setter Property="Background" Value="{DynamicResource Surface}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="FontWeight" Value="Bold"></Setter>
-        </Style>
-        <Style Selector="ComboBox:pointerover /template/ Border">
-            <Setter Property="Background" Value="{DynamicResource Surface}" />
-        </Style>
-    </UserControl.Styles>
-
+    
     <Grid x:Name="TopBar" Margin="0 20 20 20" ColumnDefinitions="Auto *" RowDefinitions="42 *" ColumnSpacing="20" RowSpacing="20">
         <PathIcon Height="32" Foreground="{DynamicResource Brand}" Width="32" Data="{StaticResource AngorLogo}" />
         <DockPanel Grid.Row="0" Grid.Column="1" Dock="Top">
@@ -76,8 +54,8 @@
             </DockPanel>
         </DockPanel>
         <SectionStrip Classes="Nav" Grid.Row="1" Grid.Column="0" SelectedSection="{Binding SelectedSection}" IconSize="24" Width="200" HorizontalAlignment="Left" Sections="{Binding SidebarSections}" />
-        <Border Grid.Row="1" Grid.Column="1" Classes="Panel">
+        <OverlayBorder Grid.Row="1" Grid.Column="1" Classes="Panel" Padding="0" Background="{DynamicResource TiledLogoBrush}">
             <Frame Navigator="{Binding SelectedSection.Navigator}" />
-        </Border>
+        </OverlayBorder>
     </Grid>
 </UserControl>

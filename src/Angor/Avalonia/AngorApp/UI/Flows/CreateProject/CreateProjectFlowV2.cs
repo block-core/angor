@@ -5,6 +5,7 @@ using Angor.Sdk.Funding.Founder.Operations;
 using AngorApp.UI.Flows.CreateProject.Wizard;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model;
+using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages;
 using Zafiro.Avalonia.Controls.Wizards.Slim;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Wizards.Slim;

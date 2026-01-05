@@ -3,8 +3,27 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:steps="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject"
+             xmlns:stages="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages"
+             xmlns:model="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d" d:DesignWidth="800"
-             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.ReviewAndDeployView" x:DataType="steps:ReviewAndDeployViewModel">
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.ReviewAndDeployView" x:DataType="steps:IReviewAndDeployViewModel">
+
+    <UserControl.DataContext>
+        <steps:ReviewAndDeployViewModelSample>
+            <steps:ReviewAndDeployViewModelSample.NewProject>
+                <model:NewProjectSample />
+            </steps:ReviewAndDeployViewModelSample.NewProject>
+        </steps:ReviewAndDeployViewModelSample>
+    </UserControl.DataContext>
+
+    <Design.DataContext>
+        <steps:ReviewAndDeployViewModelSample>
+            <steps:ReviewAndDeployViewModelSample.NewProject>
+                <model:NewProjectSample />
+            </steps:ReviewAndDeployViewModelSample.NewProject>
+        </steps:ReviewAndDeployViewModelSample>
+    </Design.DataContext>
 
     <UserControl.Resources>
 
@@ -20,51 +39,11 @@
 
     </UserControl.Resources>
 
-    <UserControl.Styles>
-        <Style Selector="Expander EdgePanel">
-            <Setter Property="Background" Value="{DynamicResource SurfaceSubtler}"></Setter>
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="CornerRadius" Value="10"></Setter>
-            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
-
-        <Style Selector="HeaderedContainer.WizardSection">
-            <Setter Property="Background" Value="{DynamicResource Translucid}" />
-        </Style>
-
-        <Style Selector="Border.Icon ContentControl">
-            <Setter Property="Foreground">White</Setter>
-        </Style>
-        <Style Selector="Border.Icon">
-            <Setter Property="Height">40</Setter>
-            <Setter Property="Width">40</Setter>
-            <Setter Property="CornerRadius">10</Setter>
-        </Style>
-        <Style Selector="Border.Accent">
-            <Setter Property="Background" Value="{DynamicResource Accent}" />
-        </Style>
-        <Style Selector="Border.Orange">
-            <Setter Property="Background" Value="{DynamicResource BitcoinAccent}" />
-        </Style>
-        <Style Selector="HeaderedContainer ContentPresenter#Header DockPanel">
-            <Setter Property="HorizontalSpacing" Value="16" />
-        </Style>
-        <Style Selector="HeaderedContainer DockPanel">
-            <Setter Property="HorizontalSpacing" Value="12" />
-        </Style>
-    </UserControl.Styles>
-
-    <ScrollViewer>
-        <StackPanel Classes="BigGap" MaxWidth="766">
-            <HeaderedContainer Classes="WizardSection">
+    <controls:ScrollableView MaxContentWidth="766">
+        <StackPanel Classes="BigGap">
+            <HeaderedContainer Classes="Translucid">
                 <HeaderedContainer.Header>
-                    <DockPanel>
-                        <Border Classes="Icon Accent">
-                            <ContentControl Content="{Icon fa-user}" />
-                        </Border>
-                        <TextBlock VerticalAlignment="Center">Project Profile</TextBlock>
-                    </DockPanel>
+                    <EdgePanel StartContent="{Icon fa-user}" Content="Project Profile" />
                 </HeaderedContainer.Header>
                 <StackPanel Classes="BigGap">
                     <EdgePanel StartContent="Name" EndContent="Not set" />
@@ -75,12 +54,7 @@
 
             <HeaderedContainer Classes="WizardHighlight">
                 <HeaderedContainer.Header>
-                    <DockPanel>
-                        <Border Classes="Icon Orange">
-                            <ContentControl Content="{Icon fa-bitcoin}" />
-                        </Border>
-                        <TextBlock VerticalAlignment="Center">Funding Configuration</TextBlock>
-                    </DockPanel>
+                    <EdgePanel StartContent="{Icon fa-bitcoin}" Content="Funding Configuration" />
                 </HeaderedContainer.Header>
                 <StackPanel Classes="BigGap">
                     <EdgePanel StartContent="Target Amount" EndContent="0.25 BTC" />
@@ -89,17 +63,22 @@
                     <EdgePanel StartContent="Penalty Days" EndContent="66 days" />
                 </StackPanel>
             </HeaderedContainer>
-            <HeaderedContainer Classes="WizardSection">
+            <HeaderedContainer Classes="Translucid">
                 <HeaderedContainer.Header>
-                    <DockPanel>
-                        <Border Classes="Icon Accent">
-                            <ContentControl Content="{Icon fa-regular fa-clipboard}" />
-                        </Border>
-                        <TextBlock VerticalAlignment="Center">Funding Stages</TextBlock>
-                    </DockPanel>
+                    <EdgePanel StartContent="{Icon fa-regular fa-clipboard}" Content="Funding Stages" />
                 </HeaderedContainer.Header>
+                <stages:StagesList Stages="{Binding NewProject.Stages}" />
             </HeaderedContainer>
             <Expander Theme="{StaticResource ExpanderSection}">
+                <Expander.Styles>
+                    <Style Selector="Expander EdgePanel">
+                        <Setter Property="Background" Value="{DynamicResource SurfaceSubtler}"></Setter>
+                        <Setter Property="Padding" Value="12" />
+                        <Setter Property="CornerRadius" Value="10"></Setter>
+                        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+                        <Setter Property="BorderThickness" Value="1" />
+                    </Style>
+                </Expander.Styles>
                 <Expander.Header>
                     <Panel Height="68">
                         <TextBlock VerticalAlignment="Center" Classes="Bold">Public Keys &amp; IDs (Advanced)</TextBlock>
@@ -134,5 +113,5 @@
                 </StackPanel>
             </HeaderedContainer>
         </StackPanel>
-    </ScrollViewer>
+    </controls:ScrollableView>
 </UserControl>

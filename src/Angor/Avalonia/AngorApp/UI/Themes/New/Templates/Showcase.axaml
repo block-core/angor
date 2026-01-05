@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Themes.New.Templates.Showcase">
+    <Border Padding="20">
+        <StackPanel Spacing="20">
+            <Border Classes="Panel" Width="200" Height="200">
+                <TextBlock>HOLA</TextBlock>
+            </Border>
+            <EnhancedButton Content="Primary" Classes="Primary" />
+            <EnhancedButton Content="Secondary" Classes="Secondary" />
+            <EnhancedButton Content="Accent" Classes="Accent" />
+            <EnhancedButton Content="White" Classes="White" />
+            <EnhancedButton Content="Outline" Classes="Outline" />
+            <CalendarDatePicker />
+            <TextBox Text="SOMETHING" />
+            <HeaderedContainer Header="Regular" Content="Content" Classes="WizardSection" />
+            <HeaderedContainer Header="Translucid" Content="Content" Classes="Translucid" />
+            <HeaderedContainer Header="Header" Content="Content" Classes="WizardHighlight" />
+            <HeaderedContainer Content="Content" Classes="WizardSection">
+                <HeaderedContainer.Header>
+                    <EdgePanel StartContent="{Icon fa-wallet}" Content="Content" EndContent="Some content" />
+                </HeaderedContainer.Header>
+            </HeaderedContainer>
+            <HeaderedContainer Content="Content" Classes="WizardHighlight">
+                <HeaderedContainer.Header>
+                    <EdgePanel StartContent="{Icon fa-wallet}" Content="Content" EndContent="Some content" />
+                </HeaderedContainer.Header>
+            </HeaderedContainer>
+        </StackPanel>
+    </Border>
+
+</UserControl>

@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:wizard="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d"
              d:DesignWidth="1200"
              x:Class="AngorApp.UI.Flows.CreateProject.Wizard.ProjectTypeView" x:DataType="wizard:ProjectTypeViewModel">
@@ -23,7 +24,6 @@
     </Design.DataContext>
 
     <UserControl.Styles>
-
         <Style Selector="ListBox">
             <Setter Property="Background" Value="Transparent" />
         </Style>
@@ -64,18 +64,19 @@
 
         <Style Selector="ListBoxItem:selected">
             <Setter Property="BorderBrush" Value="{Binding $self.Foreground}" />
+            <Setter Property="IconOptions.Fill" Value="White" />
         </Style>
         <Style Selector="ListBoxItem">
             <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
-            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
             <Setter Property="BorderThickness" Value="2" />
             <Setter Property="CornerRadius" Value="20" />
             <Setter Property="Padding" Value="20 40" />
             <Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="Transparent" />
             </Style>
-            <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="Background" Value="Transparent" />
+            <Style Selector="^:pointerover:not(:selected) /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="{DynamicResource Surface}" />
             </Style>
         </Style>
 
@@ -84,6 +85,7 @@
         </Style>
         <Style Selector="ListBoxItem:selected TextBlock.Big">
             <Setter Property="Foreground" Value="{Binding $parent[ListBoxItem].Foreground}" />
+            <Setter Property="Background" Value="Transparent" />
         </Style>
         <Style Selector="ListBoxItem TextBlock.Regular">
             <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
@@ -104,8 +106,8 @@
         </Style>
     </UserControl.Styles>
 
-    <ScrollViewer>
-        <StackPanel VerticalAlignment="Center" Classes="BigGap" MaxWidth="800">
+    <controls:ScrollableView MaxContentWidth="800">
+        <StackPanel VerticalAlignment="Center" Classes="BigGap">
             <TextBlock>Choose the type of project you want to launch.</TextBlock>
             <ListBox SelectedIndex="0" ItemsSource="{Binding ProjectTypes}">
                 <ListBox.ItemsPanel>
@@ -138,6 +140,7 @@
                 </ListBox.ItemTemplate>
             </ListBox>
         </StackPanel>
-    </ScrollViewer>
+    </controls:ScrollableView>
 
 </UserControl>
+

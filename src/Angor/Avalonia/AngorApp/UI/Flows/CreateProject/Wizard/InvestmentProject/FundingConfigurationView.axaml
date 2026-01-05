@@ -13,14 +13,9 @@
     </Design.DataContext>
 
 
-
     <UserControl.Styles>
         <Style Selector="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap" />
-        </Style>
-        
-        <Style Selector="TextBox">
-            <Setter Property="Theme" Value="{StaticResource OrangeTextBoxTheme}" />
         </Style>
 
         <Style Selector="TextBlock.FormLabel">
@@ -38,32 +33,6 @@
             <Setter Property="Foreground" Value="{DynamicResource BitcoinAccent}" />
         </Style>
 
-        <Style Selector="CalendarDatePicker.FundingConfigInput">
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
-            <Setter Property="Background" Value="{DynamicResource Surface}" />
-        </Style>
-
-        <Style Selector="CalendarDatePicker.FundingConfigInput:pointerover">
-            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
-        </Style>
-
-        <Style Selector="CalendarDatePicker.FundingConfigInput:focus">
-            <Setter Property="BorderBrush" Value="{DynamicResource BitcoinAccent}" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
-
-        <Style Selector="CalendarDatePicker.FundingConfigInput:focus-within">
-            <Setter Property="BorderBrush" Value="{DynamicResource BitcoinAccent}" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
-
-        <Style Selector="CalendarDatePicker.FundingConfigInput /template/ TextBox#PART_TextBox">
-            <Setter Property="Theme" Value="{StaticResource OrangeTextBoxTheme}" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
-            <Setter Property="Padding" Value="14 12" />
-        </Style>
 
         <Style Selector="TextBox.AmountInput">
             <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
@@ -184,43 +153,35 @@
             <Setter Property="Opacity" Value="0.92" />
         </Style>
 
-      
+
     </UserControl.Styles>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}" MaxWidth="766">
+    <controls:ScrollableView MaxContentWidth="766">
+        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}">
             <TextBlock Classes="Subtitle">Configure your funding target, window, and project nature.</TextBlock>
 
             <!-- Target amount (highlighted) -->
             <HeaderedContainer Classes="WizardHighlight">
-                <StackPanel Classes="BigGap">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <Border Width="28"
-                                Height="28"
-                                CornerRadius="999"
-                                Background="{DynamicResource BitcoinAccent}"
-                                VerticalAlignment="Center">
-                            <PathIcon Width="16"
-                                      Height="16"
-                                      Foreground="White"
+                <HeaderedContainer.Header>
+                    <EdgePanel Content="Set your target funding amount">
+                        <EdgePanel.StartContent>
+                            <PathIcon Width="20"
+                                      Height="20"
+                                      Foreground="{DynamicResource BitcoinAccent}"
                                       HorizontalAlignment="Center"
                                       VerticalAlignment="Center"
                                       Data="{StaticResource BitcoinSymbol}" />
-                        </Border>
-                        <TextBlock VerticalAlignment="Center"
-                                   FontWeight="Bold"
-                                   Foreground="{DynamicResource TextStrong}">
-                            Set your target funding amount
-                        </TextBlock>
-                    </StackPanel>
-
+                        </EdgePanel.StartContent>
+                    </EdgePanel>
+                </HeaderedContainer.Header>
+                <StackPanel Classes="BigGap">
                     <StackPanel Spacing="10">
                         <HeaderedContainer>
                             <HeaderedContainer.Header>
                                 <TextBlock Classes="FormLabel">Target Amount (BTC) *</TextBlock>
                             </HeaderedContainer.Header>
 
-                            <TextBox Classes="InvestmentProject FundingConfigInput AmountInput"
+                            <TextBox Classes="AmountInput"
                                      Text="0,25"
                                      TextInputOptions.ContentType="Number"
                                      Watermark="0.00">
@@ -253,9 +214,9 @@
                                     <TextBlock Classes="Center Tiny" Text="BTC" />
                                 </StackPanel>
                             </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </StackPanel>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
             </HeaderedContainer>
 
             <!-- Fundraising window -->
@@ -286,7 +247,7 @@
                             <HeaderedContainer.Header>
                                 <TextBlock Classes="FormLabel">End Date *</TextBlock>
                             </HeaderedContainer.Header>
-                            <CalendarDatePicker Classes="FundingConfigInput" Watermark="dd/mm/aaaa" />
+                            <CalendarDatePicker Watermark="dd/mm/aaaa" />
                         </HeaderedContainer>
 
                         <TextBlock Classes="Muted">Must be before first stage (chosen on next screen)</TextBlock>
@@ -302,7 +263,7 @@
 
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <BalancedWrapGrid  />
+                                    <BalancedWrapGrid />
                                 </ItemsPanelTemplate>
                             </ListBox.ItemsPanel>
 
@@ -344,9 +305,9 @@
                         <Slider.Resources>
                             <SolidColorBrush x:Key="SliderThumbBackground" Color="{DynamicResource Accent}" />
                             <x:Double x:Key="SliderHorizontalThumbWidth">24</x:Double>
-                            <x:Double x:Key="SliderHorizontalThumbHeight" >24</x:Double>
-                            <x:Double x:Key="SliderTrackThemeHeight" >4</x:Double>
-                            <CornerRadius x:Key="SliderThumbCornerRadius" >12</CornerRadius>
+                            <x:Double x:Key="SliderHorizontalThumbHeight">24</x:Double>
+                            <x:Double x:Key="SliderTrackThemeHeight">4</x:Double>
+                            <CornerRadius x:Key="SliderThumbCornerRadius">12</CornerRadius>
                         </Slider.Resources>
                     </Slider>
 
@@ -354,5 +315,5 @@
                 </StackPanel>
             </HeaderedContainer>
         </StackPanel>
-    </ScrollViewer>
+    </controls:ScrollableView>
 </UserControl>
