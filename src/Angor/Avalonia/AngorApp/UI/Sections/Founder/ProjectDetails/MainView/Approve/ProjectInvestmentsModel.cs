@@ -39,7 +39,7 @@ public partial class ApproveInvestmentsViewModel : ReactiveObject, IApproveInves
 
     private Task<Result<(IWallet wallet, IEnumerable<Investment> investments)>> GetWalletInvestments(ProjectId projectId, IWallet wallet)
     {
-        var investments = founderAppService.GetInvestments(new GetInvestments.GetInvestmentsRequest(wallet.Id, projectId));
+        var investments = founderAppService.GetProjectInvestments(new GetProjectInvestments.GetProjectInvestmentsRequest(wallet.Id, projectId));
         return investments.Map(x => (wallet, investments: x.Investments));
     }
 

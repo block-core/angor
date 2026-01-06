@@ -22,7 +22,7 @@ public class UnfundedProjectTransaction : IUnfundedProjectTransaction
         Release = ReactiveCommand.CreateFromTask(() => UserFlow.PromptAndNotify(
         async () =>
           {
-              var result = await founderAppService.ReleaseInvestorTransactions(new ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest(new WalletId(walletId), projectId, [InvestmentEventId]));
+              var result = await founderAppService.ReleaseFunds(new Angor.Sdk.Funding.Founder.Operations.ReleaseFunds.ReleaseFundsRequest(new WalletId(walletId), projectId, [InvestmentEventId]));
               return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
           },
         uiServices,

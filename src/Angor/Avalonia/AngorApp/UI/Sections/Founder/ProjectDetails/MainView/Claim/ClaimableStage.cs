@@ -58,7 +58,7 @@ public class ClaimableStage : ReactiveObject, IClaimableStage
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
           feerate =>
           {
-              return founderAppService.Spend(new SpendFounderStageTransaction.SpendFounderStageTransactionRequest(
+              return founderAppService.SpendStageFunds(new SpendStageFunds.SpendStageFundsRequest(
                  wallet.Value.Id, 
                 projectId, 
                new FeeEstimation { FeeRate = feerate }, 

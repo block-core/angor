@@ -45,7 +45,7 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
     private readonly Mock<ISeedwordsProvider> _mockSeedwordsProvider;
     private readonly Mock<IWalletAccountBalanceService> _mockWalletAccountBalanceService;
     private readonly IIndexerService _realIndexerService;
-    private readonly CreateInvestment.CreateInvestmentTransactionHandler _sut;
+    private readonly BuildInvestmentDraft.BuildInvestmentDraftHandler _sut;
     private readonly ITestOutputHelper _output;
 
     // Test wallet words - ONLY FOR ANGORNET (SIGNET)!
@@ -108,15 +108,15 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
         _mockSeedwordsProvider = new Mock<ISeedwordsProvider>();
         _mockWalletAccountBalanceService = new Mock<IWalletAccountBalanceService>();
 
-        // Create the handler - now using CreateInvestment.CreateInvestmentTransactionHandler
-        _sut = new CreateInvestment.CreateInvestmentTransactionHandler(
+        // Create the handler - now using BuildInvestmentDraft.BuildInvestmentDraftHandler
+        _sut = new BuildInvestmentDraft.BuildInvestmentDraftHandler(
             _mockProjectService.Object,
             investorTransactionActions,
             _mockSeedwordsProvider.Object,
             _walletOperations,
             _derivationOperations,
             _mockWalletAccountBalanceService.Object,
-            new NullLogger<CreateInvestment.CreateInvestmentTransactionHandler>());
+            new NullLogger<BuildInvestmentDraft.BuildInvestmentDraftHandler>());
     }
 
     [Fact(Skip = "Integration test - requires Angornet (Bitcoin Signet) access and real funds. Run manually.")]
@@ -183,7 +183,7 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
             .ReturnsAsync(Result.Success(accountBalance));
 
         // Create request with FundingAddress - this uses the new CreateInvestment handler
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             project.Id,
             new Amount(50000000), // 0.5 BTC investment

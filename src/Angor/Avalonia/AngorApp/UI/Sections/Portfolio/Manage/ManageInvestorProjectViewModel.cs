@@ -38,7 +38,7 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
     private Task<Result<RecoveryStateViewModel>> GetRecoveryStateViewModel(IWallet wallet, SharedCommands sharedCommands)
     {
         return investmentAppService
-       .GetInvestorProjectRecovery(new GetInvestorProjectRecovery.GetInvestorProjectRecoveryRequest(wallet.Id, projectId))
+       .GetRecoveryStatus(new GetRecoveryStatus.GetRecoveryStatusRequest(wallet.Id, projectId))
             .Map(response => new RecoveryStateViewModel(wallet.Id, response.RecoveryData, sharedCommands, investmentAppService, uiServices));
   }
 

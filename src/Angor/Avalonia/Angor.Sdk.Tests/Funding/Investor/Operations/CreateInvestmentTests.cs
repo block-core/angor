@@ -35,7 +35,7 @@ public class CreateInvestmentTests
     private readonly Mock<IIndexerService> _mockIndexerService;
     private readonly IDerivationOperations _derivationOperations;
     private readonly INetworkConfiguration _networkConfiguration;
-    private readonly CreateInvestment.CreateInvestmentTransactionHandler _sut;
+    private readonly BuildInvestmentDraft.BuildInvestmentDraftHandler _sut;
     private readonly Network _network;
 
     public CreateInvestmentTests()
@@ -73,14 +73,14 @@ public class CreateInvestmentTests
             new NullLogger<WalletOperations>(),
             _networkConfiguration);
 
-        _sut = new CreateInvestment.CreateInvestmentTransactionHandler(
+        _sut = new BuildInvestmentDraft.BuildInvestmentDraftHandler(
             _mockProjectService.Object,
             _investorTransactionActions,
             _mockSeedwordsProvider.Object,
             _walletOperations,
             _derivationOperations,
             _mockWalletBalanceService.Object,
-            new NullLogger<CreateInvestment.CreateInvestmentTransactionHandler>());
+            new NullLogger<BuildInvestmentDraft.BuildInvestmentDraftHandler>());
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public class CreateInvestmentTests
             .Setup(x => x.GetAsync(projectId))
             .ReturnsAsync(Result.Failure<Project>("Project not found"));
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(1000000),
@@ -127,7 +127,7 @@ public class CreateInvestmentTests
             .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
             .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet not found"));
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(1000000),
@@ -168,7 +168,7 @@ public class CreateInvestmentTests
             .Setup(x => x.GetAccountBalanceInfoAsync(It.IsAny<WalletId>()))
             .ReturnsAsync(Result.Failure<AccountBalanceInfo>("Failed to get account balance"));
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(1000000),
@@ -196,7 +196,7 @@ public class CreateInvestmentTests
 
         SetupBasicMocks(project, words, accountInfo);
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(1000000),
@@ -226,7 +226,7 @@ public class CreateInvestmentTests
 
         SetupBasicMocks(project, words, accountInfo);
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(1000000),
@@ -256,7 +256,7 @@ public class CreateInvestmentTests
 
         SetupBasicMocks(project, words, accountInfo);
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(1000000),
@@ -286,7 +286,7 @@ public class CreateInvestmentTests
 
         SetupBasicMocks(project, words, accountInfo);
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(1000000),
@@ -314,7 +314,7 @@ public class CreateInvestmentTests
 
         SetupBasicMocks(project, words, accountInfo);
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(1000000),
@@ -346,7 +346,7 @@ public class CreateInvestmentTests
 
         SetupBasicMocks(project, words, accountInfo);
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(100000000), // 1 BTC
@@ -374,7 +374,7 @@ public class CreateInvestmentTests
             .Setup(x => x.GetAsync(projectId))
             .ReturnsAsync(Result.Failure<Project>("Project not found"));
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(1000000),
@@ -402,7 +402,7 @@ public class CreateInvestmentTests
             .Setup(x => x.GetSensitiveData(walletId.Value))
             .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Failed"));
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             project.Id,
             new Amount(1000000),

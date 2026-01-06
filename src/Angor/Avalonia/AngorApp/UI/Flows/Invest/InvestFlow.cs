@@ -65,8 +65,8 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
                var amount = new Angor.Sdk.Funding.Projects.Domain.Amount(satsToInvest);
 
                // Pass pattern index and investment start date for Fund/Subscribe projects
-               var investmentDraft = investmentAppService.CreateInvestmentDraft(
-                new CreateInvestment.CreateInvestmentTransactionRequest(
+               var investmentDraft = investmentAppService.BuildInvestmentDraft(
+                new BuildInvestmentDraft.BuildInvestmentDraftRequest(
                     walletId,
                     fullProject.ProjectId,
                     amount,

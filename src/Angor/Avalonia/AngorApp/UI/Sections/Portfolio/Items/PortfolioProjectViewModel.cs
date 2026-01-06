@@ -52,7 +52,7 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
 
         // cancel investment command
         CancelInvestment = ReactiveCommand.CreateFromTask(() => 
-   investmentAppService.CancelInvestment(new CancelInvestmentSignatures.CancelInvestmentSignaturesRequest(walletContext.CurrentWallet.Value.Id, new ProjectId(projectDto.Id), projectDto.InvestmentId))
+   investmentAppService.CancelInvestmentRequest(new Angor.Sdk.Funding.Investor.Operations.CancelInvestmentRequest.CancelInvestmentRequestRequest(walletContext.CurrentWallet.Value.Id, new ProjectId(projectDto.Id), projectDto.InvestmentId))
           .Map(_ => Unit.Default), canCancelInvestment)
             .Enhance()
             .DisposeWith(disposable);
