@@ -3,7 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:stages="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d" d:DesignWidth="800"
+             x:Name="Root"
              x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages.StagesAdvancedEditor" x:DataType="stages:IStagesViewModel">
 
     <Design.DataContext>
@@ -79,11 +81,18 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <StackPanel>
-                        <Grid ColumnDefinitions="* Auto *">
+                        <Grid ColumnDefinitions="* Auto *" IsVisible="{Binding #TimeFromPreviousText.Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                             <Separator />
                             <Border Padding="15 10" Grid.Column="1" Classes="Panel" HorizontalAlignment="Center">
                                 <EdgePanel IconOptions.Fill="{DynamicResource Dimmed}" IconOptions.Size="15" StartContent="{Icon fa-regular fa-clock}">
-                                    <TextBlock Classes="Size-S">1 month after funding ends</TextBlock>
+                                    <TextBlock Classes="Size-S" x:Name="TimeFromPreviousText" >
+                                        <TextBlock.Text>
+                                            <MultiBinding Converter="{x:Static controls:AngorConverters.TimeStringFromPreviousStage}">
+                                                <Binding Path="#ItemIndex.Tag" />
+                                                <Binding Path="TimeFromPrevious" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
                                 </EdgePanel>
                             </Border>
                             <Separator Grid.Column="2" />
@@ -92,21 +101,26 @@
                             <Grid ColumnDefinitions="Auto,120, *, Auto" RowDefinitions="Auto Auto">
                                 <Border Grid.RowSpan="2" Background="{DynamicResource SurfaceHover}" Padding="20">
                                     <Border CornerRadius="40" Width="40" Height="40" Background="{DynamicResource Translucid}" BorderBrush="{DynamicResource Dimmed}" BorderThickness="2">
-                                        <TextBlock HorizontalAlignment="Center" Classes="Weight-Bold" VerticalAlignment="Center" Foreground="{DynamicResource Dimmed}" Text="{ItemIndex StartFromOne=True}" />
+                                        <TextBlock x:Name="ItemIndex" Tag="{ItemIndex StartFromOne=True}" HorizontalAlignment="Center" Classes="Weight-Bold" VerticalAlignment="Center" Foreground="{DynamicResource Dimmed}" Text="{ItemIndex StartFromOne=True}" />
                                     </Border>
                                 </Border>
                                 <HeaderedContainer Grid.Row="0" Grid.Column="1" Header="Percentage">
-                                    <TextBox FontWeight="Bold" Text="33">
-                                        <TextBox.InnerRightContent>
-                                            <TextBlock Classes="Text-Dimmed" VerticalAlignment="Center" Padding="10 0">%</TextBlock>
-                                        </TextBox.InnerRightContent>
-                                    </TextBox>
+                                    <NumericUpDown Value="{Binding Percent, Mode=TwoWay, Converter={x:Static controls:AngorConverters.RatioToPercentage}}"
+                                                   FormatString="0.##"
+                                                   Minimum="0"
+                                                   VerticalAlignment="Top"
+                                                   Maximum="100">
+                                        <NumericUpDown.InnerRightContent>
+                                            <TextBlock Padding="0 0 10 0">%</TextBlock>
+                                        </NumericUpDown.InnerRightContent>
+                                    </NumericUpDown>
                                 </HeaderedContainer>
                                 <HeaderedContainer Grid.Row="0" Grid.Column="2" Header="Release date">
-                                    <CalendarDatePicker />
+                                    <CalendarDatePicker SelectedDate="{Binding ReleaseDate}" />
                                 </HeaderedContainer>
                                 <HeaderedContainer Grid.Row="0" Grid.Column="3" Header="">
-                                    <EnhancedButton BorderThickness="0" Classes="Widget" IconOptions.Fill="#D1D5DB" Icon="{Icon fa-trash-can}" VerticalAlignment="Center" />
+                                    <EnhancedButton Command="{Binding #Root.DataContext.RemoveStage}" CommandParameter="{Binding}" BorderThickness="0" Classes="Widget" IconOptions.Fill="#D1D5DB" Icon="{Icon fa-trash-can}"
+                                                    VerticalAlignment="Center" />
                                 </HeaderedContainer>
                                 <TextBlock Margin="10 10" Grid.Row="1" Grid.Column="2" Classes="Text-Dimmed Size-XS">
                                     <TextBlock.Inlines>
@@ -120,12 +134,13 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <EnhancedButton Theme="{StaticResource DashedButton}" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" Height="56" VerticalContentAlignment="Center" Icon="{Icon fa-plus}">
+        <EnhancedButton Command="{Binding AddStage}" Theme="{StaticResource DashedButton}" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" Height="56" VerticalContentAlignment="Center" Icon="{Icon fa-plus}">
             <EnhancedButton.Content>
                 <TextBlock Text="Add Another Stage" Classes="Weight-Light Text-Strong"></TextBlock>
             </EnhancedButton.Content>
         </EnhancedButton>
-        <EdgePanel IconOptions.VerticalAlignment="Top" IconOptions.Margin="5 5" IconOptions.Fill="#d97706" CornerRadius="10" BorderThickness="1" BorderBrush="#fde68a" Background="#fffbeb" Padding="10" StartContent="{Icon mdi-information-outline}">
+        <EdgePanel IconOptions.VerticalAlignment="Top" IconOptions.Margin="5 5" IconOptions.Fill="#d97706" CornerRadius="10" BorderThickness="1" BorderBrush="#fde68a" Background="#fffbeb" Padding="10"
+                   StartContent="{Icon mdi-information-outline}">
             <EdgePanel.Content>
                 <TextBlock Classes="Text-Muted" LineHeight="22">
                     <TextBlock.Inlines>

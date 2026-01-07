@@ -6,7 +6,7 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.ProjectProfileView" x:DataType="steps:ProjectProfileViewModel">
-    
+
 
     <UserControl.Styles>
         <Style Selector="TextBlock">
@@ -23,7 +23,6 @@
             <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
         </Style>
 
-     
 
     </UserControl.Styles>
 
@@ -41,13 +40,18 @@
                             <TextBox x:Name="ProjectNameTextBox"
                                      MaxLength="200"
                                      Watermark="Enter the name of your project"
-                                     Text="{Binding NewProject.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
-
-                            <TextBlock Classes="Counter"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Bottom"
-                                       Margin="0 0 12 10"
-                                       Text="{Binding ElementName=ProjectNameTextBox, Path=Text.Length, StringFormat={}{0}/200}" />
+                                     Text="{Binding NewProject.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}">
+                                <TextBox.InnerRightContent>
+                                    <TextBlock Classes="Counter"
+                                               HorizontalAlignment="Right"
+                                               VerticalAlignment="Bottom"
+                                               Margin="0 0 12 10"
+                                               Text="{Binding ElementName=ProjectNameTextBox, Path=Text.Length, StringFormat={}{0}/200}" />
+                                </TextBox.InnerRightContent>
+                                <Interaction.Behaviors>
+                                    <FocusOnAttachedBehavior />
+                                </Interaction.Behaviors>
+                            </TextBox>
                         </Grid>
                     </HeaderedContainer>
                 </StackPanel>
@@ -61,19 +65,20 @@
                         </HeaderedContainer.Header>
                         <Grid>
                             <TextBox x:Name="AboutTextBox"
-                                     Classes="InvestmentProject ProjectProfile"
                                      MinHeight="140"
                                      MaxLength="400"
                                      TextInputOptions.Multiline="True"
                                      TextWrapping="Wrap"
                                      Watermark="Provide a brief description of the project"
-                                     Text="{Binding NewProject.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
-
-                            <TextBlock Classes="Counter"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Bottom"
-                                       Margin="0 0 12 10"
-                                       Text="{Binding ElementName=AboutTextBox, Path=Text.Length, StringFormat={}{0}/400}" />
+                                     Text="{Binding NewProject.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}">
+                                <TextBox.InnerRightContent>
+                                    <TextBlock Classes="Counter"
+                                               HorizontalAlignment="Right"
+                                               VerticalAlignment="Bottom"
+                                               Margin="0 0 12 10"
+                                               Text="{Binding ElementName=AboutTextBox, Path=Text.Length, StringFormat={}{0}/400}" />
+                                </TextBox.InnerRightContent>
+                            </TextBox>
                         </Grid>
                     </HeaderedContainer>
                 </StackPanel>
@@ -85,8 +90,7 @@
                         <HeaderedContainer.Header>
                             <TextBlock Classes="FormLabel">Project Website</TextBlock>
                         </HeaderedContainer.Header>
-                        <TextBox Classes="InvestmentProject ProjectProfile"
-                                 TextInputOptions.ContentType="Url"
+                        <TextBox TextInputOptions.ContentType="Url"
                                  Watermark="https://example.com"
                                  Text="{Binding NewProject.Website, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
                     </HeaderedContainer>
@@ -95,4 +99,3 @@
         </StackPanel>
     </controls:ScrollableView>
 </UserControl>
-

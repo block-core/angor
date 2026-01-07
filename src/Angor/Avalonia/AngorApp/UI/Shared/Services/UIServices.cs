@@ -14,7 +14,12 @@ using Preset = AngorApp.UI.Shared.Controls.Feerate.Preset;
 
 namespace AngorApp.UI.Shared.Services;
 
-public partial class UIServices : ReactiveObject
+public interface IUIServices
+{
+    bool EnableProductionValidations();
+}
+
+public partial class UIServices : ReactiveObject, IUIServices
 {
     private readonly ISettings<UIPreferences> preferences;
     private readonly INetworkConfiguration networkConfiguration;
@@ -27,7 +32,7 @@ public partial class UIServices : ReactiveObject
     public INotificationService NotificationService { get; }
     public string ProfileName { get; }
 
-    public UIServices(IDialog dialog, 
+    public UIServices(IDialog dialog,
         INotificationService notificationService,
         IValidations validations,
         ISettings<UIPreferences> preferences,
@@ -67,11 +72,11 @@ public partial class UIServices : ReactiveObject
             .DistinctUntilChanged()
             .Do(isDarkTheme => Application.Current.RequestedThemeVariant = isDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light)
             .Subscribe();
-        
+
         var topLevel = Observable.FromEventPattern<RoutedEventArgs>(h => mainView.Loaded += h, h => mainView.Loaded -= h)
             .Select(_ => TopLevel.GetTopLevel(mainView))
             .WhereNotNull();
-        
+
         var property = new Reactive.Bindings.ReactiveProperty<TopLevel?>(topLevel);
 
         // Propagate preferred unit globally via inheritable attached property
@@ -115,7 +120,7 @@ public partial class UIServices : ReactiveObject
     /// This allows for more flexible testing in development environments.
     /// </summary>
     /// <returns>True if debug mode is enabled and network is testnet; otherwise false.</returns>
-    public bool EnableProductionValidations()
+    public virtual bool EnableProductionValidations()
     {
         var isDebugMode = IsDebugModeEnabled;
         var network = networkConfiguration.GetNetwork();

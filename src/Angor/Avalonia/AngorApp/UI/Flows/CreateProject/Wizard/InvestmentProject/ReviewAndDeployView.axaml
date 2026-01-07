@@ -8,19 +8,11 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.ReviewAndDeployView" x:DataType="steps:IReviewAndDeployViewModel">
-
-    <UserControl.DataContext>
-        <steps:ReviewAndDeployViewModelSample>
-            <steps:ReviewAndDeployViewModelSample.NewProject>
-                <model:NewProjectSample />
-            </steps:ReviewAndDeployViewModelSample.NewProject>
-        </steps:ReviewAndDeployViewModelSample>
-    </UserControl.DataContext>
-
+    
     <Design.DataContext>
         <steps:ReviewAndDeployViewModelSample>
             <steps:ReviewAndDeployViewModelSample.NewProject>
-                <model:NewProjectSample />
+                <model:InvestmentProjectConfigSample />
             </steps:ReviewAndDeployViewModelSample.NewProject>
         </steps:ReviewAndDeployViewModelSample>
     </Design.DataContext>
@@ -46,9 +38,9 @@
                     <EdgePanel StartContent="{Icon fa-user}" Content="Project Profile" />
                 </HeaderedContainer.Header>
                 <StackPanel Classes="BigGap">
-                    <EdgePanel StartContent="Name" EndContent="Not set" />
-                    <EdgePanel StartContent="About" EndContent="Not set" />
-                    <EdgePanel StartContent="Website" EndContent="Not set" />
+                    <EdgePanel StartContent="Name" EndContent="{Binding NewProject.Name}" />
+                    <EdgePanel StartContent="About" EndContent="{Binding NewProject.Description}" />
+                    <EdgePanel StartContent="Website" EndContent="{Binding NewProject.Website}" />
                 </StackPanel>
             </HeaderedContainer>
 
@@ -57,17 +49,17 @@
                     <EdgePanel StartContent="{Icon fa-bitcoin}" Content="Funding Configuration" />
                 </HeaderedContainer.Header>
                 <StackPanel Classes="BigGap">
-                    <EdgePanel StartContent="Target Amount" EndContent="0.25 BTC" />
+                    <EdgePanel StartContent="Target Amount" EndContent="{Binding NewProject.TargetAmount.DecimalString}" />
                     <EdgePanel StartContent="Start Date" EndContent="25/11/2025" />
-                    <EdgePanel StartContent="End Date" EndContent="Not set" />
-                    <EdgePanel StartContent="Penalty Days" EndContent="66 days" />
+                    <EdgePanel StartContent="End Date" EndContent="{Binding NewProject.FundingEndDate, StringFormat='d'}" />
+                    <EdgePanel StartContent="Penalty Days" EndContent="{Binding NewProject.PenaltyDays, StringFormat='{}{0} days'}" />
                 </StackPanel>
             </HeaderedContainer>
             <HeaderedContainer Classes="Translucid">
                 <HeaderedContainer.Header>
                     <EdgePanel StartContent="{Icon fa-regular fa-clipboard}" Content="Funding Stages" />
                 </HeaderedContainer.Header>
-                <stages:StagesList Stages="{Binding NewProject.Stages}" />
+                <stages:StagesList Stages="{Binding NewProject.Stages}" TotalSats="{Binding NewProject.TargetAmount.Sats}" />
             </HeaderedContainer>
             <Expander Theme="{StaticResource ExpanderSection}">
                 <Expander.Styles>

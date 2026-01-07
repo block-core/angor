@@ -12,6 +12,8 @@
     <StyleInclude Source="Custom/Buttons.axaml" />
     <StyleInclude Source="Custom/ListBox.axaml" />
     <StyleInclude Source="Custom/Wizard.axaml" />
+    <StyleInclude Source="Custom/CalendarPicker.axaml" />
+    <StyleInclude Source="Custom/NumericUpDown.axaml" />
 
     <StyleInclude Source="/UI/Shared/Styles/Styles.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/Pane.axaml" />
@@ -26,7 +28,6 @@
     <StyleInclude Source="/UI/Shared/Controls/ScrollableView.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/Badge.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/Cards.axaml" />
-    <StyleInclude Source="/UI/Shared/Styles/TextBox.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/OverlayBorder.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/TextBlock.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/ToggleButton.axaml" />
@@ -60,6 +61,11 @@
                     <Color x:Key="SurfaceSubtle">#E5E7EB</Color>
                     <Color x:Key="SurfaceSubtler">#FAF9F6</Color>
                     <Color x:Key="DashColorHighlight">#606060</Color>
+                    
+                    <SolidColorBrush x:Key="SystemControlErrorTextForegroundBrush">#ef4444</SolidColorBrush>
+                    <SolidColorBrush x:Key="ErrorSoft" Color="#fee2e2" />
+                    <SolidColorBrush x:Key="ErrorHard" Color="#fecaca" />
+                    <SolidColorBrush x:Key="ErrorForeground" Color="#dc2626" />
 
                     <BoxShadows x:Key="SectionShadow">0 0 30 0 LightGray</BoxShadows>
                     <BoxShadows x:Key="ItemShadow">0 0 20 0 LightGray</BoxShadows>
@@ -85,6 +91,15 @@
                             <GradientStop Color="#0D2D5A3D" Offset="1" />
                         </GradientStops>
                     </LinearGradientBrush>
+                    
+                    <LinearGradientBrush x:Key="TranslucidOrange" StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStops>
+                            <GradientStop Offset="0" Color="#fff7ed" />
+                            <GradientStop Offset="1" Color="#fff7ed" />
+                        </GradientStops>
+                    </LinearGradientBrush>
+                    
+                    
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
                     <Color x:Key="AppBackground">#0A0A0A</Color>
@@ -101,8 +116,20 @@
                     <Color x:Key="SurfaceSubtle">#333333</Color>
                     <Color x:Key="SurfaceSubtler">#0A0A0A</Color>
                     <Color x:Key="DashColorHighlight">#FBBF24</Color>
+                    
+                    <SolidColorBrush x:Key="SystemControlErrorTextForegroundBrush">#ef4444</SolidColorBrush>
+                    <SolidColorBrush x:Key="ErrorSoft" Color="#667f1d1d" />
+                    <SolidColorBrush x:Key="ErrorHard" Color="#80991b1b" />
+                    <SolidColorBrush x:Key="ErrorForeground" Color="#80991b1b" />
 
                     <SolidColorBrush x:Key="Translucid" Color="#0A0A0A" />
+                    
+                    <LinearGradientBrush x:Key="TranslucidOrange" StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStops>
+                            <GradientStop Offset="0" Color="#0EF7931A" />
+                            <GradientStop Offset="1" Color="#1AF7931A" />
+                        </GradientStops>
+                    </LinearGradientBrush>
 
                     <LinearGradientBrush x:Key="ProgressBrush">
                         <GradientStops>
@@ -153,6 +180,7 @@
 
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="Icons.axaml" />
+                <ResourceInclude Source="Custom/ErrorSummary.axaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <ControlTheme x:Key="{x:Type TextBox}"
@@ -494,7 +522,7 @@
 
     <Style Selector="HeaderedContainer.Translucid">
         <Setter Property="ContentPadding" Value="24 0 24 24" />
-        <Setter Property="BorderBrush" Value="#3F22005A" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="HeaderPadding" Value="24" />
         <Setter Property="CornerRadius" Value="10" />
@@ -529,14 +557,7 @@
         <Setter Property="CornerRadius" Value="12" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="{DynamicResource BitcoinAccent}" />
-        <Setter Property="Background">
-            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                <GradientStops>
-                    <GradientStop Offset="0" Color="#fff7ed" />
-                    <GradientStop Offset="1" Color="#fff7ed" />
-                </GradientStops>
-            </LinearGradientBrush>
-        </Setter>
+        <Setter Property="Background" Value="{DynamicResource TranslucidOrange}" />
         <Setter Property="HeaderPadding" Value="24" />
         <Setter Property="ContentPadding" Value="24 0 24 24" />
         <Setter Property="Foreground" Value="{DynamicResource BitcoinAccent}" />
@@ -569,16 +590,6 @@
         <Setter Property="FontWeight" Value="Bold"></Setter>
     </Style>
     <Style Selector="ComboBox:pointerover /template/ Border">
-        <Setter Property="Background" Value="{DynamicResource Surface}" />
-    </Style>
-
-    <Style Selector="CalendarDatePicker">
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Height" Value="42" />
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="Padding" Value="12 0" />
-        <Setter Property="HorizontalAlignment" Value="Stretch" />
-        <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
         <Setter Property="Background" Value="{DynamicResource Surface}" />
     </Style>
 

@@ -2,6 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
+             xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.UI.Themes.New.Templates.Showcase">
     <Border Padding="20">
@@ -14,8 +16,15 @@
             <EnhancedButton Content="Accent" Classes="Accent" />
             <EnhancedButton Content="White" Classes="White" />
             <EnhancedButton Content="Outline" Classes="Outline" />
-            <CalendarDatePicker />
             <TextBox Text="SOMETHING" />
+            <TextBox Text="SOMETHING">
+                <!-- <DataValidationErrors.Errors> -->
+                <!--     <generic:List -->
+                <!--         x:TypeArguments="x:String"> -->
+                <!--         hola -->
+                <!--     </generic:List> -->
+                <!-- </DataValidationErrors.Errors> -->
+            </TextBox>
             <HeaderedContainer Header="Regular" Content="Content" Classes="WizardSection" />
             <HeaderedContainer Header="Translucid" Content="Content" Classes="Translucid" />
             <HeaderedContainer Header="Header" Content="Content" Classes="WizardHighlight" />

@@ -14,7 +14,7 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <DockPanel>
-                    <Border Background="White" DockPanel.Dock="Bottom" BoxShadow="0 -1 40 -10 Gray" ZIndex="1">
+                    <Border Background="{DynamicResource Surface}" DockPanel.Dock="Bottom" BoxShadow="0 -1 40 -10 Gray" ZIndex="1">
                         <Grid Margin="20 " IconOptions.Size="16" Grid.IsSharedSizeScope="True">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition SharedSizeGroup="Column" />
@@ -27,10 +27,12 @@
                                             x:CompileBindings="False"
                                             HorizontalAlignment="Left"
                                             Command="{TemplateBinding Cancel}"
+                                            IsCancel="True"
                                             IsVisible="{Binding $parent[WizardNavigator].Wizard.CurrentStep.Step.Kind, Converter={x:Static SlimWizardConverters.CancelVisible}}" />
                             <EnhancedButton Grid.Column="2" Content="{Binding $parent[WizardNavigator].Wizard.Next.Text, TargetNullValue='Next'}"
                                             Command="{Binding $parent[WizardNavigator].Wizard.Next}"
                                             Classes="Primary ReverseIcon"
+                                            IsDefault="True"
                                             HorizontalAlignment="Right" Icon="{Icon fa-chevron-right}" />
                         </Grid>
                     </Border>
