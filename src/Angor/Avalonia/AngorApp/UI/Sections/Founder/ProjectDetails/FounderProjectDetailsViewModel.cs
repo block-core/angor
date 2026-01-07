@@ -42,7 +42,7 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
         // this is an ugly hack to bypass the static object in the method signature
         var investmentRequests = Task.Run(async () => 
         {
-            var a = await founderAppService.GetInvestments(new GetInvestments.GetInvestmentsRequest(walletContext.CurrentWallet.Value.Id, projectId));
+            var a = await founderAppService.GetProjectInvestments(new GetProjectInvestments.GetProjectInvestmentsRequest(walletContext.CurrentWallet.Value.Id, projectId));
             return a;
                 
         }).GetAwaiter().GetResult();

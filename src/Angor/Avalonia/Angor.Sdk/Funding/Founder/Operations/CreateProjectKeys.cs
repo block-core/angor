@@ -1,4 +1,3 @@
-// File: `Angor/Contexts/Funding/Founder/Operations/StartNewProject.cs`
 using System.Threading;
 using System.Threading.Tasks;
 using Angor.Sdk.Common;
@@ -12,25 +11,25 @@ using Microsoft.Extensions.Logging;
 
 namespace Angor.Sdk.Funding.Founder.Operations;
 
-public static class CreateProjectNewKeys
+public static class CreateProjectKeys
 {
-    public sealed record CreateProjectNewKeysRequest(WalletId WalletId) : IRequest<Result<CreateProjectNewKeysResponse>>;
+    public sealed record CreateProjectKeysRequest(WalletId WalletId) : IRequest<Result<CreateProjectKeysResponse>>;
 
-    public sealed record CreateProjectNewKeysResponse(ProjectSeedDto ProjectSeedDto);
+    public sealed record CreateProjectKeysResponse(ProjectSeedDto ProjectSeedDto);
 
-    internal sealed class FindNextAvailableProjectKeysHandler(
+    internal sealed class CreateProjectKeysHandler(
         IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
         IAngorIndexerService angorIndexerService,
-        ILogger<FindNextAvailableProjectKeysHandler> logger)
-        : IRequestHandler<CreateProjectNewKeysRequest, Result<CreateProjectNewKeysResponse>>
+        ILogger<CreateProjectKeysHandler> logger)
+        : IRequestHandler<CreateProjectKeysRequest, Result<CreateProjectKeysResponse>>
     {
-        public async Task<Result<CreateProjectNewKeysResponse>> Handle(CreateProjectNewKeysRequest request, CancellationToken cancellationToken)
+        public async Task<Result<CreateProjectKeysResponse>> Handle(CreateProjectKeysRequest request, CancellationToken cancellationToken)
         {
             var storedKeysResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.ToString());
             if (storedKeysResult.IsFailure || storedKeysResult.Value is null)
             {
                 logger.LogDebug("Project keys not found for WalletId {WalletId}", request.WalletId);
-                return Result.Failure<CreateProjectNewKeysResponse>("Project keys not found. Load founder projects first.");
+                return Result.Failure<CreateProjectKeysResponse>("Project keys not found. Load founder projects first.");
             }
 
             FounderKeys? available = null;
@@ -47,10 +46,10 @@ public static class CreateProjectNewKeys
             if (available is null)
             {
                 logger.LogDebug("No free project slot for WalletId {WalletId}", request.WalletId);
-                return Result.Failure<CreateProjectNewKeysResponse>("No available project slot.");
+                return Result.Failure<CreateProjectKeysResponse>("No available project slot.");
             }
 
-            return Result.Success(new CreateProjectNewKeysResponse(new ProjectSeedDto(
+            return Result.Success(new CreateProjectKeysResponse(new ProjectSeedDto(
                 available.FounderKey,
                 available.FounderRecoveryKey,
                 available.NostrPubKey,

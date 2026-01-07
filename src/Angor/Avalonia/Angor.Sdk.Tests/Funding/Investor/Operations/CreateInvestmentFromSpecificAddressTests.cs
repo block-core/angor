@@ -35,7 +35,7 @@ public class CreateInvestmentFromSpecificAddressTests
     private readonly Mock<IIndexerService> _mockIndexerService;
     private readonly IDerivationOperations _derivationOperations;
     private readonly INetworkConfiguration _networkConfiguration;
-    private readonly CreateInvestment.CreateInvestmentTransactionHandler _sut;
+    private readonly BuildInvestmentDraft.BuildInvestmentDraftHandler _sut;
     private readonly Network _network;
 
     public CreateInvestmentFromSpecificAddressTests()
@@ -73,14 +73,14 @@ public class CreateInvestmentFromSpecificAddressTests
             new NullLogger<WalletOperations>(),
             _networkConfiguration);
 
-        _sut = new CreateInvestment.CreateInvestmentTransactionHandler(
+        _sut = new BuildInvestmentDraft.BuildInvestmentDraftHandler(
             _mockProjectService.Object,
             _investorTransactionActions,
             _mockSeedwordsProvider.Object,
             _walletOperations,
             _derivationOperations,
             _mockWalletBalanceService.Object,
-            new NullLogger<CreateInvestment.CreateInvestmentTransactionHandler>());
+            new NullLogger<BuildInvestmentDraft.BuildInvestmentDraftHandler>());
     }
 
     [Fact(Skip = "BUG: AddInputsFromAddressAndSignTransaction has network validation issues. " +
@@ -103,7 +103,7 @@ public class CreateInvestmentFromSpecificAddressTests
 
         SetupMocks(project, words, accountInfo, fundingAddress);
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(1000000000), // 10 BTC
@@ -137,7 +137,7 @@ public class CreateInvestmentFromSpecificAddressTests
 
         SetupBasicMocks(project, words, accountInfo);
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(1000000000),
@@ -167,7 +167,7 @@ public class CreateInvestmentFromSpecificAddressTests
 
         SetupBasicMocks(project, words, accountInfo);
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(1000000000),
@@ -202,7 +202,7 @@ public class CreateInvestmentFromSpecificAddressTests
 
         SetupMocks(project, words, accountInfo, fundingAddress);
 
-        var request = new CreateInvestment.CreateInvestmentTransactionRequest(
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
             projectId,
             new Amount(1000000000), // Trying to invest 10 BTC

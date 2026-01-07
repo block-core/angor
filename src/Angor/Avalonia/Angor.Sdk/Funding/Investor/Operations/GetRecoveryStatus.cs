@@ -16,13 +16,13 @@ using Angor.Sdk.Funding.Projects;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 
-public static class GetInvestorProjectRecovery
+public static class GetRecoveryStatus
 {
-    public record GetInvestorProjectRecoveryRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<GetInvestorProjectRecoveryResponse>>;
+    public record GetRecoveryStatusRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<GetRecoveryStatusResponse>>;
 
-    public record GetInvestorProjectRecoveryResponse(InvestorProjectRecoveryDto RecoveryData);
+    public record GetRecoveryStatusResponse(InvestorProjectRecoveryDto RecoveryData);
 
-    public class Handler(
+    public class GetRecoveryStatusHandler(
         IProjectService projectService,
         IPortfolioService investmentService,
         IAngorIndexerService angorIndexerService,
@@ -30,43 +30,43 @@ public static class GetInvestorProjectRecovery
         IInvestorTransactionActions investorTransactionActions,
         IProjectInvestmentsService projectInvestmentsService,
         ITransactionService transactionService
-    ) : IRequestHandler<GetInvestorProjectRecoveryRequest, Result<GetInvestorProjectRecoveryResponse>>
+    ) : IRequestHandler<GetRecoveryStatusRequest, Result<GetRecoveryStatusResponse>>
     {
-        public async Task<Result<GetInvestorProjectRecoveryResponse>> Handle(GetInvestorProjectRecoveryRequest request,
+        public async Task<Result<GetRecoveryStatusResponse>> Handle(GetRecoveryStatusRequest request,
             CancellationToken cancellationToken)
         {
             var project = await projectService.GetAsync(request.ProjectId);
 
             if (project.IsFailure)
-                return Result.Failure<GetInvestorProjectRecoveryResponse>(project.Error);
+                return Result.Failure<GetRecoveryStatusResponse>(project.Error);
             
             var investments = await investmentService.GetByWalletId(request.WalletId.Value);
 
             if (investments.IsFailure)
-                return Result.Failure<GetInvestorProjectRecoveryResponse>(investments.Error);
+                return Result.Failure<GetRecoveryStatusResponse>(investments.Error);
 
             if (investments.Value.ProjectIdentifiers.Count == 0)
-                return Result.Failure<GetInvestorProjectRecoveryResponse>("No investments found for this wallet");
+                return Result.Failure<GetRecoveryStatusResponse>("No investments found for this wallet");
             
             var investmentRecord = investments.Value.ProjectIdentifiers
                 .FirstOrDefault(x => x.ProjectIdentifier == request.ProjectId.Value);
             
             if (investmentRecord == null)
-                return Result.Failure<GetInvestorProjectRecoveryResponse>("No investments found for this project");
+                return Result.Failure<GetRecoveryStatusResponse>("No investments found for this project");
 
             var investmentDetails = await FindInvestments(project.Value, investmentRecord.InvestorPubKey);
             
             if (investmentDetails.IsFailure)
-                return Result.Failure<GetInvestorProjectRecoveryResponse>(investmentDetails.Error);
+                return Result.Failure<GetRecoveryStatusResponse>(investmentDetails.Error);
             
             if (!investmentDetails.Value.Item2.Any())
-                return Result.Failure<GetInvestorProjectRecoveryResponse>("No investment stages found for this project");
+                return Result.Failure<GetRecoveryStatusResponse>("No investment stages found for this project");
 
             var checkResult = await CheckSpentFund(investmentDetails.Value.Item2.ToList(), investmentDetails.Value.Item1, project.Value);
                 
             return checkResult.IsSuccess 
-               ? Result.Success(new GetInvestorProjectRecoveryResponse(checkResult.Value))
-             : Result.Failure<GetInvestorProjectRecoveryResponse>(checkResult.Error);
+               ? Result.Success(new GetRecoveryStatusResponse(checkResult.Value))
+             : Result.Failure<GetRecoveryStatusResponse>(checkResult.Error);
         }
 
 

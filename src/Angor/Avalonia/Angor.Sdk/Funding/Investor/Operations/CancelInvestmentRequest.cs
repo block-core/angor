@@ -18,18 +18,18 @@ using MediatR;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 
-public static class CancelInvestmentSignatures
+public static class CancelInvestmentRequest
 {
-    public record CancelInvestmentSignaturesRequest(WalletId WalletId, ProjectId ProjectId, string InvestmentId) : IRequest<Result<CancelInvestmentSignaturesResponse>>;
+    public record CancelInvestmentRequestRequest(WalletId WalletId, ProjectId ProjectId, string InvestmentId) : IRequest<Result<CancelInvestmentRequestResponse>>;
 
-    public record CancelInvestmentSignaturesResponse();
+    public record CancelInvestmentRequestResponse();
 
-    public class CancelInvestmentSignaturesHandler(
+    public class CancelInvestmentRequestHandler(
         IPortfolioService portfolioService,
         INetworkConfiguration networkConfiguration,
-        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<CancelInvestmentSignaturesRequest, Result<CancelInvestmentSignaturesResponse>>
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<CancelInvestmentRequestRequest, Result<CancelInvestmentRequestResponse>>
     {
-        public async Task<Result<CancelInvestmentSignaturesResponse>> Handle(CancelInvestmentSignaturesRequest request, CancellationToken cancellationToken)
+        public async Task<Result<CancelInvestmentRequestResponse>> Handle(CancelInvestmentRequestRequest request, CancellationToken cancellationToken)
         {
             var investmentRecords = await portfolioService.GetByWalletId(request.WalletId.Value);
 
@@ -37,7 +37,7 @@ public static class CancelInvestmentSignatures
                 .FirstOrDefault(r => r.ProjectIdentifier == request.ProjectId.Value && r.InvestmentTransactionHash == request.InvestmentId);
 
             if (record == null)
-                return Result.Failure<CancelInvestmentSignaturesResponse>("Investment record not found.");
+                return Result.Failure<CancelInvestmentRequestResponse>("Investment record not found.");
 
             // Release reserved UTXOs before removing the investment record
             if (!string.IsNullOrEmpty(record.InvestmentTransactionHex))
@@ -48,9 +48,9 @@ public static class CancelInvestmentSignatures
             var res = await portfolioService.RemoveInvestmentRecordAsync(request.WalletId.Value, record);
 
             if (res.IsFailure)
-                return Result.Failure<CancelInvestmentSignaturesResponse>(res.Error);
+                return Result.Failure<CancelInvestmentRequestResponse>(res.Error);
 
-            return Result.Success(new CancelInvestmentSignaturesResponse());
+            return Result.Success(new CancelInvestmentRequestResponse());
         }
 
         private async Task ReleaseReservedUtxos(WalletId walletId, string signedTxHex)

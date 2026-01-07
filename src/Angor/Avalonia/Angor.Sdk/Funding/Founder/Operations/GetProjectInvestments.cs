@@ -13,33 +13,33 @@ using Investment = Angor.Sdk.Funding.Founder.Domain.Investment;
 
 namespace Angor.Sdk.Funding.Founder.Operations;
 
-public static class GetInvestments
+public static class GetProjectInvestments
 {
-    public class GetInvestmentsRequest(WalletId walletId, ProjectId projectId) : IRequest<Result<GetInvestmentsResponse>>
+    public class GetProjectInvestmentsRequest(WalletId walletId, ProjectId projectId) : IRequest<Result<GetProjectInvestmentsResponse>>
     {
         public WalletId WalletId { get; } = walletId;
         public ProjectId ProjectId { get; } = projectId;
     }
 
-    public record GetInvestmentsResponse(IEnumerable<Investment> Investments);
+    public record GetProjectInvestmentsResponse(IEnumerable<Investment> Investments);
 
-    public class GetInvestmentsHandler(
+    public class GetProjectInvestmentsHandler(
         IAngorIndexerService angorIndexerService,
         IProjectService projectService,
         INetworkConfiguration networkConfiguration,
-        IInvestmentHandshakeService HandshakeService) : IRequestHandler<GetInvestmentsRequest, Result<GetInvestmentsResponse>>
+        IInvestmentHandshakeService HandshakeService) : IRequestHandler<GetProjectInvestmentsRequest, Result<GetProjectInvestmentsResponse>>
     {
-        public Task<Result<GetInvestmentsResponse>> Handle(GetInvestmentsRequest request, CancellationToken cancellationToken)
+        public Task<Result<GetProjectInvestmentsResponse>> Handle(GetProjectInvestmentsRequest request, CancellationToken cancellationToken)
         {
-            return GetInvestments(request);
+            return GetProjectInvestments(request);
         }
 
-        private async Task<Result<GetInvestmentsResponse>> GetInvestments(GetInvestmentsRequest request)
+        private async Task<Result<GetProjectInvestmentsResponse>> GetProjectInvestments(GetProjectInvestmentsRequest request)
         {
             var projectResult = await projectService.GetAsync(request.ProjectId);
             if (projectResult.IsFailure)
             {
-                return Result.Failure<GetInvestmentsResponse>(projectResult.Error);
+                return Result.Failure<GetProjectInvestmentsResponse>(projectResult.Error);
             }
 
             var nostrPubKey = projectResult.Value.NostrPubKey;
@@ -52,7 +52,7 @@ public static class GetInvestments
 
             if (syncResult.IsFailure)
             {
-                return Result.Failure<GetInvestmentsResponse>(syncResult.Error);
+                return Result.Failure<GetProjectInvestmentsResponse>(syncResult.Error);
             }
 
             // Get Handshakes from database
@@ -62,13 +62,13 @@ public static class GetInvestments
 
             if (HandshakesResult.IsFailure)
             {
-                return Result.Failure<GetInvestmentsResponse>(HandshakesResult.Error);
+                return Result.Failure<GetProjectInvestmentsResponse>(HandshakesResult.Error);
             }
 
             var alreadyInvestedResult = await LookupCurrentInvestments(request);
             if (alreadyInvestedResult.IsFailure)
             {
-                return Result.Failure<GetInvestmentsResponse>(alreadyInvestedResult.Error);
+                return Result.Failure<GetProjectInvestmentsResponse>(alreadyInvestedResult.Error);
             }
 
             var investments = HandshakesResult.Value
@@ -76,7 +76,7 @@ public static class GetInvestments
                 .Select(conv => CreateInvestmentFromHandshake(conv, alreadyInvestedResult.Value, projectResult.Value))
                 .ToList();
 
-            return Result.Success(new GetInvestmentsResponse(investments));
+            return Result.Success(new GetProjectInvestmentsResponse(investments));
         }
         
         private InvestmentStatus DetermineInvestmentStatus(
@@ -134,7 +134,7 @@ public static class GetInvestments
                 investmentStatus);
         }
 
-        private Task<Result<List<ProjectInvestment>>> LookupCurrentInvestments(GetInvestmentsRequest request)
+        private Task<Result<List<ProjectInvestment>>> LookupCurrentInvestments(GetProjectInvestmentsRequest request)
         {
             return Result.Try(() => angorIndexerService.GetInvestmentsAsync(request.ProjectId.Value));
         }

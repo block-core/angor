@@ -20,42 +20,42 @@ using Angor.Sdk.Funding.Projects;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 
-public static class RecoverFunds
+public static class BuildRecoveryTransaction
 {
-    public record RecoverFundsRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<RecoverFundsResponse>>;
+    public record BuildRecoveryTransactionRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<BuildRecoveryTransactionResponse>>;
     
-    public record RecoverFundsResponse(RecoveryTransactionDraft TransactionDraft);
+    public record BuildRecoveryTransactionResponse(RecoveryTransactionDraft TransactionDraft);
     
-    public class RecoverFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
+    public class BuildRecoveryTransactionHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
         IProjectService projectService, IInvestorTransactionActions investorTransactionActions,
    IPortfolioService investmentService, INetworkConfiguration networkConfiguration,
   IWalletOperations walletOperations, ISignService signService,
    IEncryptionService decrypter, ISerializer serializer, ITransactionService transactionService,
- IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<RecoverFundsRequest, Result<RecoverFundsResponse>>
+ IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<BuildRecoveryTransactionRequest, Result<BuildRecoveryTransactionResponse>>
   {
-  public async Task<Result<RecoverFundsResponse>> Handle(RecoverFundsRequest request, CancellationToken cancellationToken)
+  public async Task<Result<BuildRecoveryTransactionResponse>> Handle(BuildRecoveryTransactionRequest request, CancellationToken cancellationToken)
         {
     var words = await provider.GetSensitiveData(request.WalletId.Value);
   if (words.IsFailure)
-          return Result.Failure<RecoverFundsResponse>(words.Error);
+          return Result.Failure<BuildRecoveryTransactionResponse>(words.Error);
             
     // Get account info from database
          var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId);
     if (accountBalanceResult.IsFailure)
-     return Result.Failure<RecoverFundsResponse>(accountBalanceResult.Error);
+     return Result.Failure<BuildRecoveryTransactionResponse>(accountBalanceResult.Error);
      
    var accountInfo = accountBalanceResult.Value.AccountInfo;
    
             var project = await projectService.GetAsync(request.ProjectId);
  if (project.IsFailure)
-     return Result.Failure<RecoverFundsResponse>(project.Error);
+     return Result.Failure<BuildRecoveryTransactionResponse>(project.Error);
      var investments = await investmentService.GetByWalletId(request.WalletId.Value);
 if (investments.IsFailure)
-      return Result.Failure<RecoverFundsResponse>(investments.Error);
+      return Result.Failure<BuildRecoveryTransactionResponse>(investments.Error);
      
     var investment = investments.Value.ProjectIdentifiers.FirstOrDefault(p => p.ProjectIdentifier == request.ProjectId.Value);
       if (investment is null)
-  return Result.Failure<RecoverFundsResponse>("No investment found for this project");
+  return Result.Failure<BuildRecoveryTransactionResponse>("No investment found for this project");
           
     var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey);
 
@@ -65,9 +65,9 @@ if (investments.IsFailure)
       investmentTransaction);
 
   if (signatureLookup.IsFailure)
-    return Result.Failure<RecoverFundsResponse>(signatureLookup.Error ?? "Could not retrieve founder signatures");
+    return Result.Failure<BuildRecoveryTransactionResponse>(signatureLookup.Error ?? "Could not retrieve founder signatures");
      if (signatureLookup.Value is null)
-return Result.Failure<RecoverFundsResponse>("No founder signatures found");
+return Result.Failure<BuildRecoveryTransactionResponse>("No founder signatures found");
          
           
       var unsignedRecoveryTransaction = investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project.Value.ToProjectInfo(), investmentTransaction, signatureLookup.Value, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
@@ -76,7 +76,7 @@ return Result.Failure<RecoverFundsResponse>("No founder signatures found");
        var transactionInfo = await transactionService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
 
   if (transactionInfo is null)
-  return Result.Failure<RecoverFundsResponse>("Could not find transaction info");
+  return Result.Failure<BuildRecoveryTransactionResponse>("Could not find transaction info");
 
     transactionInfo.Outputs.ForEach((output, i) =>
      {
@@ -89,12 +89,12 @@ return Result.Failure<RecoverFundsResponse>("No founder signatures found");
          
     var changeAddress = accountInfo.GetNextChangeReceiveAddress();
   if (changeAddress == null)
-      return Result.Failure<RecoverFundsResponse>("Could not get a change address");
+      return Result.Failure<BuildRecoveryTransactionResponse>("Could not get a change address");
             
        // add fee to the recovery trx
  var recoveryTransaction = walletOperations.AddFeeAndSignTransaction(changeAddress, unsignedRecoveryTransaction, words.Value.ToWalletWords(), accountInfo, request.SelectedFeeRate.SatsPerKilobyte);
 
-          return Result.Success(new RecoverFundsResponse(new RecoveryTransactionDraft
+          return Result.Success(new BuildRecoveryTransactionResponse(new RecoveryTransactionDraft
         {
      SignedTxHex = recoveryTransaction.Transaction.ToHex(),
 TransactionFee = new Amount(recoveryTransaction.TransactionFee),

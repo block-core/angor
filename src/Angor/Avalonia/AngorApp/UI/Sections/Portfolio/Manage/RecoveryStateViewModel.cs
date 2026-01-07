@@ -70,7 +70,7 @@ public sealed record RecoveryStateViewModel
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
         fr =>
         {
-            return investmentAppService.BuildRecoverInvestorFunds(new RecoverFunds.RecoverFundsRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
+            return investmentAppService.BuildRecoveryTransaction(new BuildRecoveryTransaction.BuildRecoveryTransactionRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
                 .Map(ITransactionDraftViewModel (response) => new TransactionDraftViewModel(response.TransactionDraft, uiServices));
         }, 
         model => 
@@ -89,7 +89,7 @@ public sealed record RecoveryStateViewModel
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
         fr =>
         {
-            return investmentAppService.BuildClaimInvestorEndOfProjectFunds(new ClaimEndOfProject.ClaimEndOfProjectRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
+            return investmentAppService.BuildEndOfProjectClaim(new BuildEndOfProjectClaim.BuildEndOfProjectClaimRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
                 .Map(ITransactionDraftViewModel (response) => new TransactionDraftViewModel(response.TransactionDraft, uiServices));
         }, 
         model => 
@@ -108,7 +108,7 @@ public sealed record RecoveryStateViewModel
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
         fr =>
         {
-            return investmentAppService.BuildReleaseInvestorFunds(new ReleaseFunds.ReleaseFundsRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
+            return investmentAppService.BuildReleaseTransaction(new BuildReleaseTransaction.BuildReleaseTransactionRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
                 .Map(ITransactionDraftViewModel (response) => new TransactionDraftViewModel(response.TransactionDraft, uiServices));
         }, 
         model =>

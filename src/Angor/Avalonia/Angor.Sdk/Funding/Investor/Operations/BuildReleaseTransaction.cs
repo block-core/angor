@@ -20,42 +20,42 @@ using Angor.Sdk.Funding.Projects;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 
-public static class ReleaseFunds
+public static class BuildReleaseTransaction
 {
-    public record ReleaseFundsRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<ReleaseFundsResponse>>;
+    public record BuildReleaseTransactionRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<BuildReleaseTransactionResponse>>;
     
-    public record ReleaseFundsResponse(ReleaseTransactionDraft TransactionDraft);
+    public record BuildReleaseTransactionResponse(ReleaseTransactionDraft TransactionDraft);
     
-    public class ReleaseFundsHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
+    public class BuildReleaseTransactionHandler(ISeedwordsProvider provider, IDerivationOperations derivationOperations,
         IProjectService projectService, IInvestorTransactionActions investorTransactionActions,
         IPortfolioService investmentService, INetworkConfiguration networkConfiguration,
         IWalletOperations walletOperations, ISignService signService,
         IEncryptionService decrypter, ISerializer serializer,
         ITransactionService transactionService,
-        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<ReleaseFundsRequest, Result<ReleaseFundsResponse>>
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<BuildReleaseTransactionRequest, Result<BuildReleaseTransactionResponse>>
     {
-        public async Task<Result<ReleaseFundsResponse>> Handle(ReleaseFundsRequest request, CancellationToken cancellationToken)
+        public async Task<Result<BuildReleaseTransactionResponse>> Handle(BuildReleaseTransactionRequest request, CancellationToken cancellationToken)
         {
             var project = await projectService.GetAsync(request.ProjectId);
             if (project.IsFailure)
-                return Result.Failure<ReleaseFundsResponse>(project.Error);
+                return Result.Failure<BuildReleaseTransactionResponse>(project.Error);
             
             var investments = await investmentService.GetByWalletId(request.WalletId.Value);
             if (investments.IsFailure)
-                return Result.Failure<ReleaseFundsResponse>(investments.Error);
+                return Result.Failure<BuildReleaseTransactionResponse>(investments.Error);
             
             var investment = investments.Value.ProjectIdentifiers.FirstOrDefault(p => p.ProjectIdentifier == request.ProjectId.Value);
             if (investment is null) //TODO we need to make sure we always have this data
-                return Result.Failure<ReleaseFundsResponse>("No investment found for this project");
+                return Result.Failure<BuildReleaseTransactionResponse>("No investment found for this project");
 
             var words = await provider.GetSensitiveData(request.WalletId.Value);
             if (words.IsFailure)
-                return Result.Failure<ReleaseFundsResponse>(words.Error);
+                return Result.Failure<BuildReleaseTransactionResponse>(words.Error);
             
             // Get account info from database
             var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId);
             if (accountBalanceResult.IsFailure)
-                return Result.Failure<ReleaseFundsResponse>(accountBalanceResult.Error);
+                return Result.Failure<BuildReleaseTransactionResponse>(accountBalanceResult.Error);
             
             var accountInfo = accountBalanceResult.Value.AccountInfo;
 
@@ -67,10 +67,10 @@ public static class ReleaseFunds
                 investmentTransaction);
             
             if (signatureLookup.IsFailure)
-                return Result.Failure<ReleaseFundsResponse>(signatureLookup.Error ?? "Could not retrieve founder signatures");
+                return Result.Failure<BuildReleaseTransactionResponse>(signatureLookup.Error ?? "Could not retrieve founder signatures");
             
             if (signatureLookup.Value is null)
-                return Result.Failure<ReleaseFundsResponse>("No founder signatures found");
+                return Result.Failure<BuildReleaseTransactionResponse>("No founder signatures found");
             
             var investorReleaseSigInfo = signatureLookup.Value;
             
@@ -86,7 +86,7 @@ public static class ReleaseFunds
             var transactionInfo = await transactionService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
 
             if (transactionInfo is null)
-                return Result.Failure<ReleaseFundsResponse>("Could not find transaction info");
+                return Result.Failure<BuildReleaseTransactionResponse>("Could not find transaction info");
 
             transactionInfo.Outputs.ForEach((output, i) =>
             {
@@ -99,12 +99,12 @@ public static class ReleaseFunds
             
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();
             if (changeAddress == null)
-                return Result.Failure<ReleaseFundsResponse>("Could not get a change address");
+                return Result.Failure<BuildReleaseTransactionResponse>("Could not get a change address");
             
             // add fee to the recovery trx
             var releaseTransaction = walletOperations.AddFeeAndSignTransaction(changeAddress, unsignedReleaseTransaction, words.Value.ToWalletWords(), accountInfo, request.SelectedFeeRate.SatsPerKilobyte);
             
-            return Result.Success(new ReleaseFundsResponse(new ReleaseTransactionDraft
+            return Result.Success(new BuildReleaseTransactionResponse(new ReleaseTransactionDraft
             {
                 SignedTxHex = releaseTransaction.Transaction.ToHex(),
                 TransactionFee = new Amount(releaseTransaction.TransactionFee),

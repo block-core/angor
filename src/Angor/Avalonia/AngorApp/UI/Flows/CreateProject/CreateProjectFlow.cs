@@ -45,7 +45,7 @@ public class CreateProjectFlow(
 
     private async Task<Result<ProjectSeedDto>> GetProjectSeed(WalletId walletId)
     {
-        var result = await founderAppService.CreateNewProjectKeysAsync(new CreateProjectNewKeys.CreateProjectNewKeysRequest(walletId));
+        var result = await founderAppService.CreateProjectKeys(new CreateProjectKeys.CreateProjectKeysRequest(walletId));
         return result.Map(response => response.ProjectSeedDto);
     }
 }

@@ -17,60 +17,60 @@ using Angor.Sdk.Funding.Projects;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 
-public static class ClaimEndOfProject
+public static class BuildEndOfProjectClaim
 {
-    public record ClaimEndOfProjectRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<ClaimEndOfProjectResponse>>;
+    public record BuildEndOfProjectClaimRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<BuildEndOfProjectClaimResponse>>;
     
-    public record ClaimEndOfProjectResponse(EndOfProjectTransactionDraft TransactionDraft);
+    public record BuildEndOfProjectClaimResponse(EndOfProjectTransactionDraft TransactionDraft);
     
-    public class ClaimEndOfProjectHandler(
+    public class BuildEndOfProjectClaimHandler(
         IDerivationOperations derivationOperations, IProjectService projectService, 
         IInvestorTransactionActions investorTransactionActions, IPortfolioService investmentService, 
         ISeedwordsProvider provider, ITransactionService transactionService,
-        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<ClaimEndOfProjectRequest, Result<ClaimEndOfProjectResponse>>
+        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<BuildEndOfProjectClaimRequest, Result<BuildEndOfProjectClaimResponse>>
     {
-        public async Task<Result<ClaimEndOfProjectResponse>> Handle(ClaimEndOfProjectRequest request, CancellationToken cancellationToken)
+        public async Task<Result<BuildEndOfProjectClaimResponse>> Handle(BuildEndOfProjectClaimRequest request, CancellationToken cancellationToken)
         {
             var words = await provider.GetSensitiveData(request.WalletId.Value);
             if (words.IsFailure)
-                return Result.Failure<ClaimEndOfProjectResponse>(words.Error);
+                return Result.Failure<BuildEndOfProjectClaimResponse>(words.Error);
             
             // Get account info from database
             var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(request.WalletId);
             if (accountBalanceResult.IsFailure)
-                return Result.Failure<ClaimEndOfProjectResponse>(accountBalanceResult.Error);
+                return Result.Failure<BuildEndOfProjectClaimResponse>(accountBalanceResult.Error);
             
             var accountInfo = accountBalanceResult.Value.AccountInfo;
 
             var investments = await investmentService.GetByWalletId(request.WalletId.Value);
             if (investments.IsFailure)
-                return Result.Failure<ClaimEndOfProjectResponse>(investments.Error);
+                return Result.Failure<BuildEndOfProjectClaimResponse>(investments.Error);
             
             var investment = investments.Value.ProjectIdentifiers.FirstOrDefault(p => p.ProjectIdentifier == request.ProjectId.Value);
             if (investment is null)
-                return Result.Failure<ClaimEndOfProjectResponse>("No investment found for this project");
+                return Result.Failure<BuildEndOfProjectClaimResponse>("No investment found for this project");
 
             if (investment.InvestmentTransactionHex is null)
             {
                 investment.InvestmentTransactionHex =  await transactionService.GetTransactionHexByIdAsync(investment.InvestmentTransactionHash);
                 if (investment.InvestmentTransactionHex is null)
-                    return Result.Failure<ClaimEndOfProjectResponse>("Could not find investment transaction in indexer: " + investment.InvestmentTransactionHash);
+                    return Result.Failure<BuildEndOfProjectClaimResponse>("Could not find investment transaction in indexer: " + investment.InvestmentTransactionHash);
             }
             
             var project = await projectService.GetAsync(request.ProjectId);
             if (project.IsFailure)
-                return Result.Failure<ClaimEndOfProjectResponse>(project.Error);
+                return Result.Failure<BuildEndOfProjectClaimResponse>(project.Error);
             
             var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey);
 
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();
             if (changeAddress == null)
-                return Result.Failure<ClaimEndOfProjectResponse>("Could not get a change address");
+                return Result.Failure<BuildEndOfProjectClaimResponse>("Could not get a change address");
             
             var transactionInfo = await transactionService.GetTransactionInfoByIdAsync(investment.InvestmentTransactionHash);
 
             if (transactionInfo is null)
-                return Result.Failure<ClaimEndOfProjectResponse>("Could not find transaction info");
+                return Result.Failure<BuildEndOfProjectClaimResponse>("Could not find transaction info");
             
             var stageIndex = transactionInfo.Outputs
                 .Select((x, i) => i < 2 ? -1 // Skip the first two outputs (fee and op_return)
@@ -82,7 +82,7 @@ public static class ClaimEndOfProject
             var endOfProjectTransaction = investorTransactionActions.RecoverEndOfProjectFunds(investment.InvestmentTransactionHex, project.Value.ToProjectInfo(), stageIndex,
                 changeAddress, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), new FeeEstimation(){FeeRate = request.SelectedFeeRate.SatsPerKilobyte});
             
-            return Result.Success(new ClaimEndOfProjectResponse(new EndOfProjectTransactionDraft()
+            return Result.Success(new BuildEndOfProjectClaimResponse(new EndOfProjectTransactionDraft()
                {
                    SignedTxHex = endOfProjectTransaction.Transaction.ToHex(),
                    TransactionFee = new Amount(Money.Satoshis(endOfProjectTransaction.TransactionFee)),

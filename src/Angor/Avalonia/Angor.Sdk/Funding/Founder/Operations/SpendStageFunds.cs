@@ -17,13 +17,13 @@ using Angor.Sdk.Funding.Projects;
 
 namespace Angor.Sdk.Funding.Founder.Operations;
 
-public static class SpendFounderStageTransaction
+public static class SpendStageFunds
 {
-    public record SpendFounderStageTransactionRequest(WalletId WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<SpendFounderStageTransactionResponse>>;
+    public record SpendStageFundsRequest(WalletId WalletId, ProjectId ProjectId, FeeEstimation SelectedFee, IEnumerable<SpendTransactionDto> ToSpend) : IRequest<Result<SpendStageFundsResponse>>;
 
-    public record SpendFounderStageTransactionResponse(TransactionDraft TransactionDraft);
+    public record SpendStageFundsResponse(TransactionDraft TransactionDraft);
 
-    public class SpendFounderStageTransactionHandler(
+    public class SpendStageFundsHandler(
         IFounderTransactionActions founderTransactionActions,
         INetworkConfiguration networkConfiguration,
         IAngorIndexerService angorIndexerService,
@@ -34,14 +34,14 @@ public static class SpendFounderStageTransaction
         IWalletAccountBalanceService walletAccountBalanceService,
         IWalletOperations walletOperations,
         IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
-        ILogger<SpendFounderStageTransactionHandler> logger
-    ) : IRequestHandler<SpendFounderStageTransactionRequest, Result<SpendFounderStageTransactionResponse>>
+        ILogger<SpendStageFundsHandler> logger
+    ) : IRequestHandler<SpendStageFundsRequest, Result<SpendStageFundsResponse>>
     {
-        public async Task<Result<SpendFounderStageTransactionResponse>> Handle(SpendFounderStageTransactionRequest request, CancellationToken cancellationToken)
+        public async Task<Result<SpendStageFundsResponse>> Handle(SpendStageFundsRequest request, CancellationToken cancellationToken)
         {
             var groupedByStage = request.ToSpend.GroupBy(x => x.StageId).ToList();
             if (groupedByStage.Count > 1)
-                return Result.Failure<SpendFounderStageTransactionResponse>("You can only spend one stage at a time.");
+                return Result.Failure<SpendStageFundsResponse>("You can only spend one stage at a time.");
             
             var selectedStageId = groupedByStage.First().Key;
             var network = networkConfiguration.GetNetwork();
@@ -49,12 +49,12 @@ public static class SpendFounderStageTransaction
             var project = await projectService.GetAsync(request.ProjectId);
             if (project.IsFailure)
             {
-                return Result.Failure<SpendFounderStageTransactionResponse>(project.Error);
+                return Result.Failure<SpendStageFundsResponse>(project.Error);
             }
             
             var founderKey = await GetProjectFounderKeyAsync(request.WalletId.Value, request.ProjectId.Value);
             if (founderKey == null)
-                return Result.Failure<SpendFounderStageTransactionResponse>("Project keys not found in storage. Please load founder projects first.");
+                return Result.Failure<SpendStageFundsResponse>("Project keys not found in storage. Please load founder projects first.");
             
             var founderContext = new FounderContext { ProjectInfo = project.Value.ToProjectInfo(), ProjectSeeders = new ProjectSeeders() };
 
@@ -65,7 +65,7 @@ public static class SpendFounderStageTransaction
             
             var addressResult = await GetUnfundedReleaseAddress(request.WalletId);
             if (addressResult.IsFailure) 
-                return Result.Failure<SpendFounderStageTransactionResponse>("Could not get an unfunded release address");
+                return Result.Failure<SpendStageFundsResponse>("Could not get an unfunded release address");
             
             var addressScript = BitcoinAddress.Create(addressResult.Value, network).ScriptPubKey;
             
@@ -73,7 +73,7 @@ public static class SpendFounderStageTransaction
                 founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript,
                 founderKey, request.SelectedFee); 
             
-            return Result.Success(new SpendFounderStageTransactionResponse(new TransactionDraft
+            return Result.Success(new SpendStageFundsResponse(new TransactionDraft
             {
                 SignedTxHex = signedTransaction.Transaction.ToHex(),
                 TransactionFee = new Amount(signedTransaction.TransactionFee),
