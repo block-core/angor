@@ -5,6 +5,7 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Angor.Sdk.Funding.Projects.Operations;
 
@@ -12,10 +13,24 @@ public static class ProjectStatistics
 {
     public record ProjectStatsRequest(ProjectId ProjectId) : IRequest<Result<ProjectStatisticsDto>>;
 
-    public class ProjectStatsHandler(IProjectInvestmentsService projectInvestmentsService, IProjectService projectService) : IRequestHandler<ProjectStatsRequest, Result<ProjectStatisticsDto>>
+    public class ProjectStatsHandler(
+        IProjectInvestmentsService projectInvestmentsService,
+        IProjectService projectService,
+        IMemoryCache memoryCache) : IRequestHandler<ProjectStatsRequest, Result<ProjectStatisticsDto>>
     {
+        private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(1);
+
+        private static string GetCacheKey(ProjectId projectId) => $"ProjectStats_{projectId.Value}";
+
         public async Task<Result<ProjectStatisticsDto>> Handle(ProjectStatsRequest request, CancellationToken cancellationToken)
         {
+            var cacheKey = GetCacheKey(request.ProjectId);
+
+            if (memoryCache.TryGetValue(cacheKey, out ProjectStatisticsDto? cachedResult) && cachedResult != null)
+            {
+                return Result.Success(cachedResult);
+            }
+
             var stagesInformation = await projectInvestmentsService.ScanFullInvestments(request.ProjectId.Value);
 
             if (stagesInformation.IsFailure)
@@ -24,7 +39,15 @@ public static class ProjectStatistics
             }
 
             var project = await projectService.GetAsync(request.ProjectId);
-            return Result.Try(() => CalculateTotalValues(stagesInformation.Value.ToList(), project.Value.ToProjectInfo()));
+            var result = Result.Try(() => CalculateTotalValues(stagesInformation.Value.ToList(), project.Value.ToProjectInfo()));
+
+            if (result.IsSuccess)
+            {
+                var cacheOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(CacheExpiration);
+                memoryCache.Set(cacheKey, result.Value, cacheOptions);
+            }
+
+            return result;
         }
 
         private static ProjectStatisticsDto CalculateTotalValues(List<StageData> stagesInformation, ProjectInfo projectInfo)

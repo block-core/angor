@@ -26,6 +26,7 @@ public static class FundingContextServices
     {
         var networkConfiguration = new NetworkConfiguration();
 
+        services.AddMemoryCache();
         
         services.AddSingleton<IPortfolioService, PortfolioService>();
         //services.AddSingleton<IProjectRepository, ProjectRepository>();
