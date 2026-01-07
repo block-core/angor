@@ -19,7 +19,7 @@ public class FounderAppService(IMediator mediator) : IFounderAppService
 
     public Task<Result<GetClaimableTransactions.GetClaimableTransactionsResponse>> GetClaimableTransactions(GetClaimableTransactions.GetClaimableTransactionsRequest request) => mediator.Send(request);
     
-    public Task<Result<GetReleaseableTransactions.GetReleaseableTransactionsResponse>> GetReleasableTransactions(GetReleaseableTransactions.GetReleaseableTransactionsRequest request) => mediator.Send(request);
+    public Task<Result<GetReleasableTransactions.GetReleasableTransactionsResponse>> GetReleasableTransactions(GetReleasableTransactions.GetReleasableTransactionsRequest request) => mediator.Send(request);
 
     public Task<Result<ReleaseFunds.ReleaseFundsResponse>> ReleaseFunds(ReleaseFunds.ReleaseFundsRequest request) => mediator.Send(request);
     

@@ -10,21 +10,21 @@ using MediatR;
 
 namespace Angor.Sdk.Funding.Founder.Operations;
 
-public static class GetReleaseableTransactions
+public static class GetReleasableTransactions
 {
-    public record GetReleaseableTransactionsRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<GetReleaseableTransactionsResponse>>;
+    public record GetReleasableTransactionsRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<GetReleasableTransactionsResponse>>;
 
-    public record GetReleaseableTransactionsResponse(IEnumerable<ReleaseableTransactionDto> Transactions);
+    public record GetReleasableTransactionsResponse(IEnumerable<ReleasableTransactionDto> Transactions);
 
     public class GetClaimableTransactionsHandler(ISignService signService, IProjectService projectService,
-        INostrDecrypter nostrDecrypter, ISerializer serializer) : IRequestHandler<GetReleaseableTransactionsRequest, Result<GetReleaseableTransactionsResponse>>
+        INostrDecrypter nostrDecrypter, ISerializer serializer) : IRequestHandler<GetReleasableTransactionsRequest, Result<GetReleasableTransactionsResponse>>
     {
-        public async Task<Result<GetReleaseableTransactionsResponse>> Handle(GetReleaseableTransactionsRequest request, CancellationToken cancellationToken)
+        public async Task<Result<GetReleasableTransactionsResponse>> Handle(GetReleasableTransactionsRequest request, CancellationToken cancellationToken)
         {
             
             var projectResult = await projectService.GetAsync(request.ProjectId);
             if (projectResult.IsFailure)
-                return Result.Failure<GetReleaseableTransactionsResponse>(projectResult.Error);
+                return Result.Failure<GetReleasableTransactionsResponse>(projectResult.Error);
             
             var requests = await FetchSignatureRequestsAsync(projectResult.Value.NostrPubKey);
             
@@ -36,7 +36,7 @@ public static class GetReleaseableTransactions
             
             await Task.WhenAll(approvalTask, releaseTask,decryptResult);
 
-            var list = requests.Select(x => new ReleaseableTransactionDto
+            var list = requests.Select(x => new ReleasableTransactionDto
             {
                 Approved = x.ApprovaleTime,
                 Arrived = x.InvestmentRequestTime,
@@ -44,7 +44,7 @@ public static class GetReleaseableTransactions
                 InvestmentEventId = x.SignRecoveryRequestEventId
             });
                 
-            return Result.Success(new GetReleaseableTransactionsResponse(list));
+            return Result.Success(new GetReleasableTransactionsResponse(list));
         }
         
 
