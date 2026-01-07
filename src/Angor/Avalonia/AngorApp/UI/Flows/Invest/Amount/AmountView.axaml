@@ -1,142 +1,113 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia"
-			 xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
-			 xmlns:c="clr-namespace:AngorApp.UI.Flows.Invest.Amount"
-			 xmlns:models="clr-namespace:Angor.Shared.Models;assembly=Angor.Shared"
-			 mc:Ignorable="d"
-			 d:DesignWidth="500"
-			 x:Class="AngorApp.UI.Flows.Invest.Amount.AmountView" x:DataType="c:IAmountViewModel">
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:behaviors="clr-namespace:Zafiro.Avalonia.Behaviors;assembly=Zafiro.Avalonia" xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls" xmlns:c="clr-namespace:AngorApp.UI.Flows.Invest.Amount" xmlns:models="clr-namespace:Angor.Shared.Models;assembly=Angor.Shared" mc:Ignorable="d" d:DesignWidth="500" x:Class="AngorApp.UI.Flows.Invest.Amount.AmountView" x:DataType="c:IAmountViewModel">
 
-	<Design.DataContext>
-		<c:AmountViewModelSample />
-	</Design.DataContext>
+  <Design.DataContext>
+    <c:AmountViewModelSample />
+  </Design.DataContext>
 
-	<UserControl.Styles>
-		<Style Selector="TextBlock">
-			<Setter Property="TextWrapping" Value="Wrap" />
-		</Style>
+  <UserControl.Styles>
+    <Style Selector="TextBlock">
+      <Setter Property="TextWrapping"Value="Wrap"/>
+    </Style>
 
-		<!-- Pattern ListBox Item Styles -->
-		<Style Selector="ListBoxItem">
-			<Setter Property="Padding" Value="12,8" />
-			<Setter Property="Margin" Value="0,0,0,8" />
-		</Style>
+    <!-- Pattern ListBox Item Styles -->
+    <Style Selector="ListBoxItem">
+      <Setter Property="Padding"Value="12,8"/><Setter Property="Margin"Value="0,0,0,8"/>
+    </Style>
 
-		<Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-			<Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
-		</Style>
-	</UserControl.Styles>
+    <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background"Value="{DynamicResource SystemAccentColor}"/>
+    </Style>
+  </UserControl.Styles>
 
-	<Panel>
-		<StackPanel Spacing="10" Grid.IsSharedSizeScope="True">
-			<HeaderedContainer>
-				<HeaderedContainer.Header>
-					<TextBlock Padding="10 0">
-						Enter the amount you want to invest
-					</TextBlock>
-				</HeaderedContainer.Header>
-				<controls:AmountControl Satoshis="{Binding Amount}">
-					<Interaction.Behaviors>
-						<behaviors:UntouchedClassBehavior />
-					</Interaction.Behaviors>
-				</controls:AmountControl>
-			</HeaderedContainer>
+  <Panel>
+    <StackPanel Spacing="10" Grid.IsSharedSizeScope="True">
+      <HeaderedContainer>
+        <HeaderedContainer.Header>
+          <TextBlock Padding="10 0">
+            Enter the amount you want to invest
+          </TextBlock>
+        </HeaderedContainer.Header>
+        <controls:AmountControl Satoshis="{Binding Amount}">
+          <Interaction.Behaviors>
+            <behaviors:UntouchedClassBehavior />
+          </Interaction.Behaviors>
+        </controls:AmountControl>
+        <TextBlock Text="Please enter a valid investment amount greater than zero." Foreground="{DynamicResource SystemErrorTextBrush}" FontSize="12" IsVisible="{Binding IsValid^}" Margin="10,4,0,0" />
 
-			<!-- Pattern Selection for Fund/Subscribe Projects -->
-			<HeaderedContainer IsVisible="{Binding RequiresPatternSelection}">
-				<HeaderedContainer.Header>
-					<TextBlock Padding="10 0">
-						Select a funding pattern
-					</TextBlock>
-				</HeaderedContainer.Header>
-				<ListBox ItemsSource="{Binding AvailablePatterns}"
-						 SelectedIndex="0"
-						 SelectionMode="Single"
-						 Name="PatternListBox"
-						 Background="Transparent"
-						 BorderThickness="0">
-					<ListBox.ItemTemplate>
-						<DataTemplate DataType="models:DynamicStagePattern">
-							<Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-									BorderThickness="1"
-									CornerRadius="4"
-									Padding="12,10">
-								<StackPanel Spacing="6">
-									<!-- Pattern Name -->
-									<TextBlock Text="{Binding Name}"
-											   FontWeight="SemiBold"
-											   FontSize="14" />
+      </HeaderedContainer>
 
-									<!-- Pattern Description -->
-									<TextBlock Text="{Binding Description}"
-											   FontSize="12"
-											   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-											   TextWrapping="Wrap" />
+      <!-- Pattern Selection for Fund/Subscribe Projects -->
+      <HeaderedContainer IsVisible="{Binding RequiresPatternSelection}">
+        <HeaderedContainer.Header>
+          <TextBlock Padding="10 0">
+            Select a funding pattern
+          </TextBlock>
+        </HeaderedContainer.Header>
+        <ListBox ItemsSource="{Binding AvailablePatterns}" SelectedIndex="0" SelectionMode="Single" Name="PatternListBox" Background="Transparent" BorderThickness="0">
+          <ListBox.ItemTemplate>
+            <DataTemplate DataType="models:DynamicStagePattern">
+              <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" CornerRadius="4" Padding="12,10">
+                <StackPanel Spacing="6">
+                  <!-- Pattern Name -->
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" />
 
-									<!-- Pattern Details -->
-									<StackPanel Orientation="Horizontal" Spacing="16">
-										<StackPanel Orientation="Horizontal" Spacing="4">
-											<TextBlock Text="?"
-													   FontSize="11"
-													   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-											<TextBlock FontSize="11"
-													   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
-												<Run Text="{Binding StageCount}" />
-												<Run Text="stages" />
-											</TextBlock>
-										</StackPanel>
+                  <!-- Pattern Description -->
+                  <TextBlock Text="{Binding Description}" FontSize="12" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" TextWrapping="Wrap" />
 
-										<StackPanel Orientation="Horizontal" Spacing="4">
-											<TextBlock Text="?"
-													   FontSize="11"
-													   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-											<TextBlock Text="{Binding Frequency}"
-													   FontSize="11"
-													   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-										</StackPanel>
-									</StackPanel>
-								</StackPanel>
-							</Border>
-						</DataTemplate>
-					</ListBox.ItemTemplate>
-				</ListBox>
-			</HeaderedContainer>
+                  <!-- Pattern Details -->
+                  <StackPanel Orientation="Horizontal" Spacing="16">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <TextBlock Text="?" FontSize="11" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                      <TextBlock FontSize="11" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
+                        <Run Text="{Binding StageCount}" />
+                        <Run Text="stages" />
+                      </TextBlock>
+                    </StackPanel>
 
-			<!-- Penalty Warning - Above Threshold -->
-			<Card IsVisible="{Binding RequiresFounderApproval}" Classes="Warning">
-				<StackPanel Spacing="10">
-					<TextBlock Classes="SizeMedium" FontWeight="Bold">
-						?? Penalty and Founder Approval Required
-					</TextBlock>
-					<TextBlock TextWrapping="Wrap">
-						Your investment meets or exceeds the penalty threshold. To recover your funds early, you will need to obtain the founder's signatures and your funds will be subject to a time-locked penalty period. Without founder approval, you can only claim funds after the project expiry date.
-					</TextBlock>
-				</StackPanel>
-			</Card>
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <TextBlock Text="?" FontSize="11" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                      <TextBlock Text="{Binding Frequency}" FontSize="11" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                    </StackPanel>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </HeaderedContainer>
 
-			<!-- No Penalty Notice - Below Threshold -->
-			<Card IsVisible="{Binding !RequiresFounderApproval}" Classes="Success">
-				<StackPanel Spacing="10">
-					<TextBlock Classes="SizeMedium" FontWeight="Bold">
-						? No Penalty on Recovery
-					</TextBlock>
-					<TextBlock TextWrapping="Wrap">
-						Your investment is below the penalty threshold. You can recover your funds immediately after investing without needing founder signatures and without incurring any penalty period.
-					</TextBlock>
-				</StackPanel>
-			</Card>
+      <!-- Penalty Warning - Above Threshold -->
+      <Card IsVisible="{Binding RequiresFounderApproval}" Classes="Warning">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="SizeMedium" FontWeight="Bold">
+            ?? Penalty and Founder Approval Required
+          </TextBlock>
+          <TextBlock TextWrapping="Wrap">
+            Your investment meets or exceeds the penalty threshold. To recover your funds early, you will need to obtain the founder's signatures and your funds will be subject to a time-locked penalty period. Without founder approval, you can only claim funds after the project expiry date.
+          </TextBlock>
+        </StackPanel>
+      </Card>
 
-			<HeaderedContainer IsVisible="{Binding IsValid^}" >
-				<HeaderedContainer.Header>
-					<TextBlock Padding="10 0">
-						Stage breakdown
-					</TextBlock>
-				</HeaderedContainer.Header>
-				<c:StagesBreakdown />
-			</HeaderedContainer>
-		</StackPanel>
-	</Panel>
+      <!-- No Penalty Notice - Below Threshold -->
+      <Card IsVisible="{Binding !RequiresFounderApproval}" Classes="Success">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="SizeMedium" FontWeight="Bold">
+            ? No Penalty on Recovery
+          </TextBlock>
+          <TextBlock TextWrapping="Wrap">
+            Your investment is below the penalty threshold. You can recover your funds immediately after investing without needing founder signatures and without incurring any penalty period.
+          </TextBlock>
+        </StackPanel>
+      </Card>
+
+      <HeaderedContainer IsVisible="{Binding IsValid^}">
+        <HeaderedContainer.Header>
+          <TextBlock Padding="10 0">
+            Stage breakdown
+          </TextBlock>
+        </HeaderedContainer.Header>
+        <c:StagesBreakdown />
+      </HeaderedContainer>
+    </StackPanel>
+  </Panel>
 </UserControl>
