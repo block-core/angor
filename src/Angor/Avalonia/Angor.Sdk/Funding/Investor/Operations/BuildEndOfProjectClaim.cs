@@ -79,7 +79,9 @@ public static class BuildEndOfProjectClaim
 
             stageIndex -= 2; // Adjust for skipped outputs
 
-            var endOfProjectTransaction = investorTransactionActions.RecoverEndOfProjectFunds(investment.InvestmentTransactionHex, project.Value.ToProjectInfo(), stageIndex,
+            var firstAvailableStageNumber = stageIndex + 1;
+            
+            var endOfProjectTransaction = investorTransactionActions.RecoverEndOfProjectFunds(investment.InvestmentTransactionHex, project.Value.ToProjectInfo(), firstAvailableStageNumber,
                 changeAddress, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), new FeeEstimation(){FeeRate = request.SelectedFeeRate.SatsPerKilobyte});
             
             return Result.Success(new BuildEndOfProjectClaimResponse(new EndOfProjectTransactionDraft()
