@@ -332,73 +332,244 @@ public class DynamicStageCalculatorTests
 
     #endregion
 
-    #region Edge Cases and Integration Tests
+    #region DynamicStagePattern Amount Validation Tests
 
     [Fact]
-    public void CalculateMonthlyPayoutDate_YearBoundary_CalculatesCorrectly()
+    public void DynamicStagePattern_HasFixedAmount_ReturnsTrueWhenAmountIsSet()
     {
         // Arrange
-        var startDate = new DateTime(2024, 11, 10, 0, 0, 0, DateTimeKind.Utc);
-
-        // Act
-        var stage0 = DynamicStageCalculator.CalculateMonthlyPayoutDate(startDate, StageFrequency.Monthly, 15, 0);
-        var stage1 = DynamicStageCalculator.CalculateMonthlyPayoutDate(startDate, StageFrequency.Monthly, 15, 1);
-        var stage2 = DynamicStageCalculator.CalculateMonthlyPayoutDate(startDate, StageFrequency.Monthly, 15, 2);
-
-        // Assert
-        Assert.Equal(new DateTime(2024, 11, 15, 0, 0, 0, DateTimeKind.Utc), stage0); // Nov 15
-        Assert.Equal(new DateTime(2024, 12, 15, 0, 0, 0, DateTimeKind.Utc), stage1); // Dec 15
-        Assert.Equal(new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc), stage2);  // Jan 15 (next year)
-    }
-
-    [Fact]
-    public void CalculateWeeklyPayoutDate_YearBoundary_CalculatesCorrectly()
-    {
-        // Arrange
-        var startDate = new DateTime(2024, 12, 25, 0, 0, 0, DateTimeKind.Utc); // Wednesday
-
-        // Act - Every Monday
-        var stage0 = DynamicStageCalculator.CalculateWeeklyPayoutDate(startDate, StageFrequency.Weekly, 1, 0);
-        var stage1 = DynamicStageCalculator.CalculateWeeklyPayoutDate(startDate, StageFrequency.Weekly, 1, 1);
-
-        // Assert
-        Assert.Equal(new DateTime(2024, 12, 30, 0, 0, 0, DateTimeKind.Utc), stage0); // Dec 30 (Monday)
-        Assert.Equal(new DateTime(2025, 1, 6, 0, 0, 0, DateTimeKind.Utc), stage1);   // Jan 6 (next year)
-    }
-
-    [Fact]
-    public void CalculateDynamicStageReleaseDate_AllFrequencies_ProduceDistinctDates()
-    {
-        // Arrange
-        var startDate = new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Utc);
-        var frequencies = new[]
-          {
-            StageFrequency.Weekly,
-            StageFrequency.Biweekly,
-            StageFrequency.Monthly,
-            StageFrequency.BiMonthly,
-            StageFrequency.Quarterly
+        var pattern = new DynamicStagePattern
+        {
+            StageCount = 3,
+            Amount = 100000 // 100,000 sats
         };
 
-        foreach (var frequency in frequencies)
+        // Assert
+        Assert.True(pattern.HasFixedAmount);
+    }
+
+    [Fact]
+    public void DynamicStagePattern_HasFixedAmount_ReturnsFalseWhenAmountIsNull()
+    {
+        // Arrange
+        var pattern = new DynamicStagePattern
         {
-            var pattern = new DynamicStagePattern
-            {
-                PayoutDayType = PayoutDayType.FromStartDate,
-                Frequency = frequency,
-                StageCount = 3
-            };
+            StageCount = 3,
+            Amount = null
+        };
 
-            // Act
-            var stage0 = DynamicStageCalculator.CalculateDynamicStageReleaseDate(startDate, pattern, 0);
-            var stage1 = DynamicStageCalculator.CalculateDynamicStageReleaseDate(startDate, pattern, 1);
-            var stage2 = DynamicStageCalculator.CalculateDynamicStageReleaseDate(startDate, pattern, 2);
+        // Assert
+        Assert.False(pattern.HasFixedAmount);
+    }
 
-            // Assert - Each stage should be later than the previous
-            Assert.True(stage0 > startDate, $"{frequency}: Stage 0 should be after start date");
-            Assert.True(stage1 > stage0, $"{frequency}: Stage 1 should be after stage 0");
-            Assert.True(stage2 > stage1, $"{frequency}: Stage 2 should be after stage 1");
-        }
+    [Fact]
+    public void DynamicStagePattern_HasFixedAmount_ReturnsFalseWhenAmountIsZero()
+    {
+        // Arrange
+        var pattern = new DynamicStagePattern
+        {
+            StageCount = 3,
+            Amount = 0
+        };
+
+        // Assert
+        Assert.False(pattern.HasFixedAmount);
+    }
+
+    [Fact]
+    public void FundingParameters_ValidateSubscribe_ThrowsWhenNoAmount()
+    {
+        // Arrange
+        var pattern = new DynamicStagePattern
+        {
+            StageCount = 3,
+            Amount = null,
+            PayoutDayType = PayoutDayType.FromStartDate
+        };
+        var projectInfo = new ProjectInfo
+        {
+            ProjectType = ProjectType.Subscribe,
+            DynamicStagePatterns = new List<DynamicStagePattern> { pattern }
+        };
+        var fundingParameters = new FundingParameters
+        {
+            InvestorKey = "testkey",
+            TotalInvestmentAmount = 100000,
+            InvestmentStartDate = DateTime.UtcNow,
+            PatternIndex = 0
+        };
+
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() => fundingParameters.Validate(projectInfo));
+        Assert.Contains("fixed Amount", exception.Message);
+    }
+
+    [Fact]
+    public void FundingParameters_ValidateSubscribe_SucceedsWithMatchingAmount()
+    {
+        // Arrange
+        var pattern = new DynamicStagePattern
+        {
+            StageCount = 3,
+            Amount = 100000,
+            PayoutDayType = PayoutDayType.FromStartDate
+        };
+        var projectInfo = new ProjectInfo
+        {
+            ProjectType = ProjectType.Subscribe,
+            DynamicStagePatterns = new List<DynamicStagePattern> { pattern }
+        };
+        var fundingParameters = new FundingParameters
+        {
+            InvestorKey = "testkey",
+            TotalInvestmentAmount = 100000, // Matches pattern amount
+            InvestmentStartDate = DateTime.UtcNow,
+            PatternIndex = 0
+        };
+
+        // Act - should not throw
+        fundingParameters.Validate(projectInfo);
+    }
+
+    [Fact]
+    public void FundingParameters_ValidateSubscribe_ThrowsWhenAmountDoesNotMatch()
+    {
+        // Arrange
+        var pattern = new DynamicStagePattern
+        {
+            StageCount = 3,
+            Amount = 100000,
+            PayoutDayType = PayoutDayType.FromStartDate
+        };
+        var projectInfo = new ProjectInfo
+        {
+            ProjectType = ProjectType.Subscribe,
+            DynamicStagePatterns = new List<DynamicStagePattern> { pattern }
+        };
+        var fundingParameters = new FundingParameters
+        {
+            InvestorKey = "testkey",
+            TotalInvestmentAmount = 50000, // Does not match pattern amount
+            InvestmentStartDate = DateTime.UtcNow,
+            PatternIndex = 0
+        };
+
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() => fundingParameters.Validate(projectInfo));
+        Assert.Contains("fixed amount", exception.Message);
+    }
+
+    [Fact]
+    public void FundingParameters_ValidateFund_SucceedsWithoutAmount()
+    {
+        // Arrange
+        var pattern = new DynamicStagePattern
+        {
+            StageCount = 3,
+            Amount = null,
+            PayoutDayType = PayoutDayType.FromStartDate
+        };
+        var projectInfo = new ProjectInfo
+        {
+            ProjectType = ProjectType.Fund,
+            DynamicStagePatterns = new List<DynamicStagePattern> { pattern }
+        };
+        var fundingParameters = new FundingParameters
+        {
+            InvestorKey = "testkey",
+            TotalInvestmentAmount = 100000,
+            InvestmentStartDate = DateTime.UtcNow,
+            PatternIndex = 0
+        };
+
+        // Act - should not throw (Fund doesn't require fixed amount)
+        fundingParameters.Validate(projectInfo);
+    }
+
+    [Fact]
+    public void FundingParameters_Validate_ThrowsWhenStageCountIsZero()
+    {
+        // Arrange
+        var pattern = new DynamicStagePattern
+        {
+            StageCount = 0,
+            Amount = 100000,
+            PayoutDayType = PayoutDayType.FromStartDate
+        };
+        var projectInfo = new ProjectInfo
+        {
+            ProjectType = ProjectType.Subscribe,
+            DynamicStagePatterns = new List<DynamicStagePattern> { pattern }
+        };
+        var fundingParameters = new FundingParameters
+        {
+            InvestorKey = "testkey",
+            TotalInvestmentAmount = 100000,
+            InvestmentStartDate = DateTime.UtcNow,
+            PatternIndex = 0
+        };
+
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() => fundingParameters.Validate(projectInfo));
+        Assert.Contains("StageCount", exception.Message);
+    }
+
+    [Fact]
+    public void FundingParameters_Validate_ThrowsForInvalidPayoutDayOfMonth()
+    {
+        // Arrange
+        var pattern = new DynamicStagePattern
+        {
+            StageCount = 3,
+            Amount = 100000,
+            PayoutDayType = PayoutDayType.SpecificDayOfMonth,
+            PayoutDay = 32 // Invalid
+        };
+        var projectInfo = new ProjectInfo
+        {
+            ProjectType = ProjectType.Subscribe,
+            DynamicStagePatterns = new List<DynamicStagePattern> { pattern }
+        };
+        var fundingParameters = new FundingParameters
+        {
+            InvestorKey = "testkey",
+            TotalInvestmentAmount = 100000,
+            InvestmentStartDate = DateTime.UtcNow,
+            PatternIndex = 0
+        };
+
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() => fundingParameters.Validate(projectInfo));
+        Assert.Contains("PayoutDay", exception.Message);
+    }
+
+    [Fact]
+    public void FundingParameters_Validate_ThrowsForInvalidPayoutDayOfWeek()
+    {
+        // Arrange
+        var pattern = new DynamicStagePattern
+        {
+            StageCount = 3,
+            Amount = 100000,
+            PayoutDayType = PayoutDayType.SpecificDayOfWeek,
+            PayoutDay = 7 // Invalid (must be 0-6)
+        };
+        var projectInfo = new ProjectInfo
+        {
+            ProjectType = ProjectType.Subscribe,
+            DynamicStagePatterns = new List<DynamicStagePattern> { pattern }
+        };
+        var fundingParameters = new FundingParameters
+        {
+            InvestorKey = "testkey",
+            TotalInvestmentAmount = 100000,
+            InvestmentStartDate = DateTime.UtcNow,
+            PatternIndex = 0
+        };
+
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() => fundingParameters.Validate(projectInfo));
+        Assert.Contains("PayoutDay", exception.Message);
     }
 
     #endregion

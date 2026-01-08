@@ -1007,7 +1007,7 @@ namespace Angor.Test.Protocol
 
             Assert.NotNull(founderSpendStage2);
             Assert.NotNull(founderSpendStage2.Transaction);
-            TransactionValidation.ThanTheTransactionHasNoErrors(founderSpendStage2.Transaction, 
+            TransactionValidation.ThanTheTransactionHasNoErrors(founderSpendStage2.Transaction,
                 allInvestmentHexes.SelectMany(hex => network.CreateTransaction(hex.TransactionHex).Outputs.AsCoins().Where(c => c.Amount > 0)));
         }
 
@@ -1024,6 +1024,9 @@ namespace Angor.Test.Protocol
             var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, _derivationOperations.DeriveFounderKey(words, 1));
             var founderReceiveAddress = new Key().PubKey.ScriptPubKey;
 
+            // Fixed subscription amount for Subscribe projects (0.3 BTC)
+            long subscriptionAmount = Money.Coins(0.3m).Satoshi;
+
             var projectInvestmentInfo = new ProjectInfo
             {
                 Version = 2,
@@ -1038,13 +1041,14 @@ namespace Angor.Test.Protocol
                 {
                     new DynamicStagePattern
                     {
-                        PatternId = 0,
-                        Name            = "3-Month Subscribe (1st of month)",
-                        Frequency       = StageFrequency.Monthly,
-                        StageCount      = 3,
-                        PayoutDayType   = PayoutDayType.SpecificDayOfMonth,
-                        PayoutDay       = 1
-                   }
+                            PatternId = 0,
+                            Name         = "3-Month Subscribe (1st of month)",
+                            Frequency       = StageFrequency.Monthly,
+                            StageCount      = 3,
+                            PayoutDayType   = PayoutDayType.SpecificDayOfMonth,
+                            PayoutDay       = 1,
+                            Amount        = subscriptionAmount // Fixed amount for Subscribe pattern
+                    }
                 }
             };
             projectInvestmentInfo.ProjectIdentifier = derivationOperations.DeriveAngorKey(angorRootKey, projectInvestmentInfo.FounderKey);
@@ -1058,47 +1062,46 @@ namespace Angor.Test.Protocol
             investorContext.InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes());
             investorContext.ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString();
 
-            long investmentAmount = Money.Coins(0.3m).Satoshi;
             var investmentStartDate = new DateTime(2025, 2, 1, 0, 0, 0, DateTimeKind.Utc);
 
             var investorParameters = FundingParameters.CreateForSubscribe(
-                    projectInvestmentInfo,
-                    investorContext.InvestorKey,
-                    investmentAmount,
-                    0,
-                    investmentStartDate);
+                projectInvestmentInfo,
+                investorContext.InvestorKey,
+                subscriptionAmount, // Must match the pattern's fixed Amount
+                0,
+                investmentStartDate);
 
             var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, investorParameters);
 
             Assert.NotNull(investorInvTrx);
 
             var founderSpendStage1 = _founderTransactionActions.SpendFounderStage(
-                    projectInvestmentInfo,
-                    new[] { investorInvTrx.ToHex() },
-                    1,
-                    founderReceiveAddress,
-                    Encoders.Hex.EncodeData(founderKey.ToBytes()),
-                    _expectedFeeEstimation);
+                projectInvestmentInfo,
+                new[] { investorInvTrx.ToHex() },
+                1,
+                founderReceiveAddress,
+                Encoders.Hex.EncodeData(founderKey.ToBytes()),
+                _expectedFeeEstimation);
 
             Assert.NotNull(founderSpendStage1);
             Assert.NotNull(founderSpendStage1.Transaction);
 
             TransactionValidation.ThanTheTransactionHasNoErrors(founderSpendStage1.Transaction,
-                investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
+               investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
 
             var investor1RecoverStage2 = _investorTransactionActions.RecoverEndOfProjectFunds(
-                investorInvTrx.ToHex(),
-                projectInvestmentInfo,
-                2,
-                investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
+               investorInvTrx.ToHex(),
+                          projectInvestmentInfo,
+                       2,
+             investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
                 Encoders.Hex.EncodeData(investorKey.ToBytes()),
-                _expectedFeeEstimation);
+                 _expectedFeeEstimation);
 
             Assert.NotNull(investor1RecoverStage2);
             Assert.NotNull(investor1RecoverStage2.Transaction);
 
             TransactionValidation.ThanTheTransactionHasNoErrors(investor1RecoverStage2.Transaction,
-                    investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
+                investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
         }
     }
 }
