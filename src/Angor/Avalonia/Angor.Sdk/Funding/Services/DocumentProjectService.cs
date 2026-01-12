@@ -142,27 +142,25 @@ public class DocumentProjectService(
         if (!nostrProjects.Any())
             return Result.Failure<IEnumerable<Project>>("No projects found in Nostr relays");
 
-        // Step 2: Validate each project exists on-chain sequentially
-        var validatedProjectIds = new List<ProjectId>();
-        foreach (var projectInfo in nostrProjects)
-        {
-            if (string.IsNullOrEmpty(projectInfo.ProjectIdentifier))
-                continue;
-
-            try
+        // Step 2: Validate each project exists on-chain in parallel
+        var validationTasks = nostrProjects
+            .Where(p => !string.IsNullOrEmpty(p.ProjectIdentifier))
+            .Select(async projectInfo =>
             {
-                var indexerData = await angorIndexerService.GetProjectByIdAsync(projectInfo.ProjectIdentifier);
-                if (indexerData != null)
+                try
                 {
-                    validatedProjectIds.Add(new ProjectId(projectInfo.ProjectIdentifier));
+                    var indexerData = await angorIndexerService.GetProjectByIdAsync(projectInfo.ProjectIdentifier);
+                    return indexerData != null ? new ProjectId(projectInfo.ProjectIdentifier) : null;
                 }
-                // Projects not found on-chain are silently filtered out (potential spam)
-            }
-            catch
-            {
-                // Skip projects that fail validation
-            }
-        }
+                catch
+                {
+                    // Skip projects that fail validation
+                    return null;
+                }
+            });
+
+        var results = await Task.WhenAll(validationTasks);
+        var validatedProjectIds = results.Where(id => id != null).Select(id => id!).ToList();
 
         if (!validatedProjectIds.Any())
             return Result.Failure<IEnumerable<Project>>("No valid on-chain projects found from Nostr events");
@@ -173,37 +171,33 @@ public class DocumentProjectService(
 
     private Task<Result<IEnumerable<ProjectInfo>>> QueryLatestNostrProjectEventsAsync(int limit)
     {
-        return Task.Run(async () =>
-              {
-                  using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-                  var tcs = new TaskCompletionSource<List<ProjectInfo>>();
-                  var results = new List<ProjectInfo>();
-                  var processedProjectIds = new HashSet<string>();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        var tcs = new TaskCompletionSource<Dictionary<string, ProjectInfo>>();
+        var results = new Dictionary<string, ProjectInfo>();
 
-                  void OnNext(ProjectInfo info)
-                  {
-                      // Deduplicate by project identifier
-                      if (!string.IsNullOrEmpty(info.ProjectIdentifier) && processedProjectIds.Add(info.ProjectIdentifier))
-                      {
-                          results.Add(info);
-                      }
-                  }
+        void OnNext(ProjectInfo info)
+        {
+            // Deduplicate by project identifier using dictionary key
+            if (!string.IsNullOrEmpty(info.ProjectIdentifier))
+            {
+                results.TryAdd(info.ProjectIdentifier, info);
+            }
+        }
 
-                  void OnCompleted() => tcs.TrySetResult(results);
+        void OnCompleted() => tcs.TrySetResult(results);
 
-                  relayService.LookupLatestProjects<ProjectInfo>(OnNext, OnCompleted, limit);
+        relayService.LookupLatestProjects<ProjectInfo>(OnNext, OnCompleted, limit);
 
-                  // Race between completion and timeout
-                  var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(10), cts.Token));
+        // Race between completion and timeout
+        var completedTask = Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(10), cts.Token));
 
-                  if (completedTask == tcs.Task)
-                      return Result.Success(results.AsEnumerable());
+        if (completedTask.Result == tcs.Task)
+            return Task.FromResult(Result.Success(results.Values.AsEnumerable()));
 
-                  // On timeout, return whatever we collected
-                  return results.Any()
-                        ? Result.Success(results.AsEnumerable())
-                        : Result.Failure<IEnumerable<ProjectInfo>>("Timeout waiting for Nostr project events");
-              });
+        // On timeout, return whatever we collected
+        return Task.FromResult(results.Any()
+            ? Result.Success(results.Values.AsEnumerable())
+            : Result.Failure<IEnumerable<ProjectInfo>>("Timeout waiting for Nostr project events"));
     }
 
     private Uri? TryGetUri(string uriString)
@@ -240,8 +234,8 @@ public class DocumentProjectService(
         {
             relayService.LookupNostrProfileForNPub(
                    (npub, nostrMetadata) => observer.OnNext(new ProjectMetadataWithNpub(npub, nostrMetadata)),
-                        observer.OnCompleted,
-               npubs.Where(x => x != null).ToArray());
+                    observer.OnCompleted,
+                    npubs.Where(x => x != null).ToArray());
 
             return Disposable.Empty;
         }).Timeout(TimeSpan.FromSeconds(30));
