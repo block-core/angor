@@ -4,11 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:model="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model"
              xmlns:stages="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages.StagesList">
-    
+
     <Design.DataContext>
-        <model:NewProjectSample />
+        <model:InvestmentProjectConfigSample />
     </Design.DataContext>
 
     <UserControl.Styles>
@@ -16,19 +17,26 @@
             <Setter Property="Spacing" Value="10" />
         </Style>
     </UserControl.Styles>
-    
+
     <ItemsControl ItemsSource="{Binding Stages, RelativeSource={RelativeSource AncestorType=stages:StagesList}}" FontWeight="Bold" Foreground="{DynamicResource Accent}">
         <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="model:ICreateStage">
+            <DataTemplate DataType="model:IFundingStageConfig">
                 <Border Classes="Translucid">
                     <Grid ColumnDefinitions="* Auto" ColumnSpacing="10">
                         <TextBlock Text="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}"></TextBlock>
                         <TextBlock Grid.Column="1">
                             <TextBlock.Inlines>
-                                <Run Text="{Binding Percent, StringFormat='{}{0}%'}" />
-                                <Run Text="{Binding Amount.BtcString, StringFormat='({0})'}" />
+                                <Run Text="{Binding Percent, StringFormat={}{0:0.##%}}" />
+                                <Run>
+                                    <Run.Text>
+                                        <MultiBinding Converter="{x:Static controls:AngorConverters.PercentOfTotalToBtcString}">
+                                            <Binding Path="Percent" />
+                                            <Binding Path="$parent[stages:StagesList].TotalSats" />
+                                        </MultiBinding>
+                                    </Run.Text>
+                                </Run>
                                 <Run FontWeight="Regular" Text="released on" />
-                                <Run Text="{Binding ReleaseDate, StringFormat='{}{0}'}" />
+                                <Run Text="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.OrdinalDateFormat}}" />
                             </TextBlock.Inlines>
                         </TextBlock>
                     </Grid>

@@ -3,7 +3,7 @@
     
     <Styles.Resources>
         
-        <ControlTheme x:Key="Buttonized" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+        <ControlTheme x:Key="ButtonizedListBoxItem" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
             <Setter Property="Padding" Value="10"></Setter>
             <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
             <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
@@ -56,8 +56,8 @@
     <Design.PreviewWith>
         <Border Padding="20">
             <WrapPanel ItemSpacing="10">
-                <ListBoxItem IsSelected="True" Content="Selected" Theme="{StaticResource Buttonized}" />
-                <ListBoxItem IsSelected="False" Content="Unselected" Theme="{StaticResource Buttonized}" />
+                <ListBoxItem IsSelected="True" Content="Selected" Theme="{StaticResource ButtonizedListBoxItem}" />
+                <ListBoxItem IsSelected="False" Content="Unselected" Theme="{StaticResource ButtonizedListBoxItem}" />
                 
                 <ListBoxItem IsSelected="True" Content="Selected" Theme="{StaticResource ButtonizedWhite}" />
                 <ListBoxItem IsSelected="False" Content="Unselected" Theme="{StaticResource ButtonizedWhite}" />

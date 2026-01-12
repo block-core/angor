@@ -1,0 +1,63 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <NumericUpDown Width="200" InnerRightContent="Hola"></NumericUpDown>
+        </Border>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <ControlTheme x:Key="{x:Type NumericUpDown}" TargetType="NumericUpDown">
+            <Setter Property="ShowButtonSpinner" Value="False" />
+            <Setter Property="Foreground" Value="{DynamicResource TextControlForeground}" />
+            <Setter Property="Background" Value="{DynamicResource TextControlBackground}" />
+            <Setter Property="BorderThickness" Value="{DynamicResource TextControlBorderThemeThickness}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrush}" />
+            <Setter Property="MinHeight" Value="{DynamicResource TextControlThemeMinHeight}" />
+            <Setter Property="MinWidth" Value="{DynamicResource TextControlThemeMinWidth}" />
+            <Setter Property="Padding" Value="{DynamicResource TextControlThemePadding}" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <DataValidationErrors>
+                        <TextBox Name="PART_TextBox"
+                                 Background="{TemplateBinding Background}"
+                                 Foreground="{TemplateBinding Foreground}"
+                                 Watermark="{TemplateBinding Watermark}"
+                                 IsReadOnly="{TemplateBinding IsReadOnly}"
+                                 VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                 HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                 Text="{TemplateBinding Text}"
+                                 TextAlignment="{TemplateBinding TextAlignment}"
+                                 AcceptsReturn="False"
+                                 TextWrapping="NoWrap"
+                                 InnerLeftContent="{Binding InnerLeftContent, RelativeSource={RelativeSource TemplatedParent}}">
+                            <TextBox.InnerRightContent>
+                               <StackPanel Orientation="Horizontal">
+                                   <ContentControl VerticalAlignment="Center" Content="{Binding $parent[NumericUpDown].InnerRightContent}" />
+                                   <ButtonSpinner Name="PART_Spinner"
+                                                  Background="{TemplateBinding Background}"
+                                                  BorderThickness="{TemplateBinding BorderThickness}"
+                                                  BorderBrush="{TemplateBinding BorderBrush}"
+                                                  CornerRadius="{TemplateBinding CornerRadius}"
+                                                  IsTabStop="False"
+                                                  Padding="0"
+                                                  MinWidth="0"
+                                                  HorizontalContentAlignment="Stretch"
+                                                  VerticalContentAlignment="Stretch"
+                                                  AllowSpin="{TemplateBinding AllowSpin}"
+                                                  ShowButtonSpinner="{Binding $parent[NumericUpDown].ShowButtonSpinner}"
+                                                  ButtonSpinnerLocation="{Binding $parent[NumericUpDown].ShowButtonSpinner}">
+                                   </ButtonSpinner>
+                               </StackPanel>
+                            </TextBox.InnerRightContent>
+                        </TextBox>
+
+                    </DataValidationErrors>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+
+    </Styles.Resources>
+
+</Styles>

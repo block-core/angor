@@ -6,17 +6,14 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages.StagesView" x:DataType="stages:IStagesViewModel">
-
-    <UserControl.DataContext>
-        <stages:StagesViewModelSample />
-    </UserControl.DataContext>
-
+    
     <Design.DataContext>
         <stages:StagesViewModelSample />
     </Design.DataContext>
 
     <controls:ScrollableView MaxContentWidth="766">
         <StackPanel Classes="BigGap">
+            <controls:ErrorSummary HorizontalAlignment="Stretch" Errors="{Binding Errors}" />
             <DockPanel>
                 <EnhancedButton DockPanel.Dock="Right" IsVisible="{Binding !IsAdvanced}" Classes="Outline" Command="{Binding ToggleEditor}">Advanced Editor</EnhancedButton>
                 <EnhancedButton DockPanel.Dock="Right" IsVisible="{Binding IsAdvanced}" Classes="Outline" Command="{Binding ToggleEditor}">Simple Editor</EnhancedButton>
