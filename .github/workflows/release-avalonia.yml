@@ -170,16 +170,6 @@ jobs:
             --application-name "${{ env.APP_NAME }}" \
             --version ${{ needs.prepare.outputs.version }}
 
-
-      - name: Create Linux x86 RPM
-        run: |
-          dotnetpackager rpm from-project \
-            --project ${{ env.DESKTOP_PROJECT }} \
-            --arch x86 \
-            --output artifacts/Angor-${{ needs.prepare.outputs.version }}-i386.rpm \
-            --application-name "${{ env.APP_NAME }}" \
-            --version ${{ needs.prepare.outputs.version }}
-
       
       - name: Create Linux arm64 .deb
         run: |
