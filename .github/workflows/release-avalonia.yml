@@ -94,8 +94,8 @@ jobs:
             --application-name "${{ env.APP_NAME }}" `
             --appId ${{ env.APP_ID }} `
             --version ${{ needs.prepare.outputs.version }} `
-            --vendor "${{ env.VENDOR }}" `
-            --self-contained
+            --vendor "${{ env.VENDOR }}"
+
       
       - name: Create Windows arm64 Installer
         run: |
@@ -106,8 +106,8 @@ jobs:
             --application-name "${{ env.APP_NAME }}" `
             --appId ${{ env.APP_ID }} `
             --version ${{ needs.prepare.outputs.version }} `
-            --vendor "${{ env.VENDOR }}" `
-            --self-contained
+            --vendor "${{ env.VENDOR }}"
+
       
       - name: Restore global.json
         if: always()
@@ -149,8 +149,8 @@ jobs:
             --arch x64 \
             --output artifacts/angor_${{ needs.prepare.outputs.version }}_amd64.deb \
             --application-name "${{ env.APP_NAME }}" \
-            --version ${{ needs.prepare.outputs.version }} \
-            --self-contained
+            --version ${{ needs.prepare.outputs.version }}
+
       
       - name: Create Linux x64 AppImage
         run: |
@@ -158,8 +158,28 @@ jobs:
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch x64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-x86_64.AppImage \
+            --application-name "${{ env.APP_NAME }}"
+
+      
+      - name: Create Linux x64 RPM
+        run: |
+          dotnetpackager rpm from-project \
+            --project ${{ env.DESKTOP_PROJECT }} \
+            --arch x64 \
+            --output artifacts/Angor-${{ needs.prepare.outputs.version }}-x86_64.rpm \
             --application-name "${{ env.APP_NAME }}" \
-            --self-contained
+            --version ${{ needs.prepare.outputs.version }}
+
+
+      - name: Create Linux x86 RPM
+        run: |
+          dotnetpackager rpm from-project \
+            --project ${{ env.DESKTOP_PROJECT }} \
+            --arch x86 \
+            --output artifacts/Angor-${{ needs.prepare.outputs.version }}-i386.rpm \
+            --application-name "${{ env.APP_NAME }}" \
+            --version ${{ needs.prepare.outputs.version }}
+
       
       - name: Create Linux arm64 .deb
         run: |
@@ -168,8 +188,8 @@ jobs:
             --arch arm64 \
             --output artifacts/angor_${{ needs.prepare.outputs.version }}_arm64.deb \
             --application-name "${{ env.APP_NAME }}" \
-            --version ${{ needs.prepare.outputs.version }} \
-            --self-contained
+            --version ${{ needs.prepare.outputs.version }}
+
       
       - name: Create Linux arm64 AppImage
         run: |
@@ -177,8 +197,8 @@ jobs:
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch arm64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-aarch64.AppImage \
-            --application-name "${{ env.APP_NAME }}" \
-            --self-contained
+            --application-name "${{ env.APP_NAME }}"
+
       
       - name: Create macOS x64 .dmg (cross-compile)
         run: |
@@ -186,8 +206,8 @@ jobs:
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch x64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-osx-x64.dmg \
-            --application-name "${{ env.APP_NAME }}" \
-            --self-contained
+            --application-name "${{ env.APP_NAME }}"
+
       
       - name: Create macOS arm64 .dmg (cross-compile)
         run: |
@@ -195,8 +215,8 @@ jobs:
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch arm64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-osx-arm64.dmg \
-            --application-name "${{ env.APP_NAME }}" \
-            --self-contained
+            --application-name "${{ env.APP_NAME }}"
+
       
       - name: Restore global.json
         if: always()
