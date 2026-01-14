@@ -303,7 +303,7 @@ namespace Angor.Shared.Services
             return signed.Id!;
         }
 
-        public void LookupLatestProjects<T>(Action<T> onResponseAction, Action? onEndOfStreamAction, int limit)
+        public void LookupLatestProjects<T>(Action<EventInfo<T>> onResponseAction, Action? onEndOfStreamAction, int limit)
         {
             var subscriptionKey = $"LatestProjects_{Guid.NewGuid():N}";
 
@@ -320,7 +320,7 @@ namespace Angor.Shared.Services
                 .Select(_ => _.Event)
                 .Subscribe(ev =>
               {
-                  if (ev?.Content == null)
+                  if (ev?.Content == null || ev.Id == null)
                       return;
 
                   try
@@ -328,7 +328,7 @@ namespace Angor.Shared.Services
                       var projectInfo = _serializer.Deserialize<T>(ev.Content);
                       if (projectInfo != null)
                       {
-                          onResponseAction(projectInfo);
+                          onResponseAction(new EventInfo<T>(ev.Id, projectInfo));
                       }
                   }
                   catch (Exception ex)

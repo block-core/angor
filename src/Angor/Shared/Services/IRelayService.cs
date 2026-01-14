@@ -27,5 +27,5 @@ public interface IRelayService
 
     string PublishNip65List(string hexPrivateKey, Action<NostrOkResponse> action);
     
-    void LookupLatestProjects<T>(Action<T> onResponseAction, Action? onEndOfStreamAction, int limit);
+    void LookupLatestProjects<T>(Action<EventInfo<T>> onResponseAction, Action? onEndOfStreamAction, int limit);
 }

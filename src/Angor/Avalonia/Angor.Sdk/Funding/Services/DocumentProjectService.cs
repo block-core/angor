@@ -144,13 +144,17 @@ public class DocumentProjectService(
 
         // Step 2: Validate each project exists on-chain in parallel
         var validationTasks = nostrProjects
-            .Where(p => !string.IsNullOrEmpty(p.ProjectIdentifier))
-            .Select(async projectInfo =>
+            .Where(p => !string.IsNullOrEmpty(p.Data.ProjectIdentifier))
+            .Select(async eventInfo =>
             {
                 try
                 {
-                    var indexerData = await angorIndexerService.GetProjectByIdAsync(projectInfo.ProjectIdentifier);
-                    return indexerData != null ? new ProjectId(projectInfo.ProjectIdentifier) : null;
+                    var indexerData = await angorIndexerService.GetProjectByIdAsync(eventInfo.Data.ProjectIdentifier);
+
+                    if (indexerData?.NostrEventId != eventInfo.EventId)
+                        return null; // Mismatch between Nostr event ID and indexer data
+
+                    return indexerData != null ? new ProjectId(eventInfo.Data.ProjectIdentifier) : null;
                 }
                 catch
                 {
@@ -169,18 +173,18 @@ public class DocumentProjectService(
         return await GetAllAsync(validatedProjectIds.ToArray());
     }
 
-    private Task<Result<IEnumerable<ProjectInfo>>> QueryLatestNostrProjectEventsAsync(int limit)
+    private Task<Result<IEnumerable<EventInfo<ProjectInfo>>>> QueryLatestNostrProjectEventsAsync(int limit)
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-        var tcs = new TaskCompletionSource<Dictionary<string, ProjectInfo>>();
-        var results = new Dictionary<string, ProjectInfo>();
+        var tcs = new TaskCompletionSource<Dictionary<string, EventInfo<ProjectInfo>>>();
+        var results = new Dictionary<string, EventInfo<ProjectInfo>>();
 
-        void OnNext(ProjectInfo info)
+        void OnNext(EventInfo<ProjectInfo> eventInfo)
         {
             // Deduplicate by project identifier using dictionary key
-            if (!string.IsNullOrEmpty(info.ProjectIdentifier))
+            if (!string.IsNullOrEmpty(eventInfo.Data.ProjectIdentifier))
             {
-                results.TryAdd(info.ProjectIdentifier, info);
+                results.TryAdd(eventInfo.Data.ProjectIdentifier, eventInfo);
             }
         }
 
@@ -196,8 +200,8 @@ public class DocumentProjectService(
 
         // On timeout, return whatever we collected
         return Task.FromResult(results.Any()
-            ? Result.Success(results.Values.AsEnumerable())
-            : Result.Failure<IEnumerable<ProjectInfo>>("Timeout waiting for Nostr project events"));
+               ? Result.Success(results.Values.AsEnumerable())
+               : Result.Failure<IEnumerable<EventInfo<ProjectInfo>>>("Timeout waiting for Nostr project events"));
     }
 
     private Uri? TryGetUri(string uriString)
