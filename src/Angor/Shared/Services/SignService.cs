@@ -1,4 +1,4 @@
-﻿using System.Reactive.Linq;
+﻿﻿using System.Reactive.Linq;
 using Angor.Shared.Models;
 using Newtonsoft.Json;
 using Nostr.Client.Keys;
@@ -38,6 +38,31 @@ namespace Angor.Shared.Services
             // Blazor does not support AES so it needs to be done manually in javascript
             // var encrypted = ev.EncryptDirect(sender, receiver); 
             // var signed = encrypted.Sign(sender);
+
+            var signed = ev.Sign(sender);
+
+            if(!_subscriptionsHanding.TryAddOKAction(signed.Id!,okResponse))
+                throw new Exception("Failed to add OK action");
+            
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            nostrClient.Send(new NostrEventRequest(signed));
+
+            return (signed.CreatedAt!.Value, signed.Id!);
+        }
+
+        public (DateTime,string) NotifyInvestmentCompleted(string encryptedContent, string investorNostrPrivateKey, string founderNostrPubKey, Action<NostrOkResponse> okResponse)
+        {
+            var sender = NostrPrivateKey.FromHex(investorNostrPrivateKey);
+
+            var ev = new NostrEvent
+            {
+                Kind = NostrKind.EncryptedDm,
+                CreatedAt = DateTime.UtcNow,
+                Content = encryptedContent,
+                Tags = new NostrEventTags(
+                    NostrEventTag.Profile(founderNostrPubKey),
+                    new NostrEventTag("subject","Investment completed"))
+            };
 
             var signed = ev.Sign(sender);
 
@@ -93,6 +118,42 @@ namespace Angor.Shared.Services
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Investment offer")
+                    .Select(_ => _.Event)
+                    .Subscribe(nostrEvent =>
+                    {
+                        action.Invoke(nostrEvent.Id, nostrEvent.Pubkey, nostrEvent.Content, nostrEvent.CreatedAt.Value);
+                    });
+
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
+
+            var nostrFilter = new NostrFilter
+            {
+                P = [nostrPubKey], //To founder,
+                Kinds = [NostrKind.EncryptedDm],
+                Since = since
+            };
+
+            if (senderNpub != null)  nostrFilter.Authors = [senderNpub]; //From investor
+
+            nostrClient.Send(new NostrRequest(subscriptionKey, nostrFilter));
+
+            return Task.CompletedTask;
+        }
+
+        public Task LookupInvestmentNotificationsAsync(string nostrPubKey, string? senderNpub, DateTime? since,
+            Action<string, string, string, DateTime> action, Action onAllMessagesReceived)
+        {
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            var subscriptionKey = nostrPubKey + "inv_notif";
+
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Investment completed")
                     .Select(_ => _.Event)
                     .Subscribe(nostrEvent =>
                     {

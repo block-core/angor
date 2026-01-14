@@ -1,4 +1,5 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
@@ -99,7 +100,7 @@ public class InvestmentHandshakeService(
         {
             logger.Information("Starting sync of investment Handshakes for project {ProjectId}", projectId.Value);
 
-            // Fetch all investment requests from Nostr
+            // Fetch all investment requests from Nostr (signature requests)
             var requestsResult = await FetchInvestmentRequestsFromNostr(projectNostrPubKey);
             if (requestsResult.IsFailure)
             {
@@ -109,6 +110,18 @@ public class InvestmentHandshakeService(
 
             var requests = requestsResult.Value.ToList();
             logger.Information("Fetched {Count} investment requests", requests.Count);
+
+            // Fetch all investment notifications from Nostr (direct investments below threshold)
+            var notificationsResult = await FetchInvestmentNotificationsFromNostr(projectNostrPubKey);
+            if (notificationsResult.IsFailure)
+            {
+                logger.Warning("Failed to fetch investment notifications: {Error}", notificationsResult.Error);
+            }
+
+            var notifications = notificationsResult.IsSuccess 
+                ? notificationsResult.Value.ToList() 
+                : new List<DirectMessage>();
+            logger.Information("Fetched {Count} investment notifications", notifications.Count);
 
             // Fetch all approvals from Nostr
             var approvalsResult = await FetchInvestmentApprovalsFromNostr(projectNostrPubKey);
@@ -196,6 +209,56 @@ public class InvestmentHandshakeService(
                 HandshakesToUpsert.Add(Handshake);
             }
 
+            // Process each notification (direct investments below threshold)
+            foreach (var notification in notifications)
+            {
+                // Check if we already have this Handshake
+                if (existingHandshakes.TryGetValue(notification.Id, out _))
+                {
+                    continue;
+                }
+                
+                InvestmentNotification? investmentNotification = null;
+
+                try
+                {
+                    var decryptResult = await nostrDecrypter.Decrypt(walletId, projectId, notification);
+                    if (decryptResult.IsSuccess)
+                    {
+                        investmentNotification = serializer.Deserialize<InvestmentNotification>(decryptResult.Value);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Warning(ex, "Failed to decrypt/parse notification {EventId}", notification.Id);
+                }
+
+                // Create Handshake object for direct investment
+                var Handshake = new InvestmentHandshake
+                {
+                    Id = GenerateCompositeId(walletId, projectId, notification.Id),
+                    WalletId = walletId.Value,
+                    ProjectId = projectId.Value,
+                    RequestEventId = notification.Id,
+                    InvestorNostrPubKey = notification.SenderNostrPubKey,
+                    RequestCreated = notification.Created,
+                    ProjectIdentifier = investmentNotification?.ProjectIdentifier,
+                    InvestmentTransactionId = investmentNotification?.TransactionId,
+                    InvestmentTransactionHex = null, // Not sent in notification, can be fetched from indexer if needed
+                    UnfundedReleaseAddress = null, // Not applicable for direct investments
+                    UnfundedReleaseKey = null,
+                    ApprovalEventId = null, // Direct investments don't need approval
+                    ApprovalCreated = null,
+                    Status = InvestmentRequestStatus.Invested, // Already invested
+                    IsSynced = true,
+                    IsDirectInvestment = true, // Mark as direct investment
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                HandshakesToUpsert.Add(Handshake);
+            }
+
             // Store all Handshakes
             if (HandshakesToUpsert.Any())
             {
@@ -258,6 +321,31 @@ public class InvestmentHandshakeService(
         {
             logger.Error(ex, "Failed to fetch investment requests from Nostr");
             return Result.Failure<IEnumerable<DirectMessage>>($"Failed to fetch investment requests: {ex.Message}");
+        }
+    }
+
+    private async Task<Result<IEnumerable<DirectMessage>>> FetchInvestmentNotificationsFromNostr(string projectNostrPubKey)
+    {
+        try
+        {
+            var tcs = new TaskCompletionSource<List<DirectMessage>>();
+            var messages = new List<DirectMessage>();
+
+            await signService.LookupInvestmentNotificationsAsync(
+                projectNostrPubKey,
+                null,
+                null,
+                (id, pubKey, content, created) => messages.Add(new DirectMessage(id, pubKey, content, created)),
+                () => tcs.SetResult(messages)
+            );
+
+            var result = await tcs.Task;
+            return Result.Success<IEnumerable<DirectMessage>>(result);
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "Failed to fetch investment notifications from Nostr");
+            return Result.Failure<IEnumerable<DirectMessage>>($"Failed to fetch investment notifications: {ex.Message}");
         }
     }
 

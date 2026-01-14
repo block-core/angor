@@ -7,9 +7,22 @@ public interface ISignService
 {
     (DateTime eventTime, string eventId) RequestInvestmentSigs(string encryptedContent, string investorNostrPrivateKey,
         string founderNostrPubKey, Action<NostrOkResponse> okResponse);
+    
+    /// <summary>
+    /// Sends a notification to the founder that an investment has been completed (for below-threshold investments that don't require signatures).
+    /// </summary>
+    (DateTime eventTime, string eventId) NotifyInvestmentCompleted(string encryptedContent, string investorNostrPrivateKey,
+        string founderNostrPubKey, Action<NostrOkResponse> okResponse);
+    
     void LookupSignatureForInvestmentRequest(string investorNostrPubKey, string projectNostrPubKey, DateTime? sigRequestSentTime, string sigRequestEventId, Func<string, Task> action,Action? onAllMessagesReceived = null);
 
     Task LookupInvestmentRequestsAsync(string nostrPubKey, string? senderNpub, DateTime? since, Action<string, string, string, DateTime> action,
+        Action onAllMessagesReceived);
+    
+    /// <summary>
+    /// Looks up investment completion notifications (for below-threshold investments that don't require signatures).
+    /// </summary>
+    Task LookupInvestmentNotificationsAsync(string nostrPubKey, string? senderNpub, DateTime? since, Action<string, string, string, DateTime> action,
         Action onAllMessagesReceived);
     
     void LookupInvestmentRequestApprovals(string nostrPubKey, Action<string, DateTime, string> action,

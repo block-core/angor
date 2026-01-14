@@ -1,9 +1,4 @@
-using Angor.Sdk.Common;
-using Angor.Sdk.Funding.Investor.Dtos;
 using Angor.Sdk.Funding.Investor.Operations;
-using Angor.Sdk.Funding.Projects.Domain;
-using Angor.Sdk.Funding.Shared;
-using Angor.Sdk.Funding.Shared.TransactionDrafts;
 using CSharpFunctionalExtensions;
 using MediatR;
 
