@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:stages="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages.StagesView" x:DataType="stages:IStagesViewModel">
+    
+    <Design.DataContext>
+        <stages:StagesViewModelSample />
+    </Design.DataContext>
+
+    <controls:ScrollableView MaxContentWidth="766">
+        <StackPanel Classes="BigGap">
+            <controls:ErrorSummary HorizontalAlignment="Stretch" Errors="{Binding Errors}" />
+            <DockPanel>
+                <EnhancedButton DockPanel.Dock="Right" IsVisible="{Binding !IsAdvanced}" Classes="Outline" Command="{Binding ToggleEditor}">Advanced Editor</EnhancedButton>
+                <EnhancedButton DockPanel.Dock="Right" IsVisible="{Binding IsAdvanced}" Classes="Outline" Command="{Binding ToggleEditor}">Simple Editor</EnhancedButton>
+                <TextBlock VerticalAlignment="Center" Classes="Size-M Text-Muted">Tell us your project length and funding needs</TextBlock>
+            </DockPanel>
+            <stages:StagesSimpleEditor IsVisible="{Binding !IsAdvanced}" />
+            <stages:StagesAdvancedEditor IsVisible="{Binding IsAdvanced}" />
+        </StackPanel>
+    </controls:ScrollableView>
+
+</UserControl>

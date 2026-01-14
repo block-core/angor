@@ -12,7 +12,7 @@ namespace AngorApp.UI.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
 
 public class UnfundedProjectTransaction : IUnfundedProjectTransaction
 {
-    public UnfundedProjectTransaction(string walletId, ProjectId projectId, ReleaseableTransactionDto dto, IFounderAppService founderAppService, UIServices uiServices)
+    public UnfundedProjectTransaction(string walletId, ProjectId projectId, ReleasableTransactionDto dto, IFounderAppService founderAppService, UIServices uiServices)
     {
         Arrived = dto.Arrived;
         Released = dto.Released;
@@ -22,7 +22,7 @@ public class UnfundedProjectTransaction : IUnfundedProjectTransaction
         Release = ReactiveCommand.CreateFromTask(() => UserFlow.PromptAndNotify(
         async () =>
           {
-              var result = await founderAppService.ReleaseInvestorTransactions(new ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest(new WalletId(walletId), projectId, [InvestmentEventId]));
+              var result = await founderAppService.ReleaseFunds(new Angor.Sdk.Funding.Founder.Operations.ReleaseFunds.ReleaseFundsRequest(new WalletId(walletId), projectId, [InvestmentEventId]));
               return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
           },
         uiServices,

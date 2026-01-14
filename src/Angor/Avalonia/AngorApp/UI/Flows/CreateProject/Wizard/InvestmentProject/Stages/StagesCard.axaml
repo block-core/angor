@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:stages="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages.StagesCard"
+             x:DataType="stages:IStagesViewModel">
+    
+    <Design.DataContext>
+       <stages:StagesViewModelSample />
+    </Design.DataContext>
+
+    <StackPanel>
+        <HeaderedContainer FontWeight="Bold" Classes="Translucid">
+            <HeaderedContainer.Header>
+                <EdgePanel StartContent="{Icon fa-regular fa-clipboard}">
+                    <EdgePanel.EndContent>
+                        <StackPanel Orientation="Horizontal" Classes="SmallGap">
+                            <EnhancedButton IconOptions.Fill="{DynamicResource Accent}" Icon="{Icon fa-trash}" Classes="Outline" Command="{Binding ClearStages}">Delete</EnhancedButton>
+                            <EnhancedButton IconOptions.Fill="{DynamicResource PrimaryButtonForeground}" Icon="{Icon fa-pen-to-square}" Classes="Accent" Command="{Binding ToggleEditor}">Edit</EnhancedButton>
+                        </StackPanel>
+                    </EdgePanel.EndContent>
+                    <TextBlock>Funding Stages</TextBlock>
+                </EdgePanel>
+            </HeaderedContainer.Header>
+            <stages:StagesList Stages="{Binding NewProject.Stages}" TotalSats="{Binding NewProject.TargetAmount.Sats}" />
+        </HeaderedContainer>
+    </StackPanel>
+
+</UserControl>

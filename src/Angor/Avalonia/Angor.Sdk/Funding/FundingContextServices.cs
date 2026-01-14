@@ -34,7 +34,7 @@ public static class FundingContextServices
         services.AddSingleton<IInvestmentHandshakeService, InvestmentHandshakeService>();
         services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssembly(typeof(CreateInvestment.CreateInvestmentTransactionHandler).Assembly);
+            cfg.RegisterServicesFromAssembly(typeof(BuildInvestmentDraft.BuildInvestmentDraftHandler).Assembly);
             cfg.AddOpenBehavior(typeof(UnhandledExceptionBehavior<,>));
         });
         services.TryAddSingleton<ISerializer, Serializer>();

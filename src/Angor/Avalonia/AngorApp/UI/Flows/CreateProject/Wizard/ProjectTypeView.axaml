@@ -1,0 +1,146 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:wizard="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.ProjectTypeView" x:DataType="wizard:ProjectTypeViewModel">
+
+    <UserControl.Resources>
+        <ResourceKeyConverter x:Key="BrushConverter">
+            <ResourceKeyConverter.Dictionary>
+                <ResourceDictionary>
+                    <SolidColorBrush x:Key="Investment" Color="{DynamicResource Accent}" />
+                    <SolidColorBrush x:Key="Fund" Color="{DynamicResource BitcoinAccent}" />
+                    <SolidColorBrush x:Key="Subscription" Color="{DynamicResource BitcoinAccent}" />
+                </ResourceDictionary>
+            </ResourceKeyConverter.Dictionary>
+        </ResourceKeyConverter>
+    </UserControl.Resources>
+    <Design.DataContext>
+        <wizard:ProjectTypeViewModel />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="ListBox">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="RadioButton">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border CornerRadius="12"
+                            Height="24"
+                            Width="24"
+                            Background="Transparent"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            BorderBrush="{TemplateBinding BorderBrush}" />
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="RadioButton:checked">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border CornerRadius="12"
+                            Height="24"
+                            Width="24"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            BorderBrush="{TemplateBinding Background}">
+                        <ContentControl Foreground="White" IconOptions.Size="12" Content="{Icon fa-check}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="ListBoxItem:selected ContentControl#Icon">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <Style Selector="ListBoxItem ContentControl#Icon">
+            <Setter Property="Foreground" Value="{Binding $parent[ListBoxItem].Foreground}" />
+        </Style>
+
+        <Style Selector="ListBoxItem:selected">
+            <Setter Property="BorderBrush" Value="{Binding $self.Foreground}" />
+            <Setter Property="IconOptions.Fill" Value="White" />
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="Padding" Value="20 40" />
+            <Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+            <Style Selector="^:pointerover:not(:selected) /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="{DynamicResource Surface}" />
+            </Style>
+        </Style>
+
+        <Style Selector="ListBoxItem TextBlock.Big">
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+        <Style Selector="ListBoxItem:selected TextBlock.Big">
+            <Setter Property="Foreground" Value="{Binding $parent[ListBoxItem].Foreground}" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ListBoxItem TextBlock.Regular">
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+        <Style Selector="ListBoxItem:selected RadioButton">
+            <Setter Property="Background" Value="{Binding $parent[ListBoxItem].Foreground}" />
+        </Style>
+        <Style Selector="ListBoxItem:selected Border">
+            <Setter Property="Background" Value="{Binding $parent[ListBoxItem].Foreground}" />
+            <Setter Property="BorderBrush" Value="{Binding $parent[ListBoxItem].Foreground}" />
+        </Style>
+        <Style Selector="ListBoxItem RadioButton">
+            <Setter Property="Background" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+        </Style>
+        <Style Selector="ListBoxItem Border">
+            <Setter Property="Background" Value="{DynamicResource SurfaceSubtle}" />
+        </Style>
+    </UserControl.Styles>
+
+    <controls:ScrollableView MaxContentWidth="800">
+        <StackPanel VerticalAlignment="Center" Classes="BigGap">
+            <TextBlock>Choose the type of project you want to launch.</TextBlock>
+            <ListBox SelectedIndex="0" ItemsSource="{Binding ProjectTypes}">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Classes="BigGap" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemContainerTheme>
+                    <ControlTheme TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                        <Setter x:DataType="wizard:ProjectType" Property="Foreground" Value="{Binding Path=Name,  Converter={StaticResource BrushConverter}}" />
+                    </ControlTheme>
+                </ListBox.ItemContainerTheme>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel HorizontalSpacing="20">
+                            <Border Width="48" Height="48" CornerRadius="10">
+                                <ContentControl x:Name="Icon" Content="{Binding Icon}" />
+                            </Border>
+                            <RadioButton DockPanel.Dock="Right" IsChecked="{Binding $parent[ListBoxItem].IsSelected}"
+
+                                         BorderThickness="2"
+                                         Background="{Binding $parent[ListBoxItem].Foreground}">
+                            </RadioButton>
+                            <StackPanel Classes="BigGap">
+                                <TextBlock Classes="Big" Text="{Binding Name}" />
+                                <TextBlock Classes="Regular" Text="{Binding Description}" />
+                            </StackPanel>
+                        </DockPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
+    </controls:ScrollableView>
+
+</UserControl>
+

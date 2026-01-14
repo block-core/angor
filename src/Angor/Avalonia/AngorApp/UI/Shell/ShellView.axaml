@@ -5,36 +5,14 @@
              xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
              xmlns:shell="clr-namespace:AngorApp.UI.Shell"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
-             x:Class="AngorApp.UI.Shell.ShellView" x:DataType="shell:IShellViewModel" Background="{DynamicResource Background}">
+             x:Class="AngorApp.UI.Shell.ShellView" x:DataType="shell:IShellViewModel" Background="{DynamicResource AppBackground}">
 
     <Design.DataContext>
         <shell:ShellViewModelSample />
     </Design.DataContext>
-
-    <UserControl.Styles>
-        <Style Selector="EnhancedButton.Widget">
-            <Setter Property="Background" Value="{DynamicResource Overbackground}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="{DynamicResource Text}" />
-            <Setter Property="Padding" Value="10" />
-        </Style>
-        <Style Selector="ComboBox">
-            <Setter Property="Background" Value="{DynamicResource Overbackground}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="{DynamicResource Text}" />
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="FontWeight" Value="Bold"></Setter>
-        </Style>
-        <Style Selector="ComboBox:pointerover /template/ Border">
-            <Setter Property="Background" Value="{DynamicResource Overbackground}" />
-        </Style>
-    </UserControl.Styles>
-
+    
     <Grid x:Name="TopBar" Margin="0 20 20 20" ColumnDefinitions="Auto *" RowDefinitions="42 *" ColumnSpacing="20" RowSpacing="20">
-        <PathIcon Height="32" Foreground="{DynamicResource Logo}" Width="32" Data="{StaticResource AngorLogo}" />
+        <PathIcon Height="32" Foreground="{DynamicResource Brand}" Width="32" Data="{StaticResource AngorLogo}" />
         <DockPanel Grid.Row="0" Grid.Column="1" Dock="Top">
             <DockPanel DockPanel.Dock="Top" HorizontalSpacing="20">
                 <TextBlock FontWeight="Bold" VerticalAlignment="Center" FontSize="20" Text="{Binding SelectedSection.FriendlyName}" />
@@ -62,13 +40,13 @@
                         </ComboBox.ItemsSource>
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
-                                <EdgePanel IconOptions.Size="18" Foreground="{DynamicResource Text}" StartContent="{Icon mdi-web}" Content="{Binding}" />
+                                <EdgePanel IconOptions.Size="18" Foreground="{DynamicResource TextMuted}" StartContent="{Icon mdi-web}" Content="{Binding}" />
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
                     <ToggleButton Classes="Widget" IsChecked="{Binding IsDarkThemeEnabled, Mode=TwoWay}">
                         <ToggleButton.Content>
-                            <PathIcon Foreground="{DynamicResource Text}" Data="{DynamicResource Sun}" />
+                            <PathIcon Foreground="{DynamicResource TextMuted}" Data="{DynamicResource Sun}" />
                         </ToggleButton.Content>
                     </ToggleButton>
                     <EnhancedButton Classes="Widget" Icon="{Icon mdi-cog}" Command="{Binding GoToSettings}" />
@@ -76,8 +54,8 @@
             </DockPanel>
         </DockPanel>
         <SectionStrip Classes="Nav" Grid.Row="1" Grid.Column="0" SelectedSection="{Binding SelectedSection}" IconSize="24" Width="200" HorizontalAlignment="Left" Sections="{Binding SidebarSections}" />
-        <Border Grid.Row="1" Grid.Column="1" Classes="Regular">
+        <OverlayBorder Grid.Row="1" Grid.Column="1" Classes="Panel" Padding="0" Background="{DynamicResource TiledLogoBrush}">
             <Frame Navigator="{Binding SelectedSection.Navigator}" />
-        </Border>
+        </OverlayBorder>
     </Grid>
 </UserControl>

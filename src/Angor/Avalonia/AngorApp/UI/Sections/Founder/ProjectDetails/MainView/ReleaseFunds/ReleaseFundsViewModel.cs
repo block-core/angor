@@ -58,7 +58,7 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
 
     private Task<Result<List<IUnfundedProjectTransaction>>> GetTransactions(IWallet wallet)
     {
-        return founderAppService.GetReleasableTransactions(new GetReleaseableTransactions.GetReleaseableTransactionsRequest(wallet.Id, projectId))
+        return founderAppService.GetReleasableTransactions(new GetReleasableTransactions.GetReleasableTransactionsRequest(wallet.Id, projectId))
      .Map(response => response.Transactions)
            .MapEach(IUnfundedProjectTransaction (dto) => new UnfundedProjectTransaction(wallet.Id.Value, projectId, dto, founderAppService, uiServices))
  .Map(enumerable => enumerable.ToList());
@@ -93,7 +93,7 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
     return UserFlow.PromptAndNotify(
      async () => 
        {
-     var result = await founderAppService.ReleaseInvestorTransactions(new ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest(wallet.Id, projectId, addresses));
+     var result = await founderAppService.ReleaseFunds(new Angor.Sdk.Funding.Founder.Operations.ReleaseFunds.ReleaseFundsRequest(wallet.Id, projectId, addresses));
                 return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
             }, 
    uiServices,

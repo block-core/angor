@@ -9,7 +9,7 @@
         <AvaloniaResource Include="Assets/**"/>
         <!-- Link theme-specific app icons located at the solution root to our Assets folder -->
         <AvaloniaResource Include="../angor-app-icon-light.png">
-            <Link>Assets/angor-app-icon-light.png</Link>
+            <Link>Assets/angor-app-icon-light84c17bc6d299ec806d065d7d23c9b42aa21f330e.png</Link>
         </AvaloniaResource>
         <AvaloniaResource Include="../angor-app-icon-dark.png">
             <Link>Assets/angor-app-icon-dark.png</Link>

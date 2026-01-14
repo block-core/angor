@@ -94,8 +94,8 @@ jobs:
             --application-name "${{ env.APP_NAME }}" `
             --appId ${{ env.APP_ID }} `
             --version ${{ needs.prepare.outputs.version }} `
-            --vendor "${{ env.VENDOR }}" `
-            --self-contained
+            --vendor "${{ env.VENDOR }}"
+
       
       - name: Create Windows arm64 Installer
         run: |
@@ -106,8 +106,8 @@ jobs:
             --application-name "${{ env.APP_NAME }}" `
             --appId ${{ env.APP_ID }} `
             --version ${{ needs.prepare.outputs.version }} `
-            --vendor "${{ env.VENDOR }}" `
-            --self-contained
+            --vendor "${{ env.VENDOR }}"
+
       
       - name: Restore global.json
         if: always()
@@ -149,8 +149,8 @@ jobs:
             --arch x64 \
             --output artifacts/angor_${{ needs.prepare.outputs.version }}_amd64.deb \
             --application-name "${{ env.APP_NAME }}" \
-            --version ${{ needs.prepare.outputs.version }} \
-            --self-contained
+            --version ${{ needs.prepare.outputs.version }}
+
       
       - name: Create Linux x64 AppImage
         run: |
@@ -158,8 +158,18 @@ jobs:
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch x64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-x86_64.AppImage \
+            --application-name "${{ env.APP_NAME }}"
+
+      
+      - name: Create Linux x64 RPM
+        run: |
+          dotnetpackager rpm from-project \
+            --project ${{ env.DESKTOP_PROJECT }} \
+            --arch x64 \
+            --output artifacts/Angor-${{ needs.prepare.outputs.version }}-x86_64.rpm \
             --application-name "${{ env.APP_NAME }}" \
-            --self-contained
+            --version ${{ needs.prepare.outputs.version }}
+
       
       - name: Create Linux arm64 .deb
         run: |
@@ -168,8 +178,8 @@ jobs:
             --arch arm64 \
             --output artifacts/angor_${{ needs.prepare.outputs.version }}_arm64.deb \
             --application-name "${{ env.APP_NAME }}" \
-            --version ${{ needs.prepare.outputs.version }} \
-            --self-contained
+            --version ${{ needs.prepare.outputs.version }}
+
       
       - name: Create Linux arm64 AppImage
         run: |
@@ -177,8 +187,8 @@ jobs:
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch arm64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-aarch64.AppImage \
-            --application-name "${{ env.APP_NAME }}" \
-            --self-contained
+            --application-name "${{ env.APP_NAME }}"
+
       
       - name: Create macOS x64 .dmg (cross-compile)
         run: |
@@ -186,8 +196,8 @@ jobs:
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch x64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-osx-x64.dmg \
-            --application-name "${{ env.APP_NAME }}" \
-            --self-contained
+            --application-name "${{ env.APP_NAME }}"
+
       
       - name: Create macOS arm64 .dmg (cross-compile)
         run: |
@@ -195,8 +205,8 @@ jobs:
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch arm64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-osx-arm64.dmg \
-            --application-name "${{ env.APP_NAME }}" \
-            --self-contained
+            --application-name "${{ env.APP_NAME }}"
+
       
       - name: Restore global.json
         if: always()
@@ -212,11 +222,11 @@ jobs:
   build-android:
     runs-on: ubuntu-latest
     needs: [prepare, test]
+    defaults:
+      run:
+        working-directory: ${{ env.AVALONIA_DIR }}
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Rename global.json
-        run: mv global.json global.json.backup
       
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -224,19 +234,19 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       
       - name: Install Android workload
-        working-directory: ${{ env.AVALONIA_DIR }}
         run: dotnet workload install android
       
       - name: Build APK
         run: |
-          dotnet publish ${{ env.ANDROID_PROJECT }} \
+          dotnet publish AngorApp.Android/AngorApp.Android.csproj \
             -c Release \
             -f net9.0-android \
             -p:ApplicationDisplayVersion=${{ needs.prepare.outputs.version }} \
             -p:ApplicationVersion=${{ github.run_number }} \
-            -o artifacts/
+            -o ${{ github.workspace }}/artifacts/
       
       - name: Rename APK
+        working-directory: ${{ github.workspace }}
         run: |
           # List what we have
           ls -la artifacts/*.apk || true
@@ -262,15 +272,11 @@ jobs:
         if: always()
         run: rm -f android.keystore
       
-      - name: Restore global.json
-        if: always()
-        run: mv global.json.backup global.json || true
-      
       - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
         with:
           name: android-package
-          path: artifacts/*.apk
+          path: ${{ github.workspace }}/artifacts/*.apk
 
   # Create GitHub Release and upload all artifacts
   release:

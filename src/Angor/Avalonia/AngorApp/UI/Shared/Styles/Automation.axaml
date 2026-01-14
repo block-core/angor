@@ -48,5 +48,19 @@
         </Setter>
         <Setter Property="AutomationProperties.ItemType" Value="ShellSection" />
     </Style>
+    
+    <Style Selector="SectionStrip.Nav SectionStripItem">
+        <Setter Property="AutomationProperties.Name">
+            <Setter.Value>
+                <Binding Path="$self.((sections:ISection)DataContext).Name" StringFormat="Section_{0}" Converter="{x:Static f:Automation.ContentToAutomationId}" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="AutomationProperties.AutomationId">
+            <Setter.Value>
+                <Binding Path="$self.((sections:ISection)DataContext).FriendlyName" StringFormat="Section_{0}" Converter="{x:Static f:Automation.ContentToAutomationId}" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="AutomationProperties.ItemType" Value="ShellSection" />
+    </Style>
 
 </Styles>

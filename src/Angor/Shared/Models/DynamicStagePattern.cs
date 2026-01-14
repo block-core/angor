@@ -49,6 +49,20 @@ public class DynamicStagePattern
     public int PayoutDay { get; set; }
 
     /// <summary>
+    /// The fixed investment amount in satoshis for this pattern.
+    /// This is MANDATORY for Subscribe project types where the founder defines the subscription price.
+    /// For Fund projects, this can be null/0 to allow investors to choose their own amount.
+    /// When set, the total investment will be this amount, split equally across all stages.
+    /// </summary>
+    public long? Amount { get; set; }
+
+    /// <summary>
+    /// Indicates whether this pattern has a fixed amount (typically used for Subscribe projects).
+    /// When true, the Amount property must be set and investors cannot choose their own amount.
+    /// </summary>
+    public bool HasFixedAmount => Amount.HasValue && Amount.Value > 0;
+
+    /// <summary>
     /// Gets a collection of standard predefined patterns for Fund and Subscribe projects.
     /// Includes various monthly, biweekly, weekly, and quarterly options.
     /// </summary>

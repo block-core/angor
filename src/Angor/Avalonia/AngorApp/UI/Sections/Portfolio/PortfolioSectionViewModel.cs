@@ -48,7 +48,7 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
 
     private static Task<Result<ICollection<IPortfolioProjectViewModel>>> GetInvestedProjects(IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator, IWalletContext walletContext, IWallet wallet, SharedCommands sharedCommands)
     {
-        return investmentAppService.GetInvestorProjects(new Investments.InvestmentsPortfolioRequest(wallet.Id))
+        return investmentAppService.GetInvestments(new GetInvestments.GetInvestmentsRequest(wallet.Id))
     .Map(response => response.Projects)
        .MapEach(IPortfolioProjectViewModel (dto) => new PortfolioProjectViewModel(dto, investmentAppService, uiServices, navigator, walletContext, sharedCommands))
    .Map<IEnumerable<IPortfolioProjectViewModel>, ICollection<IPortfolioProjectViewModel>>(models => models.ToList());

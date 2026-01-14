@@ -9,14 +9,14 @@ namespace Angor.Sdk.Funding.Founder;
 
 public interface IFounderAppService
 {
-    Task<Result<GetInvestments.GetInvestmentsResponse>> GetInvestments(GetInvestments.GetInvestmentsRequest request);
+    Task<Result<GetProjectInvestments.GetProjectInvestmentsResponse>> GetProjectInvestments(GetProjectInvestments.GetProjectInvestmentsRequest request);
     Task<Result<ApproveInvestment.ApproveInvestmentResponse>> ApproveInvestment(ApproveInvestment.ApproveInvestmentRequest request);
-    Task<Result<SpendFounderStageTransaction.SpendFounderStageTransactionResponse>> Spend(SpendFounderStageTransaction.SpendFounderStageTransactionRequest request);
+    Task<Result<SpendStageFunds.SpendStageFundsResponse>> SpendStageFunds(SpendStageFunds.SpendStageFundsRequest request);
     Task<Result<GetClaimableTransactions.GetClaimableTransactionsResponse>> GetClaimableTransactions(GetClaimableTransactions.GetClaimableTransactionsRequest request);
-    Task<Result<GetReleaseableTransactions.GetReleaseableTransactionsResponse>> GetReleasableTransactions(GetReleaseableTransactions.GetReleaseableTransactionsRequest request);
-    Task<Result<ReleaseInvestorTransaction.ReleaseInvestorTransactionResponse>> ReleaseInvestorTransactions(ReleaseInvestorTransaction.ReleaseInvestorTransactionRequest request);
+    Task<Result<GetReleasableTransactions.GetReleasableTransactionsResponse>> GetReleasableTransactions(GetReleasableTransactions.GetReleasableTransactionsRequest request);
+    Task<Result<ReleaseFunds.ReleaseFundsResponse>> ReleaseFunds(ReleaseFunds.ReleaseFundsRequest request);
   
-    Task<Result<CreateProjectNewKeys.CreateProjectNewKeysResponse>> CreateNewProjectKeysAsync(CreateProjectNewKeys.CreateProjectNewKeysRequest request);
+    Task<Result<CreateProjectKeys.CreateProjectKeysResponse>> CreateProjectKeys(CreateProjectKeys.CreateProjectKeysRequest request);
     Task<Result<PublishFounderTransaction.PublishFounderTransactionResponse>> SubmitTransactionFromDraft(PublishFounderTransaction.PublishFounderTransactionRequest request);
     Task<Result<GetMoonshotProject.GetMoonshotProjectResponse>> GetMoonshotProject(GetMoonshotProject.GetMoonshotProjectRequest request);
 }

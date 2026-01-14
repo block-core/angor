@@ -1,0 +1,58 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <Style Selector="EnhancedButton.ReverseIcon ContentPresenter#IconPresenter">
+        <Setter Property="DockPanel.Dock" Value="Right" />
+    </Style>
+    
+    <Style Selector="SlimWizardControl ScrollViewer">
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style Selector="WizardNavigator">
+        <Setter Property="Padding" Value="0"></Setter>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <DockPanel>
+                    <Border Background="{DynamicResource Surface}" DockPanel.Dock="Bottom" BoxShadow="0 -1 40 -10 Gray" ZIndex="1">
+                        <Grid Margin="20 " IconOptions.Size="16" Grid.IsSharedSizeScope="True">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition SharedSizeGroup="Column" />
+                                <ColumnDefinition />
+                                <ColumnDefinition SharedSizeGroup="Column" />
+                            </Grid.ColumnDefinitions>
+                            <EnhancedButton Content="Cancel"
+                                            Icon="{Icon fa-chevron-left}"
+                                            Classes="Secondary"
+                                            x:CompileBindings="False"
+                                            HorizontalAlignment="Left"
+                                            Command="{TemplateBinding Cancel}"
+                                            IsCancel="True"
+                                            IsVisible="{Binding $parent[WizardNavigator].Wizard.CurrentStep.Step.Kind, Converter={x:Static SlimWizardConverters.CancelVisible}}" />
+                            <EnhancedButton Grid.Column="2" Content="{Binding $parent[WizardNavigator].Wizard.Next.Text, TargetNullValue='Next'}"
+                                            Command="{Binding $parent[WizardNavigator].Wizard.Next}"
+                                            Classes="Primary ReverseIcon"
+                                            IsDefault="True"
+                                            HorizontalAlignment="Right" Icon="{Icon fa-chevron-right}" />
+                        </Grid>
+                    </Border>
+                    <Border ZIndex="0">
+                        <SlimWizardControl Wizard="{TemplateBinding Wizard}"  />
+                    </Border>
+                </DockPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <Design.PreviewWith>
+        <Border Width="500" Height="300">
+            <WizardNavigator>
+                <WizardNavigator.Wizard>
+                    <WizardDesign></WizardDesign>
+                </WizardNavigator.Wizard>
+            </WizardNavigator>
+        </Border>
+    </Design.PreviewWith>
+
+    <!-- Add Styles Here -->
+</Styles>
