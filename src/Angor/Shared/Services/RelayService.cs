@@ -317,6 +317,7 @@ namespace Angor.Shared.Services
                 var subscription = nostrClient.Streams.EventStream
                 .Where(_ => _.Subscription == subscriptionKey)
                 .Where(_ => _.Event?.Kind == Nip3030NostrKind)
+                .Where(_ => _.Event?.IsSignatureValid() == true)
                 .Select(_ => _.Event)
                 .Subscribe(ev =>
               {
