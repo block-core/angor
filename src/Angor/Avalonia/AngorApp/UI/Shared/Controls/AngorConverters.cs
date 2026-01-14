@@ -129,6 +129,8 @@ namespace AngorApp.UI.Shared.Controls
 
         public static IValueConverter AddMonthsToToday { get; } = new AddTodayToMonthsConverter();
         public static IValueConverter RatioToPercentage { get; } = new RatioToPercentageConverter();
+        public static IValueConverter BtcToAmountUI { get; } = new BtcToAmountUIConverter();
+        public static IValueConverter BtcToAmountUIWithDefault { get; } = new BtcToAmountUIWithDefaultConverter();
 
         private sealed class FallbackIfNullOrEmptyConverter : IValueConverter
         {
@@ -237,5 +239,71 @@ namespace AngorApp.UI.Shared.Controls
             }
         }
 
+        /// <summary>
+        /// Converts between decimal? (BTC value for NumericUpDown) and IAmountUI?.
+        /// Convert: IAmountUI? → decimal? (extracts Btc)
+        /// ConvertBack: decimal? → IAmountUI? (creates new AmountUI from BTC)
+        /// </summary>
+        private class BtcToAmountUIConverter : IValueConverter
+        {
+            protected const long SatsPerBtc = 100_000_000;
+
+            public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+            {
+                if (value is IAmountUI amount)
+                {
+                    return amount.Btc;
+                }
+                return null;
+            }
+
+            public virtual object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+            {
+                if (value is decimal btc)
+                {
+                    long sats = (long)(btc * SatsPerBtc);
+                    return new AmountUI(sats);
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Same as BtcToAmountUIConverter but defaults to 0.001 BTC when value is null/cleared.
+        /// Used for Threshold inputs where a default is desired.
+        /// </summary>
+        private class BtcToAmountUIWithDefaultConverter : BtcToAmountUIConverter
+        {
+            private const long DefaultThresholdSats = 100_000; // 0.001 BTC
+
+            public override object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+            {
+                if (value is decimal btc)
+                {
+                    long sats = (long)(btc * SatsPerBtc);
+                    return new AmountUI(sats);
+                }
+                // When null/empty, return the default threshold
+                return new AmountUI(DefaultThresholdSats);
+            }
+        }
+
+        public static IValueConverter IsEqualTo { get; } = new EqualsConverter();
+
+        private class EqualsConverter : IValueConverter
+        {
+            public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+            {
+                return object.Equals(value, parameter);
+            }
+
+            public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+            {
+                return AvaloniaProperty.UnsetValue;
+            }
+        }
+
+        public static IValueConverter JoinStrings { get; } = new FuncValueConverter<IEnumerable<int>?, string?>(
+            values => values == null ? null : string.Join(", ", values));
     }
 }

@@ -7,13 +7,16 @@ using AngorApp.UI.Flows.CreateProject.Wizard;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages;
+using AngorApp.UI.Flows.CreateProject.Wizard.FundProject;
+using AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model;
+using AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Payouts;
 using AngorApp.UI.Shared.Controls.Common.Success;
 using Serilog;
 using Zafiro.Avalonia.Controls.Wizards.Slim;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Wizards.Slim;
 using Zafiro.UI.Wizards.Slim.Builder;
-using ProjectType = AngorApp.UI.Flows.CreateProject.Wizard.ProjectType;
+using Avalonia.Threading;
 
 namespace AngorApp.UI.Flows.CreateProject
 {
@@ -41,7 +44,7 @@ namespace AngorApp.UI.Flows.CreateProject
                                             .StartWith(() => new WelcomeViewModel()).NextCommand(model => model.Start)
                                             .Then(_ => new ProjectTypeViewModel())
                                             .NextCommand<Unit, ProjectTypeViewModel, string>(vm => CreateProjectOftype(
-                                                vm.ProjectType,
+                                                vm,
                                                 walletId,
                                                 seed))
                                             .Then(txId => new SuccessViewModel($"Project {txId} created successfully!"), "Success").Next((_, s) => s, "Finish").Always()
@@ -51,20 +54,23 @@ namespace AngorApp.UI.Flows.CreateProject
         }
 
         private IEnhancedCommand<Result<string>> CreateProjectOftype(
-            ProjectType projectType,
+            ProjectTypeViewModel vm,
             WalletId walletId,
             ProjectSeedDto seed
         )
         {
-            // TODO: We support only investment projects for now. That's why we ignore projectType.
-            return CreateInvestmentProject(walletId, seed);
-        }
+            var canExecute = vm.WhenAnyValue(x => x.ProjectType).Select(x => x != null);
 
-        private IEnhancedCommand<Result<string>> CreateInvestmentProject(WalletId walletId, ProjectSeedDto seed)
-        {
-            return ReactiveCommand
-                   .CreateFromTask(() => CreateInvestmentProjectWizard(walletId, seed).Navigate(navigator).ToResult("Wizard was cancelled by user"))
-                   .Enhance();
+            return ReactiveCommand.CreateFromTask(async () =>
+            {
+                var projectType = vm.ProjectType;
+                return await Dispatcher.UIThread.InvokeAsync(() => projectType.Name switch
+                {
+                    "Investment" => CreateInvestmentProjectWizard(walletId, seed).Navigate(navigator).ToResult("Wizard was cancelled by user"),
+                    "Fund" => CreateFundProjectWizard(walletId, seed).Navigate(navigator).ToResult("Wizard was cancelled by user"),
+                    _ => throw new NotImplementedException($"Project type {projectType.Name} not implemented")
+                });
+            }, canExecute).Enhance();
         }
 
         private SlimWizard<string> CreateInvestmentProjectWizard(WalletId walletId, ProjectSeedDto seed)
@@ -78,6 +84,31 @@ namespace AngorApp.UI.Flows.CreateProject
                                         .Then(_ => new FundingConfigurationViewModel(newProject)).NextUnit().WhenValid()
                                         .Then(_ => new StagesViewModel(newProject)).NextUnit().WhenValid()
                                         .Then(_ => new ReviewAndDeployViewModel(
+                                                  newProject,
+                                                  new ProjectDeploymentOrchestrator(
+                                                      projectAppService,
+                                                      founderAppService,
+                                                      uiServices,
+                                                      logger),
+                                                  walletId,
+                                                  seed,
+                                                  uiServices))
+                                        .NextCommand(review => review.DeployCommand)
+                                        .WithCommitFinalStep();
+
+            return wizard;
+        }
+
+        private SlimWizard<string> CreateFundProjectWizard(WalletId walletId, ProjectSeedDto seed)
+        {
+            var newProject = new FundProjectConfig();
+
+            SlimWizard<string> wizard = WizardBuilder
+                                        .StartWith(() => new ProjectProfileViewModel(newProject)).NextUnit().WhenValid()
+                                        .Then(_ => new ProjectImagesViewModel(newProject)).NextUnit().Always()
+                                        .Then(_ => new GoalViewModel(newProject)).NextUnit().WhenValid()
+                                        .Then(_ => new FundPayoutsViewModel(newProject)).NextUnit().WhenValid()
+                                        .Then(_ => new FundReviewAndDeployViewModel(
                                                   newProject,
                                                   new ProjectDeploymentOrchestrator(
                                                       projectAppService,

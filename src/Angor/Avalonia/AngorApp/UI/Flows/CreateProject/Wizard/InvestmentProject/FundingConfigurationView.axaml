@@ -162,7 +162,7 @@
         <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}">
             <TextBlock Classes="Subtitle">Configure your funding target, window, and project nature.</TextBlock>
 
-            <!-- Target amount (highlighted) -->
+
             <HeaderedContainer Classes="WizardHighlight">
                 <HeaderedContainer.Header>
                     <EdgePanel Content="Set your target funding amount">
@@ -183,22 +183,21 @@
                                 <TextBlock Classes="FormLabel">Target Amount (BTC) *</TextBlock>
                             </HeaderedContainer.Header>
 
-                            <TextBox Classes="AmountInput"
-                                     Text="{Binding NewProject.TargetAmount.Btc, Mode=TwoWay}"
-                                     TextInputOptions.ContentType="Number"
+                            <NumericUpDown Classes="AmountInput"
+                                     Value="{Binding NewProject.TargetAmount, Mode=TwoWay, Converter={x:Static controls:AngorConverters.BtcToAmountUI}}"
+                                     FormatString="0.########"
+                                     Minimum="0"
+                                     Increment="0.01"
                                      x:Name="AmountBox"
                                      Watermark="0.00">
-                                <TextBox.InnerRightContent>
+                                <NumericUpDown.InnerRightContent>
                                     <TextBlock Classes="AmountUnitInline"
                                                VerticalAlignment="Center"
                                                Margin="0 0 12 0">
                                         BTC
                                     </TextBlock>
-                                </TextBox.InnerRightContent>
-                                <Interaction.Behaviors>
-                                    <FocusOnAttachedBehavior />
-                                </Interaction.Behaviors>
-                            </TextBox>
+                                </NumericUpDown.InnerRightContent>
+                            </NumericUpDown>
                         </HeaderedContainer>
 
                         <TextBlock Classes="AccentHint">The minimum amount your project needs to raise</TextBlock>
@@ -227,7 +226,7 @@
                 </StackPanel>
             </HeaderedContainer>
 
-            <!-- Fundraising window -->
+
             <HeaderedContainer Classes="WizardSection">
                 <HeaderedContainer.Header>
                     <StackPanel Orientation="Horizontal" Spacing="10">
@@ -261,7 +260,7 @@
 
                         <ListBox SelectedValueBinding="{Binding Months}" 
                                  SelectedValue="{Binding NewProject.FundingEndDate, Mode=TwoWay, Converter={x:Static controls:AngorConverters.AddMonthsToToday}}"
-                                 ItemContainerTheme="{StaticResource ButtonizedWhite}" Background="Transparent">
+                                 ItemContainerTheme="{StaticResource ButtonizedAccent}" Background="Transparent">
                             <ListBox.ItemsSource>
                                 <generic:List x:TypeArguments="model:PeriodOption">
                                     <model:PeriodOption Months="1" Title="1 Month" />
@@ -288,7 +287,7 @@
                 </Grid>
             </HeaderedContainer>
 
-            <!-- Project nature (penalty) -->
+
             <HeaderedContainer Classes="WizardSection">
                 <HeaderedContainer.Header>
                     <StackPanel Orientation="Horizontal" Spacing="10">

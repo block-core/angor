@@ -1,0 +1,159 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:payouts="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Payouts"
+             xmlns:model="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Payouts.PayoutsView" x:DataType="payouts:IPayoutsViewModel">
+
+    <Design.DataContext>
+        <payouts:PayoutsViewModelSample>
+            <payouts:PayoutsViewModelSample.FundProject>
+                <model:FundProjectConfigSampleEmpty />
+            </payouts:PayoutsViewModelSample.FundProject>
+        </payouts:PayoutsViewModelSample>
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="TextBlock.FormLabel">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+            <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        </Style>
+    </UserControl.Styles>
+
+    <controls:ScrollableView MaxContentWidth="766">
+        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}">
+            <TextBlock Classes="Subtitle">Select your payout pattern and schedule</TextBlock>
+
+                <StackPanel Spacing="{StaticResource BigGap}" IsVisible="{Binding !!!Payouts.Count}">
+
+                <HeaderedContainer Classes="WizardSection">
+                    <HeaderedContainer.Header>
+                        <TextBlock Classes="FormLabel">Payout Frequency</TextBlock>
+                    </HeaderedContainer.Header>
+
+                    <ListBox SelectedItem="{Binding FundProject.PayoutFrequency, Mode=TwoWay}"
+                             SelectionMode="Single"
+                             ItemsSource="{Binding AvailableFrequencies}"
+                             ItemContainerTheme="{StaticResource ButtonizedAccent}"
+                             Background="Transparent">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <BalancedWrapGrid />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Classes="Center Bold" Text="{Binding}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </HeaderedContainer>
+
+
+                <HeaderedContainer Classes="WizardSection">
+                    <HeaderedContainer.Header>
+                        <TextBlock Classes="FormLabel">Number of Installments</TextBlock>
+                    </HeaderedContainer.Header>
+
+                    <ListBox ItemsSource="{Binding AvailableInstallmentCounts}"
+                             Selection="{Binding FundProject.SelectedInstallments.SelectionModel}"
+                             ItemContainerTheme="{StaticResource ButtonizedAccent}"
+                             Background="Transparent">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Classes="BigGap" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <EdgePanel StartContent="{Binding}" Content="Installments">
+                                    <EdgePanel.EndContent>
+                                        <CheckBox IsChecked="{Binding $parent[ListBoxItem].IsSelected}" />
+                                    </EdgePanel.EndContent>
+                                </EdgePanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </HeaderedContainer>
+
+
+                <HeaderedContainer Classes="WizardSection" IsVisible="{Binding FundProject.PayoutFrequency, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static model:PayoutFrequency.Monthly}}">
+                    <HeaderedContainer.Header>
+                        <TextBlock Classes="FormLabel">Monthly Offer Payout Date</TextBlock>
+                    </HeaderedContainer.Header>
+
+                    <ListBox SelectedItem="{Binding FundProject.MonthlyPayoutDate, Mode=TwoWay}"
+                             SelectionMode="Multiple"
+                             ItemsSource="{Binding AvailablePayoutDates}"
+                             ItemContainerTheme="{StaticResource ButtonizedAccent}"
+                             Background="Transparent">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid ColumnSpacing="10" RowSpacing="10" Columns="10" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Classes="Center" Text="{Binding}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </HeaderedContainer>
+
+
+                <HeaderedContainer Classes="WizardSection" IsVisible="{Binding FundProject.PayoutFrequency, Converter={x:Static  ObjectConverters.Equal}, ConverterParameter={x:Static model:PayoutFrequency.Weekly}}">
+                    <HeaderedContainer.Header>
+                        <TextBlock Classes="FormLabel">Weekly Payout Day</TextBlock>
+                    </HeaderedContainer.Header>
+
+                    <ListBox SelectedItem="{Binding FundProject.WeeklyPayoutDay, Mode=TwoWay}"
+                             SelectionMode="Single"
+                             ItemsSource="{Binding AvailableDaysOfWeek}"
+                             ItemContainerTheme="{StaticResource ButtonizedAccent}"
+                             Background="Transparent">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <BalancedWrapGrid />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Classes="Center Bold" Text="{Binding}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </HeaderedContainer>
+
+
+                <EnhancedButton HorizontalAlignment="Stretch" Classes="Accent" HorizontalContentAlignment="Center" Command="{Binding GeneratePayouts}">Generate Payout Schedule</EnhancedButton>
+            </StackPanel>
+
+
+            <HeaderedContainer FontWeight="Bold" Classes="Translucid" IsVisible="{Binding !!Payouts.Count}">
+                <HeaderedContainer.Header>
+                    <EdgePanel StartContent="{Icon fa-regular fa-clipboard}">
+                        <EdgePanel.EndContent>
+                            <EnhancedButton IconOptions.Fill="{DynamicResource Accent}" Icon="{Icon fa-trash}" Classes="Outline" Command="{Binding ClearPayouts}">Delete</EnhancedButton>
+                        </EdgePanel.EndContent>
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock>Payout Schedule</TextBlock>
+                            <TextBlock Text="{Binding Payouts.Count, StringFormat='({0})'}" />
+                        </StackPanel>
+                    </EdgePanel>
+                </HeaderedContainer.Header>
+                <payouts:PayoutsList Payouts="{Binding Payouts}" 
+                                     TotalSats="{Binding FundProject.GoalAmount.Sats, FallbackValue=0}" 
+                                     Frequency="{Binding FundProject.PayoutFrequency}" />
+            </HeaderedContainer>
+        </StackPanel>
+    </controls:ScrollableView>
+</UserControl>

@@ -4,7 +4,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
 {
     public interface IReviewAndDeployViewModel
     {
-        IInvestmentProjectConfig NewProject { get; }
+        IProjectConfig NewProject { get; }
         IEnhancedCommand<Result<string>> DeployCommand { get; }
     }
 }

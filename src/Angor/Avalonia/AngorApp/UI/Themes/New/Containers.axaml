@@ -1,0 +1,78 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <StackPanel Spacing="10">
+            <Border Padding="20">
+                <HeaderedContainer Classes="BlueThreshold" Header="Header">
+                    <EdgePanel StartContent="Label" EndContent="Value"></EdgePanel>
+                </HeaderedContainer>
+            </Border>
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+                <Border Classes="BlueThreshold" Padding="20">
+                    <HeaderedContainer Classes="BlueThreshold" Header="Header">
+                        <EdgePanel StartContent="Label" EndContent="Value" />
+                    </HeaderedContainer>
+                </Border>
+            </ThemeVariantScope>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+
+                <!-- Light -->
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="BlueThreshold.ContainerBorderBrush" Color="#bfdbfe" />
+
+                    <LinearGradientBrush x:Key="BlueThreshold.ContainerBackground" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Offset="0" Color="#eff6ff" />
+                        <GradientStop Offset="1" Color="#e0e7ff" />
+                    </LinearGradientBrush>
+
+                    <SolidColorBrush x:Key="BlueThreshold.IconBackground" Color="#2563eb" />
+                    <SolidColorBrush x:Key="BlueThreshold.LabelForeground" Color="#1e40af" />
+                    <SolidColorBrush x:Key="BlueThreshold.HelpForeground" Color="#1e40af" />
+                </ResourceDictionary>
+
+                <!-- Dark -->
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="BlueThreshold.ContainerBorderBrush" Color="#4a5a6a" />
+
+                    <LinearGradientBrush x:Key="BlueThreshold.ContainerBackground" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Offset="0" Color="#1A2A3A" />
+                        <GradientStop Offset="1" Color="#2A1A3A" />
+                    </LinearGradientBrush>
+
+                    <SolidColorBrush x:Key="BlueThreshold.IconBackground" Color="#3b82f6" />
+
+                    <SolidColorBrush x:Key="BlueThreshold.LabelForeground" Color="#60a5fa" />
+                    <SolidColorBrush x:Key="BlueThreshold.HelpForeground" Color="#60a5fa" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <Style Selector="HeaderedContainer.BlueThreshold">
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="HeaderPadding" Value="24" />
+        <Setter Property="ContentPadding" Value="24 0 24 24" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BlueThreshold.ContainerBorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource BlueThreshold.ContainerBackground}" />
+    </Style>
+
+    <Style Selector="HeaderedContainer.Blue /template/ ContentPresenter#Header">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Background" Value="{DynamicResource BlueThreshold.IconBackground}" />
+    </Style>
+
+    <Style Selector="HeaderedContainer.Blue EdgePanel ContentControl#StartContent">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{DynamicResource BlueThreshold.LabelForeground}" />
+    </Style>
+
+   
+</Styles>

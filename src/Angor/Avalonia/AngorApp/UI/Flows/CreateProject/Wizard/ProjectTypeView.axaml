@@ -14,7 +14,7 @@
                 <ResourceDictionary>
                     <SolidColorBrush x:Key="Investment" Color="{DynamicResource Accent}" />
                     <SolidColorBrush x:Key="Fund" Color="{DynamicResource BitcoinAccent}" />
-                    <SolidColorBrush x:Key="Subscription" Color="{DynamicResource BitcoinAccent}" />
+                    <SolidColorBrush x:Key="Subscription" Color="#9e9e9e" />
                 </ResourceDictionary>
             </ResourceKeyConverter.Dictionary>
         </ResourceKeyConverter>
@@ -109,7 +109,7 @@
     <controls:ScrollableView MaxContentWidth="800">
         <StackPanel VerticalAlignment="Center" Classes="BigGap">
             <TextBlock>Choose the type of project you want to launch.</TextBlock>
-            <ListBox SelectedIndex="0" ItemsSource="{Binding ProjectTypes}">
+            <ListBox SelectedIndex="0" ItemsSource="{Binding ProjectTypes}" SelectedItem="{Binding ProjectType}">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Classes="BigGap" />
@@ -131,8 +131,8 @@
                                          BorderThickness="2"
                                          Background="{Binding $parent[ListBoxItem].Foreground}">
                             </RadioButton>
-                            <StackPanel Classes="BigGap">
-                                <TextBlock Classes="Big" Text="{Binding Name}" />
+                            <StackPanel Classes="SmallGap">
+                                <TextBlock Classes="Big" Text="{Binding Title}" />
                                 <TextBlock Classes="Regular" Text="{Binding Description}" />
                             </StackPanel>
                         </DockPanel>

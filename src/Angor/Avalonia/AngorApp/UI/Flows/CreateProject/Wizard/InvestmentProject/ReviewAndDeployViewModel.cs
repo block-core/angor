@@ -1,6 +1,8 @@
 using System.Reactive.Disposables;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Dtos;
+using AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Mappers;
+using AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Mappers;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model;
 
@@ -13,11 +15,11 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
         private readonly ProjectSeedDto projectSeed;
         private readonly CompositeDisposable disposables = new();
 
-        public IInvestmentProjectConfig NewProject { get; }
+        public IProjectConfig NewProject { get; }
         public IEnhancedCommand<Result<string>> DeployCommand { get; }
 
         public ReviewAndDeployViewModel(
-            IInvestmentProjectConfig newProject,
+            IProjectConfig newProject,
             IProjectDeploymentOrchestrator orchestrator,
             WalletId walletId,
             ProjectSeedDto projectSeed,
@@ -34,7 +36,9 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
 
         private async Task<Result<string>> Deploy()
         {
-            var dto = NewProject.ToDto();
+            var dto = (NewProject as IInvestmentProjectConfig)?.ToDto()
+                   ?? (NewProject as IFundProjectConfig)?.ToDto()
+                   ?? throw new InvalidOperationException($"Unknown project type: {NewProject.GetType().Name}");
             return await orchestrator.Deploy(walletId, dto, projectSeed);
         }
 

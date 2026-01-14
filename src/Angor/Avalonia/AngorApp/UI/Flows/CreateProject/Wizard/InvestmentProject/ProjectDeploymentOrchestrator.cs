@@ -31,7 +31,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
             var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
                 async feerate =>
                 {
-                    // Create transaction draft
+
                     var result = await CreateProjectTransactionDraft(walletId, feerate, dto, projectSeed);
                     return result.Map(response =>
                     {
@@ -42,7 +42,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
                 },
                 model =>
                 {
-                    // Submit transaction
+
                     return SubmitProjectTransaction(new PublishFounderTransaction.PublishFounderTransactionRequest(model.Model))
                         .Tap(txId =>
                         {

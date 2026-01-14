@@ -23,7 +23,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
         [Reactive] private string description = string.Empty;
         [Reactive] private string website = string.Empty;
 
-        // Investment Properties
+
         [Reactive] private IAmountUI? targetAmount;
         [Reactive] private int? penaltyDays;
         [Reactive] private long? penaltyThreshold;
@@ -59,7 +59,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
                 .ToCollection()
                 .Select(items => items.Sum(x => x.Percent ?? 0));
 
-            // Basic Info Validations
+
             this.ValidationRule(x => x.Name, x => !string.IsNullOrWhiteSpace(x), "Project name is required.").DisposeWith(Disposables);
             this.ValidationRule(x => x.Description, x => !string.IsNullOrWhiteSpace(x), "Project description is required.").DisposeWith(Disposables);
             this.ValidationRule(x => x.Website, x => string.IsNullOrWhiteSpace(x) || (Uri.TryCreate(x, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)), "Website must be a valid URL (http or https).").DisposeWith(Disposables);
@@ -67,7 +67,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
             var isTotalPercentValid = totalPercent.Select(percent => Math.Abs(percent - 1.0m) < 0.0001m);
             this.ValidationRule(x => x.Stages, isTotalPercentValid, "Total percentage must be 100%");
 
-            // Target Amount
+
             this.ValidationRule(
                 this.WhenAnyValue(
                     x => x.TargetAmount,
@@ -79,18 +79,18 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
                 .DisposeWith(Disposables);
             this.ValidationRule(x => x.TargetAmount, x => x != null, _ => "Target amount is required.").DisposeWith(Disposables);
 
-            // Penalty Days
+
             this.ValidationRule(x => x.PenaltyDays, x => x != null, "Penalty days is required.").DisposeWith(Disposables);
             this.ValidationRule(x => x.PenaltyDays, x => x is null || x >= 0, "Penalty days cannot be negative.").DisposeWith(Disposables);
             this.ValidationRule(x => x.PenaltyDays, x => x is null || x <= 365, "Penalty period cannot exceed 365 days.").DisposeWith(Disposables);
 
-            // Penalty Threshold
+
             this.ValidationRule(x => x.PenaltyThreshold, x => x is null or >= 0, "Penalty threshold must be greater than or equal to 0.").DisposeWith(Disposables);
 
-            // Funding End Date
+
             this.ValidationRule(x => x.FundingEndDate, x => x != null, "Funding end date is required.").DisposeWith(Disposables);
 
-            // Stages
+
             var areStagesValid = StagesSource.Connect().FilterOnObservable(stage => stage.IsValid).IsEmpty().Select(b => !b);
             this.ValidationRule(x => x.Stages, areStagesValid, "Stages are not valid").DisposeWith(Disposables);
 
@@ -102,7 +102,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
                 _ => "Start date must be before or equal to funding end date."
             ).DisposeWith(Disposables);
 
-            // Environment-specific validations
+
             AddEnvironmentSpecificValidations(environment);
         }
 
@@ -120,7 +120,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
 
         private void AddProductionValidations()
         {
-            // Target Amount Production Limits
+
             this.ValidationRule(
                 this.WhenAnyValue(
                     x => x.TargetAmount,
@@ -140,10 +140,10 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
                 _ => "Target amount cannot exceed 100 BTC.")
                 .DisposeWith(Disposables);
 
-            // Penalty Days Production Limit
+
             this.ValidationRule(x => x.PenaltyDays, x => x is null || x >= 10, "Penalty period must be at least 10 days.").DisposeWith(Disposables);
 
-            // Funding Date Production Check
+
             this.ValidationRule(x => x.FundingEndDate, x => x == null || x.Value.Date > DateTime.Now.Date, "Funding end date must be after today.").DisposeWith(Disposables);
             this.ValidationRule(x => x.FundingEndDate, x => x == null || (x.Value - DateTime.Now) <= TimeSpan.FromDays(365), "Funding period cannot exceed one year.").DisposeWith(Disposables);
         }
