@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 
-namespace Angor.Shared.Services.Electrum;
+namespace Angor.Shared.Services.Indexer.Electrum;
 
 /// <summary>
 /// Electrum JSON-RPC client over SSL/TCP.

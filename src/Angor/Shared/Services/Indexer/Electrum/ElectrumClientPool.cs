@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 
-namespace Angor.Shared.Services.Electrum;
+namespace Angor.Shared.Services.Indexer.Electrum;
 
 /// <summary>
 /// Pool for managing multiple ElectrumClient connections.

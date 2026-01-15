@@ -1,8 +1,9 @@
+using Angor.Shared.Services.Indexer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
-namespace Angor.Shared.Services.Electrum;
+namespace Angor.Shared.Services.Indexer.Electrum;
 
 /// <summary>
 /// Extension methods for registering Electrum services in DI container.
@@ -24,7 +25,7 @@ public static class ElectrumServiceExtensions
         var configs = serverConfigs?.ToList() ?? GetDefaultServerConfigs();
 
         // Register the client pool as singleton (manages connections)
-        services.AddSingleton<ElectrumClientPool>(sp =>
+        services.AddSingleton(sp =>
              {
                  var logger = sp.GetRequiredService<ILogger<ElectrumClientPool>>();
                  var loggerFactory = sp.GetRequiredService<ILoggerFactory>();

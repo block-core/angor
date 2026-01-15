@@ -4,7 +4,7 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
-using Angor.Shared.Services;
+using Angor.Shared.Services.Indexer;
 using Angor.Shared.Utilities;
 using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;

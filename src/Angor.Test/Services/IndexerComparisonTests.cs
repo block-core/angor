@@ -2,6 +2,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Services;
+using Angor.Shared.Services.Indexer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

@@ -1,7 +1,7 @@
 using Angor.Shared.Models;
 using Microsoft.Extensions.Logging;
 
-namespace Angor.Shared.Services;
+namespace Angor.Shared.Services.Indexer;
 
 public class MempoolMonitoringService : IMempoolMonitoringService
 {

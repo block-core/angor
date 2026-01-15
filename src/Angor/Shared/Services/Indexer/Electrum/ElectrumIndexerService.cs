@@ -1,10 +1,11 @@
 using System.Text.Json;
 using Angor.Shared.Models;
+using Angor.Shared.Services.Indexer;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 
-namespace Angor.Shared.Services.Electrum;
+namespace Angor.Shared.Services.Indexer.Electrum;
 
 /// <summary>
 /// Electrum-based implementation of IIndexerService.

@@ -4,10 +4,10 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared.Models;
-using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Angor.Shared.Services.Indexer;
 
 namespace Angor.Sdk.Funding.Founder.Operations;
 

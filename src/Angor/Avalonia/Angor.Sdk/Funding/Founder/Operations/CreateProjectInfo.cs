@@ -13,6 +13,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Stage = Angor.Shared.Models.Stage;
 using Angor.Sdk.Funding.Projects.Dtos;
+using Angor.Shared.Services.Indexer;
 
 namespace Angor.Sdk.Funding.Founder.Operations;
 

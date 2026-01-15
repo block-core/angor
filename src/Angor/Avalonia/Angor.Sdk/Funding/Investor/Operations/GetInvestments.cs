@@ -5,7 +5,7 @@ using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
-using Angor.Shared.Services;
+using Angor.Shared.Services.Indexer;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;

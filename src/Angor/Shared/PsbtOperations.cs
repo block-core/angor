@@ -1,5 +1,5 @@
 using Angor.Shared.Models;
-using Angor.Shared.Services;
+using Angor.Shared.Services.Indexer;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;

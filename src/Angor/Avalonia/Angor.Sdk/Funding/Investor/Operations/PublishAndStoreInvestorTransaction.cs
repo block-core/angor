@@ -1,7 +1,7 @@
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Funding.Shared.TransactionDrafts;
-using Angor.Shared.Services;
+using Angor.Shared.Services.Indexer;
 using CSharpFunctionalExtensions;
 using MediatR;
 

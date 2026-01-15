@@ -4,7 +4,7 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.Networks;
 
-namespace Angor.Shared.Services.Electrum;
+namespace Angor.Shared.Services.Indexer.Electrum;
 
 public static class ElectrumScriptHashUtility
 {

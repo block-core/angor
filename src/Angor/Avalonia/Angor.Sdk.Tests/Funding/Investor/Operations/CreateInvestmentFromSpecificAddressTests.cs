@@ -9,7 +9,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
-using Angor.Shared.Services;
+using Angor.Shared.Services.Indexer;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.DataEncoders;
