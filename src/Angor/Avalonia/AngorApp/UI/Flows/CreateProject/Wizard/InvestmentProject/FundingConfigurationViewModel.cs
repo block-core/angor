@@ -25,14 +25,12 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
                 var defaultPreset = AmountPresets.FirstOrDefault();
                 if (defaultPreset != null)
                 {
-                    NewProject.TargetAmount = new MutableAmountUI { Sats = defaultPreset.Sats };
+                    NewProject.TargetAmount = new AmountUI(defaultPreset.Sats);
                 }
             }
         }
 
-        /// <summary>
-        /// Helper property to bridge between preset selection (long) and TargetAmount (IAmountUI)
-        /// </summary>
+
         public long? SelectedPresetSats
         {
             get => NewProject.TargetAmount?.Sats;
@@ -40,10 +38,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
             {
                 if (value.HasValue)
                 {
-                    if (NewProject.TargetAmount == null)
-                        NewProject.TargetAmount = new MutableAmountUI { Sats = value.Value };
-                    else if (NewProject.TargetAmount is MutableAmountUI mutable)
-                        mutable.Sats = value.Value;
+                    NewProject.TargetAmount = new AmountUI(value.Value);
                 }
             }
         }

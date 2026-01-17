@@ -49,7 +49,7 @@
                             </ComboBox>
                             <TextBox Text="{Binding DurationValue, Mode=TwoWay}" />
                         </DockPanel>
-                        <ListBox ItemContainerTheme="{StaticResource ButtonizedWhite}"
+                        <ListBox ItemContainerTheme="{StaticResource ButtonizedAccent}"
                                  Background="Transparent"
                                  SelectedItem="{Binding DurationPreset, Mode=TwoWay}">
                             <ListBox.ItemsSource>
@@ -88,7 +88,7 @@
                     <TextBlock>How often do you need funding released?</TextBlock>
                 </HeaderedContainer.Header>
 
-                <ListBox ItemContainerTheme="{StaticResource ButtonizedWhite}"
+                <ListBox ItemContainerTheme="{StaticResource ButtonizedAccent}"
                          Background="Transparent"
                          SelectedValueBinding="{Binding TimeSpan}"
                          SelectedValue="{Binding ReleaseFrequency, Mode=TwoWay}">

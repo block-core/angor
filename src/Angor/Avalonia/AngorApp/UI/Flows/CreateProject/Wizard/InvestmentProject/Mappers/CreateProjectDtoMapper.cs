@@ -15,7 +15,7 @@ public static class CreateProjectDtoMapper
 
         return new CreateProjectDto
         {
-            // Nostr profile
+
             ProjectName = newProject.Name,
             Description = newProject.Description,
             WebsiteUri = newProject.Website,
@@ -25,19 +25,21 @@ public static class CreateProjectDtoMapper
             Lud16 = newProject.Lud16,
             Nip57 = newProject.Nip57,
 
-            // Project information
+
             ProjectType = newProject.ProjectType,
             Sats = satsValue,
-            StartDate = newProject.StartDate ?? DateTime.Now, // Default or ensure verified
+            StartDate = newProject.StartDate ?? DateTime.Now,
+
             ExpiryDate = newProject.ExpiryDate,
             EndDate = newProject.FundingEndDate,
             PenaltyDays = penaltyDaysValue,
             PenaltyThreshold = newProject.PenaltyThreshold,
             TargetAmount = new Amount(satsValue),
             Stages = newProject.Stages.Select(stage =>
-                    new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent ?? 0)), // Assuming valid before call
+                    new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent ?? 0)),
 
-            // For Fund and Subscribe types - those might be null for Invest projects
+
+
             SelectedPatterns = null,
             PayoutDay = null
         };

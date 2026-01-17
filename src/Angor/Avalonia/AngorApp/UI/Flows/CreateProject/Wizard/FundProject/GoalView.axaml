@@ -1,0 +1,156 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fund="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.FundProject"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.FundProject.GoalView" x:DataType="fund:IGoalViewModel">
+
+    <Design.DataContext>
+        <fund:GoalViewModelSample />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style Selector="TextBlock.FormLabel">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+
+        <Style Selector="TextBlock.AccentHint">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+            <Setter Property="Foreground" Value="{DynamicResource BitcoinAccent}" />
+        </Style>
+
+        <Style Selector="NumericUpDown.AmountInput">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <Style Selector="TextBlock.AmountUnitInline">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+
+        <Style Selector="Border.HelpBadge">
+            <Setter Property="Background" Value="{DynamicResource BitcoinAccent}" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="8 3" />
+            <Setter Property="TextElement.Foreground" Value="White" />
+            <Setter Property="TextElement.FontSize" Value="{StaticResource FontSizeSmall}" />
+            <Setter Property="TextElement.FontWeight" Value="Bold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+    
+    <controls:ScrollableView MaxContentWidth="766">
+        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}">
+            <TextBlock Classes="Subtitle">Configure your funding goal and project nature.</TextBlock>
+
+
+            <HeaderedContainer Classes="WizardHighlight">
+                <HeaderedContainer.Header>
+                    <EdgePanel Content="Goal">
+                        <EdgePanel.StartContent>
+                            <PathIcon Width="20"
+                                      Height="20"
+                                      Foreground="{DynamicResource BitcoinAccent}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Data="{StaticResource BitcoinSymbol}" />
+                        </EdgePanel.StartContent>
+                    </EdgePanel>
+                </HeaderedContainer.Header>
+                <StackPanel Classes="BigGap">
+                    <StackPanel Spacing="10">
+                        <HeaderedContainer HeaderPadding="0" ContentPadding="0 12 0 0">
+                            <HeaderedContainer.Header>
+                                <TextBlock Classes="FormLabel">Goal (BTC) *</TextBlock>
+                            </HeaderedContainer.Header>
+
+                            <NumericUpDown Classes="AmountInput"
+                                     Value="{Binding FundProject.GoalAmount, Mode=TwoWay, Converter={x:Static controls:AngorConverters.BtcToAmountUI}}"
+                                     FormatString="0.########"
+                                     Minimum="0"
+                                     Increment="0.01"
+                                     x:Name="AmountBox"
+                                     Watermark="0.00">
+                                <NumericUpDown.InnerRightContent>
+                                    <TextBlock Classes="AmountUnitInline"
+                                               VerticalAlignment="Center"
+                                               Margin="0 0 12 0">
+                                        BTC
+                                    </TextBlock>
+                                </NumericUpDown.InnerRightContent>
+                            </NumericUpDown>
+                        </HeaderedContainer>
+
+                        <TextBlock Classes="AccentHint">The amount you want to get funded</TextBlock>
+                    </StackPanel>
+
+                    <ListBox ItemsSource="{Binding AmountPresets}"
+                             HorizontalAlignment="Right"
+                             Background="Transparent"
+                             SelectedValueBinding="{Binding Sats}"
+                             SelectedValue="{Binding SelectedPresetSats, Mode=TwoWay}"
+                             ItemContainerTheme="{StaticResource ButtonizedListBoxItem}">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <BalancedWrapGrid />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel HorizontalAlignment="Center" Classes="TinyGap">
+                                    <TextBlock Classes="Center Bold" Text="{Binding  Btc}" />
+                                    <TextBlock Classes="Center Tiny" Text="BTC" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </HeaderedContainer>
+
+            <HeaderedContainer Classes="BlueThreshold" HeaderPadding="24 24 24 0" ContentPadding="12 12 12 12">
+                <HeaderedContainer.Header>
+                    <EdgePanel Content="Threshold for Approval">
+                        <EdgePanel.StartContent>
+                            <PathIcon Foreground="#3b82f6" Data="{StaticResource Shield}"></PathIcon>
+                        </EdgePanel.StartContent>
+                    </EdgePanel>
+                </HeaderedContainer.Header>
+                <HeaderedContainer Header="Threshold" Foreground="Black">
+                    <StackPanel Classes="SmallGap">
+                        <NumericUpDown Watermark="0.001" Classes="AmountInput"
+                                       FontSize="{StaticResource FontSizeBig}"
+                                       FontWeight="Bold"
+                                 Value="{Binding ThresholdBtc, Mode=TwoWay}"
+                                 FormatString="0.########"
+                                 Minimum="0"
+                                 Increment="0.001">
+                            <NumericUpDown.InnerRightContent>
+                                <TextBlock Classes="AmountUnitInline"
+                                           VerticalAlignment="Center"
+                                           Margin="0 0 12 0">
+                                    BTC
+                                </TextBlock>
+                            </NumericUpDown.InnerRightContent>
+                        </NumericUpDown>
+                        <TextBlock Foreground="#3b82f6" Classes="Weight-Light Size-XS">
+                            <TextBlock.Inlines>
+                                <Run>Supporters who contribute over</Run>
+                                <Run Text="{Binding FundProject.Threshold.DecimalString}" />
+                                <Run>will require approval by you</Run>
+                            </TextBlock.Inlines>
+                        </TextBlock>
+                    </StackPanel>
+                </HeaderedContainer>
+            </HeaderedContainer>
+        </StackPanel>
+    </controls:ScrollableView>
+</UserControl>

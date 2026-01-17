@@ -62,11 +62,11 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
             return stage;
         }
 
-        // IValidatableViewModel implementation stub
+
         public IObservable<bool> IsValid => Observable.Return(true);
         public IValidationContext ValidationContext { get; } = new ValidationContext();
 
-        // INotifyDataErrorInfo implementation stub
+
         public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
         public System.Collections.IEnumerable GetErrors(string? propertyName) => Enumerable.Empty<object>();
         public bool HasErrors => false;

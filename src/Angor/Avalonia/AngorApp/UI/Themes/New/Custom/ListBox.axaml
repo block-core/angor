@@ -29,7 +29,7 @@
             </Style>
         </ControlTheme>
         
-        <ControlTheme x:Key="ButtonizedWhite" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+        <ControlTheme x:Key="ButtonizedAccent" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
             <Setter Property="BorderThickness" Value="2" />
             <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
             <Setter Property="CornerRadius" Value="10" />
@@ -59,8 +59,8 @@
                 <ListBoxItem IsSelected="True" Content="Selected" Theme="{StaticResource ButtonizedListBoxItem}" />
                 <ListBoxItem IsSelected="False" Content="Unselected" Theme="{StaticResource ButtonizedListBoxItem}" />
                 
-                <ListBoxItem IsSelected="True" Content="Selected" Theme="{StaticResource ButtonizedWhite}" />
-                <ListBoxItem IsSelected="False" Content="Unselected" Theme="{StaticResource ButtonizedWhite}" />
+                <ListBoxItem IsSelected="True" Content="Selected" Theme="{StaticResource ButtonizedAccent}" />
+                <ListBoxItem IsSelected="False" Content="Unselected" Theme="{StaticResource ButtonizedAccent}" />
             </WrapPanel>
         </Border>
     </Design.PreviewWith>

@@ -26,7 +26,7 @@
                         A small fee is required to prevent spam and will be paid when you submit your project for deployment.
                     </TextBlock>
                 </Border>
-                <!-- <EnhancedButton HorizontalAlignment="Center" Command="{Binding Start}" Margin="20" Classes="Accent">Start</EnhancedButton> -->
+
             </StackPanel>
         </Border>
     </controls:ScrollableView>

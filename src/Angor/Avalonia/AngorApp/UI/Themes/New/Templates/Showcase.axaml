@@ -6,6 +6,7 @@
              xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.UI.Themes.New.Templates.Showcase">
+    
     <Border Padding="20">
         <StackPanel Spacing="20">
             <Border Classes="Panel" Width="200" Height="200">
@@ -38,6 +39,7 @@
                     <EdgePanel StartContent="{Icon fa-wallet}" Content="Content" EndContent="Some content" />
                 </HeaderedContainer.Header>
             </HeaderedContainer>
+            <CheckBox></CheckBox>
         </StackPanel>
     </Border>
 

@@ -38,6 +38,7 @@
     <StyleInclude Source="/UI/Shared/Styles/HeaderedContainer.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/EdgePanel.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/Border.axaml" />
+    <StyleInclude Source="Containers.axaml" />
 
     <Styles.Resources>
         <ResourceDictionary>
@@ -61,7 +62,7 @@
                     <Color x:Key="SurfaceSubtle">#E5E7EB</Color>
                     <Color x:Key="SurfaceSubtler">#FAF9F6</Color>
                     <Color x:Key="DashColorHighlight">#606060</Color>
-                    
+
                     <SolidColorBrush x:Key="SystemControlErrorTextForegroundBrush">#ef4444</SolidColorBrush>
                     <SolidColorBrush x:Key="ErrorSoft" Color="#fee2e2" />
                     <SolidColorBrush x:Key="ErrorHard" Color="#fecaca" />
@@ -91,15 +92,15 @@
                             <GradientStop Color="#0D2D5A3D" Offset="1" />
                         </GradientStops>
                     </LinearGradientBrush>
-                    
+
                     <LinearGradientBrush x:Key="TranslucidOrange" StartPoint="0%,0%" EndPoint="100%,100%">
                         <GradientStops>
                             <GradientStop Offset="0" Color="#fff7ed" />
                             <GradientStop Offset="1" Color="#fff7ed" />
                         </GradientStops>
                     </LinearGradientBrush>
-                    
-                    
+
+
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
                     <Color x:Key="AppBackground">#0A0A0A</Color>
@@ -116,14 +117,14 @@
                     <Color x:Key="SurfaceSubtle">#333333</Color>
                     <Color x:Key="SurfaceSubtler">#0A0A0A</Color>
                     <Color x:Key="DashColorHighlight">#FBBF24</Color>
-                    
+
                     <SolidColorBrush x:Key="SystemControlErrorTextForegroundBrush">#ef4444</SolidColorBrush>
                     <SolidColorBrush x:Key="ErrorSoft" Color="#667f1d1d" />
                     <SolidColorBrush x:Key="ErrorHard" Color="#80991b1b" />
                     <SolidColorBrush x:Key="ErrorForeground" Color="#80991b1b" />
 
                     <SolidColorBrush x:Key="Translucid" Color="#0A0A0A" />
-                    
+
                     <LinearGradientBrush x:Key="TranslucidOrange" StartPoint="0%,0%" EndPoint="100%,100%">
                         <GradientStops>
                             <GradientStop Offset="0" Color="#0EF7931A" />
@@ -161,6 +162,13 @@
 
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
+            
+            <StaticResource x:Key="CheckBoxCheckBackgroundFillChecked" ResourceKey="Accent" />
+            <StaticResource x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" ResourceKey="Accent" />
+            <StaticResource x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" ResourceKey="Accent" />
+            <Thickness x:Key="CheckBoxBorderThemeThickness">2</Thickness>
+            <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUnchecked" ResourceKey="Stroke" />
+            <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" ResourceKey="Accent" />
 
             <LinearGradientBrush x:Key="ProgressBrush">
                 <GradientStops>
@@ -591,6 +599,52 @@
     </Style>
     <Style Selector="ComboBox:pointerover /template/ Border">
         <Setter Property="Background" Value="{DynamicResource Surface}" />
+    </Style>
+
+    <Style Selector="CheckBox">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid x:Name="RootGrid" ColumnDefinitions="24,*">
+                    <Border x:Name="PART_Border"
+                            Grid.ColumnSpan="2"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}" />
+
+                    <Grid VerticalAlignment="Top" Height="{DynamicResource CheckBoxMinHeight}">
+                        <Border x:Name="NormalRectangle"
+                                BorderBrush="{DynamicResource CheckBoxCheckBackgroundStrokeUnchecked}"
+                                Background="{DynamicResource CheckBoxCheckBackgroundFillUnchecked}"
+                                BorderThickness="{DynamicResource CheckBoxBorderThemeThickness}"
+                                CornerRadius="{TemplateBinding CornerRadius}"
+                                UseLayoutRounding="False"
+                                Height="24"
+                                Width="24" />
+
+                        <Viewbox UseLayoutRounding="False">
+                            <Panel>
+                                <Panel Height="16" Width="16" />
+                                <Path x:Name="CheckGlyph"
+                                      Opacity="0"
+                                      Fill="{DynamicResource CheckBoxCheckGlyphForegroundUnchecked}"
+                                      Stretch="Uniform"
+                                      VerticalAlignment="Center"
+                                      FlowDirection="LeftToRight" />
+                            </Panel>
+                        </Viewbox>
+                    </Grid>
+                    <ContentPresenter x:Name="PART_ContentPresenter"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Content="{TemplateBinding Content}"
+                                      Margin="{TemplateBinding Padding}"
+                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                      TextWrapping="Wrap"
+                                      Grid.Column="1" />
+                </Grid>
+            </ControlTemplate>
+        </Setter>
     </Style>
 
     <Style Selector=":is(Control).Padded">

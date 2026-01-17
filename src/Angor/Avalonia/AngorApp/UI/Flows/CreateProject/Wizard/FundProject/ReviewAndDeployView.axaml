@@ -2,15 +2,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:steps="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject"
-             xmlns:stages="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages"
-             xmlns:model="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model"
+             xmlns:fund="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.FundProject"
+             xmlns:model="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:payouts="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Payouts"
              mc:Ignorable="d" d:DesignWidth="800"
-             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.ReviewAndDeployView" x:DataType="steps:IReviewAndDeployViewModel">
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.FundProject.ReviewAndDeployView" 
+             x:DataType="fund:IFundReviewAndDeployViewModel">
     
     <Design.DataContext>
-        <steps:ReviewAndDeployViewModelSample />
+        <fund:FundReviewAndDeployViewModelSample />
     </Design.DataContext>
 
     <UserControl.Resources>
@@ -42,21 +43,33 @@
 
             <HeaderedContainer Classes="WizardHighlight">
                 <HeaderedContainer.Header>
-                    <EdgePanel StartContent="{Icon fa-bitcoin}" Content="Funding Configuration" />
+                    <EdgePanel StartContent="{Icon fa-bullseye}" Content="Goal" />
                 </HeaderedContainer.Header>
-                <StackPanel Classes="BigGap" DataContext="{Binding NewProject}" x:DataType="model:IInvestmentProjectConfig">
-                    <EdgePanel StartContent="Target Amount" EndContent="{Binding TargetAmount.DecimalString}" />
-                    <EdgePanel StartContent="Start Date" EndContent="25/11/2025" />
-                    <EdgePanel StartContent="End Date" EndContent="{Binding FundingEndDate, StringFormat='d'}" />
-                    <EdgePanel StartContent="Penalty Days" EndContent="{Binding PenaltyDays, StringFormat='{}{0} days'}" />
+                <StackPanel Classes="BigGap">
+                    <EdgePanel StartContent="Goal Amount" EndContent="{Binding NewProject.GoalAmount.DecimalString}" />
+                    <EdgePanel StartContent="Threshold" EndContent="{Binding NewProject.Threshold.DecimalString}" />
                 </StackPanel>
             </HeaderedContainer>
+            
             <HeaderedContainer Classes="Translucid">
                 <HeaderedContainer.Header>
-                    <EdgePanel StartContent="{Icon fa-regular fa-clipboard}" Content="Funding Stages" />
+                    <EdgePanel StartContent="{Icon fa-regular fa-calendar}" Content="Payouts" />
                 </HeaderedContainer.Header>
-                <stages:StagesList x:DataType="model:IInvestmentProjectConfig" DataContext="{Binding NewProject}" Stages="{Binding Stages}" TotalSats="{Binding TargetAmount.Sats}" />
+                <StackPanel Classes="BigGap">
+                    <EdgePanel StartContent="Frequency" EndContent="{Binding NewProject.PayoutFrequency}" />
+                    <EdgePanel StartContent="Installments" EndContent="{Binding NewProject.SelectedInstallments.SelectedItems, Converter={x:Static controls:AngorConverters.JoinStrings}}" />
+                    <EdgePanel IsVisible="{Binding NewProject.PayoutFrequency, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static model:PayoutFrequency.Monthly}}" 
+                               StartContent="Monthly Date" EndContent="{Binding NewProject.MonthlyPayoutDate, StringFormat='Day {0}'}" />
+                    <EdgePanel IsVisible="{Binding NewProject.PayoutFrequency, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static model:PayoutFrequency.Weekly}}" 
+                               StartContent="Weekly Day" EndContent="{Binding NewProject.WeeklyPayoutDay}" />
+                    
+
+                    <payouts:PayoutsList Payouts="{Binding Payouts}" 
+                                         TotalSats="{Binding NewProject.GoalAmount.Sats, FallbackValue=0}" 
+                                         Frequency="{Binding NewProject.PayoutFrequency}" />
+                </StackPanel>
             </HeaderedContainer>
+            
             <Expander Theme="{StaticResource ExpanderSection}">
                 <Expander.Styles>
                     <Style Selector="Expander EdgePanel">

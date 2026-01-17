@@ -196,7 +196,7 @@
             <OverlayBorder Classes="ImagePreviewCard">
                 <Grid>
                     <Grid RowDefinitions="Auto,Auto">
-                        <!-- Banner -->
+
                         <Border Classes="BannerArea" Grid.Row="0">
                             <Grid>
                                 <Border Classes="BannerPlaceholder" />
@@ -217,7 +217,7 @@
                             </Grid>
                         </Border>
 
-                        <!-- Body -->
+
                         <Border Classes="PreviewBody" Grid.Row="1">
                             <StackPanel Classes="ProjectMeta">
                                 <TextBlock Classes="Title"
@@ -228,7 +228,7 @@
                         </Border>
                     </Grid>
 
-                    <!-- Avatar (overlapping) -->
+
                     <Border Classes="AvatarArea">
                         <Grid>
                             <Border Classes="AvatarInner" />
