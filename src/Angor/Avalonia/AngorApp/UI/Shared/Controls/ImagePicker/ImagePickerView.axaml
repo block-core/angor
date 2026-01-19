@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:l="clr-namespace:AngorApp.UI.Shared.Controls.ImagePicker"
+             xmlns:i="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             mc:Ignorable="d"
+             x:Class="AngorApp.UI.Shared.Controls.ImagePicker.ImagePickerView" x:DataType="l:IImagePickerViewModel">
+
+    <Design.DataContext>
+        <l:ImagePickerViewModelSample />
+    </Design.DataContext>
+
+    <HeaderedContainer Classes="WizardSection">
+        <StackPanel Classes="BigGap">
+            <TextBlock>Enter the URL of the image you want to use</TextBlock>
+            <HeaderedContainer Header="Image URL" ContentPadding="0" HeaderPadding="0 0 0 12">
+                <TextBox Text="{Binding ImageUri}">
+                    <Interaction.Behaviors>
+                        <TextBoxSelectAllOnGotFocusBehavior />
+                    </Interaction.Behaviors>
+                </TextBox>
+            </HeaderedContainer>
+            <i:AdvancedImage Width="400" Height="300" CornerRadius="10" Stretch="UniformToFill" Source="{Binding ImageUri}" />
+        </StackPanel>
+    </HeaderedContainer>
+</UserControl>

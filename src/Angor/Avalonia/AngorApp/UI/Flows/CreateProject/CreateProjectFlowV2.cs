@@ -80,7 +80,7 @@ namespace AngorApp.UI.Flows.CreateProject
 
             SlimWizard<string> wizard = WizardBuilder
                                         .StartWith(() => new ProjectProfileViewModel(newProject)).NextUnit().WhenValid()
-                                        .Then(_ => new ProjectImagesViewModel(newProject)).NextUnit().Always()
+                                        .Then(_ => new ProjectImagesViewModel(newProject, new ImagePicker(uiServices))).NextUnit().Always()
                                         .Then(_ => new FundingConfigurationViewModel(newProject)).NextUnit().WhenValid()
                                         .Then(_ => new StagesViewModel(newProject)).NextUnit().WhenValid()
                                         .Then(_ => new ReviewAndDeployViewModel(
@@ -105,7 +105,7 @@ namespace AngorApp.UI.Flows.CreateProject
 
             SlimWizard<string> wizard = WizardBuilder
                                         .StartWith(() => new ProjectProfileViewModel(newProject)).NextUnit().WhenValid()
-                                        .Then(_ => new ProjectImagesViewModel(newProject)).NextUnit().Always()
+                                        .Then(_ => new ProjectImagesViewModel(newProject, new ImagePicker(uiServices))).NextUnit().Always()
                                         .Then(_ => new GoalViewModel(newProject)).NextUnit().WhenValid()
                                         .Then(_ => new FundPayoutsViewModel(newProject)).NextUnit().WhenValid()
                                         .Then(_ => new FundReviewAndDeployViewModel(

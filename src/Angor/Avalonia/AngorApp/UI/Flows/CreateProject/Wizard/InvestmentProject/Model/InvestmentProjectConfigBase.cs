@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Disposables;
+using AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model;
 using DynamicData;
 using DynamicData.Aggregation;
 using ReactiveUI.Validation.Extensions;
@@ -31,8 +32,9 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
         [Reactive] private DateTime? startDate;
         [Reactive] private DateTime? expiryDate;
 
-        [Reactive] private string avatarUri = string.Empty;
-        [Reactive] private string bannerUri = string.Empty;
+        [Reactive] private string avatarUri = DebugData.GetDefaultImageUriString(170, 170);
+        [Reactive] private string bannerUri = DebugData.GetDefaultImageUriString(820, 312);
+        
         [Reactive] private string nip05 = string.Empty;
         [Reactive] private string lud16 = string.Empty;
         [Reactive] private string nip57 = string.Empty;
