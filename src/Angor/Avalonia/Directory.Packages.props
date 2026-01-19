@@ -46,15 +46,15 @@
     <PackageVersion Include="Serilog.Sinks.XUnit" Version="3.0.19" />
     <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="6.0.0" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
-    <PackageVersion Include="Zafiro" Version="45.0.4" />
+    <PackageVersion Include="Zafiro" Version="45.0.6" />
     <PackageVersion Include="Zafiro.Avalonia" Version="42.0.6" />
-    <PackageVersion Include="Zafiro.Avalonia.Generators" Version="46.0.5" />
-    <PackageVersion Include="Zafiro.Avalonia.Icons.Projektanker" Version="46.0.5" />
-    <PackageVersion Include="Zafiro.Avalonia.Icons.Svg" Version="46.0.5" />
+    <PackageVersion Include="Zafiro.Avalonia.Generators" Version="46.0.9" />
+    <PackageVersion Include="Zafiro.Avalonia.Icons.Projektanker" Version="46.0.9" />
+    <PackageVersion Include="Zafiro.Avalonia.Icons.Svg" Version="46.0.9" />
     <PackageVersion Include="Zafiro.FileSystem" Version="41.2.3" />
     <PackageVersion Include="Zafiro.UI" Version="41.2.6" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="46.0.5" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="46.0.7" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />
     <PackageVersion Include="FluentAssertions.Reactive" Version="0.2.0" />
