@@ -16,7 +16,8 @@ public static class LatestProjects
     {
         public async Task<Result<LatestProjectsResponse>> Handle(LatestProjectsRequest request, CancellationToken cancellationToken)
         {
-            var projects = await projectService.LatestAsync();
+            // var projects = await projectService.LatestAsync();
+            var projects = await projectService.LatestFromNostrAsync();
             return projects.Map(sequence => new LatestProjectsResponse(sequence.Select(project => project.ToDto())));
         }
     }

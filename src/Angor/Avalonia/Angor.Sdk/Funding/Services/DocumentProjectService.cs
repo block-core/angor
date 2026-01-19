@@ -10,10 +10,11 @@ using Stage = Angor.Sdk.Funding.Projects.Domain.Stage;
 
 namespace Angor.Sdk.Funding.Services;
 
-public class DocumentProjectService(IGenericDocumentCollection<Project> collection, IRelayService relayService,
+public class DocumentProjectService(
+  IGenericDocumentCollection<Project> collection,
+    IRelayService relayService,
     IAngorIndexerService angorIndexerService) : IProjectService
 {
-
     public Task<Result<Project>> GetAsync(ProjectId id)
     {
         return TryGetAsync(id).Bind(maybe => maybe.ToResult($"Project with id {id} not found"));
@@ -130,6 +131,78 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
         return await GetAllAsync(projectIds);
     }
 
+    public async Task<Result<IEnumerable<Project>>> LatestFromNostrAsync()
+    {
+        // Step 1: Query Nostr relays for the latest 30 kind 3030 events
+        var nostrProjectsResult = await QueryLatestNostrProjectEventsAsync(30);
+        if (nostrProjectsResult.IsFailure)
+            return Result.Failure<IEnumerable<Project>>(nostrProjectsResult.Error);
+
+        var nostrProjects = nostrProjectsResult.Value.ToList();
+        if (!nostrProjects.Any())
+            return Result.Failure<IEnumerable<Project>>("No projects found in Nostr relays");
+
+        // Step 2: Validate each project exists on-chain in parallel
+        var validationTasks = nostrProjects
+            .Where(p => !string.IsNullOrEmpty(p.Data.ProjectIdentifier))
+            .Select(async eventInfo =>
+            {
+                try
+                {
+                    var indexerData = await angorIndexerService.GetProjectByIdAsync(eventInfo.Data.ProjectIdentifier);
+
+                    if (indexerData?.NostrEventId != eventInfo.EventId)
+                        return null; // Mismatch between Nostr event ID and indexer data
+
+                    return indexerData != null ? new ProjectId(eventInfo.Data.ProjectIdentifier) : null;
+                }
+                catch
+                {
+                    // Skip projects that fail validation
+                    return null;
+                }
+            });
+
+        var results = await Task.WhenAll(validationTasks);
+        var validatedProjectIds = results.Where(id => id != null).Select(id => id!).ToList();
+
+        if (!validatedProjectIds.Any())
+            return Result.Failure<IEnumerable<Project>>("No valid on-chain projects found from Nostr events");
+
+        // Step 3: Use existing GetAllAsync to fetch full project data with caching
+        return await GetAllAsync(validatedProjectIds.ToArray());
+    }
+
+    private Task<Result<IEnumerable<EventInfo<ProjectInfo>>>> QueryLatestNostrProjectEventsAsync(int limit)
+    {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        var tcs = new TaskCompletionSource<Dictionary<string, EventInfo<ProjectInfo>>>();
+        var results = new Dictionary<string, EventInfo<ProjectInfo>>();
+
+        void OnNext(EventInfo<ProjectInfo> eventInfo)
+        {
+            // Deduplicate by project identifier using dictionary key
+            if (!string.IsNullOrEmpty(eventInfo.Data.ProjectIdentifier))
+            {
+                results.TryAdd(eventInfo.Data.ProjectIdentifier, eventInfo);
+            }
+        }
+
+        void OnCompleted() => tcs.TrySetResult(results);
+
+        relayService.LookupLatestProjects<ProjectInfo>(OnNext, OnCompleted, limit);
+
+        // Race between completion and timeout
+        var completedTask = Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(10), cts.Token));
+
+        if (completedTask.Result == tcs.Task)
+            return Task.FromResult(Result.Success(results.Values.AsEnumerable()));
+
+        // On timeout, return whatever we collected
+        return Task.FromResult(results.Any()
+               ? Result.Success(results.Values.AsEnumerable())
+               : Result.Failure<IEnumerable<EventInfo<ProjectInfo>>>("Timeout waiting for Nostr project events"));
+    }
 
     private Uri? TryGetUri(string uriString)
     {
@@ -165,8 +238,8 @@ public class DocumentProjectService(IGenericDocumentCollection<Project> collecti
         {
             relayService.LookupNostrProfileForNPub(
                    (npub, nostrMetadata) => observer.OnNext(new ProjectMetadataWithNpub(npub, nostrMetadata)),
-                        observer.OnCompleted,
-               npubs.Where(x => x != null).ToArray());
+                    observer.OnCompleted,
+                    npubs.Where(x => x != null).ToArray());
 
             return Disposable.Empty;
         }).Timeout(TimeSpan.FromSeconds(30));
