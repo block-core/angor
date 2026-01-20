@@ -3,7 +3,7 @@ using ReactiveUI.Validation.Abstractions;
 namespace AngorApp.UI.Flows.CreateProject.Wizard
 {
 
-    public interface IProjectProfile : IValidatableViewModel, IValidatable, System.ComponentModel.INotifyDataErrorInfo
+    public interface IProjectProfile : IValidatableViewModel, IValidatable, System.ComponentModel.INotifyDataErrorInfo, IReactiveObject
     {
 
         string Name { get; set; }

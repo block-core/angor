@@ -23,8 +23,9 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model
         [Reactive] private IAmountUI? goalAmount;
         [Reactive] private IAmountUI? threshold;
 
-        [Reactive] private string avatarUri = string.Empty;
-        [Reactive] private string bannerUri = string.Empty;
+        [Reactive] private string avatarUri = DebugData.GetDefaultImageUriString(170, 170);
+        [Reactive] private string bannerUri = DebugData.GetDefaultImageUriString(820, 312);
+        
         [Reactive] private string nip05 = string.Empty;
         [Reactive] private string lud16 = string.Empty;
         [Reactive] private string nip57 = string.Empty;
@@ -43,20 +44,27 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model
 
             this.ValidationRule(x => x.Name, x => !string.IsNullOrWhiteSpace(x), "Project name is required.")
                 .DisposeWith(Disposables);
-            this.ValidationRule(x => x.Description, x => !string.IsNullOrWhiteSpace(x), "Project description is required.")
+            this.ValidationRule(
+                    x => x.Description,
+                    x => !string.IsNullOrWhiteSpace(x),
+                    "Project description is required.")
                 .DisposeWith(Disposables);
-            this.ValidationRule(x => x.Website, x => string.IsNullOrWhiteSpace(x) || (Uri.TryCreate(x, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)), "Website must be a valid URL (http or https).")
+            this.ValidationRule(
+                    x => x.Website,
+                    x => string.IsNullOrWhiteSpace(x) || (Uri.TryCreate(x, UriKind.Absolute, out var uri) &&
+                                                          (uri.Scheme == Uri.UriSchemeHttp ||
+                                                           uri.Scheme == Uri.UriSchemeHttps)),
+                    "Website must be a valid URL (http or https).")
                 .DisposeWith(Disposables);
 
 
             this.ValidationRule(
-                this.WhenAnyValue(
-                    x => x.GoalAmount,
-                    x => x.GoalAmount!.Sats,
-                    (amount, sats) => amount != null && sats > 0
-                ),
-                isValid => isValid,
-                _ => "Goal amount must be greater than 0.")
+                    this.WhenAnyValue(
+                        x => x.GoalAmount,
+                        x => x.GoalAmount!.Sats,
+                        (amount, sats) => amount != null && sats > 0),
+                    isValid => isValid,
+                    _ => "Goal amount must be greater than 0.")
                 .DisposeWith(Disposables);
             this.ValidationRule(x => x.GoalAmount, x => x != null, _ => "Goal amount is required.")
                 .DisposeWith(Disposables);
@@ -64,28 +72,43 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model
 
             this.ValidationRule(x => x.PayoutFrequency, x => x != null, "Payout frequency is required.")
                 .DisposeWith(Disposables);
-            this.ValidationRule(x => x.SelectedInstallments, SelectedInstallments.SelectionCount, i => i > 0, _ => "At least one installment count is required.")
+            this.ValidationRule(
+                    x => x.SelectedInstallments,
+                    SelectedInstallments.SelectionCount,
+                    i => i > 0,
+                    _ => "At least one installment count is required.")
                 .DisposeWith(Disposables);
 
 
             var monthlyDateValid = Observable.CombineLatest(
                 this.WhenAnyValue(x => x.PayoutFrequency),
                 this.WhenAnyValue(x => x.MonthlyPayoutDate),
-                (freq, date) => freq != AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model.PayoutFrequency.Monthly || date != null
-            );
-            this.ValidationRule(x => x.MonthlyPayoutDate, monthlyDateValid, "Monthly payout date is required for monthly frequency.")
+                (freq, date) =>
+                    freq != AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model.PayoutFrequency.Monthly ||
+                    date != null);
+            this.ValidationRule(
+                    x => x.MonthlyPayoutDate,
+                    monthlyDateValid,
+                    "Monthly payout date is required for monthly frequency.")
                 .DisposeWith(Disposables);
 
-            this.ValidationRule(x => x.MonthlyPayoutDate, x => x is null || (x >= 1 && x <= 29), "Monthly payout date must be between 1 and 29.")
+            this.ValidationRule(
+                    x => x.MonthlyPayoutDate,
+                    x => x is null || (x >= 1 && x <= 29),
+                    "Monthly payout date must be between 1 and 29.")
                 .DisposeWith(Disposables);
 
 
             var weeklyDayValid = Observable.CombineLatest(
                 this.WhenAnyValue(x => x.PayoutFrequency),
                 this.WhenAnyValue(x => x.WeeklyPayoutDay),
-                (freq, day) => freq != AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model.PayoutFrequency.Weekly || day != null
-            );
-            this.ValidationRule(x => x.WeeklyPayoutDay, weeklyDayValid, "Weekly payout day is required for weekly frequency.")
+                (freq, day) =>
+                    freq != AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model.PayoutFrequency.Weekly ||
+                    day != null);
+            this.ValidationRule(
+                    x => x.WeeklyPayoutDay,
+                    weeklyDayValid,
+                    "Weekly payout day is required for weekly frequency.")
                 .DisposeWith(Disposables);
         }
 

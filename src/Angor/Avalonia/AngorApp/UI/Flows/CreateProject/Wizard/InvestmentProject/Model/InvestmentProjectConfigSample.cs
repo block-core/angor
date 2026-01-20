@@ -9,7 +9,7 @@ using ReactiveUI.Validation.Contexts;
 
 namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
 {
-    public class InvestmentProjectConfigSample : IInvestmentProjectConfig
+    public class InvestmentProjectConfigSample : ReactiveObject, IInvestmentProjectConfig
     {
         private readonly ReadOnlyObservableCollection<IFundingStageConfig> stages;
 
