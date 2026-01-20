@@ -118,7 +118,7 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
 
             if (trxs == null || !trxs.Any())
             {
-                _logger.LogWarning($"No transactions found for project {projectId}");
+                _logger.LogWarning($"No transactions found for project {projectId} ({projectAddress})");
                 return null;
             }
 

@@ -17,7 +17,7 @@
 
     <Interaction.Behaviors>
         <LoadedTrigger>
-            <InvokeCommandAction IsEnabled="{Binding !!!ProjectsList.Count}" Command="{Binding LoadProjects}" />
+            <InvokeCommandAction IsEnabled="{Binding !!!ProjectsList.Count}" Command="{Binding LoadProjectsCommand}" />
         </LoadedTrigger>
     </Interaction.Behaviors>
 
@@ -53,8 +53,8 @@
                 <Card Theme="{StaticResource WideCard}" Header="Founder" DockPanel.Dock="Top">
                     <Card.HeaderEndContent>
                         <Grid ColumnDefinitions="Auto *" ColumnSpacing="10">
-                            <EnhancedButton Command="{Binding LoadProjects}" Icon="{Icon fa-arrows-rotate}" />
-                            <EnhancedButton Grid.Column="1" Classes="Expand CenterContent" Command="{Binding Create}" Content="New Project">
+                            <EnhancedButton Command="{Binding LoadProjectsCommand}" Icon="{Icon fa-arrows-rotate}" />
+                            <EnhancedButton Grid.Column="1" Classes="Expand CenterContent" Command="{Binding CreateCommand}" Content="New Project">
                                 <EnhancedButton.Icon>
                                     <ui:Icon Source="fa-plus" />
                                 </EnhancedButton.Icon>
@@ -65,7 +65,7 @@
                         <i:Icon FontSize="40" Value="mdi-shield-account-outline" />
                     </Card.HeaderStartContent>
                 </Card>
-                <Loading LoadingText="Loading your projects. Please wait." IsLoading="{Binding LoadProjects.IsExecuting^}">
+                <Loading LoadingText="Loading your projects. Please wait." IsLoading="{Binding IsLoading}">
                     <CardGrid Empty.Content="Nothing to show"
                               Classes="ShowEmptyContent Listing" ItemsSource="{Binding ProjectsList}" />
                 </Loading>

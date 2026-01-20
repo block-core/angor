@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using ReactiveUI;
-using Zafiro.CSharpFunctionalExtensions;
+using System.Windows.Input;
 
 namespace AngorApp.UI.Sections.Founder;
 
@@ -10,7 +8,7 @@ public class FounderSectionViewModelSample : IFounderSectionViewModel
 {
     public FounderSectionViewModelSample()
     {
-        var projects = new ObservableCollection<IFounderProjectViewModel>
+        ProjectsList = new ObservableCollection<IFounderProjectViewModel>
         {
             new FounderProjectViewModelSample
             {
@@ -38,14 +36,24 @@ public class FounderSectionViewModelSample : IFounderSectionViewModel
             }
         };
 
-        ProjectsList = new ReadOnlyObservableCollection<IFounderProjectViewModel>(projects);
-        LoadProjects = ReactiveCommand.Create(() => Result.Success<IEnumerable<IFounderProjectViewModel>>(ProjectsList)).Enhance();
-        Create = ReactiveCommand.Create(() => Result.Success(Maybe<string>.None)).Enhance();
+        LoadProjectsCommand = new NoOpCommand();
+        CreateCommand = new NoOpCommand();
     }
 
-    public IEnhancedCommand<Result<IEnumerable<IFounderProjectViewModel>>> LoadProjects { get; }
+    public ICommand LoadProjectsCommand { get; }
 
-    public IReadOnlyCollection<IFounderProjectViewModel> ProjectsList { get; }
+    public ObservableCollection<IFounderProjectViewModel> ProjectsList { get; }
 
-    public IEnhancedCommand<Result<Maybe<string>>> Create { get; }
+    public ICommand CreateCommand { get; }
+
+    public bool IsLoading => false;
+
+    public string? ErrorMessage => null;
+
+    private class NoOpCommand : ICommand
+    {
+        public bool CanExecute(object? parameter) => true;
+        public void Execute(object? parameter) { }
+        public event EventHandler? CanExecuteChanged;
+    }
 }
