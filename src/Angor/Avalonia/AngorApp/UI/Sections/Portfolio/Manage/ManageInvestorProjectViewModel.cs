@@ -27,6 +27,7 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
         this.uiServices = uiServices;
 
         Load = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => GetRecoveryStateViewModel(wallet, sharedCommands))).Enhance().DisposeWith(disposables);
+        Load.HandleErrorsWith(uiServices.NotificationService);
         State = Load.Successes();
         
         // Refresh on Batch Action completion
