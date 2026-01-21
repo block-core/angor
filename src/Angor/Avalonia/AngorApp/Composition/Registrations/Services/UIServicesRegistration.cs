@@ -36,23 +36,9 @@ public static class UIServicesRegistration
             .AddSingleton<IValidations, Validations>()
             .AddSingleton<SharedCommands>()
             .AddSingleton<ILauncherService, LauncherService>()
-            .AddSingleton<INotificationService>(_ => NotificationService())
+            .AddSingleton<INotificationService, NotificationService>()
             .AddSingleton<IImageValidationService, ImageValidationService>()
             .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileContext.ProfileName, mainView));
-    }
-    
-    private static NotificationService NotificationService()
-    {
-        return new NotificationService(() =>
-        {
-            var managedNotificationManager = new WindowNotificationManager(ApplicationUtils.TopLevel().GetValueOrThrow("No top level window"))
-            {
-                Position = NotificationPosition.BottomRight,
-            };
-        
-            ApplicationUtils.SafeAreaPadding.BindTo(managedNotificationManager, manager => manager.Margin);
-            return managedNotificationManager;
-        });
     }
 
     private static string CreateSettingsFilePath(IApplicationStorage storage, ProfileContext profileContext)
