@@ -32,6 +32,9 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     public Task<Result<CheckPenaltyThreshold.CheckPenaltyThresholdResponse>> IsInvestmentAbovePenaltyThreshold(CheckPenaltyThreshold.CheckPenaltyThresholdRequest request)
         => mediator.Send(request);
 
+    public Task<Result<GetInvestorNsec.GetInvestorNsecResponse>> GetInvestorNsec(GetInvestorNsec.GetInvestorNsecRequest request)
+        => mediator.Send(request);
+
     #region Methods for Investor/Manage funds. Remove this region ASAP. It's only for clarity.
 
     public Task<Result<GetRecoveryStatus.GetRecoveryStatusResponse>> GetRecoveryStatus(GetRecoveryStatus.GetRecoveryStatusRequest request)

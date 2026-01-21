@@ -160,6 +160,7 @@ public static class GetRecoveryStatus
                 Name = project.Name,
                 PenaltyDays = projectInfo.PenaltyDays,
                 ProjectIdentifier = project.Id.Value,
+                FounderKey = projectInfo.FounderKey,
                 Items = stageItems.ToList()
             };
 
