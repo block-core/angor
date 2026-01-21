@@ -27,7 +27,8 @@ public static class CancelInvestmentRequest
     public class CancelInvestmentRequestHandler(
         IPortfolioService portfolioService,
         INetworkConfiguration networkConfiguration,
-        IWalletAccountBalanceService walletAccountBalanceService) : IRequestHandler<CancelInvestmentRequestRequest, Result<CancelInvestmentRequestResponse>>
+        IWalletAccountBalanceService walletAccountBalanceService,
+        IMediator mediator) : IRequestHandler<CancelInvestmentRequestRequest, Result<CancelInvestmentRequestResponse>>
     {
         public async Task<Result<CancelInvestmentRequestResponse>> Handle(CancelInvestmentRequestRequest request, CancellationToken cancellationToken)
         {
@@ -43,6 +44,15 @@ public static class CancelInvestmentRequest
             if (!string.IsNullOrEmpty(record.InvestmentTransactionHex))
             {
                 await ReleaseReservedUtxos(request.WalletId, record.InvestmentTransactionHex);
+            }
+
+            // Notify founder of cancellation if there was a signature request
+            if (!string.IsNullOrEmpty(record.RequestEventId))
+            {
+                await mediator.Send(new NotifyFounderOfCancellation.NotifyFounderOfCancellationRequest(
+                    request.WalletId,
+                    request.ProjectId,
+                    record.RequestEventId), cancellationToken);
             }
 
             var res = await portfolioService.RemoveInvestmentRecordAsync(request.WalletId.Value, record);

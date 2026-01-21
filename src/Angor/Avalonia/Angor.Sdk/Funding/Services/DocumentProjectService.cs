@@ -209,27 +209,21 @@ public class DocumentProjectService(
         return Uri.TryCreate(uriString, UriKind.Absolute, out var uri) ? uri : null;
     }
 
-    private Task<Result<IEnumerable<ProjectInfo>>> ProjectInfos(IEnumerable<string> eventIds)
+    private async Task<Result<IEnumerable<ProjectInfo>>> ProjectInfos(IEnumerable<string> eventIds)
     {
-        return Task.Run(async () =>
-        {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            var tcs = new TaskCompletionSource<List<ProjectInfo>>();
-            var results = new List<ProjectInfo>();
+        var tcs = new TaskCompletionSource<List<ProjectInfo>>();
+        var results = new List<ProjectInfo>();
 
-            void OnNext(ProjectInfo info) => results.Add(info);
-            void OnCompleted() => tcs.SetResult(results);
+        void OnNext(ProjectInfo info) => results.Add(info);
+        void OnCompleted() => tcs.TrySetResult(results);
 
-            relayService.LookupProjectsInfoByEventIds<ProjectInfo>(OnNext, OnCompleted, eventIds.ToArray());
+        relayService.LookupProjectsInfoByEventIds<ProjectInfo>(OnNext, OnCompleted, eventIds.ToArray());
 
-            // Race between completion and timeout
-            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(10000, cts.Token));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        cts.Token.Register(() => tcs.TrySetResult(results));
 
-            if (completedTask == tcs.Task)
-                return Result.Success(results.AsEnumerable());
-
-            return Result.Failure<IEnumerable<ProjectInfo>>("Timeout waiting for project info");
-        });
+        var completedResults = await tcs.Task;
+        return Result.Success(completedResults.AsEnumerable());
     }
 
     private Task<Result<IEnumerable<ProjectMetadataWithNpub>>> ProjectMetadatas(IEnumerable<string> npubs)

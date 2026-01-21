@@ -1,4 +1,4 @@
-﻿﻿using System.Reactive.Linq;
+﻿﻿﻿using System.Reactive.Linq;
 using Angor.Shared.Models;
 using Newtonsoft.Json;
 using Nostr.Client.Keys;
@@ -179,6 +179,67 @@ namespace Angor.Shared.Services
             return Task.CompletedTask;
         }
 
+        public (DateTime,string) NotifyInvestmentCancelled(string content, string investorNostrPrivateKey, string founderNostrPubKey, Action<NostrOkResponse> okResponse)
+        {
+            var sender = NostrPrivateKey.FromHex(investorNostrPrivateKey);
+
+            var ev = new NostrEvent
+            {
+                Kind = NostrKind.EncryptedDm,
+                CreatedAt = DateTime.UtcNow,
+                Content = content,
+                Tags = new NostrEventTags(
+                    NostrEventTag.Profile(founderNostrPubKey),
+                    new NostrEventTag("subject","Investment cancelled"))
+            };
+
+            var signed = ev.Sign(sender);
+
+            if(!_subscriptionsHanding.TryAddOKAction(signed.Id!,okResponse))
+                throw new Exception("Failed to add OK action");
+            
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            nostrClient.Send(new NostrEventRequest(signed));
+
+            return (signed.CreatedAt!.Value, signed.Id!);
+        }
+
+        public Task LookupInvestmentCancellationsAsync(string nostrPubKey, string? senderNpub, DateTime? since,
+            Action<string, string, string, DateTime> action, Action onAllMessagesReceived)
+        {
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            var subscriptionKey = nostrPubKey + "inv_cancel";
+
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Investment cancelled")
+                    .Select(_ => _.Event)
+                    .Subscribe(nostrEvent =>
+                    {
+                        action.Invoke(nostrEvent.Id, nostrEvent.Pubkey, nostrEvent.Content, nostrEvent.CreatedAt.Value);
+                    });
+
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
+
+            var nostrFilter = new NostrFilter
+            {
+                P = [nostrPubKey],
+                Kinds = [NostrKind.EncryptedDm],
+                Since = since
+            };
+
+            if (senderNpub != null) nostrFilter.Authors = [senderNpub];
+
+            nostrClient.Send(new NostrRequest(subscriptionKey, nostrFilter));
+
+            return Task.CompletedTask;
+        }
+
         public void LookupInvestmentRequestApprovals(string nostrPubKey, Action<string, DateTime, string> action, Action onAllMessagesReceived)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
@@ -205,6 +266,102 @@ namespace Angor.Shared.Services
                 Authors = new[] { nostrPubKey }, //From founder
                 Kinds = new[] { NostrKind.EncryptedDm }
             }));
+        }
+
+        public Task LookupAllInvestmentMessagesAsync(
+            string nostrPubKey, 
+            string? senderNpub, 
+            DateTime? since,
+            Action<InvestmentMessageType, string, string, string, DateTime> onMessage,
+            Action onAllMessagesReceived)
+        {
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            var incomingKey = nostrPubKey.Substring(0, 20) + "_in";
+            var outgoingKey = nostrPubKey.Substring(0, 20) + "_out";
+            
+            var receivedEoseCount = 0;
+            
+            void CheckAllReceived()
+            {
+                if (Interlocked.Increment(ref receivedEoseCount) >= 2)
+                {
+                    onAllMessagesReceived();
+                }
+            }
+
+            void HandleEvent(NostrEvent nostrEvent)
+            {
+                var subject = nostrEvent.Tags.FindFirstTagValue("subject");
+                var messageType = subject switch
+                {
+                    "Investment offer" => InvestmentMessageType.Request,
+                    "Investment completed" => InvestmentMessageType.Notification,
+                    "Investment cancelled" => InvestmentMessageType.Cancellation,
+                    "Re:Investment offer" => InvestmentMessageType.Approval,
+                    _ => (InvestmentMessageType?)null
+                };
+
+                if (messageType.HasValue)
+                {
+                    // For approvals, we pass the referenced event ID (from e tag) as the id
+                    // This allows matching the approval to the original request
+                    var eventId = messageType.Value == InvestmentMessageType.Approval
+                        ? nostrEvent.Tags.FindFirstTagValue(NostrEventTag.EventIdentifier) ?? nostrEvent.Id
+                        : nostrEvent.Id;
+                    
+                    onMessage.Invoke(
+                        messageType.Value,
+                        eventId,
+                        nostrEvent.Pubkey,
+                        nostrEvent.Content,
+                        nostrEvent.CreatedAt!.Value);
+                }
+            }
+
+            // Incoming messages subscription (requests, notifications, cancellations TO founder)
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(incomingKey))
+            {
+                var incomingSub = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == incomingKey)
+                    .Select(_ => _.Event)
+                    .Subscribe(HandleEvent);
+
+                _subscriptionsHanding.TryAddRelaySubscription(incomingKey, incomingSub);
+            }
+            _subscriptionsHanding.TryAddEoseAction(incomingKey, CheckAllReceived);
+
+            // Outgoing messages subscription (approvals FROM founder)
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(outgoingKey))
+            {
+                var outgoingSub = nostrClient.Streams.EventStream
+                    .Where(_ => _.Subscription == outgoingKey)
+                    .Select(_ => _.Event)
+                    .Subscribe(HandleEvent);
+
+                _subscriptionsHanding.TryAddRelaySubscription(outgoingKey, outgoingSub);
+            }
+            _subscriptionsHanding.TryAddEoseAction(outgoingKey, CheckAllReceived);
+
+            // Fetch messages TO founder (requests, notifications, cancellations)
+            var incomingFilter = new NostrFilter
+            {
+                P = [nostrPubKey],
+                Kinds = [NostrKind.EncryptedDm],
+                Since = since
+            };
+            if (senderNpub != null) incomingFilter.Authors = [senderNpub];
+            nostrClient.Send(new NostrRequest(incomingKey, incomingFilter));
+
+            // Fetch messages FROM founder (approvals)
+            var outgoingFilter = new NostrFilter
+            {
+                Authors = [nostrPubKey],
+                Kinds = [NostrKind.EncryptedDm],
+                Since = since
+            };
+            nostrClient.Send(new NostrRequest(outgoingKey, outgoingFilter));
+
+            return Task.CompletedTask;
         }
 
         public DateTime SendSignaturesToInvestor(string encryptedSignatureInfo, string nostrPrivateKeyHex, string investorNostrPubKey, string eventId)

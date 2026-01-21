@@ -17,3 +17,20 @@ public class InvestmentNotification
     public string TransactionId { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Notification sent to founder when an investor cancels their investment request.
+/// This is sent unencrypted as it only contains public identifiers.
+/// </summary>
+public class CancellationNotification
+{
+    /// <summary>
+    /// The project identifier this cancellation is for.
+    /// </summary>
+    public string ProjectIdentifier { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// The Nostr event ID of the original investment request that is being cancelled.
+    /// </summary>
+    public string RequestEventId { get; set; } = string.Empty;
+}
+

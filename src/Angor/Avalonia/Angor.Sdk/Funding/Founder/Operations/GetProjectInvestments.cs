@@ -87,6 +87,10 @@ public static class GetProjectInvestments
             if (Handshake.IsDirectInvestment)
                 return InvestmentStatus.Invested;
             
+            // Check if cancelled
+            if (Handshake.Status == InvestmentRequestStatus.Cancelled)
+                return InvestmentStatus.Cancelled;
+            
             if (string.IsNullOrEmpty(Handshake.InvestmentTransactionHex))
                 return InvestmentStatus.PendingFounderSignatures;
 

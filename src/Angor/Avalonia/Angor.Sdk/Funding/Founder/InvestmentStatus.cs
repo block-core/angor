@@ -6,5 +6,6 @@ public enum InvestmentStatus
     Invalid = 0,
     PendingFounderSignatures,
     FounderSignaturesReceived,
-    Invested
+    Invested,
+    Cancelled
 }
