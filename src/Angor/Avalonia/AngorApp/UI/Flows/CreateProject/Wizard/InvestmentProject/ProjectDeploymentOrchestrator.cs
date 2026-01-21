@@ -5,6 +5,7 @@ using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Projects.Operations;
+using Angor.Sdk.Funding.Projects.Mappers;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectConstants.CreateProject;
 using AngorApp.UI.TransactionDrafts.DraftTypes.Base;
 using CSharpFunctionalExtensions;
@@ -13,6 +14,7 @@ using Serilog;
 using AngorApp.UI.TransactionDrafts;
 using AngorApp.UI.TransactionDrafts.DraftTypes;
 using Zafiro.Avalonia.Dialogs;
+using TransactionDraft = Angor.Sdk.Funding.Shared.TransactionDraft;
 
 namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
 {
@@ -43,7 +45,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
                 model =>
                 {
 
-                    return SubmitProjectTransaction(new PublishFounderTransaction.PublishFounderTransactionRequest(model.Model))
+                    return SubmitProjectTransaction(dto, projectSeed, model.Model)
                         .Tap(txId =>
                         {
                             transactionId = txId;
@@ -76,9 +78,9 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
             return await projectAppService.CreateProject(walletId, feerate, dto, projectInfoEventId, projectSeed);
         }
 
-        private async Task<Result<string>> SubmitProjectTransaction(PublishFounderTransaction.PublishFounderTransactionRequest request)
+        private async Task<Result<string>> SubmitProjectTransaction(CreateProjectDto dto, ProjectSeedDto projectSeed, TransactionDraft draft)
         {
-            return await founderAppService.SubmitTransactionFromDraft(request)
+            return await founderAppService.SubmitTransactionFromDraft(new PublishFounderTransaction.PublishFounderTransactionRequest(draft, dto.ToDomain(projectSeed)))
                 .Tap(response => logger.Information("Project created successfully: {TransactionId}", response.TransactionId))
                 .Map(response => response.TransactionId);
         }

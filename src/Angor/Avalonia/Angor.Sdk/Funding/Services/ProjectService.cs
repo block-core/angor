@@ -155,6 +155,11 @@ public class ProjectService(
         throw new NotSupportedException("This class is obsolete. Use DocumentProjectService for LatestFromNostrAsync functionality.");
     }
 
+    public Task<Result> AddAsync(Project project)
+    {
+        return store.Save(project.Id.Value, project);
+    }
+
     public Task<Result<Maybe<Project>>> TryGet(ProjectId projectId)
     {
         return GetSingle(projectId);

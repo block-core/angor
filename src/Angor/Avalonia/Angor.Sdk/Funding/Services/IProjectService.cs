@@ -17,4 +17,5 @@ public interface IProjectService
     /// Projects not found on-chain are filtered out (potential spam).
     /// </summary>
     Task<Result<IEnumerable<Project>>> LatestFromNostrAsync();
+    Task<Result> AddAsync(Project project);
 }

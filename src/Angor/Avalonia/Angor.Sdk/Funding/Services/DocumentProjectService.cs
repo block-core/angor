@@ -173,6 +173,12 @@ public class DocumentProjectService(
         return await GetAllAsync(validatedProjectIds.ToArray());
     }
 
+    public async Task<Result> AddAsync(Project project)
+    {
+        var result = await collection.InsertAsync(p => p.Id.Value, project);
+        return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
+    }
+
     private Task<Result<IEnumerable<EventInfo<ProjectInfo>>>> QueryLatestNostrProjectEventsAsync(int limit)
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
