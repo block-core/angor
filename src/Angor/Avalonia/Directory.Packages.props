@@ -48,13 +48,13 @@
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
     <PackageVersion Include="Zafiro" Version="45.0.6" />
     <PackageVersion Include="Zafiro.Avalonia" Version="42.0.6" />
-    <PackageVersion Include="Zafiro.Avalonia.Generators" Version="46.0.9" />
-    <PackageVersion Include="Zafiro.Avalonia.Icons.Projektanker" Version="46.0.9" />
-    <PackageVersion Include="Zafiro.Avalonia.Icons.Svg" Version="46.0.9" />
+    <PackageVersion Include="Zafiro.Avalonia.Generators" Version="46.0.10" />
+    <PackageVersion Include="Zafiro.Avalonia.Icons.Projektanker" Version="46.0.10" />
+    <PackageVersion Include="Zafiro.Avalonia.Icons.Svg" Version="46.0.10" />
     <PackageVersion Include="Zafiro.FileSystem" Version="41.2.3" />
     <PackageVersion Include="Zafiro.UI" Version="41.2.6" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="46.0.9" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="46.0.10" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />
     <PackageVersion Include="FluentAssertions.Reactive" Version="0.2.0" />
