@@ -1,19 +1,20 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:common="clr-namespace:AngorApp.Model.Common;assembly=AngorApp.Model"
              x:Class="AngorApp.App"
              RequestedThemeVariant="Default">
     <Application.Resources>
         <ResourceDictionary>
-
-            <IconDataTemplate x:Key="IconDataTemplate" />
 
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="UI/Shared/Controls/Header.axaml" />
                 <MergeResourceInclude Source="UI/Shared/Controls/SectionItem.axaml" />
                 <MergeResourceInclude Source="UI/Shared/Resources/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
-
+            
+            <IconDataTemplate x:Key="IconDataTemplate" />
+            
             <DataTemplate x:Key="BigIcon" DataType="x:Object">
                 <ContentPresenter Content="{Binding}">
                     <ContentPresenter.DataTemplates>
@@ -47,6 +48,9 @@
     <Application.DataTemplates>
         <DataTypeViewLocator />
         <DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
+        <DataTemplate DataType="common:CopyableText">
+            <SelectableTextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding Text}" />
+        </DataTemplate>
     </Application.DataTemplates>
 
 </Application>

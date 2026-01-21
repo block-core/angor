@@ -46,12 +46,12 @@ public sealed record RecoveryStateViewModel
     
     private async Task ShowInvestorNsecAsync()
     {
-        var result = await investmentAppService.GetInvestorNsec(
-            new GetInvestorNsec.GetInvestorNsecRequest(WalletId, dto.FounderKey));
+        var result = await investmentAppService.GetInvestorNsec(new GetInvestorNsec.GetInvestorNsecRequest(WalletId, dto.FounderKey));
         
         if (result.IsSuccess)
         {
-            await uiServices.Dialog.ShowOk("Investor nsec", $"Your investment private key (nsec):\n\n{result.Value.Nsec}\n\nSelect and copy the key above.");
+            var copyableMessage = new CopyableText($"Your investment private key (nsec):\n\n{result.Value.Nsec}\n\nSelect and copy the key above.");
+            await uiServices.Dialog.ShowOk(copyableMessage, "Investor nsec");
         }
         else
         {
