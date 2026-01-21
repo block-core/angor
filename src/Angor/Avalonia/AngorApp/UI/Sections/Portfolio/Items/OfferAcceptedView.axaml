@@ -30,12 +30,28 @@
 
     <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
         <StackPanel Spacing="20" HorizontalAlignment="Center" IsVisible="{Binding !IsInvestmentCompleted}">
-            <EdgePanel HorizontalAlignment="Center">
+            <!-- Message when founder has approved (can complete investment) -->
+            <EdgePanel HorizontalAlignment="Center" IsVisible="{Binding CompleteInvestment.CanExecute^}">
                 <EdgePanel.StartContent>
                     <ui:Icon Source="fa-circle-info" />
                 </EdgePanel.StartContent>
                 <TextBlock TextWrapping="Wrap">
                     <Bold>Good news!</Bold> The founder has accepted your investment request. Complete it to finalize the investment process.
+                </TextBlock>
+            </EdgePanel>
+            <!-- Message when pending founder approval (can only cancel) -->
+            <EdgePanel HorizontalAlignment="Center">
+                <EdgePanel.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="!CompleteInvestment.CanExecute^" />
+                        <Binding Path="CancelInvestment.CanExecute^" />
+                    </MultiBinding>
+                </EdgePanel.IsVisible>
+                <EdgePanel.StartContent>
+                    <ui:Icon Source="fa-clock" />
+                </EdgePanel.StartContent>
+                <TextBlock TextWrapping="Wrap">
+                    <Bold>Pending approval.</Bold> Your investment request is waiting for the founder's approval. You can cancel it if you change your mind.
                 </TextBlock>
             </EdgePanel>
             <WrapPanel ItemSpacing="10" LineSpacing="10"  HorizontalAlignment="Center">
