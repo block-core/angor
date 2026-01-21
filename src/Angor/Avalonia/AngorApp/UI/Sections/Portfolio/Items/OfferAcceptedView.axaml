@@ -15,6 +15,9 @@
             <Setter Property="Foreground" Value="Orange" />
             <Setter Property="FontSize" Value="20" />
         </Style>
+        <Style Selector="EnhancedButton[IsEffectivelyEnabled=False]">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
     </UserControl.Styles>
 
     <Design.DataContext>
@@ -55,8 +58,8 @@
                 </TextBlock>
             </EdgePanel>
             <WrapPanel ItemSpacing="10" LineSpacing="10"  HorizontalAlignment="Center">
-                <Button Command="{Binding CompleteInvestment}" HorizontalAlignment="Center">Complete investment</Button>
-                <Button Command="{Binding CancelInvestment}" HorizontalAlignment="Center">Cancel investment</Button>
+                <EnhancedButton Classes="Primary" Command="{Binding CompleteInvestment}" HorizontalAlignment="Center">Complete investment</EnhancedButton>
+                <EnhancedButton Classes="Secondary" Command="{Binding CancelInvestment}" HorizontalAlignment="Center">Cancel investment</EnhancedButton>
             </WrapPanel>
         </StackPanel>
     </OverlayBorder>
