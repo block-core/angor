@@ -1,0 +1,90 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <StackPanel Spacing="10" HorizontalAlignment="Center">
+            <ThemeVariantScope RequestedThemeVariant="Light">
+                <Border Padding="20" Background="{DynamicResource AppBackground}">
+                    <StackPanel Spacing="10">
+                        <EnhancedButton Content="Default" />
+                        <EnhancedButton Classes="Primary" Content="Primary" />
+                        <EnhancedButton Classes="Accent" Content="Accent" />
+                        <EnhancedButton Classes="Secondary" Content="Secondary" />
+                        <EnhancedButton Classes="White" Content="White" />
+                        <EnhancedButton Classes="Outline" Content="Outline" />
+                        <EnhancedButton Classes="Widget" Content="Widget" />
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+                <Border Padding="20" Background="{DynamicResource AppBackground}">
+                    <StackPanel Spacing="10">
+                        <EnhancedButton Content="Default" />
+                        <EnhancedButton Classes="Primary" Content="Primary" />
+                        <EnhancedButton Classes="Accent" Content="Accent" />
+                        <EnhancedButton Classes="Secondary" Content="Secondary" />
+                        <EnhancedButton Classes="White" Content="White" />
+                        <EnhancedButton Classes="Outline" Content="Outline" />
+                        <EnhancedButton Classes="Widget" Content="Widget" />
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <!-- Base EnhancedButton Style -->
+    <Style Selector="EnhancedButton">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBorder}" />
+        <Setter Property="IconOptions.Fill" Value="{Binding $self.Foreground}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <Style Selector="EnhancedButton.Primary">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBorder}" />
+        <Setter Property="Padding" Value="24 12" />
+    </Style>
+
+    <Style Selector="EnhancedButton.Accent">
+        <Setter Property="Foreground" Value="{DynamicResource AccentButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorder}" />
+        <Setter Property="Padding" Value="24 12" />
+    </Style>
+
+    <Style Selector="EnhancedButton.Secondary">
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource SecondaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SecondaryButtonBorder}" />
+        <Setter Property="Padding" Value="24 12" />
+    </Style>
+
+    <Style Selector="EnhancedButton.White">
+        <Setter Property="Padding" Value="24 12" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
+    </Style>
+
+    <Style Selector="EnhancedButton.Outline">
+        <Setter Property="Padding" Value="24 12" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="EnhancedButton.Widget">
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        <Setter Property="Padding" Value="10" />
+    </Style>
+
+</Styles>

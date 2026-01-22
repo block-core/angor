@@ -1,0 +1,199 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <Design.PreviewWith>
+        <ScrollViewer>
+            <StackPanel Spacing="20" Width="500">
+                <!-- Light Theme -->
+                <ThemeVariantScope RequestedThemeVariant="Light">
+                    <Border Padding="20" Background="{DynamicResource AppBackground}">
+                        <StackPanel Spacing="15">
+                            <TextBlock FontWeight="Bold" FontSize="16">Light Theme</TextBlock>
+                            
+                            <HeaderedContainer Header="WizardSection" Content="Default section style" Classes="WizardSection" />
+                            
+                            <HeaderedContainer Header="Translucid" Content="Accent translucent style" Classes="Translucid" />
+                            
+                            <HeaderedContainer Header="WizardHighlight" Content="Bitcoin accent style" Classes="WizardHighlight" />
+                            
+                            <HeaderedContainer Header="BlueThreshold" Classes="BlueThreshold">
+                                <EdgePanel StartContent="Label" EndContent="Value" />
+                            </HeaderedContainer>
+                            
+                            <HeaderedContainer Classes="WizardSection">
+                                <HeaderedContainer.Header>
+                                    <EdgePanel StartContent="{Icon fa-wallet}" Content="With Icon" EndContent="$1,234" />
+                                </HeaderedContainer.Header>
+                            </HeaderedContainer>
+                            
+                            <Border Classes="Translucid">
+                                <TextBlock>Border.Translucid</TextBlock>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </ThemeVariantScope>
+                
+                <!-- Dark Theme -->
+                <ThemeVariantScope RequestedThemeVariant="Dark">
+                    <Border Padding="20" Background="{DynamicResource AppBackground}">
+                        <StackPanel Spacing="15">
+                            <TextBlock FontWeight="Bold" FontSize="16" Foreground="White">Dark Theme</TextBlock>
+                            
+                            <HeaderedContainer Header="WizardSection" Content="Default section style" Classes="WizardSection" />
+                            
+                            <HeaderedContainer Header="Translucid" Content="Accent translucent style" Classes="Translucid" />
+                            
+                            <HeaderedContainer Header="WizardHighlight" Content="Bitcoin accent style" Classes="WizardHighlight" />
+                            
+                            <HeaderedContainer Header="BlueThreshold" Classes="BlueThreshold">
+                                <EdgePanel StartContent="Label" EndContent="Value" />
+                            </HeaderedContainer>
+                        </StackPanel>
+                    </Border>
+                </ThemeVariantScope>
+            </StackPanel>
+        </ScrollViewer>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+
+                <!-- Light -->
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="BlueThreshold.ContainerBorderBrush" Color="#bfdbfe" />
+
+                    <LinearGradientBrush x:Key="BlueThreshold.ContainerBackground" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Offset="0" Color="#eff6ff" />
+                        <GradientStop Offset="1" Color="#e0e7ff" />
+                    </LinearGradientBrush>
+
+                    <SolidColorBrush x:Key="BlueThreshold.IconBackground" Color="#2563eb" />
+                    <SolidColorBrush x:Key="BlueThreshold.LabelForeground" Color="#1e40af" />
+                    <SolidColorBrush x:Key="BlueThreshold.HelpForeground" Color="#1e40af" />
+                </ResourceDictionary>
+
+                <!-- Dark -->
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="BlueThreshold.ContainerBorderBrush" Color="#4a5a6a" />
+
+                    <LinearGradientBrush x:Key="BlueThreshold.ContainerBackground" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Offset="0" Color="#1A2A3A" />
+                        <GradientStop Offset="1" Color="#2A1A3A" />
+                    </LinearGradientBrush>
+
+                    <SolidColorBrush x:Key="BlueThreshold.IconBackground" Color="#3b82f6" />
+
+                    <SolidColorBrush x:Key="BlueThreshold.LabelForeground" Color="#60a5fa" />
+                    <SolidColorBrush x:Key="BlueThreshold.HelpForeground" Color="#60a5fa" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         HeaderedContainer Styles
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Base HeaderedContainer icon styling -->
+    <Style Selector="HeaderedContainer /template/ ContentPresenter#Header EdgePanel /template/ ContentControl#StartContent">
+        <Setter Property="IconOptions.Size" Value="20" />
+        <Setter Property="IconOptions.Fill" Value="White" />
+        <Setter Property="IconOptions.Padding" Value="10" />
+        <Setter Property="IconOptions.CornerRadius" Value="10" />
+    </Style>
+
+    <!-- Title Style -->
+    <Style Selector="HeaderedContainer.Title /template/ ContentControl#Header">
+        <Setter Property="FontSize" Value="25" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+    </Style>
+
+    <!-- WizardSection Style -->
+    <Style Selector="HeaderedContainer.WizardSection">
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        <Setter Property="HeaderBackground" Value="{DynamicResource SurfaceSubtler}" />
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        <Setter Property="HeaderPadding" Value="24 12" />
+        <Setter Property="ContentPadding" Value="24" />
+    </Style>
+
+    <Style Selector="HeaderedContainer.WizardSection /template/ ContentPresenter#Header EdgePanel /template/ ContentControl#StartContent">
+        <Setter Property="IconOptions.Background" Value="{DynamicResource Accent}" />
+    </Style>
+
+    <!-- Translucid Style -->
+    <Style Selector="HeaderedContainer.Translucid">
+        <Setter Property="ContentPadding" Value="24 0 24 24" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="HeaderPadding" Value="24" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+        <Setter Property="Background" Value="{StaticResource TranslucidBackground}" />
+    </Style>
+
+    <Style Selector="HeaderedContainer.Translucid /template/ ContentPresenter#Header EdgePanel /template/ ContentControl#StartContent">
+        <Setter Property="IconOptions.Background" Value="{DynamicResource Accent}" />
+    </Style>
+
+    <!-- WizardHighlight Style (Bitcoin/Orange accent) -->
+    <Style Selector="HeaderedContainer.WizardHighlight">
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BitcoinAccent}" />
+        <Setter Property="Background" Value="{DynamicResource TranslucidOrange}" />
+        <Setter Property="HeaderPadding" Value="24" />
+        <Setter Property="ContentPadding" Value="24 0 24 24" />
+        <Setter Property="Foreground" Value="{DynamicResource BitcoinAccent}" />
+    </Style>
+
+    <Style Selector="HeaderedContainer.WizardHighlight /template/ ContentPresenter#Header EdgePanel /template/ ContentControl#StartContent">
+        <Setter Property="IconOptions.Background" Value="{DynamicResource BitcoinAccent}" />
+    </Style>
+
+    <Style Selector="HeaderedContainer.WizardHighlight EdgePanel ContentControl#EndContent">
+        <Setter Property="Foreground" Value="{DynamicResource BitcoinAccent}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+    </Style>
+
+    <!-- BlueThreshold Style -->
+    <Style Selector="HeaderedContainer.BlueThreshold">
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="HeaderPadding" Value="24" />
+        <Setter Property="ContentPadding" Value="24 0 24 24" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BlueThreshold.ContainerBorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource BlueThreshold.ContainerBackground}" />
+    </Style>
+
+    <Style Selector="HeaderedContainer.BlueThreshold /template/ ContentPresenter#Header">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Background" Value="{DynamicResource BlueThreshold.IconBackground}" />
+    </Style>
+
+    <Style Selector="HeaderedContainer.BlueThreshold EdgePanel ContentControl#StartContent">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{DynamicResource BlueThreshold.LabelForeground}" />
+    </Style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         Border Styles
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <Style Selector="Border.Translucid">
+        <Setter Property="Padding" Value="20" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="BorderBrush" Value="#3F22005A" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background" Value="{StaticResource TranslucidBackground}" />
+    </Style>
+
+</Styles>

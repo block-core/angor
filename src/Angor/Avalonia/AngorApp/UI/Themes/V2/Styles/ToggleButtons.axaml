@@ -1,0 +1,58 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="{DynamicResource Surface}" />
+        <SolidColorBrush x:Key="ToggleButtonBackgroundPointerOver" Color="{DynamicResource Stroke}" />
+        <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="{DynamicResource Stroke}" />
+        <SolidColorBrush x:Key="ToggleButtonBackgroundIndeterminatePressed" Color="{DynamicResource Stroke}" />
+        <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="{DynamicResource Stroke}" />
+        <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="{DynamicResource Stroke}" />
+    </Styles.Resources>
+
+    <Style Selector="ToggleButton.Widget">
+        <Setter Property="Height" Value="42" />
+        <Setter Property="Width" Value="42" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+    </Style>
+
+    <Design.PreviewWith>
+        <StackPanel Spacing="20">
+            <ThemeVariantScope RequestedThemeVariant="Light">
+                <Border Padding="20" Background="{DynamicResource AppBackground}">
+                    <StackPanel Spacing="10">
+                        <TextBlock FontWeight="Bold">Light Theme</TextBlock>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <ToggleButton Classes="Widget" IsChecked="False">
+                                <PathIcon Data="{DynamicResource Sun}" />
+                            </ToggleButton>
+                            <ToggleButton Classes="Widget" IsChecked="True">
+                                <PathIcon Data="{DynamicResource Sun}" />
+                            </ToggleButton>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+                <Border Padding="20" Background="{DynamicResource AppBackground}">
+                    <StackPanel Spacing="10">
+                        <TextBlock FontWeight="Bold" Foreground="White">Dark Theme</TextBlock>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <ToggleButton Classes="Widget" IsChecked="False">
+                                <PathIcon Foreground="{DynamicResource TextMuted}" Data="{DynamicResource Sun}" />
+                            </ToggleButton>
+                            <ToggleButton Classes="Widget" IsChecked="True">
+                                <PathIcon Foreground="{DynamicResource TextMuted}" Data="{DynamicResource Sun}" />
+                            </ToggleButton>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+        </StackPanel>
+    </Design.PreviewWith>
+
+
+</Styles>

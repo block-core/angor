@@ -42,7 +42,7 @@
         </ResourceDictionary>
     </Application.Resources>
     <Application.Styles>
-        <StyleInclude Source="UI/Themes/New/NewTheme.axaml" />
+        <StyleInclude Source="UI/Themes/V2/Theme.axaml" />
     </Application.Styles>
 
     <Application.DataTemplates>
