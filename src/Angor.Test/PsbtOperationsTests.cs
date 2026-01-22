@@ -7,7 +7,6 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using Angor.Shared.Services;
 using Angor.Test.Protocol;
 using Money = Blockcore.NBitcoin.Money;
 using uint256 = Blockcore.NBitcoin.uint256;
@@ -15,6 +14,7 @@ using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
 using Blockcore.NBitcoin.BIP32;
+using Angor.Shared.Services.Indexer;
 
 namespace Angor.Test;
 

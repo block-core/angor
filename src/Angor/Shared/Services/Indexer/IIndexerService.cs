@@ -1,6 +1,6 @@
 using Angor.Shared.Models;
 
-namespace Angor.Shared.Services;
+namespace Angor.Shared.Services.Indexer;
 
 public interface IIndexerService
 {

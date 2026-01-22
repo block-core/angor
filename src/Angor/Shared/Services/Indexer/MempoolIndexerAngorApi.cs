@@ -4,7 +4,7 @@ using System.Text.Json;
 using Angor.Shared.Models;
 using Microsoft.Extensions.Logging;
 
-namespace Angor.Shared.Services;
+namespace Angor.Shared.Services.Indexer;
 
 public class MempoolIndexerAngorApi : IAngorIndexerService
 {

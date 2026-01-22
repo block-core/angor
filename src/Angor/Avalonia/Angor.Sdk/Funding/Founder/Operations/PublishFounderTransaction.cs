@@ -1,5 +1,5 @@
 using Angor.Sdk.Funding.Shared;
-using Angor.Shared.Services;
+using Angor.Shared.Services.Indexer;
 using CSharpFunctionalExtensions;
 using MediatR;
 

@@ -1,7 +1,7 @@
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared.Models;
-using Angor.Shared.Services;
+using Angor.Shared.Services.Indexer;
 
 namespace Angor.Sdk.Funding.Services;
 

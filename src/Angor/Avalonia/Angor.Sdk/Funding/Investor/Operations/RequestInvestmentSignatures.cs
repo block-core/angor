@@ -15,6 +15,7 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Angor.Shared.Services.Indexer;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 

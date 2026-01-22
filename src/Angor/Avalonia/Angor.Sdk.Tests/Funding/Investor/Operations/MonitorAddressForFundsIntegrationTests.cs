@@ -7,6 +7,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Services;
+using Angor.Shared.Services.Indexer;
 using Blockcore.Networks;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging.Abstractions;

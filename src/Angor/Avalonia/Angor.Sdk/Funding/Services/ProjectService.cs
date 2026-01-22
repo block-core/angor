@@ -5,6 +5,7 @@ using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
+using Angor.Shared.Services.Indexer;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.DependencyInjection;
 using Zafiro.CSharpFunctionalExtensions;

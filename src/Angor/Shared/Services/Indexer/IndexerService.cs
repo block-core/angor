@@ -5,7 +5,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
 
-namespace Angor.Shared.Services
+namespace Angor.Shared.Services.Indexer
 {
     
     [Obsolete("This class is deprecated and will be removed in future versions. Please use the new MempoolSpaceIndexerApi instead.")]

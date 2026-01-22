@@ -7,6 +7,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using Stage = Angor.Sdk.Funding.Projects.Domain.Stage;
+using Angor.Shared.Services.Indexer;
 
 namespace Angor.Sdk.Funding.Services;
 

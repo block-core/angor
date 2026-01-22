@@ -4,6 +4,7 @@ using Angor.Sdk.Wallet.Domain;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
+using Angor.Shared.Services.Indexer;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;

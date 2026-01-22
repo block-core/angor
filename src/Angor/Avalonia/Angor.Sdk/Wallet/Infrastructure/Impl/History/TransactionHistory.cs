@@ -4,7 +4,7 @@ using Angor.Sdk.Wallet.Domain;
 using Angor.Sdk.Wallet.Infrastructure.History;
 using Angor.Shared;
 using Angor.Shared.Models;
-using Angor.Shared.Services;
+using Angor.Shared.Services.Indexer;
 using CSharpFunctionalExtensions;
 using Serilog;
 

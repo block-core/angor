@@ -7,13 +7,13 @@ using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
-using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Angor.Sdk.Funding.Projects;
+using Angor.Shared.Services.Indexer;
 
 namespace Angor.Sdk.Funding.Founder.Operations;
 
