@@ -6,7 +6,7 @@
              xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.UI.Themes.New.Templates.Showcase">
-    
+
     <Border Padding="20">
         <StackPanel Spacing="20">
             <Border Classes="Panel" Width="200" Height="200">
@@ -40,7 +40,10 @@
                 </HeaderedContainer.Header>
             </HeaderedContainer>
             <CheckBox></CheckBox>
+            <Border BorderThickness="1" BorderBrush="Pink" Width="300" Height="300" Background="{DynamicResource TiledLogoBrush}" />
+            <Border BorderThickness="1" BorderBrush="Pink" Width="300" Height="300" Background="{DynamicResource TiledLogoBrush}" />
         </StackPanel>
+
     </Border>
 
 </UserControl>
