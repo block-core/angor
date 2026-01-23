@@ -366,7 +366,11 @@ public class InvestmentHandshakeService(
             );
 
             await tcs.Task;
-            return Result.Success((requests, notifications, cancellations, approvals));
+            return Result.Success((
+                requests.DistinctBy(r => r.Id).ToList(),
+                notifications.DistinctBy(n => n.Id).ToList(),
+                cancellations.DistinctBy(c => c.Id).ToList(),
+                approvals.DistinctBy(a => a.EventIdentifier).ToList()));
         }
         catch (Exception ex)
         {
