@@ -1,4 +1,5 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
@@ -99,29 +100,39 @@ public class InvestmentHandshakeService(
         {
             logger.Information("Starting sync of investment Handshakes for project {ProjectId}", projectId.Value);
 
-            // Fetch all investment requests from Nostr
-            var requestsResult = await FetchInvestmentRequestsFromNostr(projectNostrPubKey);
-            if (requestsResult.IsFailure)
+            // Fetch all investment-related messages in a single call
+            var messagesResult = await FetchAllInvestmentMessagesFromNostr(projectNostrPubKey);
+            if (messagesResult.IsFailure)
             {
-                logger.Error("Failed to fetch investment requests: {Error}", requestsResult.Error);
-                return Result.Failure<IEnumerable<InvestmentHandshake>>(requestsResult.Error);
+                logger.Error("Failed to fetch investment messages: {Error}", messagesResult.Error);
+                return Result.Failure<IEnumerable<InvestmentHandshake>>(messagesResult.Error);
             }
 
-            var requests = requestsResult.Value.ToList();
-            logger.Information("Fetched {Count} investment requests", requests.Count);
+            var (requests, notifications, cancellations, approvals) = messagesResult.Value;
+            
+            logger.Information("Fetched {RequestCount} requests, {NotificationCount} notifications, {CancellationCount} cancellations, {ApprovalCount} approvals",
+                requests.Count, notifications.Count, cancellations.Count, approvals.Count);
 
-            // Fetch all approvals from Nostr
-            var approvalsResult = await FetchInvestmentApprovalsFromNostr(projectNostrPubKey);
-            if (approvalsResult.IsFailure)
+            // Parse cancellations into a lookup dictionary by RequestEventId
+            var cancellationLookup = new Dictionary<string, CancellationNotification>();
+            foreach (var cancellation in cancellations)
             {
-                logger.Warning("Failed to fetch approvals: {Error}", approvalsResult.Error);
+                try
+                {
+                    var cancelNotification = serializer.Deserialize<CancellationNotification>(cancellation.Content);
+                    if (cancelNotification != null && !string.IsNullOrEmpty(cancelNotification.RequestEventId))
+                    {
+                        cancellationLookup[cancelNotification.RequestEventId] = cancelNotification;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Warning(ex, "Failed to parse cancellation {EventId}", cancellation.Id);
+                }
             }
 
-            var approvals = approvalsResult.IsSuccess 
-                ? approvalsResult.Value.ToDictionary(a => a.EventIdentifier, a => a)
-                : new Dictionary<string, ApprovalInfo>();
-
-            logger.Information("Fetched {Count} investment approvals", approvals.Count);
+            // Build approvals lookup by event identifier
+            var approvalsLookup = approvals.ToDictionary(a => a.EventIdentifier, a => a);
 
             // Get existing Handshakes from database
             var existingResult = await _collection.FindAsync(c =>
@@ -140,16 +151,34 @@ public class InvestmentHandshakeService(
                 // Check if we already have this Handshake
                 if (existingHandshakes.TryGetValue(request.Id, out var existingHandshake))
                 {
-                    // Update existing Handshake if approval status changed
-                    if (approvals.TryGetValue(request.Id, out var approval))
+                    var needsUpdate = false;
+                    
+                    // Always check and update approval fields if available
+                    if (approvalsLookup.TryGetValue(request.Id, out var approval))
                     {
                         if (existingHandshake.ApprovalEventId != approval.EventIdentifier)
                         {
                             existingHandshake.ApprovalEventId = approval.EventIdentifier;
                             existingHandshake.ApprovalCreated = approval.Created;
-                            existingHandshake.Status = InvestmentRequestStatus.Approved;
-                            HandshakesToUpsert.Add(existingHandshake);
+                            if (existingHandshake.Status == InvestmentRequestStatus.Pending)
+                            {
+                                existingHandshake.Status = InvestmentRequestStatus.Approved;
+                            }
+                            needsUpdate = true;
                         }
+                    }
+                    
+                    // Apply cancellation status last (takes precedence over approval)
+                    if (cancellationLookup.ContainsKey(request.Id) && existingHandshake.Status != InvestmentRequestStatus.Cancelled)
+                    {
+                        existingHandshake.Status = InvestmentRequestStatus.Cancelled;
+                        needsUpdate = true;
+                    }
+                    
+                    if (needsUpdate)
+                    {
+                        existingHandshake.UpdatedAt = DateTime.UtcNow;
+                        HandshakesToUpsert.Add(existingHandshake);
                     }
                     continue;
                 }
@@ -170,7 +199,17 @@ public class InvestmentHandshakeService(
                 }
 
                 // Check if this request has an approval
-                var hasApproval = approvals.TryGetValue(request.Id, out var requestApproval);
+                var hasApproval = approvalsLookup.TryGetValue(request.Id, out var requestApproval);
+                
+                // Check if this request has been cancelled
+                var isCancelled = cancellationLookup.ContainsKey(request.Id);
+                
+                // Determine the status: cancelled takes precedence, then approved, then pending
+                var status = isCancelled 
+                    ? InvestmentRequestStatus.Cancelled 
+                    : hasApproval 
+                        ? InvestmentRequestStatus.Approved 
+                        : InvestmentRequestStatus.Pending;
 
                 // Create Handshake object
                 var Handshake = new InvestmentHandshake
@@ -187,7 +226,7 @@ public class InvestmentHandshakeService(
                     UnfundedReleaseKey = recoveryRequest?.UnfundedReleaseKey,
                     ApprovalEventId = hasApproval ? requestApproval.EventIdentifier : null,
                     ApprovalCreated = hasApproval ? requestApproval.Created : null,
-                    Status = hasApproval ? InvestmentRequestStatus.Approved : InvestmentRequestStatus.Pending,
+                    Status = status,
                     IsSynced = true,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
@@ -195,6 +234,57 @@ public class InvestmentHandshakeService(
 
                 HandshakesToUpsert.Add(Handshake);
             }
+
+            // Process each notification (direct investments below threshold)
+            foreach (var notification in notifications)
+            {
+                // Check if we already have this Handshake
+                if (existingHandshakes.TryGetValue(notification.Id, out _))
+                {
+                    continue;
+                }
+                
+                InvestmentNotification? investmentNotification = null;
+
+                try
+                {
+                    var decryptResult = await nostrDecrypter.Decrypt(walletId, projectId, notification);
+                    if (decryptResult.IsSuccess)
+                    {
+                        investmentNotification = serializer.Deserialize<InvestmentNotification>(decryptResult.Value);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Warning(ex, "Failed to decrypt/parse notification {EventId}", notification.Id);
+                }
+
+                // Create Handshake object for direct investment
+                var Handshake = new InvestmentHandshake
+                {
+                    Id = GenerateCompositeId(walletId, projectId, notification.Id),
+                    WalletId = walletId.Value,
+                    ProjectId = projectId.Value,
+                    RequestEventId = notification.Id,
+                    InvestorNostrPubKey = notification.SenderNostrPubKey,
+                    RequestCreated = notification.Created,
+                    ProjectIdentifier = investmentNotification?.ProjectIdentifier,
+                    InvestmentTransactionId = investmentNotification?.TransactionId,
+                    InvestmentTransactionHex = null, // Not sent in notification, can be fetched from indexer if needed
+                    UnfundedReleaseAddress = null, // Not applicable for direct investments
+                    UnfundedReleaseKey = null,
+                    ApprovalEventId = null, // Direct investments don't need approval
+                    ApprovalCreated = null,
+                    Status = InvestmentRequestStatus.Invested, // Already invested
+                    IsSynced = true,
+                    IsDirectInvestment = true, // Mark as direct investment
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                HandshakesToUpsert.Add(Handshake);
+            }
+
 
             // Store all Handshakes
             if (HandshakesToUpsert.Any())
@@ -236,52 +326,53 @@ public class InvestmentHandshakeService(
         return Convert.ToHexString(hashBytes);
     }
 
-    private async Task<Result<IEnumerable<DirectMessage>>> FetchInvestmentRequestsFromNostr(string projectNostrPubKey)
+    private async Task<Result<(List<DirectMessage> Requests, List<DirectMessage> Notifications, List<DirectMessage> Cancellations, List<ApprovalInfo> Approvals)>> 
+        FetchAllInvestmentMessagesFromNostr(string projectNostrPubKey)
     {
         try
         {
-            var tcs = new TaskCompletionSource<List<DirectMessage>>();
-            var messages = new List<DirectMessage>();
-
-            await signService.LookupInvestmentRequestsAsync(
-                projectNostrPubKey,
-                null,
-                null,
-                (id, pubKey, content, created) => messages.Add(new DirectMessage(id, pubKey, content, created)),
-                () => tcs.SetResult(messages)
-            );
-
-            var result = await tcs.Task;
-            return Result.Success<IEnumerable<DirectMessage>>(result);
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "Failed to fetch investment requests from Nostr");
-            return Result.Failure<IEnumerable<DirectMessage>>($"Failed to fetch investment requests: {ex.Message}");
-        }
-    }
-
-    private async Task<Result<IEnumerable<ApprovalInfo>>> FetchInvestmentApprovalsFromNostr(string projectNostrPubKey)
-    {
-        try
-        {
-            var tcs = new TaskCompletionSource<List<ApprovalInfo>>();
+            var tcs = new TaskCompletionSource<bool>();
+            
+            var requests = new List<DirectMessage>();
+            var notifications = new List<DirectMessage>();
+            var cancellations = new List<DirectMessage>();
             var approvals = new List<ApprovalInfo>();
 
-            signService.LookupInvestmentRequestApprovals(
+            await signService.LookupAllInvestmentMessagesAsync(
                 projectNostrPubKey,
-                (profileIdentifier, created, eventIdentifier) => 
-                    approvals.Add(new ApprovalInfo(profileIdentifier, created, eventIdentifier)),
-                () => tcs.SetResult(approvals)
+                null,
+                null,
+                (messageType, id, pubKey, content, created) =>
+                {
+                    switch (messageType)
+                    {
+                        case InvestmentMessageType.Request:
+                            requests.Add(new DirectMessage(id, pubKey, content, created));
+                            break;
+                        case InvestmentMessageType.Notification:
+                            notifications.Add(new DirectMessage(id, pubKey, content, created));
+                            break;
+                        case InvestmentMessageType.Cancellation:
+                            cancellations.Add(new DirectMessage(id, pubKey, content, created));
+                            break;
+                        case InvestmentMessageType.Approval:
+                            // For approvals, we need to extract the event identifier from the content/tags
+                            // The pubKey here is the founder's pubKey, and we need the referenced event ID
+                            approvals.Add(new ApprovalInfo(pubKey, created, id));
+                            break;
+                    }
+                },
+                () => tcs.SetResult(true)
             );
 
-            var result = await tcs.Task;
-            return Result.Success<IEnumerable<ApprovalInfo>>(result);
+            await tcs.Task;
+            return Result.Success((requests, notifications, cancellations, approvals));
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "Failed to fetch investment approvals from Nostr");
-            return Result.Failure<IEnumerable<ApprovalInfo>>($"Failed to fetch approvals: {ex.Message}");
+            logger.Error(ex, "Failed to fetch investment messages from Nostr");
+            return Result.Failure<(List<DirectMessage>, List<DirectMessage>, List<DirectMessage>, List<ApprovalInfo>)>(
+                $"Failed to fetch investment messages: {ex.Message}");
         }
     }
 

@@ -83,6 +83,14 @@ public static class GetProjectInvestments
             InvestmentHandshake Handshake,
             List<ProjectInvestment> alreadyInvested)
         {
+            // Direct investments (below threshold) are already invested - no approval needed
+            if (Handshake.IsDirectInvestment)
+                return InvestmentStatus.Invested;
+            
+            // Check if cancelled
+            if (Handshake.Status == InvestmentRequestStatus.Cancelled)
+                return InvestmentStatus.Cancelled;
+            
             if (string.IsNullOrEmpty(Handshake.InvestmentTransactionHex))
                 return InvestmentStatus.PendingFounderSignatures;
 
@@ -108,6 +116,22 @@ public static class GetProjectInvestments
             List<ProjectInvestment> alreadyInvested,
             Project project)
         {
+            // Handle direct investments (below threshold) - they only have transaction ID, not full hex
+            if (Handshake.IsDirectInvestment)
+            {
+                var transactionId = Handshake.InvestmentTransactionId ?? string.Empty;
+                var indexedInvestment = alreadyInvested.FirstOrDefault(i => i.TransactionId == transactionId);
+                var amount = indexedInvestment?.TotalAmount ?? 0;
+                
+                return new Investment(
+                    Handshake.RequestEventId,
+                    Handshake.RequestCreated,
+                    transactionId, // Use transaction ID instead of hex
+                    Handshake.InvestorNostrPubKey,
+                    amount,
+                    InvestmentStatus.Invested);
+            }
+            
             if (string.IsNullOrEmpty(Handshake.InvestmentTransactionHex))
             {
                 // Invalid investment - missing transaction hex
@@ -121,7 +145,7 @@ public static class GetProjectInvestments
             }
 
             var transaction = networkConfiguration.GetNetwork().CreateTransaction(Handshake.InvestmentTransactionHex);
-            var amount = transaction.GetTotalInvestmentAmount();
+            var amount2 = transaction.GetTotalInvestmentAmount();
     
             var investmentStatus = DetermineInvestmentStatus(Handshake, alreadyInvested);
     
@@ -130,7 +154,7 @@ public static class GetProjectInvestments
                 Handshake.RequestCreated,
                 Handshake.InvestmentTransactionHex,
                 Handshake.InvestorNostrPubKey,
-                amount,
+                amount2,
                 investmentStatus);
         }
 

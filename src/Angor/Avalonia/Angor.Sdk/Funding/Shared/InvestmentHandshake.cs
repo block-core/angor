@@ -35,6 +35,13 @@ public class InvestmentHandshake : BaseDocument
     // SignRecoveryRequest properties
     public string? ProjectIdentifier { get; set; }
     public string? InvestmentTransactionHex { get; set; }
+    
+    /// <summary>
+    /// Transaction ID for direct investments (where only the ID is sent, not the full hex).
+    /// The founder can fetch the full transaction from the indexer using this ID.
+    /// </summary>
+    public string? InvestmentTransactionId { get; set; }
+    
     public string? UnfundedReleaseAddress { get; set; }
     public string? UnfundedReleaseKey { get; set; }
     
@@ -58,4 +65,10 @@ public class InvestmentHandshake : BaseDocument
     /// Whether this has been synced from Nostr
     /// </summary>
     public bool IsSynced { get; set; }
+    
+    /// <summary>
+    /// Whether this is a direct investment (below threshold, no founder approval required).
+    /// These investments are notified via "Investment completed" subject rather than "Investment offer".
+    /// </summary>
+    public bool IsDirectInvestment { get; set; }
 }

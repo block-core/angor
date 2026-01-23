@@ -1,3 +1,4 @@
+using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Funding.Shared.TransactionDrafts;
@@ -13,7 +14,7 @@ public static class PublishAndStoreInvestorTransaction
 
     public record PublishAndStoreInvestorTransactionResponse(string TransactionId);
 
-    public class Handler(IIndexerService indexerService, IPortfolioService portfolioService) : IRequestHandler<PublishAndStoreInvestorTransactionRequest, Result<PublishAndStoreInvestorTransactionResponse>>
+    public class Handler(IIndexerService indexerService, IPortfolioService portfolioService, IMediator mediator) : IRequestHandler<PublishAndStoreInvestorTransactionRequest, Result<PublishAndStoreInvestorTransactionResponse>>
     {
         public async Task<Result<PublishAndStoreInvestorTransactionResponse>> Handle(PublishAndStoreInvestorTransactionRequest request, CancellationToken cancellationToken)
         {
@@ -44,6 +45,21 @@ public static class PublishAndStoreInvestorTransaction
 
             if (updateResult.IsFailure)
                 return Result.Failure<PublishAndStoreInvestorTransactionResponse>(updateResult.Error);
+
+            // For investment drafts, notify the founder via Nostr so the investment appears in their list
+            if (request.TransactionDraft is InvestmentDraft investmentDraft)
+            {
+                var notifyResult = await mediator.Send(new NotifyFounderOfInvestment.NotifyFounderOfInvestmentRequest(
+                    new WalletId(request.WalletId),
+                    request.ProjectId,
+                    investmentDraft), cancellationToken);
+                
+                // Log but don't fail if notification fails - the transaction is already published
+                if (notifyResult.IsFailure)
+                {
+                    // TODO: Consider logging this failure
+                }
+            }
 
             return Result.Success(new PublishAndStoreInvestorTransactionResponse(request.TransactionDraft.TransactionId));
         }

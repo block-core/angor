@@ -97,20 +97,18 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         if (!_communicationFactory.EoseEventReceivedOnAllRelays(_.Subscription))
             return;
         
-        if (userEoseActions.TryGetValue(_.Subscription, out var action))
+        if (userEoseActions.Remove(_.Subscription, out var action))
         {
-            _logger.LogDebug($"Invoking action on EOSE - {_.Subscription}");
+            _logger.LogDebug($"Removed action on EOSE for subscription - {_.Subscription}");
             try
             {
+                _logger.LogDebug($"Invoking action on EOSE - {_.Subscription}");
                 action.Invoke();
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Failed to invoke end of events event action");
             }
-
-            userEoseActions.Remove(_.Subscription, out var _);
-            _logger.LogDebug($"Removed action on EOSE for subscription - {_.Subscription}");
         }
 
         _communicationFactory.ClearEoseReceivedOnSubscriptionMonitoring(_.Subscription);
