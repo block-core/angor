@@ -48,8 +48,8 @@
     <Application.DataTemplates>
         <DataTypeViewLocator />
         <DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
-        <DataTemplate DataType="common:CopyableText">
-            <SelectableTextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding Text}" />
+        <DataTemplate DataType="common:ClipboardText">
+        <SelectableTextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding Text}" />
         </DataTemplate>
     </Application.DataTemplates>
 

@@ -50,7 +50,7 @@ public sealed record RecoveryStateViewModel
         
         if (result.IsSuccess)
         {
-            var copyableMessage = new CopyableText($"Your investment private key (nsec):\n\n{result.Value.Nsec}\n\nSelect and copy the key above.");
+            var copyableMessage = new ClipboardText($"Your investment private key (nsec):\n\n{result.Value.Nsec}\n\nSelect and copy the key above.");
             await uiServices.Dialog.ShowOk(copyableMessage, "Investor nsec");
         }
         else
