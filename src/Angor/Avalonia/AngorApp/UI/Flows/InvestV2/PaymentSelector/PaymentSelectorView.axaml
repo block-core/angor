@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:l="clr-namespace:AngorApp.UI.Flows.InvestV2.PaymentSelector"
+             mc:Ignorable="d" d:DesignHeight="450" Width="448"
+             x:Class="AngorApp.UI.Flows.InvestV2.PaymentSelector.PaymentSelectorView" x:DataType="l:IPaymentSelectorViewModel">
+
+    <Design.DataContext>
+        <l:PaymentSelectorViewModelSample />
+    </Design.DataContext>
+    
+    <StackPanel Classes="BigGap">
+        <Border>
+            <EdgePanel StartContent="Amount to Invest" EndContent="{Binding AmountToInvest.DecimalString}" />
+        </Border>
+        <Separator />
+        <ListBox Classes="Transparent Vertical" ItemContainerTheme="{StaticResource SelectorListBoxItem}" ItemsSource="{Binding Wallets}" SelectedItem="{Binding SelectedWallet}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <EdgePanel Spacing="12" StartContent="{Icon fa-wallet}">
+                        <EdgePanel.EndContent>
+                            <TextBlock VerticalAlignment="Center" Classes="Weight-Bold" Text="{Binding Balance.DecimalString}" />
+                        </EdgePanel.EndContent>
+                        <EdgePanel.Content>
+                            <TextBlock>
+                                <Run FontWeight="Bold" Text="{Binding Name}" />
+                                <LineBreak />
+                                <Run FontSize="12" FontWeight="Light" Text="(Wallet Kind)" />
+                            </TextBlock>
+                        </EdgePanel.Content>
+                    </EdgePanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </StackPanel>
+</UserControl>

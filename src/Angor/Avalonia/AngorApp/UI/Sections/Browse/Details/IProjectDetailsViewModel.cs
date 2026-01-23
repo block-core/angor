@@ -5,7 +5,7 @@ namespace AngorApp.UI.Sections.Browse.Details;
 
 public interface IProjectDetailsViewModel
 {
-    public IEnhancedCommand<Result<Maybe<Unit>>> Invest { get; }
+    public IEnhancedCommand<Result<Unit>> Invest { get; }
     public IEnumerable<INostrRelay> Relays { get; }
     public IFullProject Project { get; }
     bool IsInsideInvestmentPeriod { get; }

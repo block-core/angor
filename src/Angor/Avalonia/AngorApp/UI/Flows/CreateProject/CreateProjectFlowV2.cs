@@ -48,7 +48,7 @@ namespace AngorApp.UI.Flows.CreateProject
                                                 walletId,
                                                 seed))
                                             .Then(txId => new SuccessViewModel($"Project {txId} created successfully!"), "Success").Next((_, s) => s, "Finish").Always()
-                                            .WithCompletionFinalStep();
+                                            .Build(StepKind.Completion);
 
             return await rootWizard.Navigate(navigator);
         }
@@ -94,7 +94,7 @@ namespace AngorApp.UI.Flows.CreateProject
                                                   seed,
                                                   uiServices))
                                         .NextCommand(review => review.DeployCommand)
-                                        .WithCommitFinalStep();
+                                        .Build(StepKind.Commit);
 
             return wizard;
         }
@@ -119,7 +119,7 @@ namespace AngorApp.UI.Flows.CreateProject
                                                   seed,
                                                   uiServices))
                                         .NextCommand(review => review.DeployCommand)
-                                        .WithCommitFinalStep();
+                                        .Build(StepKind.Commit);
 
             return wizard;
         }

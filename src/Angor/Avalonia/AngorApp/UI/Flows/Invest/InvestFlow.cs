@@ -12,6 +12,7 @@ using AngorApp.UI.TransactionDrafts.DraftTypes.Investment;
 using AngorApp.UI.Shared.Controls.Common.Success;
 using Zafiro.Avalonia.Dialogs.Wizards.Slim;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.UI.Wizards.Slim;
 using Zafiro.UI.Wizards.Slim.Builder;
 using AmountViewModel = AngorApp.UI.Flows.Invest.Amount.AmountViewModel;
 using ITransactionDraftViewModel = AngorApp.UI.TransactionDrafts.DraftTypes.ITransactionDraftViewModel;
@@ -32,7 +33,7 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
                   .NextCommand((model, investData) => InvestCommand(model.CommitDraft, investData.above).Enhance(investData.above ? "Submit Offer" : "Invest Now"))
                   .Then(message => new SuccessViewModel(message), "Investment Successful")
                   .Next(_ => Unit.Default, "Close").Always()
-                  .WithCompletionFinalStep();
+                  .Build(StepKind.Completion);
 
         return await uiServices.Dialog.ShowWizard(wizard, @$"Invest in ""{fullProject.Name}""");
     }
@@ -102,9 +103,9 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
                }
            },
             uiServices)
-            {
-                Amount = new AmountUI(satsToInvest)
-            };
+        {
+            Amount = new AmountUI(satsToInvest)
+        };
 
         return transactionDraftPreviewerViewModel;
     }

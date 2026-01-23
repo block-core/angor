@@ -38,7 +38,7 @@ public class CreateProjectFlow(
         var wizard = WizardBuilder
             .StartWith(() => new CreateProjectViewModel(wallet, projectSeed, uiServices, projectAppService, founderAppService, logger), "Create Project").NextCommand(model => model.Create)
             .Then(transactionId => new ProjectCreatedViewModel(transactionId, commands), "Success").Next((_, projectId) => projectId, "Close").Always()
-            .WithCompletionFinalStep();
+            .Build(StepKind.Completion);
 
         return wizard;
     }

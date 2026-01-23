@@ -14,6 +14,7 @@ public interface IWallet
     IAmountUI ReservedBalance { get; }
     Result IsAddressValid(string address);
     WalletId Id { get; }
+    public string Name { get; }
     IEnhancedCommand Send { get; }
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
     public Task<Result<string>> GenerateReceiveAddress();

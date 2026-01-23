@@ -1,6 +1,10 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <Design.PreviewWith>
+        <Border BoxShadow="{DynamicResource ItemShadowBig}" />
+    </Design.PreviewWith>
+    
     <!-- ═════════════════════════════════════════════════════════════════════
          BRAND COLORS - Official Angor Design System
          Reference: angor.tx1138.com/storybook/?path=/docs/brand-colors
@@ -69,6 +73,7 @@
             <!-- Shadows -->
             <BoxShadows x:Key="SectionShadow">0 0 30 0 LightGray</BoxShadows>
             <BoxShadows x:Key="ItemShadow">0 0 20 0 LightGray</BoxShadows>
+            <BoxShadows x:Key="CardShadow">0 2 15 0 #40000000</BoxShadows>
             <BoxShadows x:Key="ItemShadowBig">0 5 25 0 LightGray</BoxShadows>
 
             <!-- Button Brushes -->
@@ -217,7 +222,7 @@
 
     <!-- TextBox overrides -->
     <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="BitcoinOrange" />
-    <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey=" SurfaceHover" />
+    <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="SurfaceHover" />
     <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
 
 </ResourceDictionary>

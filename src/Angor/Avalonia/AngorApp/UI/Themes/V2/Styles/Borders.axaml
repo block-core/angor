@@ -1,0 +1,95 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:zafiro="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <Border.Styles>
+                <Style Selector="StackPanel Border">
+                    <Setter Property="Height" Value="50" />
+                    <Setter Property="Width" Value="100" />
+                </Style>
+            </Border.Styles>
+            <StackPanel Spacing="10">
+                <Border Classes="Yellow"></Border>
+                <Border Classes="Pink" />
+                <Border Classes="Green" />
+                <Border Classes="LightGray" />
+                <Border Classes="Orange" />
+                <Border Classes="Translucent" />
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+    
+    <Style Selector="Border.SmallPadding">
+        <Setter Property="Padding" Value="10 4" />
+    </Style>
+    <Style Selector="HeaderedContainer.SmallPadding">
+        <Setter Property="Padding" Value="10 4" />
+    </Style>
+    <Style Selector="OverlayBorder.SmallPadding">
+        <Setter Property="Padding" Value="10 4" />
+    </Style>
+    <Style Selector="EdgePanel.SmallPadding">
+        <Setter Property="Padding" Value="10 4" />
+    </Style>
+    
+    <Style Selector="Border.RegularPadding">
+        <Setter Property="Padding" Value="10" />
+    </Style>
+    <Style Selector="HeaderedContainer.RegularPadding">
+        <Setter Property="Padding" Value="10" />
+    </Style>
+    <Style Selector="OverlayBorder.RegularPadding">
+        <Setter Property="Padding" Value="10" />
+    </Style>
+    <Style Selector="EdgePanel.RegularPadding">
+        <Setter Property="Padding" Value="10" />
+    </Style>
+    
+    <Style Selector=":is(Control).Rounded">
+        <Setter Property="Border.CornerRadius" Value="10" />
+    </Style>
+
+    <Style Selector="Border.Yellow, HeaderedContainer.Yellow, OverlayBorder.Yellow, EdgePanel.Yellow">
+        <Setter Property="Border.BorderBrush" Value="#fef08a" />
+        <Setter Property="Border.Background" Value="#FEFCE8" />
+        <Setter Property="Border.BorderThickness" Value="1" />
+    </Style>
+    
+    <Style Selector="Border.Pink, HeaderedContainer.Pink, OverlayBorder.Pink, EdgePanel.Pink">
+        <Setter Property="Border.BorderBrush" Value="#fed7aa" />
+        <Setter Property="Border.Background" Value="#fff7ed" />
+        <Setter Property="Border.BorderThickness" Value="1" />
+    </Style>
+    
+    <Style Selector="Border.LightGray, HeaderedContainer.LightGray, OverlayBorder.LightGray, EdgePanel.LightGray">
+        <Setter Property="Border.BorderBrush" Value="#F9FAFB" />
+        <Setter Property="Border.Background" Value="#F9FAFB" />
+        <Setter Property="Border.BorderThickness" Value="1" />
+    </Style>
+    
+    <Style Selector="Border.Green, HeaderedContainer.Green, OverlayBorder.Green, EdgePanel.Green">
+        <Setter Property="IconOptions.Fill" Value="{DynamicResource Brand}"></Setter>
+        <Setter Property="Border.BorderBrush" Value="#86EFAC" />
+        <Setter Property="Border.Background" Value="#F0FDF4" />
+        <Setter Property="Border.BorderThickness" Value="1" />
+    </Style>
+    
+    <Style Selector="Border.Orange, HeaderedContainer.Orange, OverlayBorder.Orange, EdgePanel.Orange">
+        <Setter Property="Border.BorderBrush" Value="#fef3c7" />
+        <Setter Property="Border.Background" Value="#fef3c7" />
+        <Setter Property="Border.BorderThickness" Value="1" />
+        <Setter Property="IconOptions.Fill" Value="#d97706" />
+    </Style>
+    
+    <Style Selector="Border.Circle">
+        <Setter Property="Border.CornerRadius" Value="1000" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    
+    <Style Selector="Border.Translucent">
+        <Setter Property="Border.Background" Value="#194B7C5A" />
+    </Style>
+
+</Styles>

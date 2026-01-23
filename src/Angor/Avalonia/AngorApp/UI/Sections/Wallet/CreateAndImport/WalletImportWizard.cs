@@ -7,6 +7,7 @@ using AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.RecoverySeedWords;
 using AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.Summary;
 using AngorApp.UI.Shared.Controls.Common.Success;
 using Zafiro.Avalonia.Dialogs.Wizards.Slim;
+using Zafiro.UI.Wizards.Slim;
 using Zafiro.UI.Wizards.Slim.Builder;
 
 namespace AngorApp.UI.Sections.Wallet.CreateAndImport;
@@ -34,7 +35,7 @@ public class WalletImportWizard(UIServices uiServices, IWalletProvider walletPro
                 IsRecovery = true
             }, "Summary").NextCommand(model => model.CreateWallet.Enhance("Import Wallet"))
             .Then(_ => new SuccessViewModel("Wallet imported successfully"), "Wallet Recovery").Next(_ => Unit.Default, "Close").Always()
-            .WithCompletionFinalStep();
+            .Build(StepKind.Completion);
 
         return await uiServices.Dialog.ShowWizard(wizard, "Recover wallet").Map(_ => Unit.Default);
     }

@@ -18,7 +18,7 @@ public class WalletSample : IWallet
         new BroadcastedTransactionSample { Balance = new AmountUI(30000), RawJson = "json" }
     ]);
 
-    public IAmountUI Balance { get; } = new AmountUI(5_0000_0000);
+    public IAmountUI Balance { get; set; } = new AmountUI(5_0000_0000);
     public IAmountUI UnconfirmedBalance { get; } = new AmountUI(1_0000_0000);
     public IAmountUI ReservedBalance { get; } = new AmountUI(5000_0000);
 
@@ -41,6 +41,7 @@ public class WalletSample : IWallet
     }
 
     public WalletId Id { get; }
+    public string Name { get; set; } = "Default";
     public IEnhancedCommand Send { get; }
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
     public IEnhancedCommand<Result> GetTestCoins { get; }
