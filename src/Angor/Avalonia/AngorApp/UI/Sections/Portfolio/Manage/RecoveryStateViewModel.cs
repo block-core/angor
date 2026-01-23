@@ -40,6 +40,23 @@ public sealed record RecoveryStateViewModel
             .ToList();
 
         BatchAction = CreateBatchCommand(this);
+        
+        GetNsec = ReactiveCommand.CreateFromTask(ShowInvestorNsecAsync).Enhance();
+    }
+    
+    private async Task ShowInvestorNsecAsync()
+    {
+        var result = await investmentAppService.GetInvestorNsec(new GetInvestorNsec.GetInvestorNsecRequest(WalletId, dto.FounderKey));
+        
+        if (result.IsSuccess)
+        {
+            var copyableMessage = new ClipboardText($"Your investment private key (nsec):\n\n{result.Value.Nsec}\n\nSelect and copy the key above.");
+            await uiServices.Dialog.ShowOk(copyableMessage, "Investor nsec");
+        }
+        else
+        {
+            await uiServices.Dialog.ShowOk("Error", $"Failed to retrieve nsec: {result.Error}");
+        }
     }
 
     private IEnhancedCommand<Maybe<Guid>> CreateBatchCommand(RecoveryStateViewModel recoveryStateViewModel)
@@ -123,6 +140,8 @@ public sealed record RecoveryStateViewModel
     }
 
     public IEnhancedCommand<Maybe<Guid>> BatchAction { get; }
+    
+    public IEnhancedCommand GetNsec { get; }
 
     public IEnhancedCommand ViewTransaction { get; }
 

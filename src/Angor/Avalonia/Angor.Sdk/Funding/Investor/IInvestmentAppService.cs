@@ -27,6 +27,9 @@ public interface IInvestmentAppService
 
     Task<Result<CheckPenaltyThreshold.CheckPenaltyThresholdResponse>> IsInvestmentAbovePenaltyThreshold(CheckPenaltyThreshold.CheckPenaltyThresholdRequest request);
 
+    // Methods for getting investor keys
+    Task<Result<GetInvestorNsec.GetInvestorNsecResponse>> GetInvestorNsec(GetInvestorNsec.GetInvestorNsecRequest request);
+
     // Methods for monitoring external funding
     /// <summary>
     /// Monitors a specific address for incoming funds from an external wallet.

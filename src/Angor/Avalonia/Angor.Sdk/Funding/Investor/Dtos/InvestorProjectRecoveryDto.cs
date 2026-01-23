@@ -17,6 +17,8 @@ public class InvestorProjectRecoveryDto
 
     public string? ExplorerLink { get; set; }
     public string TransactionId { get; set; }
+    
+    public string FounderKey { get; set; } = string.Empty;
 
     public List<InvestorStageItemDto> Items { get; set; } = new();
 }

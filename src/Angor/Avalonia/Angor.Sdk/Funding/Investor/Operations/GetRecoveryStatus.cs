@@ -8,11 +8,13 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
+using Angor.Shared.Utilities;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Angor.Sdk.Funding.Projects;
+using Script = Blockcore.Consensus.ScriptInfo.Script;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 
@@ -91,10 +93,21 @@ public static class GetRecoveryStatus
                 return Result.Failure<(QueryTransaction,IEnumerable<InvestorStageItemDto>)>("Investment transaction info not found");
             }
 
-            var stagesData = Result.Try(() => project.Stages.Select((_, stageIndex) =>
+            // Determine stage count based on project type
+            // For all project types, stages correspond to Taproot outputs
+            // Transaction structure: index 0 = Angor fee, index 1 = OP_RETURN, index 2+ = stage outputs
+            var taprootOutputs = trxInfo.Outputs
+                .Where(o => Script.FromHex(o.ScriptPubKey).IsTaprooOutput())
+                .OrderBy(o => o.Index)
+                .ToList();
+
+            if (!taprootOutputs.Any())
             {
-                var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
-                
+                return Result.Failure<(QueryTransaction, IEnumerable<InvestorStageItemDto>)>("No stage outputs found in investment transaction");
+            }
+
+            var stagesData = Result.Try(() => taprootOutputs.Select((output, stageIndex) =>
+            {
                 return new InvestorStageItemDto
                 {
                     StageIndex = stageIndex,
@@ -160,6 +173,7 @@ public static class GetRecoveryStatus
                 Name = project.Name,
                 PenaltyDays = projectInfo.PenaltyDays,
                 ProjectIdentifier = project.Id.Value,
+                FounderKey = projectInfo.FounderKey,
                 Items = stageItems.ToList()
             };
 
