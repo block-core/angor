@@ -1,0 +1,191 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <ScrollViewer>
+            <StackPanel Spacing="20" Width="400">
+                <!-- Light Theme -->
+                <ThemeVariantScope RequestedThemeVariant="Light">
+                    <Border Padding="20" Background="{DynamicResource AppBackground}">
+                        <StackPanel Spacing="15">
+                            <TextBlock FontWeight="Bold" FontSize="16">Light Theme</TextBlock>
+                            
+                            <StackPanel Spacing="3">
+                                <TextBlock FontWeight="Bold" FontSize="12" Foreground="Gray">SEMANTIC PRESETS</TextBlock>
+                                <TextBlock Classes="Title" Text="Title (25px Bold)" />
+                                <TextBlock Classes="Subtitle" Text="Subtitle (18px Light)" />
+                                <TextBlock Classes="Header" Text="Header (Bold + Strong + Ellipsis)" />
+                                <TextBlock Classes="Regular" Text="Regular (16px Light)" />
+                                <TextBlock Classes="Strong" Text="Strong (Bold + Strong)" />
+                            </StackPanel>
+                            
+                            <StackPanel Spacing="3">
+                                <TextBlock FontWeight="Bold" FontSize="12" Foreground="Gray">SIZE SCALE</TextBlock>
+                                <TextBlock Classes="Size-XXS" Text="Size-XXS (11px)" />
+                                <TextBlock Classes="Size-XS" Text="Size-XS (12px)" />
+                                <TextBlock Classes="Size-S" Text="Size-S (14px)" />
+                                <TextBlock Classes="Size-M" Text="Size-M (16px)" />
+                                <TextBlock Classes="Size-L" Text="Size-L (18px)" />
+                                <TextBlock Classes="Size-XL" Text="Size-XL (25px)" />
+                                <TextBlock Classes="Size-XXL" Text="Size-XXL (32px)" />
+                            </StackPanel>
+                            
+                            <StackPanel Spacing="3">
+                                <TextBlock FontWeight="Bold" FontSize="12" Foreground="Gray">WEIGHT + COLOR</TextBlock>
+                                <TextBlock Classes="Weight-Light" Text="Weight-Light" />
+                                <TextBlock Classes="Weight-Bold" Text="Weight-Bold" />
+                                <TextBlock Classes="Text-Strong" Text="Text-Strong" />
+                                <TextBlock Classes="Text-Muted" Text="Text-Muted" />
+                                <TextBlock Classes="Text-Dimmed" Text="Text-Dimmed" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </ThemeVariantScope>
+                
+                <!-- Dark Theme -->
+                <ThemeVariantScope RequestedThemeVariant="Dark">
+                    <Border Padding="20" Background="{DynamicResource AppBackground}">
+                        <StackPanel Spacing="15">
+                            <TextBlock FontWeight="Bold" FontSize="16" Foreground="White">Dark Theme</TextBlock>
+                            
+                            <StackPanel Spacing="3">
+                                <TextBlock Classes="Title" Text="Title" />
+                                <TextBlock Classes="Subtitle" Text="Subtitle" />
+                                <TextBlock Classes="Header" Text="Header" />
+                                <TextBlock Classes="Regular" Text="Regular" />
+                                <TextBlock Classes="Strong" Text="Strong" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </ThemeVariantScope>
+            </StackPanel>
+        </ScrollViewer>
+    </Design.PreviewWith>
+
+    <!-- Base TextBlock Style -->
+    <Style Selector="TextBlock">
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- Run Styles -->
+    <Style Selector="Run.Label">
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+    </Style>
+
+    <Style Selector="Run.Thin">
+        <Setter Property="FontWeight" Value="SemiLight" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+    </Style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         TEXT STYLES - Atomic Classes (combinable, single responsibility)
+         Usage: <TextBlock Classes="Size-L Weight-Bold Text-Strong" />
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Atomic: Size (FontSize only) -->
+    <Style Selector="TextBlock.Size-XXS">
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+    <Style Selector="TextBlock.Size-XS">
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="TextBlock.Size-S">
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+    <Style Selector="TextBlock.Size-M">
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+    <Style Selector="TextBlock.Size-L">
+        <Setter Property="FontSize" Value="18" />
+    </Style>
+    <Style Selector="TextBlock.Size-XL">
+        <Setter Property="FontSize" Value="25" />
+    </Style>
+    <Style Selector="TextBlock.Size-XXL">
+        <Setter Property="FontSize" Value="32" />
+    </Style>
+
+    <!-- Atomic: Weight (FontWeight only) -->
+    <Style Selector="TextBlock.Weight-Light">
+        <Setter Property="FontWeight" Value="SemiLight" />
+    </Style>
+    <Style Selector="TextBlock.Weight-Bold">
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <!-- Atomic: Color (Foreground only) -->
+    <Style Selector="TextBlock.Text-Strong">
+        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+    </Style>
+    <Style Selector="TextBlock.Text-Muted">
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+    </Style>
+    <Style Selector="TextBlock.Text-Dimmed">
+        <Setter Property="Foreground" Value="{DynamicResource Dimmed}" />
+    </Style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         TEXT STYLES - Semantic Presets (convenience combos)
+         These are shortcuts for common combinations of atomic classes.
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Title: Size-XL + Weight-Bold -->
+    <Style Selector="TextBlock.Title">
+        <Setter Property="FontSize" Value="25" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <!-- Subtitle: Size-L + Weight-Light -->
+    <Style Selector="TextBlock.Subtitle">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontWeight" Value="SemiLight" />
+    </Style>
+
+    <!-- Header: Size-L + Weight-Bold + Text-Strong + NoWrap + Ellipsis -->
+    <Style Selector="TextBlock.Header">
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+        <Setter Property="TextTrimming" Value="{x:Static TextTrimming.CharacterEllipsis}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+    </Style>
+
+    <!-- Regular: Size-M + Weight-Light (body text) -->
+    <Style Selector="TextBlock.Regular">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="SemiLight" />
+    </Style>
+
+    <!-- Strong: Weight-Bold + Text-Strong (emphasis without size change) -->
+    <Style Selector="TextBlock.Strong">
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+    </Style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         TEXT STYLES - Legacy/Aliases (for backward compatibility)
+         Consider migrating to atomic classes over time.
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Bold: Weight-Bold only -->
+    <Style Selector="TextBlock.Bold">
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <!-- Tiny: Size-XS only (prefer Size-XS) -->
+    <Style Selector="TextBlock.Tiny">
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <!-- Thin: Weight very light -->
+    <Style Selector="TextBlock.Thin">
+        <Setter Property="FontWeight" Value="Thin" />
+    </Style>
+
+    <!-- Big: Size-L + Weight-Bold (prefer Size-L Weight-Bold) -->
+    <Style Selector="TextBlock.Big">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+</Styles>
