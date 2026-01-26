@@ -1,5 +1,5 @@
-using Angor.Contexts.Funding.Investor.Dtos;
-using Angor.Contexts.Funding.Shared;
+using Angor.Sdk.Funding.Investor.Dtos;
+using Angor.Sdk.Funding.Shared;
 
 namespace AngorApp.UI.Sections.Portfolio.Manage;
 

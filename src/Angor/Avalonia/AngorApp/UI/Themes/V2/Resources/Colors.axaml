@@ -1,0 +1,223 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ═════════════════════════════════════════════════════════════════════
+         BRAND COLORS - Official Angor Design System
+         Reference: angor.tx1138.com/storybook/?path=/docs/brand-colors
+         ═════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Primary Colors -->
+    <Color x:Key="PrimaryGreen">#4B7C5A</Color>
+    <Color x:Key="PrimaryGreenHover">#3D6448</Color>
+    <Color x:Key="PrimaryGreenDark">#2D5A3D</Color>
+    <Color x:Key="PrimaryBlack">#1A1A1A</Color>
+    <Color x:Key="PrimaryBlackHover">#0A0A0A</Color>
+
+    <!-- Secondary Colors -->
+    <Color x:Key="Success">#22C55E</Color>
+    <Color x:Key="Error">#EF4444</Color>
+    <Color x:Key="Warning">#F59E0B</Color>
+    <Color x:Key="Info">#3B82F6</Color>
+
+    <!-- Bitcoin -->
+    <Color x:Key="BitcoinOrange">#F7931A</Color>
+
+    <!-- Legacy aliases (for backward compatibility) -->
+    <Color x:Key="Accent">#2D5A3D</Color>
+    <Color x:Key="Dimmed">#9ca3af</Color>
+
+    <ResourceDictionary.ThemeDictionaries>
+        
+        <!-- ═══════════════════════════════════════════════════════════════════════
+             LIGHT THEME
+             Reference: Storybook Light Mode
+             ═══════════════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Default">
+            
+            <!-- Background Colors (from Storybook) -->
+            <Color x:Key="PageBackground">#FFFFFF</Color>
+            <Color x:Key="CardBackground">#F9FAFB</Color>
+            <Color x:Key="Border">#E5E7EB</Color>
+
+            <!-- Text Colors (from Storybook) -->
+            <Color x:Key="BodyText">#1A1A1A</Color>
+            <Color x:Key="Values">#1A1A1A</Color>
+            <Color x:Key="Labels">#6B7280</Color>
+
+            <!-- Legacy/Extended Colors -->
+            <Color x:Key="AppBackground">#faf9f6</Color>
+            <Color x:Key="Surface">White</Color>
+            <Color x:Key="Stroke">#19000000</Color>
+            <Color x:Key="TextMuted">#6B7280</Color>           <!-- = Labels -->
+            <Color x:Key="TextStrong">#0A0A0A</Color>          <!-- ≈ PrimaryBlackHover -->
+            <Color x:Key="Brand">#2D5A3D</Color>               <!-- = PrimaryGreenDark -->
+            <Color x:Key="Highlight">#2D5A3D</Color>           <!-- = PrimaryGreenDark -->
+            <Color x:Key="BitcoinAccent">#F7931A</Color>       <!-- = BitcoinOrange -->
+            <Color x:Key="SurfaceHover">#E9E9E9</Color>
+            <Color x:Key="SurfaceSelected">White</Color>
+            <Color x:Key="CardSurface">White</Color>
+            <Color x:Key="SurfaceSubtle">#E5E7EB</Color>       <!-- = Border -->
+            <Color x:Key="SurfaceSubtler">#FAF9F6</Color>
+            <Color x:Key="DashColorHighlight">#606060</Color>
+
+            <!-- Error Colors -->
+            <StaticResource x:Key="SystemControlErrorTextForegroundBrush" ResourceKey="Error" />
+            <SolidColorBrush x:Key="ErrorSoft" Color="#fee2e2" />
+            <SolidColorBrush x:Key="ErrorHard" Color="#fecaca" />
+            <SolidColorBrush x:Key="ErrorForeground" Color="#dc2626" />
+
+            <!-- Shadows -->
+            <BoxShadows x:Key="SectionShadow">0 0 30 0 LightGray</BoxShadows>
+            <BoxShadows x:Key="ItemShadow">0 0 20 0 LightGray</BoxShadows>
+            <BoxShadows x:Key="ItemShadowBig">0 5 25 0 LightGray</BoxShadows>
+
+            <!-- Button Brushes -->
+            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="{StaticResource SurfaceHover}" />
+            <SolidColorBrush x:Key="PrimaryButtonBackground" Color="{StaticResource TextStrong}" />
+            <SolidColorBrush x:Key="PrimaryButtonBorder" Color="{StaticResource TextStrong}" />
+
+            <SolidColorBrush x:Key="SecondaryButtonForeground" Color="{StaticResource TextStrong}" />
+            <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{StaticResource SurfaceHover}" />
+            <SolidColorBrush x:Key="SecondaryButtonBorder" Color="{StaticResource TextStrong}" />
+
+            <!-- Decorative Brushes -->
+            <VisualBrush x:Key="TiledLogoBrush" Opacity="0.05" DestinationRect="0,0,72,72" Stretch="UniformToFill" TileMode="Tile">
+                <VisualBrush.Visual>
+                    <Svg Path="/Assets/pattern.svg" />
+                </VisualBrush.Visual>
+            </VisualBrush>
+
+            <LinearGradientBrush x:Key="Translucid" Opacity="0.5">
+                <GradientStops>
+                    <GradientStop Color="#1A2D5A3D" Offset="0" />
+                    <GradientStop Color="#0D2D5A3D" Offset="1" />
+                </GradientStops>
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="TranslucidOrange" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStops>
+                    <GradientStop Offset="0" Color="#fff7ed" />
+                    <GradientStop Offset="1" Color="#fff7ed" />
+                </GradientStops>
+            </LinearGradientBrush>
+
+        </ResourceDictionary>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════
+             DARK THEME
+             Reference: Storybook Dark Mode
+             ═══════════════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Dark">
+            
+            <!-- Background Colors (from Storybook) -->
+            <Color x:Key="PageBackground">#1A1A1A</Color>      <!-- = PrimaryBlack -->
+            <Color x:Key="CardBackground">#0A0A0A</Color>      <!-- = PrimaryBlackHover -->
+            <Color x:Key="Border">#404040</Color>
+
+            <!-- Text Colors (from Storybook) -->
+            <Color x:Key="BodyText">#FAFAFA</Color>
+            <Color x:Key="Values">#9CA3AF</Color>
+            <Color x:Key="Labels">#888888</Color>
+
+            <!-- Legacy/Extended Colors -->
+            <Color x:Key="AppBackground">#0A0A0A</Color>       <!-- = CardBackground (Dark) -->
+            <Color x:Key="Surface">#B31A1A1A</Color>
+            <Color x:Key="Stroke">#19FFFFFF</Color>
+            <Color x:Key="TextMuted">#A0A0A0</Color>
+            <Color x:Key="TextStrong">#FAFAFA</Color>          <!-- = BodyText (Dark) -->
+            <Color x:Key="Brand">#5FAF78</Color>
+            <Color x:Key="Highlight">#E5E8E1</Color>
+            <Color x:Key="BitcoinAccent">#F7931A</Color>       <!-- = BitcoinOrange -->
+            <Color x:Key="SurfaceHover">#3A3A3A</Color>
+            <Color x:Key="SurfaceSelected">#202020</Color>
+            <Color x:Key="CardSurface">#2A2A2A</Color>
+            <Color x:Key="SurfaceSubtle">#333333</Color>
+            <Color x:Key="SurfaceSubtler">#0A0A0A</Color>
+            <Color x:Key="DashColorHighlight">#FBBF24</Color>
+
+            <!-- Error Colors -->
+            <StaticResource x:Key="SystemControlErrorTextForegroundBrush" ResourceKey="Error" />
+            <SolidColorBrush x:Key="ErrorSoft" Color="#667f1d1d" />
+            <SolidColorBrush x:Key="ErrorHard" Color="#80991b1b" />
+            <SolidColorBrush x:Key="ErrorForeground" Color="#80991b1b" />
+
+            <!-- Decorative Brushes -->
+            <SolidColorBrush x:Key="Translucid" Color="#0A0A0A" />
+
+            <LinearGradientBrush x:Key="TranslucidOrange" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStops>
+                    <GradientStop Offset="0" Color="#0EF7931A" />
+                    <GradientStop Offset="1" Color="#1AF7931A" />
+                </GradientStops>
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="ProgressBrush">
+                <GradientStops>
+                    <GradientStop Offset="0" Color="{StaticResource Brand}" />
+                    <GradientStop Offset="1" Color="#7DCE96" />
+                </GradientStops>
+            </LinearGradientBrush>
+
+            <!-- Shadows (disabled for dark theme) -->
+            <BoxShadows x:Key="SectionShadow">0 0 0 0 Transparent</BoxShadows>
+            <BoxShadows x:Key="ItemShadow">0 0 0 0 LightGray</BoxShadows>
+            <BoxShadows x:Key="ItemShadowBig">0 0 0 0 LightGray</BoxShadows>
+
+            <!-- Button Brushes -->
+            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="{StaticResource TextStrong}" />
+            <LinearGradientBrush x:Key="PrimaryButtonBackground" Opacity="0.5">
+                <GradientStops>
+                    <GradientStop Offset="0" Color="{StaticResource Stroke}" />
+                    <GradientStop Offset="1" Color="{StaticResource Surface}" />
+                </GradientStops>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="PrimaryButtonBorder" Color="{StaticResource Stroke}" />
+
+            <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource SurfaceHover}" />
+            <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource Accent}" />
+            <SolidColorBrush x:Key="AccentButtonBorder" Color="{StaticResource Stroke}" />
+
+            <SolidColorBrush x:Key="SecondaryButtonForeground" Color="{StaticResource TextStrong}" />
+            <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{StaticResource Surface}" />
+            <SolidColorBrush x:Key="SecondaryButtonBorder" Color="{StaticResource Stroke}" />
+
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         SHARED RESOURCES (theme-independent)
+         ═══════════════════════════════════════════════════════════════════════ -->
+    
+    <!-- CheckBox overrides -->
+    <StaticResource x:Key="CheckBoxCheckBackgroundFillChecked" ResourceKey="Accent" />
+    <StaticResource x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" ResourceKey="Accent" />
+    <StaticResource x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" ResourceKey="Accent" />
+    <Thickness x:Key="CheckBoxBorderThemeThickness">2</Thickness>
+    <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUnchecked" ResourceKey="Stroke" />
+    <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" ResourceKey="Accent" />
+
+    <!-- Progress -->
+    <LinearGradientBrush x:Key="ProgressBrush">
+        <GradientStops>
+            <GradientStop Offset="0" Color="{StaticResource PrimaryGreenDark}" />
+            <GradientStop Offset="1" Color="#4A8F5F" />
+        </GradientStops>
+    </LinearGradientBrush>
+
+    <!-- Accent Button (fallback) -->
+    <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource SurfaceHover}" />
+    <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource Accent}" />
+    <SolidColorBrush x:Key="AccentButtonBorder" Color="{StaticResource Accent}" />
+
+    <!-- Translucid Background -->
+    <LinearGradientBrush x:Key="TranslucidBackground" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#192D5A3D" Offset="0" />
+        <GradientStop Color="#102D5A3D" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- TextBox overrides -->
+    <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="BitcoinOrange" />
+    <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey=" SurfaceHover" />
+    <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
+
+</ResourceDictionary>

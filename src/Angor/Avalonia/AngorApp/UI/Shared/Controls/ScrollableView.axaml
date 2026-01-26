@@ -1,0 +1,38 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls">
+
+    <Design.PreviewWith>
+        <controls:ScrollableView Width="400" Height="300" ContentPadding="20" MaxContentWidth="300">
+            <StackPanel Spacing="10">
+                <TextBlock Text="This is scrollable content" />
+                <TextBlock Text="With automatic padding" />
+                <TextBlock Text="And max width constraint" />
+                <Border Height="400" Background="LightGray">
+                    <TextBlock Text="Tall content to demonstrate scrolling" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                </Border>
+            </StackPanel>
+        </controls:ScrollableView>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <ControlTheme TargetType="controls:ScrollableView" x:Key="{x:Type controls:ScrollableView}">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                        <ContentPresenter x:Name="PART_ContentPresenter"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Margin="{TemplateBinding ContentPadding}"
+                                          MaxWidth="{TemplateBinding MaxContentWidth}"
+                                          HorizontalAlignment="Stretch"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </ScrollViewer>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </Styles.Resources>
+
+</Styles>

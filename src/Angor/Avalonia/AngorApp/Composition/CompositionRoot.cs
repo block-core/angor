@@ -1,17 +1,16 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Funding;
-using Angor.Contexts.Integration.WalletFunding;
-using Angor.Contexts.Wallet;
-using Angor.Contexts.Wallet.Domain;
-using Angor.Contexts.Wallet.Infrastructure.Impl;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding;
+using Angor.Sdk.Integration;
+using Angor.Sdk.Wallet;
+using Angor.Sdk.Wallet.Domain;
+using Angor.Sdk.Wallet.Infrastructure.Impl;
 using Angor.Data.Documents.LiteDb.Extensions;
 using Angor.Shared;
 using Angor.Shared.Services;
 using AngorApp.Core;
-using AngorApp.Composition.Registrations.Sections;
 using AngorApp.Composition.Registrations.Services;
 using AngorApp.Composition.Registrations.ViewModels;
-using AngorApp.UI.Sections.Shell;
+using AngorApp.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Zafiro.UI.Navigation;
@@ -21,7 +20,7 @@ namespace AngorApp.Composition;
 
 public static class CompositionRoot
 {
-    public static IMainViewModel CreateMainViewModel(Control topLevelView, string profileName)
+    public static IShellViewModel CreateMainViewModel(Control topLevelView, string profileName)
     {
         var services = new ServiceCollection();
         var applicationStorage = new ApplicationStorage();
@@ -69,12 +68,12 @@ public static class CompositionRoot
         // Integration services
         services.AddSingleton<ISeedwordsProvider, SeedwordsProvider>();
 
-        services.AddAppSections(logger);
+        services.AddSectionsFromAttributes(logger);
 
         var serviceProvider = services.BuildServiceProvider();
         serviceProvider.GetRequiredService<INetworkService>().AddSettingsIfNotExist();
 
-        return serviceProvider.GetRequiredService<IMainViewModel>();
+        return serviceProvider.GetRequiredService<IShellViewModel>();
     }
 
 

@@ -1,0 +1,67 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <Styles.Resources>
+        
+        <ControlTheme x:Key="ButtonizedListBoxItem" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+            <Setter Property="Padding" Value="10"></Setter>
+            <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+            <Setter Property="BorderThickness" Value="1" />
+            
+            <Setter Property="CornerRadius" Value="10" />
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Transitions">
+                    <Transitions>
+                        <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
+                        <BrushTransition Property="Background" Duration="0:0:0.2" />
+                    </Transitions>
+                </Setter>
+            </Style>
+
+            <Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="{DynamicResource Accent}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+                <Setter Property="Foreground" Value="{DynamicResource SurfaceHover}" />
+            </Style>
+            <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+            </Style>
+        </ControlTheme>
+        
+        <ControlTheme x:Key="ButtonizedAccent" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Transitions">
+                    <Transitions>
+                        <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
+                        <BrushTransition Property="Background" Duration="0:0:0.2" />
+                    </Transitions>
+                </Setter>
+            </Style>
+
+            <Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="{DynamicResource Accent}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+                <Setter Property="Foreground" Value="{DynamicResource SurfaceHover}" />
+            </Style>
+            <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+            </Style>
+        </ControlTheme>
+    </Styles.Resources>
+    
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <WrapPanel ItemSpacing="10">
+                <ListBoxItem IsSelected="True" Content="Selected" Theme="{StaticResource ButtonizedListBoxItem}" />
+                <ListBoxItem IsSelected="False" Content="Unselected" Theme="{StaticResource ButtonizedListBoxItem}" />
+                
+                <ListBoxItem IsSelected="True" Content="Selected" Theme="{StaticResource ButtonizedAccent}" />
+                <ListBoxItem IsSelected="False" Content="Unselected" Theme="{StaticResource ButtonizedAccent}" />
+            </WrapPanel>
+        </Border>
+    </Design.PreviewWith>
+</Styles>

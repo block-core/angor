@@ -1,4 +1,6 @@
+using Angor.Sdk.Funding.Founder.Dtos;
 using AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
+using Zafiro.UI.Commands;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject.Profile;
 
@@ -12,4 +14,8 @@ public interface IProfileViewModel : IHaveErrors
     string? BannerUri { get; set; }
     public string? Nip05Username { get; set; }
     public string? LightningAddress { get; set; }
+    
+    IEnhancedCommand<Result> ImportFromMoonshot { get; }
+    
+    MoonshotProjectData? LastImportedMoonshotData { get; }
 }

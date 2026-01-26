@@ -1,4 +1,4 @@
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Wallet.Domain;
 using CSharpFunctionalExtensions;
 
 namespace AngorApp.Model.Contracts.Wallet;

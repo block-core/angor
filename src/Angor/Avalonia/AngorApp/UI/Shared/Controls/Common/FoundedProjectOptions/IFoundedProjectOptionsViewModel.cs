@@ -1,4 +1,4 @@
-using Angor.Contexts.Funding.Investor;
+using Angor.Sdk.Funding.Investor;
 using AngorApp.UI.Sections.Portfolio;
 using AngorApp.UI.Sections.Portfolio.Items;
 using Zafiro.UI.Commands;

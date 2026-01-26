@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Domain;
 using AngorApp.UI.Sections.Browse;
 using AngorApp.UI.Sections.Wallet.Main;
 using AngorApp.UI.Sections.Wallet.Main;
@@ -19,6 +19,8 @@ public class WalletSample : IWallet
     ]);
 
     public IAmountUI Balance { get; } = new AmountUI(5_0000_0000);
+    public IAmountUI UnconfirmedBalance { get; } = new AmountUI(1_0000_0000);
+    public IAmountUI ReservedBalance { get; } = new AmountUI(5000_0000);
 
     public async Task<Result<ITransactionDraft>> CreateDraft(long amount, string address, long feerate)
     {
@@ -41,7 +43,7 @@ public class WalletSample : IWallet
     public WalletId Id { get; }
     public IEnhancedCommand Send { get; }
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
-    public IEnhancedCommand GetTestCoins { get; }
+    public IEnhancedCommand<Result> GetTestCoins { get; }
     public IObservable<bool> HasTransactions { get; } = Observable.Return(false);
     public IObservable<bool> HasBalance { get; } = Observable.Return(false);
 

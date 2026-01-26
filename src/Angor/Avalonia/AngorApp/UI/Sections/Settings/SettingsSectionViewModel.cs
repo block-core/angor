@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
-using Angor.Contexts.Wallet.Infrastructure.Impl;
-using Angor.Contexts.Wallet.Infrastructure.Interfaces;
+using Angor.Sdk.Wallet.Infrastructure.Impl;
+using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
@@ -14,9 +14,11 @@ using AngorApp.UI.Sections.Wallet.CreateAndImport;
 using ReactiveUI;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.UI.Shell.Utils;
 
 namespace AngorApp.UI.Sections.Settings;
 
+[Section("Settings")]
 public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSectionViewModel
 {
     [Reactive]
@@ -65,7 +67,12 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Indexers = new ObservableCollection<SettingsUrlViewModel>(settings.Indexers.Select(CreateIndexer));
         Relays = new ObservableCollection<SettingsUrlViewModel>(settings.Relays.Select(CreateRelay));
         currentNetwork = networkStorage.GetNetwork();
-        networkConfiguration.SetNetwork(currentNetwork == "Mainnet" ? new BitcoinMain() : new Angornet());
+        networkConfiguration.SetNetwork(currentNetwork switch
+        {
+            "Mainnet" => new BitcoinMain(),
+            "Liquid" => new LiquidMain(),
+            _ => new Angornet()
+        });
         Network = currentNetwork;
         IsTestnet = currentNetwork == "Angornet";
 
@@ -92,7 +99,12 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
                     {
                         networkStorage.SetNetwork(t.n);
                         networkStorage.SetSettings(new SettingsInfo());
-                        networkConfiguration.SetNetwork(t.n == "Mainnet" ? new BitcoinMain() : new Angornet());
+                        networkConfiguration.SetNetwork(t.n switch
+                        {
+                            "Mainnet" => new BitcoinMain(),
+                            "Liquid" => new LiquidMain(),
+                            _ => new Angornet()
+                        });
                         networkService.AddSettingsIfNotExist();
                         var s = networkStorage.GetSettings();
                         Reset(Indexers, s.Indexers.Select(CreateIndexer));
@@ -128,7 +140,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     public ObservableCollection<SettingsUrlViewModel> Indexers { get; }
     public ObservableCollection<SettingsUrlViewModel> Relays { get; }
 
-    public IReadOnlyList<string> Networks { get; } = new[] { "Angornet", "Mainnet" };
+    public IReadOnlyList<string> Networks { get; } = new[] { "Angornet", "Mainnet", "Liquid" };
 
     public ReactiveCommand<Unit, Unit> AddIndexer { get; }
     public ReactiveCommand<Unit, Unit> AddRelay { get; }

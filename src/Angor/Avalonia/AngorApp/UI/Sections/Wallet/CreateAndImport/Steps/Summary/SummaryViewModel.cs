@@ -1,5 +1,5 @@
-using Angor.Contexts.Wallet.Application;
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Wallet.Application;
+using Angor.Sdk.Wallet.Domain;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;

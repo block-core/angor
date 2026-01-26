@@ -1,4 +1,4 @@
-using Angor.Contexts.Funding.Shared;
+using Angor.Sdk.Funding.Shared;
 using AngorApp.Core.Factories;
 using AngorApp.UI.Shared.Controls.Common.FoundedProjectOptions;
 
@@ -6,7 +6,7 @@ namespace AngorApp.UI.Sections.Browse.Details;
 
 public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 {
-    private readonly FullProject project;
+    private readonly IFullProject project;
     private bool enableProductionValidations;
 
     public ProjectDetailsViewModel(

@@ -1,0 +1,32 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+        xmlns:system="clr-namespace:System;assembly=System.Runtime">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <StackPanel Classes="BigGap">
+                <CalendarDatePicker />
+                <CalendarDatePicker>
+                    <DataValidationErrors.Errors>
+                        <generic:List x:TypeArguments="x:String">
+                            <x:String>hola</x:String>
+                        </generic:List>
+                    </DataValidationErrors.Errors>
+                </CalendarDatePicker>
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+
+    <Style Selector="CalendarDatePicker">
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="12 0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
+    </Style>
+
+    <Style Selector="CalendarDatePicker TextBox#PART_TextBox">
+        <Setter Property="Height" Value="42" />
+    </Style>
+</Styles>

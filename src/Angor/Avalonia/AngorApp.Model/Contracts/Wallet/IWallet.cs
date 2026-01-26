@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Domain;
 using CSharpFunctionalExtensions;
 using Zafiro.UI.Commands;
 
@@ -10,10 +10,12 @@ public interface IWallet
 {
     public ReadOnlyObservableCollection<IBroadcastedTransaction> History { get; }
     IAmountUI Balance { get; }
+    IAmountUI UnconfirmedBalance { get; }
+    IAmountUI ReservedBalance { get; }
     Result IsAddressValid(string address);
     WalletId Id { get; }
     IEnhancedCommand Send { get; }
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
     public Task<Result<string>> GenerateReceiveAddress();
-    public IEnhancedCommand GetTestCoins { get; }
+    public IEnhancedCommand<Result> GetTestCoins { get; }
 }

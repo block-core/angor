@@ -7,16 +7,44 @@
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.UI.Sections.Wallet.Main.Balance" x:DataType="simple:SimpleWallet">
     
-    <Card Theme="{StaticResource WideCard}">
-        <Card.Header>
-            <Panel>
-                <TextBlock IsVisible="{Binding !Load.IsExecuting^}" Text="{Binding Balance.DecimalString}" />
-                <ProgressBar HorizontalAlignment="Left" MaxWidth="120" IsIndeterminate="True" IsVisible="{Binding Load.IsExecuting^}" />
-            </Panel>
-        </Card.Header>
-        <Card.HeaderStartContent>
-            <ui:Icon Source="fa-database" />
-        </Card.HeaderStartContent>
-    </Card>
+    <StackPanel Spacing="10">
+        <Card Theme="{StaticResource WideCard}">
+            <Card.Header>
+                <Panel>
+                    <TextBlock IsVisible="{Binding !Load.IsExecuting^}" Text="{Binding Balance.DecimalString}" />
+                    <ProgressBar HorizontalAlignment="Left" MaxWidth="120" IsIndeterminate="True" IsVisible="{Binding Load.IsExecuting^}" />
+                </Panel>
+            </Card.Header>
+            <Card.HeaderStartContent>
+                <ui:Icon Source="fa-database" />
+            </Card.HeaderStartContent>
+        </Card>
+        
+        <!-- Unconfirmed Balance -->
+        <Card Theme="{StaticResource WideCard}" IsVisible="{Binding UnconfirmedBalance.IsPositive}">
+            <Card.Header>
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="{Binding UnconfirmedBalance.DecimalString}" Foreground="{DynamicResource SystemAccentColorDark1}" />
+                    <TextBlock Text="(Unconfirmed)" Foreground="{DynamicResource SystemAccentColorDark1}" Opacity="0.7" />
+                </StackPanel>
+            </Card.Header>
+            <Card.HeaderStartContent>
+                <ui:Icon Source="fa-clock" />
+            </Card.HeaderStartContent>
+        </Card>
+        
+        <!-- Reserved Balance -->
+        <Card Theme="{StaticResource WideCard}" IsVisible="{Binding ReservedBalance.IsPositive}">
+            <Card.Header>
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="{Binding ReservedBalance.DecimalString}" Foreground="Orange" />
+                    <TextBlock Text="(Reserved for Investment)" Foreground="Orange" Opacity="0.7" />
+                </StackPanel>
+            </Card.Header>
+            <Card.HeaderStartContent>
+                <ui:Icon Source="fa-lock" />
+            </Card.HeaderStartContent>
+        </Card>
+    </StackPanel>
 
 </UserControl>

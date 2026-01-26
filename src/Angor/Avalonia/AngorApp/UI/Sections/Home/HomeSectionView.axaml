@@ -2,110 +2,39 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:home="clr-namespace:AngorApp.UI.Sections.Home"
-             xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
-             xmlns:a="clr-namespace:AngorApp.UI.Shared.Controls"
-             mc:Ignorable="d" d:DesignWidth="600"
-             x:Class="AngorApp.UI.Sections.Home.HomeSectionView" x:DataType="home:IHomeSectionViewModel">
-
-    <Design.DataContext>
-        <home:HomeSectionViewModelSample IsWalletSetup="False" />
-    </Design.DataContext>
-
-    <UserControl.Styles>
-        <Style Selector="TextBlock">
-            <Setter Property="TextWrapping" Value="Wrap" />
-        </Style>
-    </UserControl.Styles>
-
-    <a:PageContainer>
-        <ScrollViewer>
-            <StackPanel MaxWidth="1200" VerticalAlignment="Center" Classes="BigGap">
-                <Card Theme="{StaticResource BigCard}"
-                      Padding="50"
-                      Header="Welcome to Angor"
-                      HeaderAndBodySpacing="20"
-                      Subheader="A P2P funding protocol built on Bitcoin and Nostr">
-                    <Card.HeaderStartContent>
-                        <ui:Icon Source="svg:/Assets/angor-icon.svg" />
-                    </Card.HeaderStartContent>
-                    <UniformGrid Rows="1" HorizontalAlignment="Center" ColumnSpacing="20">
-                        <EnhancedButton Command="{Binding GoToSection}" CommandParameter="Wallet">Get Started</EnhancedButton>
-                        <EnhancedButton Command="{Binding OpenHub}">Learn More</EnhancedButton>
-                    </UniformGrid>
-                </Card>
-                <BalancedWrapGrid MinItemWidth="200" HorizontalSpacing="20" VerticalSpacing="20">
-                    <Card Theme="{StaticResource SmallCard}" Header="Create your wallet" Subheader="Create a new wallet or recover your existing one to get started with Angor">
-                        <Card.HeaderStartContent>
-                            <ui:Icon Source="svg:/Assets/wallet.svg" />
-                        </Card.HeaderStartContent>
-                        <Interaction.Behaviors>
-                            <TappedEventTrigger>
-                                <InvokeCommandAction Command="{Binding GoToSection}" CommandParameter="Wallet" />
-                            </TappedEventTrigger>
-                        </Interaction.Behaviors>
-                    </Card>
-                    <Card Theme="{StaticResource SmallCard}" Header="Explore Opportunities" Subheader="Browse through innovative projects and find your next investment">
-                        <Card.HeaderStartContent>
-                            <ui:Icon Source="svg:/Assets/browse.svg" />
-                        </Card.HeaderStartContent>
-                        <Interaction.Behaviors>
-                            <TappedEventTrigger>
-                                <InvokeCommandAction Command="{Binding GoToSection}" CommandParameter="Browse" />
-                            </TappedEventTrigger>
-                        </Interaction.Behaviors>
-                    </Card>
-                    <Card Theme="{StaticResource SmallCard}" Header="Launch Your Project" Subheader="Start your fundraising journey and launch your project on Angor">
-                        <Card.HeaderStartContent>
-                            <ui:Icon Source="svg:/Assets/user.svg" />
-                        </Card.HeaderStartContent>
-                        <Interaction.Behaviors>
-                            <TappedEventTrigger>
-                                <InvokeCommandAction Command="{Binding GoToSection}" CommandParameter="Founder" />
-                            </TappedEventTrigger>
-                        </Interaction.Behaviors>
-                    </Card>
-                    <Card Theme="{StaticResource SmallCard}" Header="Invest &amp; Grow" Subheader="Invest in promising projects and be part of their success story">
-                        <Card.HeaderStartContent>
-                            <ui:Icon Source="svg:/Assets/portfolio.svg" />
-                        </Card.HeaderStartContent>
-                        <Interaction.Behaviors>
-                            <TappedEventTrigger>
-                                <InvokeCommandAction Command="{Binding GoToSection}" CommandParameter="Portfolio" />
-                            </TappedEventTrigger>
-                        </Interaction.Behaviors>
-                    </Card>
-                </BalancedWrapGrid>
-                <Card Header="The Angor Flow">
-                    <Card.HeaderTheme>
-                        <ControlTheme TargetType="TemplatedControl">
-                            <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
-                        </ControlTheme>
-                    </Card.HeaderTheme>
-                    <Card.Resources>
-                        <ControlTemplate x:Key="Mobile">
-                            <StackPanel Classes="SmallGap">
-                                <Image RenderOptions.BitmapInterpolationMode="None" Source="/Assets/flow.png" />
-                                <EdgePanel Content="Tap to see" VerticalAlignment="Top" HorizontalAlignment="Right">
-                                    <EdgePanel.StartContent>
-                                        <ui:Icon Source="fa-magnifying-glass" />
-                                    </EdgePanel.StartContent>
-                                </EdgePanel>
-                                <Interaction.Behaviors>
-                                    <TappedEventTrigger>
-                                        <InvokeCommandAction Command="{Binding GoToAngorFlow}" />
-                                    </TappedEventTrigger>
-                                </Interaction.Behaviors>
-                            </StackPanel>
-                        </ControlTemplate>
-                        <ControlTemplate x:Key="Desktop">
-                            <Svg MaxWidth="800" Path="/Assets/flow.svg" />
-                        </ControlTemplate>
-                    </Card.Resources>
-                    <ContentControl Template="{OnFormFactor Mobile={StaticResource Mobile}, Default={StaticResource Desktop}}" />
-                </Card>
-            </StackPanel>
-        </ScrollViewer>
-    </a:PageContainer>
-
+             xmlns:new="clr-namespace:AngorApp.UI.Sections.Home"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="450"
+             x:Class="AngorApp.UI.Sections.Home.HomeSectionView" x:DataType="new:HomeSectionSectionViewModel">
+    <controls:ScrollableView>
+        <BalancedWrapGrid HorizontalSpacing="20">
+            <Border Classes="Panel" Height="500">
+                <StackPanel Classes="HugeGap" VerticalAlignment="Center">
+                    <PathIcon Height="96" Width="96" Foreground="{DynamicResource Brand}" Data="{StaticResource BitcoinSymbol}" />
+                    <TextBlock Classes="Title Strong Center">Fund Projects</TextBlock>
+                    <TextBlock Classes="Subtitle Center">Discover and fund innovative Bitcoin projects on the Angor platform.</TextBlock>
+                    <EnhancedButton HorizontalAlignment="Center" Command="{Binding FindProjects}" Icon="{Icon fa-search}" Content="Find Projects" Classes="Center Primary" />
+                </StackPanel>
+            </Border>
+            <Border Classes="Panel">
+                <StackPanel Classes="HugeGap" VerticalAlignment="Center">
+                    <PathIcon Foreground="Transparent" Height="96" Width="96" Data="{StaticResource Lightning}">
+                        <PathIcon.Styles>
+                            <Style Selector="PathIcon Path">
+                                <Setter Property="Margin" Value="1.2" />
+                                <Setter Property="Stroke" Value="{DynamicResource Brand}" />
+                                <Setter Property="StrokeThickness" Value="1.2" />
+                                <Setter Property="StrokeJoin" Value="Round" />
+                            </Style>
+                        </PathIcon.Styles>
+                    </PathIcon>
+                    <TextBlock Classes="Title Strong Center">Get Projects Funded</TextBlock>
+                    <TextBlock Classes="Subtitle Center">Create and launch your own projects to raise funding.</TextBlock>
+                    <WrapGrid RowSpacing="16" ColumnSpacing="16" HorizontalAlignment="Center">
+                        <EnhancedButton HorizontalAlignment="Center" Command="{Binding CreateProject}" Content="Launch a Project" Classes="Primary" />
+                    </WrapGrid>
+                </StackPanel>
+            </Border>
+        </BalancedWrapGrid>
+    </controls:ScrollableView>
 </UserControl>

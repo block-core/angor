@@ -1,5 +1,5 @@
 using System;
-using Angor.Contexts.CrossCutting;
+using Angor.Sdk.Common;
 using Angor.Data.Documents.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

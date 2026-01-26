@@ -1,10 +1,11 @@
 using System.Linq;
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Investor.Dtos;
-using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Shared.TransactionDrafts;
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Dtos;
+using Angor.Sdk.Funding.Investor.Operations;
+using Angor.Sdk.Funding.Shared;
+using Angor.Sdk.Funding.Shared.TransactionDrafts;
+using Angor.Sdk.Wallet.Domain;
 using AngorApp.Core;
 using AngorApp.UI.TransactionDrafts;
 using AngorApp.UI.TransactionDrafts.DraftTypes;
@@ -39,6 +40,23 @@ public sealed record RecoveryStateViewModel
             .ToList();
 
         BatchAction = CreateBatchCommand(this);
+        
+        GetNsec = ReactiveCommand.CreateFromTask(ShowInvestorNsecAsync).Enhance();
+    }
+    
+    private async Task ShowInvestorNsecAsync()
+    {
+        var result = await investmentAppService.GetInvestorNsec(new GetInvestorNsec.GetInvestorNsecRequest(WalletId, dto.FounderKey));
+        
+        if (result.IsSuccess)
+        {
+            var copyableMessage = new ClipboardText($"Your investment private key (nsec):\n\n{result.Value.Nsec}\n\nSelect and copy the key above.");
+            await uiServices.Dialog.ShowOk(copyableMessage, "Investor nsec");
+        }
+        else
+        {
+            await uiServices.Dialog.ShowOk("Error", $"Failed to retrieve nsec: {result.Error}");
+        }
     }
 
     private IEnhancedCommand<Maybe<Guid>> CreateBatchCommand(RecoveryStateViewModel recoveryStateViewModel)
@@ -69,12 +87,12 @@ public sealed record RecoveryStateViewModel
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
         fr =>
         {
-            return investmentAppService.BuildRecoverInvestorFunds(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr))
-            .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
+            return investmentAppService.BuildRecoveryTransaction(new BuildRecoveryTransaction.BuildRecoveryTransactionRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
+                .Map(ITransactionDraftViewModel (response) => new TransactionDraftViewModel(response.TransactionDraft, uiServices));
         }, 
         model => 
         {
-            return investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId, Project.ProjectId, model.Model)
+            return investmentAppService.SubmitTransactionFromDraft(new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model))
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds recovery transaction has been submitted successfully"))
             .Map(_ => Guid.Empty);
         }, 
@@ -88,12 +106,12 @@ public sealed record RecoveryStateViewModel
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
         fr =>
         {
-            return investmentAppService.BuildClaimInvestorEndOfProjectFunds(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr))
-                .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
+            return investmentAppService.BuildEndOfProjectClaim(new BuildEndOfProjectClaim.BuildEndOfProjectClaimRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
+                .Map(ITransactionDraftViewModel (response) => new TransactionDraftViewModel(response.TransactionDraft, uiServices));
         }, 
         model => 
         {
-            return investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId, Project.ProjectId, model.Model)
+            return investmentAppService.SubmitTransactionFromDraft(new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model))
             .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
             .Map(_ => Guid.Empty);
         }, 
@@ -107,12 +125,12 @@ public sealed record RecoveryStateViewModel
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
         fr =>
         {
-            return investmentAppService.BuildReleaseInvestorFunds(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr))
-                .Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
+            return investmentAppService.BuildReleaseTransaction(new BuildReleaseTransaction.BuildReleaseTransactionRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
+                .Map(ITransactionDraftViewModel (response) => new TransactionDraftViewModel(response.TransactionDraft, uiServices));
         }, 
         model =>
         {
-            return investmentAppService.SubmitTransactionFromDraft(recoveryStateViewModel.WalletId, Project.ProjectId, model.Model)
+            return investmentAppService.SubmitTransactionFromDraft(new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model))
                 .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
                 .Map(_ => Guid.Empty);
         }, 
@@ -122,6 +140,8 @@ public sealed record RecoveryStateViewModel
     }
 
     public IEnhancedCommand<Maybe<Guid>> BatchAction { get; }
+    
+    public IEnhancedCommand GetNsec { get; }
 
     public IEnhancedCommand ViewTransaction { get; }
 

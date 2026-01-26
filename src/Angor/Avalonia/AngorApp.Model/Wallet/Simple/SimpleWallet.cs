@@ -1,9 +1,9 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Wallet.Application;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Application;
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Wallet.Domain;
 using Angor.Shared;
 using AngorApp.Model.Contracts.Amounts;
 using AngorApp.Model.Contracts.Flows;
@@ -27,6 +27,8 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     private readonly IWalletAppService walletAppService;
     private readonly IDialog dialog;
     [ObservableAsProperty] private IAmountUI balance = new AmountUI(0);
+    [ObservableAsProperty] private IAmountUI unconfirmedBalance = new AmountUI(0);
+    [ObservableAsProperty] private IAmountUI reservedBalance = new AmountUI(0);
     private readonly CompositeDisposable disposable = new();
 
     public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, IDialog dialog, INotificationService notificationService, INetworkConfiguration networkConfiguration)
@@ -40,10 +42,27 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
         Load = transactionCollection.Refresh;
         Load.HandleErrorsWith(notificationService, "Cannot load wallet info");
 
-        balanceHelper = transactionCollection.Changes
-            .Sum(transaction => transaction.Balance.Sats)
-            .Select(sats => new AmountUI(sats))
+        // Subscribe to Load command success to update all balances from AccountBalanceInfo
+        var balanceUpdates = Load.Successes()
+            .SelectMany(_ => Observable.FromAsync(() => walletAppService.GetAccountBalanceInfo(id)))
+            .Where(r => r.IsSuccess)
+            .Select(r => r.Value)
+            .Publish()
+            .RefCount();
+
+        balanceHelper = balanceUpdates
+            .Select(info => new AmountUI(info.TotalBalance))
             .ToProperty(this, x => x.Balance)
+            .DisposeWith(disposable);
+
+        unconfirmedBalanceHelper = balanceUpdates
+            .Select(info => new AmountUI(info.TotalUnconfirmedBalance))
+            .ToProperty(this, x => x.UnconfirmedBalance)
+            .DisposeWith(disposable);
+
+        reservedBalanceHelper = balanceUpdates
+            .Select(info => new AmountUI(info.TotalBalanceReserved))
+            .ToProperty(this, x => x.ReservedBalance)
             .DisposeWith(disposable);
 
         History = transactionCollection.Items;
@@ -54,7 +73,9 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
         ReceiveAddress = GetReceiveAddress.Successes().Publish().RefCount();
         
         GetTestCoins = ReactiveCommand.CreateFromTask(RequestTestCoins).Enhance().DisposeWith(disposable);
-        
+
+        GetTestCoins.HandleErrorsWith(notificationService, "Cannot get test coins");
+
         CanGetTestCoins = networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet;
     }
 
@@ -71,7 +92,7 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
     public IEnhancedCommand<Result<IEnumerable<IBroadcastedTransaction>>> Load { get; }
     public ReadOnlyObservableCollection<IBroadcastedTransaction> History { get; }
-    public IEnhancedCommand GetTestCoins { get; }
+    public IEnhancedCommand<Result> GetTestCoins { get; }
 
     public Result IsAddressValid(string address)
     {

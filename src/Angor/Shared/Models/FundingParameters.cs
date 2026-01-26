@@ -145,7 +145,7 @@ public class FundingParameters
             TotalInvestmentAmount = totalInvestmentAmount,
             InvestmentStartDate = dynamicInfo?.GetInvestmentStartDate(),
             PatternIndex = dynamicInfo?.PatternId ?? 0,
-            StageCountOverride = dynamicInfo?.StageCount,
+            StageCountOverride = dynamicInfo?.StageCount > 0 ? dynamicInfo.StageCount : (int?)null,
             HashOfSecret = secretHash,
             ExpiryDateOverride = expiryDateOverride
         };
@@ -204,10 +204,13 @@ public class FundingParameters
         if (PatternIndex >= projectInfo.DynamicStagePatterns.Count)
             throw new ArgumentOutOfRangeException(nameof(PatternIndex), $"Pattern index {PatternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
 
+        var pattern = projectInfo.DynamicStagePatterns[PatternIndex];
+
+        // Validate pattern properties
+        ValidatePattern(pattern);
+
         if (stageIndex.HasValue)
         {
-            var pattern = projectInfo.DynamicStagePatterns[PatternIndex];
-
             if (!StageCountOverride.HasValue || StageCountOverride.Value == 0)
             {
                 if (stageIndex.Value >= pattern.StageCount)
@@ -232,10 +235,21 @@ public class FundingParameters
         if (PatternIndex >= projectInfo.DynamicStagePatterns.Count)
             throw new ArgumentOutOfRangeException(nameof(PatternIndex), $"Pattern index {PatternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
 
+        var pattern = projectInfo.DynamicStagePatterns[PatternIndex];
+
+        // Validate pattern properties
+        ValidatePattern(pattern);
+
+        // Subscribe patterns must have a fixed amount
+        if (!pattern.HasFixedAmount)
+            throw new InvalidOperationException("Subscribe patterns must have a fixed Amount specified.");
+
+        // Validate that TotalInvestmentAmount matches the pattern's fixed Amount
+        if (TotalInvestmentAmount != pattern.Amount!.Value)
+            throw new InvalidOperationException($"Subscribe projects must use the pattern's fixed amount of {pattern.Amount.Value} satoshis. Received: {TotalInvestmentAmount} satoshis.");
+
         if (stageIndex.HasValue)
         {
-            var pattern = projectInfo.DynamicStagePatterns[PatternIndex];
-
             if (!StageCountOverride.HasValue || StageCountOverride.Value == 0)
             {
                 if (stageIndex.Value >= pattern.StageCount)
@@ -246,6 +260,24 @@ public class FundingParameters
                 if (stageIndex.Value >= StageCountOverride.Value)
                     throw new ArgumentOutOfRangeException(nameof(stageIndex), $"Stage index {stageIndex.Value} is out of range. Override stage count is {StageCountOverride.Value}.");
             }
+        }
+    }
+
+    private static void ValidatePattern(DynamicStagePattern pattern)
+    {
+        if (pattern.StageCount <= 0)
+            throw new InvalidOperationException("StageCount must be greater than 0.");
+
+        // Validate PayoutDay based on PayoutDayType
+        if (pattern.PayoutDayType == PayoutDayType.SpecificDayOfMonth)
+        {
+            if (pattern.PayoutDay < 1 || pattern.PayoutDay > 31)
+                throw new InvalidOperationException("PayoutDay must be between 1 and 31 for SpecificDayOfMonth.");
+        }
+        else if (pattern.PayoutDayType == PayoutDayType.SpecificDayOfWeek)
+        {
+            if (pattern.PayoutDay < 0 || pattern.PayoutDay > 6)
+                throw new InvalidOperationException("PayoutDay must be between 0 (Sunday) and 6 (Saturday) for SpecificDayOfWeek.");
         }
     }
 }

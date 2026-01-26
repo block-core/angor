@@ -72,6 +72,20 @@
                         <HeaderedContainer Header="Actions">
                             <EnhancedButton IsVisible="{Binding $self.IsEffectivelyEnabled}" Content="{Binding State^.BatchAction.Text, FallbackValue='Empty'}" Command="{Binding State^.BatchAction}" />
                         </HeaderedContainer>
+                        
+                        <HeaderedContainer Header="Investment Keys">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Your investor private key (nsec) for this project. Keep this secure and never share it." 
+                                           TextWrapping="Wrap" 
+                                           Opacity="0.7" />
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <EnhancedButton Content="Reveal nsec" 
+                                                    Command="{Binding State^.GetNsec}" 
+                                                    Icon="{Icon fa-key}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </HeaderedContainer>
+                        
                         <ResponsivePresenter Breakpoint="600">
                             <ResponsivePresenter.Narrow>
                                 <ItemsControl Classes="ShowEmptyContent" Empty.Content="No release items found" ItemsSource="{Binding State^.Stages}">

@@ -1,22 +1,20 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:password="clr-namespace:AngorApp.Model.Wallet.Password;assembly=AngorApp.Model"
-             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
+             xmlns:common="clr-namespace:AngorApp.Model.Common;assembly=AngorApp.Model"
              x:Class="AngorApp.App"
              RequestedThemeVariant="Default">
-
     <Application.Resources>
         <ResourceDictionary>
-
-            <IconDataTemplate x:Key="IconDataTemplate" />
 
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="UI/Shared/Controls/Header.axaml" />
                 <MergeResourceInclude Source="UI/Shared/Controls/SectionItem.axaml" />
                 <MergeResourceInclude Source="UI/Shared/Resources/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
-
+            
+            <IconDataTemplate x:Key="IconDataTemplate" />
+            
             <DataTemplate x:Key="BigIcon" DataType="x:Object">
                 <ContentPresenter Content="{Binding}">
                     <ContentPresenter.DataTemplates>
@@ -44,109 +42,15 @@
         </ResourceDictionary>
     </Application.Resources>
     <Application.Styles>
-
-        <FluentTheme>
-            <FluentTheme.Palettes>
-                <ColorPaletteResources x:Key="Light"
-                                       Accent="#086c81"
-                                       AltHigh="White"
-                                       AltLow="White"
-                                       AltMedium="White"
-                                       AltMediumHigh="White"
-                                       AltMediumLow="White"
-                                       BaseHigh="#FF022229"
-                                       BaseLow="#FFE6F1F2"
-                                       BaseMedium="#FF93BCC1"
-                                       BaseMediumHigh="#3E686D"
-                                       BaseMediumLow="#FFBAD5D9"
-                                       ChromeAltLow="#FF669CA1"
-                                       ChromeBlackHigh="Black"
-                                       ChromeBlackLow="#FFE6F1F2"
-                                       ChromeBlackMedium="#FF669CA1"
-                                       ChromeBlackMediumLow="#FF93BCC1"
-                                       ChromeDisabledHigh="#FFE6F1F2"
-                                       ChromeDisabledLow="#FF93BCC1"
-                                       ChromeGray="#FFBAD5D9"
-                                       ChromeHigh="#FFE6F1F2"
-                                       ChromeLow="#FFF2F8F9"
-                                       ChromeMedium="#FFEAF2F3"
-                                       ChromeMediumLow="#FFF2F8F9"
-                                       ChromeWhite="White"
-                                       ListLow="#FFEAF2F3"
-                                       ListMedium="#FFE6F1F2"
-                                       RegionColor="#CBDDE1" />
-
-                <ColorPaletteResources x:Key="Dark"
-                                       Accent="#85B9C4"
-                                       AltHigh="#ff0a0e0f"
-                                       AltLow="#ff151d20"
-                                       AltMedium="#ff1f2a2e"
-                                       AltMediumHigh="#ff293539"
-                                       AltMediumLow="#ff334044"
-                                       BaseHigh="#ffecf4f6"
-                                       BaseLow="#007179"
-                                       BaseMedium="#ff75b5c2"
-                                       BaseMediumHigh="#ff91c9d4"
-                                       BaseMediumLow="#ff3c8c9d"
-                                       ChromeAltLow="#ff91c9d4"
-                                       ChromeBlackHigh="#ff0a0e0f"
-                                       ChromeBlackLow="#ff91c9d4"
-                                       ChromeBlackMedium="#ff1f2a2e"
-                                       ChromeBlackMediumLow="#ff293539"
-                                       ChromeDisabledHigh="#ff046479"
-                                       ChromeDisabledLow="#ff75b5c2"
-                                       ChromeGray="#ff59a1b0"
-                                       ChromeHigh="#08c7e0"
-                                       ChromeLow="#083B46"
-                                       ChromeMedium="#ff023e54"
-                                       ChromeMediumLow="#ff083B46"
-                                       ChromeWhite="#ffe8f2f4"
-                                       ListLow="#ff083B46"
-                                       ListMedium="#ff046479"
-                                       RegionColor="#ff022229" />
-            </FluentTheme.Palettes>
-
-        </FluentTheme>
-
-        <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
-        <StyleInclude Source="avares://Zafiro.Avalonia.Dialogs/Styles.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/Styles.axaml" />
-        <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/Pane.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/AmountControl.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/List.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/IconLabel.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/ProjectCard.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/Feerate/FeerateSelector.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/ErrorSummary.axaml" />
-        <StyleInclude Source="UI/Sections/Wallet/CreateAndImport/Steps/SeedWordsGeneration/SeedWordList.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/PageContainer.axaml" />
-        <StyleInclude Source="UI/Shared/Controls/Badge.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/Cards.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/TextBox.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/OverlayBorder.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/CalendarDatePicker.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/TextBlock.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/ToggleButton.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/FlyoutPresenter.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/Button.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/Automation.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/SlimDataGrid.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/HeaderedContainer.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/EdgePanel.axaml" />
-        <StyleInclude Source="UI/Shared/Styles/Border.axaml" />
+        <StyleInclude Source="UI/Themes/V2/Theme.axaml" />
     </Application.Styles>
 
     <Application.DataTemplates>
-        <!-- TEMPLATE PRIORITY IS IMPORTANT! -->
-        <!-- The first template that matches the type will be used, so first templates in this list are checked for a match before the others -->
-        <DataTemplate DataType="ui:IIcon">
-            <Viewbox Height="{Binding $self.(IconOptions.Size)}" Width="{Binding $self.Width}">
-                <ContentControl ContentTemplate="{StaticResource IconDataTemplate}" Content="{Binding }" />
-            </Viewbox>
-        </DataTemplate>
         <DataTypeViewLocator />
         <DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
+        <DataTemplate DataType="common:ClipboardText">
+        <SelectableTextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding Text}" />
+        </DataTemplate>
     </Application.DataTemplates>
 
 </Application>

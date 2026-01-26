@@ -1,5 +1,5 @@
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Wallet.Domain;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Domain;
 using CSharpFunctionalExtensions;
 
 namespace AngorApp.Model.Contracts.Wallet;

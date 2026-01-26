@@ -1,12 +1,10 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
-using Angor.Contexts.CrossCutting;
-using Angor.Contexts.Wallet.Application;
-using Angor.Contexts.Wallet.Domain;
-using Angor.Contexts.Wallet.Infrastructure.Impl;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Application;
+using Angor.Sdk.Wallet.Domain;
 using DynamicData;
-using NBitcoin;
 using Zafiro.CSharpFunctionalExtensions;
 
 namespace AngorApp.UI.Shared.Services;
@@ -78,8 +76,7 @@ public sealed class WalletContext : IWalletContext, IDisposable
             return Task.FromResult(Result.Success(CurrentWallet.Value));
         }
         
-        var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
-        return walletAppService.CreateWallet("<default>", mnemonic.ToString(), Maybe<string>.None, GetUniqueId(), bitcoinNetwork())
+        return walletAppService.CreateWallet("<default>",  GetUniqueId(), bitcoinNetwork())
             .Bind(id => walletProvider.Get(id))
             .Tap(id => sourceCache.AddOrUpdate(id));
     }

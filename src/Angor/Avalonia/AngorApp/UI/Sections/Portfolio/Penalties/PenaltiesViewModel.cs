@@ -2,7 +2,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Windows.Input;
-using Angor.Contexts.Funding.Investor;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Operations;
 using AngorApp.Model.Common;
 using AngorApp.UI.Sections.Portfolio.Recover;
 using DynamicData;
@@ -23,7 +24,8 @@ public class PenaltiesViewModel : ReactiveObject, IPenaltiesViewModel, IDisposab
         GoToRecovery = ReactiveCommand.Create(() => navigator.Go<IRecoverViewModel>());
 
         penaltiesCollection = RefreshableCollection.Create(
-                () => walletContext.RequiresWallet(wallet => investmentAppService.GetPenalties(wallet.Id)
+                () => walletContext.RequiresWallet(wallet => investmentAppService.GetPenalties(new GetPenalties.GetPenaltiesRequest(wallet.Id))
+                    .Map(response => response.Penalties)
                     .MapEach(IPenaltyViewModel (dto) => new PenaltyViewModel(dto))),
                 model => model.InvestorPubKey)
             .DisposeWith(disposable);

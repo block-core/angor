@@ -1,7 +1,8 @@
 using System;
 using System.Reactive.Linq;
-using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Shared;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Operations;
+using Angor.Sdk.Funding.Shared;
 using AngorApp.Core;
 using AngorApp.UI.Sections.Portfolio;
 using AngorApp.UI.Sections.Portfolio.Items;
@@ -36,8 +37,8 @@ public class FoundedProjectOptionsViewModel : IFoundedProjectOptionsViewModel
 
     private Task<Result<Maybe<InvestedProjectDto>>> GetInvestedProject(IWallet wallet)
     {
-        return investmentAppService.GetInvestorProjects(wallet.Id)
-            .Map(dtos => dtos.TryFirst(dto => dto.Id == projectId.Value));
+        return investmentAppService.GetInvestments(new GetInvestments.GetInvestmentsRequest(wallet.Id))
+            .Map(response => response.Projects.TryFirst(dto => dto.Id == projectId.Value));
     }
 
     public IObservable<IPortfolioProjectViewModel> ProjectInvestment { get; }

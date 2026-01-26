@@ -16,7 +16,7 @@ public static class ModelServices
         return services
             .AddSingleton<IAmountFactory, AmountFactory>()
             .AddSingleton<IWalletProvider, SimpleWalletProvider>()
-            .AddScoped<ICreateProjectFlow, CreateProjectFlow>()
+            .AddScoped<ICreateProjectFlow, CreateProjectFlowV2>()
             .AddScoped<ISendMoneyFlow, SendMoneyFlow>()
             .AddSingleton<InvestFlow>()
             .AddSingleton<WalletCreationWizard>()

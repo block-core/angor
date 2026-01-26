@@ -1,11 +1,14 @@
 using System.Reactive.Disposables;
-using Angor.Contexts.Funding.Projects.Application.Dtos;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
+using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.UI.Shell.Utils;
+using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Projects.Dtos;
 
 namespace AngorApp.UI.Sections.Founder;
 
+[Section("My Projects", icon: "fa-regular fa-file-lines", sortIndex: 4)]
+[SectionGroup("FOUNDER")]
 public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel, IDisposable
 {
     private readonly CompositeDisposable disposable = new();
@@ -21,6 +24,7 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
         projectsCollection = RefreshableCollection.Create(
                 () => walletContext.RequiresWallet(wallet => projectAppService
                     .GetFounderProjects(wallet.Id)
+                    .Map(response => response.Projects)
                     .MapEach(projectViewModelFactory)),
                 project => project.Id)
             .DisposeWith(disposable);

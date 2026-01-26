@@ -1,11 +1,14 @@
+using System.Linq;
 using System.Reactive.Disposables;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
+using System.Threading.Tasks;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Projects;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Claim;
 using AngorApp.UI.Sections.Founder.ProjectDetails.MainView.ReleaseFunds;
 using Zafiro.CSharpFunctionalExtensions;
-using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
+using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 
 namespace AngorApp.UI.Sections.Founder.ProjectDetails;
 
@@ -34,14 +37,26 @@ public partial class FounderProjectDetailsViewModel : ReactiveObject, IFounderPr
 
     private static object CreateContent(ProjectId projectId, ProjectStatus status, IFounderAppService founderAppService, UIServices uiServices, IWalletContext walletContext)
     {
+        // todo: fix this so that we can load approve
+        // and claim at the same time for fund type projects
+        // this is an ugly hack to bypass the static object in the method signature
+        var investmentRequests = Task.Run(async () => 
+        {
+            var a = await founderAppService.GetProjectInvestments(new GetProjectInvestments.GetProjectInvestmentsRequest(walletContext.CurrentWallet.Value.Id, projectId));
+            return a;
+                
+        }).GetAwaiter().GetResult();
+
+        if(investmentRequests.Value.Investments.Any(_ => _.Status == InvestmentStatus.PendingFounderSignatures))
+        {
+            return new ApproveInvestmentsViewModel(projectId, founderAppService, uiServices, walletContext);
+        }
+
         var enableProductionValidations = uiServices.EnableProductionValidations();
 
         if (enableProductionValidations == false)
         {
-            if(status == ProjectStatus.Succeeded)
-                return new ClaimFundsViewModel(projectId, founderAppService, uiServices, walletContext);
-
-            return new ApproveInvestmentsViewModel(projectId, founderAppService, uiServices, walletContext);
+            return new ClaimFundsViewModel(projectId, founderAppService, uiServices, walletContext);
         }
 
         return status switch

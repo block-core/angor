@@ -1,0 +1,155 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:stages="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Name="Root"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages.StagesAdvancedEditor" x:DataType="stages:IStagesViewModel">
+
+    <Design.DataContext>
+        <stages:StagesViewModelSample />
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <ControlTheme x:Key="DashedButton" TargetType="EnhancedButton">
+            <Setter Property="Spacing" Value="10" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Panel>
+                        <Rectangle StrokeDashArray="3, 2" Stroke="{DynamicResource Stroke}" StrokeThickness="2" RadiusX="10" RadiusY="10" Fill="White" />
+                        <DockPanel HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" HorizontalSpacing="{TemplateBinding Spacing}">
+                            <ContentPresenter Content="{TemplateBinding Icon}" />
+                            <ContentPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              Content="{TemplateBinding Content}" />
+                        </DockPanel>
+                    </Panel>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^/template/ Rectangle">
+                <Setter Property="Transitions">
+                    <Transitions>
+                        <BrushTransition Property="Stroke" Duration="0:0:0.1" />
+                    </Transitions>
+                </Setter>
+            </Style>
+            <Style Selector="^:pointerover /template/ Rectangle">
+                <Setter Property="Stroke" Value="{DynamicResource DashColorHighlight}" />
+            </Style>
+        </ControlTheme>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Separator">
+            <Setter Property="Margin" Value="20 0"></Setter>
+            <Setter Property="Height" Value="2" />
+            <Setter Property="Background">
+                <LinearGradientBrush>
+                    <GradientStops>
+                        <GradientStop Color="#0D2D5A3D" Offset="0" />
+                        <GradientStop Color="#1A2D5A3D" Offset="0.5" />
+                        <GradientStop Color="#0D2D5A3D" Offset="1" />
+                    </GradientStops>
+                </LinearGradientBrush>
+            </Setter>
+        </Style>
+        <Style Selector="OverlayBorder.Panel">
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+        </Style>
+        <Style Selector="EnhancedButton.Dashed">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Panel>
+                        <Rectangle StrokeDashArray="3, 2" Stroke="Black" StrokeThickness="2" RadiusX="10" RadiusY="10" Fill="White" />
+                        <DockPanel HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" HorizontalSpacing="{TemplateBinding Spacing}">
+                            <ContentPresenter Content="{TemplateBinding Icon}" />
+                            <ContentPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              Content="{TemplateBinding Content}" />
+                        </DockPanel>
+                    </Panel>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Classes="BigGap">
+        <ItemsControl ItemsSource="{Binding NewProject.Stages}" FontSize="14">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel>
+                        <Grid ColumnDefinitions="* Auto *" IsVisible="{Binding #TimeFromPreviousText.Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <Separator />
+                            <Border Padding="15 10" Grid.Column="1" Classes="Panel" HorizontalAlignment="Center">
+                                <EdgePanel IconOptions.Fill="{DynamicResource Dimmed}" IconOptions.Size="15" StartContent="{Icon fa-regular fa-clock}">
+                                    <TextBlock Classes="Size-S" x:Name="TimeFromPreviousText" >
+                                        <TextBlock.Text>
+                                            <MultiBinding Converter="{x:Static controls:AngorConverters.TimeStringFromPreviousStage}">
+                                                <Binding Path="#ItemIndex.Tag" />
+                                                <Binding Path="TimeFromPrevious" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </EdgePanel>
+                            </Border>
+                            <Separator Grid.Column="2" />
+                        </Grid>
+                        <OverlayBorder Classes="Panel" Padding="0" Margin="0 20">
+                            <Grid ColumnDefinitions="Auto,120, *, Auto" RowDefinitions="Auto Auto">
+                                <Border Grid.RowSpan="2" Background="{DynamicResource SurfaceHover}" Padding="20">
+                                    <Border CornerRadius="40" Width="40" Height="40" Background="{DynamicResource Translucid}" BorderBrush="{DynamicResource Dimmed}" BorderThickness="2">
+                                        <TextBlock x:Name="ItemIndex" Tag="{ItemIndex StartFromOne=True}" HorizontalAlignment="Center" Classes="Weight-Bold" VerticalAlignment="Center" Foreground="{DynamicResource Dimmed}" Text="{ItemIndex StartFromOne=True}" />
+                                    </Border>
+                                </Border>
+                                <HeaderedContainer Grid.Row="0" Grid.Column="1" Header="Percentage">
+                                    <NumericUpDown Value="{Binding Percent, Mode=TwoWay, Converter={x:Static controls:AngorConverters.RatioToPercentage}}"
+                                                   FormatString="0.##"
+                                                   Minimum="0"
+                                                   VerticalAlignment="Top"
+                                                   Maximum="100">
+                                        <NumericUpDown.InnerRightContent>
+                                            <TextBlock Padding="0 0 10 0">%</TextBlock>
+                                        </NumericUpDown.InnerRightContent>
+                                    </NumericUpDown>
+                                </HeaderedContainer>
+                                <HeaderedContainer Grid.Row="0" Grid.Column="2" Header="Release date">
+                                    <CalendarDatePicker SelectedDate="{Binding ReleaseDate}" />
+                                </HeaderedContainer>
+                                <HeaderedContainer Grid.Row="0" Grid.Column="3" Header="">
+                                    <EnhancedButton Command="{Binding #Root.DataContext.RemoveStage}" CommandParameter="{Binding}" BorderThickness="0" Classes="Widget" IconOptions.Fill="#D1D5DB" Icon="{Icon fa-trash-can}"
+                                                    VerticalAlignment="Center" />
+                                </HeaderedContainer>
+                                <TextBlock Margin="10 10" Grid.Row="1" Grid.Column="2" Classes="Text-Dimmed Size-XS">
+                                    <TextBlock.Inlines>
+                                        <Run>Must be after the previous stage and after the funding end date</Run>
+                                        <Run FontWeight="Bold">25/02/2026</Run>
+                                    </TextBlock.Inlines>
+                                </TextBlock>
+                            </Grid>
+                        </OverlayBorder>
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <EnhancedButton Command="{Binding AddStage}" Theme="{StaticResource DashedButton}" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" Height="56" VerticalContentAlignment="Center" Icon="{Icon fa-plus}">
+            <EnhancedButton.Content>
+                <TextBlock Text="Add Another Stage" Classes="Weight-Light Text-Strong"></TextBlock>
+            </EnhancedButton.Content>
+        </EnhancedButton>
+        <EdgePanel IconOptions.VerticalAlignment="Top" IconOptions.Margin="5 5" IconOptions.Fill="#d97706" CornerRadius="10" BorderThickness="1" BorderBrush="#fde68a" Background="#fffbeb" Padding="10"
+                   StartContent="{Icon mdi-information-outline}">
+            <EdgePanel.Content>
+                <TextBlock Classes="Text-Muted" LineHeight="22">
+                    <TextBlock.Inlines>
+                        <Run>Stage Guidelines</Run>
+                        <LineBreak />
+                        <Run>Stages must add up to 100% and dates must be after the funding end date.</Run>
+                    </TextBlock.Inlines>
+                </TextBlock>
+            </EdgePanel.Content>
+        </EdgePanel>
+    </StackPanel>
+</UserControl>

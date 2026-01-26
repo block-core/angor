@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:findProjects="clr-namespace:AngorApp.UI.Sections.FindProjects"
+             xmlns:a="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="650"
+             x:Class="AngorApp.UI.Sections.FindProjects.FindProjectsSectionView" x:DataType="findProjects:IFindProjectsSectionViewModel" ClipToBounds="False">
+
+    <Design.DataContext>
+        <findProjects:FindProjectsSectionViewModelSample />
+    </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <DataContextChangedTrigger>
+            <InvokeCommandAction Command="{Binding LoadProjects}" />
+        </DataContextChangedTrigger>
+    </Interaction.Behaviors>
+
+    <Panel Classes="Padded">
+        <Loading IsLoading="{Binding LoadProjects.IsExecuting^}">
+            <ScrollViewer>
+                <ItemsControl Margin="0 70 0 0" ItemsSource="{Binding Projects}" ClipToBounds="False">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <BalancedWrapGrid MinItemWidth="280" MaxItemWidth="500" HorizontalSpacing="20" VerticalSpacing="20" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="10" Classes="Panel Elevated Interactive">
+                                <StackPanel Classes="BigGap">
+                                    <a:AdvancedImage CornerRadius="10 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140" Source="{Binding BannerUrl}" />
+                                    <Border Height="60" Width="60" Margin="0 -50 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource AppBackground}">
+                                        <a:AdvancedImage Source="{Binding LogoUrl}" />
+                                    </Border>
+                                    <TextBlock Classes="Header" DockPanel.Dock="Top" Text="{Binding Name}" />
+                                    <TextBlock Text="{Binding Description}" MaxLines="2" TextWrapping="Wrap" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
+                                    <Grid>
+                                        <TextBlock Text="{Binding InvestorsCount, TargetNullValue='', StringFormat='{}{0} Investors'}" />
+                                        <TextBlock Classes="Strong" HorizontalAlignment="Right" Text="{Binding FundingRaised.DecimalString, FallbackValue='...'}" MaxLines="2" TextWrapping="Wrap" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="Target" />
+                                        <TextBlock HorizontalAlignment="Right" Text="{Binding FundingTarget.DecimalString}" MaxLines="2" TextWrapping="Wrap" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
+                                    </Grid>
+                                    <ProgressBar IsIndeterminate="{Binding LoadStatistics.IsExecuting^}" Foreground="{DynamicResource ProgressBrush}" Background="{DynamicResource AppBackground}" Height="8"
+                                                 Value="{Binding FundingRaised.Sats}" Maximum="{Binding FundingTarget.Sats}" />
+                                </StackPanel>
+
+                                <Interaction.Behaviors>
+                                    <TappedEventTrigger>
+                                        <InvokeCommandAction Command="{Binding GoToDetails}" />
+                                    </TappedEventTrigger>
+                                    <DataContextChangedTrigger>
+                                        <InvokeCommandAction Command="{Binding LoadStatistics}" />
+                                    </DataContextChangedTrigger>
+                                </Interaction.Behaviors>
+
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Loading>
+    </Panel>
+
+</UserControl>

@@ -1,5 +1,6 @@
-using Angor.Contexts.Wallet.Infrastructure.Impl;
-using Angor.Contexts.Wallet.Infrastructure.Interfaces;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Infrastructure.Impl;
+using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using AngorApp.Model.Wallet.Password;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +14,8 @@ public static class Security
         services.AddSingleton<IWalletSecurityContext, WalletSecurityContext>();
         services.AddSingleton<IWalletEncryption, AesWalletEncryption>();
         services.AddSingleton<IPassphraseProvider, PassphraseProviderAdapter>();
+        //services.AddSingleton<IEncryptionKeyStore, WindowsWalletEncryptionKeyStore>();
+        //services.AddSingleton<IPasswordProvider, LocalPasswordProvider>();
         services.AddSingleton<IPasswordProvider, PasswordProviderAdapter>();
         return services;
     }

@@ -11,6 +11,12 @@ public class NetworkMapper
     /// <returns></returns>
     public static NBitcoin.Network Map(Network network)
     {
+        // Special case for Liquid network
+        if (network.Name == "Liquid")
+        {
+            return NBitcoin.Altcoins.Liquid.Instance.Mainnet;
+        }
+
         return network.NetworkType switch
         {
             NetworkType.Mainnet => NBitcoin.Network.Main,

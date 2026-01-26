@@ -1,6 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:a="using:AngorApp.UI.Shared.Controls">
+        xmlns:a="clr-namespace:AngorApp.UI.Shared.Controls">
     <Design.PreviewWith>
         <a:PageContainer Width="620" Height="200">
         </a:PageContainer>

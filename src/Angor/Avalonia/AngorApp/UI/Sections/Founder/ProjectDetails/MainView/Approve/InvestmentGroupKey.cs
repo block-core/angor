@@ -1,5 +1,5 @@
-using Angor.Contexts.Funding.Founder.Domain;
-using Angor.Contexts.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Founder.Domain;
+using Angor.Sdk.Funding.Founder.Operations;
 
 namespace AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve;
 

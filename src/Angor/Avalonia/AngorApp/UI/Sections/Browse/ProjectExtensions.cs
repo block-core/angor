@@ -1,5 +1,5 @@
 using System.Linq;
-using Angor.Contexts.Funding.Projects.Application.Dtos;
+using Angor.Sdk.Funding.Projects.Dtos;
 using AngorApp.Model.Projects;
 
 namespace AngorApp.UI.Sections.Browse;
@@ -29,7 +29,10 @@ public static class ProjectExtensions
                 .ToList(),
             PenaltyDuration = dto.PenaltyDuration,
             TargetAmount = new AmountUI(dto.TargetAmount),
-            StartDate = dto.FundingStartDate
+            StartDate = dto.FundingStartDate,
+            Version = dto.Version,
+            ProjectType = dto.ProjectType,
+            DynamicStagePatterns = dto.DynamicStagePatterns
         };
     }
 }

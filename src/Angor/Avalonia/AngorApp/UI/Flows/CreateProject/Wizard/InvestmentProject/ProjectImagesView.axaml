@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:w="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject"
+             xmlns:s="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:i="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="850"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.ProjectImagesView" x:DataType="w:IProjectImagesViewModel">
+
+    <Design.DataContext>
+        <w:ProjectImagesViewModelSample />
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <x:Double x:Key="BannerHeight">220</x:Double>
+        <x:Double x:Key="AvatarSize">120</x:Double>
+    </UserControl.Resources>
+
+    <s:ScrollableView ContentPadding="30" MaxContentWidth="820">
+        <StackPanel Classes="BigGap">
+            <TextBlock>Upload your project's banner and profile images.
+            </TextBlock>
+            <HeaderedContainer Height="375"
+                               Background="{DynamicResource Surface}"
+                               BorderBrush="{DynamicResource Stroke}" BorderThickness="2" CornerRadius="10" ContentPadding="0" HeaderPadding="0 0 0 12">
+                <HeaderedContainer.Header>
+                    <Panel>
+                        <Panel.Styles>
+                            <Style Selector="Border#PickBannerOverlay">
+                                <Setter Property="Opacity" Value="0" />
+                                <Setter Property="Transitions">
+                                    <Transitions>
+                                        <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
+                                    </Transitions>
+                                </Setter>
+                            </Style>
+                            <Style Selector="Panel:pointerover Border#PickBannerOverlay">
+                                <Setter Property="Opacity" Value="1" />
+                            </Style>
+                        </Panel.Styles>
+                        <Rectangle Fill="{DynamicResource AppBackground}" />
+                        <Rectangle Fill="{DynamicResource TiledLogoBrush}" />
+                        <i:AdvancedImage CornerRadius="10 10 0 0" Height="200" Stretch="UniformToFill" Source="{Binding NewProject.BannerUri}" />
+                        <Border x:Name="PickBannerOverlay" Background="#85808080">
+                            <EnhancedButton Command="{Binding PickBanner}" HorizontalAlignment="Center" VerticalAlignment="Center" Icon="{Icon fa-image}" Classes="White">Upload Banner</EnhancedButton>
+                        </Border>
+                    </Panel>
+                </HeaderedContainer.Header>
+                <StackPanel Spacing="40" HorizontalAlignment="Left" Margin="24 -76 0 0">
+                    <Panel>
+                        <Panel.Styles>
+                            <Style Selector="Border#UploadAvatarPanel">
+                                <Setter Property="Opacity" Value="0" />
+                                <Setter Property="Transitions">
+                                    <Transitions>
+                                        <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
+                                    </Transitions>
+                                </Setter>
+                            </Style>
+                            <Style Selector="Border:pointerover#UploadAvatarPanel">
+                                <Setter Property="Opacity" Value="1" />
+                            </Style>
+                        </Panel.Styles>
+                        <OverlayBorder BorderThickness="8" BorderBrush="White" Width="128" Height="128" CornerRadius="64" BoxShadow="0 10 30 0 #22000000">
+                            <Panel>
+                                <ContentControl IconOptions.Size="40" Background="White" Content="{Icon fa-user}" />
+                                <i:AdvancedImage Stretch="Fill" Source="{Binding NewProject.AvatarUri}" CornerRadius="64" />
+                            </Panel>
+                        </OverlayBorder>
+                        <Border x:Name="UploadAvatarPanel" Background="#85808080" Width="128" Height="128" CornerRadius="64">
+                            <EnhancedButton HorizontalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Icon="{Icon fa-camera}" CornerRadius="20" Classes="Widget" />
+                        </Border>
+                        <Interaction.Behaviors>
+                            <TappedEventTrigger>
+                                <InvokeCommandAction Command="{Binding PickAvatar}" />
+                            </TappedEventTrigger>
+                        </Interaction.Behaviors>
+                    </Panel>
+                    <StackPanel Classes="SmallGap">
+                        <TextBlock Classes="Weight-Bold Size-L Strong" Text="{Binding NewProject.Name}" />
+                        <TextBlock Text="{Binding NewProject.Description}" Classes="Weight-Light" />
+                    </StackPanel>
+                </StackPanel>
+            </HeaderedContainer>
+        </StackPanel>
+    </s:ScrollableView>
+</UserControl>

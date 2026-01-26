@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Angor.Contexts.Wallet.Application;
+using Angor.Sdk.Wallet.Application;
 using AngorApp.Core;
 using AngorApp.UI.Shared.Services;
 using ReactiveUI.SourceGenerators;

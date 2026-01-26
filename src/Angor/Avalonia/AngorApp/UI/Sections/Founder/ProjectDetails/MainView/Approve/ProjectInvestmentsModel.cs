@@ -1,14 +1,14 @@
 using System.Linq;
 using System.Reactive.Disposables;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Founder.Domain;
-using Angor.Contexts.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Domain;
+using Angor.Sdk.Funding.Founder.Operations;
 using AngorApp.UI.Shared.Services;
 using ReactiveUI;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
-using ProjectId = Angor.Contexts.Funding.Shared.ProjectId;
+using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 
 namespace AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve;
 
@@ -39,8 +39,8 @@ public partial class ApproveInvestmentsViewModel : ReactiveObject, IApproveInves
 
     private Task<Result<(IWallet wallet, IEnumerable<Investment> investments)>> GetWalletInvestments(ProjectId projectId, IWallet wallet)
     {
-        var investments = founderAppService.GetInvestments(wallet.Id, projectId);
-        return investments.Map(x => (wallet, investments: x));
+        var investments = founderAppService.GetProjectInvestments(new GetProjectInvestments.GetProjectInvestmentsRequest(wallet.Id, projectId));
+        return investments.Map(x => (wallet, investments: x.Investments));
     }
 
     private async Task<bool> Approve(ProjectId projectId, IWallet wallet, Investment investment)
@@ -52,7 +52,7 @@ public partial class ApproveInvestmentsViewModel : ReactiveObject, IApproveInves
             return false;
         }
 
-        var approvalResult = await founderAppService.ApproveInvestment(wallet.Id, projectId, investment);
+        var approvalResult = await founderAppService.ApproveInvestment(new ApproveInvestment.ApproveInvestmentRequest(wallet.Id, projectId, investment));
 
         return approvalResult.IsSuccess;
     }

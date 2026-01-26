@@ -1,16 +1,20 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Windows.Input;
-using Angor.Contexts.Funding.Investor;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Operations;
 using AngorApp.Core;
 using AngorApp.UI.Sections.Portfolio.Items;
 using AngorApp.UI.Sections.Portfolio.Penalties;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
 using Zafiro.UI.Navigation;
+using Zafiro.UI.Shell.Utils;
 
 namespace AngorApp.UI.Sections.Portfolio;
 
+[Section("Funded", icon: "fa-arrow-trend-up", sortIndex: 3)]
+[SectionGroup("INVESTOR")]
 public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewModel, IDisposable
 {
     private readonly CompositeDisposable disposable = new();
@@ -44,9 +48,10 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
 
     private static Task<Result<ICollection<IPortfolioProjectViewModel>>> GetInvestedProjects(IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator, IWalletContext walletContext, IWallet wallet, SharedCommands sharedCommands)
     {
-        return investmentAppService.GetInvestorProjects(wallet.Id)
-            .MapEach(IPortfolioProjectViewModel (dto) => new PortfolioProjectViewModel(dto, investmentAppService, uiServices, navigator, walletContext, sharedCommands))
-            .Map<IEnumerable<IPortfolioProjectViewModel>, ICollection<IPortfolioProjectViewModel>>(models => models.ToList());
+        return investmentAppService.GetInvestments(new GetInvestments.GetInvestmentsRequest(wallet.Id))
+    .Map(response => response.Projects)
+       .MapEach(IPortfolioProjectViewModel (dto) => new PortfolioProjectViewModel(dto, investmentAppService, uiServices, navigator, walletContext, sharedCommands))
+   .Map<IEnumerable<IPortfolioProjectViewModel>, ICollection<IPortfolioProjectViewModel>>(models => models.ToList());
     }
 
     public IEnhancedCommand<Result<ICollection<IPortfolioProjectViewModel>>> LoadPortfolio { get; }

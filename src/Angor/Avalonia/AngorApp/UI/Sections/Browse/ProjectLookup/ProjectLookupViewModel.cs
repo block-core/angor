@@ -1,7 +1,8 @@
 using System.Linq;
 using System.Windows.Input;
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.Contexts.Funding.Shared;
+using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Projects.Operations;
+using Angor.Sdk.Funding.Shared;
 using AngorApp.Core;
 using AngorApp.Core.Factories;
 using Serilog;
@@ -24,8 +25,8 @@ public partial class ProjectLookupViewModel : ReactiveObject, IProjectLookupView
 
         Lookup = ReactiveCommand.CreateFromTask<string, Result<SafeMaybe<IList<IProjectViewModel>>>>(async pid =>
             {
-                Result<SafeMaybe<IList<IProjectViewModel>>> project = await projectAppService.TryGet(new ProjectId(pid))
-                    .Map(maybeProject => maybeProject.Map(dto => dto.ToProject())
+                Result<SafeMaybe<IList<IProjectViewModel>>> project = await projectAppService.TryGet(new TryGetProject.TryGetProjectRequest(new ProjectId(pid)))
+                    .Map(response => response.Project.Map(dto => dto.ToProject())
                         .Tap(p => Log.Debug("Got project {ProjectId}", p))
                         .Map<IProject, IList<IProjectViewModel>>(project =>
                         {

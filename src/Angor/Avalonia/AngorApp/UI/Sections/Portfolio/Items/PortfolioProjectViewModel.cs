@@ -1,7 +1,8 @@
 using System.Reactive.Disposables;
-using Angor.Contexts.Funding.Founder;
-using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Shared;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Operations;
+using Angor.Sdk.Funding.Shared;
 using AngorApp.Core;
 using AngorApp.UI.Sections.Portfolio.Manage;
 using Zafiro.Avalonia.Dialogs;
@@ -24,7 +25,9 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
         var canCompleteInvestment = this.WhenAnyValue(x => x.InvestmentStatus).Select(x => x == InvestmentStatus.FounderSignaturesReceived);
         var canCancelInvestment = this.WhenAnyValue(x => x.InvestmentStatus).Select(x => x != InvestmentStatus.Invested);
 
-        CompleteInvestment = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => investmentAppService.ConfirmInvestment(projectDto.InvestmentId, wallet.Id, new ProjectId(projectDto.Id))), canCompleteInvestment)
+        CompleteInvestment = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => 
+    investmentAppService.ConfirmInvestment(new PublishInvestment.PublishInvestmentRequest(projectDto.InvestmentId, wallet.Id, new ProjectId(projectDto.Id)))
+        .Map(_ => Unit.Default)), canCompleteInvestment)
             .Enhance()
             .DisposeWith(disposable);
 
@@ -48,7 +51,9 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
         GoToManageFunds = ReactiveCommand.CreateFromTask(() => navigator.Go(() => new ManageInvestorProjectViewModel(new ProjectId(projectDto.Id), investmentAppService, uiServices, walletContext, sharedCommands))).Enhance().DisposeWith(disposable);
 
         // cancel investment command
-        CancelInvestment = ReactiveCommand.CreateFromTask(() => investmentAppService.CancelInvestment(walletContext.CurrentWallet.Value.Id, new ProjectId(projectDto.Id), projectDto.InvestmentId), canCancelInvestment)
+        CancelInvestment = ReactiveCommand.CreateFromTask(() => 
+   investmentAppService.CancelInvestmentRequest(new Angor.Sdk.Funding.Investor.Operations.CancelInvestmentRequest.CancelInvestmentRequestRequest(walletContext.CurrentWallet.Value.Id, new ProjectId(projectDto.Id), projectDto.InvestmentId))
+          .Map(_ => Unit.Default), canCancelInvestment)
             .Enhance()
             .DisposeWith(disposable);
 

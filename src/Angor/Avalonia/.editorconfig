@@ -1,4 +1,3 @@
-
 [*.{cs,vb}]
 #### Naming styles ####
 
@@ -137,7 +136,13 @@ csharp_style_var_when_type_is_apparent = false:silent
 csharp_style_var_elsewhere = false:silent
 
 # --- New line rules ---
-csharp_new_line_before_open_brace = methods, types, properties, indexers, events, anonymous_methods, lambda_methods
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true
+csharp_new_line_between_query_expression_clauses = true
 
 # Force each parameter on its own line
 csharp_new_line_between_method_declaration_parameters = true
@@ -154,3 +159,107 @@ csharp_indent_nested_while_stmt = true
 csharp_indent_nested_lock_stmt = true
 csharp_indent_nested_using_stmt = true
 csharp_indent_nested_fixed_stmt = true
+
+# --- Indentation rules for parameters ---
+# Indent wrapped parameters in method/constructor declarations
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_indent_block_contents = true
+csharp_indent_braces = false
+csharp_indent_case_contents_when_block = false
+
+# --- Spacing rules ---
+# Space after cast
+csharp_space_after_cast = false
+# Space after keywords in control flow statements
+csharp_space_after_keywords_in_control_flow_statements = true
+# Space between method declaration parameter list parentheses
+csharp_space_between_method_declaration_parameter_list_parentheses = false
+# Space between method declaration empty parameter list parentheses
+csharp_space_between_method_declaration_empty_parameter_list_parentheses = false
+# Space between method declaration name and open parenthesis
+csharp_space_between_method_declaration_name_and_open_parenthesis = false
+# Space between method call parameter list parentheses
+csharp_space_between_method_call_parameter_list_parentheses = false
+# Space between method call empty parameter list parentheses
+csharp_space_between_method_call_empty_parameter_list_parentheses = false
+# Space between method call name and opening parenthesis
+csharp_space_between_method_call_name_and_opening_parenthesis = false
+# Space after comma
+csharp_space_after_comma = true
+# Space before comma
+csharp_space_before_comma = false
+# Space after dot
+csharp_space_after_dot = false
+# Space before dot
+csharp_space_before_dot = false
+# Space after semicolon in for statement
+csharp_space_after_semicolon_in_for_statement = true
+# Space before semicolon in for statement
+csharp_space_before_semicolon_in_for_statement = false
+# Space around declaration statements
+csharp_space_around_declaration_statements = false
+# Space before open square brackets
+csharp_space_before_open_square_brackets = false
+# Space between empty square brackets
+csharp_space_between_empty_square_brackets = false
+# Space between square brackets
+csharp_space_between_square_brackets = false
+
+# --- Wrapping rules ---
+# Keep existing preference for wrapping
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true
+
+# =====================================================
+# ReSharper/Rider Specific Settings
+# These work with ReSharper installed in Visual Studio
+# =====================================================
+
+# --- Parameter Wrapping and Alignment ---
+# Wrap parameters if declaration is too long
+resharper_csharp_wrap_parameters_style = chop_if_long
+# Indent continuation when parameters wrap
+resharper_csharp_indent_method_decl_pars = 1
+# Align multiline constructs
+resharper_csharp_align_multiline_parameter = true
+resharper_csharp_align_multiline_calls_chain = true
+resharper_csharp_align_multiline_extends_list = true
+resharper_csharp_align_multiline_argument = true
+
+# --- Method Declaration Formatting ---
+# Don't wrap before opening parenthesis
+resharper_csharp_wrap_before_declaration_lpar = false
+# Wrap after opening parenthesis if needed
+resharper_csharp_wrap_after_declaration_lpar = true
+# Put closing parenthesis on new line when parameters wrapped
+resharper_csharp_wrap_before_declaration_rpar = true
+# Place parameters on new lines when wrapping
+resharper_csharp_place_constructor_initializer_on_same_line = false
+
+# --- Method Call Formatting ---
+# Wrap arguments if call is too long
+resharper_csharp_wrap_arguments_style = chop_if_long
+# Align arguments when wrapped
+resharper_csharp_align_first_arg_by_paren = false
+# Wrap after opening parenthesis
+resharper_csharp_wrap_after_invocation_lpar = true
+# Put closing parenthesis on same line as last argument
+resharper_csharp_wrap_before_invocation_rpar = false
+
+# --- Primary Constructor Parameters (C# 12+) ---
+# Indent primary constructor parameters
+resharper_csharp_indent_primary_constructor_decl_pars = 1
+# Wrap primary constructor parameters like regular constructors
+resharper_csharp_wrap_primary_constructor_parameters_style = chop_if_long
+
+# --- Line Breaks ---
+# Max line length before wrapping (adjust as needed)
+resharper_csharp_max_line_length = 120
+# Keep existing line breaks
+resharper_csharp_keep_existing_declaration_parens_arrangement = false
+resharper_csharp_keep_existing_invocation_parens_arrangement = false
+
+# --- Continuous Line Indent ---
+# Indent size for continuation (wrapped lines)
+resharper_csharp_continuous_indent_multiplier = 1

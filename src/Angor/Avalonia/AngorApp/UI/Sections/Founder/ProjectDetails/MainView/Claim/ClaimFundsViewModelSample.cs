@@ -1,4 +1,4 @@
-using Angor.Contexts.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder.Dtos;
 using Zafiro.UI.Commands;
 
 namespace AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Claim;
@@ -21,7 +21,7 @@ public class ClaimFundsViewModelSample : ReactiveObject, IClaimFundsViewModel
                 {
                     Amount = new AmountUI(200000),
                     Address = "bc1qexampleaddress2",
-                    ClaimStatus = ClaimStatus.Unspent
+                    ClaimStatus = ClaimStatus.Locked
                 },
                 new ClaimableTransactionSample
                 {

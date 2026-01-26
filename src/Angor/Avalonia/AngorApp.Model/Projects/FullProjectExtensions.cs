@@ -1,5 +1,6 @@
-using Angor.Contexts.Funding.Projects.Infrastructure.Interfaces;
-using Angor.Contexts.Funding.Shared;
+using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Projects.Operations;
+using Angor.Sdk.Funding.Shared;
 using CSharpFunctionalExtensions;
 
 namespace AngorApp.Model.Projects;
@@ -8,9 +9,9 @@ public static class FullProjectExtensions
 {
     public static Task<Result<IFullProject>> GetFullProject(this IProjectAppService projectAppService, ProjectId projectId)
     {
-        return from project in projectAppService.Get(projectId)
+        return from projectResponse in projectAppService.Get(new GetProject.GetProjectRequest(projectId))
             from stats in projectAppService.GetProjectStatistics(projectId)
-            select (IFullProject) new FullProject(project, stats);
+            select (IFullProject) new FullProject(projectResponse.Project, stats);
     }
     
     public static IAmountUI Raised(this IFullProject project)

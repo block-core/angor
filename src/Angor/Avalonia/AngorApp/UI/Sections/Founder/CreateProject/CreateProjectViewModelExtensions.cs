@@ -1,6 +1,7 @@
 using System.Linq;
-using Angor.Contexts.Funding.Projects.Application.Dtos;
-using Angor.Contexts.Funding.Projects.Domain;
+using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Sdk.Funding.Projects.Dtos;
+using Angor.Shared.Models;
 
 namespace AngorApp.UI.Sections.Founder.CreateProject;
 
@@ -8,6 +9,17 @@ public static class CreateProjectViewModelExtensions
 {
     public static CreateProjectDto ToDto(this ICreateProjectViewModel createProjectViewModel)
     {
+        var fundingVm = createProjectViewModel.FundingStructureViewModel;
+        var projectType = fundingVm.ProjectType;
+
+        // For Invest projects, Sats and PenaltyDays are required
+        // For Fund/Subscribe projects, they may be optional or 0
+        var satsValue = projectType == ProjectType.Invest
+       ? fundingVm.Sats!.Value
+      : fundingVm.Sats ?? 0;
+
+        var penaltyDaysValue = fundingVm.PenaltyDays ?? 0;
+
         return new CreateProjectDto
         {
             //Nostr profile
@@ -21,14 +33,20 @@ public static class CreateProjectViewModelExtensions
             Lud16 = null, //TODO: Map result...
 
             //Project information
-            Sats = createProjectViewModel.FundingStructureViewModel.Sats!.Value,
-            StartDate = createProjectViewModel.FundingStructureViewModel.FundingStartDate,
-            ExpiryDate = createProjectViewModel.FundingStructureViewModel.ExpiryDate,
-            EndDate = createProjectViewModel.FundingStructureViewModel.FundingEndDate,
-            PenaltyDays = createProjectViewModel.FundingStructureViewModel.PenaltyDays!.Value,
-            PenaltyThreshold = createProjectViewModel.FundingStructureViewModel.PenaltyThreshold,
-            TargetAmount = new Amount(createProjectViewModel.FundingStructureViewModel.Sats!.Value),
-            Stages = createProjectViewModel.StagesViewModel.Stages.Select(stage => new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent!.Value))
+            ProjectType = projectType,
+            Sats = satsValue,
+            StartDate = fundingVm.FundingStartDate,
+            ExpiryDate = fundingVm.ExpiryDate,
+            EndDate = fundingVm.FundingEndDate,
+            PenaltyDays = penaltyDaysValue,
+            PenaltyThreshold = fundingVm.PenaltyThreshold,
+            TargetAmount = new Amount(satsValue),
+            Stages = createProjectViewModel.StagesViewModel.Stages.Select(stage => 
+                    new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent!.Value)),
+
+            // For Fund and Subscribe types - convert ObservableCollection to List
+            SelectedPatterns = fundingVm.SelectedPatterns?.ToList(),
+            PayoutDay = fundingVm.PayoutDay
         };
     }
 }

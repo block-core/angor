@@ -1,0 +1,317 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:steps="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+             xmlns:model="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.FundingConfigurationView" x:DataType="steps:IFundingConfigurationViewModel">
+
+    <Design.DataContext>
+        <steps:FundingConfigurationViewModelSample />
+    </Design.DataContext>
+
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style Selector="TextBlock.FormLabel">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+
+        <Style Selector="TextBlock.Muted">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+
+        <Style Selector="TextBlock.AccentHint">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+            <Setter Property="Foreground" Value="{DynamicResource BitcoinAccent}" />
+        </Style>
+
+
+        <Style Selector="TextBox.AmountInput">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <Style Selector="TextBlock.AmountUnitInline">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+
+        <Style Selector="Border.HelpBadge">
+            <Setter Property="Background" Value="{DynamicResource BitcoinAccent}" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="8 3" />
+            <Setter Property="TextElement.Foreground" Value="White" />
+            <Setter Property="TextElement.FontSize" Value="{StaticResource FontSizeSmall}" />
+            <Setter Property="TextElement.FontWeight" Value="Bold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="16 14" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset:checked">
+            <Setter Property="Background" Value="{DynamicResource Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset TextBlock.AmountValue">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset TextBlock.AmountUnit">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+            <Setter Property="Opacity" Value="0.8" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset:checked TextBlock.AmountValue">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <Style Selector="ToggleButton.AmountPreset:checked TextBlock.AmountUnit">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Opacity" Value="0.85" />
+        </Style>
+
+        <Style Selector="TextBlock.DaysValue">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBig}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+
+        <Style Selector="ListBox.DurationPresets">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <Style Selector="ListBox.DurationPresets ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+
+            <Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+
+            <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+        </Style>
+
+        <Style Selector="Border.DurationPresetBorder">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="14 8" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="TextElement.FontWeight" Value="Bold" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+
+        <Style Selector="ListBox.DurationPresets ListBoxItem:pointerover Border.DurationPresetBorder">
+            <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+        </Style>
+
+        <Style Selector="ListBox.DurationPresets ListBoxItem:selected Border.DurationPresetBorder">
+            <Setter Property="Background" Value="{DynamicResource Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+            <Setter Property="TextElement.Foreground" Value="White" />
+        </Style>
+
+        <Style Selector="ListBox.DurationPresets ListBoxItem:selected:pointerover Border.DurationPresetBorder">
+            <Setter Property="Background" Value="{DynamicResource Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+            <Setter Property="TextElement.Foreground" Value="White" />
+            <Setter Property="Opacity" Value="0.92" />
+        </Style>
+
+
+    </UserControl.Styles>
+
+    <controls:ScrollableView MaxContentWidth="766">
+        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}">
+            <TextBlock Classes="Subtitle">Configure your funding target, window, and project nature.</TextBlock>
+
+
+            <HeaderedContainer Classes="WizardHighlight">
+                <HeaderedContainer.Header>
+                    <EdgePanel Content="Set your target funding amount">
+                        <EdgePanel.StartContent>
+                            <PathIcon Width="20"
+                                      Height="20"
+                                      Foreground="{DynamicResource BitcoinAccent}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Data="{StaticResource BitcoinSymbol}" />
+                        </EdgePanel.StartContent>
+                    </EdgePanel>
+                </HeaderedContainer.Header>
+                <StackPanel Classes="BigGap">
+                    <StackPanel Spacing="10">
+                        <HeaderedContainer>
+                            <HeaderedContainer.Header>
+                                <TextBlock Classes="FormLabel">Target Amount (BTC) *</TextBlock>
+                            </HeaderedContainer.Header>
+
+                            <NumericUpDown Classes="AmountInput"
+                                     Value="{Binding NewProject.TargetAmount, Mode=TwoWay, Converter={x:Static controls:AngorConverters.BtcToAmountUI}}"
+                                     FormatString="0.########"
+                                     Minimum="0"
+                                     Increment="0.01"
+                                     x:Name="AmountBox"
+                                     Watermark="0.00">
+                                <NumericUpDown.InnerRightContent>
+                                    <TextBlock Classes="AmountUnitInline"
+                                               VerticalAlignment="Center"
+                                               Margin="0 0 12 0">
+                                        BTC
+                                    </TextBlock>
+                                </NumericUpDown.InnerRightContent>
+                            </NumericUpDown>
+                        </HeaderedContainer>
+
+                        <TextBlock Classes="AccentHint">The minimum amount your project needs to raise</TextBlock>
+                    </StackPanel>
+
+                    <ListBox ItemsSource="{Binding AmountPresets}"
+                             HorizontalAlignment="Right"
+                             Background="Transparent"
+                             SelectedValueBinding="{Binding Sats}"
+                             SelectedValue="{Binding SelectedPresetSats, Mode=TwoWay}"
+                             ItemContainerTheme="{StaticResource ButtonizedListBoxItem}">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <BalancedWrapGrid />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel HorizontalAlignment="Center" Classes="TinyGap">
+                                    <TextBlock Classes="Center Bold" Text="{Binding  Btc}" />
+                                    <TextBlock Classes="Center Tiny" Text="BTC" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </HeaderedContainer>
+
+
+            <HeaderedContainer Classes="WizardSection">
+                <HeaderedContainer.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock>Fundraising Window</TextBlock>
+                        <Border Classes="HelpBadge">
+                            <TextBlock>Help</TextBlock>
+                        </Border>
+                    </StackPanel>
+                </HeaderedContainer.Header>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="24" RowDefinitions="Auto">
+                    <StackPanel Grid.Column="0" Spacing="8">
+                        <HeaderedContainer>
+                            <HeaderedContainer.Header>
+                                <TextBlock Classes="FormLabel">Start Date</TextBlock>
+                            </HeaderedContainer.Header>
+                            <CalendarDatePicker SelectedDate="{Binding NewProject.StartDate}" Watermark="dd/mm/aaaa" />
+                        </HeaderedContainer>
+                        <TextBlock Classes="Muted">When the fundraising campaign begins</TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Spacing="8">
+                        <HeaderedContainer>
+                            <HeaderedContainer.Header>
+                                <TextBlock Classes="FormLabel">End Date *</TextBlock>
+                            </HeaderedContainer.Header>
+                            <CalendarDatePicker SelectedDate="{Binding NewProject.FundingEndDate}" Watermark="dd/mm/aaaa" />
+                        </HeaderedContainer>
+
+                        <TextBlock Classes="Muted">Must be before first stage (chosen on next screen)</TextBlock>
+
+                        <ListBox SelectedValueBinding="{Binding Months}" 
+                                 SelectedValue="{Binding NewProject.FundingEndDate, Mode=TwoWay, Converter={x:Static controls:AngorConverters.AddMonthsToToday}}"
+                                 ItemContainerTheme="{StaticResource ButtonizedAccent}" Background="Transparent">
+                            <ListBox.ItemsSource>
+                                <generic:List x:TypeArguments="model:PeriodOption">
+                                    <model:PeriodOption Months="1" Title="1 Month" />
+                                    <model:PeriodOption Months="2" Title="2 Months" />
+                                    <model:PeriodOption Months="3" Title="3 Months" />
+                                </generic:List>
+                            </ListBox.ItemsSource>
+
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <BalancedWrapGrid />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="model:PeriodOption">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Classes="TinyGap">
+                                        <TextBlock Classes="Center Bold Tiny" Text="{Binding Title}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Grid>
+            </HeaderedContainer>
+
+
+            <HeaderedContainer Classes="WizardSection">
+                <HeaderedContainer.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock>Project Nature (Penalty)</TextBlock>
+                        <Border Classes="HelpBadge">
+                            <TextBlock>Help</TextBlock>
+                        </Border>
+                    </StackPanel>
+                </HeaderedContainer.Header>
+
+                <StackPanel Spacing="16">
+                    <Panel>
+                        <TextBlock Classes="Muted" Text="Experimental" />
+                        <TextBlock Classes="Muted" Text="High Value" HorizontalAlignment="Right" />
+                    </Panel>
+
+                    <Slider x:Name="PenaltyDays" Minimum="30" Maximum="180" Value="{Binding NewProject.PenaltyDays}" Foreground="{DynamicResource Accent}" Background="{DynamicResource Stroke}">
+                        <Slider.Resources>
+                        </Slider.Resources>
+                    </Slider>
+
+                    <TextBlock Classes="Strong Big" HorizontalAlignment="Center" Text="{Binding #PenaltyDays.Value, StringFormat='{}{0:0} days'}" />
+                </StackPanel>
+            </HeaderedContainer>
+        </StackPanel>
+    </controls:ScrollableView>
+</UserControl>

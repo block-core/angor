@@ -1,0 +1,51 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+                    xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections">
+
+    <Design.PreviewWith>
+        <StackPanel Spacing="10">
+            <ThemeVariantScope RequestedThemeVariant="Light">
+                <controls:ErrorSummary>
+                    <controls:ErrorSummary.Errors>
+                        <generic:List x:TypeArguments="x:String">
+                            <x:String>Error 1</x:String>
+                            <x:String>Error 2</x:String>
+                            <x:String>Error 3</x:String>
+                        </generic:List>
+                    </controls:ErrorSummary.Errors>
+                </controls:ErrorSummary>
+            </ThemeVariantScope>
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+                <controls:ErrorSummary>
+                    <controls:ErrorSummary.Errors>
+                        <generic:List x:TypeArguments="x:String">
+                            <x:String>Error 1</x:String>
+                            <x:String>Error 2</x:String>
+                            <x:String>Error 3</x:String>
+                        </generic:List>
+                    </controls:ErrorSummary.Errors>
+                </controls:ErrorSummary>
+            </ThemeVariantScope>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <ControlTheme TargetType="controls:ErrorSummary" x:Key="{x:Type controls:ErrorSummary}">
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <EdgePanel IsVisible="{Binding !!$parent[controls:ErrorSummary].Errors.Count}" IconOptions.Fill="{DynamicResource ErrorForeground}"
+                           Spacing="16"
+                           CornerRadius="10" BorderThickness="1"
+                           Padding="16" BorderBrush="{DynamicResource ErrorHard}"
+                           Background="{DynamicResource ErrorSoft}"
+                           Foreground="{DynamicResource TextMuted}"
+                           IconOptions.Size="15"
+                           StartContent="{Icon fa-circle-exclamation}">
+                    <ItemsControl ItemsSource="{TemplateBinding Errors}" />
+                </EdgePanel>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+
+</ResourceDictionary>

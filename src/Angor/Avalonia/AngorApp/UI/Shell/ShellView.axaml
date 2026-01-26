@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+             xmlns:shell="clr-namespace:AngorApp.UI.Shell"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
+             x:Class="AngorApp.UI.Shell.ShellView" x:DataType="shell:IShellViewModel" Background="{DynamicResource AppBackground}">
+
+    <Design.DataContext>
+        <shell:ShellViewModelSample />
+    </Design.DataContext>
+    
+    <Grid x:Name="TopBar" Margin="0 20 20 20" ColumnDefinitions="Auto *" RowDefinitions="42 *" ColumnSpacing="20" RowSpacing="20">
+        <PathIcon Height="32" Foreground="{DynamicResource Brand}" Width="32" Data="{StaticResource AngorLogo}" />
+        <DockPanel Grid.Row="0" Grid.Column="1" Dock="Top">
+            <DockPanel DockPanel.Dock="Top" HorizontalSpacing="20">
+                <TextBlock FontWeight="Bold" VerticalAlignment="Center" FontSize="20" Text="{Binding SelectedSection.FriendlyName}" />
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="16" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center">
+                        <TextBlock.Inlines>
+                            <Run Classes="Thin">Invested:</Run>
+                            <Run Classes="Label">0.0000 BTC</Run>
+                        </TextBlock.Inlines>
+                    </TextBlock>
+                    <TextBlock VerticalAlignment="Center">
+                        <TextBlock.Inlines>
+                            <Run Classes="Thin">Available:</Run>
+                            <Run Classes="Label">10.0000 BTC</Run>
+                        </TextBlock.Inlines>
+                    </TextBlock>
+                    <ComboBox SelectedIndex="0" VerticalAlignment="Center">
+                        <ComboBox.ItemsSource>
+                            <generic:List x:TypeArguments="x:String">
+                                <x:String>Mainnet</x:String>
+                                <x:String>Testnet</x:String>
+                                <x:String>Liquid</x:String>
+                                <x:String>Ecash</x:String>
+                            </generic:List>
+                        </ComboBox.ItemsSource>
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <EdgePanel IconOptions.Size="18" Foreground="{DynamicResource TextMuted}" StartContent="{Icon mdi-web}" Content="{Binding}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ToggleButton Classes="Widget" IsChecked="{Binding IsDarkThemeEnabled, Mode=TwoWay}">
+                        <ToggleButton.Content>
+                            <PathIcon Foreground="{DynamicResource TextMuted}" Data="{DynamicResource Sun}" />
+                        </ToggleButton.Content>
+                    </ToggleButton>
+                    <EnhancedButton Classes="Widget" Icon="{Icon mdi-cog}" Command="{Binding GoToSettings}" />
+                </StackPanel>
+            </DockPanel>
+        </DockPanel>
+        <SectionStrip Classes="Nav" Grid.Row="1" Grid.Column="0" SelectedSection="{Binding SelectedSection}" IconSize="24" Width="200" HorizontalAlignment="Left" Sections="{Binding SidebarSections}" />
+        <OverlayBorder Grid.Row="1" Grid.Column="1" Classes="Panel" Padding="0" Background="{DynamicResource TiledLogoBrush}">
+            <Frame Navigator="{Binding SelectedSection.Navigator}" />
+        </OverlayBorder>
+    </Grid>
+</UserControl>

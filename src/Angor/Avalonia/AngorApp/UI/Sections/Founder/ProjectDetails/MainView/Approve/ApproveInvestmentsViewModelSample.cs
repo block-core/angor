@@ -1,4 +1,4 @@
-using Angor.Contexts.Funding.Founder;
+using Angor.Sdk.Funding.Founder;
 
 namespace AngorApp.UI.Sections.Founder.ProjectDetails.MainView.Approve;
 

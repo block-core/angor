@@ -1,7 +1,8 @@
 using System.Reactive.Disposables;
-using Angor.Contexts.Funding.Investor;
-using Angor.Contexts.Funding.Shared;
-using Angor.Contexts.Funding.Shared.TransactionDrafts;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Operations;
+using Angor.Sdk.Funding.Shared;
+using Angor.Sdk.Funding.Shared.TransactionDrafts;
 using AngorApp.Core;
 using AngorApp.UI.TransactionDrafts;
 using AngorApp.UI.TransactionDrafts.DraftTypes;
@@ -26,6 +27,7 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
         this.uiServices = uiServices;
 
         Load = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => GetRecoveryStateViewModel(wallet, sharedCommands))).Enhance().DisposeWith(disposables);
+        Load.HandleErrorsWith(uiServices.NotificationService);
         State = Load.Successes();
         
         // Refresh on Batch Action completion
@@ -37,9 +39,9 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
     private Task<Result<RecoveryStateViewModel>> GetRecoveryStateViewModel(IWallet wallet, SharedCommands sharedCommands)
     {
         return investmentAppService
-            .GetInvestorProjectRecovery(wallet.Id, projectId)
-            .Map(dto => new RecoveryStateViewModel(wallet.Id, dto, sharedCommands, investmentAppService, uiServices));
-    }
+       .GetRecoveryStatus(new GetRecoveryStatus.GetRecoveryStatusRequest(wallet.Id, projectId))
+            .Map(response => new RecoveryStateViewModel(wallet.Id, response.RecoveryData, sharedCommands, investmentAppService, uiServices));
+  }
 
     public IEnhancedCommand ViewTransaction { get; }
     public IEnhancedCommand<Result<RecoveryStateViewModel>> Load { get; }
