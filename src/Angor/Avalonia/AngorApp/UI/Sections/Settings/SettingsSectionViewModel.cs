@@ -266,6 +266,18 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private async Task RefreshIndexersAsync()
     {
+        // If no indexers exist, add the default indexers back
+        if (Indexers.Count == 0)
+        {
+            var defaultIndexers = networkConfiguration.GetDefaultIndexerUrls();
+            foreach (var indexer in defaultIndexers)
+            {
+                Indexers.Add(CreateIndexer(indexer));
+            }
+            SaveSettings();
+        }
+
+        // Refresh indexer status
         try
         {
             await networkService.CheckServices(true);
