@@ -32,72 +32,84 @@
         <Style Selector="Card StackPanel">
             <Setter Property="Spacing" Value="10" />
         </Style>
+        <!-- Status Badge Styles -->
+        <Style Selector="Badge[Tag=Unknown]">
+            <Setter Property="Color" Value="Gray" />
+        </Style>
+        <Style Selector="Badge[Tag=Online]">
+            <Setter Property="Color" Value="{DynamicResource SuccessColor}" />
+        </Style>
+        <Style Selector="Badge[Tag=Offline]">
+            <Setter Property="Color" Value="{DynamicResource ErrorColor}" />
+        </Style>
+        <Style Selector="Badge[Tag=NotReady]">
+            <Setter Property="Color" Value="{DynamicResource WarningColor}" />
+        </Style>
+
+        <!-- Link styling for URLs -->
+        <Style Selector="SlimDataGrid TextBlock.Link">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessColor}" />
+        </Style>
+
+        <!-- Trash button styling -->
+        <Style Selector="EnhancedButton.Trash">
+            <Setter Property="Foreground" Value="{DynamicResource ErrorColor}" />
+        </Style>
 
     </UserControl.Styles>
 
     <controls:PageContainer>
         <ScrollViewer IconOptions.Size="{StaticResource IconSizeSmall}">
             <StackPanel Classes="BigGap" MaxWidth="700">
-                <Card HeaderStartContent="{Icon fa-network-wired}" Header="Network">
-                    <StackPanel Classes="BigGap">
-                        <TextBlock Classes="Warning Wrap Center">WARNING NOTICE: Changing networks will wipe your wallet data.</TextBlock>
-                        <ComboBox HorizontalAlignment="Center" MinWidth="200" ItemsSource="{Binding Networks}" SelectedItem="{Binding Network}" />
+                
+                <!-- Network Section -->
+                <Card HeaderStartContent="{Icon fa-globe}" Header="Network">
+                    <Card.HeaderEndContent>
+                        <EnhancedButton Classes="Primary" Icon="{Icon fa-plus}" Content="Change Network" Command="{Binding ChangeNetwork}" />
+                    </Card.HeaderEndContent>
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <TextBlock Text="Network Type:" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Network}" FontWeight="Bold" VerticalAlignment="Center" />
                     </StackPanel>
                 </Card>
-                <Card Header="Appearance">
-                    <ToggleSwitch IsChecked="{Binding IsBitcoinPreferred}" Content="Unit for amount entry" OnContent="BTC" OffContent="sats" />
-                </Card>
-                <Card Header="Debug Mode" IsVisible="{Binding IsTestnet}">
-                    <StackPanel Classes="BigGap">
-                        <TextBlock Classes="Wrap Center">Debug mode is only available on testnet networks. When enabled, additional debugging features will be available.</TextBlock>
-                        <ToggleSwitch IsChecked="{Binding IsDebugMode}" Content="Debug Mode" OnContent="Enabled" OffContent="Disabled" HorizontalAlignment="Center" />
-                    </StackPanel>
-                </Card>
+
+                <!-- Indexer Section -->
                 <Card HeaderStartContent="{Icon fa-server}" Header="Indexer">
+                    <Card.HeaderEndContent>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <EnhancedButton Classes="Primary" Icon="{Icon fa-plus}" Content="Add" Command="{Binding AddIndexer}" />
+                            <EnhancedButton Classes="Primary" Icon="{Icon fa-rotate-right}" Content="Refresh" Command="{Binding RefreshIndexers}" />
+                        </StackPanel>
+                    </Card.HeaderEndContent>
                     <StackPanel>
-                        <DockPanel  Margin="0 0 20 0">
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10">
-                                <EnhancedButton Icon="{Icon fa-rotate-right}" Command="{Binding RefreshIndexers}" />
-                                <EnhancedButton Icon="{Icon fa-plus}" Command="{Binding AddIndexer}" />
-                            </StackPanel>
-                            <TextBox VerticalContentAlignment="Center" Watermark="Enter new indexer link" Text="{Binding NewIndexer}" />
-                        </DockPanel>
+                        <TextBox Watermark="Enter new indexer link" Text="{Binding NewIndexer}" Margin="0 0 0 10" />
                         <SlimDataGrid ItemsSource="{Binding Indexers}">
                             <SlimDataGrid.Columns>
-                                <Column Header="Primary" Width="Auto" Binding="{Binding}">
+                                <Column Header="Link" Width="*">
                                     <Column.CellTemplate>
                                         <DataTemplate>
-                                            <RadioButton GroupName="Indexer" Command="{Binding SetPrimary}" IsChecked="{Binding IsPrimary, Mode=TwoWay}" />
+                                            <TextBlock Classes="Link" Text="{Binding Url}" />
                                         </DataTemplate>
                                     </Column.CellTemplate>
                                 </Column>
-                                <Column Header="Address" Binding="{Binding Url}" />
                                 <Column Header="Status" Width="Auto">
                                     <Column.CellTemplate>
                                         <DataTemplate>
-                                            <Badge Content="{Binding Status}" Tag="{Binding Status}">
-                                                <Badge.Styles>
-                                                    <Style Selector="Badge[Tag=Unknown]">
-                                                        <Setter Property="Color" Value="Gray" />
-                                                    </Style>
-                                                    <Style Selector="Badge[Tag=Online]">
-                                                        <Setter Property="Color" Value="{DynamicResource SuccessColor}" />
-                                                    </Style>
-                                                    <Style Selector="Badge[Tag=Offline]">
-                                                        <Setter Property="Color" Value="{DynamicResource ErrorColor}" />
-                                                    </Style>
-                                                    <Style Selector="Badge[Tag=NotReady]">
-                                                        <Setter Property="Color" Value="{DynamicResource WarningColor}" />
-                                                    </Style>
-                                                </Badge.Styles>
-                                            </Badge>
+                                            <Badge Content="{Binding Status}" Tag="{Binding Status}" />
+                                        </DataTemplate>
+                                    </Column.CellTemplate>
+                                </Column>
+                                <Column Header="Default" Width="Auto">
+                                    <Column.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding IsPrimary}" Command="{Binding SetPrimary}" IsEnabled="{Binding !IsPrimary}" />
                                         </DataTemplate>
                                     </Column.CellTemplate>
                                 </Column>
                                 <Column Width="Auto" Binding="{Binding}">
                                     <Column.CellTemplate>
                                         <DataTemplate>
-                                            <EnhancedButton Icon="{Icon fa-trash}" Command="{Binding Remove}" />
+                                            <EnhancedButton Classes="Trash" Icon="{Icon fa-trash}" Command="{Binding Remove}" />
                                         </DataTemplate>
                                     </Column.CellTemplate>
                                 </Column>
@@ -105,19 +117,38 @@
                         </SlimDataGrid>
                     </StackPanel>
                 </Card>
+
+                <!-- Nostr Relays Section -->
                 <Card HeaderStartContent="{Icon mdi-antenna}" Header="Nostr Relays">
+                    <Card.HeaderEndContent>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <EnhancedButton Classes="Primary" Icon="{Icon fa-plus}" Content="Add" Command="{Binding AddRelay}" />
+                            <EnhancedButton Classes="Primary" Icon="{Icon fa-rotate-right}" Content="Refresh" Command="{Binding RefreshRelays}" />
+                        </StackPanel>
+                    </Card.HeaderEndContent>
                     <StackPanel>
-                        <DockPanel Margin="0 0 20 0">
-                            <EnhancedButton Icon="{Icon fa-plus}" Command="{Binding AddRelay}" />
-                            <TextBox Watermark="Enter new relay link" Text="{Binding NewRelay}" />
-                        </DockPanel>
+                        <TextBox Watermark="Enter new relay link" Text="{Binding NewRelay}" Margin="0 0 0 10" />
                         <SlimDataGrid ItemsSource="{Binding Relays}">
                             <SlimDataGrid.Columns>
-                                <Column Header="Address" Binding="{Binding Url}" />
+                                <Column Header="Link" Width="*">
+                                    <Column.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Classes="Link" Text="{Binding Url}" />
+                                        </DataTemplate>
+                                    </Column.CellTemplate>
+                                </Column>
+                                <Column Header="Name" Binding="{Binding Name}" Width="Auto" />
+                                <Column Header="Status" Width="Auto">
+                                    <Column.CellTemplate>
+                                        <DataTemplate>
+                                            <Badge Content="{Binding Status}" Tag="{Binding Status}" />
+                                        </DataTemplate>
+                                    </Column.CellTemplate>
+                                </Column>
                                 <Column Width="Auto" Binding="{Binding}">
                                     <Column.CellTemplate>
                                         <DataTemplate>
-                                            <EnhancedButton Icon="{Icon fa-trash}" Command="{Binding Remove}" />
+                                            <EnhancedButton Classes="Trash" Icon="{Icon fa-trash}" Command="{Binding Remove}" />
                                         </DataTemplate>
                                     </Column.CellTemplate>
                                 </Column>
@@ -125,15 +156,50 @@
                         </SlimDataGrid>
                     </StackPanel>
                 </Card>
-                <Card HeaderStartContent="{Icon fa-wallet}" Header="Wallet">
+
+                <!-- Currency Display Section -->
+                <Card HeaderStartContent="{Icon fa-bitcoin}" Header="Currency Display">
                     <StackPanel Classes="BigGap">
-                        <TextBlock Classes="Wrap Center">Import an existing wallet using your recovery words.</TextBlock>
+                        <StackPanel Orientation="Horizontal" Spacing="15">
+                            <TextBlock Text="Select Currency:" VerticalAlignment="Center" />
+                            <ToggleSwitch IsChecked="{Binding IsBitcoinPreferred}" OnContent="Bitcoin (BTC)" OffContent="Satoshis (sats)" />
+                        </StackPanel>
+                        <TextBlock Classes="Muted Wrap" Text="Bitcoin-only application - currency display is fixed to BTC or sats." />
+                    </StackPanel>
+                </Card>
+
+                <!-- Debug Mode Section (Testnet only) -->
+                <Card Header="Debug Mode" IsVisible="{Binding IsTestnet}">
+                    <StackPanel Classes="BigGap">
+                        <TextBlock Classes="Wrap Muted">Debug mode is only available on testnet networks. When enabled, additional debugging features will be available.</TextBlock>
+                        <ToggleSwitch IsChecked="{Binding IsDebugMode}" Content="Debug Mode" OnContent="Enabled" OffContent="Disabled" HorizontalAlignment="Left" />
+                    </StackPanel>
+                </Card>
+
+                <!-- Backup Account Section -->
+                <Card HeaderStartContent="{Icon fa-download}" Header="Backup Account" IsVisible="{Binding HasWallet}">
+                    <StackPanel Classes="BigGap">
+                        <TextBlock Classes="Wrap Muted">Download a backup of your account (seed) so you never lose access.</TextBlock>
+                        <EnhancedButton HorizontalAlignment="Left" Icon="{Icon fa-download}" Content="Download Backup" Command="{Binding BackupWallet}" />
+                    </StackPanel>
+                </Card>
+
+                <!-- Wallet Section -->
+                <Card HeaderStartContent="{Icon fa-wallet}" Header="Wallet" IsVisible="{Binding !HasWallet}">
+                    <StackPanel Classes="BigGap">
+                        <TextBlock Classes="Wrap Muted">Import an existing wallet using your recovery words.</TextBlock>
                         <EnhancedButton HorizontalAlignment="Right" Command="{Binding ImportWallet}" Content="Import wallet" />
                     </StackPanel>
                 </Card>
+
+                <!-- Danger Zone Section -->
                 <Card BorderBrush="{StaticResource DangerColor}" BorderThickness="3" HeaderStartContent="{Icon mdi alert-outline}" Header="Danger Zone">
-                    <EnhancedButton HorizontalAlignment="Right" Classes="Danger" Content="Delete wallet" Command="{Binding DeleteWallet}" />
+                    <Card.HeaderEndContent>
+                        <TextBlock Classes="Muted" Text="Irreversible actions" VerticalAlignment="Center" />
+                    </Card.HeaderEndContent>
+                    <EnhancedButton HorizontalAlignment="Left" Classes="Danger" Icon="{Icon fa-trash}" Content="Wipe Data" Command="{Binding WipeData}" />
                 </Card>
+                
             </StackPanel>
         </ScrollViewer>
     </controls:PageContainer>

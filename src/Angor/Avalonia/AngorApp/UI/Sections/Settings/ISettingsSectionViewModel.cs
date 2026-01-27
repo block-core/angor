@@ -19,11 +19,16 @@ internal interface ISettingsSectionViewModel : IDisposable
     ReactiveCommand<Unit, Unit> AddIndexer { get; }
     ReactiveCommand<Unit, Unit> AddRelay { get; }
     ReactiveCommand<Unit, Unit> RefreshIndexers { get; }
+    ReactiveCommand<Unit, Unit> RefreshRelays { get; }
+    ReactiveCommand<Unit, Unit> ChangeNetwork { get; }
     ReactiveCommand<Unit, Unit> DeleteWallet { get; }
+    ReactiveCommand<Unit, Unit> WipeData { get; }
+    ReactiveCommand<Unit, Unit> BackupWallet { get; }
     IEnhancedCommand ImportWallet { get; }
     bool IsBitcoinPreferred { get; set; }
     bool IsDebugMode { get; set; }
     bool IsTestnet { get; }
+    bool HasWallet { get; }
 }
 
 internal class SettingsSectionViewModelSample : ISettingsSectionViewModel
@@ -32,11 +37,14 @@ internal class SettingsSectionViewModelSample : ISettingsSectionViewModel
     {
         Indexers = new ObservableCollection<SettingsUrlViewModel>
         {
-            new("https://indexer.angor.io", true, UrlStatus.Online, DateTime.UtcNow, _ => { }, _ => { })
+            new("https://test.indexer.angor.io", false, UrlStatus.Offline, DateTime.UtcNow, _ => { }, _ => { }),
+            new("https://signet.angor.online", true, UrlStatus.Online, DateTime.UtcNow, _ => { }, _ => { }),
+            new("https://signet2.angor.online", false, UrlStatus.Offline, DateTime.UtcNow, _ => { }, _ => { })
         };
         Relays = new ObservableCollection<SettingsUrlViewModel>
         {
-            new("wss://relay.angor.io", false, UrlStatus.Offline, DateTime.UtcNow, _ => { })
+            new("wss://relay.angor.io", false, UrlStatus.Online, DateTime.UtcNow, _ => { }, name: "strfry default"),
+            new("wss://relay2.angor.io", false, UrlStatus.Online, DateTime.UtcNow, _ => { }, name: "strfry2 default")
         };
     }
 
@@ -49,10 +57,15 @@ internal class SettingsSectionViewModelSample : ISettingsSectionViewModel
     public ReactiveCommand<Unit, Unit> AddIndexer { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> AddRelay { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> RefreshIndexers { get; } = ReactiveCommand.Create(() => { });
+    public ReactiveCommand<Unit, Unit> RefreshRelays { get; } = ReactiveCommand.Create(() => { });
+    public ReactiveCommand<Unit, Unit> ChangeNetwork { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> DeleteWallet { get; } = ReactiveCommand.Create(() => { });
+    public ReactiveCommand<Unit, Unit> WipeData { get; } = ReactiveCommand.Create(() => { });
+    public ReactiveCommand<Unit, Unit> BackupWallet { get; } = ReactiveCommand.Create(() => { });
     public IEnhancedCommand ImportWallet { get; } = ReactiveCommand.Create(() => { }).Enhance();
     public bool IsBitcoinPreferred { get; set; } = true;
     public bool IsDebugMode { get; set; } = false;
     public bool IsTestnet { get; } = true;
+    public bool HasWallet { get; } = true;
     public void Dispose() { }
 }
