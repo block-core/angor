@@ -217,7 +217,7 @@
 
     <!-- TextBox overrides -->
     <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="BitcoinOrange" />
-    <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey=" SurfaceHover" />
+    <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="SurfaceHover" />
     <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
 
 </ResourceDictionary>
