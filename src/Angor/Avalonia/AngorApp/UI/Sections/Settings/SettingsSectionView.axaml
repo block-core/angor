@@ -4,6 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:settings="clr-namespace:AngorApp.UI.Sections.Settings"
+             xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.UI.Sections.Settings.SettingsSectionView"
              x:DataType="settings:ISettingsSectionViewModel">
@@ -78,7 +80,14 @@
                     <Card.HeaderEndContent>
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <EnhancedButton Classes="Primary" Icon="{Icon fa-plus}" Content="Add" Command="{Binding AddIndexer}" />
-                            <EnhancedButton Classes="Primary" Icon="{Icon fa-rotate-right}" Content="Refresh" Command="{Binding RefreshIndexers}" />
+                            <EnhancedButton Classes="Primary" Content="Refresh" Command="{Binding RefreshIndexers}">
+                                <EnhancedButton.Icon>
+                                    <Panel>
+                                        <i:Icon Value="fa-rotate-right" IsVisible="{Binding !RefreshIndexers.IsExecuting^}" />
+                                        <fa:ProgressRing Width="16" Height="16" IsVisible="{Binding RefreshIndexers.IsExecuting^}" />
+                                    </Panel>
+                                </EnhancedButton.Icon>
+                            </EnhancedButton>
                         </StackPanel>
                     </Card.HeaderEndContent>
                     <StackPanel>
@@ -123,7 +132,14 @@
                     <Card.HeaderEndContent>
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <EnhancedButton Classes="Primary" Icon="{Icon fa-plus}" Content="Add" Command="{Binding AddRelay}" />
-                            <EnhancedButton Classes="Primary" Icon="{Icon fa-rotate-right}" Content="Refresh" Command="{Binding RefreshRelays}" />
+                            <EnhancedButton Classes="Primary" Content="Refresh" Command="{Binding RefreshRelays}">
+                                <EnhancedButton.Icon>
+                                    <Panel>
+                                        <i:Icon Value="fa-rotate-right" IsVisible="{Binding !RefreshRelays.IsExecuting^}" />
+                                        <fa:ProgressRing Width="16" Height="16" IsVisible="{Binding RefreshRelays.IsExecuting^}" />
+                                    </Panel>
+                                </EnhancedButton.Icon>
+                            </EnhancedButton>
                         </StackPanel>
                     </Card.HeaderEndContent>
                     <StackPanel>
