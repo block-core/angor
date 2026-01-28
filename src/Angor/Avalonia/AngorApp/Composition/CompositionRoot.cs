@@ -13,6 +13,8 @@ using AngorApp.Composition.Registrations.ViewModels;
 using AngorApp.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Zafiro.UI.Navigation;
+using Branta.V2.Extensions;
 
 namespace AngorApp.Composition;
 
@@ -51,8 +53,14 @@ public static class CompositionRoot
             .AddModelServices()
             .AddViewModels()
             .AddUIServices(topLevelView, profileContext, applicationStorage);
+
+        services.ConfigureBrantaServices(new Branta.Classes.BrantaClientOptions() {
+            BaseUrl = System.Diagnostics.Debugger.IsAttached
+                ? Branta.Enums.BrantaServerBaseUrl.Staging
+                : Branta.Enums.BrantaServerBaseUrl.Production
+        });
         
-        services.AddAnnotatedSections(logger);
+        services.AddNavigator(logger);
         services.AddSecurityContext();
         RegisterWalletServices(services, logger, network);
         FundingContextServices.Register(services, logger);
