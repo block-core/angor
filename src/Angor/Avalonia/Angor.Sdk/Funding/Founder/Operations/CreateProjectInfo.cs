@@ -127,7 +127,10 @@ public static class CreateProjectInfo
                            return;
                        }
 
-                       tsc.SetResult(Result.Success(okResponse.EventId!));
+                       if (tsc.Task.IsCompleted)
+                        return;
+                       
+                       tsc.TrySetResult(Result.Success(okResponse.EventId!));
                    });
 
             return await tsc.Task;
