@@ -21,7 +21,6 @@ internal interface ISettingsSectionViewModel : IDisposable
     ReactiveCommand<Unit, Unit> RefreshIndexers { get; }
     ReactiveCommand<Unit, Unit> RefreshRelays { get; }
     ReactiveCommand<Unit, Unit> ChangeNetwork { get; }
-    ReactiveCommand<Unit, Unit> DeleteWallet { get; }
     ReactiveCommand<Unit, Unit> WipeData { get; }
     ReactiveCommand<Unit, Unit> BackupWallet { get; }
     IEnhancedCommand ImportWallet { get; }
@@ -59,7 +58,6 @@ internal class SettingsSectionViewModelSample : ISettingsSectionViewModel
     public ReactiveCommand<Unit, Unit> RefreshIndexers { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> RefreshRelays { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> ChangeNetwork { get; } = ReactiveCommand.Create(() => { });
-    public ReactiveCommand<Unit, Unit> DeleteWallet { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> WipeData { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> BackupWallet { get; } = ReactiveCommand.Create(() => { });
     public IEnhancedCommand ImportWallet { get; } = ReactiveCommand.Create(() => { }).Enhance();

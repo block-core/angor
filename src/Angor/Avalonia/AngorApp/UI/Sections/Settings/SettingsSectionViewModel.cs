@@ -89,13 +89,12 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         ChangeNetwork = ReactiveCommand.CreateFromTask(ChangeNetworkAsync).DisposeWith(disposable);
         ImportWallet = ReactiveCommand.CreateFromTask(walletImportWizard.Start).Enhance().DisposeWith(disposable);
 
-        var canDeleteWallet = walletContext.CurrentWalletChanges
+        var canBackupWallet = walletContext.CurrentWalletChanges
             .Select(maybe => maybe.HasValue)
             .StartWith(walletContext.CurrentWallet.HasValue)
             .ObserveOn(RxApp.MainThreadScheduler);
-        DeleteWallet = ReactiveCommand.CreateFromTask(DeleteWalletAsync, canDeleteWallet).DisposeWith(disposable);
         WipeData = ReactiveCommand.CreateFromTask(WipeDataAsync).DisposeWith(disposable);
-        BackupWallet = ReactiveCommand.CreateFromTask(BackupWalletAsync, canDeleteWallet).DisposeWith(disposable);
+        BackupWallet = ReactiveCommand.CreateFromTask(BackupWalletAsync, canBackupWallet).DisposeWith(disposable);
 
         // Track wallet state
         walletContext.CurrentWalletChanges
@@ -127,7 +126,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     public ReactiveCommand<Unit, Unit> RefreshIndexers { get; }
     public ReactiveCommand<Unit, Unit> RefreshRelays { get; }
     public ReactiveCommand<Unit, Unit> ChangeNetwork { get; }
-    public ReactiveCommand<Unit, Unit> DeleteWallet { get; }
     public ReactiveCommand<Unit, Unit> WipeData { get; }
     public ReactiveCommand<Unit, Unit> BackupWallet { get; }
     public IEnhancedCommand ImportWallet { get; }
@@ -316,32 +314,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
         var settings = networkStorage.GetSettings();
         Reset(Relays, settings.Relays.Select(CreateRelay));
-    }
-
-    private async Task DeleteWalletAsync()
-    {
-        var confirmation = await uiServices.Dialog.ShowConfirmation("Delete wallet?", "Deleting the current wallet will remove all local wallet data. This action cannot be undone.");
-        var shouldDelete = confirmation.GetValueOrDefault(() => false);
-
-        if (!shouldDelete)
-        {
-            return;
-        }
-
-        var wallet = walletContext.CurrentWallet.GetValueOrDefault();
-        if (wallet is null)
-        {
-            return;
-        }
-
-        var deleteResult = await walletContext.DeleteWallet(wallet.Id);
-        if (deleteResult.IsFailure)
-        {
-            await uiServices.Dialog.ShowMessage("Delete wallet failed", deleteResult.Error);
-            return;
-        }
-
-        await uiServices.Dialog.ShowMessage("Wallet deleted", "The current wallet has been removed.");
     }
 
     private async Task WipeDataAsync()
