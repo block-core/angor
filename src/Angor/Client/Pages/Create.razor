@@ -110,18 +110,14 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="NostrMetadataBanner" class="form-label d-flex align-items-center">
-                                Banner Image Url
-                                <span class="ms-2">(Recommended size: 820×312px)</span>
-                            </label>
-                            <InputText id="NostrMetadataBanner" 
-                                       autocomplete="off" 
-                                       @bind-Value="project.Metadata.Banner" 
-                                       @bind-Value:after="SaveProjectToStorage"
-                                       @onblur="OnBannerChanged"
-                                       class=@($"form-control{(bannerError ? " is-invalid" : "")}")
-                                       placeholder="Enter the URL for the project banner image" 
-                                       disabled="@nostrMetadataCreated" />
+                            <ImageUploadWizard 
+                                Label="Banner Image"
+                                RecommendedSize="(Recommended size: 820×312px)"
+                                ImageUrl="@project.Metadata.Banner"
+                                ImageUrlChanged="OnBannerUrlChanged"
+                                InputId="NostrMetadataBanner"
+                                Placeholder="Enter the URL for the project banner image"
+                                Disabled="@nostrMetadataCreated" />
                             @if (bannerError)
                             {
                                 <div class="text-danger mt-1 small">
@@ -131,18 +127,14 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="NostrMetadataPicture" class="form-label d-flex align-items-center">
-                                Profile Image Url
-                                <span class="ms-2">(Recommended size: 170×170px)</span>
-                            </label>
-                            <InputText id="NostrMetadataPicture" 
-                                       autocomplete="off" 
-                                       @bind-Value="project.Metadata.Picture" 
-                                       @bind-Value:after="SaveProjectToStorage"
-                                       @onblur="OnPictureChanged"
-                                       class=@($"form-control{(pictureError ? " is-invalid" : "")}")
-                                       placeholder="Enter the URL for the project logo or profile picture" 
-                                       disabled="@nostrMetadataCreated" />
+                            <ImageUploadWizard 
+                                Label="Profile Image"
+                                RecommendedSize="(Recommended size: 170×170px)"
+                                ImageUrl="@project.Metadata.Picture"
+                                ImageUrlChanged="OnPictureUrlChanged"
+                                InputId="NostrMetadataPicture"
+                                Placeholder="Enter the URL for the project logo or profile picture"
+                                Disabled="@nostrMetadataCreated" />
                             @if (pictureError)
                             {
                                 <div class="text-danger mt-1 small">
@@ -2455,10 +2447,24 @@
         StateHasChanged();
     }
 
+    private void OnBannerUrlChanged(string newUrl)
+    {
+        project.Metadata.Banner = newUrl;
+        SaveProjectToStorage();
+        ValidateBannerUrl();
+    }
+
     private void OnPictureChanged()
     {
         ValidatePictureUrl();
         StateHasChanged();
+    }
+
+    private void OnPictureUrlChanged(string newUrl)
+    {
+        project.Metadata.Picture = newUrl;
+        SaveProjectToStorage();
+        ValidatePictureUrl();
     }
 
     private void ValidateTargetAmount()
