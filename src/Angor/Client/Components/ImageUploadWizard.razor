@@ -1,0 +1,373 @@
+@using Angor.Shared.Models
+@using System.Net.Http
+@using System.Net.Http.Headers
+
+<div class="image-upload-wizard">
+    <div class="mb-3">
+        <div class="d-flex align-items-center mb-2">
+            <label class="form-label mb-0 me-3">@Label</label>
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" 
+                        class="btn @(uploadMode ? "btn-primary" : "btn-outline-primary")" 
+                        @onclick="() => SetUploadMode(true)"
+                        disabled="@Disabled">
+                    Upload File
+                </button>
+                <button type="button" 
+                        class="btn @(!uploadMode ? "btn-primary" : "btn-outline-primary")" 
+                        @onclick="() => SetUploadMode(false)"
+                        disabled="@Disabled">
+                    Enter URL
+                </button>
+            </div>
+        </div>
+
+        @if (uploadMode)
+        {
+            <div class="upload-section">
+                <!-- Note about CORS and API keys -->
+                <div class="alert alert-info alert-sm mb-3" role="alert">
+                    <small>
+                        <strong>Note:</strong> Image uploads require the server to support CORS for browser uploads. 
+                        Some servers may also require API keys or authentication.
+                    </small>
+                </div>
+
+                <!-- Server Selection -->
+                <div class="mb-3">
+                    <label for="serverSelect" class="form-label small">Select Image Server</label>
+                    <select id="serverSelect" 
+                            class="form-select form-select-sm" 
+                            @bind="selectedServerIndex"
+                            @bind:after="OnServerSelectionChanged"
+                            disabled="@(Disabled || isUploading)">
+                        @foreach (var (server, index) in imageServers.Select((s, i) => (s, i)))
+                        {
+                            <option value="@index">@server.Name - @server.Description</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Custom Server URL Input -->
+                @if (imageServers[selectedServerIndex].IsCustom)
+                {
+                    <div class="mb-3">
+                        <label for="customServerUrl" class="form-label small">Custom Server Upload URL</label>
+                        <input type="text" 
+                               id="customServerUrl" 
+                               class="form-control form-control-sm" 
+                               @bind="customServerUrl"
+                               placeholder="https://your-server.com/upload"
+                               disabled="@(Disabled || isUploading)" />
+                        <small class="text-muted d-block mt-1">
+                            Ensure your server supports CORS and accepts multipart/form-data uploads
+                        </small>
+                    </div>
+                }
+
+                <!-- File Selection -->
+                <div class="mb-3">
+                    <label for="fileInput" class="form-label small">Choose Image File</label>
+                    <InputFile id="fileInput" 
+                               class="form-control form-control-sm" 
+                               OnChange="OnFileSelected"
+                               accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+                               disabled="@(Disabled || isUploading)" />
+                    @if (!string.IsNullOrEmpty(selectedFileName))
+                    {
+                        <small class="text-muted d-block mt-1">
+                            Selected: @selectedFileName (@FormatFileSize(selectedFileSize))
+                        </small>
+                    }
+                </div>
+
+                <!-- Upload Button -->
+                <div class="mb-3">
+                    <button type="button" 
+                            class="btn btn-sm btn-success" 
+                            @onclick="UploadImage"
+                            disabled="@(Disabled || isUploading || selectedFile == null || (!imageServers[selectedServerIndex].IsCustom ? false : string.IsNullOrEmpty(customServerUrl)))">
+                        @if (isUploading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <span>Uploading...</span>
+                        }
+                        else
+                        {
+                            <span>Upload Image</span>
+                        }
+                    </button>
+                </div>
+
+                <!-- Upload Status Messages -->
+                @if (!string.IsNullOrEmpty(uploadMessage))
+                {
+                    <div class="alert @(uploadSuccess ? "alert-success" : "alert-danger") alert-sm py-2" role="alert">
+                        @uploadMessage
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <!-- URL Input Mode -->
+            <div class="url-section">
+                <label for="@InputId" class="form-label small">@Label <span class="text-muted">@RecommendedSize</span></label>
+                <input type="text" 
+                       id="@InputId" 
+                       class="form-control" 
+                       @bind="ImageUrl"
+                       @bind:after="OnUrlChanged"
+                       placeholder="@Placeholder"
+                       disabled="@Disabled" />
+            </div>
+        }
+
+        <!-- Image Preview -->
+        @if (!string.IsNullOrEmpty(ImageUrl) && IsValidImageUrl(ImageUrl))
+        {
+            <div class="mt-3">
+                <label class="form-label small">Preview</label>
+                <div class="image-preview-container">
+                    <img src="@ImageUrl" 
+                         alt="Preview" 
+                         class="img-fluid rounded"
+                         style="max-height: 150px; max-width: 100%;"
+                         onerror="this.style.display='none'" />
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Label { get; set; } = "Image";
+
+    [Parameter]
+    public string ImageUrl { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<string> ImageUrlChanged { get; set; }
+
+    [Parameter]
+    public string InputId { get; set; } = "imageUrl";
+
+    [Parameter]
+    public string Placeholder { get; set; } = "Enter image URL";
+
+    [Parameter]
+    public string RecommendedSize { get; set; } = "";
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Inject]
+    private HttpClient Http { get; set; } = default!;
+
+    private bool uploadMode = false;
+    private List<ImageServerConfig> imageServers = ImageServerConfig.GetDefaultServers();
+    private int selectedServerIndex = 0;
+    private string customServerUrl = "";
+    private IBrowserFile? selectedFile = null;
+    private string selectedFileName = "";
+    private long selectedFileSize = 0;
+    private bool isUploading = false;
+    private string uploadMessage = "";
+    private bool uploadSuccess = false;
+
+    private void SetUploadMode(bool mode)
+    {
+        uploadMode = mode;
+        uploadMessage = "";
+        StateHasChanged();
+    }
+
+    private void OnServerSelectionChanged()
+    {
+        uploadMessage = "";
+        StateHasChanged();
+    }
+
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+        selectedFileName = e.File.Name;
+        selectedFileSize = e.File.Size;
+        uploadMessage = "";
+        StateHasChanged();
+    }
+
+    private async Task OnUrlChanged()
+    {
+        await ImageUrlChanged.InvokeAsync(ImageUrl);
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+
+    private async Task UploadImage()
+    {
+        if (selectedFile == null)
+        {
+            uploadMessage = "Please select a file first.";
+            uploadSuccess = false;
+            return;
+        }
+
+        var server = imageServers[selectedServerIndex];
+        var uploadUrl = server.IsCustom ? customServerUrl : server.UploadUrl;
+
+        if (string.IsNullOrEmpty(uploadUrl))
+        {
+            uploadMessage = "Please enter a custom server URL.";
+            uploadSuccess = false;
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        const long maxFileSize = 5 * 1024 * 1024;
+        if (selectedFile.Size > maxFileSize)
+        {
+            uploadMessage = "File size exceeds 5MB limit.";
+            uploadSuccess = false;
+            return;
+        }
+
+        isUploading = true;
+        uploadMessage = "";
+        StateHasChanged();
+
+        try
+        {
+            // Note: This is a simplified implementation for demonstration
+            // In a real implementation, each server would need specific handling
+            // for authentication, headers, and response parsing
+            using var content = new MultipartFormDataContent();
+            var fileContent = new StreamContent(selectedFile.OpenReadStream(maxFileSize));
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(selectedFile.ContentType);
+            
+            // Different servers use different field names
+            // This uses "file" as a common field name
+            content.Add(fileContent, "file", selectedFile.Name);
+
+            using var response = await Http.PostAsync(uploadUrl, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                
+                // Try to extract image URL from response
+                var uploadedUrl = ExtractImageUrlFromResponse(responseContent, server.Name);
+
+                if (!string.IsNullOrEmpty(uploadedUrl))
+                {
+                    ImageUrl = uploadedUrl;
+                    await ImageUrlChanged.InvokeAsync(ImageUrl);
+                    uploadMessage = $"Image uploaded successfully to {server.Name}!";
+                    uploadSuccess = true;
+                }
+                else
+                {
+                    uploadMessage = "Upload succeeded but could not parse image URL from response. Please check the server's API documentation.";
+                    uploadSuccess = false;
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var corsMessage = response.StatusCode == System.Net.HttpStatusCode.Forbidden 
+                    ? " This may be a CORS issue or authentication requirement." 
+                    : "";
+                uploadMessage = $"Upload failed: {response.ReasonPhrase}.{corsMessage}";
+                uploadSuccess = false;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            uploadMessage = $"Upload error: {ex.Message}. This may be a CORS or network connectivity issue.";
+            uploadSuccess = false;
+        }
+        catch (Exception ex)
+        {
+            uploadMessage = $"Upload error: {ex.Message}";
+            uploadSuccess = false;
+        }
+        finally
+        {
+            isUploading = false;
+            StateHasChanged();
+        }
+    }
+
+    private bool IsValidImageUrl(string url)
+    {
+        // Validate URL to prevent XSS attacks
+        if (string.IsNullOrWhiteSpace(url))
+            return false;
+
+        // Only allow http and https schemes
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
+        }
+
+        return false;
+    }
+
+    private string ExtractImageUrlFromResponse(string response, string serverName)
+    {
+        // This is a simplified parser for demonstration
+        // In a production implementation, each server would need specific parsing logic
+        // based on their API response format
+        
+        try
+        {
+            // Try to find a URL in the response that looks like an image
+            var urlPattern = @"https?://[^\s""'<>]+\.(jpg|jpeg|png|gif|webp|svg)";
+            var match = System.Text.RegularExpressions.Regex.Match(response, urlPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            
+            if (match.Success)
+            {
+                return match.Value;
+            }
+
+            // Some APIs might return JSON with a url field
+            // Try to extract url from common JSON patterns
+            var jsonUrlPatterns = new[] { 
+                @"""url""\s*:\s*""([^""]+)""",
+                @"""image_url""\s*:\s*""([^""]+)""",
+                @"""link""\s*:\s*""([^""]+)""",
+                @"""data""\s*:\s*{[^}]*""url""\s*:\s*""([^""]+)""",
+            };
+
+            foreach (var pattern in jsonUrlPatterns)
+            {
+                match = System.Text.RegularExpressions.Regex.Match(response, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                if (match.Success && match.Groups.Count > 1)
+                {
+                    return match.Groups[1].Value;
+                }
+            }
+
+            // If no URL found, return empty string
+            return "";
+        }
+        catch (Exception)
+        {
+            // Regex parsing failed - response format may be unexpected
+            // Return empty string to indicate parsing failure
+            return "";
+        }
+    }
+}
