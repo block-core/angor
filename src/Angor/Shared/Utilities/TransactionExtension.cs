@@ -35,10 +35,12 @@ public static class TransactionExtension
 
     /// <summary>
     /// Converts an NBitcoin Transaction to a QueryTransaction object for JSON serialization
+    /// Note: Size and Weight values are approximations based on VirtualSize
     /// </summary>
     public static QueryTransaction ToQueryTransaction(this NBitcoin.Transaction transaction, NBitcoin.Network network)
     {
         var virtualSize = (int)transaction.GetVirtualSize();
+        
         return new QueryTransaction
         {
             TransactionId = transaction.GetHash().ToString(),
@@ -46,7 +48,7 @@ public static class TransactionExtension
             LockTime = transaction.LockTime.ToString(),
             Size = virtualSize,
             VirtualSize = virtualSize,
-            Weight = virtualSize * 4,
+            Weight = virtualSize * 4, // Approximation: actual weight may differ for witness transactions
             HasWitness = transaction.HasWitness,
             Inputs = transaction.Inputs.AsIndexedInputs().Select(input => new QueryTransactionInput
             {
@@ -72,6 +74,8 @@ public static class TransactionExtension
 
     /// <summary>
     /// Converts a Blockcore Transaction to a QueryTransaction object for JSON serialization
+    /// Note: InputAddress is not populated as Blockcore doesn't provide GetSignerAddress.
+    /// Size and Weight values are approximations based on VirtualSize.
     /// </summary>
     public static QueryTransaction ToQueryTransaction(this Blockcore.Consensus.TransactionInfo.Transaction transaction, Blockcore.Networks.Network network)
     {
@@ -83,7 +87,7 @@ public static class TransactionExtension
             LockTime = transaction.LockTime.ToString(),
             Size = virtualSize,
             VirtualSize = virtualSize,
-            Weight = virtualSize * 4,
+            Weight = virtualSize * 4, // Approximation: actual weight may differ for witness transactions
             HasWitness = transaction.HasWitness,
             Inputs = transaction.Inputs.AsIndexedInputs().Select(input => new QueryTransactionInput
             {
@@ -109,18 +113,19 @@ public static class TransactionExtension
 
     private static string GetScriptTypeNBitcoin(NBitcoin.Script scriptPubKey)
     {
+        // Check specific types before general types
         if (scriptPubKey.IsScriptType(NBitcoin.ScriptType.Taproot))
             return "taproot";
+        if (scriptPubKey.IsScriptType(NBitcoin.ScriptType.P2WPKH))
+            return "witness_v0_keyhash";
+        if (scriptPubKey.IsScriptType(NBitcoin.ScriptType.P2WSH))
+            return "witness_v0_scripthash";
         if (scriptPubKey.IsScriptType(NBitcoin.ScriptType.Witness))
             return "witness";
         if (scriptPubKey.IsScriptType(NBitcoin.ScriptType.P2PKH))
             return "pubkeyhash";
         if (scriptPubKey.IsScriptType(NBitcoin.ScriptType.P2SH))
             return "scripthash";
-        if (scriptPubKey.IsScriptType(NBitcoin.ScriptType.P2WPKH))
-            return "witness_v0_keyhash";
-        if (scriptPubKey.IsScriptType(NBitcoin.ScriptType.P2WSH))
-            return "witness_v0_scripthash";
         return "unknown";
     }
 
