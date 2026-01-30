@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Angor Desktop",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-desktop",
+            "program": "${workspaceFolder}/src/Angor/Avalonia/AngorApp.Desktop/bin/Debug/net9.0/Angor",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/Angor/Avalonia/AngorApp.Desktop",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Debug Angor Desktop (No Build)",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/Angor/Avalonia/AngorApp.Desktop/bin/Debug/net9.0/Angor",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/Angor/Avalonia/AngorApp.Desktop",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Attach to Process",
+            "type": "coreclr",
+            "request": "attach"
+        }
+    ]
+}

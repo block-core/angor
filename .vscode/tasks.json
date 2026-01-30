@@ -1,0 +1,52 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-desktop",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "AngorApp.Desktop/AngorApp.Desktop.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/Angor/Avalonia"
+            },
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "build-solution",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "Angor.Avalonia.sln",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/Angor/Avalonia"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "clean",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "clean",
+                "AngorApp.Desktop/AngorApp.Desktop.csproj"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/Angor/Avalonia"
+            },
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}
