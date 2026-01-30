@@ -25,6 +25,14 @@
         @if (uploadMode)
         {
             <div class="upload-section">
+                <!-- Note about CORS and API keys -->
+                <div class="alert alert-info alert-sm mb-3" role="alert">
+                    <small>
+                        <strong>Note:</strong> Image uploads require the server to support CORS for browser uploads. 
+                        Some servers may also require API keys or authentication.
+                    </small>
+                </div>
+
                 <!-- Server Selection -->
                 <div class="mb-3">
                     <label for="serverSelect" class="form-label small">Select Image Server</label>
@@ -51,6 +59,9 @@
                                @bind="customServerUrl"
                                placeholder="https://your-server.com/upload"
                                disabled="@(Disabled || isUploading)" />
+                        <small class="text-muted d-block mt-1">
+                            Ensure your server supports CORS and accepts multipart/form-data uploads
+                        </small>
                     </div>
                 }
 
@@ -64,7 +75,9 @@
                                disabled="@(Disabled || isUploading)" />
                     @if (!string.IsNullOrEmpty(selectedFileName))
                     {
-                        <small class="text-muted d-block mt-1">Selected: @selectedFileName</small>
+                        <small class="text-muted d-block mt-1">
+                            Selected: @selectedFileName (@FormatFileSize(selectedFileSize))
+                        </small>
                     }
                 </div>
 
@@ -158,6 +171,7 @@
     private string customServerUrl = "";
     private IBrowserFile? selectedFile = null;
     private string selectedFileName = "";
+    private long selectedFileSize = 0;
     private bool isUploading = false;
     private string uploadMessage = "";
     private bool uploadSuccess = false;
@@ -179,6 +193,7 @@
     {
         selectedFile = e.File;
         selectedFileName = e.File.Name;
+        selectedFileSize = e.File.Size;
         uploadMessage = "";
         StateHasChanged();
     }
@@ -186,6 +201,19 @@
     private async Task OnUrlChanged()
     {
         await ImageUrlChanged.InvokeAsync(ImageUrl);
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
     }
 
     private async Task UploadImage()
@@ -222,14 +250,15 @@
 
         try
         {
-            // Note: This is a simplified implementation
-            // Real implementation would need to handle different API formats for different servers
+            // Note: This is a simplified implementation for demonstration
+            // In a real implementation, each server would need specific handling
+            // for authentication, headers, and response parsing
             using var content = new MultipartFormDataContent();
             var fileContent = new StreamContent(selectedFile.OpenReadStream(maxFileSize));
             fileContent.Headers.ContentType = new MediaTypeHeaderValue(selectedFile.ContentType);
             
             // Different servers use different field names
-            // nostr.build uses "fileToUpload", void.cat uses "file", etc.
+            // This uses "file" as a common field name
             content.Add(fileContent, "file", selectedFile.Name);
 
             var response = await Http.PostAsync(uploadUrl, content);
@@ -238,8 +267,7 @@
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
                 
-                // Different servers return different response formats
-                // This is a simplified parser - real implementation would need server-specific parsing
+                // Try to extract image URL from response
                 var uploadedUrl = ExtractImageUrlFromResponse(responseContent, server.Name);
 
                 if (!string.IsNullOrEmpty(uploadedUrl))
@@ -251,15 +279,21 @@
                 }
                 else
                 {
-                    uploadMessage = "Upload succeeded but could not parse image URL. Response: " + responseContent.Substring(0, Math.Min(100, responseContent.Length));
+                    uploadMessage = "Upload succeeded but could not parse image URL from response. Please check the server's API documentation.";
                     uploadSuccess = false;
                 }
             }
             else
             {
-                uploadMessage = $"Upload failed: {response.ReasonPhrase}";
+                var errorContent = await response.Content.ReadAsStringAsync();
+                uploadMessage = $"Upload failed: {response.ReasonPhrase}. {(response.StatusCode == System.Net.HttpStatusCode.Forbidden ? "This may be a CORS issue or authentication requirement." : "")}";
                 uploadSuccess = false;
             }
+        }
+        catch (HttpRequestException ex)
+        {
+            uploadMessage = $"Upload error: {ex.Message}. This may be a CORS or network connectivity issue.";
+            uploadSuccess = false;
         }
         catch (Exception ex)
         {
@@ -275,19 +309,37 @@
 
     private string ExtractImageUrlFromResponse(string response, string serverName)
     {
-        // This is a simplified parser
-        // In reality, different servers have different response formats
-        // This would need to be customized per server
+        // This is a simplified parser for demonstration
+        // In a production implementation, each server would need specific parsing logic
+        // based on their API response format
         
         try
         {
-            // Try to find a URL in the response
+            // Try to find a URL in the response that looks like an image
             var urlPattern = @"https?://[^\s""'<>]+\.(jpg|jpeg|png|gif|webp|svg)";
             var match = System.Text.RegularExpressions.Regex.Match(response, urlPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
             
             if (match.Success)
             {
                 return match.Value;
+            }
+
+            // Some APIs might return JSON with a url field
+            // Try to extract url from common JSON patterns
+            var jsonUrlPatterns = new[] { 
+                @"""url""\s*:\s*""([^""]+)""",
+                @"""image_url""\s*:\s*""([^""]+)""",
+                @"""link""\s*:\s*""([^""]+)""",
+                @"""data""\s*:\s*{[^}]*""url""\s*:\s*""([^""]+)""",
+            };
+
+            foreach (var pattern in jsonUrlPatterns)
+            {
+                match = System.Text.RegularExpressions.Regex.Match(response, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                if (match.Success && match.Groups.Count > 1)
+                {
+                    return match.Groups[1].Value;
+                }
             }
 
             // If no URL found, return empty string
