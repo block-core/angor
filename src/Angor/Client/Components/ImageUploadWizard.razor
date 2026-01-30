@@ -124,7 +124,7 @@
         }
 
         <!-- Image Preview -->
-        @if (!string.IsNullOrEmpty(ImageUrl))
+        @if (!string.IsNullOrEmpty(ImageUrl) && IsValidImageUrl(ImageUrl))
         {
             <div class="mt-3">
                 <label class="form-label small">Preview</label>
@@ -163,7 +163,7 @@
     public bool Disabled { get; set; }
 
     [Inject]
-    private HttpClient Http { get; set; }
+    private HttpClient Http { get; set; } = default!;
 
     private bool uploadMode = false;
     private List<ImageServerConfig> imageServers = ImageServerConfig.GetDefaultServers();
@@ -261,7 +261,7 @@
             // This uses "file" as a common field name
             content.Add(fileContent, "file", selectedFile.Name);
 
-            var response = await Http.PostAsync(uploadUrl, content);
+            using var response = await Http.PostAsync(uploadUrl, content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -286,7 +286,10 @@
             else
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                uploadMessage = $"Upload failed: {response.ReasonPhrase}. {(response.StatusCode == System.Net.HttpStatusCode.Forbidden ? "This may be a CORS issue or authentication requirement." : "")}";
+                var corsMessage = response.StatusCode == System.Net.HttpStatusCode.Forbidden 
+                    ? " This may be a CORS issue or authentication requirement." 
+                    : "";
+                uploadMessage = $"Upload failed: {response.ReasonPhrase}.{corsMessage}";
                 uploadSuccess = false;
             }
         }
@@ -305,6 +308,21 @@
             isUploading = false;
             StateHasChanged();
         }
+    }
+
+    private bool IsValidImageUrl(string url)
+    {
+        // Validate URL to prevent XSS attacks
+        if (string.IsNullOrWhiteSpace(url))
+            return false;
+
+        // Only allow http and https schemes
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
+        }
+
+        return false;
     }
 
     private string ExtractImageUrlFromResponse(string response, string serverName)
@@ -345,8 +363,10 @@
             // If no URL found, return empty string
             return "";
         }
-        catch
+        catch (Exception)
         {
+            // Regex parsing failed - response format may be unexpected
+            // Return empty string to indicate parsing failure
             return "";
         }
     }

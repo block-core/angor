@@ -2452,6 +2452,7 @@
         project.Metadata.Banner = newUrl;
         SaveProjectToStorage();
         ValidateBannerUrl();
+        StateHasChanged();
     }
 
     private void OnPictureChanged()
@@ -2465,6 +2466,7 @@
         project.Metadata.Picture = newUrl;
         SaveProjectToStorage();
         ValidatePictureUrl();
+        StateHasChanged();
     }
 
     private void ValidateTargetAmount()

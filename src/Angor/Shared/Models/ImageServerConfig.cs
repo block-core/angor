@@ -2,9 +2,9 @@ namespace Angor.Shared.Models;
 
 public class ImageServerConfig
 {
-    public string Name { get; set; }
-    public string UploadUrl { get; set; }
-    public string Description { get; set; }
+    public required string Name { get; set; }
+    public required string UploadUrl { get; set; }
+    public required string Description { get; set; }
     public bool IsCustom { get; set; }
 
     public static List<ImageServerConfig> GetDefaultServers()
