@@ -1495,7 +1495,7 @@ else
                 DaysFromStart = stage.DaysFromStartDate,
                 AmountToRelease = project.ProjectInfo.Stages[stage.StageNumber - 1].AmountToRelease
             }).ToList(),
-            RawTransaction = signedTransaction.Transaction.ToHex()
+            RawTransaction = signedTransaction.Transaction.ToQueryTransaction(network)
         };
 
         transactionJson = JsonSerializer.Serialize(transactionDetails, new JsonSerializerOptions
