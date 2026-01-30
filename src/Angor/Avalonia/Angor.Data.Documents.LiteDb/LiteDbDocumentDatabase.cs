@@ -62,6 +62,7 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase, IDisposable
         try
         {
             _database.Commit();
+            _database.Checkpoint();
             _logger.LogDebug("Transaction committed");
             return await Task.FromResult(true);
         }
@@ -141,7 +142,8 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase, IDisposable
 
     public void Dispose()
     {
-        _database?.Dispose();
+        _database.Checkpoint();
+        _database.Dispose();
         _logger.LogInformation("LiteDB database disposed");
     }
 }

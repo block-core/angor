@@ -2,7 +2,6 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
-using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
@@ -15,18 +14,18 @@ namespace Angor.Sdk.Funding.Services;
 /// Combines LookupInvestmentRequestsAsync and LookupInvestmentRequestApprovals
 /// </summary>
 public class InvestmentHandshakeService(
-    IAngorDocumentDatabase database,
     ISignService signService,
     INostrDecrypter nostrDecrypter,
     ISerializer serializer,
-    ILogger logger)
+    ILogger logger,
+    IGenericDocumentCollection<InvestmentHandshake> collection)
     : IInvestmentHandshakeService
 {
-    private readonly IDocumentCollection<InvestmentHandshake> _collection = database.GetCollection<InvestmentHandshake>();
+    //private readonly IGenericDocumentCollection<InvestmentHandshake> _collection ;//= database.GetCollection<>();
 
     public Task<Result<IEnumerable<InvestmentHandshake>>> GetHandshakesAsync(WalletId walletId, ProjectId projectId)
     {
-        return _collection.FindAsync(c =>
+        return collection.FindAsync(c =>
             c.WalletId == walletId.Value && 
             c.ProjectId == projectId.Value);
     }
@@ -36,53 +35,32 @@ public class InvestmentHandshakeService(
         ProjectId projectId, 
         string requestEventId)
     {
-        var result = await _collection.FindAsync(c =>
-            c.WalletId == walletId.Value &&
-            c.ProjectId == projectId.Value &&
-            c.RequestEventId == requestEventId);
+        var id = GenerateCompositeId(walletId, projectId, requestEventId);
 
-        return result.Map(Handshakes => Handshakes.FirstOrDefault());
+        return await collection.FindByIdAsync(id);
     }
+    
 
-    public async Task<Result> UpsertHandshakeAsync(InvestmentHandshake Handshake)
+    public async Task<Result> UpsertHandshakesAsync(IEnumerable<InvestmentHandshake> handshakes)
     {
         try
         {
-            Handshake.UpdatedAt = DateTime.UtcNow;
-            var result = await _collection.UpsertAsync(Handshake);
-            return result.IsSuccess
-                ? Result.Success()
-                : Result.Failure(result.Error);
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "Failed to upsert Handshake {RequestEventId}", Handshake.RequestEventId);
-            return Result.Failure($"Failed to upsert Handshake: {ex.Message}");
-        }
-    }
-
-    public async Task<Result> UpsertHandshakesAsync(IEnumerable<InvestmentHandshake> Handshakes)
-    {
-        try
-        {
-            var HandshakeList = Handshakes.ToList();
-            foreach (var Handshake in HandshakeList)
+            var tasks = handshakes.Select(h =>
             {
-                Handshake.UpdatedAt = DateTime.UtcNow;
-            }
-
-            var tasks = HandshakeList.Select(c => _collection.UpsertAsync(c));
+                var id = GenerateCompositeId(new WalletId(h.WalletId), new ProjectId(h.ProjectId), h.RequestEventId);
+                return collection.UpsertAsync(item => id, h);
+            });
+            
             var results = await Task.WhenAll(tasks);
 
             var failures = results.Where(r => r.IsFailure).ToList();
-            if (failures.Any())
-            {
-                var errors = string.Join(", ", failures.Select(f => f.Error));
-                logger.Error("Failed to upsert some Handshakes: {Errors}", errors);
-                return Result.Failure($"Failed to upsert some Handshakes: {errors}");
-            }
+            if (failures.Count == 0)
+                return Result.Success();
 
-            return Result.Success();
+            var errors = string.Join(", ", failures.Select(f => f.Error));
+            logger.Error("Failed to upsert some Handshakes: {Errors}", errors);
+            return Result.Failure($"Failed to upsert some Handshakes: {errors}");
+
         }
         catch (Exception ex)
         {
@@ -108,7 +86,7 @@ public class InvestmentHandshakeService(
                 return Result.Failure<IEnumerable<InvestmentHandshake>>(messagesResult.Error);
             }
 
-            var (requests, notifications, cancellations, approvals) = messagesResult.Value;
+            (List<DirectMessage> requests, List<DirectMessage> notifications, List<DirectMessage> cancellations, List<ApprovalInfo> approvals) = messagesResult.Value;
             
             logger.Information("Fetched {RequestCount} requests, {NotificationCount} notifications, {CancellationCount} cancellations, {ApprovalCount} approvals",
                 requests.Count, notifications.Count, cancellations.Count, approvals.Count);
@@ -135,7 +113,7 @@ public class InvestmentHandshakeService(
             var approvalsLookup = approvals.ToDictionary(a => a.EventIdentifier, a => a);
 
             // Get existing Handshakes from database
-            var existingResult = await _collection.FindAsync(c =>
+            var existingResult = await collection.FindAsync(c =>
                 c.WalletId == walletId.Value &&
                 c.ProjectId == projectId.Value);
 
@@ -143,7 +121,7 @@ public class InvestmentHandshakeService(
                 ? existingResult.Value.ToDictionary(c => c.RequestEventId, c => c)
                 : new Dictionary<string, InvestmentHandshake>();
 
-            var HandshakesToUpsert = new List<InvestmentHandshake>();
+            var handshakesToUpsert = new List<InvestmentHandshake>();
 
             // Process each request
             foreach (var request in requests)
@@ -178,7 +156,7 @@ public class InvestmentHandshakeService(
                     if (needsUpdate)
                     {
                         existingHandshake.UpdatedAt = DateTime.UtcNow;
-                        HandshakesToUpsert.Add(existingHandshake);
+                        handshakesToUpsert.Add(existingHandshake);
                     }
                     continue;
                 }
@@ -205,11 +183,8 @@ public class InvestmentHandshakeService(
                 var isCancelled = cancellationLookup.ContainsKey(request.Id);
                 
                 // Determine the status: cancelled takes precedence, then approved, then pending
-                var status = isCancelled 
-                    ? InvestmentRequestStatus.Cancelled 
-                    : hasApproval 
-                        ? InvestmentRequestStatus.Approved 
-                        : InvestmentRequestStatus.Pending;
+                var status = isCancelled ? InvestmentRequestStatus.Cancelled 
+                    : hasApproval ? InvestmentRequestStatus.Approved : InvestmentRequestStatus.Pending;
 
                 // Create Handshake object
                 var Handshake = new InvestmentHandshake
@@ -232,7 +207,7 @@ public class InvestmentHandshakeService(
                     UpdatedAt = DateTime.UtcNow
                 };
 
-                HandshakesToUpsert.Add(Handshake);
+                handshakesToUpsert.Add(Handshake);
             }
 
             // Process each notification (direct investments below threshold)
@@ -260,7 +235,7 @@ public class InvestmentHandshakeService(
                 }
 
                 // Create Handshake object for direct investment
-                var Handshake = new InvestmentHandshake
+                handshakesToUpsert.Add(new InvestmentHandshake
                 {
                     Id = GenerateCompositeId(walletId, projectId, notification.Id),
                     WalletId = walletId.Value,
@@ -280,16 +255,14 @@ public class InvestmentHandshakeService(
                     IsDirectInvestment = true, // Mark as direct investment
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
-                };
-
-                HandshakesToUpsert.Add(Handshake);
+                });
             }
 
 
             // Store all Handshakes
-            if (HandshakesToUpsert.Any())
+            if (handshakesToUpsert.Any())
             {
-                var upsertResult = await UpsertHandshakesAsync(HandshakesToUpsert);
+                var upsertResult = await UpsertHandshakesAsync(handshakesToUpsert);
                 if (upsertResult.IsFailure)
                 {
                     logger.Warning("Failed to store some Handshakes: {Error}", upsertResult.Error);
@@ -297,26 +270,15 @@ public class InvestmentHandshakeService(
             }
 
             logger.Information("Synced {Count} investment Handshakes for project {ProjectId}",
-                HandshakesToUpsert.Count, projectId.Value);
+                handshakesToUpsert.Count, projectId.Value);
 
-            return Result.Success<IEnumerable<InvestmentHandshake>>(HandshakesToUpsert);
+            return Result.Success<IEnumerable<InvestmentHandshake>>(handshakesToUpsert);
         }
         catch (Exception ex)
         {
             logger.Error(ex, "Failed to sync Handshakes from Nostr");
             return Result.Failure<IEnumerable<InvestmentHandshake>>($"Failed to sync Handshakes: {ex.Message}");
         }
-    }
-
-    public async Task<Result<IEnumerable<InvestmentHandshake>>> GetHandshakesByStatusAsync(
-        WalletId walletId,
-        ProjectId projectId,
-        InvestmentRequestStatus status)
-    {
-        return await _collection.FindAsync(c =>
-            c.WalletId == walletId.Value &&
-            c.ProjectId == projectId.Value &&
-            c.Status == status);
     }
 
     private static string GenerateCompositeId(WalletId walletId, ProjectId projectId, string requestEventId)
@@ -366,6 +328,7 @@ public class InvestmentHandshakeService(
             );
 
             await tcs.Task;
+            
             return Result.Success((
                 requests.DistinctBy(r => r.Id).ToList(),
                 notifications.DistinctBy(n => n.Id).ToList(),
