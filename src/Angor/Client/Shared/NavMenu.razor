@@ -74,15 +74,6 @@
 @code {
 
     [Parameter]
-    public EventCallback ToggleSidenavCallback { get; set; }
-
-    [Parameter]
-    public EventCallback ToggleSidenavTextCallback { get; set; }
-
-    [Parameter]
-    public EventCallback ToggleleLockMenuCallback { get; set; }
-
-    [Parameter]
     public bool IsCollapsed { get; set; }
 
     [Parameter]
@@ -92,9 +83,6 @@
     public EventCallback<bool> IsCollapsedChanged { get; set; }
 
     private bool hasWallet;
-    private string betweenOrEnd = "between";
-    private bool islockMenu = false;
-    private bool isSidenavHide = true;
     private Timer? _timer;
     private int _elapsedCount = 0;
 
@@ -103,29 +91,6 @@
         hasWallet = _walletStorage.HasWallet();
         NavMenuState.OnChange += NavMenuStateOnOnChange;
         await base.OnInitializedAsync();
-    }
-
-    private async Task ToggleSidenav()
-    {
-        await ToggleSidenavCallback.InvokeAsync();
-    }
-
-    private async Task ToggleSidenavText()
-    {
-        await ToggleSidenavTextCallback.InvokeAsync();
-        isSidenavHide = !isSidenavHide;
-    }
-
-    private async Task ToggleLockMenu()
-    {
-        await ToggleleLockMenuCallback.InvokeAsync();
-        islockMenu = !islockMenu;
-        UpdateLockMenuIcon(islockMenu);
-    }
-
-    private void UpdateLockMenuIcon(bool islockMenu)
-    {
-        betweenOrEnd = islockMenu ? "end" : "between";
     }
 
     private bool IsInvestorPage(string page)

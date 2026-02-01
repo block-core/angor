@@ -97,9 +97,7 @@
 @code {
     private string _softwareVersion = "0.0.0";
     private bool isDarkTheme = false;
-    private bool isLockMenu = false;
     private string themeIcon = "light_mode";
-    private string sidenavClass = "sidenav-hidden";
     private bool isSidebarCollapsed;
 
     private string networkText = string.Empty;
@@ -262,26 +260,6 @@
     private async Task SaveThemeToStorage(bool isDark)
     {
         await Js.InvokeVoidAsync("localStorage.setItem", "theme", isDark ? "dark" : "light");
-    }
-
-    private void ToggleSidenavMobile()
-    {
-        isSidebarCollapsed = !isSidebarCollapsed;
-    }
-
-    private void ToggleSidenav()
-    {
-        isSidebarCollapsed = !isSidebarCollapsed;
-    }
-
-    private void ToggleLockMenu()
-    {
-        isLockMenu = !isLockMenu;
-
-        if (isLockMenu)
-        {
-            sidenavClass = "";
-        }
     }
 
     public void Dispose()
