@@ -69,41 +69,6 @@
                                          Frequency="{Binding NewProject.PayoutFrequency}" />
                 </StackPanel>
             </HeaderedContainer>
-            
-            <Expander Theme="{StaticResource ExpanderSection}">
-                <Expander.Styles>
-                    <Style Selector="Expander EdgePanel">
-                        <Setter Property="Background" Value="{DynamicResource SurfaceSubtler}"></Setter>
-                        <Setter Property="Padding" Value="12" />
-                        <Setter Property="CornerRadius" Value="10"></Setter>
-                        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
-                        <Setter Property="BorderThickness" Value="1" />
-                    </Style>
-                </Expander.Styles>
-                <Expander.Header>
-                    <Panel Height="68">
-                        <TextBlock VerticalAlignment="Center" Classes="Bold">Public Keys &amp; IDs (Advanced)</TextBlock>
-                        <EnhancedButton VerticalAlignment="Center" Classes="Accent" Padding="16 8" Content="Download" HorizontalAlignment="Right" />
-                    </Panel>
-                </Expander.Header>
-                <StackPanel Classes="BigGap">
-                    <HeaderedContainer Header="Project ID">
-                        <EdgePanel StartContent="{Icon mdi-cloud-upload-outline}" EndContent="{Icon fa-regular fa-copy}" Content="0240cedf78fa3bb00a67fcddec93ac916b51c3c9704a1ba22705070d7471c9a542" />
-                    </HeaderedContainer>
-                    <HeaderedContainer Header="Founder Key">
-                        <EdgePanel StartContent="{Icon fa-key}" EndContent="{Icon fa-regular fa-copy}" Content="0240cedf78fa3bb00a67fcddec93ac916b51c3c9704a1ba22705070d7471c9a542" />
-                    </HeaderedContainer>
-                    <HeaderedContainer Header="Recovery Key">
-                        <EdgePanel StartContent="{Icon fa-arrows-rotate}" EndContent="{Icon fa-regular fa-copy}" Content="0240cedf78fa3bb00a67fcddec93ac916b51c3c9704a1ba22705070d7471c9a542" />
-                    </HeaderedContainer>
-                    <HeaderedContainer Header="Nostr Public Key (npub)">
-                        <EdgePanel StartContent="{Icon fa-user}" EndContent="{Icon fa-regular fa-copy}" Content="0240cedf78fa3bb00a67fcddec93ac916b51c3c9704a1ba22705070d7471c9a542" />
-                    </HeaderedContainer>
-                    <HeaderedContainer Header="NIP-05">
-                        <EdgePanel StartContent="{Icon fa-user}" EndContent="{Icon fa-regular fa-copy}" Content="0240cedf78fa3bb00a67fcddec93ac916b51c3c9704a1ba22705070d7471c9a542" />
-                    </HeaderedContainer>
-                </StackPanel>
-            </Expander>
             <HeaderedContainer Classes="WizardSection" Foreground="{DynamicResource Accent}" Background="{DynamicResource Translucid}">
                 <StackPanel Margin="30" MaxWidth="500" Classes="BigGap">
                     <Border Width="64" Height="64" HorizontalAlignment="Center" Padding="20" CornerRadius="40" Background="{DynamicResource Accent}">
