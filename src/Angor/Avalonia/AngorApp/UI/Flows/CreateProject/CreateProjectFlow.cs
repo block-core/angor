@@ -3,49 +3,131 @@ using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
-using AngorApp.Core;
-using AngorApp.UI.Sections.Founder.CreateProject;
-using AngorApp.UI.Sections.Founder.CreateProject.ProjectCreated;
-using Microsoft.Extensions.Logging;
+using AngorApp.UI.Flows.CreateProject.Wizard;
+using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject;
+using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model;
+using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages;
+using AngorApp.UI.Flows.CreateProject.Wizard.FundProject;
+using AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model;
+using AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Payouts;
+using AngorApp.UI.Shared.Controls.Common.Success;
+using Serilog;
 using Zafiro.Avalonia.Controls.Wizards.Slim;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Wizards.Slim;
 using Zafiro.UI.Wizards.Slim.Builder;
+using Avalonia.Threading;
 
-namespace AngorApp.UI.Flows.CreateProject;
-
-public class CreateProjectFlow(
-    UIServices uiServices,
-    INavigator navigator,
-    IProjectAppService projectAppService,
-    IFounderAppService founderAppService,
-    SharedCommands commands,
-    IWalletContext walletContext,
-    ILogger<CreateProjectViewModel> logger)
-    : ICreateProjectFlow
+namespace AngorApp.UI.Flows.CreateProject
 {
-    public Task<Result<Maybe<string>>> CreateProject()
+    public class CreateProjectFlow(
+        INavigator navigator,
+        IFounderAppService founderAppService,
+        IProjectAppService projectAppService,
+        IWalletContext walletContext,
+        UIServices uiServices,
+        ILogger logger
+    )
+        : ICreateProjectFlow
     {
-        var createWizardResult = from wallet in walletContext.GetDefaultWallet()
-                                 from seed in GetProjectSeed(wallet.Id)
-                                 select CreateWizard(wallet, seed);
+        public Task<Result<Maybe<string>>> CreateProject()
+        {
+            return from wallet in walletContext.GetDefaultWallet()
+                   from seed in GetProjectSeed(wallet.Id)
+                   from creationResult in Create(wallet.Id, seed)
+                   select creationResult;
+        }
 
-        return createWizardResult.Map(slimWizard => slimWizard.Navigate(navigator));
-    }
+        private async Task<Result<Maybe<string>>> Create(WalletId walletId, ProjectSeedDto seed)
+        {
+            SlimWizard<string> rootWizard = WizardBuilder
+                                            .StartWith(() => new WelcomeViewModel()).NextCommand(model => model.Start)
+                                            .Then(_ => new ProjectTypeViewModel())
+                                            .NextCommand<Unit, ProjectTypeViewModel, string>(vm => CreateProjectOftype(
+                                                vm,
+                                                walletId,
+                                                seed))
+                                            .Then(txId => new SuccessViewModel($"Project {txId} created successfully!"), "Success").Next((_, s) => s, "Finish").Always()
+                                            .Build(StepKind.Completion);
 
-    private SlimWizard<string> CreateWizard(IWallet wallet, ProjectSeedDto projectSeed)
-    {
-        var wizard = WizardBuilder
-            .StartWith(() => new CreateProjectViewModel(wallet, projectSeed, uiServices, projectAppService, founderAppService, logger), "Create Project").NextCommand(model => model.Create)
-            .Then(transactionId => new ProjectCreatedViewModel(transactionId, commands), "Success").Next((_, projectId) => projectId, "Close").Always()
-            .Build(StepKind.Completion);
+            return await rootWizard.Navigate(navigator);
+        }
 
-        return wizard;
-    }
+        private IEnhancedCommand<Result<string>> CreateProjectOftype(
+            ProjectTypeViewModel vm,
+            WalletId walletId,
+            ProjectSeedDto seed
+        )
+        {
+            var canExecute = vm.WhenAnyValue(x => x.ProjectType).Select(x => x != null);
 
-    private async Task<Result<ProjectSeedDto>> GetProjectSeed(WalletId walletId)
-    {
-        var result = await founderAppService.CreateProjectKeys(new CreateProjectKeys.CreateProjectKeysRequest(walletId));
-        return result.Map(response => response.ProjectSeedDto);
+            return ReactiveCommand.CreateFromTask(async () =>
+            {
+                var projectType = vm.ProjectType;
+                return await Dispatcher.UIThread.InvokeAsync(() => projectType.Name switch
+                {
+                    "Investment" => CreateInvestmentProjectWizard(walletId, seed).Navigate(navigator).ToResult("Wizard was cancelled by user"),
+                    "Fund" => CreateFundProjectWizard(walletId, seed).Navigate(navigator).ToResult("Wizard was cancelled by user"),
+                    _ => throw new NotImplementedException($"Project type {projectType.Name} not implemented")
+                });
+            }, canExecute).Enhance();
+        }
+
+        private SlimWizard<string> CreateInvestmentProjectWizard(WalletId walletId, ProjectSeedDto seed)
+        {
+            InvestmentProjectConfigBase newProject =
+                uiServices.EnableProductionValidations() ? new InvestmentProjectConfig() : new InvestmentProjectConfigDebug();
+
+            SlimWizard<string> wizard = WizardBuilder
+                                        .StartWith(() => new ProjectProfileViewModel(newProject)).NextUnit().WhenValid()
+                                        .Then(_ => new ProjectImagesViewModel(newProject, new ImagePicker(uiServices))).NextUnit().Always()
+                                        .Then(_ => new FundingConfigurationViewModel(newProject)).NextUnit().WhenValid()
+                                        .Then(_ => new StagesViewModel(newProject)).NextUnit().WhenValid()
+                                        .Then(_ => new ReviewAndDeployViewModel(
+                                                  newProject,
+                                                  new ProjectDeploymentOrchestrator(
+                                                      projectAppService,
+                                                      founderAppService,
+                                                      uiServices,
+                                                      logger),
+                                                  walletId,
+                                                  seed,
+                                                  uiServices))
+                                        .NextCommand(review => review.DeployCommand)
+                                        .Build(StepKind.Commit);
+
+            return wizard;
+        }
+
+        private SlimWizard<string> CreateFundProjectWizard(WalletId walletId, ProjectSeedDto seed)
+        {
+            var newProject = new FundProjectConfig();
+
+            SlimWizard<string> wizard = WizardBuilder
+                                        .StartWith(() => new ProjectProfileViewModel(newProject)).NextUnit().WhenValid()
+                                        .Then(_ => new ProjectImagesViewModel(newProject, new ImagePicker(uiServices))).NextUnit().Always()
+                                        .Then(_ => new GoalViewModel(newProject)).NextUnit().WhenValid()
+                                        .Then(_ => new FundPayoutsViewModel(newProject)).NextUnit().WhenValid()
+                                        .Then(_ => new FundReviewAndDeployViewModel(
+                                                  newProject,
+                                                  new ProjectDeploymentOrchestrator(
+                                                      projectAppService,
+                                                      founderAppService,
+                                                      uiServices,
+                                                      logger),
+                                                  walletId,
+                                                  seed,
+                                                  uiServices))
+                                        .NextCommand(review => review.DeployCommand)
+                                        .Build(StepKind.Commit);
+
+            return wizard;
+        }
+
+        private async Task<Result<ProjectSeedDto>> GetProjectSeed(WalletId walletId)
+        {
+            var result = await founderAppService.CreateProjectKeys(new CreateProjectKeys.CreateProjectKeysRequest(walletId));
+            return result.Map(response => response.ProjectSeedDto);
+        }
     }
 }
