@@ -43,7 +43,7 @@
                     <ListBox SelectedItem="{Binding FundProject.PayoutFrequency, Mode=TwoWay}"
                              SelectionMode="Single"
                              ItemsSource="{Binding AvailableFrequencies}"
-                             ItemContainerTheme="{StaticResource ButtonizedAccent}"
+                             ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                              Background="Transparent">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -66,7 +66,7 @@
 
                     <ListBox ItemsSource="{Binding AvailableInstallmentCounts}"
                              Selection="{Binding FundProject.SelectedInstallments.SelectionModel}"
-                             ItemContainerTheme="{StaticResource ButtonizedAccent}"
+                             ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                              Background="Transparent">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -94,7 +94,7 @@
                     <ListBox SelectedItem="{Binding FundProject.MonthlyPayoutDate, Mode=TwoWay}"
                              SelectionMode="Multiple"
                              ItemsSource="{Binding AvailablePayoutDates}"
-                             ItemContainerTheme="{StaticResource ButtonizedAccent}"
+                             ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                              Background="Transparent">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -118,7 +118,7 @@
                     <ListBox SelectedItem="{Binding FundProject.WeeklyPayoutDay, Mode=TwoWay}"
                              SelectionMode="Single"
                              ItemsSource="{Binding AvailableDaysOfWeek}"
-                             ItemContainerTheme="{StaticResource ButtonizedAccent}"
+                             ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                              Background="Transparent">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>

@@ -30,11 +30,13 @@
             <Setter Property="Template">
                 <ControlTemplate>
                     <Panel>
-                        <BackgroundOverlappingBorder x:Name="MainBorder" BorderThickness="{TemplateBinding BorderThickness}"
+                        <OverlayBorder x:Name="MainBorder" BorderThickness="{TemplateBinding BorderThickness}"
                                                      Padding="{TemplateBinding Padding}"
                                                      Background="{TemplateBinding Background}"
                                                      BorderBrush="{TemplateBinding BorderBrush}"
-                                                     CornerRadius="{TemplateBinding CornerRadius}">
+                                                     CornerRadius="{TemplateBinding CornerRadius}"
+                                                     BoxShadow="{TemplateBinding BoxShadow}"
+                                                     >
                             <SmartDockPanel HorizontalSpacing="{Binding $parent[EnhancedButton].Spacing}">
                                 <ContentPresenter IsVisible="{Binding !!$self.Content}"
                                                   VerticalAlignment="Center"
@@ -47,11 +49,11 @@
                                                   Content="{TemplateBinding Content}"
                                                   ContentTemplate="{TemplateBinding ContentTemplate}" />
                             </SmartDockPanel>
-                        </BackgroundOverlappingBorder>
+                        </OverlayBorder>
                     </Panel>
                 </ControlTemplate>
             </Setter>
-            <Style Selector="^ /template/ BackgroundOverlappingBorder#MainBorder">
+            <Style Selector="^ /template/ OverlayBorder#MainBorder">
                 <Setter Property="Transitions">
                     <Setter.Value>
                         <Transitions>
@@ -60,14 +62,14 @@
                     </Setter.Value>
                 </Setter>
             </Style>
-            <Style Selector="^:pointerover /template/ BackgroundOverlappingBorder#MainBorder">
+            <Style Selector="^:pointerover /template/ OverlayBorder#MainBorder">
                 <Setter Property="Opacity" Value="0.7" />
             </Style>
-            <Style Selector="^:pressed /template/ BackgroundOverlappingBorder#MainBorder">
+            <Style Selector="^:pressed /template/ OverlayBorder#MainBorder">
                 <Setter Property="Opacity" Value="0.7" />
                 <Setter Property="RenderTransform" Value="scale(0.99)" />
             </Style>
-            <Style Selector="^:disabled /template/ BackgroundOverlappingBorder#MainBorder">
+            <Style Selector="^:disabled /template/ OverlayBorder#MainBorder">
                 <Setter Property="Opacity" Value="0.5" />
             </Style>
         </ControlTheme>

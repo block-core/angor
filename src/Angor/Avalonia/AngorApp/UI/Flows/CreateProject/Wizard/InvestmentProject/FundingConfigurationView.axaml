@@ -260,7 +260,7 @@
 
                         <ListBox SelectedValueBinding="{Binding Months}" 
                                  SelectedValue="{Binding NewProject.FundingEndDate, Mode=TwoWay, Converter={x:Static controls:AngorConverters.AddMonthsToToday}}"
-                                 ItemContainerTheme="{StaticResource ButtonizedAccent}" Background="Transparent">
+                                 ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}" Background="Transparent">
                             <ListBox.ItemsSource>
                                 <generic:List x:TypeArguments="model:PeriodOption">
                                     <model:PeriodOption Months="1" Title="1 Month" />

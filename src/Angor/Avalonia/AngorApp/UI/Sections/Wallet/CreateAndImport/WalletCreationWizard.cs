@@ -8,6 +8,7 @@ using AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.SeedWordsGeneration;
 using AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.Summary;
 using AngorApp.UI.Shared.Controls.Common.Success;
 using Zafiro.Avalonia.Dialogs.Wizards.Slim;
+using Zafiro.UI.Wizards.Slim;
 using Zafiro.UI.Wizards.Slim.Builder;
 
 namespace AngorApp.UI.Sections.Wallet.CreateAndImport;
@@ -37,7 +38,7 @@ public class WalletCreationWizard(UIServices uiServices, IWalletProvider walletP
                 IsRecovery = false
             }, "Summary").NextCommand(model => model.CreateWallet.Enhance("Create Wallet"))
             .Then(_ => new SuccessViewModel("Wallet created successfully"), "Wallet Creation").NextUnit("Close").Always()
-            .WithCompletionFinalStep();
+            .Build(StepKind.Completion);
 
         return await uiServices.Dialog.ShowWizard(wizard, "Create wallet").Map(_ => Unit.Default);
     }

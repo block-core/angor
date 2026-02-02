@@ -15,7 +15,7 @@ public class ProjectDetailsViewModelSample : IProjectDetailsViewModel
     public object Icon { get; }
     public object Picture { get; }
 
-    public IEnhancedCommand<Result<Maybe<Unit>>> Invest { get; }
+    public IEnhancedCommand<Result<Unit>> Invest { get; }
 
     public IEnumerable<INostrRelay> Relays { get; } =
     [

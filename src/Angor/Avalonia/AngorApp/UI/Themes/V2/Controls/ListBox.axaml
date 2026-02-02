@@ -1,6 +1,30 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     
+    <Style Selector="ListBox.Transparent">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+        
+    <Style Selector="ListBox.Horizontal">
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" ColumnSpacing="10" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <Style Selector="ListBox.Vertical">
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <StackPanel Classes="MediumGap" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Styles.Resources>
         
         <ControlTheme x:Key="ButtonizedListBoxItem" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
@@ -29,7 +53,7 @@
             </Style>
         </ControlTheme>
         
-        <ControlTheme x:Key="ButtonizedAccent" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+        <ControlTheme x:Key="ButtonizedAccentListBoxItem" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
             <Setter Property="BorderThickness" Value="2" />
             <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
             <Setter Property="CornerRadius" Value="10" />
@@ -51,6 +75,39 @@
                 <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
             </Style>
         </ControlTheme>
+        
+        <ControlTheme x:Key="SelectorListBoxItem" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+            <Setter Property="BorderThickness" Value="2" />
+            
+            <Setter Property="CornerRadius" Value="10" />
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Transitions">
+                    <Transitions>
+                        <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
+                        <BrushTransition Property="Background" Duration="0:0:0.2" />
+                    </Transitions>
+                </Setter>
+            </Style>
+
+            <Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="{DynamicResource Surface}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+                <!-- <Setter Property="Foreground" Value="{DynamicResource SurfaceHover}" /> -->
+            </Style>
+            <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+                <Setter Property="Background" Value="{DynamicResource Surface}" />
+            </Style>
+        </ControlTheme>
+        
+        <ControlTheme x:Key="SmallSelectorListBoxItem" TargetType="ListBoxItem" BasedOn="{StaticResource SelectorListBoxItem}">
+            <Setter Property="Padding" Value="10" />
+        </ControlTheme>
+
     </Styles.Resources>
     
     <Design.PreviewWith>
@@ -59,8 +116,8 @@
                 <ListBoxItem IsSelected="True" Content="Selected" Theme="{StaticResource ButtonizedListBoxItem}" />
                 <ListBoxItem IsSelected="False" Content="Unselected" Theme="{StaticResource ButtonizedListBoxItem}" />
                 
-                <ListBoxItem IsSelected="True" Content="Selected" Theme="{StaticResource ButtonizedAccent}" />
-                <ListBoxItem IsSelected="False" Content="Unselected" Theme="{StaticResource ButtonizedAccent}" />
+                <ListBoxItem IsSelected="True" Content="Selected" Theme="{StaticResource ButtonizedAccentListBoxItem}" />
+                <ListBoxItem IsSelected="False" Content="Unselected" Theme="{StaticResource ButtonizedAccentListBoxItem}" />
             </WrapPanel>
         </Border>
     </Design.PreviewWith>

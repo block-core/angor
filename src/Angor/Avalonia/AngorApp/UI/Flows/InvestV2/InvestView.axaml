@@ -1,0 +1,127 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:l="clr-namespace:AngorApp.UI.Flows.InvestV2"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="AngorApp.UI.Flows.InvestV2.InvestView"
+             x:DataType="l:IInvestViewModel">
+
+    <Design.DataContext>
+        <l:InvestViewModelSample />
+    </Design.DataContext>
+
+    <controls:ScrollableView>
+        <Grid RowDefinitions="Auto, *, Auto">
+            
+            <!-- Main Content -->
+            <BalancedWrapGrid MinItemWidth="346" Grid.Row="1" HorizontalSpacing="24" VerticalSpacing="24">
+
+                <!-- Amount Section -->
+                <HeaderedContainer Grid.Column="0" Classes="WizardHighlight Shadow">
+                    <HeaderedContainer.Header>
+                        <EdgePanel StartContent="{Icon fa-bitcoin}" Content="Investment Amount" />
+                    </HeaderedContainer.Header>
+                    <StackPanel Spacing="20">
+                        <TextBlock Text="Amount (BTC)" FontWeight="SemiBold" />
+                        <NumericUpDown Value="{Binding Amount, Mode=TwoWay, Converter={x:Static controls:AngorConverters.BtcToAmountUI}}"
+                                       FormatString="0.########"
+                                       Minimum="0.001"
+                                       Increment="0.01"
+                                       x:Name="AmountBox"
+                                       Watermark="0.00">
+                            <NumericUpDown.InnerRightContent>
+                                <TextBlock VerticalAlignment="Center"  Classes="Weight-Bold" Foreground="{DynamicResource Labels}" 
+                                           Margin="0 0 12 0">
+                                    BTC
+                                </TextBlock>
+                            </NumericUpDown.InnerRightContent>
+                        </NumericUpDown>
+                        
+                        <TextBlock Text="Minimum investment: 0.001 BTC" FontSize="12" Foreground="{DynamicResource TextMuted}" />
+                        <ListBox ItemsSource="{Binding AmountPresets}"
+                                 HorizontalAlignment="Right"
+                                 Background="Transparent"
+                                 SelectedItem="{Binding SelectedAmountPreset, Mode=TwoWay}"
+                                 ItemContainerTheme="{StaticResource ButtonizedListBoxItem}">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <BalancedWrapGrid />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel HorizontalAlignment="Center" Classes="TinyGap">
+                                        <TextBlock Classes="Center Bold" Text="{Binding  Btc}" />
+                                        <TextBlock Classes="Center Tiny" Text="BTC" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </HeaderedContainer>
+
+                <!-- Release Schedule Section -->
+                <HeaderedContainer Grid.Column="2" Header="Release Schedule" Classes="StagesCard Shadow">
+                    <ScrollViewer>
+                        <StackPanel Classes="BigGap">
+                            <TextBlock Classes="Text-Muted">Your investment will be released in stages:</TextBlock>
+                            <ItemsControl ItemsSource="{Binding StageBreakdowns}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Classes="BigGap" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource Surface}" CornerRadius="10" Padding="14" BorderThickness="1" BorderBrush="{DynamicResource Stroke}">
+                                            <StackPanel Classes="SmallGap">
+                                                <EdgePanel>
+                                                    <EdgePanel.StartContent>
+                                                        <TextBlock Classes="Size-S Weight-Bold" Text="{Binding Index, StringFormat='Stage {0}'}" />
+                                                    </EdgePanel.StartContent>
+                                                    <EdgePanel.EndContent>
+                                                        <Border Padding="8 2" CornerRadius="4" Background="{DynamicResource SurfaceSubtle}">
+                                                            <TextBlock Classes="Size-XS Weight-Bold" Foreground="{DynamicResource Brand}" Text="{Binding RatioOfTotal, StringFormat='p0'}"></TextBlock>
+                                                        </Border>
+                                                    </EdgePanel.EndContent>
+                                                </EdgePanel>
+                                                <EdgePanel>
+                                                    <EdgePanel.EndContent>
+                                                        <TextBlock Classes="Size-S Weight-Bold" Text="{Binding Amount.DecimalString}" />
+                                                    </EdgePanel.EndContent>
+                                                    <EdgePanel.StartContent>
+                                                        <TextBlock Text="{Binding ReleaseDate, StringFormat='d'}" Classes="Size-XS Weight-Light Dimmed"></TextBlock>
+                                                    </EdgePanel.StartContent>
+                                                </EdgePanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </HeaderedContainer>
+
+                <!-- Transaction Details Section -->
+                <HeaderedContainer Grid.Column="4" Header="Transaction Details" Classes="TransactionCard Shadow">
+                    <StackPanel Spacing="15">
+                        <HeaderedContainer Header="Project ID" Content="{Binding ProjectId}" Classes="ProjectIdBox" />
+                        <Separator />
+                        <EdgePanel Classes="BreakdownItem" StartContent="Amount to Invest" EndContent="{Binding TransactionDetails.AmountToInvest.DecimalString}" />
+                        <EdgePanel Classes="BreakdownItem" StartContent="Miner Fee" EndContent="{Binding TransactionDetails.MinerFee.DecimalString}" />
+                        <EdgePanel Classes="BreakdownItem" StartContent="Angor Fee" EndContent="{Binding TransactionDetails.AngorFee.DecimalString}" />
+                        <Separator />
+                        <EdgePanel StartContent="Total (incl. fees)">
+                            <EdgePanel.EndContent>
+                                <TextBlock Text="{Binding TransactionDetails.Total.DecimalString}" FontWeight="Bold" Foreground="{DynamicResource Accent}" />
+                            </EdgePanel.EndContent>
+                        </EdgePanel>
+                    </StackPanel>
+                </HeaderedContainer>
+
+            </BalancedWrapGrid>
+        </Grid>
+    </controls:ScrollableView>
+</UserControl>

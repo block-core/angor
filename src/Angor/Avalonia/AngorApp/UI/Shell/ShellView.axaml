@@ -55,7 +55,11 @@
         </DockPanel>
         <SectionStrip Classes="Nav" Grid.Row="1" Grid.Column="0" SelectedSection="{Binding SelectedSection}" IconSize="24" Width="200" HorizontalAlignment="Left" Sections="{Binding SidebarSections}" />
         <OverlayBorder Grid.Row="1" Grid.Column="1" Classes="Panel" Padding="0" Background="{DynamicResource TiledLogoBrush}">
-            <Frame Navigator="{Binding SelectedSection.Navigator}" />
+            <Frame Content="{Binding SelectedSection.Navigator.Content^}" BackCommand="{Binding SelectedSection.Navigator.Back}">
+                <Interaction.Behaviors>
+                    <AutoHeaderFooterBehavior />
+                </Interaction.Behaviors>
+            </Frame>
         </OverlayBorder>
     </Grid>
 </UserControl>

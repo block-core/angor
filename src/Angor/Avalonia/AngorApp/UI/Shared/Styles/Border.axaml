@@ -1,5 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:zafiro="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia">
     <Design.PreviewWith>
         <StackPanel>
             <Border Classes="Card" Padding="20">

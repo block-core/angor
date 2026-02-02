@@ -1,6 +1,8 @@
 using Angor.Sdk.Funding.Shared;
 using AngorApp.Core.Factories;
+using AngorApp.UI.Flows.InvestV2;
 using AngorApp.UI.Shared.Controls.Common.FoundedProjectOptions;
+using Zafiro.UI.Navigation;
 
 namespace AngorApp.UI.Sections.Browse.Details;
 
@@ -11,9 +13,8 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 
     public ProjectDetailsViewModel(
         FullProject project,
-        IProjectInvestCommandFactory investCommandFactory,
         Func<ProjectId, IFoundedProjectOptionsViewModel> foundedProjectOptionsFactory,
-        UIServices uiServices)
+        UIServices uiServices, INavigator navigator)
     {
         this.project = project;
 
@@ -28,8 +29,10 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
         {
             IsInsideInvestmentPeriod = true;
         }
-
-        Invest = investCommandFactory.Create(project, IsInsideInvestmentPeriod);
+        
+        Invest = EnhancedCommand.CreateWithResult(() => navigator.Go<IInvestViewModel>() , Observable.Return(IsInsideInvestmentPeriod));
+        Invest.HandleErrorsWith(uiServices.NotificationService, "Investment failed");
+        
         FoundedProjectOptions = foundedProjectOptionsFactory(project.ProjectId);
     }
 
@@ -38,7 +41,7 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
     public IStage? CurrentStage { get; }
     public IFoundedProjectOptionsViewModel FoundedProjectOptions { get; }
 
-    public IEnhancedCommand<Result<Maybe<Unit>>> Invest { get; }
+    public IEnhancedCommand<Result<Unit>> Invest { get; }
 
     public IEnumerable<INostrRelay> Relays { get; } =
     [

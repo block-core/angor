@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:l="clr-namespace:AngorApp.UI.Flows.InvestV2.Header"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Flows.InvestV2.Header.HeaderView"
+             x:DataType="l:IHeaderViewModel">
+
+    <Design.DataContext>
+        <l:HeaderViewModelSample />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="Border.Shadow">
+            <Setter Property="BoxShadow" Value="{StaticResource SectionShadow}" />
+        </Style>
+        <Style Selector="Border">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="White"></Setter>
+            <Setter Property="Padding" Value="10"></Setter>
+            <Setter Property="BoxShadow" Value="{StaticResource SectionShadow}" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel HorizontalSpacing="10" LastChildFill="False" Margin="10">
+        <Border DockPanel.Dock="Left">
+            <TextBlock Classes="Weight-Bold Strong" Text="{Binding ProjectTitle}" />
+        </Border>
+        <Border DockPanel.Dock="Right">
+            <TextBlock>
+                <Run>Progress:</Run>
+                <Run Foreground="Black" FontWeight="Bold" Text="{Binding  Progress, StringFormat=p0}" />
+            </TextBlock>
+        </Border>
+        <Border DockPanel.Dock="Right">
+            <TextBlock>
+                <Run>Total Raised:</Run>
+                <Run Foreground="Black" FontWeight="Bold" Text="{Binding  Raised.DecimalString}" />
+            </TextBlock>
+        </Border>
+    </DockPanel>
+</UserControl>
