@@ -15,15 +15,15 @@
         <Setter Property="Icon" Value="{Icon mdi-chevron-left}" />
         <Setter Property="Content" Value="Back" />
         <Setter Property="Height" Value="44" />
-        <Setter Property="Spacing" Value="2"></Setter>
+        <Setter Property="Spacing" Value="2" />
         <Setter Property="Padding" Value="10 10 20 10" />
         <Setter Property="BoxShadow" Value="{DynamicResource ItemShadowBig}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="BorderBrush" Value="{DynamicResource Border}"></Setter>
+        <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
         <Setter Property="Background" Value="{DynamicResource Surface}" />
         <Setter Property="Foreground" Value="#333333" />
     </Style>
-    
+
     <Style Selector="Frame ContentPresenter#Footer">
         <Setter Property="BoxShadow" Value="{StaticResource ItemShadow}" />
         <Setter Property="IsVisible" Value="{Binding $self.Content, Converter={x:Static ObjectConverters.IsNotNull}}" />

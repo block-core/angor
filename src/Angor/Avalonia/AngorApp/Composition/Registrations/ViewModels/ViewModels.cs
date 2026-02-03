@@ -40,7 +40,7 @@ public static class ViewModels
                 .AddTransient<IFounderSectionViewModel, FounderSectionViewModel>()
                 .AddTransient<ISettingsSectionViewModel, SettingsSectionViewModel>()
                 .AddScoped<IPenaltiesViewModel, PenaltiesViewModel>()
-                .AddScoped<IInvestViewModel, InvestViewModel>()
+                .AddScoped<Func<IFullProject, IInvestViewModel>>(provider => proj => ActivatorUtilities.CreateInstance<InvestViewModel>(provider, proj))
                 .AddScoped<IPaymentSelectorViewModel, PaymentSelectorViewModel>()
                 .AddScoped<IRecoverViewModel, RecoverViewModel>()
                 .AddSingleton<IShellViewModel, ShellViewModel>();

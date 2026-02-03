@@ -1,62 +1,84 @@
-using System.Windows.Input;
+using System.Linq;
+using Angor.Sdk.Funding.Investor;
 using AngorApp.UI.Flows.Invest.Amount;
-using ReactiveUI.Validation.Helpers;
-using Zafiro.Avalonia.Dialogs;
-using Option = Zafiro.Avalonia.Dialogs.Option;
-using AngorApp.UI.Flows.InvestV2.PaymentSelector;
-using AngorApp.UI.Flows.InvestV2.Model;
-using AngorApp.UI.Flows.InvestV2.Header;
 using AngorApp.UI.Flows.InvestV2.Footer;
+using AngorApp.UI.Flows.InvestV2.Header;
+using AngorApp.UI.Flows.InvestV2.Model;
 using AngorApp.UI.Shell;
+using ReactiveUI.Validation.Helpers;
+using Zafiro.Reactive;
 
-namespace AngorApp.UI.Flows.InvestV2;
-
-public class InvestViewModel : ReactiveValidationObject, IInvestViewModel
+namespace AngorApp.UI.Flows.InvestV2
 {
-    private readonly UIServices uiServices;
-    private readonly IShellViewModel shell;
-
-    public InvestViewModel(UIServices uiServices, IShellViewModel shell)
+    public partial class InvestViewModel : ReactiveValidationObject, IInvestViewModel, IValidatable
     {
-        this.uiServices = uiServices;
-        this.shell = shell;
-        ProjectName = "Example Project";
-        ProjectId = "b04c...8d1a";
-        Amount = 100000;
-
-        StageBreakdowns = new List<Breakdown>
+        private readonly IFullProject fullProject;
+        private readonly IShellViewModel shell;
+        private readonly UIServices uiServices;
+        private readonly IWalletContext walletContext;
+        private readonly IInvestmentAppService investmentAppService;
+        [Reactive] private IAmountUI? amountToInvest;
+        
+        public InvestViewModel(
+            IFullProject fullProject,
+            UIServices uiServices,
+            IShellViewModel shell,
+            IInvestmentAppService investmentAppService,
+            IWalletContext walletContext
+        )
         {
-            new(1, new AmountUI(50000), 0.5m, DateTime.Now.AddDays(30)),
-            new(2, new AmountUI(25000), 0.25m, DateTime.Now.AddDays(60)),
-            new(3, new AmountUI(25000), 0.25m, DateTime.Now.AddDays(90))
-        };
+            this.fullProject = fullProject;
+            this.uiServices = uiServices;
+            this.shell = shell;
+            this.investmentAppService = investmentAppService;
+            this.walletContext = walletContext;
 
-        TransactionDetails = new TransactionDetails(
-            new AmountUI(100000),
-            new AmountUI(500),
-            new AmountUI(1000)
-        );
+            StageBreakdowns = this.WhenAnyValue(model => model.AmountToInvest)
+                                  .Select(amount => GetStageBreakdowns(fullProject, amount));
+            Details = this.WhenAnyValue(model => model.AmountToInvest).Select(GetTransactionDetails);
+            IsValid = this.WhenAnyValue(model => model.AmountToInvest).NotNull();
+        }
 
-        Invest = ReactiveCommand.Create(() => uiServices.Dialog.Show(new PaymentSelectorViewModel(uiServices, shell), "Select Wallet", (model, closeable) => model.Options(closeable)));
+        public string ProjectTitle => fullProject.Name;
+        public decimal Progress => fullProject.RaisedAmount.Btc / fullProject.TargetAmount.Btc;
+        public IAmountUI Raised => fullProject.RaisedAmount;
 
-        SelectAmount = ReactiveCommand.Create<long>(a => Amount = a);
+        public IObservable<IEnumerable<Breakdown>> StageBreakdowns { get; }
+        public IObservable<TransactionDetails> Details { get; }
+        public string ProjectId => fullProject.ProjectId.Value;
+
+        public IEnumerable<IAmountUI> AmountPresets { get; } =
+            [AmountUI.FromBtc(0.001), AmountUI.FromBtc(0.01), AmountUI.FromBtc(0.1), AmountUI.FromBtc(0.5)];
+
+        public IObservable<object> Footer => Observable.Return(
+            new FooterViewModel(
+                fullProject,
+                this.WhenAnyValue(model => model.AmountToInvest).Select(ui => ui ?? AmountUI.FromBtc(0)),
+                uiServices,
+                investmentAppService,
+                shell,
+                walletContext));
+
+        public IObservable<object> Header => Observable.Return(new HeaderViewModel(fullProject));
+        public IObservable<bool> IsValid { get; }
+
+        private static IEnumerable<Breakdown> GetStageBreakdowns(IFullProject fullProject, IAmountUI? amount)
+        {
+            return fullProject.Stages.Select(stage => new Breakdown(
+                                                 amount ?? AmountUI.FromBtc(0m),
+                                                 stage.RatioOfTotal,
+                                                 stage.ReleaseDate));
+        }
+
+        private static TransactionDetails GetTransactionDetails(IAmountUI? amount)
+        {
+            if (amount == null)
+            {
+                return TransactionDetails.Empty();
+            }
+
+            AmountUI angorFee = new((long)Math.Ceiling(amount.Sats * 0.01));
+            return new TransactionDetails(amount, new AmountUI(0), angorFee);
+        }
     }
-
-    public decimal? Amount { get; set; }
-    public IEnumerable<Breakdown> StageBreakdowns { get; }
-    public TransactionDetails? TransactionDetails { get; }
-    public ICommand Invest { get; }
-    public ICommand SelectAmount { get; }
-    public string ProjectName { get; }
-    public string ProjectId { get; }
-    public IObservable<bool> IsValid => Observable.Return(true);
-    public IEnumerable<IAmountUI> AmountPresets { get; } = [AmountUI.FromBtc(0.001), AmountUI.FromBtc(0.01), AmountUI.FromBtc(0.1), AmountUI.FromBtc(0.5)];
-    public IAmountUI SelectedAmountPreset { get; set; }
-    public string ProjectTitle { get; } = "Angor UX";
-    public decimal Progress { get; } = 0.21m;
-    public IAmountUI Raised { get; } = AmountUI.FromBtc(0.1234m);
-    public IAmountUI AmountToInvest { get; } = AmountUI.FromBtc(0.001m);
-    public int NumberOfReleases { get; } = 3;
-    public IObservable<object> Footer => Observable.Return(new FooterViewModel(uiServices, shell));
-    public IObservable<object> Header { get; } = Observable.Return(new HeaderViewModel());
 }

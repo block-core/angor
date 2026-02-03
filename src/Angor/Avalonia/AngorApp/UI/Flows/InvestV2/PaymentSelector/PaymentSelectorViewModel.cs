@@ -1,87 +1,118 @@
-using AngorApp.UI.Sections.Wallet;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Operations;
+using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Sdk.Funding.Shared;
+using AngorApp.UI.Flows.InvestV2.BackupWallet;
+using AngorApp.UI.Flows.InvestV2.InvestmentResult;
+using AngorApp.UI.Flows.InvestV2.Invoice;
+using AngorApp.UI.Shell;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Reactive;
 using Option = Zafiro.Avalonia.Dialogs.Option;
-using AngorApp.UI.Flows.InvestV2.Invoice;
-using AngorApp.UI.Flows.InvestV2.BackupWallet;
-using AngorApp.UI.Flows.InvestV2.InvestmentResult;
-using AngorApp.UI.Shell;
 
-namespace AngorApp.UI.Flows.InvestV2.PaymentSelector;
-
-public partial class PaymentSelectorViewModel : ReactiveObject, IPaymentSelectorViewModel, IHaveTitle
+namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
 {
-    private readonly UIServices uiServices;
-
-    public PaymentSelectorViewModel(UIServices uiServices, IShellViewModel shell)
+    public partial class PaymentSelectorViewModel : ReactiveObject, IPaymentSelectorViewModel, IHaveTitle
     {
-        this.uiServices = uiServices;
-        this.shell = shell;
-    }
+        private readonly IShellViewModel shell;
+        private readonly IInvestmentAppService investmentAppService;
+        private readonly ProjectId projectId;
+        private readonly UIServices uiServices;
 
-    [Reactive] private IWallet? selectedWallet;
-    private readonly IShellViewModel shell;
-    public IAmountUI AmountToInvest { get; } = AmountUI.FromBtc(0.5m);
+        [Reactive] private IWallet? selectedWallet;
 
-    public IEnumerable<IWallet> Wallets { get; } =
-    [
-        new WalletSample { Name = "Fat Wallet", Balance = AmountUI.FromBtc(100) },
-        new WalletSample { Name = "Savings Wallet", Balance = AmountUI.FromBtc(12) },
-        new WalletSample { Name = "Tipping Wallet", Balance = AmountUI.FromBtc(0.5) }
-    ];
-
-    public IObservable<string> Title { get; } = Observable.Return("Select Payment Method");
-
-    public IEnumerable<IOption> Options(ICloseable closeable) =>
-    [
-        PayWithWalletOption(closeable),
-        GenerateInvoiceOption(closeable)
-    ];
-
-    private Option GenerateInvoiceOption(ICloseable closeable)
-    {
-        var command = EnhancedCommand.Create(async () =>
+        public PaymentSelectorViewModel(ProjectId projectId, UIServices uiServices, IShellViewModel shell, IInvestmentAppService investmentAppService, IWalletContext walletContext, IAmountUI amountToInvest, IWallet? preSelectedWallet = null)
         {
-            closeable.Close();
-            await uiServices.Dialog.Show(
-                new InvoiceViewModel(),
-                "Pay Invoice to Invest",
-                (model, closeable) =>
-                [
-                    new Option(
-                        "Next",
-                        EnhancedCommand.Create(
-                            () =>
-                            {
-                                closeable.Close();
-                                return uiServices.Dialog.Show(
-                                    new BackupWalletViewModel(uiServices),
-                                    "Backup Your Account",
-                                    (model, c) => model.Options(c, shell));
-                            },
-                            model.IsValid),
-                        new Settings() { IsVisible = model.IsValid })
-                ]);
-        });
+            this.projectId = projectId;
+            this.uiServices = uiServices;
+            this.shell = shell;
+            this.investmentAppService = investmentAppService;
+            AmountToInvest = amountToInvest;
 
-        return new Option("Generate Invoice Instead", command, new Settings());
-    }
+            Wallets = walletContext.Wallets;
+            SelectedWallet = preSelectedWallet;
+        }
 
-    private Option PayWithWalletOption(ICloseable closeable)
-    {
-        var title = this.WhenAnyValue(viewModel => viewModel.SelectedWallet)
-                        .Select(wallet => wallet.AsMaybe().Match(
-                                    x => "Pay with " + x.Name,
-                                    () => "Choose Wallet"));
+        public IObservable<string> Title { get; } = Observable.Return("Select Payment Method");
+        public IAmountUI AmountToInvest { get; }
+        public IEnumerable<IWallet> Wallets { get; }
 
-        var command = EnhancedCommand.Create(
-            async () =>
+        public IEnumerable<IOption> Options(ICloseable closeable)
+        {
+            return
+            [
+                PayWithWalletOption(closeable),
+                GenerateInvoiceOption(closeable)
+            ];
+        }
+
+        private Option GenerateInvoiceOption(ICloseable closeable)
+        {
+            IEnhancedCommand<Unit> command = EnhancedCommand.Create(async () =>
+            {
+                closeable.Close();
+                await uiServices.Dialog.Show(
+                    new InvoiceViewModel(SelectedWallet!),
+                    "Pay Invoice to Invest",
+                    (model, closeable) =>
+                    [
+                        new Option(
+                            "Next",
+                            EnhancedCommand.Create(
+                                () =>
+                                {
+                                    closeable.Close();
+                                    return uiServices.Dialog.Show(
+                                        new BackupWalletViewModel(uiServices),
+                                        "Backup Your Account",
+                                        (model, c) => model.Options(c, shell));
+                                },
+                                model.IsValid),
+                            new Settings { IsVisible = model.IsValid })
+                    ]);
+            });
+
+            return new Option("Generate Invoice Instead", command, new Settings());
+        }
+
+        private Option PayWithWalletOption(ICloseable closeable)
+        {
+            IObservable<string> title = this.WhenAnyValue(viewModel => viewModel.SelectedWallet)
+                                            .Select(wallet => wallet.AsMaybe().Match(
+                                                        x => "Pay with " + x.Name,
+                                                        () => "Choose Wallet"));
+
+            var payCommand = EnhancedCommand.CreateWithResult(() => PayFlow(closeable), this.WhenAnyValue(viewModel => viewModel.SelectedWallet).NotNull());
+            return new Option(title, payCommand, new Settings());
+        }
+
+        private Task<Result> PayFlow(ICloseable closeable)
+        {
+            return Pay().Bind(async () =>
             {
                 closeable.Close();
                 await uiServices.Dialog.Show(new InvestResultViewModel(shell), "Investment Completed", (model, c) => model.Options(c));
-            },
-            this.WhenAnyValue(viewModel => viewModel.SelectedWallet).NotNull());
+                return Result.Success();
+            });
+        }
 
-        return new Option(title, command, new Settings());
+        private async Task<Result> Pay()
+        {
+            var draftResult = investmentAppService.BuildInvestmentDraft(
+                new BuildInvestmentDraft.BuildInvestmentDraftRequest(
+                    SelectedWallet!.Id,
+                    projectId,
+                    new Amount(AmountToInvest.Sats),
+                    new DomainFeerate(20)));
+
+            var publishResult = await draftResult
+                .Bind(response =>
+                {
+                    var publishAndStoreInvestorTransactionRequest = new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(SelectedWallet.Id.Value, projectId, response.InvestmentDraft);        
+                    return investmentAppService.SubmitTransactionFromDraft(publishAndStoreInvestorTransactionRequest);
+                });
+            
+            return publishResult;
+        }
     }
 }

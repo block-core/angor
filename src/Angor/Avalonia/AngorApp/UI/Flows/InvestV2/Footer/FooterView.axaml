@@ -3,16 +3,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:l="clr-namespace:AngorApp.UI.Flows.InvestV2.Footer"
-             xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:investV2="clr-namespace:AngorApp.UI.Flows.InvestV2"
-             mc:Ignorable="d" d:DesignWidth="800" 
+             mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.UI.Flows.InvestV2.Footer.FooterView"
              x:DataType="l:IFooterViewModel">
-    
+
     <Design.DataContext>
         <investV2:InvestViewModelSample />
     </Design.DataContext>
-    
+
     <UserControl.Styles>
         <Style Selector="Border.Shadow">
             <Setter Property="BoxShadow" Value="{StaticResource CardShadow}" />
@@ -20,21 +19,21 @@
         <Style Selector="Border">
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Background" Value="White"></Setter>
-            <Setter Property="Padding" Value="10"></Setter>
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Padding" Value="10" />
             <Setter Property="BoxShadow" Value="{StaticResource SectionShadow}" />
         </Style>
     </UserControl.Styles>
-    
+
     <StackPanel Spacing="30" Margin="10" HorizontalAlignment="Right" Orientation="Horizontal">
         <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center">
             <Run>Total (incl. fees):</Run>
-            <Run Foreground="Black" FontWeight="Bold" Text="{Binding  AmountToInvest.DecimalString}" />
+            <Run Foreground="Black" FontWeight="Bold" Text="{Binding  AmountToInvest.Value.DecimalString}" />
         </TextBlock>
         <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center">
-            <Run>Total Raised:</Run>
-            <Run Foreground="Black" FontWeight="Bold" Text="{Binding  NumberOfReleases, StringFormat='{}{0} releases'}" />
+            <Run>Stages:</Run>
+            <Run Foreground="Black" FontWeight="Bold" Text="{Binding  StageCount, StringFormat='{}{0} releases'}" />
         </TextBlock>
-        <EnhancedButton Command="{Binding Invest}" DockPanel.Dock="Right" Classes="Outline" Icon="{Icon fa-chart-line}" Content="Invest Now" />
+        <EnhancedButton Command="{Binding Invest}" DockPanel.Dock="Right" Classes="Outline" Icon="{Icon fa-chart-line}" Content="Invest" />
     </StackPanel>
 </UserControl>

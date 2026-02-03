@@ -26,7 +26,7 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
         this.investmentAppService = investmentAppService;
         this.uiServices = uiServices;
 
-        Load = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => GetRecoveryStateViewModel(wallet, sharedCommands))).Enhance().DisposeWith(disposables);
+        Load = ReactiveCommand.CreateFromTask(() => walletContext.Require().Bind(wallet => GetRecoveryStateViewModel(wallet, sharedCommands))).Enhance().DisposeWith(disposables);
         Load.HandleErrorsWith(uiServices.NotificationService);
         State = Load.Successes();
         

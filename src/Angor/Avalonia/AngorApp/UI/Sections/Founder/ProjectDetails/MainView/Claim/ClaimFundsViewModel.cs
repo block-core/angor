@@ -30,7 +30,7 @@ public partial class ClaimFundsViewModel : ReactiveObject, IClaimFundsViewModel,
         this.projectId = projectId;
         this.uiServices = uiServices;
         this.walletContext = walletContext;
-        LoadClaimableStages = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetClaimableStages))
+        LoadClaimableStages = ReactiveCommand.CreateFromTask(() => walletContext.Require().Bind(GetClaimableStages))
             .Enhance()
             .DisposeWith(disposable);
         

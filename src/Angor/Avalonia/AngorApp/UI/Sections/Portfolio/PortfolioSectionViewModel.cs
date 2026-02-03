@@ -29,7 +29,7 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
             .Select(IInvestorStatsViewModel (projects) => new InvestorStatsViewModel(projects.ToList())).ToProperty(this, x => x.InvestorStats).DisposeWith(disposable);
 
         Func<IWallet, Task<Result<ICollection<IPortfolioProjectViewModel>>>> execute = wallet => GetInvestedProjects(investmentAppService, uiServices, navigator, walletContext, wallet, sharedCommands);
-        LoadPortfolio = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(execute), null).Enhance();
+        LoadPortfolio = ReactiveCommand.CreateFromTask(() => walletContext.Require().Bind(execute), null).Enhance();
         LoadPortfolio.HandleErrorsWith(uiServices.NotificationService, "Failed to load portfolio projects").DisposeWith(disposable);
         investedProjectsHelper = LoadPortfolio.Successes().ToProperty(this, x => x.InvestedProjects).DisposeWith(disposable);
         

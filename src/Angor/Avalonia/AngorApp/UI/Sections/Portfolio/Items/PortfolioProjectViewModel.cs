@@ -25,7 +25,7 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
         var canCompleteInvestment = this.WhenAnyValue(x => x.InvestmentStatus).Select(x => x == InvestmentStatus.FounderSignaturesReceived);
         var canCancelInvestment = this.WhenAnyValue(x => x.InvestmentStatus).Select(x => x != InvestmentStatus.Invested);
 
-        CompleteInvestment = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => 
+        CompleteInvestment = ReactiveCommand.CreateFromTask(() => walletContext.Require().Bind(wallet => 
     investmentAppService.ConfirmInvestment(new PublishInvestment.PublishInvestmentRequest(projectDto.InvestmentId, wallet.Id, new ProjectId(projectDto.Id)))
         .Map(_ => Unit.Default)), canCompleteInvestment)
             .Enhance()

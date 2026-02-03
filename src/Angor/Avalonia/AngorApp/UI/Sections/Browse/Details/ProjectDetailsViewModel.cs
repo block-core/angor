@@ -12,8 +12,9 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
     private bool enableProductionValidations;
 
     public ProjectDetailsViewModel(
-        FullProject project,
+        IFullProject project,
         Func<ProjectId, IFoundedProjectOptionsViewModel> foundedProjectOptionsFactory,
+        Func<IFullProject, IInvestViewModel> investViewModelFactory,
         UIServices uiServices, INavigator navigator)
     {
         this.project = project;
@@ -30,7 +31,7 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
             IsInsideInvestmentPeriod = true;
         }
         
-        Invest = EnhancedCommand.CreateWithResult(() => navigator.Go<IInvestViewModel>() , Observable.Return(IsInsideInvestmentPeriod));
+        Invest = EnhancedCommand.CreateWithResult(() => navigator.Go(() => investViewModelFactory(project)) , Observable.Return(IsInsideInvestmentPeriod));
         Invest.HandleErrorsWith(uiServices.NotificationService, "Investment failed");
         
         FoundedProjectOptions = foundedProjectOptionsFactory(project.ProjectId);

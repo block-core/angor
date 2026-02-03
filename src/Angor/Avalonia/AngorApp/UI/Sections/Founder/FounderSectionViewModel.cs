@@ -22,7 +22,7 @@ public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel,
         Func<ProjectDto, IFounderProjectViewModel> projectViewModelFactory)
     {
         projectsCollection = RefreshableCollection.Create(
-                () => walletContext.RequiresWallet(wallet => projectAppService
+                () => walletContext.Require().Bind(wallet => projectAppService
                     .GetFounderProjects(wallet.Id)
                     .Map(response => response.Projects)
                     .MapEach(projectViewModelFactory)),
