@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
-using AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model;
 using DynamicData;
 using DynamicData.Aggregation;

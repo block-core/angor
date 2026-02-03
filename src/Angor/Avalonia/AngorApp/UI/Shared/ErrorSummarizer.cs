@@ -4,7 +4,7 @@ using System.Reactive.Disposables;
 using DynamicData;
 using ReactiveUI.Validation.Contexts;
 
-namespace AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
+namespace AngorApp.UI.Shared;
 
 public sealed class ErrorSummarizer : ReactiveObject, IDisposable
 {
