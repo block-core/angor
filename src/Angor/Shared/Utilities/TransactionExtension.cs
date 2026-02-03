@@ -3,23 +3,24 @@ using System.Text.Json.Serialization;
 using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
+using Blockcore.Networks;
 
 namespace Angor.Shared.Utilities;
 
 public static class TransactionExtension
 {
-    public static bool IsTaprooOutput(this Blockcore.Consensus.TransactionInfo.IndexedTxOut txout)
+    public static bool IsTaprooOutput(this IndexedTxOut txout)
     {
         return txout.TxOut.ScriptPubKey.IsTaprooOutput();
     }
 
-    public static bool IsTaprooOutput(this Blockcore.Consensus.ScriptInfo.Script script)
+    public static bool IsTaprooOutput(this Script script)
     {
         var _script = script.ToBytes();
         return script.Length == 34 && _script[0] == 0x51 && _script[1] == 32;
     }
 
-    public static long GetTotalInvestmentAmount(this Blockcore.Consensus.TransactionInfo.Transaction investmentTransaction)
+    public static long GetTotalInvestmentAmount(this Transaction investmentTransaction)
     {
         return investmentTransaction.Outputs.AsIndexedOutputs()
                 .Where(txout => txout.IsTaprooOutput())
@@ -38,7 +39,7 @@ public static class TransactionExtension
     /// Note: InputAddress is not populated as Blockcore doesn't provide GetSignerAddress.
     /// Size and Weight values are approximations based on VirtualSize.
     /// </summary>
-    public static QueryTransaction ToQueryTransaction(this Blockcore.Consensus.TransactionInfo.Transaction transaction, Blockcore.Networks.Network network)
+    public static QueryTransaction ToQueryTransaction(this Transaction transaction, Network network)
     {
         var virtualSize = (int)transaction.GetVirtualSize(4);
         return new QueryTransaction
@@ -72,7 +73,7 @@ public static class TransactionExtension
         };
     }
 
-    private static string GetScriptTypeBlockcore(Blockcore.Consensus.ScriptInfo.Script scriptPubKey)
+    private static string GetScriptTypeBlockcore(Script scriptPubKey)
     {
         var scriptBytes = scriptPubKey.ToBytes();
         
