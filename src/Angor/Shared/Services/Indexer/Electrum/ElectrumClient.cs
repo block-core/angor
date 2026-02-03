@@ -79,14 +79,18 @@ public class ElectrumClient : IDisposable
                         },
                            cancellationToken);
 
-                _reader = new StreamReader(_sslStream, Encoding.UTF8);
-                _writer = new StreamWriter(_sslStream, Encoding.UTF8) { AutoFlush = true };
+                // Use UTF-8 without BOM - Electrum servers reject JSON with BOM prefix
+                var utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+                _reader = new StreamReader(_sslStream, utf8NoBom);
+                _writer = new StreamWriter(_sslStream, utf8NoBom) { AutoFlush = true };
             }
             else
             {
                 var stream = _tcpClient.GetStream();
-                _reader = new StreamReader(stream, Encoding.UTF8);
-                _writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
+                // Use UTF-8 without BOM - Electrum servers reject JSON with BOM prefix
+                var utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+                _reader = new StreamReader(stream, utf8NoBom);
+                _writer = new StreamWriter(stream, utf8NoBom) { AutoFlush = true };
             }
 
             _isConnected = true;
@@ -228,9 +232,20 @@ public class ElectrumClient : IDisposable
             {
                 if (root.TryGetProperty("error", out var error) && error.ValueKind != JsonValueKind.Null)
                 {
-                    var errorMessage = error.TryGetProperty("message", out var msg)
-             ? msg.GetString()
-                 : error.ToString();
+                    // Handle both string errors and object errors with a message property
+                    string? errorMessage;
+                    if (error.ValueKind == JsonValueKind.String)
+                    {
+                        errorMessage = error.GetString();
+                    }
+                    else if (error.ValueKind == JsonValueKind.Object && error.TryGetProperty("message", out var msg))
+                    {
+                        errorMessage = msg.GetString();
+                    }
+                    else
+                    {
+                        errorMessage = error.ToString();
+                    }
                     tcs.SetException(new ElectrumException(errorMessage ?? "Unknown error"));
                 }
                 else if (root.TryGetProperty("result", out var result))
