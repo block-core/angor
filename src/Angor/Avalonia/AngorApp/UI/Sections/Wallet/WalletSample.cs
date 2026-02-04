@@ -48,6 +48,7 @@ public class WalletSample : IWallet
     public IEnhancedCommand<Result> GetTestCoins { get; }
     public IObservable<bool> HasTransactions { get; } = Observable.Return(false);
     public IObservable<bool> HasBalance { get; } = Observable.Return(false);
+    public NetworkKind NetworkKind { get; set; } = NetworkKind.Bitcoin;
 
     public async Task<Result<string>> GenerateReceiveAddress()
     {

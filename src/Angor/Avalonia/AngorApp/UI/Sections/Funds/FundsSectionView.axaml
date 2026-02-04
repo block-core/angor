@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:funds="clr-namespace:AngorApp.UI.Sections.Funds"
+             xmlns:l="clr-namespace:AngorApp.UI.Sections.Fund"
+             xmlns:main="clr-namespace:AngorApp.UI.Sections.Wallet.Main"
+             xmlns:accounts="clr-namespace:AngorApp.UI.Sections.Funds.Accounts"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Sections.Funds.FundsSectionView"
+             x:DataType="funds:IFundsSectionViewModel">
+
+    <Design.DataContext>
+        <funds:FundsSectionViewModelSample />
+    </Design.DataContext>
+
+    <StackPanel>
+        <accounts:AccountsView DataContext="{Binding Accounts}" />
+    </StackPanel>
+</UserControl>

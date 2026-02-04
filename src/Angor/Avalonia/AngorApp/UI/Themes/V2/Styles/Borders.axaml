@@ -82,6 +82,12 @@
         <Setter Property="IconOptions.Fill" Value="#d97706" />
     </Style>
     
+    <Style Selector="Border.StatsCard, HeaderedContainer.StatsCard, OverlayBorder.StatsCard, EdgePanel.StatsCard">
+        <Setter Property="Border.BorderBrush" Value="#66FDBA74" />
+        <Setter Property="Border.Background" Value="#B3FFFFFF" />
+        <Setter Property="Border.BorderThickness" Value="1" />
+    </Style> 
+    
     <Style Selector="Border.Circle">
         <Setter Property="Border.CornerRadius" Value="1000" />
         <Setter Property="HorizontalAlignment" Value="Center" />

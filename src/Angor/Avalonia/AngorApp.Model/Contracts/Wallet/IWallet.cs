@@ -19,5 +19,8 @@ public interface IWallet
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
     public Task<Result<string>> GenerateReceiveAddress();
     public IEnhancedCommand<Result> GetTestCoins { get; }
+    IEnumerable<string> Labels => [];
+    NetworkKind NetworkKind => NetworkKind.Bitcoin;
+    ImportKind ImportKind => ImportKind.Generated; 
     public DateTimeOffset CreatedOn { get; } 
 }

@@ -15,6 +15,7 @@
                                 Background="LightBlue"
                                 HorizontalContentAlignment="Left" Icon="{Icon fa-wallet}">
                 </EnhancedButton>
+                <EnhancedButton Icon="{Icon fa-wallet}" />
             </StackPanel>
         </Border>
     </Design.PreviewWith>

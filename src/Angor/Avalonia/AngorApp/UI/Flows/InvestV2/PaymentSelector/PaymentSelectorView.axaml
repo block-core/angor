@@ -30,7 +30,7 @@
                             <TextBlock>
                                 <Run FontWeight="Bold" Text="{Binding Name}" />
                                 <LineBreak />
-                                <Run FontSize="12" FontWeight="Light" Text="(Wallet Kind)" />
+                                <Run FontSize="12" FontWeight="Light" Text="(Wallet NetworkKind)" />
                             </TextBlock>
                         </EdgePanel.Content>
                     </EdgePanel>

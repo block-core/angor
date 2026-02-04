@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:conv="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:accounts="clr-namespace:AngorApp.UI.Sections.Funds.Accounts"
+             xmlns:l="clr-namespace:AngorApp"
+             xmlns:receive="clr-namespace:AngorApp.UI.Sections.Funds.Receive"
+             mc:Ignorable="d" Width="448"
+             x:Class="AngorApp.UI.Sections.Funds.Receive.ReceiveView"
+             x:DataType="receive:IReceiveViewModel">
+
+    <Design.DataContext>
+        <l:ReceiveViewModelSample />
+    </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Wallet.GetReceiveAddress}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <DockPanel VerticalSpacing="20">
+        <Border BorderThickness="1" Background="{DynamicResource SurfaceSubtler}" Classes="RegularPadding" DockPanel.Dock="Top">
+            <TextBlock>
+                <TextBlock.Inlines>
+                    <Run Text="To" />
+                    <Run FontWeight="Bold" Text="{Binding Wallet.Name}" />
+                </TextBlock.Inlines>
+            </TextBlock>
+        </Border>
+        <HeaderedContainer Classes="LightGray" DockPanel.Dock="Bottom">
+            <HeaderedContainer.Header>
+                <TextBlock HorizontalAlignment="Center">Bitcoin Address</TextBlock>
+            </HeaderedContainer.Header>
+            <HeaderedContainer.Content>
+                <EdgePanel>
+                    <EdgePanel.EndContent>
+                        <EnhancedButton Classes="Widget" Icon="{Icon fa-copy}" HorizontalAlignment="Stretch"
+                                        IsVisible="{Binding Address^, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
+                                        Command="{Binding Source={x:Static Commands.Instance}, Path=CopyParameter}" CommandParameter="{Binding Address^}" />
+                    </EdgePanel.EndContent>
+                    <SelectableTextBlock HorizontalAlignment="Center" Text="{Binding Address^, FallbackValue=...}" />
+                </EdgePanel>
+            </HeaderedContainer.Content>
+        </HeaderedContainer>
+
+        <Loading Width="232" Height="232" IsLoading="{Binding Wallet.GetReceiveAddress.IsExecuting^}">
+            <Border Padding="16" Classes="Rounded" BorderThickness="3" BorderBrush="{DynamicResource Stroke}">
+                <Image Width="192" Height="192" Stretch="UniformToFill" Source="{Binding Path=Address^, Converter={x:Static conv:AngorConverters.StringToQRCode}}" />
+            </Border>
+        </Loading>
+    </DockPanel>
+</UserControl>

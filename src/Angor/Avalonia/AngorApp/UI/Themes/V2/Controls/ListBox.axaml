@@ -5,7 +5,7 @@
         <Setter Property="Background" Value="Transparent" />
     </Style>
         
-    <Style Selector="ListBox.Horizontal">
+    <Style Selector="ItemsControl.Horizontal">
         <Setter Property="ItemsPanel">
             <Setter.Value>
                 <ItemsPanelTemplate>
@@ -15,7 +15,7 @@
         </Setter>
     </Style>
     
-    <Style Selector="ListBox.Vertical">
+    <Style Selector="ItemsControl.Vertical">
         <Setter Property="ItemsPanel">
             <Setter.Value>
                 <ItemsPanelTemplate>
