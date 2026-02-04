@@ -13,6 +13,30 @@
         <funders:FundersSectionViewModelSample />
     </Design.DataContext>
 
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="funders:IFunderApprovalItemViewModel">
+            <Border BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="12" Padding="20" Background="{DynamicResource PanelBackground}">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
+                    <StackPanel Spacing="10">
+                        <TextBlock FontWeight="Bold" Text="{Binding ProjectName}" />
+                        <TextBlock Classes="SizeBig" FontWeight="Bold" Text="{Binding AmountText}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <i:Icon FontSize="16" Value="mdi-calendar" />
+                            <TextBlock Classes="Thin" Text="{Binding Timestamp, StringFormat='{}{0:dd MMMM yyyy HH:mm}'}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <EnhancedButton Classes="Success" Command="{Binding Approve}" Icon="{Icon fa-check}" Content="Approve" />
+                        <EnhancedButton Classes="Danger" Command="{Binding Reject}" Icon="{Icon fa-xmark}" Content="Reject" />
+                        <EnhancedButton Classes="Outline" Command="{Binding Message}" Icon="{Icon fa-message}" />
+                        <EnhancedButton Classes="Outline" Icon="{Icon fa-chevron-down}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
     <co:PageContainer Container.Name="RootPanel" Container.Sizing="Width">
         <DockPanel HorizontalSpacing="20" VerticalSpacing="20">
             <Card Theme="{StaticResource WideCard}" DockPanel.Dock="Top" Header="Funders Overview">
@@ -24,20 +48,52 @@
                 </Card.HeaderEndContent>
             </Card>
 
-            <Border BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="10" Padding="24" Background="{DynamicResource PanelBackground}">
-                <StackPanel Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="600">
-                    <Border Width="64" Height="64" CornerRadius="12" Background="{DynamicResource CardBackground}"
-                            HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Viewbox>
-                            <i:Icon FontSize="48" Value="mdi-account-multiple" />
-                        </Viewbox>
-                    </Border>
+            <TabControl SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock FontWeight="Bold" Text="Awaiting Approval" />
+                            <Border Background="#FF9B2C" CornerRadius="10" Padding="6,2">
+                                <TextBlock FontWeight="Bold" Foreground="White" Text="{Binding PendingCount}" />
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
 
-                    <TextBlock HorizontalAlignment="Center" Classes="SizeBig" FontWeight="Bold" Text="No Funders Yet" />
-                    <TextBlock HorizontalAlignment="Center" Classes="Thin" TextWrapping="Wrap" TextAlignment="Center"
-                               Text="When investors fund your projects, they'll appear here. You can review and approve funding requests from this page." />
-                </StackPanel>
-            </Border>
+                    <StackPanel Spacing="20" Margin="0,10,0,0">
+                        <ItemsControl ItemsSource="{Binding Pending}" />
+
+                        <Border IsVisible="{Binding ShowPendingEmptyState}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="10" Padding="24" Background="{DynamicResource PanelBackground}">
+                            <StackPanel Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="600">
+                                <Border Width="64" Height="64" CornerRadius="12" Background="{DynamicResource CardBackground}"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Viewbox>
+                                        <i:Icon FontSize="48" Value="mdi-account-multiple" />
+                                    </Viewbox>
+                                </Border>
+
+                                <TextBlock HorizontalAlignment="Center" Classes="SizeBig" FontWeight="Bold" Text="No Funders Yet" />
+                                <TextBlock HorizontalAlignment="Center" Classes="Thin" TextWrapping="Wrap" TextAlignment="Center"
+                                           Text="When investors fund your projects, they'll appear here. You can review and approve funding requests from this page." />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </TabItem>
+
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock FontWeight="Bold" Text="Approved" />
+                            <Border Background="#FF9B2C" CornerRadius="10" Padding="6,2">
+                                <TextBlock FontWeight="Bold" Foreground="White" Text="{Binding ApprovedCount}" />
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+
+                    <StackPanel Spacing="20" Margin="0,10,0,0">
+                        <ItemsControl ItemsSource="{Binding Approved}" />
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
         </DockPanel>
     </co:PageContainer>
 </UserControl>
