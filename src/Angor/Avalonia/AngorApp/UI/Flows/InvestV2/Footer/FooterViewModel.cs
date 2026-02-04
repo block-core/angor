@@ -56,11 +56,15 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
                     var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell);
                     try
                     {
-                        return await uiServices.Dialog.ShowAndGetResult(
+                        bool result = await uiServices.Dialog.Show(
                             invoiceViewModel,
                             "Select Wallet",
-                            model => model.IsValid,
-                            _ => "");
+                            (model, closeable) =>
+                            {
+                                model.SetCloseable(closeable);
+                                return [];
+                            });
+                        return Maybe.From(result ? "" : null);
                     }
                     finally
                     {
@@ -76,7 +80,11 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
                 var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell);
                 try
                 {
-                    bool show = await uiServices.Dialog.Show(invoiceViewModel, "Select Wallet", _ => []);
+                    bool show = await uiServices.Dialog.Show(invoiceViewModel, "Select Wallet", (model, closeable) =>
+                    {
+                        model.SetCloseable(closeable);
+                        return [];
+                    });
                     return Maybe.From(show ? "" : null);
                 }
                 finally

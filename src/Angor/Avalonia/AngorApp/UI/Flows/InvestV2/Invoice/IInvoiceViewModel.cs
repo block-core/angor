@@ -1,3 +1,5 @@
+using Zafiro.Avalonia.Dialogs;
+
 namespace AngorApp.UI.Flows.InvestV2.Invoice
 {
     public interface IInvoiceViewModel
@@ -7,5 +9,6 @@ namespace AngorApp.UI.Flows.InvestV2.Invoice
         IAmountUI Amount { get; }
         IObservable<bool> PaymentReceived { get; }
         IEnhancedCommand CopyAddress { get; }
+        void SetCloseable(ICloseable closeable);
     }
 }

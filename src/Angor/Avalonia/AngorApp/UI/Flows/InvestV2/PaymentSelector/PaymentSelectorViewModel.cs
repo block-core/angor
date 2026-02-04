@@ -57,22 +57,26 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
                     await uiServices.Dialog.Show(
                         invoiceViewModel,
                         "Pay Invoice to Invest",
-                        (model, closeable) =>
-                        [
-                            new Option(
-                                "Next",
-                                EnhancedCommand.Create(
-                                    () =>
-                                    {
-                                        closeable.Close();
-                                        return uiServices.Dialog.Show(
-                                            new BackupWalletViewModel(uiServices),
-                                            "Backup Your Account",
-                                            (model, c) => model.Options(c, shell));
-                                    },
-                                    model.IsValid),
-                                new Settings { IsVisible = model.IsValid })
-                        ]);
+                        (model, invoiceCloseable) =>
+                        {
+                            model.SetCloseable(invoiceCloseable);
+                            return
+                            [
+                                new Option(
+                                    "Next",
+                                    EnhancedCommand.Create(
+                                        () =>
+                                        {
+                                            invoiceCloseable.Close();
+                                            return uiServices.Dialog.Show(
+                                                new BackupWalletViewModel(uiServices),
+                                                "Backup Your Account",
+                                                (model, c) => model.Options(c, shell));
+                                        },
+                                        model.IsValid),
+                                    new Settings { IsVisible = model.IsValid })
+                            ];
+                        });
                 }
                 finally
                 {

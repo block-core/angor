@@ -1,4 +1,5 @@
 using System.Linq;
+using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.UI.Flows.InvestV2.Invoice;
 
@@ -23,4 +24,9 @@ public partial class InvoiceViewModelSample : ReactiveObject, IInvoiceViewModel
     [Reactive] private IInvoiceType? selectedInvoiceType;
     
     public IEnhancedCommand CopyAddress { get; }
+    
+    public void SetCloseable(ICloseable closeable)
+    {
+        // No-op for sample
+    }
 }

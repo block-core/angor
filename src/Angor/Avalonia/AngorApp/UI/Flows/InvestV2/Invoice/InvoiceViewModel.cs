@@ -13,6 +13,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
+using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.UI.Flows.InvestV2.Invoice;
 
@@ -21,6 +22,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     private readonly CompositeDisposable disposable = new();
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly BehaviorSubject<bool> paymentReceivedSubject = new(false);
+    private ICloseable? closeable;
 
     [Reactive] private IEnumerable<IInvoiceType> invoiceTypes = [new InvoiceTypeSample { Name = "Loading...", Address = "" }];
     [Reactive] private IInvoiceType? selectedInvoiceType;
@@ -46,6 +48,11 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         Observable.StartAsync(async ct => await InitializeAsync(wallet, investmentAppService, uiServices, projectId, shell, ct), RxApp.MainThreadScheduler)
             .Subscribe()
             .DisposeWith(disposable);
+    }
+    
+    public void SetCloseable(ICloseable closeable)
+    {
+        this.closeable = closeable;
     }
 
     private async Task CopyAddressToClipboard()
@@ -243,7 +250,8 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 // Investment submitted, waiting for founder approval
                 paymentReceivedSubject.OnNext(true);
                 
-                // Show investment result dialog
+                // Close the invoice dialog and show investment result dialog
+                closeable?.Close();
                 var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount };
                 await uiServices.Dialog.Show(resultViewModel, Observable.Return("Investment Submitted"), (model, c) => model.Options(c));
             }
@@ -268,7 +276,8 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 // Investment completed
                 paymentReceivedSubject.OnNext(true);
                 
-                // Show investment result dialog
+                // Close the invoice dialog and show investment result dialog
+                closeable?.Close();
                 var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount };
                 await uiServices.Dialog.Show(resultViewModel, Observable.Return("Investment Completed"), (model, c) => model.Options(c));
             }
