@@ -1,4 +1,3 @@
-using Angor.Sdk.Common;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
@@ -25,7 +24,7 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
         var upsertResult = await collection.UpsertAsync(x => x.WalletId,
             new WalletAccountBalanceInfo { WalletId = walletId.Value, AccountBalanceInfo = accountBalanceInfo });
 
-        if (!upsertResult.IsFailure) 
+        if (!upsertResult.IsFailure)
             return Result.Success(accountBalanceInfo);
         
         logger.LogError("Failed to save account balance info for wallet {WalletId}: {Error}", walletId, upsertResult.Error);

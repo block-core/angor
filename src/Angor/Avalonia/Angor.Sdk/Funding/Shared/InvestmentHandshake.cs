@@ -5,8 +5,13 @@ namespace Angor.Sdk.Funding.Shared;
 /// <summary>
 /// Represents a combined view of investment requests and approvals for a project Handshake
 /// </summary>
-public class InvestmentHandshake : BaseDocument
+public class InvestmentHandshake //: BaseDocument
 {
+    public string Id { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    
     /// <summary>
     /// Composite key: WalletId + ProjectId
     /// </summary>
