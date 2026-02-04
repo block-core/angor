@@ -1091,7 +1091,7 @@
                     InvokeAsync(StateHasChanged);
                 }
             },
-            () => { }, // onEndOfStream - nothing to do
+            null, // onEndOfStream - nothing to do
             nostrPubKey);
     }
 
