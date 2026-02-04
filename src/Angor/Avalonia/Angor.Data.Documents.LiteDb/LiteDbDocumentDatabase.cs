@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Angor.Data.Documents.LiteDb;
 
-public class LiteDbDocumentDatabase : IAngorDocumentDatabase, IDisposable
+public class LiteDbDocumentDatabase : IAngorDocumentDatabase
 {
     private readonly LiteDatabase _database;
     private readonly ILogger<LiteDbDocumentDatabase> _logger;
@@ -126,6 +126,21 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase, IDisposable
         {
             _logger.LogError(ex, "Failed to get database size at: {Path}", _databasePath);
             return 0L;
+        }
+    }
+
+    public async Task<bool> CheckpointAsync()
+    {
+        try
+        {
+            _database.Checkpoint();
+            _logger.LogDebug("Database checkpoint performed");
+            return await Task.FromResult(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to perform database checkpoint");
+            return false;
         }
     }
 

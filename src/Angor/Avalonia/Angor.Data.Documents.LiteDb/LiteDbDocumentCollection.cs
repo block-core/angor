@@ -9,16 +9,20 @@ namespace Angor.Data.Documents.LiteDb;
 
 public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : BaseDocument
 {
+    private readonly LiteDatabase _database;
     private readonly ILiteCollection<T> _collection;
     private readonly ILogger _logger;
 
     public LiteDbDocumentCollection(LiteDatabase database, ILogger logger, string? collectionName = null)
     {
         _logger = logger;
+        _database = database;
+        
+        _database.CheckpointSize = 10;
         
         // Use custom collection name if provided, otherwise use the type name
         var name = collectionName ?? typeof(T).Name;
-        _collection = database.GetCollection<T>(name);
+        _collection = _database.GetCollection<T>(name);
         
         // Ensure indexes on common fields
         _collection.EnsureIndex(x => x.Id);
