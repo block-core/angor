@@ -11,9 +11,14 @@ namespace AngorApp.UI.Sections.Funders;
 public class FunderApprovalItemViewModel : ReactiveObject, IFunderApprovalItemViewModel
 {
     private readonly Func<Task> refresh;
+    private readonly ProjectId projectId;
+    private readonly IWallet wallet;
+    private readonly IFounderAppService founderAppService;
+    private readonly UIServices uiServices;
 
     public FunderApprovalItemViewModel(
         ProjectId projectId,
+        string projectName,
         Investment investment,
         IWallet wallet,
         IFounderAppService founderAppService,
@@ -21,32 +26,18 @@ public class FunderApprovalItemViewModel : ReactiveObject, IFunderApprovalItemVi
         Func<Task> refresh)
     {
         this.refresh = refresh;
+        this.projectId = projectId;
+        this.wallet = wallet;
+        this.founderAppService = founderAppService;
+        this.uiServices = uiServices;
+
         Investment = investment;
 
-        ProjectName = projectId.Value;
+        ProjectName = projectName;
         AmountText = $"{investment.Amount / 100_000_000m:0.00000} BTC";
         Timestamp = investment.CreatedOn;
 
-        Approve = ReactiveCommand.CreateFromTask(async () =>
-        {
-            var confirmationResult = await uiServices.Dialog.ShowConfirmation("Approve investment", "Do you want to approve this investment?");
-
-            if (confirmationResult.HasNoValue || !confirmationResult.Value)
-            {
-                return;
-            }
-
-            var approvalResult = await founderAppService.ApproveInvestment(
-                new ApproveInvestment.ApproveInvestmentRequest(wallet.Id, projectId, investment));
-
-            if (approvalResult.IsFailure)
-            {
-                await uiServices.NotificationService.Show($"Could not approve investment: {approvalResult.Error}", "Error");
-                return;
-            }
-
-            await this.refresh();
-        }).Enhance();
+        Approve = ReactiveCommand.CreateFromTask(async () => await ApproveAsync()).Enhance();
 
         Reject = ReactiveCommand.Create(() => { }).Enhance();
         Message = ReactiveCommand.Create(() => { }).Enhance();
@@ -67,4 +58,26 @@ public class FunderApprovalItemViewModel : ReactiveObject, IFunderApprovalItemVi
     public IEnhancedCommand Reject { get; }
 
     public IEnhancedCommand Message { get; }
+
+    public async Task<bool> ApproveAsync()
+    {
+        var confirmationResult = await uiServices.Dialog.ShowConfirmation("Approve investment", "Do you want to approve this investment?");
+
+        if (confirmationResult.HasNoValue || !confirmationResult.Value)
+        {
+            return false;
+        }
+
+        var approvalResult = await founderAppService.ApproveInvestment(
+            new ApproveInvestment.ApproveInvestmentRequest(wallet.Id, projectId, Investment));
+
+        if (approvalResult.IsFailure)
+        {
+            await uiServices.NotificationService.Show($"Could not approve investment: {approvalResult.Error}", "Error");
+            return false;
+        }
+
+        await refresh();
+        return true;
+    }
 }

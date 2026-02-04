@@ -69,18 +69,16 @@ public partial class FundersSectionViewModel : ReactiveObject, IFundersSectionVi
             var projectsResult = await projectAppService.GetFounderProjects(wallet.Id);
             if (projectsResult.IsFailure)
             {
-                return CSharpFunctionalExtensions.Result.Failure<(IWallet wallet, IEnumerable<(ProjectId projectId, Investment investment)> items)>(projectsResult.Error);
+                return CSharpFunctionalExtensions.Result.Failure<(IWallet wallet, IEnumerable<(ProjectId projectId, string projectName, Investment investment)> items)>(projectsResult.Error);
             }
 
-            var projectIds = projectsResult.Value.Projects
-                .Select(dto => dto.Id)
-                .ToList();
+            var projects = projectsResult.Value.Projects.ToList();
 
-            var all = new List<(ProjectId projectId, Investment investment)>();
+            var all = new List<(ProjectId projectId, string projectName, Investment investment)>();
 
-            foreach (var projectId in projectIds)
+            foreach (var project in projects)
             {
-                var investmentsResult = await founderAppService.GetProjectInvestments(new GetProjectInvestments.GetProjectInvestmentsRequest(wallet.Id, projectId));
+                var investmentsResult = await founderAppService.GetProjectInvestments(new GetProjectInvestments.GetProjectInvestmentsRequest(wallet.Id, project.Id));
                 if (investmentsResult.IsFailure)
                 {
                     continue;
@@ -88,7 +86,7 @@ public partial class FundersSectionViewModel : ReactiveObject, IFundersSectionVi
 
                 foreach (var investment in investmentsResult.Value.Investments)
                 {
-                    all.Add((projectId, investment));
+                    all.Add((project.Id, project.Name, investment));
                 }
             }
 
@@ -106,6 +104,7 @@ public partial class FundersSectionViewModel : ReactiveObject, IFundersSectionVi
         var viewModels = result.Value.items
             .Select(tuple => (IFunderApprovalItemViewModel)new FunderApprovalItemViewModel(
                 tuple.projectId,
+                tuple.projectName,
                 tuple.investment,
                 walletValue,
                 founderAppService,
@@ -135,13 +134,22 @@ public partial class FundersSectionViewModel : ReactiveObject, IFundersSectionVi
             return;
         }
 
+        var successes = 0;
         var failures = 0;
 
         foreach (var item in pendingSnapshot)
         {
             try
             {
-                item.Approve.Execute(null);
+                var ok = await item.ApproveAsync();
+                if (ok)
+                {
+                    successes++;
+                }
+                else
+                {
+                    failures++;
+                }
             }
             catch
             {
@@ -153,11 +161,11 @@ public partial class FundersSectionViewModel : ReactiveObject, IFundersSectionVi
 
         if (failures == 0)
         {
-            await uiServices.NotificationService.Show("All investments approved", "Success");
+            await uiServices.NotificationService.Show($"Approved {successes} investment(s)", "Success");
             return;
         }
 
-        await uiServices.NotificationService.Show($"Approved with {failures} failure(s)", "Error");
+        await uiServices.NotificationService.Show($"Approved {successes} investment(s), {failures} failed/cancelled", "Error");
     }
 
     public void Dispose()

@@ -8,6 +8,8 @@ public interface IFunderApprovalItemViewModel
 
     bool IsApproved { get; }
 
+    Task<bool> ApproveAsync();
+
     IEnhancedCommand Approve { get; }
     IEnhancedCommand Reject { get; }
     IEnhancedCommand Message { get; }

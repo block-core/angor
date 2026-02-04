@@ -8,6 +8,8 @@ public class FunderApprovalItemViewModelSample : IFunderApprovalItemViewModel
 
     public bool IsApproved { get; init; }
 
+    public Task<bool> ApproveAsync() => Task.FromResult(true);
+
     public IEnhancedCommand Approve { get; } = ReactiveCommand.Create(() => { }).Enhance();
     public IEnhancedCommand Reject { get; } = ReactiveCommand.Create(() => { }).Enhance();
     public IEnhancedCommand Message { get; } = ReactiveCommand.Create(() => { }).Enhance();
