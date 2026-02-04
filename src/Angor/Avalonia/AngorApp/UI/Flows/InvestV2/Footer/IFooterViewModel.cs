@@ -1,8 +1,12 @@
-namespace AngorApp.UI.Flows.InvestV2.Footer;
+using Reactive.Bindings;
 
-public interface IFooterViewModel
+namespace AngorApp.UI.Flows.InvestV2.Footer
 {
-    public IAmountUI AmountToInvest { get; }
-    public int NumberOfReleases { get; }
-    public IEnhancedCommand<bool> Invest { get; }
+    public interface IFooterViewModel
+    {
+        IReadOnlyReactiveProperty<IAmountUI> AmountToInvest { get; }
+        IEnhancedCommand Invest { get; }
+        IAmountUI TotalRaised { get; }
+        int StageCount { get; }
+    }
 }

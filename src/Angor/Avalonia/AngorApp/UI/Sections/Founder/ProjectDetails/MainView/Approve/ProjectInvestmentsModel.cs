@@ -32,7 +32,7 @@ public partial class ApproveInvestmentsViewModel : ReactiveObject, IApproveInves
 
     private Task<Result<IEnumerable<IInvestmentViewModel>>> GetInvestments(ProjectId projectId)
     {
-        return walletContext.RequiresWallet(w => GetWalletInvestments(projectId, w)
+        return walletContext.Require().Bind(w => GetWalletInvestments(projectId, w)
             .Map(tuple => tuple.investments.GroupBy(investment => new InvestmentGroupKey(investment, tuple.wallet))
                 .Select(IInvestmentViewModel (grouping) => new InvestmentViewModel(grouping, () => Approve(projectId, tuple.wallet, grouping.Key.Investment)))));
     }

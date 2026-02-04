@@ -94,6 +94,7 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     public IEnhancedCommand<Result<IEnumerable<IBroadcastedTransaction>>> Load { get; }
     public ReadOnlyObservableCollection<IBroadcastedTransaction> History { get; }
     public IEnhancedCommand<Result> GetTestCoins { get; }
+    public DateTimeOffset CreatedOn { get; } = DateTimeOffset.MinValue;
 
     public Result IsAddressValid(string address)
     {

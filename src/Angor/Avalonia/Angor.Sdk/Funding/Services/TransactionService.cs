@@ -58,7 +58,7 @@ public class TransactionService(IGenericDocumentCollection<QueryTransaction> que
             if (trxInfo is not null)
             {
                 var insertResult = await queryTransactionCollection
-                    .InsertAsync(x => x.TransactionId, trxInfo);    
+                    .InsertAsync(x => x.TransactionId, trxInfo);
             }
         }
         else if(trxInfo.Outputs.Any(IsUnspent)) //If we have unspent outputs, check if they are still unspent

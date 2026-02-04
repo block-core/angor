@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Angor.Data.Documents.LiteDb;
 
-public class LiteDbDocumentDatabase : IAngorDocumentDatabase, IDisposable
+public class LiteDbDocumentDatabase : IAngorDocumentDatabase
 {
     private readonly LiteDatabase _database;
     private readonly ILogger<LiteDbDocumentDatabase> _logger;
@@ -62,6 +62,7 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase, IDisposable
         try
         {
             _database.Commit();
+            _database.Checkpoint();
             _logger.LogDebug("Transaction committed");
             return await Task.FromResult(true);
         }
@@ -128,6 +129,21 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase, IDisposable
         }
     }
 
+    public async Task<bool> CheckpointAsync()
+    {
+        try
+        {
+            _database.Checkpoint();
+            _logger.LogDebug("Database checkpoint performed");
+            return await Task.FromResult(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to perform database checkpoint");
+            return false;
+        }
+    }
+
     private static string ExtractFilePathFromConnectionString(string connectionString)
     {
         const string filenamePrefix = "Filename=";
@@ -141,7 +157,8 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase, IDisposable
 
     public void Dispose()
     {
-        _database?.Dispose();
+        _database.Checkpoint();
+        _database.Dispose();
         _logger.LogInformation("LiteDB database disposed");
     }
 }

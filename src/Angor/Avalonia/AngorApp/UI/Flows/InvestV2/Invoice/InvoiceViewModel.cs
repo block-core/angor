@@ -6,7 +6,7 @@ namespace AngorApp.UI.Flows.InvestV2.Invoice;
 
 public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IValidatable
 {
-    public InvoiceViewModel()
+    public InvoiceViewModel(IWallet wallet)
     {
         SelectedInvoiceType = InvoiceTypes.First();
         PaymentReceived = Observable.Timer(TimeSpan.FromSeconds(3), RxApp.MainThreadScheduler).Select(l => true).StartWith(false);

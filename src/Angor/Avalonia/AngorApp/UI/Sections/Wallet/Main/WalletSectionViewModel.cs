@@ -1,6 +1,5 @@
 using System.Reactive.Disposables;
 using AngorApp.UI.Sections.Wallet.CreateAndImport;
-using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI.Shell.Utils;
 
@@ -16,13 +15,7 @@ public partial class WalletSectionViewModel : ReactiveObject, IWalletSectionView
 
     public WalletSectionViewModel(IWalletContext walletContext, WalletCreationWizard creationWizard)
     {
-        walletContext
-            .WalletChanges
-            .Bind(out var wallets)
-            .Subscribe()
-            .DisposeWith(disposable);
-        
-        Wallets = wallets;
+        Wallets = walletContext.Wallets;
 
         Create = ReactiveCommand.CreateFromTask(creationWizard.Start).Enhance().DisposeWith(disposable);
         

@@ -20,29 +20,11 @@ public interface IInvestmentHandshakeService
     Task<Result<InvestmentHandshake?>> GetHandshakeByRequestEventIdAsync(WalletId walletId, ProjectId projectId, string requestEventId);
     
     /// <summary>
-    /// Store or update an investment Handshake
-    /// </summary>
-    Task<Result> UpsertHandshakeAsync(InvestmentHandshake Handshake);
-    
-    /// <summary>
-    /// Store or update multiple investment Handshakes
-    /// </summary>
-    Task<Result> UpsertHandshakesAsync(IEnumerable<InvestmentHandshake> Handshakes);
-    
-    /// <summary>
     /// Sync investment Handshakes from Nostr (both requests and approvals) and store in DB
     /// </summary>
     Task<Result<IEnumerable<InvestmentHandshake>>> SyncHandshakesFromNostrAsync(
         WalletId walletId, 
         ProjectId projectId,
         string projectNostrPubKey);
-    
-    /// <summary>
-    /// Get Handshakes by status
-    /// </summary>
-    Task<Result<IEnumerable<InvestmentHandshake>>> GetHandshakesByStatusAsync(
-        WalletId walletId, 
-        ProjectId projectId, 
-        InvestmentRequestStatus status);
 }
 

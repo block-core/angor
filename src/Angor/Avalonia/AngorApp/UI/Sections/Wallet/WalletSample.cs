@@ -41,6 +41,7 @@ public class WalletSample : IWallet
     }
 
     public WalletId Id { get; }
+    public DateTimeOffset CreatedOn { get; } = DateTimeOffset.Now;
     public string Name { get; set; } = "Default";
     public IEnhancedCommand Send { get; }
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }

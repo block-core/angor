@@ -23,7 +23,7 @@ public class FoundedProjectOptionsViewModel : IFoundedProjectOptionsViewModel
     {
         this.projectId = projectId;
         this.investmentAppService = investmentAppService;
-        LoadInvestment = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetInvestedProject));
+        LoadInvestment = ReactiveCommand.CreateFromTask(() => walletContext.Require().Bind(GetInvestedProject));
 
         ProjectInvestment = LoadInvestment.Successes().Values()
             .Select(dto => new PortfolioProjectViewModel(dto, investmentAppService, uiServices, navigator, walletContext, sharedCommands));
