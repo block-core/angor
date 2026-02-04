@@ -32,7 +32,7 @@ namespace AngorApp.UI.Flows.CreateProject
     {
         public Task<Result<Maybe<string>>> CreateProject()
         {
-            return from wallet in walletContext.GetDefaultWallet()
+            return from wallet in walletContext.Require()
                    from seed in GetProjectSeed(wallet.Id)
                    from creationResult in Create(wallet.Id, seed)
                    select creationResult;
@@ -43,7 +43,7 @@ namespace AngorApp.UI.Flows.CreateProject
             SlimWizard<string> rootWizard = WizardBuilder
                                             .StartWith(() => new WelcomeViewModel()).NextCommand(model => model.Start)
                                             .Then(_ => new ProjectTypeViewModel())
-                                            .NextCommand<Unit, ProjectTypeViewModel, string>(vm => CreateProjectOftype(
+                                            .NextCommand<Unit, ProjectTypeViewModel, string>(vm => CreateProjectOfType(
                                                 vm,
                                                 walletId,
                                                 seed))
@@ -53,7 +53,7 @@ namespace AngorApp.UI.Flows.CreateProject
             return await rootWizard.Navigate(navigator);
         }
 
-        private IEnhancedCommand<Result<string>> CreateProjectOftype(
+        private IEnhancedCommand<Result<string>> CreateProjectOfType(
             ProjectTypeViewModel vm,
             WalletId walletId,
             ProjectSeedDto seed
