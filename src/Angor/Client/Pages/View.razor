@@ -836,6 +836,7 @@
 
         try
         {
+            // Initialize with settings relays as fallback
             NostrClients = storage.GetSettingsInfo().Relays.Select(_ => _.Url.ToString()).ToList();
 
             project = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
@@ -843,6 +844,10 @@
             {
                 founder = true;
                 NavMenuState.SetActivePage("founder");
+                
+                // Fetch relays from the user's Nostr account
+                FetchRelaysFromNostrAccount(project.ProjectInfo.NostrPubKey);
+                
                 if (project is FounderProject founderProject)
                 {
                     await _RelayService.LookupSignaturesDirectMessagesForPubKeyAsync(founderProject.ProjectInfo.NostrPubKey, founderProject.LastRequestForSignaturesTime?.AddSeconds(1), 1,
@@ -868,6 +873,9 @@
             {
                 invested = investorProject.InvestedInProject();
 
+                // Fetch relays from the user's Nostr account
+                FetchRelaysFromNostrAccount(project.ProjectInfo.NostrPubKey);
+
                 myProjectExplorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/tx/{investorProject.TransactionId}";
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
@@ -878,6 +886,9 @@
             project = SessionStorage.GetProjectById(ProjectId);
             if (project != null)
             {
+                // Fetch relays from the user's Nostr account
+                FetchRelaysFromNostrAccount(project.ProjectInfo.NostrPubKey);
+
                 projectStats.Loading = false;
                 SetProjectLinksAndRefreshBalance();
                 RefreshProjectProfile();
@@ -913,6 +924,9 @@
                                         findInProgress = false;
                                         if (project?.ProjectInfo != null)
                                         {
+                                            // Fetch relays from the user's Nostr account
+                                            FetchRelaysFromNostrAccount(project.ProjectInfo.NostrPubKey);
+
                                             if (!SessionStorage.IsProjectInStorageById(project.ProjectInfo.ProjectIdentifier))
                                             {
                                                 SessionStorage.StoreProject(project);
@@ -1055,6 +1069,30 @@
                 StateHasChanged,
                 project.ProjectInfo.NostrPubKey);
         }
+    }
+
+    private void FetchRelaysFromNostrAccount(string nostrPubKey)
+    {
+        if (string.IsNullOrEmpty(nostrPubKey))
+            return;
+
+        _RelayService.LookupRelayListForNPubs(
+            (pubkey, relayTags) =>
+            {
+                // Extract relay URLs from the tags
+                var relays = relayTags
+                    .Select(tag => tag.AdditionalData.FirstOrDefault())
+                    .Where(url => !string.IsNullOrEmpty(url))
+                    .ToList();
+
+                if (relays.Any())
+                {
+                    NostrClients = relays;
+                    InvokeAsync(StateHasChanged);
+                }
+            },
+            () => { }, // onEndOfStream - nothing to do
+            nostrPubKey);
     }
 
     private async Task RecoverFunds()
