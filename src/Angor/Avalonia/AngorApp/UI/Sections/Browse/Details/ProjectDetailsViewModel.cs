@@ -1,5 +1,5 @@
 using System.Collections.ObjectModel;
-using Angor.Sdk.Funding.Services;
+using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
 using AngorApp.Core.Factories;
@@ -12,7 +12,7 @@ namespace AngorApp.UI.Sections.Browse.Details;
 public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
 {
     private readonly IFullProject project;
-    private readonly IProjectService projectService;
+    private readonly IProjectAppService projectAppService;
     private readonly INetworkStorage networkStorage;
     private bool enableProductionValidations;
     private ObservableCollection<INostrRelay> relays = new();
@@ -22,11 +22,11 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
         Func<ProjectId, IFoundedProjectOptionsViewModel> foundedProjectOptionsFactory,
         UIServices uiServices, 
         INavigator navigator,
-        IProjectService projectService,
+        IProjectAppService projectAppService,
         INetworkStorage networkStorage)
     {
         this.project = project;
-        this.projectService = projectService;
+        this.projectAppService = projectAppService;
         this.networkStorage = networkStorage;
 
         enableProductionValidations = uiServices.EnableProductionValidations();
@@ -70,11 +70,11 @@ public class ProjectDetailsViewModel : ReactiveObject, IProjectDetailsViewModel
         if (string.IsNullOrEmpty(nostrPubKey))
             return;
 
-        var result = await projectService.GetRelaysForNpubAsync(nostrPubKey);
+        var result = await projectAppService.GetRelaysForNpubAsync(nostrPubKey);
         
-        if (result.IsSuccess && result.Value.Any())
+        if (result.IsSuccess && result.Value.RelayUrls.Any())
         {
-            var userRelays = result.Value
+            var userRelays = result.Value.RelayUrls
                 .Where(url => System.Uri.TryCreate(url, UriKind.Absolute, out _))
                 .Select(url => new NostrRelay { Uri = new System.Uri(url) })
                 .Cast<INostrRelay>()

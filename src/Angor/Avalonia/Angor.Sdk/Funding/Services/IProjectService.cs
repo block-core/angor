@@ -17,12 +17,4 @@ public interface IProjectService
     /// Projects not found on-chain are filtered out (potential spam).
     /// </summary>
     Task<Result<IEnumerable<Project>>> LatestFromNostrAsync();
-    
-    /// <summary>
-    /// Fetches the relay list from a user's Nostr account using NIP-65.
-    /// Returns the list of relay URLs published by the user, or an empty list if none found.
-    /// </summary>
-    /// <param name="nostrPubKey">The Nostr public key (hex format) to lookup relays for</param>
-    /// <returns>A list of relay URLs</returns>
-    Task<Result<IEnumerable<string>>> GetRelaysForNpubAsync(string nostrPubKey);
 }

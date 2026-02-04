@@ -204,9 +204,4 @@ public class ProjectService(
             from metadatas in GetProjectMetadatas(infos)
             select Combine(indexerItems, metadatas, infos);
     }
-
-    public Task<Result<IEnumerable<string>>> GetRelaysForNpubAsync(string nostrPubKey)
-    {
-        throw new NotImplementedException();
-    }
 }
