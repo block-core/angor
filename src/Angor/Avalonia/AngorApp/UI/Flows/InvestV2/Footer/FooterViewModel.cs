@@ -13,6 +13,7 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
     {
         private readonly IFullProject fullProject;
         private readonly IInvestmentAppService investmentAppService;
+        private readonly UIServices uiServices;
 
         public FooterViewModel(
             IFullProject fullProject,
@@ -25,6 +26,7 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
         {
             this.fullProject = fullProject;
             this.investmentAppService = investmentAppService;
+            this.uiServices = uiServices;
             AmountToInvest = new ReadOnlyReactiveProperty<IAmountUI>(amountToInvest);
             Invest = ReactiveCommand.CreateFromTask(
                 () => InvestFlow(uiServices, shell, walletContext),
@@ -49,19 +51,38 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
         {
             if (walletContext.Wallets.Count == 0)
             {
-                return await walletContext.GetOrCreate().Map(wallet => uiServices.Dialog.ShowAndGetResult(
-                                                                 new InvoiceViewModel(wallet),
-                                                                 "Select Wallet",
-                                                                 model => model.IsValid,
-                                                                 _ => ""));
+                return await walletContext.GetOrCreate().Map(async wallet =>
+                {
+                    var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId);
+                    try
+                    {
+                        return await uiServices.Dialog.ShowAndGetResult(
+                            invoiceViewModel,
+                            "Select Wallet",
+                            model => model.IsValid,
+                            _ => "");
+                    }
+                    finally
+                    {
+                        invoiceViewModel.Dispose();
+                    }
+                });
             }
 
             IWallet wallet = ChooseWallet(walletContext);
 
             if (HasEnoughBalance(wallet))
             {
-                bool show = await uiServices.Dialog.Show(new InvoiceViewModel(wallet), "Select Wallet", _ => []);
-                return Maybe.From(show ? "" : null);
+                var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId);
+                try
+                {
+                    bool show = await uiServices.Dialog.Show(invoiceViewModel, "Select Wallet", _ => []);
+                    return Maybe.From(show ? "" : null);
+                }
+                finally
+                {
+                    invoiceViewModel.Dispose();
+                }
             }
 
             return await uiServices.Dialog.ShowAndGetResult(
