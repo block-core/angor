@@ -35,5 +35,5 @@ public interface IInvestmentAppService
     /// Monitors a specific address for incoming funds from an external wallet.
     /// Stores the request to DB, monitors the mempool, updates account info when funds are detected, and saves to DB.
     /// </summary>
-    Task<Result<MonitorAddressForFunds.MonitorAddressForFundsResponse>> MonitorAddressForFunds(MonitorAddressForFunds.MonitorAddressForFundsRequest request);
+    Task<Result<MonitorAddressForFunds.MonitorAddressForFundsResponse>> MonitorAddressForFunds(MonitorAddressForFunds.MonitorAddressForFundsRequest request, CancellationToken cancellationToken = default);
 }

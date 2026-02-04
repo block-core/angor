@@ -7,6 +7,10 @@ using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Domain;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input.Platform;
 
 namespace AngorApp.UI.Flows.InvestV2.Invoice;
 
@@ -29,10 +33,38 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         Amount = amount;
         PaymentReceived = paymentReceivedSubject.AsObservable();
         
+        // Create copy address command
+        var canCopy = this.WhenAnyValue(x => x.SelectedInvoiceType)
+            .Select(x => !string.IsNullOrEmpty(x?.Address));
+        
+        CopyAddress = ReactiveCommand.CreateFromTask(CopyAddressToClipboard, canCopy).Enhance();
+        
         // Start initialization asynchronously on the UI thread
         Observable.StartAsync(async ct => await InitializeAsync(wallet, investmentAppService, uiServices, projectId, ct), RxApp.MainThreadScheduler)
             .Subscribe()
             .DisposeWith(disposable);
+    }
+
+    private async Task CopyAddressToClipboard()
+    {
+        if (SelectedInvoiceType?.Address == null)
+            return;
+            
+        var clipboard = GetClipboard();
+        if (clipboard != null)
+        {
+            await clipboard.SetTextAsync(SelectedInvoiceType.Address);
+        }
+    }
+    
+    private static IClipboard? GetClipboard()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            return desktop.MainWindow?.Clipboard;
+        }
+        
+        return null;
     }
 
     private async Task InitializeAsync(
@@ -104,7 +136,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 new Amount(Amount.Sats),
                 TimeSpan.FromMinutes(10));
 
-            var result = await investmentAppService.MonitorAddressForFunds(request);
+            var result = await investmentAppService.MonitorAddressForFunds(request, cancellationToken);
 
             // Check if cancelled before continuing
             cancellationToken.ThrowIfCancellationRequested();
@@ -243,6 +275,8 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     public IObservable<bool> PaymentReceived { get; }
 
     public IAmountUI Amount { get; }
+    
+    public IEnhancedCommand CopyAddress { get; }
 
     public IObservable<bool> IsValid => PaymentReceived;
 

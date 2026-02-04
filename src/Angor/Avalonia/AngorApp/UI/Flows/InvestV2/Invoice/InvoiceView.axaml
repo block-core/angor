@@ -13,11 +13,11 @@
         <l:InvoiceViewModelSample />
     </Design.DataContext>
 
-    <DockPanel VerticalSpacing="20">
+    <DockPanel VerticalSpacing="20" Classes="Padded">
         <ListBox SelectedIndex="0" DockPanel.Dock="Top" Classes="Horizontal" ItemContainerTheme="{StaticResource SmallSelectorListBoxItem}" ItemsSource="{Binding InvoiceTypes}" SelectedItem="{Binding SelectedInvoiceType}"
                  DisplayMemberBinding="{Binding Name}" />
-        <Border Classes="Pink Rounded RegularPadding" DockPanel.Dock="Bottom">
-            <DockPanel HorizontalSpacing="10">
+        <Border Classes="Pink Rounded" DockPanel.Dock="Bottom">
+            <DockPanel HorizontalSpacing="10" Classes="Padded">
                 <Border IsVisible="{Binding !PaymentReceived^}" VerticalAlignment="Center" DockPanel.Dock="Right" Classes="Yellow Rounded SmallPadding">
                     <EdgePanel>
                         <EdgePanel.Content>
@@ -39,7 +39,16 @@
                 </HeaderedContainer>
             </DockPanel>
         </Border>
-        <HeaderedContainer Classes="LightGray" DockPanel.Dock="Bottom" Header="{Binding SelectedInvoiceType.Name}" Content="{Binding SelectedInvoiceType.Address}" />
+        <HeaderedContainer Classes="LightGray" DockPanel.Dock="Bottom" Header="{Binding SelectedInvoiceType.Name}">
+            <DockPanel Classes="Padded">
+                <EnhancedButton  DockPanel.Dock="Right" Command="{Binding CopyAddress}" 
+                                 Classes="" ToolTip.Tip="Copy address to clipboard"
+                                 Padding="8,4" VerticalAlignment="Center">
+                    <ContentControl Content="{Icon fa-copy}" />
+                </EnhancedButton>
+                <TextBlock Classes="Weight-Light Size-XS" Text="{Binding SelectedInvoiceType.Address}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+        </HeaderedContainer>
         
         <Image Width="300" Height="300"
                Source="{Binding Path=SelectedInvoiceType.Address, Converter={x:Static conv:AngorConverters.StringToQRCode}}" />

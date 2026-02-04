@@ -51,8 +51,8 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
 
     #region Methods for monitoring external funding
 
-    public Task<Result<MonitorAddressForFunds.MonitorAddressForFundsResponse>> MonitorAddressForFunds(MonitorAddressForFunds.MonitorAddressForFundsRequest request)
-        => mediator.Send(request);
+    public Task<Result<MonitorAddressForFunds.MonitorAddressForFundsResponse>> MonitorAddressForFunds(MonitorAddressForFunds.MonitorAddressForFundsRequest request, CancellationToken cancellationToken = default)
+        => mediator.Send(request, cancellationToken);
 
     #endregion
 }

@@ -7,6 +7,7 @@ public partial class InvoiceViewModelSample : ReactiveObject, IInvoiceViewModel
     public InvoiceViewModelSample()
     {
         SelectedInvoiceType = InvoiceTypes.First();
+        CopyAddress = EnhancedCommand.Create(() => { });
     }
         
     public IAmountUI Amount { get; } = AmountUI.FromBtc(0.5m);
@@ -20,4 +21,6 @@ public partial class InvoiceViewModelSample : ReactiveObject, IInvoiceViewModel
     ];
 
     [Reactive] private IInvoiceType? selectedInvoiceType;
+    
+    public IEnhancedCommand CopyAddress { get; }
 }
