@@ -18,6 +18,7 @@ public partial class ShellViewModel : ReactiveObject, IShellViewModel
                 sectionsByName["Find Projects"],
                 sectionsByName["Funded"],
                 sectionsByName["My Projects"],
+                sectionsByName["Funders"],
             ];
         
         SelectedSection = sectionsByName["Home"];

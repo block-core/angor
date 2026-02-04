@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:funders="clr-namespace:AngorApp.UI.Sections.Funders"
+             xmlns:co="clr-namespace:AngorApp.UI.Shared.Controls"
+             mc:Ignorable="d" d:DesignWidth="730" d:DesignHeight="800"
+             x:Class="AngorApp.UI.Sections.Funders.FundersSectionView"
+             x:DataType="funders:IFundersSectionViewModel">
+
+    <Design.DataContext>
+        <funders:FundersSectionViewModelSample />
+    </Design.DataContext>
+
+    <co:PageContainer Container.Name="RootPanel" Container.Sizing="Width">
+        <DockPanel HorizontalSpacing="20" VerticalSpacing="20">
+            <Card Theme="{StaticResource WideCard}" DockPanel.Dock="Top" Header="Funders Overview">
+                <Card.HeaderStartContent>
+                    <i:Icon FontSize="40" Value="mdi-account-multiple" />
+                </Card.HeaderStartContent>
+                <Card.HeaderEndContent>
+                    <EnhancedButton Classes="Outline" Command="{Binding ApproveAll}" Icon="{Icon fa-check}" Content="Approve All" />
+                </Card.HeaderEndContent>
+            </Card>
+
+            <Border BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="10" Padding="24" Background="{DynamicResource PanelBackground}">
+                <StackPanel Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="600">
+                    <Border Width="64" Height="64" CornerRadius="12" Background="{DynamicResource CardBackground}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Viewbox>
+                            <i:Icon FontSize="48" Value="mdi-account-multiple" />
+                        </Viewbox>
+                    </Border>
+
+                    <TextBlock HorizontalAlignment="Center" Classes="SizeBig" FontWeight="Bold" Text="No Funders Yet" />
+                    <TextBlock HorizontalAlignment="Center" Classes="Thin" TextWrapping="Wrap" TextAlignment="Center"
+                               Text="When investors fund your projects, they'll appear here. You can review and approve funding requests from this page." />
+                </StackPanel>
+            </Border>
+        </DockPanel>
+    </co:PageContainer>
+</UserControl>

@@ -47,7 +47,15 @@ public partial class ShellViewModelSample : ReactiveObject, IShellViewModel
             Icon = new Icon("fa-regular fa-file-lines"),
         };
 
-        SidebarSections = [home, funds, find, funded, myProjects];
+        var funders = new SimpleSection()
+        {
+            FriendlyName = "Funders",
+            Group = new SectionGroup("FOUNDER"),
+            Name = "Funders",
+            Icon = new Icon("fa-user-group"),
+        };
+
+        SidebarSections = [home, funds, find, funded, myProjects, funders];
     }
     
     public IEnumerable<ISection> SidebarSections { get; }
