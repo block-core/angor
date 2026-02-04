@@ -241,6 +241,35 @@ public class DocumentProjectService(
         return Result.Try(async () => await projectMetadatas.ToList()).Map(list => list.AsEnumerable());
     }
 
+    public async Task<Result<IEnumerable<string>>> GetRelaysForNpubAsync(string nostrPubKey)
+    {
+        if (string.IsNullOrEmpty(nostrPubKey))
+            return Result.Success(Enumerable.Empty<string>());
+
+        var tcs = new TaskCompletionSource<List<string>>();
+        var results = new List<string>();
+
+        relayService.LookupRelayListForNPubs(
+            (pubkey, relayTags) =>
+            {
+                // Extract relay URLs from the "r" tags
+                var relayUrls = relayTags
+                    .Select(tag => tag.AdditionalData.FirstOrDefault())
+                    .Where(url => !string.IsNullOrEmpty(url))
+                    .ToList();
+
+                results.AddRange(relayUrls!);
+            },
+            () => tcs.TrySetResult(results),
+            nostrPubKey);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        cts.Token.Register(() => tcs.TrySetResult(results));
+
+        var completedResults = await tcs.Task;
+        return Result.Success(completedResults.AsEnumerable());
+    }
+
     private class ProjectMetadataWithNpub : ProjectMetadata
     {
         public string Npub { get; }
