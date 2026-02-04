@@ -12,7 +12,11 @@
     
     <StackPanel Classes="BigGap">
         <Border>
-            <EdgePanel StartContent="Amount to Invest" EndContent="{Binding AmountToInvest.DecimalString}" />
+            <EdgePanel StartContent="Amount to Invest">
+                <EdgePanel.EndContent>
+                    <TextBlock Classes="Weight-Bold" Text="{Binding AmountToInvest.DecimalString}"></TextBlock>
+                </EdgePanel.EndContent>
+            </EdgePanel>
         </Border>
         <Separator />
         <ListBox Classes="Transparent Vertical" ItemContainerTheme="{StaticResource SelectorListBoxItem}" ItemsSource="{Binding Wallets}" SelectedItem="{Binding SelectedWallet}">

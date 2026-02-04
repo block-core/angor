@@ -24,7 +24,7 @@ public class PenaltiesViewModel : ReactiveObject, IPenaltiesViewModel, IDisposab
         GoToRecovery = ReactiveCommand.Create(() => navigator.Go<IRecoverViewModel>());
 
         penaltiesCollection = RefreshableCollection.Create(
-                () => walletContext.RequiresWallet(wallet => investmentAppService.GetPenalties(new GetPenalties.GetPenaltiesRequest(wallet.Id))
+                () => walletContext.Require().Bind(wallet => investmentAppService.GetPenalties(new GetPenalties.GetPenaltiesRequest(wallet.Id))
                     .Map(response => response.Penalties)
                     .MapEach(IPenaltyViewModel (dto) => new PenaltyViewModel(dto))),
                 model => model.InvestorPubKey)

@@ -32,7 +32,7 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
         this.founderAppService = founderAppService;
         this.uiServices = uiServices;
 
-        RefreshTransactions = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(GetTransactions))
+        RefreshTransactions = ReactiveCommand.CreateFromTask(() => walletContext.Require().Bind(GetTransactions))
             .DisposeWith(disposable);
         
         transactionsHelper = RefreshTransactions
@@ -40,7 +40,7 @@ public partial class ReleaseFundsViewModel : ReactiveObject, IReleaseFundsViewMo
             .ToProperty(this, model => model.Transactions)
             .DisposeWith(disposable);
         
-        ReleaseAll = ReactiveCommand.CreateFromTask(() => walletContext.RequiresWallet(wallet => DoReleaseAll(wallet)).ToMaybeResult(), this.WhenAnyValue(model => model.Transactions).NotNull())
+        ReleaseAll = ReactiveCommand.CreateFromTask(() => walletContext.Require().Map(wallet => DoReleaseAll(wallet)).ToMaybeResult(), this.WhenAnyValue(model => model.Transactions).NotNull())
             .Enhance()
             .DisposeWith(disposable);
         

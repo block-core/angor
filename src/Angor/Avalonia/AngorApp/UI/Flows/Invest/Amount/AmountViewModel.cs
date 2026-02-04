@@ -41,7 +41,7 @@ public partial class AmountViewModel : ReactiveValidationObject, IAmountViewMode
 
         stageBreakdownsHelper = this.WhenAnyValue(model => model.Amount)
             .WhereNotNull()
-            .Select(investAmount => project.Stages.Select(stage => new Breakdown(stage.Index, new AmountUI(investAmount!.Value), stage.RatioOfTotal, stage.ReleaseDate)))
+            .Select(investAmount => project.Stages.Select(stage => new Breakdown(new AmountUI(investAmount!.Value), stage.RatioOfTotal, stage.ReleaseDate)))
             .ToProperty(this, x => x.StageBreakdowns);
 
         requiresFounderApprovalHelper = this.WhenAnyValue(model => model.Amount)

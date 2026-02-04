@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
@@ -26,6 +27,12 @@ public sealed class WalletContext : IWalletContext, IDisposable
         LoadInitialWallets(walletAppService, walletProvider, sourceCache).DisposeWith(disposable);
 
         WalletChanges = sourceCache.Connect();
+        WalletChanges
+            .Bind(out var wallets)
+            .Subscribe()
+            .DisposeWith(disposable);
+        Wallets = wallets;
+        
         WalletChanges.OnItemAdded(added => CurrentWallet = added.AsMaybe()).Subscribe().DisposeWith(disposable);
         WalletChanges.OnItemRemoved(removed => CurrentWallet = sourceCache.Items.TryFirst(wallet => !wallet.Equals(removed))).Subscribe().DisposeWith(disposable);
     }
@@ -37,6 +44,7 @@ public sealed class WalletContext : IWalletContext, IDisposable
         return sourceCache.PopulateFrom(successes);
     }
 
+    public ReadOnlyObservableCollection<IWallet> Wallets { get; }
     public IObservable<IChangeSet<IWallet, WalletId>> WalletChanges { get; }
     public IObservable<Maybe<IWallet>> CurrentWalletChanges => current.DistinctUntilChanged();
 
@@ -69,16 +77,21 @@ public sealed class WalletContext : IWalletContext, IDisposable
         return Result.Success();
     }
 
-    public Task<Result<IWallet>> GetDefaultWallet()
+    public Task<Result<IWallet>> GetOrCreate()
     {
-        if (CurrentWallet.HasValue)
-        {
-            return Task.FromResult(Result.Success(CurrentWallet.Value));
-        }
-        
         return walletAppService.CreateWallet("<default>",  GetUniqueId(), bitcoinNetwork())
             .Bind(id => walletProvider.Get(id))
             .Tap(id => sourceCache.AddOrUpdate(id));
+    }
+    
+    public async Task<Maybe<IWallet>> TryGet()
+    {
+        return CurrentWallet;
+    }
+
+    public Task<Result<IWallet>> CreateDefaultWallet()
+    {
+        return GetOrCreate();
     }
 
     private string GetUniqueId()
