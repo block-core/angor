@@ -355,6 +355,42 @@ namespace Angor.Shared.Services
             nostrClient.Send(request);
         }
 
+        public void LookupRelayListForNPubs(Action<string, List<NostrEventTag>> onResponse, Action onEndOfStream, params string[] npubs)
+        {
+            var client = _communicationFactory.GetOrCreateClient(_networkService);
+
+            var subscriptionKey = Guid.NewGuid().ToString().Replace("-", "");
+
+            if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionKey))
+            {
+                var subscription = client.Streams.EventStream
+                    .Where(_ => _.Subscription == subscriptionKey)
+                    .Where(_ => _.Event is not null)
+                    .Select(_ => _.Event)
+                    .Subscribe(@event =>
+                    {
+                        // Extract relay tags ("r" tags contain relay URLs)
+                        var relayTags = @event.Tags
+                            .Where(t => t.TagIdentifier == "r")
+                            .ToList();
+                        onResponse(@event.Pubkey, relayTags);
+                    });
+
+                _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
+            }
+
+            if (onEndOfStream != null)
+            {
+                _subscriptionsHandling.TryAddEoseAction(subscriptionKey, onEndOfStream);
+            }
+
+            client.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            {
+                Authors = npubs,
+                Kinds = [NostrKind.RelayListMetadata],
+            }));
+        }
+
         private static NostrEvent GetNip3030NostrEvent(string content)
         {
             // https://github.com/block-core/nips/blob/peer-to-peer-decentralized-funding/3030.md

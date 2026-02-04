@@ -50,4 +50,9 @@ public class ProjectAppService(
     {
         return mediator.Send(new ProjectStatistics.ProjectStatsRequest(projectId));
     }
+
+    public Task<Result<GetProjectRelays.GetProjectRelaysResponse>> GetRelaysForNpubAsync(string nostrPubKey)
+    {
+        return mediator.Send(new GetProjectRelays.GetProjectRelaysRequest(nostrPubKey));
+    }
 }
