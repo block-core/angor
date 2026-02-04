@@ -7,6 +7,8 @@ using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Domain;
+using AngorApp.UI.Flows.InvestV2.InvestmentResult;
+using AngorApp.UI.Shell;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -28,7 +30,8 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         IInvestmentAppService investmentAppService, 
         UIServices uiServices, 
         IAmountUI amount,
-        ProjectId projectId)
+        ProjectId projectId,
+        IShellViewModel shell)
     {
         Amount = amount;
         PaymentReceived = paymentReceivedSubject.AsObservable();
@@ -40,7 +43,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         CopyAddress = ReactiveCommand.CreateFromTask(CopyAddressToClipboard, canCopy).Enhance();
         
         // Start initialization asynchronously on the UI thread
-        Observable.StartAsync(async ct => await InitializeAsync(wallet, investmentAppService, uiServices, projectId, ct), RxApp.MainThreadScheduler)
+        Observable.StartAsync(async ct => await InitializeAsync(wallet, investmentAppService, uiServices, projectId, shell, ct), RxApp.MainThreadScheduler)
             .Subscribe()
             .DisposeWith(disposable);
     }
@@ -72,6 +75,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         IInvestmentAppService investmentAppService,
         UIServices uiServices,
         ProjectId projectId,
+        IShellViewModel shell,
         CancellationToken cancellationToken)
     {
         // Link with our disposal token
@@ -113,7 +117,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             }
 
             // Funds received - now build and submit the investment transaction
-            await BuildAndSubmitInvestmentAsync(wallet.Id, projectId, address, investmentAppService, uiServices, token);
+            await BuildAndSubmitInvestmentAsync(wallet.Id, projectId, address, investmentAppService, uiServices, shell, token);
         }
         catch (OperationCanceledException)
         {
@@ -170,6 +174,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         string fundingAddress,
         IInvestmentAppService investmentAppService,
         UIServices uiServices,
+        IShellViewModel shell,
         CancellationToken cancellationToken)
     {
         try
@@ -237,6 +242,10 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
 
                 // Investment submitted, waiting for founder approval
                 paymentReceivedSubject.OnNext(true);
+                
+                // Show investment result dialog
+                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount };
+                await uiServices.Dialog.Show(resultViewModel, Observable.Return("Investment Submitted"), (model, c) => model.Options(c));
             }
             else
             {
@@ -258,6 +267,10 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
 
                 // Investment completed
                 paymentReceivedSubject.OnNext(true);
+                
+                // Show investment result dialog
+                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount };
+                await uiServices.Dialog.Show(resultViewModel, Observable.Return("Investment Completed"), (model, c) => model.Options(c));
             }
         }
         catch (OperationCanceledException)

@@ -53,7 +53,7 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
             {
                 return await walletContext.GetOrCreate().Map(async wallet =>
                 {
-                    var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId);
+                    var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell);
                     try
                     {
                         return await uiServices.Dialog.ShowAndGetResult(
@@ -73,7 +73,7 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
 
             if (HasEnoughBalance(wallet))
             {
-                var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId);
+                var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell);
                 try
                 {
                     bool show = await uiServices.Dialog.Show(invoiceViewModel, "Select Wallet", _ => []);
