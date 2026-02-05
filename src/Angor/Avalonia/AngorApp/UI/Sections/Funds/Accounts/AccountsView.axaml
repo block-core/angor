@@ -22,8 +22,8 @@
     </UserControl.Styles>
 
     <controls:ScrollableView>
-        <StackPanel Classes="BigGap" MaxWidth="1152">
-            <EnhancedButton Command="{Binding ImportAccount}" HorizontalAlignment="Right" Classes="Outline" Icon="{Icon fa-upload}">Import wallet</EnhancedButton>
+    <StackPanel Classes="BigGap" MaxWidth="1152">
+        <EnhancedButton Command="{Binding ImportAccount}" HorizontalAlignment="Right" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False">Import wallet</EnhancedButton>
             <HeaderedContainer Classes="Big WizardHighlight" Header="Balance Summary" Background="{DynamicResource TranslucidOrange2}">
                 <ItemsControl ItemsSource="{Binding Balances}">
                     <ItemsControl.ItemsPanel>
