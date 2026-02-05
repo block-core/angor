@@ -4,6 +4,7 @@ using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
 using AngorApp.UI.Sections.Founder.CreateProject.FundingStructure;
 using AngorApp.UI.Sections.Founder.CreateProject.Moonshot;
+using AngorApp.UI.Shared.Controls.ImageUploadWizard;
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.Avalonia.Dialogs;
@@ -28,11 +29,39 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
         ProjectSeedDto projectSeed,
         UIServices uiServices,
         IFounderAppService founderAppService,
+        IImageUploadService imageUploadService,
+        Func<TopLevel?> getTopLevel,
         Action<MoonshotProjectData>? onMoonshotImported = null)
     {
         this.uiServices = uiServices;
         _founderAppService = founderAppService;
         _onMoonshotImported = onMoonshotImported;
+        
+        // Create Image Upload Wizard ViewModels
+        BannerUploadWizard = new ImageUploadWizardViewModel(imageUploadService, getTopLevel);
+        AvatarUploadWizard = new ImageUploadWizardViewModel(imageUploadService, getTopLevel);
+        
+        // Sync ImageUri from wizards to the profile properties
+        BannerUploadWizard.WhenAnyValue(x => x.ImageUri)
+            .Where(uri => uri != null)
+            .Subscribe(uri => BannerUri = uri)
+            .DisposeWith(disposable);
+            
+        AvatarUploadWizard.WhenAnyValue(x => x.ImageUri)
+            .Where(uri => uri != null)
+            .Subscribe(uri => AvatarUri = uri)
+            .DisposeWith(disposable);
+            
+        // Also sync from profile properties to wizards (for initial values or external updates)
+        this.WhenAnyValue(x => x.BannerUri)
+            .Where(uri => uri != BannerUploadWizard.ImageUri)
+            .Subscribe(uri => BannerUploadWizard.ImageUri = uri)
+            .DisposeWith(disposable);
+            
+        this.WhenAnyValue(x => x.AvatarUri)
+            .Where(uri => uri != AvatarUploadWizard.ImageUri)
+            .Subscribe(uri => AvatarUploadWizard.ImageUri = uri)
+            .DisposeWith(disposable);
 #if DEBUG
         AvatarUri = "https://picsum.photos/170/170";
         BannerUri = "https://picsum.photos/800/312";
@@ -118,6 +147,16 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
     /// Gets the command to import from Moonshot.
     /// </summary>
     public IEnhancedCommand<Result> ImportFromMoonshot { get; }
+    
+    /// <summary>
+    /// Gets the view model for the banner image upload wizard.
+    /// </summary>
+    public IImageUploadWizardViewModel BannerUploadWizard { get; }
+    
+    /// <summary>
+    /// Gets the view model for the avatar image upload wizard.
+    /// </summary>
+    public IImageUploadWizardViewModel AvatarUploadWizard { get; }
 
     private IObservable<Result<bool>> IsValidImage(Expression<Func<ProfileViewModel, string?>> expression)
     {
@@ -133,6 +172,11 @@ public partial class ProfileViewModel : ReactiveValidationObject, IProfileViewMo
 
     protected override void Dispose(bool disposing)
     {
+        if (disposing)
+        {
+            (BannerUploadWizard as IDisposable)?.Dispose();
+            (AvatarUploadWizard as IDisposable)?.Dispose();
+        }
         disposable.Dispose();
         base.Dispose(disposing);
     }

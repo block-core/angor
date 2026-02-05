@@ -1,0 +1,175 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:l="clr-namespace:AngorApp.UI.Shared.Controls.ImageUploadWizard"
+             xmlns:i="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             mc:Ignorable="d"
+             x:Class="AngorApp.UI.Shared.Controls.ImageUploadWizard.ImageUploadWizardView"
+             x:DataType="l:IImageUploadWizardViewModel">
+
+    <Design.DataContext>
+        <l:ImageUploadWizardViewModelSample />
+    </Design.DataContext>
+
+    <StackPanel Classes="BigGap">
+        <!-- Mode Toggle -->
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <RadioButton GroupName="ImageMode"
+                         IsChecked="{Binding IsUploadMode}"
+                         Content="Upload File" />
+            <RadioButton GroupName="ImageMode"
+                         IsChecked="{Binding !IsUploadMode}"
+                         Content="Enter URL" />
+        </StackPanel>
+
+        <!-- Upload Mode Section -->
+        <StackPanel IsVisible="{Binding IsUploadMode}" Spacing="12">
+            <!-- Info Alert -->
+            <Border Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
+                    Padding="12"
+                    CornerRadius="6">
+                <TextBlock TextWrapping="Wrap"
+                           FontSize="12"
+                           Foreground="{DynamicResource SystemFillColorCautionBrush}">
+                    <Run FontWeight="Bold">Note:</Run>
+                    <Run>Some image servers may require API keys or have upload restrictions.</Run>
+                </TextBlock>
+            </Border>
+
+            <!-- Server Selection -->
+            <HeaderedContainer Header="Image Server" ContentPadding="0" HeaderPadding="0 0 0 8">
+                <ComboBox ItemsSource="{Binding Servers}"
+                          SelectedItem="{Binding SelectedServer}"
+                          HorizontalAlignment="Stretch"
+                          IsEnabled="{Binding !IsUploading}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding Name}" FontWeight="SemiBold" />
+                                <Run Text=" - " />
+                                <Run Text="{Binding Description}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </HeaderedContainer>
+
+            <!-- Custom Server URL (only shown when Custom Server is selected) -->
+            <HeaderedContainer Header="Custom Server URL"
+                               ContentPadding="0"
+                               HeaderPadding="0 0 0 8"
+                               IsVisible="{Binding SelectedServer.IsCustom, FallbackValue=False}">
+                <StackPanel Spacing="4">
+                    <TextBox Text="{Binding CustomServerUrl}"
+                             Watermark="https://your-server.com/upload"
+                             IsEnabled="{Binding !IsUploading}" />
+                    <TextBlock Classes="Dimmed" FontSize="11">
+                        Ensure your server accepts multipart/form-data uploads
+                    </TextBlock>
+                </StackPanel>
+            </HeaderedContainer>
+
+            <!-- File Selection -->
+            <StackPanel Spacing="8">
+                <Button Command="{Binding SelectFile}"
+                        HorizontalAlignment="Left"
+                        IsEnabled="{Binding !IsUploading}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <PathIcon Data="{StaticResource folder_open_regular}" />
+                        <TextBlock Text="Choose Image File" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Selected File Info -->
+                <Border IsVisible="{Binding HasSelectedFile}"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        Padding="12"
+                        CornerRadius="6">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <PathIcon Data="{StaticResource image_regular}" />
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding SelectedFileName}" FontWeight="SemiBold" />
+                            <TextBlock Classes="Dimmed" FontSize="11">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0}">
+                                        <Binding Path="SelectedFileSize"
+                                                 Converter="{x:Static l:ImageUploadWizardView.FileSizeConverter}" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Upload Button -->
+            <Button Command="{Binding Upload}"
+                    Classes="accent"
+                    HorizontalAlignment="Left"
+                    IsEnabled="{Binding CanUpload}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <PathIcon Data="{StaticResource arrow_upload_regular}"
+                              IsVisible="{Binding !IsUploading}" />
+                    <fa:ProgressRing Width="16" Height="16"
+                                     IsVisible="{Binding IsUploading}" />
+                    <TextBlock VerticalAlignment="Center">
+                        <TextBlock.Text>
+                            <Binding Path="IsUploading">
+                                <Binding.Converter>
+                                    <l:BoolToTextConverter TrueText="Uploading..." FalseText="Upload Image" />
+                                </Binding.Converter>
+                            </Binding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </StackPanel>
+            </Button>
+
+            <!-- Status Message - Success -->
+            <Border IsVisible="{Binding IsSuccess}"
+                    Padding="12"
+                    CornerRadius="6"
+                    Background="{DynamicResource SystemFillColorSuccessBackgroundBrush}">
+                <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" />
+            </Border>
+            
+            <!-- Status Message - Error -->
+            <Border Padding="12"
+                    CornerRadius="6"
+                    Background="{DynamicResource SystemFillColorCriticalBackgroundBrush}">
+                <Border.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="StatusMessage" Converter="{x:Static StringConverters.IsNotNullOrEmpty}" />
+                        <Binding Path="!IsSuccess" />
+                    </MultiBinding>
+                </Border.IsVisible>
+                <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" />
+            </Border>
+        </StackPanel>
+
+        <!-- URL Mode Section -->
+        <StackPanel IsVisible="{Binding !IsUploadMode}" Spacing="8">
+            <TextBlock Classes="Dimmed">Enter the URL of the image you want to use</TextBlock>
+            <TextBox Text="{Binding ImageUri}"
+                     TextInputOptions.ContentType="Url"
+                     Watermark="https://example.com/image.png" />
+        </StackPanel>
+
+        <!-- Image Preview -->
+        <StackPanel IsVisible="{Binding ImageUri, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                    Spacing="8">
+            <TextBlock Text="Preview" FontWeight="SemiBold" />
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    Padding="12"
+                    CornerRadius="8"
+                    HorizontalAlignment="Left">
+                <i:AdvancedImage Width="300"
+                                 Height="200"
+                                 CornerRadius="6"
+                                 Stretch="UniformToFill"
+                                 Source="{Binding ImageUri}" />
+            </Border>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

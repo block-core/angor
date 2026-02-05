@@ -19,6 +19,8 @@ public class CreateProjectFlow(
     INavigator navigator,
     IProjectAppService projectAppService,
     IFounderAppService founderAppService,
+    IImageUploadService imageUploadService,
+    Func<TopLevel?> getTopLevel,
     SharedCommands commands,
     IWalletContext walletContext,
     ILogger<CreateProjectViewModel> logger)
@@ -36,7 +38,7 @@ public class CreateProjectFlow(
     private SlimWizard<string> CreateWizard(IWallet wallet, ProjectSeedDto projectSeed)
     {
         var wizard = WizardBuilder
-            .StartWith(() => new CreateProjectViewModel(wallet, projectSeed, uiServices, projectAppService, founderAppService, logger), "Create Project").NextCommand(model => model.Create)
+            .StartWith(() => new CreateProjectViewModel(wallet, projectSeed, uiServices, projectAppService, founderAppService, imageUploadService, getTopLevel, logger), "Create Project").NextCommand(model => model.Create)
             .Then(transactionId => new ProjectCreatedViewModel(transactionId, commands), "Success").Next((_, projectId) => projectId, "Close").Always()
             .WithCompletionFinalStep();
 

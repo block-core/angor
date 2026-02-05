@@ -3,6 +3,7 @@ using Angor.Sdk.Common;
 using AngorApp.Core;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Dialogs.Implementations;
@@ -19,6 +20,20 @@ public static class UIServicesRegistration
     public static IServiceCollection AddUIServices(this IServiceCollection services, Control mainView, ProfileContext profileContext, IApplicationStorage storage)
     {
         var settingsFilePath = CreateSettingsFilePath(storage, profileContext);
+        
+        // Create a function that gets the TopLevel from the mainView
+        // This is deferred until after the view is loaded
+        TopLevel? cachedTopLevel = null;
+        Func<TopLevel?> getTopLevel = () =>
+        {
+            if (cachedTopLevel != null)
+                return cachedTopLevel;
+            cachedTopLevel = TopLevel.GetTopLevel(mainView);
+            return cachedTopLevel;
+        };
+        
+        // Subscribe to Loaded event to cache TopLevel
+        mainView.Loaded += (_, _) => cachedTopLevel = TopLevel.GetTopLevel(mainView);
         
         return services
             .AddSettings(
@@ -38,6 +53,8 @@ public static class UIServicesRegistration
             .AddSingleton<ILauncherService, LauncherService>()
             .AddSingleton<INotificationService, NotificationService>()
             .AddSingleton<IImageValidationService, ImageValidationService>()
+            .AddSingleton<IImageUploadService, ImageUploadService>()
+            .AddSingleton<Func<TopLevel?>>(getTopLevel)
             .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileContext.ProfileName, mainView));
     }
 

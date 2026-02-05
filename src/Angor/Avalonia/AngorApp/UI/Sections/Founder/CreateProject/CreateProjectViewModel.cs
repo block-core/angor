@@ -34,6 +34,8 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
         UIServices uiServices,
         IProjectAppService projectAppService,
         IFounderAppService founderAppService,
+        IImageUploadService imageUploadService,
+        Func<TopLevel?> getTopLevel,
         ILogger<CreateProjectViewModel> logger)
     {
         this.projectAppService = projectAppService;
@@ -52,6 +54,8 @@ public class CreateProjectViewModel : ReactiveValidationObject, ICreateProjectVi
             projectSeed, 
             uiServices, 
             founderAppService,
+            imageUploadService,
+            getTopLevel,
             onMoonshotImported: moonshotData => FundingStructureViewModel.ApplyMoonshotData(moonshotData))
             .DisposeWith(disposable);
 

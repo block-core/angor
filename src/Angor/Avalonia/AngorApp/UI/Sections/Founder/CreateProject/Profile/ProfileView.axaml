@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:profile="clr-namespace:AngorApp.UI.Sections.Founder.CreateProject.Profile"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:imageUpload="clr-namespace:AngorApp.UI.Shared.Controls.ImageUploadWizard"
              mc:Ignorable="d" d:DesignWidth="400"
              x:Class="AngorApp.UI.Sections.Founder.CreateProject.Profile.ProfileView"
              x:DataType="profile:IProfileViewModel">
@@ -38,20 +39,20 @@
                 <TextBox MinLines="6" MaxLength="1000" TextInputOptions.Multiline="True" Watermark="Provide a brief description of the project" Text="{Binding Description}" />
             </HeaderedContainer>
             <HeaderedContainer Header="Visual Identity" Classes="Transparent">
-                <BalancedWrapGrid MinItemWidth="250">
-                    <HeaderedContainer Header="Banner Image URL">
+                <StackPanel Classes="BigGap">
+                    <HeaderedContainer Header="Banner Image" ContentPadding="0">
                         <StackPanel Spacing="5">
-                            <TextBox TextInputOptions.ContentType="Url" Watermark="Project banner image URL" Text="{Binding BannerUri}" />
+                            <imageUpload:ImageUploadWizardView DataContext="{Binding BannerUploadWizard}" />
                             <TextBlock Classes="Dimmed">Recommended size: 820×312px</TextBlock>
                         </StackPanel>
                     </HeaderedContainer>
-                    <HeaderedContainer Header="Avatar Image URL">
+                    <HeaderedContainer Header="Avatar Image" ContentPadding="0">
                         <StackPanel Spacing="5">
-                            <TextBox TextInputOptions.ContentType="Url" Watermark="Project logo or profile URL" Text="{Binding AvatarUri}" />
+                            <imageUpload:ImageUploadWizardView DataContext="{Binding AvatarUploadWizard}" />
                             <TextBlock Classes="Dimmed">Recommended size: 170×170px</TextBlock>
                         </StackPanel>
                     </HeaderedContainer>
-                </BalancedWrapGrid>
+                </StackPanel>
             </HeaderedContainer>
             <ToggleSwitch x:Name="AdvancedSwitch">Show advanced settings</ToggleSwitch>
             <StackPanel Classes="BigGap" IsVisible="{Binding #AdvancedSwitch.IsChecked}">
