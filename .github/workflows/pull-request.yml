@@ -1,9 +1,9 @@
-name: Pull Request
+name: Pull Request (Deprecated)
 
+# This workflow is disabled - the Blazor/WASM app has been replaced by Avalonia.
+# See build.yml for the active Avalonia build workflow.
 on: 
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:  # Only allow manual trigger, not automatic on PRs
 
 jobs:
   
