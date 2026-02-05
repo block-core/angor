@@ -51,37 +51,29 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
             IEnhancedCommand<Unit> command = EnhancedCommand.Create(async () =>
             {
                 closeable.Close();
-                var invoiceViewModel = new InvoiceViewModel(SelectedWallet!, investmentAppService, uiServices, AmountToInvest, projectId, shell);
-                try
-                {
-                    await uiServices.Dialog.Show(
-                        invoiceViewModel,
-                        "Pay Invoice to Invest",
-                        (model, invoiceCloseable) =>
-                        {
-                            model.SetCloseable(invoiceCloseable);
-                            return
-                            [
-                                new Option(
-                                    "Next",
-                                    EnhancedCommand.Create(
-                                        () =>
-                                        {
-                                            invoiceCloseable.Close();
-                                            return uiServices.Dialog.Show(
-                                                new BackupWalletViewModel(uiServices),
-                                                "Backup Your Account",
-                                                (model, c) => model.Options(c, shell));
-                                        },
-                                        model.IsValid),
-                                    new Settings { IsVisible = model.IsValid })
-                            ];
-                        });
-                }
-                finally
-                {
-                    invoiceViewModel.Dispose();
-                }
+                using var invoiceViewModel = new InvoiceViewModel(SelectedWallet!, investmentAppService, uiServices, AmountToInvest, projectId, shell);
+                await uiServices.Dialog.Show(
+                    invoiceViewModel,
+                    "Pay Invoice to Invest",
+                    (model, invoiceCloseable) =>
+                    {
+                        model.SetCloseable(invoiceCloseable);
+                        return
+                        [
+                            new Option("Next",
+                                       EnhancedCommand.Create(
+                                           () =>
+                                           {
+                                               invoiceCloseable.Close();
+                                               return uiServices.Dialog.Show(
+                                                   new BackupWalletViewModel(uiServices),
+                                                   "Backup Your Account",
+                                                   (model, c) => model.Options(c, shell));
+                                           },
+                                           model.IsValid),
+                                       new Settings { IsVisible = model.IsValid })
+                        ];
+                    });
             });
 
             return new Option("Generate Invoice Instead", command, new Settings());

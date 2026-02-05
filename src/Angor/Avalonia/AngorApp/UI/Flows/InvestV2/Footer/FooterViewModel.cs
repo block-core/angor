@@ -53,23 +53,16 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
             {
                 return await walletContext.GetOrCreate().Map(async wallet =>
                 {
-                    var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell);
-                    try
-                    {
-                        bool result = await uiServices.Dialog.Show(
-                            invoiceViewModel,
-                            "Select Wallet",
-                            (model, closeable) =>
-                            {
-                                model.SetCloseable(closeable);
-                                return [];
-                            });
-                        return Maybe.From(result ? "" : null);
-                    }
-                    finally
-                    {
-                        invoiceViewModel.Dispose();
-                    }
+                    using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell);
+                    bool result = await uiServices.Dialog.Show(
+                        invoiceViewModel,
+                        "Select Wallet",
+                        (model, closeable) =>
+                        {
+                            model.SetCloseable(closeable);
+                            return [];
+                        });
+                    return Maybe.From(result ? "" : null);
                 });
             }
 
@@ -77,20 +70,13 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
 
             if (HasEnoughBalance(wallet))
             {
-                var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell);
-                try
+                using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell);
+                bool show = await uiServices.Dialog.Show(invoiceViewModel, "Select Wallet", (model, closeable) =>
                 {
-                    bool show = await uiServices.Dialog.Show(invoiceViewModel, "Select Wallet", (model, closeable) =>
-                    {
-                        model.SetCloseable(closeable);
-                        return [];
-                    });
-                    return Maybe.From(show ? "" : null);
-                }
-                finally
-                {
-                    invoiceViewModel.Dispose();
-                }
+                    model.SetCloseable(closeable);
+                    return [];
+                });
+                return Maybe.From(show ? "" : null);
             }
 
             return await uiServices.Dialog.ShowAndGetResult(
