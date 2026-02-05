@@ -1,9 +1,4 @@
-using Angor.Sdk.Common;
-using Angor.Sdk.Funding.Founder.Domain;
-using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Founder.Operations;
-using Angor.Sdk.Funding.Shared;
-using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 using MediatR;
 
