@@ -39,13 +39,13 @@
                 </HeaderedContainer>
             </DockPanel>
         </Border>
-        <HeaderedContainer Classes="LightGray" DockPanel.Dock="Bottom" Header="{Binding SelectedInvoiceType.Name}">
-            <DockPanel Classes="Padded">
-                <EnhancedButton  DockPanel.Dock="Right" Command="{Binding CopyAddress}" 
-                                 Classes="" ToolTip.Tip="Copy address to clipboard"
-                                 Padding="8,4" VerticalAlignment="Center">
-                    <ContentControl Content="{Icon fa-copy}" />
-                </EnhancedButton>
+        <HeaderedContainer Classes="LightGray Rounded" DockPanel.Dock="Bottom" Header="{Binding SelectedInvoiceType.Name}">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Command="{Binding CopyAddress}" 
+                        Classes="Transparent" ToolTip.Tip="Copy address to clipboard"
+                        Padding="4" VerticalAlignment="Center">
+                    <ContentControl IconOptions.Size="12" Content="{Icon fa-copy}" />
+                </Button>
                 <TextBlock Classes="Weight-Light Size-XS" Text="{Binding SelectedInvoiceType.Address}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             </DockPanel>
         </HeaderedContainer>
