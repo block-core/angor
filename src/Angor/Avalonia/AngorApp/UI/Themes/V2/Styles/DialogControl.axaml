@@ -1,0 +1,47 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections">
+    <Design.PreviewWith>
+        <DialogControl Content="Some context">
+            <DialogControl.Options>
+                <generic:List x:TypeArguments="IOption">
+                    <OptionDesign Title="Primary" Role="Primary" />
+                    <OptionDesign Title="Secondary" Role="Secondary" IsVisible="{Return False}" />
+                    <OptionDesign Title="Cancel" Role="Cancel" />
+                    <OptionDesign Title="Destructive" Role="Destructive" />
+                </generic:List>
+            </DialogControl.Options>
+        </DialogControl>
+    </Design.PreviewWith>
+    
+    <Style Selector="DialogControl">
+        <Setter Property="MinWidth" Value="448" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <DockPanel VerticalSpacing="12">
+                    <ContentPresenter DockPanel.Dock="Top" Content="{TemplateBinding Content}" />
+                    <ItemsControl ItemsSource="{TemplateBinding Options}">
+                        <ItemsControl.ItemContainerTheme>
+                            <ControlTheme TargetType="ContentPresenter">
+                                <Setter Property="IsVisible" Value="{Binding IsVisible^, DataType=IOption}" />
+                            </ControlTheme>
+                        </ItemsControl.ItemContainerTheme>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Classes="MediumGap" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="IOption">
+                                <EnhancedButton Height="52" HorizontalAlignment="Stretch"
+                                                IsCancel="{Binding IsCancel}"
+                                                IsDefault="{Binding IsDefault}"
+                                                Role="{Binding Role}" Content="{Binding Title^}" Command="{Binding Command}"></EnhancedButton>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

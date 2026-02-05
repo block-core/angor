@@ -21,6 +21,7 @@ using AngorApp.UI.Flows.InvestV2;
 using AngorApp.UI.Flows.InvestV2.PaymentSelector;
 using AngorApp.UI.Sections.Funds.Accounts;
 using AngorApp.UI.Sections.Funds.Empty;
+using AngorApp.UI.Sections.FindProjects.Details;
 
 namespace AngorApp.Composition.Registrations.ViewModels;
 
@@ -33,7 +34,7 @@ public static class ViewModels
                 .AddScoped<IProjectInvestCommandFactory, ProjectInvestCommandFactory>()
                 .AddScoped<Func<IProjectLookupViewModel>>(provider => () => ActivatorUtilities.CreateInstance<ProjectLookupViewModel>(provider))
                 .AddScoped<Func<ProjectId, IFoundedProjectOptionsViewModel>>(provider => projectId => ActivatorUtilities.CreateInstance<FoundedProjectOptionsViewModel>(provider, projectId))
-                .AddScoped<Func<IFullProject, IProjectDetailsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<ProjectDetailsViewModel>(provider, project))
+                .AddScoped<Func<IFullProject, IDetailsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<DetailsViewModel>(provider, project))
                 .AddScoped<Func<ProjectId, IFounderProjectDetailsViewModel>>(provider => projectId => ActivatorUtilities.CreateInstance<FounderProjectDetailsViewModel>(provider, projectId))
                 .AddScoped<Func<ProjectDto, IFounderProjectViewModel>>(provider => dto => ActivatorUtilities.CreateInstance<FounderProjectViewModel>(provider, dto))
                 .AddTransient<IWalletSectionViewModel, WalletSectionViewModel>()

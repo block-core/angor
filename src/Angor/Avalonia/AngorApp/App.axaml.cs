@@ -24,6 +24,12 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        if (Avalonia.Controls.Design.IsDesignMode)
+        {
+            base.OnFrameworkInitializationCompleted();
+            return;
+        }
+        
         var lifetime = ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
         var profileName = GetProfileName(lifetime?.Args);
 

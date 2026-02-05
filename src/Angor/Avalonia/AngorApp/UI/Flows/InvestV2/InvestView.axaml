@@ -63,7 +63,7 @@
                 </HeaderedContainer>
 
                 <!-- Release Schedule Section -->
-                <HeaderedContainer Header="Release Schedule" Classes="StagesCard Shadow">
+                <HeaderedContainer Header="Release Schedule" Classes="Sky Shadow">
                     <ScrollViewer>
                         <StackPanel Classes="BigGap">
                             <TextBlock Classes="Text-Muted">Your investment will be released in stages:</TextBlock>
@@ -75,7 +75,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="{DynamicResource Surface}" CornerRadius="10" Padding="14" BorderThickness="1" BorderBrush="{DynamicResource Stroke}">
+                                        <Border Classes="White">
                                             <StackPanel Classes="SmallGap">
                                                 <EdgePanel>
                                                     <EdgePanel.StartContent>
