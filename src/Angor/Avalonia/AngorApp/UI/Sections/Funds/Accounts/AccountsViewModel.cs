@@ -39,7 +39,7 @@ namespace AngorApp.UI.Sections.Funds.Accounts
             return Result.Success();
         }
 
-        public IEnumerable<IAccountGroup> AccountGroups { get; }
+        public IReadOnlyCollection<IAccountGroup> AccountGroups { get; }
         public IEnhancedCommand<Result> ImportAccount { get; }
         public IEnumerable<IAccountBalance> Balances { get; }
 

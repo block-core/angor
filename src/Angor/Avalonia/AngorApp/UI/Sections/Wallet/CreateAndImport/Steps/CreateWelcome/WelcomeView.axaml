@@ -6,11 +6,11 @@
              xmlns:z="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:createWelcome1="clr-namespace:AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.CreateWelcome"
-             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
+             mc:Ignorable="d" d:DesignWidth="500" 
              x:Class="AngorApp.UI.Sections.Wallet.CreateAndImport.Steps.CreateWelcome.WelcomeView"
              x:DataType="createWelcome1:WelcomeViewModel">
     
-    <DockPanel>
+    <DockPanel VerticalSpacing="20">
         <CheckBox x:Name="ConfirmationCheckbox"
                   DockPanel.Dock="Bottom"
                   IsChecked="{Binding IsUserAware}"

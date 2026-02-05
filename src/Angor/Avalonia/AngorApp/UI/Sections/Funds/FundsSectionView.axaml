@@ -6,7 +6,7 @@
              xmlns:funds="clr-namespace:AngorApp.UI.Sections.Funds"
              xmlns:l="clr-namespace:AngorApp.UI.Sections.Fund"
              xmlns:main="clr-namespace:AngorApp.UI.Sections.Wallet.Main"
-             xmlns:accounts="clr-namespace:AngorApp.UI.Sections.Funds.Accounts"
+             xmlns:a="clr-namespace:AngorApp.UI.Sections.Funds.Accounts"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.UI.Sections.Funds.FundsSectionView"
              x:DataType="funds:IFundsSectionViewModel">
@@ -15,7 +15,11 @@
         <funds:FundsSectionViewModelSample />
     </Design.DataContext>
 
-    <StackPanel>
-        <accounts:AccountsView DataContext="{Binding Accounts}" />
-    </StackPanel>
+    <Panel>
+        <a:AccountsView IsVisible="{Binding  !!AccountGroups.Count}" DataContext="{Binding Accounts}" />
+        <ContentControl IsVisible="{Binding  !!!Accounts.AccountGroups.Count}"
+                        Content="{Binding Empty}"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center" />
+    </Panel>
 </UserControl>

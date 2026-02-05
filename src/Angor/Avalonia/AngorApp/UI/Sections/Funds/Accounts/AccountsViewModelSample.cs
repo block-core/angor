@@ -2,7 +2,7 @@ namespace AngorApp.UI.Sections.Funds.Accounts
 {
     public class AccountsViewModelSample : IAccountsViewModel
     {
-        public IEnumerable<IAccountGroup> AccountGroups { get; } =
+        public IReadOnlyCollection<IAccountGroup> AccountGroups { get; } =
         [
             new AccountGroupSample { Name = "Angor Accounts" },
             new AccountGroupSample { Name = "Imported Accounts" }

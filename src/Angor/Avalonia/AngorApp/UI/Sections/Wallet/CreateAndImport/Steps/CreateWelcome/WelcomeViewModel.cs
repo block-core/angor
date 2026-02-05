@@ -10,7 +10,7 @@ public partial class WelcomeViewModel : ReactiveValidationObject, IValidatable
     
     public WelcomeViewModel()
     {
-        this.ValidationRule<WelcomeViewModel, bool>(x => x.IsUserAware, x => x, "You cannot continue unless you understand the risks");
+        this.ValidationRule(x => x.IsUserAware, x => x, "You cannot continue unless you understand the risks");
     }
     
     public IObservable<bool> IsValid => this.IsValid();
