@@ -6,9 +6,10 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:model="clr-namespace:AngorApp.Model.Contracts.Amounts;assembly=AngorApp.Model"
              xmlns:simple="clr-namespace:AngorApp.Model.Wallet;assembly=AngorApp.Model"
+             xmlns:simple1="clr-namespace:AngorApp.Model.Wallet.Simple;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
              x:Class="AngorApp.UI.Sections.Wallet.Main.HistoryView"
-             x:DataType="simple:SimpleWallet">
+             x:DataType="simple1:SimpleWallet">
 
     <Loading LoadingText="Loading Transaction History" IsLoading="{Binding Load.IsExecuting^}">
         <SlimDataGrid ItemsSource="{Binding History}" Empty.Content="No transactions found">

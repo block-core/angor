@@ -1,14 +1,16 @@
+using System.Collections.ObjectModel;
+
 namespace AngorApp.UI.Sections.Funds.Accounts
 {
     public class AccountsViewModelSample : IAccountsViewModel
     {
-        public IReadOnlyCollection<IAccountGroup> AccountGroups { get; } =
+        public ICollection<IAccountGroup> AccountGroups { get; } =
         [
             new AccountGroupSample { Name = "Angor Accounts" },
             new AccountGroupSample { Name = "Imported Accounts" }
         ];
 
-        public IEnhancedCommand<Result> ImportAccount { get; } = EnhancedCommand.CreateWithResult(Result.Success);
+        public IEnhancedCommand ImportAccount { get; } = EnhancedCommand.Create(() => { });
         public IObservable<IAmountUI> TotalBalance { get; } = Observable.Return(AmountUI.FromBtc(0.4));
 
         public IEnumerable<IAccountBalance> Balances { get; } = new List<IAccountBalance>()

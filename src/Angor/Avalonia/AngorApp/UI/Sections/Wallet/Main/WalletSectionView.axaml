@@ -6,11 +6,12 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:main="clr-namespace:AngorApp.UI.Sections.Wallet.Main"
              xmlns:dw="clr-namespace:AngorApp.Model.Wallet;assembly=AngorApp.Model"
+             xmlns:simple="clr-namespace:AngorApp.Model.Wallet.Simple;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.UI.Sections.Wallet.Main.WalletSectionView" x:DataType="main:IWalletSectionViewModel">
 
     <UserControl.DataTemplates>
-        <DataTemplate DataType="dw:SimpleWallet">
+        <DataTemplate DataType="simple:SimpleWallet">
             <main:WalletView />
         </DataTemplate>
     </UserControl.DataTemplates>

@@ -4,8 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:simple="clr-namespace:AngorApp.Model.Wallet;assembly=AngorApp.Model"
+             xmlns:simple1="clr-namespace:AngorApp.Model.Wallet.Simple;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="800"
-             x:Class="AngorApp.UI.Sections.Wallet.Main.Balance" x:DataType="simple:SimpleWallet">
+             x:Class="AngorApp.UI.Sections.Wallet.Main.Balance" x:DataType="simple1:SimpleWallet">
     
     <StackPanel Spacing="10">
         <Card Theme="{StaticResource WideCard}">

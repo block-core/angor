@@ -1,14 +1,11 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Application;
-using Angor.Sdk.Wallet.Domain;
 using Angor.Shared;
-using AngorApp.Model.Contracts.Flows;
-using AngorApp.Model.Contracts.Wallet;
 using CSharpFunctionalExtensions;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.UI;
 
-namespace AngorApp.Model.Wallet;
+namespace AngorApp.Model.Wallet.Simple;
 
 public class SimpleWalletProvider(IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, INotificationService notificationService, INetworkConfiguration networkConfiguration, IDialog dialogService) : IWalletProvider
 {

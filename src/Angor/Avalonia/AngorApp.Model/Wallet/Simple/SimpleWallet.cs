@@ -1,18 +1,13 @@
-using Angor.Sdk.Common;
-using Angor.Sdk.Wallet.Application;
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using Angor.Sdk.Wallet.Domain;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Application;
 using Angor.Shared;
-using AngorApp.Model.Contracts.Amounts;
-using AngorApp.Model.Contracts.Flows;
-using AngorApp.Model.Contracts.Wallet;
 using AngorApp.Model.Amounts;
 using AngorApp.Model.Common;
 using Blockcore.Networks;
 using CSharpFunctionalExtensions;
-using DynamicData.Aggregation;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Dialogs;
@@ -20,7 +15,7 @@ using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
 
-namespace AngorApp.Model.Wallet;
+namespace AngorApp.Model.Wallet.Simple;
 
 public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
 {
@@ -52,17 +47,17 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
 
         balanceHelper = balanceUpdates
             .Select(info => new AmountUI(info.TotalBalance))
-            .ToProperty(this, x => x.Balance)
+            .ToProperty<SimpleWallet, IAmountUI>(this, x => x.Balance)
             .DisposeWith(disposable);
 
         unconfirmedBalanceHelper = balanceUpdates
             .Select(info => new AmountUI(info.TotalUnconfirmedBalance))
-            .ToProperty(this, x => x.UnconfirmedBalance)
+            .ToProperty<SimpleWallet, IAmountUI>(this, x => x.UnconfirmedBalance)
             .DisposeWith(disposable);
 
         reservedBalanceHelper = balanceUpdates
             .Select(info => new AmountUI(info.TotalBalanceReserved))
-            .ToProperty(this, x => x.ReservedBalance)
+            .ToProperty<SimpleWallet, IAmountUI>(this, x => x.ReservedBalance)
             .DisposeWith(disposable);
 
         History = transactionCollection.Items;

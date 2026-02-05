@@ -5,8 +5,9 @@
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:main="clr-namespace:AngorApp.UI.Sections.Wallet.Main"
              xmlns:simple="clr-namespace:AngorApp.Model.Wallet;assembly=AngorApp.Model"
+             xmlns:simple1="clr-namespace:AngorApp.Model.Wallet.Simple;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.UI.Sections.Wallet.Main.WalletView" x:DataType="simple:SimpleWallet">
+             x:Class="AngorApp.UI.Sections.Wallet.Main.WalletView" x:DataType="simple1:SimpleWallet">
     
     <Interaction.Behaviors>
         <LoadedTrigger>

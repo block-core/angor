@@ -13,6 +13,6 @@ public interface IWalletContext
     Maybe<IWallet> CurrentWallet { get; set; }
     Task<Result> DeleteWallet(WalletId walletId);
     Task<Result<IWallet>> GetOrCreate();
-    Task<Result<IWallet>> CreateDefaultWallet();
     Task<Maybe<IWallet>> TryGet();
+    Task<Result<IWallet>> ImportWallet(string seedwords, Maybe<string> optionsPassphrase, string optionsEncryptionKey, BitcoinNetwork network, NetworkKind networkKind);
 }

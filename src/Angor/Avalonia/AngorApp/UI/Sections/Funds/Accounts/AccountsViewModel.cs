@@ -6,12 +6,10 @@ namespace AngorApp.UI.Sections.Funds.Accounts
 {
     public class AccountsViewModel : IAccountsViewModel, IDisposable
     {
-        private readonly WalletImportWizard walletImportWizard;
         private readonly CompositeDisposable disposable = new();
         
         public AccountsViewModel(IWalletContext walletContext, WalletImportWizard walletImportWizard, UIServices uiServices)
         {
-            this.walletImportWizard = walletImportWizard;
             walletContext.WalletChanges
                          .Group(wallet => wallet.ImportKind)
                          .Transform(IAccountGroup (g) => new AccountGroup(g, uiServices))
@@ -20,7 +18,7 @@ namespace AngorApp.UI.Sections.Funds.Accounts
                          .DisposeWith(disposable);
 
             AccountGroups = accountGroups;
-            ImportAccount = EnhancedCommand.CreateWithResult(DoImportAccount).DisposeWith(disposable);
+            ImportAccount = EnhancedCommand.CreateWithResult(walletImportWizard.Start).DisposeWith(disposable);
             
             walletContext.WalletChanges
                          .Group(wallet => wallet.NetworkKind)
@@ -32,15 +30,8 @@ namespace AngorApp.UI.Sections.Funds.Accounts
             Balances = accountBalances;
         }
 
-        private async Task<Result> DoImportAccount()
-        {
-            await walletImportWizard.Start();
-            // TODO:
-            return Result.Success();
-        }
-
-        public IReadOnlyCollection<IAccountGroup> AccountGroups { get; }
-        public IEnhancedCommand<Result> ImportAccount { get; }
+        public ICollection<IAccountGroup> AccountGroups { get; }
+        public IEnhancedCommand ImportAccount { get; }
         public IEnumerable<IAccountBalance> Balances { get; }
 
         public void Dispose()
