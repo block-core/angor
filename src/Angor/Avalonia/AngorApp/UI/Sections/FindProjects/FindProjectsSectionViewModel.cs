@@ -3,6 +3,7 @@ using System.Reactive.Disposables;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Operations;
 using AngorApp.UI.Sections.Browse.Details;
+using AngorApp.UI.Sections.FindProjects.Details;
 using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI.Navigation;
@@ -15,11 +16,11 @@ namespace AngorApp.UI.Sections.FindProjects
     public class FindProjectsSectionViewModel : IFindProjectsSectionViewModel, IDisposable
     {
         private readonly IProjectAppService projectAppService;
-        private readonly Func<IFullProject, IProjectDetailsViewModel> detailsFactory;
+        private readonly Func<IFullProject, IDetailsViewModel> detailsFactory;
         private readonly CompositeDisposable disposable = new();
         private readonly INavigator navigator;
 
-        public FindProjectsSectionViewModel(IProjectAppService projectAppService, Func<IFullProject, IProjectDetailsViewModel> detailsFactory, INavigator navigator)
+        public FindProjectsSectionViewModel(IProjectAppService projectAppService, Func<IFullProject, IDetailsViewModel> detailsFactory, INavigator navigator)
         {
             this.projectAppService = projectAppService;
             this.detailsFactory = detailsFactory;
@@ -35,7 +36,7 @@ namespace AngorApp.UI.Sections.FindProjects
             Projects = projects;
         }
 
-        public IEnhancedCommand<Result<IEnumerable<FindProjectItem>>> LoadProjects { get; set; }
+        public IEnhancedCommand<Result<IEnumerable<FindProjectItem>>> LoadProjects { get; }
 
         private Task<Result<IEnumerable<FindProjectItem>>> DoLoadItems()
         {

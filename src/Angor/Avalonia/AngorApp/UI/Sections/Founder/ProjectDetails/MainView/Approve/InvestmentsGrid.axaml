@@ -174,7 +174,7 @@
                         <Column.CellTemplate>
                             <DataTemplate>
                                 <ToggleButton Theme="{StaticResource ExpandingToggleButtonNoText}" x:Name="AreDetailsShown" IsChecked="{Binding AreDetailsShown, Mode=TwoWay}"
-                                              IsVisible="{Binding OtherInvestments, Converter={x:Static Enumerable.Any}}" />
+                                              IsVisible="{Binding OtherInvestments, Converter={x:Static Enumerable.NotEmpty}}" />
                             </DataTemplate>
                         </Column.CellTemplate>
                     </Column>

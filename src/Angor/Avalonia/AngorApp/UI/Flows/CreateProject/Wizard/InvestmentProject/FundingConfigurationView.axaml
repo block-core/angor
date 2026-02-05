@@ -59,7 +59,7 @@
 
         <Style Selector="ToggleButton.AmountPreset">
             <Setter Property="Background" Value="{DynamicResource Surface}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceLow}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Padding" Value="16 14" />
@@ -128,7 +128,7 @@
 
         <Style Selector="Border.DurationPresetBorder">
             <Setter Property="Background" Value="{DynamicResource Surface}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceLow}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Padding" Value="14 8" />
@@ -163,7 +163,7 @@
             <TextBlock Classes="Subtitle">Configure your funding target, window, and project nature.</TextBlock>
 
 
-            <HeaderedContainer Classes="WizardHighlight">
+            <HeaderedContainer Classes="Card Radius-L Bitcoin">
                 <HeaderedContainer.Header>
                     <EdgePanel Content="Set your target funding amount">
                         <EdgePanel.StartContent>
@@ -227,7 +227,7 @@
             </HeaderedContainer>
 
 
-            <HeaderedContainer Classes="WizardSection">
+            <HeaderedContainer Classes="Card Neutral WizardSection">
                 <HeaderedContainer.Header>
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <TextBlock>Fundraising Window</TextBlock>
@@ -288,7 +288,7 @@
             </HeaderedContainer>
 
 
-            <HeaderedContainer Classes="WizardSection">
+            <HeaderedContainer Classes="Card Neutral WizardSection">
                 <HeaderedContainer.Header>
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <TextBlock>Project Nature (Penalty)</TextBlock>

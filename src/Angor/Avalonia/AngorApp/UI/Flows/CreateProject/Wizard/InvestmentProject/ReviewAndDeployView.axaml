@@ -29,7 +29,7 @@
 
     <controls:ScrollableView MaxContentWidth="766">
         <StackPanel Classes="BigGap">
-            <HeaderedContainer Classes="Translucid">
+            <HeaderedContainer Classes="Card Accent RoundedSquareIcon GreenIcon">
                 <HeaderedContainer.Header>
                     <EdgePanel StartContent="{Icon fa-user}" Content="Project Profile" />
                 </HeaderedContainer.Header>
@@ -40,7 +40,7 @@
                 </StackPanel>
             </HeaderedContainer>
 
-            <HeaderedContainer Classes="WizardHighlight">
+            <HeaderedContainer Classes="Card Radius-L Bitcoin RoundedSquareIcon OrangeIcon">
                 <HeaderedContainer.Header>
                     <EdgePanel StartContent="{Icon fa-bitcoin}" Content="Funding Configuration" />
                 </HeaderedContainer.Header>
@@ -51,13 +51,13 @@
                     <EdgePanel StartContent="Penalty Days" EndContent="{Binding PenaltyDays, StringFormat='{}{0} days'}" />
                 </StackPanel>
             </HeaderedContainer>
-            <HeaderedContainer Classes="Translucid">
+            <HeaderedContainer Classes="Card Accent GreenIcon">
                 <HeaderedContainer.Header>
                     <EdgePanel StartContent="{Icon fa-regular fa-clipboard}" Content="Funding Stages" />
                 </HeaderedContainer.Header>
                 <stages:StagesList x:DataType="model:IInvestmentProjectConfig" DataContext="{Binding NewProject}" Stages="{Binding Stages}" TotalSats="{Binding TargetAmount.Sats}" />
             </HeaderedContainer>
-            <HeaderedContainer Classes="WizardSection" Foreground="{DynamicResource Accent}" Background="{DynamicResource Translucid}">
+            <HeaderedContainer Classes="Card WizardSection Accent">
                 <StackPanel Margin="30" MaxWidth="500" Classes="BigGap">
                     <Border Width="64" Height="64" HorizontalAlignment="Center" Padding="20" CornerRadius="40" Background="{DynamicResource Accent}">
                         <PathIcon Foreground="White" Height="32" Width="32" Data="{StaticResource AngorLogo}" />

@@ -21,7 +21,7 @@
     </Interaction.Behaviors>
 
     <DockPanel VerticalSpacing="20">
-        <Border BorderThickness="1" Background="{DynamicResource SurfaceSubtler}" Classes="RegularPadding" DockPanel.Dock="Top">
+        <Border BorderThickness="1" Background="{DynamicResource SurfaceHigh}" Classes="RegularPadding" DockPanel.Dock="Top">
             <TextBlock>
                 <TextBlock.Inlines>
                     <Run Text="To" />

@@ -2,7 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:l="clr-namespace:AngorApp"
              xmlns:accounts="clr-namespace:AngorApp.UI.Sections.Funds.Accounts"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d" d:DesignWidth="800"
@@ -14,11 +13,7 @@
     </Design.DataContext>
 
     <UserControl.Styles>
-        <Style Selector="HeaderedContainer.Big /template/ ContentPresenter#Header">
-            <Setter Property="FontSize" Value="30" />
-            <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryBlack}" />
-        </Style>
+       
         <Style Selector="EnhancedButton.Spinning /template/ ContentPresenter#IconPresenter PathIcon">
             <Setter Property="RenderTransform" Value="rotate(0deg)" />
             <Setter Property="RenderTransformOrigin" Value="50%,50%" />
@@ -36,13 +31,13 @@
     </UserControl.Styles>
 
     <controls:ScrollableView>
-    <StackPanel Classes="BigGap" MaxWidth="1152">
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Classes="SmallGap">
-            <EnhancedButton Command="{Binding RefreshBalances}" Classes="Outline" Classes.Spinning="{Binding RefreshBalances.IsExecuting}" Icon="{Icon fa-sync}">Refresh</EnhancedButton>
-            <EnhancedButton Command="{Binding ImportAccount}" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False">Import Wallet</EnhancedButton>
-            <EnhancedButton Command="{Binding GetTestCoins}" IsVisible="{Binding CanGetTestCoins}" Classes="Accent" Icon="{Icon fa-plus}">Get Testnet Coins</EnhancedButton>
-        </StackPanel>
-            <HeaderedContainer Classes="Big WizardHighlight" Header="Balance Summary" Background="{DynamicResource TranslucidOrange2}">
+        <StackPanel Classes="BigGap" MaxWidth="1152">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Classes="SmallGap">
+                <EnhancedButton Command="{Binding RefreshBalances}" Classes="Outline" Classes.Spinning="{Binding RefreshBalances.IsExecuting}" Icon="{Icon fa-sync}">Refresh</EnhancedButton>
+                <EnhancedButton Command="{Binding ImportAccount}" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False">Import Wallet</EnhancedButton>
+                <EnhancedButton Command="{Binding GetTestCoins}" IsVisible="{Binding CanGetTestCoins}" Classes="Accent" Icon="{Icon fa-plus}">Get Testnet Coins</EnhancedButton>
+            </StackPanel>
+            <HeaderedContainer Classes="Card Radius-L Big Bitcoin Shadow MediumBigHeader" Header="Balance Summary" Background="{DynamicResource TranslucidOrange2}">
                 <ItemsControl ItemsSource="{Binding Balances}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -51,27 +46,25 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <HeaderedContainer Classes="Section StatsCard" HeaderPadding="20" ContentPadding="20 0 0 20">
-                                <HeaderedContainer.Header>
-                                    <TextBlock  Foreground="{DynamicResource StatLabel}" Text="{Binding Name}" />
-                                </HeaderedContainer.Header>
-                                <TextBlock Classes="Weight-Bold Size-L" Foreground="{DynamicResource StatValue}" Text="{Binding Balance^.DecimalString}" />
+                            <HeaderedContainer Header="{Binding Name}" Classes="Card StatCard Fields" HeaderPadding="20" ContentPadding="20 0 0 20" Content="{Binding Balance^.DecimalString}">
                             </HeaderedContainer>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </HeaderedContainer>
-            <ItemsControl Classes="Vertical" ItemsSource="{Binding AccountGroups}">
+            <ItemsControl Classes="VerticalBigGap" ItemsSource="{Binding AccountGroups}" ClipToBounds="False">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <HeaderedContainer Classes="Big WizardSection" Header="{Binding Name}">
-                            <ItemsControl x:Name="WalletList" ItemsSource="{Binding Accounts}" Classes="Vertical">
+                        <HeaderedContainer Classes="Card WizardSection Shadow MediumBigHeader" Header="{Binding Name}">
+                            <ItemsControl x:Name="WalletList" ItemsSource="{Binding Accounts}" Classes="Vertical" ClipToBounds="False">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <EdgePanel BorderBrush="{DynamicResource Stroke}" 
-                                                   BorderThickness="1" 
-                                                   CornerRadius="10" 
-                                                   Padding="20">
+                                        <EdgePanel Classes="White" ClipToBounds="False">
+                                            <EdgePanel.Styles>
+                                                <Style Selector="EdgePanel > Border">
+                                                    <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
+                                                </Style>
+                                            </EdgePanel.Styles>
                                             <EdgePanel.StartContent>
                                                 <EdgePanel StartContent="{Icon fa-bitcoin}"
                                                            IconOptions.Padding="10"

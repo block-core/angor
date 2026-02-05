@@ -1,0 +1,44 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections">
+    <Design.PreviewWith>
+        <DialogViewContainer Width="500" Height="500" Title="Nice Dialog">
+            <DialogControl Content="Some This is some text that gives context to the user about the dialog. It can be multiple lines and contain important information that the user needs to know before taking an action.">
+                <DialogControl.Options>
+                    <generic:List x:TypeArguments="IOption">
+                        <OptionDesign Title="Primary" Role="Primary" />
+                        <OptionDesign Title="Secondary" Role="Secondary" />
+                    </generic:List>
+                </DialogControl.Options>
+            </DialogControl>
+        </DialogViewContainer>
+    </Design.PreviewWith>
+
+    <Style Selector="DialogViewContainer">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <Border Background="{DynamicResource BodyText}" Opacity="0.2" />
+                    <Border Classes="White" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <StackPanel Classes="BigGap">
+                            <Panel>
+                                <TextBlock VerticalAlignment="Center" Classes="Size-XL Weight-Bold Center" Text="{TemplateBinding Title}" />
+                                <EnhancedButton Command="{TemplateBinding Close}"
+                                                IsCancel="True"
+                                                Padding="0"
+                                                Background="Transparent" 
+                                                BorderBrush="Transparent"
+                                                IconOptions.Size="24"
+                                                Foreground="{DynamicResource Dimmed}"
+                                                HorizontalAlignment="Right" 
+                                                Icon="{Icon mdi-close}" />
+                            </Panel>
+                            <ContentPresenter Content="{TemplateBinding Content}" />
+                        </StackPanel>
+                    </Border>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+</Styles>

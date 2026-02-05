@@ -1,0 +1,34 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <ProgressBar Value="20" Height="20" />
+        </Border>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        
+        <ResourceDictionary>
+            <LinearGradientBrush x:Key="ProgressBrush">
+                <GradientStops>
+                    <GradientStop Offset="0" Color="{StaticResource PrimaryGreenDark}" />
+                    <GradientStop Offset="1" Color="#4A8F5F" />
+                </GradientStops>
+            </LinearGradientBrush>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="ProgressBarBackground" Color="#e8e8e8" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="ProgressBarBackground" Color="#404040" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+    
+    <Style Selector="ProgressBar">
+        <Setter Property="Foreground" Value="{DynamicResource ProgressBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ProgressBarBackground}" />
+        <Setter Property="CornerRadius" Value="6" />
+    </Style>
+</Styles>

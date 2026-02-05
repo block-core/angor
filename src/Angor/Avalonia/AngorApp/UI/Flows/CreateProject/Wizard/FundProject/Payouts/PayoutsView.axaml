@@ -35,7 +35,7 @@
 
                 <StackPanel Spacing="{StaticResource BigGap}" IsVisible="{Binding !!!Payouts.Count}">
 
-                <HeaderedContainer Classes="WizardSection">
+                <HeaderedContainer Classes="Card Neutral WizardSection">
                     <HeaderedContainer.Header>
                         <TextBlock Classes="FormLabel">Payout Frequency</TextBlock>
                     </HeaderedContainer.Header>
@@ -59,7 +59,7 @@
                 </HeaderedContainer>
 
 
-                <HeaderedContainer Classes="WizardSection">
+                <HeaderedContainer Classes="Card Neutral WizardSection">
                     <HeaderedContainer.Header>
                         <TextBlock Classes="FormLabel">Number of Installments</TextBlock>
                     </HeaderedContainer.Header>
@@ -86,7 +86,7 @@
                 </HeaderedContainer>
 
 
-                <HeaderedContainer Classes="WizardSection" IsVisible="{Binding FundProject.PayoutFrequency, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static model:PayoutFrequency.Monthly}}">
+                <HeaderedContainer Classes="Card Neutral WizardSection" IsVisible="{Binding FundProject.PayoutFrequency, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static model:PayoutFrequency.Monthly}}">
                     <HeaderedContainer.Header>
                         <TextBlock Classes="FormLabel">Monthly Offer Payout Date</TextBlock>
                     </HeaderedContainer.Header>
@@ -110,7 +110,7 @@
                 </HeaderedContainer>
 
 
-                <HeaderedContainer Classes="WizardSection" IsVisible="{Binding FundProject.PayoutFrequency, Converter={x:Static  ObjectConverters.Equal}, ConverterParameter={x:Static model:PayoutFrequency.Weekly}}">
+                <HeaderedContainer Classes="Card Neutral WizardSection" IsVisible="{Binding FundProject.PayoutFrequency, Converter={x:Static  ObjectConverters.Equal}, ConverterParameter={x:Static model:PayoutFrequency.Weekly}}">
                     <HeaderedContainer.Header>
                         <TextBlock Classes="FormLabel">Weekly Payout Day</TextBlock>
                     </HeaderedContainer.Header>
@@ -138,7 +138,7 @@
             </StackPanel>
 
 
-            <HeaderedContainer FontWeight="Bold" Classes="Translucid" IsVisible="{Binding !!Payouts.Count}">
+            <HeaderedContainer FontWeight="Bold" Classes="Card Accent GreenIcon" IsVisible="{Binding !!Payouts.Count}">
                 <HeaderedContainer.Header>
                     <EdgePanel StartContent="{Icon fa-regular fa-clipboard}">
                         <EdgePanel.EndContent>

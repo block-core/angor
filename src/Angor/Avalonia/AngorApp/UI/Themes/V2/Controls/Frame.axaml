@@ -21,11 +21,11 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
         <Setter Property="Background" Value="{DynamicResource Surface}" />
-        <Setter Property="Foreground" Value="#333333" />
+        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
     </Style>
 
     <Style Selector="Frame ContentPresenter#Footer">
-        <Setter Property="BoxShadow" Value="{StaticResource ItemShadow}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
         <Setter Property="IsVisible" Value="{Binding $self.Content, Converter={x:Static ObjectConverters.IsNotNull}}" />
     </Style>
 

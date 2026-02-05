@@ -5,7 +5,7 @@
         <Setter Property="Background" Value="Transparent" />
     </Style>
         
-    <Style Selector="ItemsControl.Horizontal">
+    <Style Selector=":is(ItemsControl).Horizontal">
         <Setter Property="ItemsPanel">
             <Setter.Value>
                 <ItemsPanelTemplate>
@@ -15,11 +15,21 @@
         </Setter>
     </Style>
     
-    <Style Selector="ItemsControl.Vertical">
+    <Style Selector=":is(ItemsControl).Vertical">
         <Setter Property="ItemsPanel">
             <Setter.Value>
                 <ItemsPanelTemplate>
                     <StackPanel Classes="MediumGap" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <Style Selector=":is(ItemsControl).VerticalBigGap">
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <StackPanel Classes="BigGap" />
                 </ItemsPanelTemplate>
             </Setter.Value>
         </Setter>
@@ -55,7 +65,7 @@
         
         <ControlTheme x:Key="ButtonizedAccentListBoxItem" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
             <Setter Property="BorderThickness" Value="2" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceLow}" />
             <Setter Property="CornerRadius" Value="10" />
             <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Transitions">

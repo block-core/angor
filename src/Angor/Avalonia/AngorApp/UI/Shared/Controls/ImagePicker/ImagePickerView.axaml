@@ -11,7 +11,7 @@
         <l:ImagePickerViewModelSample />
     </Design.DataContext>
 
-    <HeaderedContainer Classes="WizardSection">
+    <HeaderedContainer Classes="Card Neutral WizardSection">
         <StackPanel Classes="BigGap">
             <TextBlock TextWrapping="Wrap">Enter an image URL directly, or browse and upload a local file to a Blossom server</TextBlock>
 

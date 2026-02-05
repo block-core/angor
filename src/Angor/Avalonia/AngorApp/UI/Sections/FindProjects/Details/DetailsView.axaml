@@ -1,0 +1,205 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:l="clr-namespace:AngorApp.UI.Sections.FindProjects.Details"
+             xmlns:a="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:c="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:cm="clr-namespace:AngorApp.UI.Shared.Controls.Common"
+             mc:Ignorable="d"
+             x:Class="AngorApp.UI.Sections.FindProjects.Details.DetailsView"
+             x:DataType="l:IDetailsViewModel">
+
+    <Design.DataContext>
+        <l:DetailsViewModelSample />
+    </Design.DataContext>
+
+
+    <c:ScrollableView>
+        <StackPanel Spacing="30" Margin="20" MaxWidth="1200" HorizontalAlignment="Stretch">
+
+            <!-- Top Section: Header + Investment Opportunity -->
+            <Grid ColumnDefinitions="*, 400" ColumnSpacing="20">
+
+                <!-- Left Column: Header & Description -->
+                <OverlayBorder Classes="White Shadow" Padding="0" CornerRadius="16">
+                    <StackPanel Grid.Column="0">
+                        <a:AdvancedImage CornerRadius="10 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140" Source="{Binding Project.Banner}" />
+                        <Panel>
+                            <Border Classes="Shadow" Height="60" Width="60" Margin="20 -30 0 0" HorizontalAlignment="Left" CornerRadius="30" />
+                            <Border Height="60" Width="60" Margin="20 -30 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource AppBackground}">
+                                <a:AdvancedImage Source="{Binding Project.Avatar}" />
+                            </Border>
+                        </Panel>
+                        <StackPanel Margin="20" Classes="SmallGap">
+                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Classes="Weight-Bold Size-XL Strong" />
+                            <TextBlock Text="{Binding ShortDescription}" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" TextWrapping="Wrap" Classes="Size-M" />
+                        </StackPanel>
+                    </StackPanel>
+                </OverlayBorder>
+
+                <!-- Right Column: Investment Opportunity -->
+                <Border Grid.Column="1" Classes="DarkGreen Shadow" IsVisible="{Binding IsInsideInvestmentPeriod}">
+                    <StackPanel Classes="BigGap" VerticalAlignment="Center">
+                        <ContentControl IconOptions.Size="32" IconOptions.Fill="White" Content="{Icon fa-bitcoin}" />
+                        <TextBlock Text="Investment Opportunity" Classes="Title" Foreground="White" FontWeight="Bold" />
+
+                        <TextBlock Text="Join this project and be part of its journey" Classes="Wrap CenterText" />
+
+                        <EnhancedButton Content="Invest Now" Icon="{Icon fa-brands fa-bitcoin}"
+                                        Command="{Binding Invest}"
+                                        Classes="White"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        FontSize="18"
+                                        Padding="24 14 "
+                                        FontWeight="Bold">
+                        </EnhancedButton>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Project Statistics -->
+            <HeaderedContainer Classes="Card Peach Shadow BigHeader BigIcon">
+                <HeaderedContainer.Header>
+                    <EdgePanel StartContent="{Icon fa-bitcoin}" Content="Project Statistics " />
+                </HeaderedContainer.Header>
+                <StackPanel Spacing="15">
+                    <UniformGrid Columns="3" Margin="0 10" ColumnSpacing="16">
+                        <HeaderedContainer Classes="Card StatCard Fields" Content="{Binding TargetAmount.DecimalString}">
+                            <HeaderedContainer.Header>
+                                <EdgePanel StartContent="Target Amount" EndContent="{Icon fa-bitcoin}" />
+                            </HeaderedContainer.Header>
+                        </HeaderedContainer>
+                        <HeaderedContainer Classes="Card StatCard Fields" Content="{Binding TotalRaised.DecimalString}">
+                            <HeaderedContainer.Header>
+                                <EdgePanel StartContent="Total Raised" EndContent="{Icon fa-clock}" />
+                            </HeaderedContainer.Header>
+                        </HeaderedContainer>
+                        <HeaderedContainer Classes="Card StatCard Fields" Content="{Binding InvestorsCount}">
+                            <HeaderedContainer.Header>
+                                <EdgePanel StartContent="Total Investors" EndContent="{Icon fa-clipboard}" />
+                            </HeaderedContainer.Header>
+                        </HeaderedContainer>
+                    </UniformGrid>
+
+                    <StackPanel Classes="MediumGap">
+                        <Grid ColumnDefinitions="*, Auto" Margin="0 0 0 5">
+                            <TextBlock Text="Funding Progress" Foreground="#4a4a4a" Classes="Size-S Weight-Bold" />
+                            <TextBlock Grid.Column="1" Foreground="{DynamicResource PrimaryGreenDark}" Text="{Binding FundingProgress, StringFormat={}{0:P0}}" FontWeight="Bold" />
+                        </Grid>
+                        <ProgressBar Grid.Row="1" Maximum="1" Value="{Binding FundingProgress}" Height="12" />
+                    </StackPanel>
+                </StackPanel>
+            </HeaderedContainer>
+
+            <!-- Investment Information -->
+            <HeaderedContainer Classes="Card White Shadow BigHeader SmallIcon">
+                <HeaderedContainer.Header>
+                    <EdgePanel Margin="-5 0" StartContent="{Icon fa-bitcoin}">Investment Information</EdgePanel>
+                </HeaderedContainer.Header>
+                <UniformGrid Columns="3" Margin="0 10" ColumnSpacing="16" RowSpacing="16">
+                    <HeaderedContainer Classes="Card StatCard Fields" Content="{Binding SubscriptionPrice.DecimalString}">
+                        <HeaderedContainer.Header>
+                            <EdgePanel StartContent="Subscription Price" EndContent="{Icon fa-bitcoin}" />
+                        </HeaderedContainer.Header>
+                    </HeaderedContainer>
+                    <HeaderedContainer Classes="Card StatCard Fields" Content="{Binding Frequency}">
+                        <HeaderedContainer.Header>
+                            <EdgePanel StartContent="Frequency" EndContent="{Icon fa-clock}" />
+                        </HeaderedContainer.Header>
+                    </HeaderedContainer>
+                    <HeaderedContainer Classes="Card StatCard Fields" Content="{Binding Installments}">
+                        <HeaderedContainer.Header>
+                            <EdgePanel StartContent="Installments" EndContent="{Icon fa-clipboard}" />
+                        </HeaderedContainer.Header>
+                    </HeaderedContainer>
+                </UniformGrid>
+            </HeaderedContainer>
+
+            <!-- Expandable: Project Details -->
+            <Expander IsExpanded="False">
+                <Expander.Header>
+                    <EdgePanel StartContent="{Icon fa-circle-info}" Content="Project Details" />
+                </Expander.Header>
+                <StackPanel Spacing="15" Margin="10">
+
+                    <HeaderedContainer Header="Explorer">
+                        <EdgePanel Classes="LightGray Radius-S SmallerPadding" StartContent="{Icon fa-arrow-up-right-from-square}">
+                            <EdgePanel.Content>
+                                <HyperlinkButton Grid.Column="1" NavigateUri="{Binding ExplorerUrl}" Content="View the transaction" HorizontalAlignment="Left" Padding="0" />
+                            </EdgePanel.Content>
+                        </EdgePanel>
+                    </HeaderedContainer>
+
+                    <HeaderedContainer Header="Project ID">
+                        <EdgePanel Classes="LightGray SmallerPadding Radius-S" StartContent="{Icon fa-cloud}">
+                            <EdgePanel.Content>
+                                <EdgePanel Content="{Binding ProjectId}">
+                                    <EdgePanel.EndContent>
+                                        <cm:CopyButton Content="{Binding ProjectId}" />
+                                    </EdgePanel.EndContent>
+                                </EdgePanel>
+                            </EdgePanel.Content>
+                        </EdgePanel>
+                    </HeaderedContainer>
+                    <HeaderedContainer Header="Founder Key">
+                        <EdgePanel Classes="LightGray SmallerPadding Radius-S" StartContent="{Icon fa-key}">
+                            <EdgePanel.Content>
+                                <EdgePanel Content="{Binding FounderKey}">
+                                    <EdgePanel.EndContent>
+                                        <cm:CopyButton Content="{Binding FounderKey}" />
+                                    </EdgePanel.EndContent>
+                                </EdgePanel>
+                            </EdgePanel.Content>
+                        </EdgePanel>
+                    </HeaderedContainer>
+                </StackPanel>
+            </Expander>
+
+            <!-- Expandable: Nostr -->
+            <Expander>
+                <Expander.Header>
+                    <EdgePanel StartContent="{Icon fa-comment-dots}" Content="Nostr" />
+                </Expander.Header>
+
+                <StackPanel Spacing="15" Margin="10">
+
+                    <HeaderedContainer Header="Nostr Public Key (npub)">
+                        <EdgePanel Classes="LightGray SmallerPadding Radius-S" StartContent="{Icon fa-user}">
+                            <EdgePanel.Content>
+                                <EdgePanel Content="{Binding NostrNpub}">
+                                    <EdgePanel.EndContent>
+                                        <cm:CopyButton Content="{Binding NostrNpub}" />
+                                    </EdgePanel.EndContent>
+                                </EdgePanel>
+                            </EdgePanel.Content>
+                        </EdgePanel>
+                    </HeaderedContainer>
+                    <HeaderedContainer Header="Nostr Public Key (hex)">
+                        <EdgePanel Classes="LightGray SmallerPadding Radius-S" StartContent="{Icon fa-hashtag}">
+                            <EdgePanel.Content>
+                                <EdgePanel Content="{Binding NostrHex}">
+                                    <EdgePanel.EndContent>
+                                        <cm:CopyButton Content="{Binding NostrHex}" />
+                                    </EdgePanel.EndContent>
+                                </EdgePanel>
+                            </EdgePanel.Content>
+                        </EdgePanel>
+                    </HeaderedContainer>
+                    
+                    <HeaderedContainer Header="Relays">
+                       <ItemsControl Classes="Vertical" ItemsSource="{Binding Relays}">
+                           <ItemsControl.ItemTemplate>
+                               <DataTemplate>
+                                   <EdgePanel Classes="LightGray SmallerPadding Radius-S" StartContent="{Icon fa-bolt}" Content="{Binding}" />
+                               </DataTemplate>
+                           </ItemsControl.ItemTemplate>
+                       </ItemsControl>
+                    </HeaderedContainer>
+                </StackPanel>
+            </Expander>
+
+        </StackPanel>
+    </c:ScrollableView>
+</UserControl>

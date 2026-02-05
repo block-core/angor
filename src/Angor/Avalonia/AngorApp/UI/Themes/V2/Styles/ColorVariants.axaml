@@ -1,0 +1,286 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Styles.Resources>
+        
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="Yellow.BorderBrush">#fef08a</SolidColorBrush>
+                    <SolidColorBrush x:Key="Yellow.Background">#FEFCE8</SolidColorBrush>
+                    <SolidColorBrush x:Key="Pink.BorderBrush">#fed7aa</SolidColorBrush>
+                    <SolidColorBrush x:Key="Pink.Background">#fff7ed</SolidColorBrush>
+                    <SolidColorBrush x:Key="LightGray.BorderBrush">#E5E7EB</SolidColorBrush>
+                    <SolidColorBrush x:Key="LightGray.Background">#F9FAFB</SolidColorBrush>
+                    <SolidColorBrush x:Key="Peach.BorderBrush">#fed7aa</SolidColorBrush>
+                    <LinearGradientBrush x:Key="Peach.Background" StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0" Color="#fff7ed" />
+                        <GradientStop Offset="1" Color="#fef3c7" />
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="Green.BorderBrush">#86EFAC</SolidColorBrush>
+                    <SolidColorBrush x:Key="Green.Background">#F0FDF4</SolidColorBrush>
+                    <SolidColorBrush x:Key="Orange.IconFill">#d97706</SolidColorBrush>
+                    <SolidColorBrush x:Key="Orange.BorderBrush">#fef3c7</SolidColorBrush>
+                    <SolidColorBrush x:Key="Orange.Background">#fef3c7</SolidColorBrush>
+                    <SolidColorBrush x:Key="Translucent.Background">#194B7C5A</SolidColorBrush>
+                    <SolidColorBrush x:Key="DarkGreen.BorderBrush">#e5e7eb</SolidColorBrush>
+                    <LinearGradientBrush x:Key="DarkGreen.Background" StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0" Color="#2d5a3d" />
+                        <GradientStop Offset="1" Color="#4a8f5f" />
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="White.BorderBrush">#e5e7eb</SolidColorBrush>
+                    <SolidColorBrush x:Key="White.Background">White</SolidColorBrush>
+                    <SolidColorBrush x:Key="StatCard.BorderBrush">#66FDBA74</SolidColorBrush>
+                    <SolidColorBrush x:Key="StatCard.Background">White</SolidColorBrush>
+                    <SolidColorBrush x:Key="Sky.BorderBrush" Color="#e5e7eb" />
+                    <LinearGradientBrush x:Key="Sky.Background" StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0" Color="#f9fafb" />
+                        <GradientStop Offset="1" Color="#f3f4f6" />
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="Blue.BorderBrush" Color="#bfdbfe" />
+                    <LinearGradientBrush x:Key="Blue.Background" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Offset="0" Color="#eff6ff" />
+                        <GradientStop Offset="1" Color="#e0e7ff" />
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="Yellow.BorderBrush">#1Afef08a</SolidColorBrush>
+                    <SolidColorBrush x:Key="Yellow.Background">#1AFEFCE8</SolidColorBrush>
+                    <SolidColorBrush x:Key="Pink.BorderBrush">#4dEA580C</SolidColorBrush>
+                    <LinearGradientBrush x:Key="Pink.Background" StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0" Color="#26ea580c" />
+                        <GradientStop Offset="1" Color="#26fbbf24" />
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="LightGray.BorderBrush">#404040</SolidColorBrush>
+                    <SolidColorBrush x:Key="LightGray.Background">#0A0A0A</SolidColorBrush>
+                    <SolidColorBrush x:Key="Peach.BorderBrush">#4dea580c</SolidColorBrush>
+                    <LinearGradientBrush x:Key="Peach.Background" StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0" Color="#26ea580c" />
+                        <GradientStop Offset="1" Color="#26fbbf24" />
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="Green.BorderBrush">#1A86EFAC</SolidColorBrush>
+                    <SolidColorBrush x:Key="Green.Background">#1AF0FDF4</SolidColorBrush>
+                    <SolidColorBrush x:Key="Orange.IconFill">#d97706</SolidColorBrush>
+                    <SolidColorBrush x:Key="Orange.BorderBrush">#1Afef3c7</SolidColorBrush>
+                    <SolidColorBrush x:Key="Orange.Background">#1Afef3c7</SolidColorBrush>
+                    <SolidColorBrush x:Key="Translucent.Background">#194B7C5A</SolidColorBrush>
+                    <SolidColorBrush x:Key="DarkGreen.BorderBrush">#e5e7eb</SolidColorBrush>
+                    <LinearGradientBrush x:Key="DarkGreen.Background" StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0" Color="#2d5a3d" />
+                        <GradientStop Offset="1" Color="#4a8f5f" />
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="White.BorderBrush">#333333</SolidColorBrush>
+                    <SolidColorBrush x:Key="White.Background">#1a1a1a</SolidColorBrush>
+                    <SolidColorBrush x:Key="StatCard.BorderBrush">#4DEA580C</SolidColorBrush>
+                    <SolidColorBrush x:Key="StatCard.Background">#B32A2A2A</SolidColorBrush>
+                    <SolidColorBrush x:Key="Sky.BorderBrush" Color="#333" />
+                    <LinearGradientBrush x:Key="Sky.Background" StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0" Color="#1a1a1a" />
+                        <GradientStop Offset="1" Color="#0f0f0f" />
+                    </LinearGradientBrush>
+                    <SolidColorBrush x:Key="Blue.BorderBrush" Color="#4a5a6a" />
+                    <LinearGradientBrush x:Key="Blue.Background" StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Offset="0" Color="#1A2A3A" />
+                        <GradientStop Offset="1" Color="#2A1A3A" />
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <!-- Base properties for all color variants -->
+    <Style Selector=":is(Control).Yellow, :is(Control).Pink, :is(Control).Peach, :is(Control).LightGray, :is(Control).Green, :is(Control).Orange, :is(Control).Translucent, :is(Control).DarkGreen, :is(Control).White, :is(Control).Sky">
+        <Setter Property="Border.CornerRadius" Value="16" />
+        <Setter Property="Border.BorderThickness" Value="1" />
+        <Setter Property="Border.Padding" Value="24" />
+    </Style>
+
+    <!-- Yellow -->
+    <Style Selector=":is(Control).Yellow">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource Yellow.BorderBrush}" />
+        <Setter Property="Border.Background" Value="{DynamicResource Yellow.Background}" />
+    </Style>
+
+    <!-- Pink -->
+    <Style Selector=":is(Control).Pink">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource Pink.BorderBrush}" />
+        <Setter Property="Border.Background" Value="{DynamicResource Pink.Background}" />
+    </Style>
+
+    <!-- Peach -->
+    <Style Selector=":is(Control).Peach">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource Peach.BorderBrush}" />
+        <Setter Property="Border.Background" Value="{DynamicResource Peach.Background}" />
+    </Style>
+
+    <!-- LightGray -->
+    <Style Selector=":is(Control).LightGray">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource LightGray.BorderBrush}" />
+        <Setter Property="Border.Background" Value="{DynamicResource LightGray.Background}" />
+    </Style>
+
+    <!-- Green -->
+    <Style Selector=":is(Control).Green">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource Green.BorderBrush}" />
+        <Setter Property="Border.Background" Value="{DynamicResource Green.Background}" />
+        <Setter Property="IconOptions.Fill" Value="{DynamicResource Brand}" />
+    </Style>
+
+    <!-- Orange -->
+    <Style Selector=":is(Control).Orange">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource Orange.BorderBrush}" />
+        <Setter Property="Border.Background" Value="{DynamicResource Orange.Background}" />
+        <Setter Property="IconOptions.Fill" Value="{DynamicResource Orange.IconFill}" />
+    </Style>
+
+    <!-- Translucent -->
+    <Style Selector=":is(Control).Translucent">
+        <Setter Property="Border.Background" Value="{DynamicResource Translucent.Background}" />
+    </Style>
+
+    <!-- DarkGreen -->
+    <Style Selector=":is(Control).DarkGreen">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource DarkGreen.BorderBrush}" />
+        <Setter Property="Border.Background" Value="{DynamicResource DarkGreen.Background}" />
+        <Setter Property="TemplatedControl.Foreground" Value="White" />
+    </Style>
+
+    <!-- White -->
+    <Style Selector=":is(Control).White">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource White.BorderBrush}" />
+        <Setter Property="Border.Background" Value="{DynamicResource White.Background}" />
+    </Style>
+
+    <!-- StatCard -->
+    <Style Selector=":is(Control).StatCard">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource StatCard.BorderBrush}" />
+        <Setter Property="Border.Background" Value="{DynamicResource StatCard.Background}" />
+        <Setter Property="Border.BorderThickness" Value="2" />
+    </Style>
+    
+    <!-- Sky -->
+    <Style Selector=":is(Control).Sky">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource Sky.BorderBrush}" />
+        <Setter Property="Border.Background" Value="{DynamicResource Sky.Background}" />
+    </Style>
+
+    <!-- Theme-based variants (use global theme resources) -->
+    <Style Selector=":is(Control).Accent">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource Accent}" />
+        <Setter Property="Border.Background" Value="{DynamicResource TranslucidBackground}" />
+        <Setter Property="TemplatedControl.Foreground" Value="{DynamicResource Accent}" />
+    </Style>
+
+    <Style Selector=":is(Control).Bitcoin">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource BitcoinAccent}" />
+        <Setter Property="Border.Background" Value="{DynamicResource TranslucidOrange}" />
+        <Setter Property="TemplatedControl.Foreground" Value="{DynamicResource BitcoinAccent}" />
+    </Style>
+
+    <Style Selector=":is(Control).Neutral">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource Stroke}" />
+        <Setter Property="Border.Background" Value="{DynamicResource Surface}" />
+        <Setter Property="TemplatedControl.Foreground" Value="{DynamicResource TextStrong}" />
+    </Style>
+    
+    <Style Selector=":is(Control).Blue">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource Blue.BorderBrush}" />
+        <Setter Property="Border.Background" Value="{DynamicResource Blue.Background}" />
+    </Style>
+    
+    <!-- Utility classes -->
+    <Style Selector=":is(Control).Shadow">
+        <Setter Property="Border.BoxShadow" Value="{DynamicResource CardShadow}" />
+    </Style>
+
+    <Style Selector=":is(Control).SmallPadding">
+        <Setter Property="Border.Padding" Value="10,4" />
+    </Style>
+    
+    <Style Selector=":is(Control).SmallerPadding">
+        <Setter Property="Border.Padding" Value="10,6" />
+    </Style>
+
+    <Style Selector=":is(Control).RegularPadding">
+        <Setter Property="Border.Padding" Value="10" />
+    </Style>
+    
+    <Style Selector="Border.StatsCard, HeaderedContainer.StatsCard, OverlayBorder.StatsCard, EdgePanel.StatsCard">
+        <Setter Property="Border.BorderBrush" Value="#66FDBA74" />
+        <Setter Property="Border.Background" Value="#B3FFFFFF" />
+        <Setter Property="Border.BorderThickness" Value="1" />
+    </Style> 
+
+    <Style Selector=":is(Control).Rounded">
+        <Setter Property="Border.CornerRadius" Value="16" />
+    </Style>
+
+    <Style Selector=":is(Control).Circle">
+        <Setter Property="Border.CornerRadius" Value="1000" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Radius variants (must be after base color styles to override) -->
+    <Style Selector=":is(Control).Radius-S">
+        <Setter Property="Border.CornerRadius" Value="8" />
+    </Style>
+    <Style Selector=":is(Control).Radius-M">
+        <Setter Property="Border.CornerRadius" Value="10" />
+    </Style>
+    <Style Selector=":is(Control).Radius-L">
+        <Setter Property="Border.CornerRadius" Value="12" />
+    </Style>
+    <Style Selector=":is(Control).Radius-XL">
+        <Setter Property="Border.CornerRadius" Value="16" />
+    </Style>
+
+    <Design.PreviewWith>
+        <WrapPanel>
+            <Border Padding="20">
+                <Border.Styles>
+                    <Style Selector="StackPanel Border">
+                        <Setter Property="MinHeight" Value="50" />
+                        <Setter Property="Width" Value="100" />
+                    </Style>
+                </Border.Styles>
+                <StackPanel Spacing="10">
+                    <Border Classes="Yellow">
+                        <TextBlock>Yellow</TextBlock>
+                    </Border>
+                    <Border Classes="Pink" />
+                    <Border Classes="Peach">
+                        <TextBlock Foreground="Red">Peach</TextBlock>
+                    </Border>
+                    <Border Classes="Green" />
+                    <Border Classes="LightGray" />
+                    <Border Classes="Orange" />
+                    <Border Classes="Translucent" />
+                </StackPanel>
+            </Border>
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+                <Border Padding="20" Background="Black">
+                    <Border.Styles>
+                        <Style Selector="StackPanel Border">
+                            <Setter Property="MinHeight" Value="50" />
+                            <Setter Property="Width" Value="100" />
+                        </Style>
+                    </Border.Styles>
+                    <StackPanel Spacing="10">
+                        <Border Classes="Yellow">
+                            <TextBlock>hola</TextBlock>
+                        </Border>
+                        <Border Classes="Pink" />
+                        <Border Classes="Peach">
+                            <TextBlock>Peach</TextBlock>
+                        </Border>
+                        <Border Classes="Green" />
+                        <Border Classes="LightGray" />
+                        <Border Classes="Orange" />
+                        <Border Classes="Translucent" />
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+        </WrapPanel>
+    </Design.PreviewWith>
+
+</Styles>

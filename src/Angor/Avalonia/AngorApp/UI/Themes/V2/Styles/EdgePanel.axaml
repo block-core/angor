@@ -1,0 +1,39 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.PreviewWith>
+        <StackPanel Spacing="20" Width="400">
+            <ThemeVariantScope RequestedThemeVariant="Light">
+                <Border Padding="20" Background="{DynamicResource AppBackground}">
+                    <StackPanel Spacing="10">
+                        <TextBlock FontWeight="Bold">Light Theme</TextBlock>
+                        <EdgePanel Classes="BreakdownItem" StartContent="Network Fee" EndContent="0.00012 BTC" />
+                        <EdgePanel Classes="BreakdownItem" StartContent="Service Fee" EndContent="0.00005 BTC" />
+                        <EdgePanel Classes="BreakdownItem" StartContent="Total" EndContent="0.00017 BTC" />
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+                <Border Padding="20" Background="{DynamicResource AppBackground}">
+                    <StackPanel Spacing="10">
+                        <TextBlock FontWeight="Bold" Foreground="White">Dark Theme</TextBlock>
+                        <EdgePanel Classes="BreakdownItem" StartContent="Network Fee" EndContent="0.00012 BTC" />
+                        <EdgePanel Classes="BreakdownItem" StartContent="Service Fee" EndContent="0.00005 BTC" />
+                        <EdgePanel Classes="BreakdownItem" StartContent="Total" EndContent="0.00017 BTC" />
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Style Selector="EdgePanel.BreakdownItem ContentControl#StartContent">
+        <Setter Property="Foreground" Value="{DynamicResource Labels}" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+
+    <Style Selector="EdgePanel.BreakdownItem ContentControl#EndContent">
+        <Setter Property="Foreground" Value="{DynamicResource Brand}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+</Styles>
