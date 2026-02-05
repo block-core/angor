@@ -1,6 +1,9 @@
 using System.Reactive.Disposables;
+using Angor.Shared;
 using AngorApp.UI.Sections.Wallet.CreateAndImport;
+using Blockcore.Networks;
 using DynamicData;
+using Zafiro.CSharpFunctionalExtensions;
 
 namespace AngorApp.UI.Sections.Funds.Accounts
 {
@@ -8,7 +11,7 @@ namespace AngorApp.UI.Sections.Funds.Accounts
     {
         private readonly CompositeDisposable disposable = new();
         
-        public AccountsViewModel(IWalletContext walletContext, WalletImportWizard walletImportWizard, UIServices uiServices)
+        public AccountsViewModel(IWalletContext walletContext, WalletImportWizard walletImportWizard, UIServices uiServices, INetworkConfiguration networkConfiguration)
         {
             walletContext.WalletChanges
                          .Group(wallet => wallet.ImportKind)
@@ -28,11 +31,24 @@ namespace AngorApp.UI.Sections.Funds.Accounts
                          .DisposeWith(disposable);
             
             Balances = accountBalances;
+            
+            CanGetTestCoins = networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet;
+            
+            GetTestCoins = EnhancedCommand.Create(async () =>
+            {
+                var wallet = walletContext.CurrentWallet;
+                if (wallet.HasValue && wallet.Value.CanGetTestCoins)
+                {
+                    await wallet.Value.GetTestCoins.Execute();
+                }
+            }).DisposeWith(disposable);
         }
 
         public ICollection<IAccountGroup> AccountGroups { get; }
         public IEnhancedCommand ImportAccount { get; }
         public IEnumerable<IAccountBalance> Balances { get; }
+        public IEnhancedCommand GetTestCoins { get; }
+        public bool CanGetTestCoins { get; }
 
         public void Dispose()
         {

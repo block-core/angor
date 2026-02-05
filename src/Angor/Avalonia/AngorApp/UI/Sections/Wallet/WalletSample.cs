@@ -46,6 +46,7 @@ public class WalletSample : IWallet
     public IEnhancedCommand Send { get; }
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
     public IEnhancedCommand<Result> GetTestCoins { get; }
+    public bool CanGetTestCoins { get; set; } = true;
     public IObservable<bool> HasTransactions { get; } = Observable.Return(false);
     public IObservable<bool> HasBalance { get; } = Observable.Return(false);
     public NetworkKind NetworkKind { get; set; } = NetworkKind.Bitcoin;

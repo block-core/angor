@@ -7,5 +7,7 @@ namespace AngorApp.UI.Sections.Funds.Accounts
         public ICollection<IAccountGroup> AccountGroups { get; }
         public IEnhancedCommand ImportAccount { get; }
         public IEnumerable<IAccountBalance> Balances { get; }
+        public IEnhancedCommand GetTestCoins { get; }
+        public bool CanGetTestCoins { get; }
     }
 }

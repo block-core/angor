@@ -19,5 +19,8 @@ namespace AngorApp.UI.Sections.Funds.Accounts
             new AccountBalanceSample() { Name = "Liquid", Balance = Observable.Return(new AmountUI(50000000)) },
             new AccountBalanceSample() { Name = "Lightning", Balance = Observable.Return(new AmountUI(4000000)) }
         };
+        
+        public IEnhancedCommand GetTestCoins { get; } = EnhancedCommand.Create(() => { });
+        public bool CanGetTestCoins { get; } = true;
     }
 }

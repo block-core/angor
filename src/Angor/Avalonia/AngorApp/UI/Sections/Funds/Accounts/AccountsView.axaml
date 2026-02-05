@@ -23,7 +23,10 @@
 
     <controls:ScrollableView>
     <StackPanel Classes="BigGap" MaxWidth="1152">
-        <EnhancedButton Command="{Binding ImportAccount}" HorizontalAlignment="Right" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False">Import wallet</EnhancedButton>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Classes="SmallGap">
+            <EnhancedButton Command="{Binding ImportAccount}" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False">Import Wallet</EnhancedButton>
+            <EnhancedButton Command="{Binding GetTestCoins}" IsVisible="{Binding CanGetTestCoins}" Classes="Accent" Icon="{Icon fa-plus}">Get Testnet Coins</EnhancedButton>
+        </StackPanel>
             <HeaderedContainer Classes="Big WizardHighlight" Header="Balance Summary" Background="{DynamicResource TranslucidOrange2}">
                 <ItemsControl ItemsSource="{Binding Balances}">
                     <ItemsControl.ItemsPanel>
