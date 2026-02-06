@@ -4,23 +4,23 @@ using CSharpFunctionalExtensions;
 namespace Angor.Sdk.Integration.Lightning;
 
 /// <summary>
-/// Service for interacting with Boltz submarine swap API.
-/// Provides direct Lightning-to-onchain swaps without intermediate custody.
+/// Service for interacting with Boltz swap API.
+/// Provides trustless Lightning-to-onchain swaps (reverse submarine swaps).
 /// </summary>
 public interface IBoltzSwapService
 {
     /// <summary>
-    /// Creates a submarine swap (Lightning → On-chain).
-    /// User pays the Lightning invoice, funds are sent directly to the specified on-chain address.
+    /// Creates a reverse submarine swap (Lightning → On-chain).
+    /// User pays the Lightning invoice, we claim the on-chain funds using the preimage.
     /// </summary>
     /// <param name="onchainAddress">The Bitcoin address to receive the swapped funds</param>
     /// <param name="amountSats">Amount in satoshis to swap</param>
-    /// <param name="refundPublicKey">Public key for refund in case swap fails</param>
-    /// <returns>Swap details including the Lightning invoice to pay</returns>
+    /// <param name="claimPublicKey">Public key for claiming the on-chain funds</param>
+    /// <returns>Swap details including the Lightning invoice to pay and preimage for claiming</returns>
     Task<Result<BoltzSubmarineSwap>> CreateSubmarineSwapAsync(
         string onchainAddress, 
         long amountSats,
-        string refundPublicKey);
+        string claimPublicKey);
 
     /// <summary>
     /// Gets the current status of a swap
@@ -29,16 +29,30 @@ public interface IBoltzSwapService
     Task<Result<BoltzSwapStatus>> GetSwapStatusAsync(string swapId);
 
     /// <summary>
-    /// Gets current swap pairs and their limits/fees
+    /// Gets current swap pairs and their limits/fees for reverse swaps
     /// </summary>
     Task<Result<BoltzPairInfo>> GetPairInfoAsync();
 
     /// <summary>
-    /// Creates a reverse submarine swap (On-chain → Lightning).
-    /// For future use if needed.
+    /// Gets a partial signature from Boltz for cooperative claim transaction signing (MuSig2).
+    /// Call this after the lockup transaction is in mempool.
     /// </summary>
-    Task<Result<BoltzReverseSwap>> CreateReverseSwapAsync(
-        string bolt11Invoice,
-        string claimPublicKey);
+    /// <param name="swapId">The swap ID</param>
+    /// <param name="claimTransaction">The unsigned claim transaction hex</param>
+    /// <param name="preimage">The preimage (secret) for the swap</param>
+    /// <param name="pubNonce">Our public nonce for MuSig2</param>
+    /// <returns>Boltz's partial signature and public nonce for aggregation</returns>
+    Task<Result<BoltzClaimResponse>> GetClaimSignatureAsync(
+        string swapId,
+        string claimTransaction,
+        string preimage,
+        string pubNonce);
+
+    /// <summary>
+    /// Broadcasts a signed transaction to the Bitcoin network via Boltz.
+    /// </summary>
+    /// <param name="transactionHex">The signed transaction hex</param>
+    /// <returns>The transaction ID if broadcast was successful</returns>
+    Task<Result<string>> BroadcastTransactionAsync(string transactionHex);
 }
 

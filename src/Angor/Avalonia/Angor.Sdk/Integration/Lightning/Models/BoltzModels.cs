@@ -21,7 +21,8 @@ public class BoltzConfiguration
 }
 
 /// <summary>
-/// Response from creating a submarine swap (Lightning → On-chain)
+/// Response from creating a reverse submarine swap (Lightning → On-chain).
+/// User pays Lightning invoice, receives BTC on-chain.
 /// </summary>
 public class BoltzSubmarineSwap
 {
@@ -36,17 +37,22 @@ public class BoltzSubmarineSwap
     public string Invoice { get; set; } = string.Empty;
     
     /// <summary>
-    /// On-chain address where funds will be sent after payment
+    /// On-chain address where funds will be sent after claiming
     /// </summary>
     public string Address { get; set; } = string.Empty;
     
     /// <summary>
-    /// Expected amount in satoshis to be received on-chain
+    /// Boltz lockup address where funds are held in HTLC until claimed
+    /// </summary>
+    public string LockupAddress { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Expected amount in satoshis to be received on-chain (after fees)
     /// </summary>
     public long ExpectedAmount { get; set; }
     
     /// <summary>
-    /// Amount the user needs to pay (including fees)
+    /// Amount the user needs to pay via Lightning
     /// </summary>
     public long InvoiceAmount { get; set; }
     
@@ -56,14 +62,45 @@ public class BoltzSubmarineSwap
     public long TimeoutBlockHeight { get; set; }
     
     /// <summary>
-    /// Redeem script for the swap HTLC
+    /// Redeem script for the swap HTLC (legacy, use SwapTree for Taproot)
     /// </summary>
     public string RedeemScript { get; set; } = string.Empty;
     
     /// <summary>
-    /// BIP21 payment URI
+    /// Swap tree for Taproot scripts (serialized JSON)
+    /// </summary>
+    public string SwapTree { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Boltz's refund public key (needed for MuSig2 claim)
+    /// </summary>
+    public string RefundPublicKey { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Our claim public key (the one we sent when creating the swap)
+    /// </summary>
+    public string ClaimPublicKey { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Blinding key for Liquid swaps (null for BTC)
+    /// </summary>
+    public string? BlindingKey { get; set; }
+    
+    /// <summary>
+    /// BIP21 payment URI (if available)
     /// </summary>
     public string Bip21 { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// The preimage (secret) used to claim the on-chain funds.
+    /// IMPORTANT: Store this securely - it's needed to claim the funds!
+    /// </summary>
+    public string Preimage { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// SHA256 hash of the preimage, sent to Boltz when creating the swap
+    /// </summary>
+    public string PreimageHash { get; set; } = string.Empty;
     
     /// <summary>
     /// Swap status
@@ -82,6 +119,18 @@ public class BoltzReverseSwap
     public long OnchainAmount { get; set; }
     public long TimeoutBlockHeight { get; set; }
     public string RedeemScript { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Response from cooperative claim signing with Boltz (MuSig2)
+/// </summary>
+public class BoltzClaimResponse
+{
+    /// <summary>Boltz's public nonce for MuSig2 aggregation</summary>
+    public string PubNonce { get; set; } = string.Empty;
+    
+    /// <summary>Boltz's partial signature for MuSig2 aggregation</summary>
+    public string PartialSignature { get; set; } = string.Empty;
 }
 
 /// <summary>
