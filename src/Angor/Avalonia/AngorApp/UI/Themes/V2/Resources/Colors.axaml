@@ -105,6 +105,16 @@
                     <GradientStop Offset="1" Color="#fff7ed" />
                 </GradientStops>
             </LinearGradientBrush>
+            
+            <LinearGradientBrush x:Key="TranslucidOrange2" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStops>
+                    <GradientStop Offset="0" Color="#fff7ed" />
+                    <GradientStop Offset="1" Color="#fef3c7" />
+                </GradientStops>
+            </LinearGradientBrush>
+            
+            <SolidColorBrush x:Key="StatValue" Color="#92400e" />
+            <SolidColorBrush x:Key="StatLabel" Color="#92400e" />
 
         </ResourceDictionary>
 
@@ -185,7 +195,9 @@
             <SolidColorBrush x:Key="SecondaryButtonForeground" Color="{StaticResource TextStrong}" />
             <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{StaticResource Surface}" />
             <SolidColorBrush x:Key="SecondaryButtonBorder" Color="{StaticResource Stroke}" />
-
+            
+            <SolidColorBrush x:Key="StatLabel" Color="#a0a0a0" />
+            <SolidColorBrush x:Key="StatValue" Color="#fafafa" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
@@ -224,5 +236,6 @@
     <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="BitcoinOrange" />
     <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="SurfaceHover" />
     <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
+    
 
 </ResourceDictionary>

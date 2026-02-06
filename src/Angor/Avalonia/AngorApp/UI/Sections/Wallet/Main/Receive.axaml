@@ -6,8 +6,9 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:commands="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
              xmlns:simple="clr-namespace:AngorApp.Model.Wallet;assembly=AngorApp.Model"
+             xmlns:simple1="clr-namespace:AngorApp.Model.Wallet.Simple;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="400"
-             x:Class="AngorApp.UI.Sections.Wallet.Main.Receive" x:DataType="simple:SimpleWallet">
+             x:Class="AngorApp.UI.Sections.Wallet.Main.Receive" x:DataType="simple1:SimpleWallet">
 
     <Interaction.Behaviors>
         <LoadedTrigger>

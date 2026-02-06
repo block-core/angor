@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:empty="clr-namespace:AngorApp.UI.Sections.Funds.Empty"
+             mc:Ignorable="d" 
+             x:Class="AngorApp.UI.Sections.Funds.Empty.EmptyView"
+             x:DataType="empty:IEmptyViewModel">
+    <StackPanel Classes="BigGap" Width="448">
+        <PathIcon Height="112" Width="112" Foreground="{DynamicResource Brand}" Data="{StaticResource AngorLogo}" />
+        <TextBlock Text="FUNDS" Classes="Size-XXL Weight-Bold Strong Center"></TextBlock>
+        <TextBlock Classes="Size-L Dimmed Center">Wallet's get created when you fund or launch projects, but if you want to import or create one before please do</TextBlock>
+        <EnhancedButton Command="{Binding AddWallet}" HorizontalAlignment="Center" Icon="{Icon fa-plus}">Add Wallet</EnhancedButton>
+    </StackPanel>
+</UserControl>

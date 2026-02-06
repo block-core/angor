@@ -1,0 +1,123 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:l="clr-namespace:AngorApp"
+             xmlns:accounts="clr-namespace:AngorApp.UI.Sections.Funds.Accounts"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Sections.Funds.Accounts.AccountsView"
+             x:DataType="accounts:IAccountsViewModel">
+
+    <Design.DataContext>
+        <accounts:AccountsViewModelSample />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="HeaderedContainer.Big /template/ ContentPresenter#Header">
+            <Setter Property="FontSize" Value="30" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBlack}" />
+        </Style>
+        <Style Selector="EnhancedButton.Spinning /template/ ContentPresenter#IconPresenter PathIcon">
+            <Setter Property="RenderTransform" Value="rotate(0deg)" />
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Style.Animations>
+                <Animation Duration="0:0:1" IterationCount="Infinite">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="RotateTransform.Angle" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="RotateTransform.Angle" Value="360" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </UserControl.Styles>
+
+    <controls:ScrollableView>
+    <StackPanel Classes="BigGap" MaxWidth="1152">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Classes="SmallGap">
+            <EnhancedButton Command="{Binding RefreshBalances}" Classes="Outline" Classes.Spinning="{Binding RefreshBalances.IsExecuting}" Icon="{Icon fa-sync}">Refresh</EnhancedButton>
+            <EnhancedButton Command="{Binding ImportAccount}" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False">Import Wallet</EnhancedButton>
+            <EnhancedButton Command="{Binding GetTestCoins}" IsVisible="{Binding CanGetTestCoins}" Classes="Accent" Icon="{Icon fa-plus}">Get Testnet Coins</EnhancedButton>
+        </StackPanel>
+            <HeaderedContainer Classes="Big WizardHighlight" Header="Balance Summary" Background="{DynamicResource TranslucidOrange2}">
+                <ItemsControl ItemsSource="{Binding Balances}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel ItemSpacing="20" ItemWidth="196" Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <HeaderedContainer Classes="Section StatsCard" HeaderPadding="20" ContentPadding="20 0 0 20">
+                                <HeaderedContainer.Header>
+                                    <TextBlock  Foreground="{DynamicResource StatLabel}" Text="{Binding Name}" />
+                                </HeaderedContainer.Header>
+                                <TextBlock Classes="Weight-Bold Size-L" Foreground="{DynamicResource StatValue}" Text="{Binding Balance^.DecimalString}" />
+                            </HeaderedContainer>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </HeaderedContainer>
+            <ItemsControl Classes="Vertical" ItemsSource="{Binding AccountGroups}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <HeaderedContainer Classes="Big WizardSection" Header="{Binding Name}">
+                            <ItemsControl x:Name="WalletList" ItemsSource="{Binding Accounts}" Classes="Vertical">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <EdgePanel BorderBrush="{DynamicResource Stroke}" 
+                                                   BorderThickness="1" 
+                                                   CornerRadius="10" 
+                                                   Padding="20">
+                                            <EdgePanel.StartContent>
+                                                <EdgePanel StartContent="{Icon fa-bitcoin}"
+                                                           IconOptions.Padding="10"
+                                                           IconOptions.CornerRadius="10"
+                                                           IconOptions.Background="{DynamicResource Stroke}">
+                                                    <StackPanel VerticalAlignment="Center" Classes="SmallGap">
+                                                        <TextBlock Classes="Weight-Bold Strong" Text="{Binding Wallet.Name}" />
+                                                        <TextBlock Classes="Weight-Light Dimmed" Text="{Binding Wallet.NetworkKind}" />
+                                                    </StackPanel>
+                                                </EdgePanel>
+                                            </EdgePanel.StartContent>
+                                            <EdgePanel.EndContent>
+                                                <StackPanel Classes="SmallGap" Orientation="Horizontal">
+                                                    <StackPanel.Styles>
+                                                        <Style Selector="EnhancedButton">
+                                                            <Setter Property="IconOptions.Size" Value="12" />
+                                                        </Style>
+                                                    </StackPanel.Styles>
+                                                    <StackPanel Margin="6 0" Orientation="Horizontal" Spacing="16">
+                                                        <StackPanel>
+                                                            <TextBlock Classes="Weight-Bold Strong" Text="{Binding Wallet.Balance.DecimalString}" />
+                                                            <TextBlock Classes="Weight-Light Dimmed" Text="Balance" FontSize="10" />
+                                                        </StackPanel>
+                                                        <StackPanel IsVisible="{Binding Wallet.UnconfirmedBalance.IsPositive}">
+                                                            <TextBlock Classes="Weight-Bold" Foreground="{DynamicResource Warning}" Text="{Binding Wallet.UnconfirmedBalance.DecimalString}" />
+                                                            <TextBlock Classes="Weight-Light Dimmed" Text="Pending" FontSize="10" />
+                                                        </StackPanel>
+                                                        <StackPanel IsVisible="{Binding Wallet.ReservedBalance.IsPositive}">
+                                                            <TextBlock Classes="Weight-Bold" Foreground="{DynamicResource Info}" Text="{Binding Wallet.ReservedBalance.DecimalString}" />
+                                                            <TextBlock Classes="Weight-Light Dimmed" Text="Reserved" FontSize="10" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding Wallet.Labels}" Classes="Horizontal" />
+                                                    <EnhancedButton Command="{Binding Send}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-arrow-up}" Classes="Accent" />
+                                                    <EnhancedButton Command="{Binding Receive}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-arrow-down}" Classes="Outline" />
+                                                    <EnhancedButton Command="{Binding ShowDetails}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-coins}" Classes="Outline" />
+                                                </StackPanel>
+                                            </EdgePanel.EndContent>
+                                        </EdgePanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </HeaderedContainer>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </controls:ScrollableView>
+</UserControl>

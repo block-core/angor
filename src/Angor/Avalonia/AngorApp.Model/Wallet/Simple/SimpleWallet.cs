@@ -1,18 +1,14 @@
-using Angor.Sdk.Common;
-using Angor.Sdk.Wallet.Application;
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using Angor.Sdk.Wallet.Domain;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Application;
 using Angor.Shared;
-using AngorApp.Model.Contracts.Amounts;
-using AngorApp.Model.Contracts.Flows;
-using AngorApp.Model.Contracts.Wallet;
+using Angor.Shared.Models;
 using AngorApp.Model.Amounts;
 using AngorApp.Model.Common;
 using Blockcore.Networks;
 using CSharpFunctionalExtensions;
-using DynamicData.Aggregation;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
 using Zafiro.Avalonia.Dialogs;
@@ -20,7 +16,7 @@ using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI;
 using Zafiro.UI.Commands;
 
-namespace AngorApp.Model.Wallet;
+namespace AngorApp.Model.Wallet.Simple;
 
 public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
 {
@@ -36,33 +32,40 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
         this.walletAppService = walletAppService;
         this.dialog = dialog;
         Id = id;
-        var transactionCollection = CreateTransactions(id)
-            .DisposeWith(disposable);
+        var transactionCollection = CreateTransactions(id).DisposeWith(disposable);
 
-        Load = transactionCollection.Refresh;
-        Load.HandleErrorsWith(notificationService, "Cannot load wallet info");
+        RefreshBalanceAndFetchHistory = transactionCollection.Refresh;
+        RefreshBalanceAndFetchHistory.HandleErrorsWith(notificationService, "Cannot load wallet info");
 
-        // Subscribe to Load command success to update all balances from AccountBalanceInfo
-        var balanceUpdates = Load.Successes()
+        // RefreshBalance: Refresh balance info without fetching transaction history
+        RefreshBalance = ReactiveCommand.CreateFromTask(RefreshAndGetAccountBalanceInfo).Enhance().DisposeWith(disposable);
+        RefreshBalance.HandleErrorsWith(notificationService, "Cannot refresh balance");
+
+        // Balance updates from both RefreshBalanceAndFetchHistory (with history) and RefreshBalance (without history)
+        var balanceFromLoad = RefreshBalanceAndFetchHistory.Successes()
             .SelectMany(_ => Observable.FromAsync(() => walletAppService.GetAccountBalanceInfo(id)))
             .Where(r => r.IsSuccess)
-            .Select(r => r.Value)
+            .Select(r => r.Value);
+
+        var balanceFromRefresh = RefreshBalance.Successes();
+
+        var balanceUpdates = balanceFromLoad.Merge(balanceFromRefresh)
             .Publish()
             .RefCount();
 
         balanceHelper = balanceUpdates
             .Select(info => new AmountUI(info.TotalBalance))
-            .ToProperty(this, x => x.Balance)
+            .ToProperty<SimpleWallet, IAmountUI>(this, x => x.Balance)
             .DisposeWith(disposable);
 
         unconfirmedBalanceHelper = balanceUpdates
             .Select(info => new AmountUI(info.TotalUnconfirmedBalance))
-            .ToProperty(this, x => x.UnconfirmedBalance)
+            .ToProperty<SimpleWallet, IAmountUI>(this, x => x.UnconfirmedBalance)
             .DisposeWith(disposable);
 
         reservedBalanceHelper = balanceUpdates
             .Select(info => new AmountUI(info.TotalBalanceReserved))
-            .ToProperty(this, x => x.ReservedBalance)
+            .ToProperty<SimpleWallet, IAmountUI>(this, x => x.ReservedBalance)
             .DisposeWith(disposable);
 
         History = transactionCollection.Items;
@@ -91,7 +94,8 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     public string Name { get; } = "Default";
     public IEnhancedCommand Send { get; }
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
-    public IEnhancedCommand<Result<IEnumerable<IBroadcastedTransaction>>> Load { get; }
+    public IEnhancedCommand<Result<IEnumerable<IBroadcastedTransaction>>> RefreshBalanceAndFetchHistory { get; }
+    public IEnhancedCommand<Result<AccountBalanceInfo>> RefreshBalance { get; }
     public ReadOnlyObservableCollection<IBroadcastedTransaction> History { get; }
     public IEnhancedCommand<Result> GetTestCoins { get; }
     public DateTimeOffset CreatedOn { get; } = DateTimeOffset.MinValue;
@@ -110,6 +114,11 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
         return walletAppService.GetNextReceiveAddress(Id).Map(address => address.Value);
     }
 
+    private Task<Result<AccountBalanceInfo>> RefreshAndGetAccountBalanceInfo()
+    {
+        return walletAppService.RefreshAndGetAccountBalanceInfo(Id);
+    }
+
     private async Task<Result> RequestTestCoins()
     {
         var result = await walletAppService.GetTestCoins(Id);
@@ -117,7 +126,7 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
         if (result.IsSuccess)
         {
             // Reload the transactions after getting test coins
-            await Load.Execute();
+            await RefreshBalanceAndFetchHistory.Execute();
         }
         
         return result;

@@ -31,9 +31,12 @@ public partial class SummaryViewModel : ReactiveValidationObject, ISummaryViewMo
 
     private Task<Result<IWallet>> CreateAndActivate()
     {
-        return walletAppService.CreateWallet("<default>", options.Seedwords.ToString(), options.Passphrase, options.EncryptionKey, getNetwork())
-            .Bind(id => walletProvider.Get(id))
-            .Tap(w => walletContext.CurrentWallet = w.AsMaybe());
+        return walletContext.ImportWallet(
+            options.Seedwords.ToString(),
+            options.Passphrase,
+            options.EncryptionKey,
+            getNetwork(),
+            NetworkKind.Bitcoin);
     }
 
     public string CreateWalletText => IsRecovery ? "Import Wallet" : "Create Wallet";

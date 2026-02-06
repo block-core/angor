@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Domain;
+using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 using Zafiro.UI.Commands;
 
@@ -19,5 +20,11 @@ public interface IWallet
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
     public Task<Result<string>> GenerateReceiveAddress();
     public IEnhancedCommand<Result> GetTestCoins { get; }
+    public bool CanGetTestCoins { get; }
+    IEnhancedCommand<Result<IEnumerable<IBroadcastedTransaction>>> RefreshBalanceAndFetchHistory { get; }
+    IEnhancedCommand<Result<AccountBalanceInfo>> RefreshBalance { get; }
+    IEnumerable<string> Labels => [];
+    NetworkKind NetworkKind => NetworkKind.Bitcoin;
+    ImportKind ImportKind => ImportKind.Generated; 
     public DateTimeOffset CreatedOn { get; } 
 }

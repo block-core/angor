@@ -89,14 +89,34 @@ public sealed class WalletContext : IWalletContext, IDisposable
         return CurrentWallet;
     }
 
-    public Task<Result<IWallet>> CreateDefaultWallet()
+    public Task<Result<IWallet>> ImportWallet(string seedwords, Maybe<string> optionsPassphrase, string optionsEncryptionKey, BitcoinNetwork network, NetworkKind networkKind)
     {
-        return GetOrCreate();
+        var name = GetNextWalletName(networkKind);
+
+        return walletAppService.CreateWallet(name, seedwords, optionsPassphrase, optionsEncryptionKey, network)
+                               .Bind(id => walletProvider.Get(id))
+                               .Tap(id => sourceCache.AddOrUpdate(id));
     }
 
     private string GetUniqueId()
     {
         return "DEFAULT";
+    }
+
+    private string GetNextWalletName(NetworkKind networkKind)
+    {
+        var existingNames = new HashSet<string>(sourceCache.Items.Select(wallet => wallet.Name), StringComparer.OrdinalIgnoreCase);
+        var index = 1;
+        while (true)
+        {
+            var candidate = $"{networkKind} Wallet {index}";
+            if (!existingNames.Contains(candidate))
+            {
+                return candidate;
+            }
+
+            index++;
+        }
     }
 
     public void Dispose()

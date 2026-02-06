@@ -117,6 +117,7 @@
                  HeaderedContainer.TransactionCard,
                  HeaderedContainer.Shadow">
         <Setter Property="HeaderPadding" Value="24" />
+        <Setter Property="CornerRadius" Value="10" />
         <Setter Property="ContentPadding" Value="24 0 24 24" />
     </Style>
 
