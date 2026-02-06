@@ -3,11 +3,7 @@ using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Funding.Shared.TransactionDrafts;
-using Angor.Sdk.Wallet.Domain;
-using Angor.Shared.Models;
-using AngorApp.Model.Projects;
 using AngorApp.UI.TransactionDrafts;
-using AngorApp.UI.TransactionDrafts.DraftTypes;
 using AngorApp.UI.TransactionDrafts.DraftTypes.Investment;
 using AngorApp.UI.Shared.Controls.Common.Success;
 using Zafiro.Avalonia.Dialogs.Wizards.Slim;
@@ -40,7 +36,7 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
 
     private Task<Result<bool>> IsAboveThreshold(ProjectId projectId, long investmentAmount)
     {
-        return investmentAppService.IsInvestmentAbovePenaltyThreshold(new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(projectId, new Angor.Sdk.Funding.Projects.Domain.Amount(investmentAmount)))
+        return investmentAppService.IsInvestmentAbovePenaltyThreshold(new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(projectId, new Angor.Sdk.Common.Amount(investmentAmount)))
          .Map(response => response.IsAboveThreshold);
     }
 
@@ -63,7 +59,7 @@ public class InvestFlow(IInvestmentAppService investmentAppService, UIServices u
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
               feerate =>
            {
-               var amount = new Angor.Sdk.Funding.Projects.Domain.Amount(satsToInvest);
+               var amount = new Angor.Sdk.Common.Amount(satsToInvest);
 
                // Pass pattern index and investment start date for Fund/Subscribe projects
                var investmentDraft = investmentAppService.BuildInvestmentDraft(
