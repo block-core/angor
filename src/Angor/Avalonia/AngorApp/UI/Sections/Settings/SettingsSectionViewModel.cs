@@ -45,8 +45,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private string newRelay;
 
-    private string newImageServer;
-
     private bool restoringNetwork;
 
     private string currentNetwork;
@@ -74,7 +72,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         var settings = networkStorage.GetSettings();
         Indexers = new ObservableCollection<SettingsUrlViewModel>(settings.Indexers.Select(CreateIndexer));
         Relays = new ObservableCollection<SettingsUrlViewModel>(settings.Relays.Select(CreateRelay));
-        ImageServers = new ObservableCollection<SettingsUrlViewModel>(settings.ImageServers.Select(CreateImageServer));
         currentNetwork = networkStorage.GetNetwork();
         networkConfiguration.SetNetwork(currentNetwork switch
         {
@@ -87,10 +84,8 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
         AddIndexer = ReactiveCommand.Create(DoAddIndexer, this.WhenAnyValue(x => x.NewIndexer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
         AddRelay = ReactiveCommand.Create(DoAddRelay, this.WhenAnyValue(x => x.NewRelay, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
-        AddImageServer = ReactiveCommand.Create(DoAddImageServer, this.WhenAnyValue(x => x.NewImageServer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
         RefreshIndexers = ReactiveCommand.CreateFromTask(RefreshIndexersAsync).DisposeWith(disposable);
         RefreshRelays = ReactiveCommand.CreateFromTask(RefreshRelaysAsync).DisposeWith(disposable);
-        RefreshImageServers = ReactiveCommand.CreateFromTask(RefreshImageServersAsync).DisposeWith(disposable);
         ChangeNetwork = ReactiveCommand.CreateFromTask(ChangeNetworkAsync).DisposeWith(disposable);
         ImportWallet = ReactiveCommand.CreateFromTask(walletImportWizard.Start).Enhance().DisposeWith(disposable);
 
@@ -123,16 +118,13 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     public ObservableCollection<SettingsUrlViewModel> Indexers { get; }
     public ObservableCollection<SettingsUrlViewModel> Relays { get; }
-    public ObservableCollection<SettingsUrlViewModel> ImageServers { get; }
 
     public IReadOnlyList<string> Networks { get; } = new[] { "Angornet", "Mainnet", "Liquid" };
 
     public ReactiveCommand<Unit, Unit> AddIndexer { get; }
     public ReactiveCommand<Unit, Unit> AddRelay { get; }
-    public ReactiveCommand<Unit, Unit> AddImageServer { get; }
     public ReactiveCommand<Unit, Unit> RefreshIndexers { get; }
     public ReactiveCommand<Unit, Unit> RefreshRelays { get; }
-    public ReactiveCommand<Unit, Unit> RefreshImageServers { get; }
     public ReactiveCommand<Unit, Unit> ChangeNetwork { get; }
     public ReactiveCommand<Unit, Unit> WipeData { get; }
     public ReactiveCommand<Unit, Unit> BackupWallet { get; }
@@ -158,12 +150,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
     {
         get => newRelay;
         set => this.RaiseAndSetIfChanged(ref newRelay, value);
-    }
-
-    public string NewImageServer
-    {
-        get => newImageServer;
-        set => this.RaiseAndSetIfChanged(ref newImageServer, value);
     }
 
     public bool IsDebugMode
@@ -211,23 +197,8 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         SaveSettings();
     }
 
-    private void DoAddImageServer()
-    {
-        ImageServers.Add(CreateImageServer(new SettingsUrl
-        {
-            Url = NewImageServer,
-            IsPrimary = ImageServers.Count == 0,
-            Status = UrlStatus.NotReady,
-            LastCheck = DateTime.UtcNow
-        }));
-        NewImageServer = string.Empty;
-        Refresh(ImageServers);
-        SaveSettings();
-    }
-
     private SettingsUrlViewModel CreateIndexer(SettingsUrl url) => new(url.Url, url.IsPrimary, url.Status, url.LastCheck, DoRemoveIndexer, DoSetPrimaryIndexer, url.Name);
     private SettingsUrlViewModel CreateRelay(SettingsUrl url) => new(url.Url, url.IsPrimary, url.Status, url.LastCheck, DoRemoveRelay, name: url.Name);
-    private SettingsUrlViewModel CreateImageServer(SettingsUrl url) => new(url.Url, url.IsPrimary, url.Status, url.LastCheck, DoRemoveImageServer, DoSetPrimaryImageServer, url.Name);
 
     private void DoRemoveIndexer(SettingsUrlViewModel url)
     {
@@ -259,29 +230,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         SaveSettings();
     }
 
-    private void DoRemoveImageServer(SettingsUrlViewModel url)
-    {
-        var wasPrimary = url.IsPrimary;
-        ImageServers.Remove(url);
-        if (wasPrimary && ImageServers.Count > 0)
-        {
-            ImageServers[0].IsPrimary = true;
-        }
-        Refresh(ImageServers);
-        SaveSettings();
-    }
-
-    private void DoSetPrimaryImageServer(SettingsUrlViewModel url)
-    {
-        foreach (var e in ImageServers)
-        {
-            e.IsPrimary = false;
-        }
-        url.IsPrimary = true;
-        Refresh(ImageServers);
-        SaveSettings();
-    }
-
     private async Task ChangeNetworkAsync()
     {
         var confirmation = await uiServices.Dialog.ShowConfirmation("Change network?", "Changing network will delete the current wallet and all local data. This action cannot be undone.");
@@ -309,7 +257,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         var s = networkStorage.GetSettings();
         Reset(Indexers, s.Indexers.Select(CreateIndexer));
         Reset(Relays, s.Relays.Select(CreateRelay));
-        Reset(ImageServers, s.ImageServers.Select(CreateImageServer));
         this.walletStore.SaveAll([]);
         currentNetwork = newNetwork;
         Network = newNetwork;
@@ -369,26 +316,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         Reset(Relays, settings.Relays.Select(CreateRelay));
     }
 
-    private async Task RefreshImageServersAsync()
-    {
-        // If no servers exist, add the defaults back
-        if (ImageServers.Count == 0)
-        {
-            var defaults = networkConfiguration.GetDefaultImageServerUrls();
-            foreach (var server in defaults)
-            {
-                ImageServers.Add(CreateImageServer(server));
-            }
-            SaveSettings();
-        }
-
-        // No status check for image servers (HTTP API varies); just reload persisted settings
-        var settings = networkStorage.GetSettings();
-        Reset(ImageServers, settings.ImageServers.Select(CreateImageServer));
-
-        await Task.CompletedTask;
-    }
-
     private async Task WipeDataAsync()
     {
         var confirmation = await uiServices.Dialog.ShowConfirmation("Wipe all data?", "This will delete your wallet and all local settings. This action cannot be undone. Make sure you have backed up your seed words.");
@@ -412,7 +339,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         var s = networkStorage.GetSettings();
         Reset(Indexers, s.Indexers.Select(CreateIndexer));
         Reset(Relays, s.Relays.Select(CreateRelay));
-        Reset(ImageServers, s.ImageServers.Select(CreateImageServer));
         walletStore.SaveAll([]);
 
         await uiServices.Dialog.ShowMessage("Data wiped", "All local data has been removed.");
@@ -469,7 +395,6 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         var current = networkStorage.GetSettings();
         current.Indexers = Indexers.Select(x => x.ToModel()).ToList();
         current.Relays = Relays.Select(x => x.ToModel()).ToList();
-        current.ImageServers = ImageServers.Select(x => x.ToModel()).ToList();
         networkStorage.SetSettings(current);
     }
 
