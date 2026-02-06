@@ -10,13 +10,14 @@ using Microsoft.Extensions.Logging;
 namespace Angor.Sdk.Funding.Investor.Operations;
 
 /// <summary>
-/// Monitors a Boltz reverse submarine swap until completion.
+/// Monitors a Boltz reverse submarine swap until completion using WebSocket.
 /// 
 /// Flow:
-/// 1. Polls Boltz API for swap status
-/// 2. When status is "transaction.mempool" or "transaction.claimed", the swap is complete
-/// 3. Fetches UTXOs from the receiving address
-/// 4. Returns UTXOs for use in the normal investment flow (BuildInvestmentDraft)
+/// 1. Connects to Boltz WebSocket and subscribes to swap updates
+/// 2. Receives real-time status updates (no polling!)
+/// 3. When status is "transaction.mempool" or "transaction.claimed", the swap is complete
+/// 4. Fetches UTXOs from the receiving address
+/// 5. Returns UTXOs for use in the normal investment flow (BuildInvestmentDraft)
 /// 
 /// Note: For reverse submarine swaps, Boltz locks funds on-chain after the Lightning invoice is paid.
 /// The funds are then claimed to the destination address using MuSig2 cooperative signing.
@@ -50,14 +51,13 @@ public static class MonitorLightningSwap
         List<UtxoData> DetectedUtxos);
 
     public class MonitorLightningSwapHandler(
-        IBoltzSwapService boltzSwapService,
+        IBoltzWebSocketClient webSocketClient,
         IIndexerService indexerService,
         IWalletAccountBalanceService walletAccountBalanceService,
         ILogger<MonitorLightningSwapHandler> logger)
         : IRequestHandler<MonitorLightningSwapRequest, Result<MonitorLightningSwapResponse>>
     {
         private static readonly TimeSpan DefaultTimeout = TimeSpan.FromMinutes(30);
-        private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(3);
 
         public async Task<Result<MonitorLightningSwapResponse>> Handle(
             MonitorLightningSwapRequest request,
@@ -66,14 +66,14 @@ public static class MonitorLightningSwap
             try
             {
                 logger.LogInformation(
-                    "Monitoring Lightning swap {SwapId} for wallet {WalletId}",
+                    "Monitoring Lightning swap {SwapId} via WebSocket for wallet {WalletId}",
                     request.SwapId, request.WalletId.Value);
 
-                // Step 1: Poll Boltz until swap completes or fails
-                var swapResult = await PollBoltzUntilComplete(
-                    request.SwapId, 
-                    request.Timeout ?? DefaultTimeout, 
-                    cancellationToken);
+                // Step 1: Monitor swap via WebSocket until complete
+                var swapResult = await webSocketClient.MonitorSwapAsync(
+                    request.SwapId,
+                    timeout: request.Timeout ?? DefaultTimeout,
+                    cancellationToken: cancellationToken);
 
                 if (swapResult.IsFailure)
                 {
@@ -94,7 +94,7 @@ public static class MonitorLightningSwap
                     // Return success anyway - tx exists, UTXOs may need a moment to appear
                     return Result.Success(new MonitorLightningSwapResponse(
                         finalStatus,
-                        finalStatus.TransactionId!,
+                        finalStatus.TransactionId ?? string.Empty,
                         new List<UtxoData>()));
                 }
 
@@ -108,7 +108,7 @@ public static class MonitorLightningSwap
 
                 return Result.Success(new MonitorLightningSwapResponse(
                     finalStatus,
-                    finalStatus.TransactionId!,
+                    finalStatus.TransactionId ?? string.Empty,
                     utxos));
             }
             catch (OperationCanceledException)
@@ -123,68 +123,6 @@ public static class MonitorLightningSwap
             }
         }
 
-        private async Task<Result<BoltzSwapStatus>> PollBoltzUntilComplete(
-            string swapId,
-            TimeSpan timeout,
-            CancellationToken cancellationToken)
-        {
-            var deadline = DateTime.UtcNow.Add(timeout);
-
-            while (DateTime.UtcNow < deadline && !cancellationToken.IsCancellationRequested)
-            {
-                var statusResult = await boltzSwapService.GetSwapStatusAsync(swapId);
-
-                if (statusResult.IsFailure)
-                {
-                    logger.LogWarning("Failed to get swap status: {Error}", statusResult.Error);
-                    await Task.Delay(PollInterval, cancellationToken);
-                    continue;
-                }
-
-                var status = statusResult.Value;
-                logger.LogDebug("Swap {SwapId} status: {Status}", swapId, status.Status);
-
-                // Swap completed successfully
-                if (status.Status.IsComplete())
-                {
-                    logger.LogInformation(
-                        "Swap {SwapId} completed! Transaction: {TxId}",
-                        swapId, status.TransactionId);
-                    return Result.Success(status);
-                }
-
-                // Swap failed
-                if (status.Status.IsFailed())
-                {
-                    var errorMsg = $"Swap failed: {status.Status}";
-                    if (!string.IsNullOrEmpty(status.FailureReason))
-                        errorMsg += $" - {status.FailureReason}";
-                    
-                    logger.LogError("Swap {SwapId} failed: {Error}", swapId, errorMsg);
-                    return Result.Failure<BoltzSwapStatus>(errorMsg);
-                }
-
-                // Transaction is on-chain (mempool or confirmed) - good enough to proceed
-                if (status.Status == SwapState.TransactionMempool ||
-                    status.Status == SwapState.TransactionConfirmed)
-                {
-                    logger.LogInformation(
-                        "Swap {SwapId} has on-chain transaction: {TxId} (status: {Status})",
-                        swapId, status.TransactionId, status.Status);
-                    return Result.Success(status);
-                }
-
-                await Task.Delay(PollInterval, cancellationToken);
-            }
-
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return Result.Failure<BoltzSwapStatus>("Monitoring was cancelled");
-            }
-
-            return Result.Failure<BoltzSwapStatus>(
-                "Timeout waiting for Lightning payment. Please pay the invoice and try monitoring again.");
-        }
 
         private async Task<List<UtxoData>?> FetchUtxosFromIndexer(string address)
         {
