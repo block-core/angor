@@ -13,7 +13,9 @@
 
     <HeaderedContainer Classes="WizardSection">
         <StackPanel Classes="BigGap">
-            <TextBlock>Enter the URL of the image you want to use</TextBlock>
+            <TextBlock TextWrapping="Wrap">Enter an image URL directly, or browse and upload a local file to a Blossom server</TextBlock>
+
+            <!-- URL Entry -->
             <HeaderedContainer Header="Image URL" ContentPadding="0" HeaderPadding="0 0 0 12">
                 <TextBox Text="{Binding ImageUri}">
                     <Interaction.Behaviors>
@@ -21,6 +23,57 @@
                     </Interaction.Behaviors>
                 </TextBox>
             </HeaderedContainer>
+
+            <!-- Upload Section -->
+            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock FontWeight="SemiBold">Upload to Blossom Server</TextBlock>
+
+                    <!-- Server Selection -->
+                    <DockPanel>
+                        <TextBlock Text="Server:" VerticalAlignment="Center" Width="60" />
+                        <ComboBox ItemsSource="{Binding ImageServers}"
+                                  SelectedItem="{Binding SelectedServer}"
+                                  HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </DockPanel>
+
+                    <!-- Custom Server URL -->
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Add" Command="{Binding AddCustomServer}" Margin="8 0 0 0" />
+                        <TextBox Watermark="https://your-blossom-server.com"
+                                 Text="{Binding CustomServerUrl}"
+                                 HorizontalAlignment="Stretch" />
+                    </DockPanel>
+
+                    <!-- Browse + Upload Row -->
+                    <DockPanel LastChildFill="True">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
+                            <Button Content="Browse..." Command="{Binding BrowseFile}" IsEnabled="{Binding !IsUploading}" />
+                            <Button Content="Upload" Command="{Binding UploadFile}" Classes="accent" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding SelectedFileName, FallbackValue='No file selected'}"
+                                   VerticalAlignment="Center"
+                                   Opacity="0.7"
+                                   Margin="0 0 10 0"
+                                   TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+
+                    <!-- Status -->
+                    <TextBlock Text="{Binding UploadStatus}"
+                               IsVisible="{Binding UploadStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                               Opacity="0.8"
+                               TextWrapping="Wrap"
+                               FontSize="12" />
+                </StackPanel>
+            </Border>
+
+            <!-- Preview -->
             <i:AdvancedImage Width="400" Height="300" CornerRadius="10" Stretch="UniformToFill" Source="{Binding ImageUri}" />
         </StackPanel>
     </HeaderedContainer>
