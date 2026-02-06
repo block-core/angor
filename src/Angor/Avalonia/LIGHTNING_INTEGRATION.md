@@ -1,269 +1,242 @@
-# Lightning Network Integration for Angor SDK
+# Boltz Lightning Integration for Angor SDK
 
-This integration adds support for funding investments via the Lightning Network using the Bolt API. Users can send Lightning payments that are automatically converted to on-chain Bitcoin and used to fund investment transactions.
+This integration adds support for funding investments via Lightning Network using **Boltz submarine swaps**. Users pay a Lightning invoice, and funds go **directly on-chain** to the investment address - no intermediate wallet or custody required.
 
 ## Overview
 
-The Lightning integration provides three main operations:
+### How It Works
 
-1. **Create Lightning Invoice** - Generate a Lightning invoice for an investment amount
-2. **Monitor & Swap** - Monitor invoice payment and swap to on-chain Bitcoin
-3. **Full Flow Orchestration** - Complete end-to-end flow from Lightning payment to investment
+```
+User's Lightning Wallet → Pays Invoice → Boltz → On-chain Bitcoin → Investment Address
+```
+
+**No intermediate custody.** Boltz acts as a trustless swap provider using HTLCs (Hash Time-Locked Contracts).
+
+## Quick Start
+
+### 1. Create a swap
+
+```csharp
+var result = await investmentAppService.CreateLightningSwap(
+    new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
+        WalletId: new WalletId("my-wallet"),
+        ProjectId: "project-123",
+        InvestmentAmount: new Amount(100000), // sats
+        ReceivingAddress: "bc1q..."           // Your investment address
+    ));
+
+if (result.IsSuccess)
+{
+    var invoice = result.Value.Swap.Invoice;  // Display this to user
+    var swapId = result.Value.Swap.Id;        // Save for monitoring
+    var fees = result.Value.PairInfo;         // Show fee breakdown
+}
+```
+
+### 2. Display invoice to user
+
+Show the `invoice` (BOLT11) as:
+- QR code
+- Copy-to-clipboard text
+- Payment link
+
+### 3. Monitor for completion
+
+```csharp
+var monitorResult = await investmentAppService.MonitorLightningSwap(
+    new MonitorLightningSwap.MonitorLightningSwapRequest(
+        WalletId: walletId,
+        SwapId: swapId,
+        ReceivingAddress: "bc1q...",
+        ExpectedAmount: expectedAmount
+    ));
+
+if (monitorResult.IsSuccess)
+{
+    var txId = monitorResult.Value.TransactionId;
+    var utxos = monitorResult.Value.DetectedUtxos;
+    // Use UTXOs for investment transaction
+}
+```
 
 ## Architecture
 
 ### Components
 
-- **IBoltService** - Interface for Bolt Lightning API operations
-- **BoltService** - Implementation of Bolt API client
-- **BoltModels** - Data models for Lightning wallets, invoices, and payments
-- **Lightning Operations**:
-  - `CreateLightningInvoiceForInvestment` - Creates invoices
-  - `MonitorLightningInvoiceAndSwap` - Monitors payments and handles swaps
-  - `FundInvestmentViaLightning` - Orchestrates the complete flow
-
-### Flow Diagram
-
 ```
-User wants to invest
-    ↓
-1. Create Lightning Invoice
-    ↓
-2. User pays invoice (external Lightning wallet)
-    ↓
-3. Monitor invoice status (polling)
-    ↓
-4. When paid, request swap address from Bolt
-    ↓
-5. Monitor swap address for on-chain transaction
-    ↓
-6. Detect UTXOs on Angor wallet address
-    ↓
-7. Use UTXOs for investment transaction (existing flow)
+┌─────────────────────────────────────────────────────────────┐
+│                      Angor SDK                               │
+├─────────────────────────────────────────────────────────────┤
+│  IInvestmentAppService                                       │
+│    ├── CreateLightningSwap()                                │
+│    └── MonitorLightningSwap()                               │
+├─────────────────────────────────────────────────────────────┤
+│  IBoltzSwapService                                          │
+│    ├── CreateSubmarineSwapAsync()                           │
+│    ├── GetSwapStatusAsync()                                 │
+│    └── GetPairInfoAsync()                                   │
+├─────────────────────────────────────────────────────────────┤
+│  BoltzSwapService (HTTP Client → api.boltz.exchange)        │
+└─────────────────────────────────────────────────────────────┘
 ```
+
+### Files
+
+| File | Description |
+|------|-------------|
+| `IBoltzSwapService.cs` | Service interface for Boltz API |
+| `BoltzSwapService.cs` | HTTP implementation |
+| `BoltzModels.cs` | Data models (swap, status, fees) |
+| `CreateLightningSwapForInvestment.cs` | MediatR handler for creating swaps |
+| `MonitorLightningSwap.cs` | MediatR handler for monitoring |
 
 ## Configuration
 
-### Environment Variables
-
-Set the following environment variables:
+### Environment Variables (Optional)
 
 ```bash
-BOLT_API_KEY=your_bolt_api_key_here
-BOLT_API_URL=https://api.bolt.observer  # Optional, defaults to this
+# Use testnet (default: false)
+BOLTZ_USE_TESTNET=true
+
+# Custom API URLs (optional)
+BOLTZ_API_URL=https://api.boltz.exchange
+BOLTZ_TESTNET_URL=https://testnet.boltz.exchange/api
 ```
 
-### Service Registration
+### Default Settings
 
-The Lightning services are automatically registered in `FundingContextServices.cs`:
+- **Mainnet**: `https://api.boltz.exchange`
+- **Testnet**: `https://testnet.boltz.exchange/api`
+- **Timeout**: 30 seconds per API call
+- **Monitor timeout**: 30 minutes
+
+## Fees
+
+Boltz charges:
+- **Percentage fee**: ~0.5% (varies)
+- **Miner fee**: ~500-2000 sats (depends on mempool)
+
+Get current fees:
 
 ```csharp
-services.TryAddSingleton<BoltConfiguration>(...);
-services.TryAddSingleton<IBoltService, BoltService>();
+var pairInfo = await boltzSwapService.GetPairInfoAsync();
+Console.WriteLine($"Fee: {pairInfo.Value.FeePercentage}%");
+Console.WriteLine($"Miner fee: {pairInfo.Value.MinerFee} sats");
+Console.WriteLine($"Min: {pairInfo.Value.MinAmount} sats");
+Console.WriteLine($"Max: {pairInfo.Value.MaxAmount} sats");
 ```
 
-## Usage Examples
+## Swap States
 
-### Example 1: Simple Orchestrated Flow
+| State | Description |
+|-------|-------------|
+| `Created` | Swap created, waiting for payment |
+| `InvoicePaid` | Lightning invoice paid, processing |
+| `TransactionMempool` | On-chain tx in mempool |
+| `TransactionConfirmed` | On-chain tx confirmed |
+| `TransactionClaimed` | **Complete** - funds available |
+| `SwapExpired` | Timeout - no payment received |
+| `InvoiceExpired` | Invoice expired |
+| `TransactionRefunded` | Swap refunded |
 
-The easiest way to use Lightning funding:
+## Error Handling
 
 ```csharp
-var investmentAppService = serviceProvider.GetRequiredService<IInvestmentAppService>();
+var result = await investmentAppService.CreateLightningSwap(request);
 
-var request = new FundInvestmentViaLightning.FundInvestmentViaLightningRequest(
-    WalletId: new WalletId("my-wallet-id"),
-    ProjectId: "project-identifier",
-    InvestmentAmount: new Amount(1000000), // 0.01 BTC
-    ReceivingAddress: "bc1q..." // Your Angor wallet address
-);
-
-var result = await investmentAppService.FundInvestmentViaLightning(request);
-
-if (result.IsSuccess)
+if (result.IsFailure)
 {
-    Console.WriteLine($"Invoice Bolt11: {result.Value.Invoice.Bolt11}");
-    Console.WriteLine($"Total Received: {result.Value.TotalAmountReceived.Sats} sats");
-    
-    // Now use result.Value.DetectedUtxos for the investment transaction
-}
-```
-
-### Example 2: Manual Step-by-Step Flow
-
-For more control over each step:
-
-```csharp
-// Step 1: Create invoice
-var createInvoiceRequest = new CreateLightningInvoiceForInvestment.CreateLightningInvoiceRequest(
-    WalletId: new WalletId("my-wallet-id"),
-    ProjectId: "project-id",
-    InvestmentAmount: new Amount(1000000),
-    Memo: "Investment in awesome project"
-);
-
-var invoiceResult = await investmentAppService.CreateLightningInvoiceForInvestment(createInvoiceRequest);
-
-if (invoiceResult.IsSuccess)
-{
-    var invoice = invoiceResult.Value.Invoice;
-    
-    // Display invoice.Bolt11 to user (QR code, copy-paste, etc.)
-    Console.WriteLine($"Pay this invoice: {invoice.Bolt11}");
-    
-    // Step 2: Monitor and swap
-    var monitorRequest = new MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceRequest(
-        WalletId: new WalletId("my-wallet-id"),
-        InvoiceId: invoice.Id,
-        BoltWalletId: invoiceResult.Value.BoltWalletId,
-        TargetAddress: "bc1q..." // Your receiving address
-    );
-    
-    var monitorResult = await investmentAppService.MonitorLightningInvoiceAndSwap(monitorRequest);
-    
-    if (monitorResult.IsSuccess && monitorResult.Value.DetectedUtxos != null)
+    switch (result.Error)
     {
-        Console.WriteLine($"Swap completed! UTXOs: {monitorResult.Value.DetectedUtxos.Count}");
-        // Proceed with investment transaction
+        case var e when e.Contains("too small"):
+            // Amount below minimum
+            break;
+        case var e when e.Contains("too large"):
+            // Amount above maximum
+            break;
+        case var e when e.Contains("expired"):
+            // Invoice/swap expired
+            break;
+        default:
+            // Other error
+            break;
     }
 }
 ```
 
-### Example 3: Just Create Invoice (Manual Monitoring)
+## Refunds
 
-If you want to handle monitoring yourself:
+If a swap fails after payment, users can claim a refund using the `refundPublicKey` provided during swap creation. The SDK automatically generates this key from the wallet.
 
-```csharp
-var request = new CreateLightningInvoiceForInvestment.CreateLightningInvoiceRequest(
-    WalletId: new WalletId("my-wallet-id"),
-    ProjectId: "project-id",
-    InvestmentAmount: new Amount(500000)
-);
+Refund timelock: ~288 blocks (~2 days)
 
-var result = await investmentAppService.CreateLightningInvoiceForInvestment(request);
+## Comparison: Old vs New
 
-if (result.IsSuccess)
-{
-    var bolt11 = result.Value.Invoice.Bolt11;
-    var invoiceId = result.Value.Invoice.Id;
-    
-    // Display to user, store invoiceId, monitor separately...
-}
-```
-
-## Integration with Existing Investment Flow
-
-Once Lightning funds are swapped to on-chain, the detected UTXOs are automatically added to the wallet's UTXO set. You can then use your existing investment transaction building flow:
-
-```csharp
-// After Lightning funding completes
-var utxos = lightningResult.Value.DetectedUtxos;
-
-// Use these UTXOs to build the investment transaction
-var buildDraftRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
-    WalletId: walletId,
-    ProjectInfo: projectInfo,
-    InvestmentAmount: amount,
-    // ... other parameters
-);
-
-var draftResult = await investmentAppService.BuildInvestmentDraft(buildDraftRequest);
-// Continue with normal investment flow...
-```
-
-## Error Handling
-
-All operations return `Result<T>` from CSharpFunctionalExtensions:
-
-```csharp
-var result = await investmentAppService.FundInvestmentViaLightning(request);
-
-if (result.IsFailure)
-{
-    Console.WriteLine($"Error: {result.Error}");
-    // Handle specific errors:
-    // - "Timeout waiting for Lightning invoice payment"
-    // - "Invoice expired"
-    // - "Failed to create wallet: 401"
-    // etc.
-}
-else
-{
-    // Success!
-    var response = result.Value;
-}
-```
-
-## Timeouts
-
-- **Invoice Payment Timeout**: Default 30 minutes (configurable)
-- **Swap Completion Timeout**: 15 minutes (hardcoded)
-- **API Request Timeout**: 30 seconds (configurable in BoltConfiguration)
-
-## Bolt API Endpoints
-
-The integration uses the following Bolt API endpoints:
-
-- `POST /v1/wallets` - Create wallet
-- `GET /v1/wallets/{id}` - Get wallet details
-- `POST /v1/wallets/{id}/invoices` - Create invoice
-- `GET /v1/invoices/{id}` - Get invoice status
-- `POST /v1/wallets/{id}/swap` - Get swap address
-- `POST /v1/wallets/{id}/payments` - Pay invoice
-- `GET /v1/wallets/{id}/invoices` - List invoices
+| Aspect | Old (Bolt) | New (Boltz) |
+|--------|-----------|-------------|
+| Custody | Intermediate wallet | **None** |
+| Flow | 3+ steps | **2 steps** |
+| Trust | Custodial service | **Trustless HTLCs** |
+| API Key | Required | **Not required** |
+| Refunds | Manual | **Automatic timelock** |
 
 ## Testing
 
-Unit tests should mock `IBoltService` and `IMempoolMonitoringService`:
+### Unit Tests
 
-```csharp
-var mockBoltService = new Mock<IBoltService>();
-mockBoltService
-    .Setup(x => x.CreateInvoiceAsync(It.IsAny<string>(), It.IsAny<long>(), It.IsAny<string>()))
-    .ReturnsAsync(Result.Success(new BoltInvoice { ... }));
-
-// Inject mock into handler for testing
+```bash
+dotnet test --filter "FullyQualifiedName~BoltzSwap"
 ```
 
-## Security Considerations
+### Manual Testing
 
-1. **API Key Storage**: Store Bolt API keys securely (environment variables, secrets manager)
-2. **Wallet Mapping**: Consider encrypting the mapping between Angor WalletId and Bolt WalletId
-3. **Amount Verification**: Always verify received amounts match expected amounts
-4. **Swap Confirmation**: Wait for on-chain confirmations before proceeding with investment
+1. Set `BOLTZ_USE_TESTNET=true`
+2. Get testnet Lightning wallet (e.g., Phoenix on testnet)
+3. Create swap with testnet address
+4. Pay invoice
+5. Monitor for completion
 
-## Future Enhancements
+## API Reference
 
-- [ ] Webhook support for instant payment notifications (instead of polling)
-- [ ] Support for multiple Lightning providers (LND, CLN, etc.)
-- [ ] Automatic fee estimation for swaps
-- [ ] Persistent storage for Lightning wallet mappings
-- [ ] Support for Lightning addresses (LNURL)
-- [ ] Refund flow for failed swaps
+### Boltz Endpoints Used
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/getpairs` | GET | Get swap limits and fees |
+| `/createswap` | POST | Create submarine swap |
+| `/swapstatus` | GET | Get swap status |
+
+### Full API Docs
+
+https://docs.boltz.exchange/
 
 ## Troubleshooting
 
-### Invoice not being detected as paid
+### "Amount too small"
+Boltz has minimum swap amounts (~10,000 sats). Check `GetPairInfoAsync()` for current limits.
 
-- Check that `BOLT_API_KEY` is correctly set
-- Verify the invoice hasn't expired (default 1 hour)
-- Check Bolt API logs for payment status
+### "Swap expired"
+Invoice wasn't paid within timeout. Create a new swap.
 
-### Swap not completing
+### "Transaction not detected"
+- Wait for on-chain confirmation
+- Check receiving address is correct
+- Verify swap status shows `TransactionClaimed`
 
-- Verify swap address is correct
-- Check mempool for pending swap transaction
-- Ensure sufficient Lightning balance exists
-- May take up to 15 minutes for swap completion
+### Refund needed
+If you paid but swap failed, use the refund script with your `refundPublicKey` after the timelock expires.
 
-### UTXOs not appearing in wallet
+## Security
 
-- Verify `ReceivingAddress` belongs to the Angor wallet
-- Check that wallet account info is being refreshed
-- Manually refresh wallet balance after swap
+- **No API keys**: Boltz is permissionless
+- **HTLCs**: Cryptographic guarantees for atomic swaps
+- **Refund keys**: Generated from wallet for recovery
+- **Timelocks**: Funds are never stuck permanently
 
-## Support
+## Future Improvements
 
-For Bolt API issues: https://docs.bolt.observer
-For Angor SDK issues: [Your support channel]
+- [ ] WebSocket for real-time status updates
+- [ ] Automatic refund claiming
+- [ ] Reverse swaps (on-chain → Lightning)
+- [ ] Multi-path payments for larger amounts
 

@@ -32,19 +32,15 @@ public interface IInvestmentAppService
     /// </summary>
     Task<Result<MonitorAddressForFunds.MonitorAddressForFundsResponse>> MonitorAddressForFunds(MonitorAddressForFunds.MonitorAddressForFundsRequest request, CancellationToken cancellationToken = default);
 
-    // Methods for Lightning Network integration
+    // Methods for Lightning Network integration (Boltz submarine swaps)
     /// <summary>
-    /// Creates a Lightning invoice for funding an investment
+    /// Creates a Boltz submarine swap for funding an investment via Lightning.
+    /// User pays the Lightning invoice, funds go directly on-chain - no intermediate custody.
     /// </summary>
-    Task<Result<CreateLightningInvoiceForInvestment.CreateLightningInvoiceResponse>> CreateLightningInvoiceForInvestment(CreateLightningInvoiceForInvestment.CreateLightningInvoiceRequest request);
+    Task<Result<CreateLightningSwapForInvestment.CreateLightningSwapResponse>> CreateLightningSwap(CreateLightningSwapForInvestment.CreateLightningSwapRequest request);
 
     /// <summary>
-    /// Monitors a Lightning invoice for payment and swaps to on-chain when paid
+    /// Monitors a Boltz swap until funds arrive on-chain.
     /// </summary>
-    Task<Result<MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceResponse>> MonitorLightningInvoiceAndSwap(MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceRequest request);
-
-    /// <summary>
-    /// Orchestrates the complete flow: creates invoice, monitors payment, swaps to on-chain for investment
-    /// </summary>
-    Task<Result<FundInvestmentViaLightning.FundInvestmentViaLightningResponse>> FundInvestmentViaLightning(FundInvestmentViaLightning.FundInvestmentViaLightningRequest request);
+    Task<Result<MonitorLightningSwap.MonitorLightningSwapResponse>> MonitorLightningSwap(MonitorLightningSwap.MonitorLightningSwapRequest request);
 }
