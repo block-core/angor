@@ -63,18 +63,16 @@ public class BoltzSwapService : IBoltzSwapService
                     $"Amount must be between {pairInfo.MinAmount} and {pairInfo.MaxAmount} sats");
             }
 
+            // Boltz API v2 submarine swap request format
             var request = new CreateSubmarineSwapRequest
             {
-                Type = "submarine",
-                PairId = "BTC/BTC",
-                OrderSide = "sell",
+                From = "BTC",
+                To = "L-BTC",
                 RefundPublicKey = refundPublicKey,
-                Invoice = "", // Boltz will generate the invoice
-                OnchainAmount = amountSats,
-                Channel = new ChannelCreation { Auto = false }
+                InvoiceAmount = amountSats
             };
 
-            var response = await _httpClient.PostAsJsonAsync("/createswap", request, _jsonOptions);
+            var response = await _httpClient.PostAsJsonAsync("/v2/swap/submarine", request, _jsonOptions);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -121,7 +119,8 @@ public class BoltzSwapService : IBoltzSwapService
         {
             _logger.LogDebug("Getting swap status for {SwapId}", swapId);
 
-            var response = await _httpClient.GetAsync($"/swapstatus?id={swapId}");
+            // Use v2 API endpoint
+            var response = await _httpClient.GetAsync($"/v2/swap/{swapId}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -163,30 +162,36 @@ public class BoltzSwapService : IBoltzSwapService
         {
             _logger.LogDebug("Getting pair info");
 
-            var response = await _httpClient.GetAsync("/getpairs");
+            // Use v2 API endpoint
+            var response = await _httpClient.GetAsync("/v2/swap/submarine");
 
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Failed to get pairs: {StatusCode} - {Error}", response.StatusCode, error);
-                return Result.Failure<BoltzPairInfo>($"Failed to get pairs: {error}");
+                _logger.LogError("Failed to get submarine info: {StatusCode} - {Error}", response.StatusCode, error);
+                return Result.Failure<BoltzPairInfo>($"Failed to get pair info: {error}");
             }
 
-            var pairsResponse = await response.Content.ReadFromJsonAsync<GetPairsResponse>(_jsonOptions);
-            if (pairsResponse?.Pairs == null || !pairsResponse.Pairs.ContainsKey("BTC/BTC"))
+            var submarineInfo = await response.Content.ReadFromJsonAsync<SubmarineInfoResponse>(_jsonOptions);
+            if (submarineInfo?.BTC == null)
+            {
+                return Result.Failure<BoltzPairInfo>("BTC pair not found in response");
+            }
+
+            var btcInfo = submarineInfo.BTC.BTC; // BTC -> BTC (Lightning to on-chain)
+            if (btcInfo == null)
             {
                 return Result.Failure<BoltzPairInfo>("BTC/BTC pair not found");
             }
 
-            var btcPair = pairsResponse.Pairs["BTC/BTC"];
             var pairInfo = new BoltzPairInfo
             {
                 PairId = "BTC/BTC",
-                MinAmount = btcPair.Limits.Minimal,
-                MaxAmount = btcPair.Limits.Maximal,
-                FeePercentage = btcPair.Fees.Percentage,
-                MinerFee = btcPair.Fees.MinerFees.BaseAsset.Normal,
-                Hash = btcPair.Hash
+                MinAmount = btcInfo.Limits.Minimal,
+                MaxAmount = btcInfo.Limits.Maximal,
+                FeePercentage = btcInfo.Fees.Percentage,
+                MinerFee = btcInfo.Fees.MinerFees,
+                Hash = btcInfo.Hash
             };
 
             _logger.LogDebug(
@@ -275,34 +280,23 @@ public class BoltzSwapService : IBoltzSwapService
 
     #region Request/Response DTOs
 
+    /// <summary>
+    /// Boltz API v2 submarine swap request
+    /// Submarine swap: User pays Lightning → receives on-chain BTC
+    /// </summary>
     private class CreateSubmarineSwapRequest
     {
-        [JsonPropertyName("type")]
-        public string Type { get; set; } = "submarine";
+        [JsonPropertyName("from")]
+        public string From { get; set; } = "BTC";  // Lightning BTC
 
-        [JsonPropertyName("pairId")]
-        public string PairId { get; set; } = "BTC/BTC";
-
-        [JsonPropertyName("orderSide")]
-        public string OrderSide { get; set; } = "sell";
+        [JsonPropertyName("to")]
+        public string To { get; set; } = "BTC";    // On-chain BTC
 
         [JsonPropertyName("refundPublicKey")]
         public string RefundPublicKey { get; set; } = string.Empty;
 
-        [JsonPropertyName("invoice")]
-        public string Invoice { get; set; } = string.Empty;
-
-        [JsonPropertyName("onchainAmount")]
-        public long OnchainAmount { get; set; }
-
-        [JsonPropertyName("channel")]
-        public ChannelCreation? Channel { get; set; }
-    }
-
-    private class ChannelCreation
-    {
-        [JsonPropertyName("auto")]
-        public bool Auto { get; set; }
+        [JsonPropertyName("invoiceAmount")]
+        public long InvoiceAmount { get; set; }
     }
 
     private class CreateSwapResponse
@@ -438,6 +432,49 @@ public class BoltzSwapService : IBoltzSwapService
     {
         [JsonPropertyName("normal")]
         public long Normal { get; set; }
+    }
+
+    // Boltz API v2 submarine info response
+    private class SubmarineInfoResponse
+    {
+        [JsonPropertyName("BTC")]
+        public SubmarinePairInfo? BTC { get; set; }
+    }
+
+    private class SubmarinePairInfo
+    {
+        [JsonPropertyName("BTC")]
+        public SubmarineAssetInfo? BTC { get; set; }
+    }
+
+    private class SubmarineAssetInfo
+    {
+        [JsonPropertyName("hash")]
+        public string Hash { get; set; } = string.Empty;
+
+        [JsonPropertyName("limits")]
+        public SubmarineLimits Limits { get; set; } = new();
+
+        [JsonPropertyName("fees")]
+        public SubmarineFees Fees { get; set; } = new();
+    }
+
+    private class SubmarineLimits
+    {
+        [JsonPropertyName("minimal")]
+        public long Minimal { get; set; }
+
+        [JsonPropertyName("maximal")]
+        public long Maximal { get; set; }
+    }
+
+    private class SubmarineFees
+    {
+        [JsonPropertyName("percentage")]
+        public decimal Percentage { get; set; }
+
+        [JsonPropertyName("minerFees")]
+        public long MinerFees { get; set; }
     }
 
     #endregion
