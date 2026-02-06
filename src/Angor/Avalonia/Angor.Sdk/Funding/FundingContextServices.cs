@@ -75,6 +75,7 @@ public static class FundingContextServices
             TimeoutSeconds = 30
         });
         services.TryAddSingleton<IBoltzSwapService, BoltzSwapService>();
+        services.TryAddTransient<IBoltzWebSocketClient, BoltzWebSocketClient>();
         
         //services.AddHttpClient();
         
