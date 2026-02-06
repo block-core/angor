@@ -90,10 +90,21 @@
                                                             <Setter Property="IconOptions.Size" Value="12" />
                                                         </Style>
                                                     </StackPanel.Styles>
-                                                    <StackPanel Margin="6 0">
-                                                        <TextBlock Classes="Weight-Bold Strong" Text="{Binding Wallet.Balance.DecimalString}" />
-                                                        <ItemsControl ItemsSource="{Binding Wallet.Labels}" Classes="Horizontal" />
+                                                    <StackPanel Margin="6 0" Orientation="Horizontal" Spacing="16">
+                                                        <StackPanel>
+                                                            <TextBlock Classes="Weight-Bold Strong" Text="{Binding Wallet.Balance.DecimalString}" />
+                                                            <TextBlock Classes="Weight-Light Dimmed" Text="Balance" FontSize="10" />
+                                                        </StackPanel>
+                                                        <StackPanel IsVisible="{Binding Wallet.UnconfirmedBalance.IsPositive}">
+                                                            <TextBlock Classes="Weight-Bold" Foreground="{DynamicResource Warning}" Text="{Binding Wallet.UnconfirmedBalance.DecimalString}" />
+                                                            <TextBlock Classes="Weight-Light Dimmed" Text="Pending" FontSize="10" />
+                                                        </StackPanel>
+                                                        <StackPanel IsVisible="{Binding Wallet.ReservedBalance.IsPositive}">
+                                                            <TextBlock Classes="Weight-Bold" Foreground="{DynamicResource Info}" Text="{Binding Wallet.ReservedBalance.DecimalString}" />
+                                                            <TextBlock Classes="Weight-Light Dimmed" Text="Reserved" FontSize="10" />
+                                                        </StackPanel>
                                                     </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding Wallet.Labels}" Classes="Horizontal" />
                                                     <EnhancedButton Command="{Binding Send}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-arrow-up}" Classes="Accent" />
                                                     <EnhancedButton Command="{Binding Receive}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-arrow-down}" Classes="Outline" />
                                                     <EnhancedButton Command="{Binding ShowDetails}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-coins}" Classes="Outline" />
