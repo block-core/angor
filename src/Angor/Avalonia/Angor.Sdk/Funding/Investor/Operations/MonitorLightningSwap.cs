@@ -10,8 +10,16 @@ using Microsoft.Extensions.Logging;
 namespace Angor.Sdk.Funding.Investor.Operations;
 
 /// <summary>
-/// Monitors a Boltz submarine swap until completion.
-/// Polls Boltz API for status, then fetches UTXOs from indexer once complete.
+/// Monitors a Boltz reverse submarine swap until completion.
+/// 
+/// Flow:
+/// 1. Polls Boltz API for swap status
+/// 2. When status is "transaction.mempool" or "transaction.claimed", the swap is complete
+/// 3. Fetches UTXOs from the receiving address
+/// 4. Returns UTXOs for use in the normal investment flow (BuildInvestmentDraft)
+/// 
+/// Note: For reverse submarine swaps, Boltz locks funds on-chain after the Lightning invoice is paid.
+/// The funds are then claimed to the destination address using MuSig2 cooperative signing.
 /// </summary>
 public static class MonitorLightningSwap
 {
@@ -20,7 +28,7 @@ public static class MonitorLightningSwap
     /// </summary>
     /// <param name="WalletId">The Angor wallet ID</param>
     /// <param name="SwapId">The Boltz swap ID to monitor</param>
-    /// <param name="ReceivingAddress">The on-chain address expecting funds</param>
+    /// <param name="ReceivingAddress">The on-chain address expecting funds (destination address from swap creation)</param>
     /// <param name="Timeout">Maximum time to wait (default 30 minutes)</param>
     public record MonitorLightningSwapRequest(
         WalletId WalletId,
@@ -29,11 +37,13 @@ public static class MonitorLightningSwap
         TimeSpan? Timeout = null) : IRequest<Result<MonitorLightningSwapResponse>>;
 
     /// <summary>
-    /// Response containing the completed swap details
+    /// Response containing the completed swap details.
+    /// Use the DetectedUtxos with BuildInvestmentDraft.BuildInvestmentDraftRequest.FundingAddress
+    /// to create the investment transaction from these specific UTXOs.
     /// </summary>
     /// <param name="SwapStatus">Final swap status</param>
-    /// <param name="TransactionId">On-chain transaction ID</param>
-    /// <param name="DetectedUtxos">UTXOs detected on the receiving address</param>
+    /// <param name="TransactionId">On-chain transaction ID (claim transaction)</param>
+    /// <param name="DetectedUtxos">UTXOs detected on the receiving address, ready for investment</param>
     public record MonitorLightningSwapResponse(
         BoltzSwapStatus SwapStatus,
         string TransactionId,
