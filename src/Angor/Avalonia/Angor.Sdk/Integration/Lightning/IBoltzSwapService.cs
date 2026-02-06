@@ -11,14 +11,14 @@ public interface IBoltzSwapService
 {
     /// <summary>
     /// Creates a reverse submarine swap (Lightning → On-chain).
-    /// User pays the Lightning invoice, we claim the on-chain funds using the preimage.
+    /// User pays the Lightning invoice, funds are claimed to the destination address.
     /// </summary>
-    /// <param name="onchainAddress">The Bitcoin address to receive the swapped funds</param>
+    /// <param name="destinationAddress">The Bitcoin address to receive the swapped funds</param>
     /// <param name="amountSats">Amount in satoshis to swap</param>
     /// <param name="claimPublicKey">Public key for claiming the on-chain funds</param>
     /// <returns>Swap details including the Lightning invoice to pay and preimage for claiming</returns>
     Task<Result<BoltzSubmarineSwap>> CreateSubmarineSwapAsync(
-        string onchainAddress, 
+        string destinationAddress, 
         long amountSats,
         string claimPublicKey);
 
@@ -47,12 +47,5 @@ public interface IBoltzSwapService
         string claimTransaction,
         string preimage,
         string pubNonce);
-
-    /// <summary>
-    /// Broadcasts a signed transaction to the Bitcoin network via Boltz.
-    /// </summary>
-    /// <param name="transactionHex">The signed transaction hex</param>
-    /// <returns>The transaction ID if broadcast was successful</returns>
-    Task<Result<string>> BroadcastTransactionAsync(string transactionHex);
 }
 
