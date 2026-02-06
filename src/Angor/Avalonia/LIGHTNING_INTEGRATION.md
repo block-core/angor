@@ -47,8 +47,7 @@ var monitorResult = await investmentAppService.MonitorLightningSwap(
     new MonitorLightningSwap.MonitorLightningSwapRequest(
         WalletId: walletId,
         SwapId: swapId,
-        ReceivingAddress: "bc1q...",
-        ExpectedAmount: expectedAmount
+        ReceivingAddress: "bc1q..."
     ));
 
 if (monitorResult.IsSuccess)

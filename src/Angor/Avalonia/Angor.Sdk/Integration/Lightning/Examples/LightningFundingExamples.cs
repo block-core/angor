@@ -75,7 +75,6 @@ public class LightningFundingExamples
             WalletId: walletId,
             SwapId: swap.Id,
             ReceivingAddress: receivingAddress,
-            ExpectedAmount: swap.ExpectedAmount,
             Timeout: TimeSpan.FromMinutes(30)
         );
 
@@ -179,16 +178,14 @@ public class LightningFundingExamples
     public async Task<bool> MonitorExistingSwapExample(
         WalletId walletId,
         string swapId,
-        string receivingAddress,
-        long expectedAmount)
+        string receivingAddress)
     {
         _logger.LogInformation("=== Example 4: Monitor Existing Swap ===");
 
         var request = new MonitorLightningSwap.MonitorLightningSwapRequest(
             WalletId: walletId,
             SwapId: swapId,
-            ReceivingAddress: receivingAddress,
-            ExpectedAmount: expectedAmount
+            ReceivingAddress: receivingAddress
         );
 
         var result = await _investmentAppService.MonitorLightningSwap(request);
