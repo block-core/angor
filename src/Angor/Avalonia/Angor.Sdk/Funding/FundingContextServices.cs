@@ -68,10 +68,10 @@ public static class FundingContextServices
         services.TryAddSingleton<IMempoolMonitoringService, MempoolMonitoringService>();
         
         // Lightning Network / Boltz submarine swap services
-        // Set BOLTZ_API_URL environment variable to use testnet: https://testnet.boltz.exchange/api
+        // Using testnet by default for development
         services.TryAddSingleton<BoltzConfiguration>(_ => new BoltzConfiguration
         {
-            BaseUrl = Environment.GetEnvironmentVariable("BOLTZ_API_URL") ?? BoltzConfiguration.MainnetUrl,
+            BaseUrl = Environment.GetEnvironmentVariable("BOLTZ_API_URL") ?? BoltzConfiguration.TestnetUrl,
             TimeoutSeconds = 30
         });
         services.TryAddSingleton<IBoltzSwapService, BoltzSwapService>();

@@ -100,15 +100,43 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
 
             var address = addressResult.Value;
 
-            // Update invoice type with wallet name + "Address"
-            InvoiceTypes =
-            [
-                new InvoiceTypeSample
-                {
-                    Name = $"{wallet.Name} Address",
-                    Address = address
-                }
-            ];
+            // Create the on-chain invoice type
+            var onChainInvoice = new InvoiceTypeSample
+            {
+                Name = $"{wallet.Name} Address",
+                Address = address
+            };
+
+            // Create Lightning swap to get invoice
+            var lightningRequest = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
+                wallet.Id,
+                projectId,
+                new Amount(Amount.Sats),
+                address);
+
+            var lightningResult = await investmentAppService.CreateLightningSwap(lightningRequest);
+
+            if (lightningResult.IsSuccess)
+            {
+                var swap = lightningResult.Value.Swap;
+                
+                // Add both options to InvoiceTypes
+                InvoiceTypes =
+                [
+                    onChainInvoice,
+                    new InvoiceTypeSample
+                    {
+                        Name = "Lightning",
+                        Address = swap.Invoice
+                    }
+                ];
+            }
+            else
+            {
+                // Lightning swap failed, only show on-chain option
+                InvoiceTypes = [onChainInvoice];
+            }
+
             SelectedInvoiceType = InvoiceTypes.First();
 
             // Start monitoring the address for funds
