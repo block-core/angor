@@ -1,6 +1,7 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
+using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Integration.Lightning;
 using Angor.Sdk.Integration.Lightning.Models;
 using Angor.Sdk.Wallet.Domain;
@@ -34,7 +35,7 @@ public class LightningFundingExamples
     /// </summary>
     public async Task<bool> SimpleSwapFlowExample(
         WalletId walletId, 
-        string projectId, 
+        ProjectId projectId, 
         long amountSats,
         string receivingAddress)
     {
@@ -139,7 +140,7 @@ public class LightningFundingExamples
     /// </summary>
     public async Task<string?> CreateSwapOnlyExample(
         WalletId walletId,
-        string projectId,
+        ProjectId projectId,
         long amountSats,
         string receivingAddress)
     {
@@ -209,7 +210,7 @@ public class LightningFundingExamples
     /// </summary>
     public async Task CompleteExampleWithErrorHandling(
         WalletId walletId,
-        string projectId,
+        ProjectId projectId,
         long amountSats,
         string receivingAddress)
     {
