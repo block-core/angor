@@ -55,4 +55,17 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
         => mediator.Send(request, cancellationToken);
 
     #endregion
+
+    #region Methods for Lightning Network integration
+
+    public Task<Result<CreateLightningInvoiceForInvestment.CreateLightningInvoiceResponse>> CreateLightningInvoiceForInvestment(CreateLightningInvoiceForInvestment.CreateLightningInvoiceRequest request)
+        => mediator.Send(request);
+
+    public Task<Result<MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceResponse>> MonitorLightningInvoiceAndSwap(MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceRequest request)
+        => mediator.Send(request);
+
+    public Task<Result<FundInvestmentViaLightning.FundInvestmentViaLightningResponse>> FundInvestmentViaLightning(FundInvestmentViaLightning.FundInvestmentViaLightningRequest request)
+        => mediator.Send(request);
+
+    #endregion
 }

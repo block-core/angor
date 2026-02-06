@@ -31,4 +31,20 @@ public interface IInvestmentAppService
     /// Stores the request to DB, monitors the mempool, updates account info when funds are detected, and saves to DB.
     /// </summary>
     Task<Result<MonitorAddressForFunds.MonitorAddressForFundsResponse>> MonitorAddressForFunds(MonitorAddressForFunds.MonitorAddressForFundsRequest request, CancellationToken cancellationToken = default);
+
+    // Methods for Lightning Network integration
+    /// <summary>
+    /// Creates a Lightning invoice for funding an investment
+    /// </summary>
+    Task<Result<CreateLightningInvoiceForInvestment.CreateLightningInvoiceResponse>> CreateLightningInvoiceForInvestment(CreateLightningInvoiceForInvestment.CreateLightningInvoiceRequest request);
+
+    /// <summary>
+    /// Monitors a Lightning invoice for payment and swaps to on-chain when paid
+    /// </summary>
+    Task<Result<MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceResponse>> MonitorLightningInvoiceAndSwap(MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceRequest request);
+
+    /// <summary>
+    /// Orchestrates the complete flow: creates invoice, monitors payment, swaps to on-chain for investment
+    /// </summary>
+    Task<Result<FundInvestmentViaLightning.FundInvestmentViaLightningResponse>> FundInvestmentViaLightning(FundInvestmentViaLightning.FundInvestmentViaLightningRequest request);
 }
