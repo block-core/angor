@@ -230,6 +230,16 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "Primal", Url = "https://primal.net/dms", IsPrimary = false },
             };
     }
+
+    public List<SettingsUrl> GetDefaultImageServerUrls()
+    {
+        return new List<SettingsUrl>
+        {
+            new SettingsUrl { Name = "nostr.build", Url = "https://nostr.build", IsPrimary = true },
+            new SettingsUrl { Name = "blossom.primal.net", Url = "https://blossom.primal.net", IsPrimary = false },
+            new SettingsUrl { Name = "nostria (Blossom)", Url = "https://mibo.eu.nostria.app", IsPrimary = false },
+        };
+    }
     public Dictionary<string, bool> GetDefaultFeatureFlags(string network)
     {
         return network switch

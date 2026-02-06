@@ -135,6 +135,15 @@ public class NetworkConfiguration : INetworkConfiguration
             new() { Name = "Primal", Url = "https://primal.net/dms", IsPrimary = false },
         };
 
+    public List<SettingsUrl> GetDefaultImageServerUrls() =>
+        new()
+        {
+            // Blossom-compatible servers (NIP-B7 / BUD-02)
+            new() { Name = "nostr.build", Url = "https://nostr.build", IsPrimary = true },
+            new() { Name = "blossom.primal.net", Url = "https://blossom.primal.net", IsPrimary = false },
+            new() { Name = "nostria (Blossom)", Url = "https://mibo.eu.nostria.app", IsPrimary = false },
+        };
+
     public List<SettingsUrl> GetDiscoveryRelays() =>
         new()
         {
@@ -175,4 +184,3 @@ public class NetworkConfiguration : INetworkConfiguration
         _ => new()
     };
 }
-

@@ -15,7 +15,8 @@ public class NetworkStorage(IStore store) : INetworkStorage
         {
             Explorers = data.Explorers,
             Indexers = data.Indexers,
-            Relays = data.Relays
+            Relays = data.Relays,
+            ImageServers = data.ImageServers
         })
         .OnFailureCompensate(_ => new SettingsInfo())
         .Value;
@@ -26,6 +27,7 @@ public class NetworkStorage(IStore store) : INetworkStorage
         data.Explorers = settingsInfo.Explorers;
         data.Indexers = settingsInfo.Indexers;
         data.Relays = settingsInfo.Relays;
+        data.ImageServers = settingsInfo.ImageServers;
         store.Save(SettingsFile, data);
     }
 
@@ -68,5 +70,6 @@ public class NetworkStorage(IStore store) : INetworkStorage
         public List<SettingsUrl> Explorers { get; set; } = new();
         public List<SettingsUrl> Indexers { get; set; } = new();
         public List<SettingsUrl> Relays { get; set; } = new();
+        public List<SettingsUrl> ImageServers { get; set; } = new();
     }
 }

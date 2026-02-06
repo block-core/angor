@@ -90,6 +90,11 @@ namespace Angor.Shared.Services
                 settings.ChatApps.AddRange(_networkConfiguration.GetDefaultChatAppUrls());
             }
 
+            if (!settings.ImageServers.Any())
+            {
+                settings.ImageServers.AddRange(_networkConfiguration.GetDefaultImageServerUrls());
+            }
+
             _networkStorage.SetSettings(settings);
         }
 
