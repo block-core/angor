@@ -12,14 +12,18 @@ internal interface ISettingsSectionViewModel : IDisposable
 {
     ObservableCollection<SettingsUrlViewModel> Indexers { get; }
     ObservableCollection<SettingsUrlViewModel> Relays { get; }
+    ObservableCollection<SettingsUrlViewModel> ImageServers { get; }
     IReadOnlyList<string> Networks { get; }
     string Network { get; set; }
     string NewIndexer { get; set; }
     string NewRelay { get; set; }
+    string NewImageServer { get; set; }
     ReactiveCommand<Unit, Unit> AddIndexer { get; }
     ReactiveCommand<Unit, Unit> AddRelay { get; }
+    ReactiveCommand<Unit, Unit> AddImageServer { get; }
     ReactiveCommand<Unit, Unit> RefreshIndexers { get; }
     ReactiveCommand<Unit, Unit> RefreshRelays { get; }
+    ReactiveCommand<Unit, Unit> RefreshImageServers { get; }
     ReactiveCommand<Unit, Unit> ChangeNetwork { get; }
     ReactiveCommand<Unit, Unit> WipeData { get; }
     ReactiveCommand<Unit, Unit> BackupWallet { get; }
@@ -45,18 +49,28 @@ internal class SettingsSectionViewModelSample : ISettingsSectionViewModel
             new("wss://relay.angor.io", false, UrlStatus.Online, DateTime.UtcNow, _ => { }, name: "strfry default"),
             new("wss://relay2.angor.io", false, UrlStatus.Online, DateTime.UtcNow, _ => { }, name: "strfry2 default")
         };
+
+        ImageServers = new ObservableCollection<SettingsUrlViewModel>
+        {
+            new("https://nostr.build", true, UrlStatus.Unknown, DateTime.UtcNow, _ => { }, _ => { }, name: "nostr.build"),
+            new("https://void.cat", false, UrlStatus.Unknown, DateTime.UtcNow, _ => { }, _ => { }, name: "void.cat")
+        };
     }
 
     public ObservableCollection<SettingsUrlViewModel> Indexers { get; }
     public ObservableCollection<SettingsUrlViewModel> Relays { get; }
+    public ObservableCollection<SettingsUrlViewModel> ImageServers { get; }
     public IReadOnlyList<string> Networks { get; } = new[] { "Angornet", "Mainnet" };
     public string Network { get; set; } = "Angornet";
     public string NewIndexer { get; set; } = string.Empty;
     public string NewRelay { get; set; } = string.Empty;
+    public string NewImageServer { get; set; } = string.Empty;
     public ReactiveCommand<Unit, Unit> AddIndexer { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> AddRelay { get; } = ReactiveCommand.Create(() => { });
+    public ReactiveCommand<Unit, Unit> AddImageServer { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> RefreshIndexers { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> RefreshRelays { get; } = ReactiveCommand.Create(() => { });
+    public ReactiveCommand<Unit, Unit> RefreshImageServers { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> ChangeNetwork { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> WipeData { get; } = ReactiveCommand.Create(() => { });
     public ReactiveCommand<Unit, Unit> BackupWallet { get; } = ReactiveCommand.Create(() => { });

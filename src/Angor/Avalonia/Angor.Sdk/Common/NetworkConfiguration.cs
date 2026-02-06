@@ -135,6 +135,14 @@ public class NetworkConfiguration : INetworkConfiguration
             new() { Name = "Primal", Url = "https://primal.net/dms", IsPrimary = false },
         };
 
+    public List<SettingsUrl> GetDefaultImageServerUrls() =>
+        new()
+        {
+            // NOTE: These are public examples; users can customize in Settings.
+            new() { Name = "nostr.build", Url = "https://nostr.build", IsPrimary = true },
+            new() { Name = "void.cat", Url = "https://void.cat", IsPrimary = false },
+        };
+
     public List<SettingsUrl> GetDiscoveryRelays() =>
         new()
         {
@@ -175,4 +183,3 @@ public class NetworkConfiguration : INetworkConfiguration
         _ => new()
     };
 }
-

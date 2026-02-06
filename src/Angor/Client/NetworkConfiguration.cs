@@ -230,6 +230,15 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "Primal", Url = "https://primal.net/dms", IsPrimary = false },
             };
     }
+
+    public List<SettingsUrl> GetDefaultImageServerUrls()
+    {
+        return new List<SettingsUrl>
+        {
+            new SettingsUrl { Name = "nostr.build", Url = "https://nostr.build", IsPrimary = true },
+            new SettingsUrl { Name = "void.cat", Url = "https://void.cat", IsPrimary = false },
+        };
+    }
     public Dictionary<string, bool> GetDefaultFeatureFlags(string network)
     {
         return network switch

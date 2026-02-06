@@ -173,6 +173,52 @@
                     </StackPanel>
                 </Card>
 
+                <!-- Image Servers Section -->
+                <Card HeaderStartContent="{Icon fa-image}" Header="Image Servers (NIP-96)">
+                    <Card.HeaderEndContent>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <EnhancedButton Classes="Primary" Icon="{Icon fa-plus}" Content="Add" Command="{Binding AddImageServer}" />
+                            <EnhancedButton Classes="Primary" Content="Refresh" Command="{Binding RefreshImageServers}">
+                                <EnhancedButton.Icon>
+                                    <Panel>
+                                        <i:Icon Value="fa-rotate-right" IsVisible="{Binding !RefreshImageServers.IsExecuting^}" />
+                                        <fa:ProgressRing Width="16" Height="16" IsVisible="{Binding RefreshImageServers.IsExecuting^}" />
+                                    </Panel>
+                                </EnhancedButton.Icon>
+                            </EnhancedButton>
+                        </StackPanel>
+                    </Card.HeaderEndContent>
+                    <StackPanel>
+                        <TextBox Watermark="Enter NIP-96 server base URL (e.g. https://nostr.build)" Text="{Binding NewImageServer}" Margin="0 0 0 10" />
+                        <SlimDataGrid ItemsSource="{Binding ImageServers}">
+                            <SlimDataGrid.Columns>
+                                <Column Header="URL" Width="*">
+                                    <Column.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Classes="Link" Text="{Binding Url}" />
+                                        </DataTemplate>
+                                    </Column.CellTemplate>
+                                </Column>
+                                <Column Header="Default" Width="Auto">
+                                    <Column.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding IsPrimary}" Command="{Binding SetPrimary}" IsEnabled="{Binding !IsPrimary}" />
+                                        </DataTemplate>
+                                    </Column.CellTemplate>
+                                </Column>
+                                <Column Width="Auto" Binding="{Binding}">
+                                    <Column.CellTemplate>
+                                        <DataTemplate>
+                                            <EnhancedButton Classes="Trash" Icon="{Icon fa-trash}" Command="{Binding Remove}" />
+                                        </DataTemplate>
+                                    </Column.CellTemplate>
+                                </Column>
+                            </SlimDataGrid.Columns>
+                        </SlimDataGrid>
+                        <TextBlock Classes="Muted Wrap" Text="These servers are used by the Project Images step to upload your avatar/banner via NIP-96." />
+                    </StackPanel>
+                </Card>
+
                 <!-- Currency Display Section -->
                 <Card HeaderStartContent="{Icon fa-bitcoin}" Header="Currency Display">
                     <StackPanel Classes="BigGap">
