@@ -12,8 +12,8 @@
         <Card Theme="{StaticResource WideCard}">
             <Card.Header>
                 <Panel>
-                    <TextBlock IsVisible="{Binding !Load.IsExecuting^}" Text="{Binding Balance.DecimalString}" />
-                    <ProgressBar HorizontalAlignment="Left" MaxWidth="120" IsIndeterminate="True" IsVisible="{Binding Load.IsExecuting^}" />
+                    <TextBlock IsVisible="{Binding !RefreshBalanceAndFetchHistory.IsExecuting^}" Text="{Binding Balance.DecimalString}" />
+                    <ProgressBar HorizontalAlignment="Left" MaxWidth="120" IsIndeterminate="True" IsVisible="{Binding RefreshBalanceAndFetchHistory.IsExecuting^}" />
                 </Panel>
             </Card.Header>
             <Card.HeaderStartContent>

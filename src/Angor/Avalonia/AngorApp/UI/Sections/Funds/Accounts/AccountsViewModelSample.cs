@@ -21,6 +21,7 @@ namespace AngorApp.UI.Sections.Funds.Accounts
         };
         
         public IEnhancedCommand GetTestCoins { get; } = EnhancedCommand.Create(() => { });
-        public bool CanGetTestCoins { get; } = true;
-    }
+            public bool CanGetTestCoins { get; } = true;
+            public IEnhancedCommand RefreshBalances { get; } = EnhancedCommand.Create(() => { });
+        }
 }

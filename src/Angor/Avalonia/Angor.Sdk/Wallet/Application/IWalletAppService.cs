@@ -12,7 +12,7 @@ public interface IWalletAppService
     Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletId walletId);
     Task<Result<Balance>> GetBalance(WalletId walletId);
     Task<Result<AccountBalanceInfo>> GetAccountBalanceInfo(WalletId walletId);
-    Task<Result<AccountBalanceInfo>> GetAccountBalanceInfoWithFullRescan(WalletId walletId);
+    Task<Result<AccountBalanceInfo>> RefreshAndGetAccountBalanceInfo(WalletId walletId);
     Task<Result<FeeAndSize>> EstimateFeeAndSize(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate);
     Task<Result<Address>> GetNextReceiveAddress(WalletId id);
     Task<Result<WalletId>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network);

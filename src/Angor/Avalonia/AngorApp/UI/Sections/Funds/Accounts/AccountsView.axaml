@@ -19,11 +19,26 @@
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Foreground" Value="{DynamicResource PrimaryBlack}" />
         </Style>
+        <Style Selector="EnhancedButton.Spinning /template/ ContentPresenter#IconPresenter PathIcon">
+            <Setter Property="RenderTransform" Value="rotate(0deg)" />
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Style.Animations>
+                <Animation Duration="0:0:1" IterationCount="Infinite">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="RotateTransform.Angle" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="RotateTransform.Angle" Value="360" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
     </UserControl.Styles>
 
     <controls:ScrollableView>
     <StackPanel Classes="BigGap" MaxWidth="1152">
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Classes="SmallGap">
+            <EnhancedButton Command="{Binding RefreshBalances}" Classes="Outline" Classes.Spinning="{Binding RefreshBalances.IsExecuting}" Icon="{Icon fa-sync}">Refresh</EnhancedButton>
             <EnhancedButton Command="{Binding ImportAccount}" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False">Import Wallet</EnhancedButton>
             <EnhancedButton Command="{Binding GetTestCoins}" IsVisible="{Binding CanGetTestCoins}" Classes="Accent" Icon="{Icon fa-plus}">Get Testnet Coins</EnhancedButton>
         </StackPanel>

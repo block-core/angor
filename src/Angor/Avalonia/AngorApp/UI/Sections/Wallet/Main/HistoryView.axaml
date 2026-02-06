@@ -11,7 +11,7 @@
              x:Class="AngorApp.UI.Sections.Wallet.Main.HistoryView"
              x:DataType="simple1:SimpleWallet">
 
-    <Loading LoadingText="Loading Transaction History" IsLoading="{Binding Load.IsExecuting^}">
+    <Loading LoadingText="Loading Transaction History" IsLoading="{Binding RefreshBalanceAndFetchHistory.IsExecuting^}">
         <SlimDataGrid ItemsSource="{Binding History}" Empty.Content="No transactions found">
             <SlimDataGrid.Styles>
                 <Style Selector="TextBlock">

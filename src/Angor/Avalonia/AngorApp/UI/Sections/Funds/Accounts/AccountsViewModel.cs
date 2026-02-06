@@ -1,4 +1,6 @@
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using Angor.Sdk.Wallet.Application;
 using Angor.Shared;
 using AngorApp.UI.Sections.Wallet.CreateAndImport;
 using Blockcore.Networks;
@@ -10,9 +12,11 @@ namespace AngorApp.UI.Sections.Funds.Accounts
     public class AccountsViewModel : IAccountsViewModel, IDisposable
     {
         private readonly CompositeDisposable disposable = new();
-        
-        public AccountsViewModel(IWalletContext walletContext, WalletImportWizard walletImportWizard, UIServices uiServices, INetworkConfiguration networkConfiguration)
+        private readonly IWalletContext walletContext;
+
+        public AccountsViewModel(IWalletContext walletContext, WalletImportWizard walletImportWizard, UIServices uiServices, INetworkConfiguration networkConfiguration, IWalletAppService walletAppService)
         {
+            this.walletContext = walletContext;
             walletContext.WalletChanges
                          .Group(wallet => wallet.ImportKind)
                          .Transform(IAccountGroup (g) => new AccountGroup(g, uiServices))
@@ -22,18 +26,18 @@ namespace AngorApp.UI.Sections.Funds.Accounts
 
             AccountGroups = accountGroups;
             ImportAccount = EnhancedCommand.CreateWithResult(walletImportWizard.Start).DisposeWith(disposable);
-            
+
             walletContext.WalletChanges
                          .Group(wallet => wallet.NetworkKind)
                          .Transform(IAccountBalance (g) => new AccountBalance(g))
                          .Bind(out var accountBalances)
                          .Subscribe()
                          .DisposeWith(disposable);
-            
+
             Balances = accountBalances;
-            
+
             CanGetTestCoins = networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet;
-            
+
             GetTestCoins = EnhancedCommand.Create(async () =>
             {
                 var wallet = walletContext.CurrentWallet;
@@ -42,6 +46,16 @@ namespace AngorApp.UI.Sections.Funds.Accounts
                     await wallet.Value.GetTestCoins.Execute();
                 }
             }).DisposeWith(disposable);
+
+            RefreshBalances = EnhancedCommand.Create(RefreshAllBalances).DisposeWith(disposable);
+        }
+
+        private async Task RefreshAllBalances()
+        {
+            foreach (var wallet in walletContext.Wallets)
+            {
+                await wallet.RefreshBalance.Execute();
+            }
         }
 
         public ICollection<IAccountGroup> AccountGroups { get; }
@@ -49,6 +63,7 @@ namespace AngorApp.UI.Sections.Funds.Accounts
         public IEnumerable<IAccountBalance> Balances { get; }
         public IEnhancedCommand GetTestCoins { get; }
         public bool CanGetTestCoins { get; }
+        public IEnhancedCommand RefreshBalances { get; }
 
         public void Dispose()
         {

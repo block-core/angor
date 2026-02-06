@@ -9,5 +9,6 @@ namespace AngorApp.UI.Sections.Funds.Accounts
         public IEnumerable<IAccountBalance> Balances { get; }
         public IEnhancedCommand GetTestCoins { get; }
         public bool CanGetTestCoins { get; }
+        public IEnhancedCommand RefreshBalances { get; }
     }
 }

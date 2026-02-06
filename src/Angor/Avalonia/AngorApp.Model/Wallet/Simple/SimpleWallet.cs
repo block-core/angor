@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Application;
 using Angor.Shared;
+using Angor.Shared.Models;
 using AngorApp.Model.Amounts;
 using AngorApp.Model.Common;
 using Blockcore.Networks;
@@ -31,17 +32,24 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
         this.walletAppService = walletAppService;
         this.dialog = dialog;
         Id = id;
-        var transactionCollection = CreateTransactions(id)
-            .DisposeWith(disposable);
+        var transactionCollection = CreateTransactions(id).DisposeWith(disposable);
 
-        Load = transactionCollection.Refresh;
-        Load.HandleErrorsWith(notificationService, "Cannot load wallet info");
+        RefreshBalanceAndFetchHistory = transactionCollection.Refresh;
+        RefreshBalanceAndFetchHistory.HandleErrorsWith(notificationService, "Cannot load wallet info");
 
-        // Subscribe to Load command success to update all balances from AccountBalanceInfo
-        var balanceUpdates = Load.Successes()
+        // RefreshBalance: Refresh balance info without fetching transaction history
+        RefreshBalance = ReactiveCommand.CreateFromTask(RefreshAndGetAccountBalanceInfo).Enhance().DisposeWith(disposable);
+        RefreshBalance.HandleErrorsWith(notificationService, "Cannot refresh balance");
+
+        // Balance updates from both RefreshBalanceAndFetchHistory (with history) and RefreshBalance (without history)
+        var balanceFromLoad = RefreshBalanceAndFetchHistory.Successes()
             .SelectMany(_ => Observable.FromAsync(() => walletAppService.GetAccountBalanceInfo(id)))
             .Where(r => r.IsSuccess)
-            .Select(r => r.Value)
+            .Select(r => r.Value);
+
+        var balanceFromRefresh = RefreshBalance.Successes();
+
+        var balanceUpdates = balanceFromLoad.Merge(balanceFromRefresh)
             .Publish()
             .RefCount();
 
@@ -86,7 +94,8 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     public string Name { get; } = "Default";
     public IEnhancedCommand Send { get; }
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
-    public IEnhancedCommand<Result<IEnumerable<IBroadcastedTransaction>>> Load { get; }
+    public IEnhancedCommand<Result<IEnumerable<IBroadcastedTransaction>>> RefreshBalanceAndFetchHistory { get; }
+    public IEnhancedCommand<Result<AccountBalanceInfo>> RefreshBalance { get; }
     public ReadOnlyObservableCollection<IBroadcastedTransaction> History { get; }
     public IEnhancedCommand<Result> GetTestCoins { get; }
     public DateTimeOffset CreatedOn { get; } = DateTimeOffset.MinValue;
@@ -105,6 +114,11 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
         return walletAppService.GetNextReceiveAddress(Id).Map(address => address.Value);
     }
 
+    private Task<Result<AccountBalanceInfo>> RefreshAndGetAccountBalanceInfo()
+    {
+        return walletAppService.RefreshAndGetAccountBalanceInfo(Id);
+    }
+
     private async Task<Result> RequestTestCoins()
     {
         var result = await walletAppService.GetTestCoins(Id);
@@ -112,7 +126,7 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
         if (result.IsSuccess)
         {
             // Reload the transactions after getting test coins
-            await Load.Execute();
+            await RefreshBalanceAndFetchHistory.Execute();
         }
         
         return result;

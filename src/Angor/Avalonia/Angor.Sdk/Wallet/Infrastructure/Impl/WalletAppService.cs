@@ -61,7 +61,7 @@ public class WalletAppService(
         return accountBalanceService.GetAccountBalanceInfoAsync(walletId);
     }
 
-    public Task<Result<AccountBalanceInfo>> GetAccountBalanceInfoWithFullRescan(WalletId walletId)
+    public Task<Result<AccountBalanceInfo>> RefreshAndGetAccountBalanceInfo(WalletId walletId)
     {
         return accountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
     }
