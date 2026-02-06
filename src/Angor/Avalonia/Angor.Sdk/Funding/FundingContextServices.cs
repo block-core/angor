@@ -67,14 +67,15 @@ public static class FundingContextServices
         services.TryAddSingleton<IWalletAccountBalanceService, WalletAccountBalanceService>();
         services.TryAddSingleton<IMempoolMonitoringService, MempoolMonitoringService>();
         
-        // Lightning Network / Bolt integration services
-        services.TryAddSingleton<BoltConfiguration>(_ => new BoltConfiguration
+        // Lightning Network / Boltz submarine swap services
+        services.TryAddSingleton<BoltzConfiguration>(_ => new BoltzConfiguration
         {
-            ApiKey = Environment.GetEnvironmentVariable("BOLT_API_KEY") ?? string.Empty,
-            BaseUrl = Environment.GetEnvironmentVariable("BOLT_API_URL") ?? "https://api.bolt.observer",
+            BaseUrl = Environment.GetEnvironmentVariable("BOLTZ_API_URL") ?? "https://api.boltz.exchange",
+            TestnetBaseUrl = Environment.GetEnvironmentVariable("BOLTZ_TESTNET_URL") ?? "https://testnet.boltz.exchange/api",
+            UseTestnet = Environment.GetEnvironmentVariable("BOLTZ_USE_TESTNET")?.ToLower() == "true",
             TimeoutSeconds = 30
         });
-        services.TryAddSingleton<IBoltService, BoltService>();
+        services.TryAddSingleton<IBoltzSwapService, BoltzSwapService>();
         
         //services.AddHttpClient();
         

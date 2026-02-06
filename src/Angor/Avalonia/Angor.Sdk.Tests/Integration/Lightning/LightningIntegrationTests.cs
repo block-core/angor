@@ -3,6 +3,7 @@ using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Integration.Lightning;
 using Angor.Sdk.Integration.Lightning.Models;
 using Angor.Sdk.Wallet.Domain;
+using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
@@ -13,299 +14,198 @@ using Xunit;
 namespace Angor.Sdk.Tests.Integration.Lightning;
 
 /// <summary>
-/// Unit tests for CreateLightningInvoiceForInvestment handler
+/// Unit tests for Boltz submarine swap integration
 /// </summary>
-public class CreateLightningInvoiceForInvestmentTests
+public class BoltzSwapTests
 {
-    private readonly Mock<IBoltService> _mockBoltService;
-    private readonly Mock<ILogger<CreateLightningInvoiceForInvestment.CreateLightningInvoiceHandler>> _mockLogger;
-    private readonly CreateLightningInvoiceForInvestment.CreateLightningInvoiceHandler _handler;
-
-    public CreateLightningInvoiceForInvestmentTests()
-    {
-        _mockBoltService = new Mock<IBoltService>();
-        _mockLogger = new Mock<ILogger<CreateLightningInvoiceForInvestment.CreateLightningInvoiceHandler>>();
-        _handler = new CreateLightningInvoiceForInvestment.CreateLightningInvoiceHandler(
-            _mockBoltService.Object,
-            _mockLogger.Object);
-    }
-
-    [Fact]
-    public async Task Handle_WhenBoltWalletExists_CreatesInvoiceSuccessfully()
-    {
-        // Arrange
-        var walletId = new WalletId("test-wallet-123");
-        var projectId = "test-project-abc";
-        var amount = new Amount(100000);
-
-        var existingWallet = new BoltWallet
-        {
-            Id = walletId.Value,
-            UserId = walletId.Value,
-            BalanceSats = 0,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        var expectedInvoice = new BoltInvoice
-        {
-            Id = "invoice-123",
-            WalletId = walletId.Value,
-            Bolt11 = "lnbc1000n1...",
-            PaymentHash = "hash123",
-            AmountSats = amount.Sats,
-            Status = BoltPaymentStatus.Pending,
-            ExpiresAt = DateTime.UtcNow.AddHours(1)
-        };
-
-        _mockBoltService
-            .Setup(x => x.GetWalletAsync(walletId.Value))
-            .ReturnsAsync(Result.Success(existingWallet));
-
-        _mockBoltService
-            .Setup(x => x.CreateInvoiceAsync(walletId.Value, amount.Sats, It.IsAny<string>()))
-            .ReturnsAsync(Result.Success(expectedInvoice));
-
-        var request = new CreateLightningInvoiceForInvestment.CreateLightningInvoiceRequest(
-            walletId, projectId, amount);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(expectedInvoice.Id, result.Value.Invoice.Id);
-        Assert.Equal(expectedInvoice.Bolt11, result.Value.Invoice.Bolt11);
-        Assert.Equal(walletId.Value, result.Value.BoltWalletId);
-    }
-
-    [Fact]
-    public async Task Handle_WhenBoltWalletDoesNotExist_CreatesWalletAndInvoice()
-    {
-        // Arrange
-        var walletId = new WalletId("new-wallet-456");
-        var projectId = "test-project-xyz";
-        var amount = new Amount(50000);
-
-        var newWallet = new BoltWallet
-        {
-            Id = walletId.Value,
-            UserId = walletId.Value,
-            BalanceSats = 0,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        var expectedInvoice = new BoltInvoice
-        {
-            Id = "invoice-456",
-            WalletId = walletId.Value,
-            Bolt11 = "lnbc500n1...",
-            PaymentHash = "hash456",
-            AmountSats = amount.Sats,
-            Status = BoltPaymentStatus.Pending,
-            ExpiresAt = DateTime.UtcNow.AddHours(1)
-        };
-
-        _mockBoltService
-            .Setup(x => x.GetWalletAsync(walletId.Value))
-            .ReturnsAsync(Result.Failure<BoltWallet>("Wallet not found"));
-
-        _mockBoltService
-            .Setup(x => x.CreateWalletAsync(walletId.Value))
-            .ReturnsAsync(Result.Success(newWallet));
-
-        _mockBoltService
-            .Setup(x => x.CreateInvoiceAsync(walletId.Value, amount.Sats, It.IsAny<string>()))
-            .ReturnsAsync(Result.Success(expectedInvoice));
-
-        var request = new CreateLightningInvoiceForInvestment.CreateLightningInvoiceRequest(
-            walletId, projectId, amount);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(expectedInvoice.Id, result.Value.Invoice.Id);
-        _mockBoltService.Verify(x => x.CreateWalletAsync(walletId.Value), Times.Once);
-    }
-
-    [Fact]
-    public async Task Handle_WhenInvoiceCreationFails_ReturnsFailure()
-    {
-        // Arrange
-        var walletId = new WalletId("test-wallet-789");
-        var projectId = "test-project-def";
-        var amount = new Amount(25000);
-
-        var existingWallet = new BoltWallet { Id = walletId.Value };
-
-        _mockBoltService
-            .Setup(x => x.GetWalletAsync(walletId.Value))
-            .ReturnsAsync(Result.Success(existingWallet));
-
-        _mockBoltService
-            .Setup(x => x.CreateInvoiceAsync(walletId.Value, amount.Sats, It.IsAny<string>()))
-            .ReturnsAsync(Result.Failure<BoltInvoice>("API error"));
-
-        var request = new CreateLightningInvoiceForInvestment.CreateLightningInvoiceRequest(
-            walletId, projectId, amount);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsFailure);
-        Assert.Contains("API error", result.Error);
-    }
-
-    [Fact]
-    public async Task Handle_WithCustomMemo_UsesProvidedMemo()
-    {
-        // Arrange
-        var walletId = new WalletId("test-wallet-memo");
-        var projectId = "test-project-ghi";
-        var amount = new Amount(75000);
-        var customMemo = "Custom investment memo";
-
-        var wallet = new BoltWallet { Id = walletId.Value };
-        var invoice = new BoltInvoice
-        {
-            Id = "invoice-memo",
-            Bolt11 = "lnbc750n1...",
-            AmountSats = amount.Sats,
-            Memo = customMemo
-        };
-
-        _mockBoltService
-            .Setup(x => x.GetWalletAsync(walletId.Value))
-            .ReturnsAsync(Result.Success(wallet));
-
-        _mockBoltService
-            .Setup(x => x.CreateInvoiceAsync(walletId.Value, amount.Sats, customMemo))
-            .ReturnsAsync(Result.Success(invoice));
-
-        var request = new CreateLightningInvoiceForInvestment.CreateLightningInvoiceRequest(
-            walletId, projectId, amount, customMemo);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsSuccess);
-        _mockBoltService.Verify(
-            x => x.CreateInvoiceAsync(walletId.Value, amount.Sats, customMemo),
-            Times.Once);
-    }
-}
-
-/// <summary>
-/// Unit tests for MonitorLightningInvoiceAndSwap handler
-/// </summary>
-public class MonitorLightningInvoiceAndSwapTests
-{
-    private readonly Mock<IBoltService> _mockBoltService;
+    private readonly Mock<IBoltzSwapService> _mockBoltzService;
+    private readonly Mock<IDerivationOperations> _mockDerivationOperations;
     private readonly Mock<IMempoolMonitoringService> _mockMempoolService;
     private readonly Mock<IWalletAccountBalanceService> _mockWalletService;
-    private readonly Mock<ILogger<MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceHandler>> _mockLogger;
-    private readonly MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceHandler _handler;
 
-    public MonitorLightningInvoiceAndSwapTests()
+    public BoltzSwapTests()
     {
-        _mockBoltService = new Mock<IBoltService>();
+        _mockBoltzService = new Mock<IBoltzSwapService>();
+        _mockDerivationOperations = new Mock<IDerivationOperations>();
         _mockMempoolService = new Mock<IMempoolMonitoringService>();
         _mockWalletService = new Mock<IWalletAccountBalanceService>();
-        _mockLogger = new Mock<ILogger<MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceHandler>>();
-        
-        _handler = new MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceHandler(
-            _mockBoltService.Object,
-            _mockMempoolService.Object,
-            _mockWalletService.Object,
-            _mockLogger.Object);
     }
 
     [Fact]
-    public async Task Handle_WhenInvoicePaidAndSwapCompletes_ReturnsSuccess()
+    public async Task CreateSwap_WithValidAmount_ReturnsSuccess()
     {
         // Arrange
         var walletId = new WalletId("test-wallet");
-        var invoiceId = "invoice-123";
-        var boltWalletId = "bolt-wallet-123";
-        var targetAddress = "bc1qtest123";
-        var swapAddress = "bc1qswap456";
+        var projectId = "test-project";
+        var amount = new Amount(100000);
+        var address = "bc1qtest123";
 
-        var paidInvoice = new BoltInvoice
+        var pairInfo = new BoltzPairInfo
         {
-            Id = invoiceId,
-            Status = BoltPaymentStatus.Paid,
-            AmountSats = 100000,
-            PaidAt = DateTime.UtcNow
+            MinAmount = 10000,
+            MaxAmount = 10000000,
+            FeePercentage = 0.5m,
+            MinerFee = 500
+        };
+
+        var expectedSwap = new BoltzSubmarineSwap
+        {
+            Id = "swap-123",
+            Invoice = "lnbc1000n1...",
+            Address = address,
+            ExpectedAmount = 99000,
+            Status = SwapState.Created
+        };
+
+        _mockBoltzService
+            .Setup(x => x.GetPairInfoAsync())
+            .ReturnsAsync(Result.Success(pairInfo));
+
+        _mockBoltzService
+            .Setup(x => x.CreateSubmarineSwapAsync(address, amount.Sats, It.IsAny<string>()))
+            .ReturnsAsync(Result.Success(expectedSwap));
+
+        var logger = new Mock<ILogger<CreateLightningSwapForInvestment.CreateLightningSwapHandler>>();
+        var handler = new CreateLightningSwapForInvestment.CreateLightningSwapHandler(
+            _mockBoltzService.Object,
+            _mockDerivationOperations.Object,
+            logger.Object);
+
+        var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
+            walletId, projectId, amount, address);
+
+        // Act
+        var result = await handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal("swap-123", result.Value.Swap.Id);
+        Assert.Equal("lnbc1000n1...", result.Value.Swap.Invoice);
+    }
+
+    [Fact]
+    public async Task CreateSwap_AmountTooSmall_ReturnsFailure()
+    {
+        // Arrange
+        var walletId = new WalletId("test-wallet");
+        var projectId = "test-project";
+        var amount = new Amount(1000); // Too small
+        var address = "bc1qtest123";
+
+        var pairInfo = new BoltzPairInfo
+        {
+            MinAmount = 10000,
+            MaxAmount = 10000000,
+            FeePercentage = 0.5m,
+            MinerFee = 500
+        };
+
+        _mockBoltzService
+            .Setup(x => x.GetPairInfoAsync())
+            .ReturnsAsync(Result.Success(pairInfo));
+
+        var logger = new Mock<ILogger<CreateLightningSwapForInvestment.CreateLightningSwapHandler>>();
+        var handler = new CreateLightningSwapForInvestment.CreateLightningSwapHandler(
+            _mockBoltzService.Object,
+            _mockDerivationOperations.Object,
+            logger.Object);
+
+        var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
+            walletId, projectId, amount, address);
+
+        // Act
+        var result = await handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.Contains("too small", result.Error.ToLower());
+    }
+
+    [Fact]
+    public async Task MonitorSwap_WhenCompleted_ReturnsSuccess()
+    {
+        // Arrange
+        var walletId = new WalletId("test-wallet");
+        var swapId = "swap-123";
+        var address = "bc1qtest123";
+        var expectedAmount = 99000L;
+
+        var completedStatus = new BoltzSwapStatus
+        {
+            SwapId = swapId,
+            Status = SwapState.TransactionClaimed,
+            TransactionId = "txid123"
         };
 
         var utxos = new List<UtxoData>
         {
             new UtxoData
             {
-                outpoint = new Outpoint { transactionId = "tx1", outputIndex = 0 },
-                value = 100000,
-                address = swapAddress
+                outpoint = new Outpoint { transactionId = "txid123", outputIndex = 0 },
+                value = expectedAmount,
+                address = address
             }
         };
 
-        _mockBoltService
-            .Setup(x => x.GetInvoiceAsync(invoiceId))
-            .ReturnsAsync(Result.Success(paidInvoice));
-
-        _mockBoltService
-            .Setup(x => x.GetSwapAddressAsync(boltWalletId, 100000))
-            .ReturnsAsync(Result.Success(swapAddress));
+        _mockBoltzService
+            .Setup(x => x.GetSwapStatusAsync(swapId))
+            .ReturnsAsync(Result.Success(completedStatus));
 
         _mockMempoolService
-            .Setup(x => x.MonitorAddressForFundsAsync(
-                swapAddress,
-                100000,
-                It.IsAny<TimeSpan>(),
-                It.IsAny<CancellationToken>()))
+            .Setup(x => x.MonitorAddressForFundsAsync(address, expectedAmount, It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(utxos);
 
-        var request = new MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceRequest(
-            walletId, invoiceId, boltWalletId, targetAddress);
+        var logger = new Mock<ILogger<MonitorLightningSwap.MonitorLightningSwapHandler>>();
+        var handler = new MonitorLightningSwap.MonitorLightningSwapHandler(
+            _mockBoltzService.Object,
+            _mockMempoolService.Object,
+            _mockWalletService.Object,
+            logger.Object);
+
+        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(
+            walletId, swapId, address, expectedAmount);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(swapAddress, result.Value.SwapAddress);
-        Assert.Equal(paidInvoice.Id, result.Value.Invoice.Id);
+        Assert.Equal(SwapState.TransactionClaimed, result.Value.SwapStatus.Status);
+        Assert.Equal("txid123", result.Value.TransactionId);
         Assert.NotNull(result.Value.DetectedUtxos);
-        Assert.Single(result.Value.DetectedUtxos);
     }
 
     [Fact]
-    public async Task Handle_WhenInvoiceExpires_ReturnsFailure()
+    public async Task MonitorSwap_WhenExpired_ReturnsFailure()
     {
         // Arrange
         var walletId = new WalletId("test-wallet");
-        var invoiceId = "invoice-expired";
-        var boltWalletId = "bolt-wallet";
-        var targetAddress = "bc1qtest";
+        var swapId = "swap-expired";
+        var address = "bc1qtest123";
 
-        var expiredInvoice = new BoltInvoice
+        var expiredStatus = new BoltzSwapStatus
         {
-            Id = invoiceId,
-            Status = BoltPaymentStatus.Expired,
-            AmountSats = 50000
+            SwapId = swapId,
+            Status = SwapState.SwapExpired,
+            FailureReason = "Invoice not paid in time"
         };
 
-        _mockBoltService
-            .Setup(x => x.GetInvoiceAsync(invoiceId))
-            .ReturnsAsync(Result.Success(expiredInvoice));
+        _mockBoltzService
+            .Setup(x => x.GetSwapStatusAsync(swapId))
+            .ReturnsAsync(Result.Success(expiredStatus));
 
-        var request = new MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceRequest(
-            walletId, invoiceId, boltWalletId, targetAddress);
+        var logger = new Mock<ILogger<MonitorLightningSwap.MonitorLightningSwapHandler>>();
+        var handler = new MonitorLightningSwap.MonitorLightningSwapHandler(
+            _mockBoltzService.Object,
+            _mockMempoolService.Object,
+            _mockWalletService.Object,
+            logger.Object);
+
+        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(
+            walletId, swapId, address, 100000);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsFailure);
@@ -313,78 +213,58 @@ public class MonitorLightningInvoiceAndSwapTests
     }
 
     [Fact]
-    public async Task Handle_WhenCancelled_ReturnsFailure()
+    public async Task GetPairInfo_ReturnsValidLimits()
     {
         // Arrange
-        var walletId = new WalletId("test-wallet");
-        var invoiceId = "invoice-cancel";
-        var boltWalletId = "bolt-wallet";
-        var targetAddress = "bc1qtest";
-
-        var cancellationTokenSource = new CancellationTokenSource();
-        cancellationTokenSource.Cancel();
-
-        var request = new MonitorLightningInvoiceAndSwap.MonitorLightningInvoiceRequest(
-            walletId, invoiceId, boltWalletId, targetAddress);
-
-        // Act
-        var result = await _handler.Handle(request, cancellationTokenSource.Token);
-
-        // Assert
-        Assert.True(result.IsFailure);
-        Assert.Contains("cancelled", result.Error.ToLower());
-    }
-}
-
-/// <summary>
-/// Unit tests for BoltService
-/// </summary>
-public class BoltServiceTests
-{
-    private readonly Mock<HttpMessageHandler> _mockHttpHandler;
-    private readonly HttpClient _httpClient;
-    private readonly BoltConfiguration _configuration;
-    private readonly Mock<ILogger<BoltService>> _mockLogger;
-
-    public BoltServiceTests()
-    {
-        _mockHttpHandler = new Mock<HttpMessageHandler>();
-        _httpClient = new HttpClient(_mockHttpHandler.Object);
-        _configuration = new BoltConfiguration
+        var expectedInfo = new BoltzPairInfo
         {
-            ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.bolt",
-            TimeoutSeconds = 30
+            PairId = "BTC/BTC",
+            MinAmount = 10000,
+            MaxAmount = 10000000,
+            FeePercentage = 0.5m,
+            MinerFee = 500
         };
-        _mockLogger = new Mock<ILogger<BoltService>>();
-    }
 
-    [Fact]
-    public void Constructor_SetsUpHttpClientCorrectly()
-    {
+        _mockBoltzService
+            .Setup(x => x.GetPairInfoAsync())
+            .ReturnsAsync(Result.Success(expectedInfo));
+
         // Act
-        var service = new BoltService(_httpClient, _configuration, _mockLogger.Object);
+        var result = await _mockBoltzService.Object.GetPairInfoAsync();
 
         // Assert
-        Assert.Equal(new Uri(_configuration.BaseUrl), _httpClient.BaseAddress);
-        Assert.Contains(_httpClient.DefaultRequestHeaders, 
-            h => h.Key == "Authorization" && h.Value.Contains("Bearer test-api-key"));
+        Assert.True(result.IsSuccess);
+        Assert.Equal(10000, result.Value.MinAmount);
+        Assert.Equal(10000000, result.Value.MaxAmount);
+        Assert.Equal(0.5m, result.Value.FeePercentage);
     }
 
     [Fact]
-    public void Constructor_ThrowsWhenHttpClientIsNull()
+    public void SwapState_IsComplete_ReturnsTrueForClaimed()
     {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
-            new BoltService(null!, _configuration, _mockLogger.Object));
+        Assert.True(SwapState.TransactionClaimed.IsComplete());
+        Assert.False(SwapState.InvoicePaid.IsComplete());
+        Assert.False(SwapState.TransactionMempool.IsComplete());
     }
 
     [Fact]
-    public void Constructor_ThrowsWhenConfigurationIsNull()
+    public void SwapState_IsFailed_ReturnsTrueForFailedStates()
     {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
-            new BoltService(_httpClient, null!, _mockLogger.Object));
+        Assert.True(SwapState.SwapExpired.IsFailed());
+        Assert.True(SwapState.InvoiceExpired.IsFailed());
+        Assert.True(SwapState.InvoiceFailedToPay.IsFailed());
+        Assert.True(SwapState.TransactionRefunded.IsFailed());
+        Assert.False(SwapState.InvoicePaid.IsFailed());
+    }
+
+    [Fact]
+    public void SwapState_IsPending_ReturnsTrueForPendingStates()
+    {
+        Assert.True(SwapState.Created.IsPending());
+        Assert.True(SwapState.InvoicePaid.IsPending());
+        Assert.True(SwapState.TransactionMempool.IsPending());
+        Assert.False(SwapState.TransactionClaimed.IsPending());
+        Assert.False(SwapState.SwapExpired.IsPending());
     }
 }
 
