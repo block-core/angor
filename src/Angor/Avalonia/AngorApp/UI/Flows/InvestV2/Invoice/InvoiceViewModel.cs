@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -6,11 +5,8 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
-using Angor.Sdk.Wallet.Domain;
 using AngorApp.UI.Flows.InvestV2.InvestmentResult;
 using AngorApp.UI.Shell;
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using Zafiro.Avalonia.Dialogs;
@@ -192,7 +188,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
                 walletId,
                 projectId,
-                new Angor.Sdk.Funding.Projects.Domain.Amount(Amount.Sats),
+                new Amount(Amount.Sats),
                 new DomainFeerate(20), // TODO: Make fee rate configurable
                 FundingAddress: fundingAddress);
 
@@ -213,7 +209,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             // Check if the investment is above the penalty threshold
             var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
                 projectId,
-                new Angor.Sdk.Funding.Projects.Domain.Amount(Amount.Sats));
+                new Amount(Amount.Sats));
 
             var thresholdResult = await investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
 
