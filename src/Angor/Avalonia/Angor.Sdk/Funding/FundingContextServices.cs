@@ -5,15 +5,15 @@ using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects;
-using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
+using Angor.Sdk.Integration.Lightning;
+using Angor.Sdk.Integration.Lightning.Models;
 using Angor.Shared;
 using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
 using Angor.Shared.Services;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
@@ -66,6 +66,15 @@ public static class FundingContextServices
         services.TryAddSingleton<ITransactionService,TransactionService>();
         services.TryAddSingleton<IWalletAccountBalanceService, WalletAccountBalanceService>();
         services.TryAddSingleton<IMempoolMonitoringService, MempoolMonitoringService>();
+        
+        // Lightning Network / Bolt integration services
+        services.TryAddSingleton<BoltConfiguration>(_ => new BoltConfiguration
+        {
+            ApiKey = Environment.GetEnvironmentVariable("BOLT_API_KEY") ?? string.Empty,
+            BaseUrl = Environment.GetEnvironmentVariable("BOLT_API_URL") ?? "https://api.bolt.observer",
+            TimeoutSeconds = 30
+        });
+        services.TryAddSingleton<IBoltService, BoltService>();
         
         //services.AddHttpClient();
         
