@@ -3,7 +3,6 @@ using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Integration.Lightning;
 using Angor.Sdk.Integration.Lightning.Models;
-using Angor.Sdk.Wallet.Domain;
 using Angor.Shared;
 using CSharpFunctionalExtensions;
 using MediatR;

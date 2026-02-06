@@ -1,16 +1,23 @@
 namespace Angor.Sdk.Integration.Lightning.Models;
 
 /// <summary>
-/// Configuration for Boltz swap service
+/// Configuration for Boltz swap service.
+/// Set BaseUrl based on your environment (mainnet or testnet).
 /// </summary>
 public class BoltzConfiguration
 {
-    public string BaseUrl { get; set; } = "https://api.boltz.exchange";
-    public string TestnetBaseUrl { get; set; } = "https://testnet.boltz.exchange/api";
-    public bool UseTestnet { get; set; } = false;
-    public int TimeoutSeconds { get; set; } = 30;
+    public const string MainnetUrl = "https://api.boltz.exchange";
+    public const string TestnetUrl = "https://testnet.boltz.exchange/api";
     
-    public string GetActiveBaseUrl() => UseTestnet ? TestnetBaseUrl : BaseUrl;
+    /// <summary>
+    /// The Boltz API base URL. Defaults to mainnet.
+    /// </summary>
+    public string BaseUrl { get; set; } = MainnetUrl;
+    
+    /// <summary>
+    /// Request timeout in seconds.
+    /// </summary>
+    public int TimeoutSeconds { get; set; } = 30;
 }
 
 /// <summary>

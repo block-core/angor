@@ -27,7 +27,7 @@ public class BoltzSwapService : IBoltzSwapService
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        _httpClient.BaseAddress = new Uri(_configuration.GetActiveBaseUrl());
+        _httpClient.BaseAddress = new Uri(_configuration.BaseUrl);
         _httpClient.Timeout = TimeSpan.FromSeconds(_configuration.TimeoutSeconds);
 
         _jsonOptions = new JsonSerializerOptions
