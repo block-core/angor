@@ -1,5 +1,8 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor.Operations;
+using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Sdk.Funding.Services;
+using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Integration.Lightning;
 using Angor.Sdk.Integration.Lightning.Models;
 using Angor.Sdk.Wallet.Domain;
@@ -19,14 +22,48 @@ namespace Angor.Sdk.Tests.Integration.Lightning;
 public class CreateLightningSwapTests
 {
     private readonly Mock<IBoltzSwapService> _mockBoltzService;
+    private readonly Mock<IProjectService> _mockProjectService;
+    private readonly Mock<ISeedwordsProvider> _mockSeedwordsProvider;
     private readonly Mock<IDerivationOperations> _mockDerivationOperations;
     private readonly Mock<ILogger<CreateLightningSwapForInvestment.CreateLightningSwapHandler>> _mockLogger;
+    private readonly CreateLightningSwapForInvestment.CreateLightningSwapHandler _handler;
 
     public CreateLightningSwapTests()
     {
         _mockBoltzService = new Mock<IBoltzSwapService>();
+        _mockProjectService = new Mock<IProjectService>();
+        _mockSeedwordsProvider = new Mock<ISeedwordsProvider>();
         _mockDerivationOperations = new Mock<IDerivationOperations>();
         _mockLogger = new Mock<ILogger<CreateLightningSwapForInvestment.CreateLightningSwapHandler>>();
+
+        _handler = new CreateLightningSwapForInvestment.CreateLightningSwapHandler(
+            _mockBoltzService.Object,
+            _mockProjectService.Object,
+            _mockSeedwordsProvider.Object,
+            _mockDerivationOperations.Object,
+            _mockLogger.Object);
+    }
+
+    private void SetupSuccessfulDependencies(ProjectId projectId)
+    {
+        var project = new Project
+        {
+            Id = projectId,
+            Name = "Test Project",
+            FounderKey = "02abc123founderkey"
+        };
+
+        _mockProjectService
+            .Setup(x => x.GetAsync(projectId))
+            .ReturnsAsync(Result.Success(project));
+
+        _mockSeedwordsProvider
+            .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
+            .ReturnsAsync(Result.Success(("word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12", Maybe<string>.None)));
+
+        _mockDerivationOperations
+            .Setup(x => x.DeriveInvestorKey(It.IsAny<WalletWords>(), It.IsAny<string>()))
+            .Returns("02refundpubkey123456789");
     }
 
     [Fact]
@@ -34,9 +71,11 @@ public class CreateLightningSwapTests
     {
         // Arrange
         var walletId = new WalletId("test-wallet");
-        var projectId = "test-project";
+        var projectId = new ProjectId("test-project");
         var amount = new Amount(100000);
         var address = "bc1qtest123";
+
+        SetupSuccessfulDependencies(projectId);
 
         var pairInfo = new BoltzPairInfo
         {
@@ -63,16 +102,11 @@ public class CreateLightningSwapTests
             .Setup(x => x.CreateSubmarineSwapAsync(address, amount.Sats, It.IsAny<string>()))
             .ReturnsAsync(Result.Success(expectedSwap));
 
-        var handler = new CreateLightningSwapForInvestment.CreateLightningSwapHandler(
-            _mockBoltzService.Object,
-            _mockDerivationOperations.Object,
-            _mockLogger.Object);
-
         var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
             walletId, projectId, amount, address);
 
         // Act
-        var result = await handler.Handle(request, CancellationToken.None);
+        var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -85,7 +119,7 @@ public class CreateLightningSwapTests
     {
         // Arrange
         var walletId = new WalletId("test-wallet");
-        var projectId = "test-project";
+        var projectId = new ProjectId("test-project");
         var amount = new Amount(1000); // Too small
         var address = "bc1qtest123";
 
@@ -101,16 +135,11 @@ public class CreateLightningSwapTests
             .Setup(x => x.GetPairInfoAsync())
             .ReturnsAsync(Result.Success(pairInfo));
 
-        var handler = new CreateLightningSwapForInvestment.CreateLightningSwapHandler(
-            _mockBoltzService.Object,
-            _mockDerivationOperations.Object,
-            _mockLogger.Object);
-
         var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
             walletId, projectId, amount, address);
 
         // Act
-        var result = await handler.Handle(request, CancellationToken.None);
+        var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsFailure);
@@ -122,7 +151,7 @@ public class CreateLightningSwapTests
     {
         // Arrange
         var walletId = new WalletId("test-wallet");
-        var projectId = "test-project";
+        var projectId = new ProjectId("test-project");
         var amount = new Amount(100000000); // Too large
         var address = "bc1qtest123";
 
@@ -138,20 +167,98 @@ public class CreateLightningSwapTests
             .Setup(x => x.GetPairInfoAsync())
             .ReturnsAsync(Result.Success(pairInfo));
 
-        var handler = new CreateLightningSwapForInvestment.CreateLightningSwapHandler(
-            _mockBoltzService.Object,
-            _mockDerivationOperations.Object,
-            _mockLogger.Object);
+        var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
+            walletId, projectId, amount, address);
+
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.Contains("too large", result.Error.ToLower());
+    }
+
+    [Fact]
+    public async Task CreateSwap_ProjectNotFound_ReturnsFailure()
+    {
+        // Arrange
+        var walletId = new WalletId("test-wallet");
+        var projectId = new ProjectId("nonexistent-project");
+        var amount = new Amount(100000);
+        var address = "bc1qtest123";
+
+        var pairInfo = new BoltzPairInfo
+        {
+            MinAmount = 10000,
+            MaxAmount = 10000000,
+            FeePercentage = 0.5m,
+            MinerFee = 500
+        };
+
+        _mockBoltzService
+            .Setup(x => x.GetPairInfoAsync())
+            .ReturnsAsync(Result.Success(pairInfo));
+
+        _mockProjectService
+            .Setup(x => x.GetAsync(projectId))
+            .ReturnsAsync(Result.Failure<Project>("Project not found"));
 
         var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
             walletId, projectId, amount, address);
 
         // Act
-        var result = await handler.Handle(request, CancellationToken.None);
+        var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsFailure);
-        Assert.Contains("too large", result.Error.ToLower());
+        Assert.Contains("project", result.Error.ToLower());
+    }
+
+    [Fact]
+    public async Task CreateSwap_WalletNotFound_ReturnsFailure()
+    {
+        // Arrange
+        var walletId = new WalletId("nonexistent-wallet");
+        var projectId = new ProjectId("test-project");
+        var amount = new Amount(100000);
+        var address = "bc1qtest123";
+
+        var pairInfo = new BoltzPairInfo
+        {
+            MinAmount = 10000,
+            MaxAmount = 10000000,
+            FeePercentage = 0.5m,
+            MinerFee = 500
+        };
+
+        var project = new Project
+        {
+            Id = projectId,
+            Name = "Test Project",
+            FounderKey = "02abc123founderkey"
+        };
+
+        _mockBoltzService
+            .Setup(x => x.GetPairInfoAsync())
+            .ReturnsAsync(Result.Success(pairInfo));
+
+        _mockProjectService
+            .Setup(x => x.GetAsync(projectId))
+            .ReturnsAsync(Result.Success(project));
+
+        _mockSeedwordsProvider
+            .Setup(x => x.GetSensitiveData(walletId.Value))
+            .ReturnsAsync(Result.Failure<(string, Maybe<string>)>("Wallet not found"));
+
+        var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
+            walletId, projectId, amount, address);
+
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.Contains("wallet", result.Error.ToLower());
     }
 }
 

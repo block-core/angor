@@ -1,4 +1,6 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Services;
+using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Integration.Lightning;
 using Angor.Sdk.Integration.Lightning.Models;
 using Angor.Sdk.Wallet.Domain;
@@ -25,7 +27,7 @@ public static class CreateLightningSwapForInvestment
     /// <param name="ReceivingAddress">On-chain address to receive the swapped funds</param>
     public record CreateLightningSwapRequest(
         WalletId WalletId,
-        string ProjectId,
+        ProjectId ProjectId,
         Amount InvestmentAmount,
         string ReceivingAddress) : IRequest<Result<CreateLightningSwapResponse>>;
 
@@ -40,6 +42,8 @@ public static class CreateLightningSwapForInvestment
 
     public class CreateLightningSwapHandler(
         IBoltzSwapService boltzSwapService,
+        IProjectService projectService,
+        ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations,
         ILogger<CreateLightningSwapHandler> logger)
         : IRequestHandler<CreateLightningSwapRequest, Result<CreateLightningSwapResponse>>
@@ -77,9 +81,15 @@ public static class CreateLightningSwapForInvestment
                         $"Amount too large. Maximum: {pairInfo.MaxAmount} sats");
                 }
 
-                // Generate refund public key from wallet
-                // This allows the user to get their funds back if the swap fails
-                var refundPubKey = GenerateRefundPublicKey(request.WalletId);
+                // Generate refund public key from wallet and project
+                var refundPubKeyResult = await GenerateRefundPublicKey(request.WalletId, request.ProjectId);
+                if (refundPubKeyResult.IsFailure)
+                {
+                    logger.LogError("Failed to generate refund public key: {Error}", refundPubKeyResult.Error);
+                    return Result.Failure<CreateLightningSwapResponse>(refundPubKeyResult.Error);
+                }
+
+                var refundPubKey = refundPubKeyResult.Value;
 
                 // Create the submarine swap
                 var swapResult = await boltzSwapService.CreateSubmarineSwapAsync(
@@ -108,18 +118,35 @@ public static class CreateLightningSwapForInvestment
             }
         }
 
-        private string GenerateRefundPublicKey(WalletId walletId)
+        private async Task<Result<string>> GenerateRefundPublicKey(WalletId walletId, ProjectId projectId)
         {
-            // TODO: Derive proper refund key from wallet's HD path
-            // For now, use a placeholder - this should be derived from the wallet's extended public key
-            // using a specific derivation path for Boltz refunds (e.g., m/84'/0'/0'/2/0)
-            
-            // In production, this would be:
-            // var refundKey = derivationOperations.DeriveRefundKey(walletId);
-            // return refundKey.PublicKeyHex;
-            
-            logger.LogWarning("Using placeholder refund key - implement proper key derivation");
-            return "02" + walletId.Value.GetHashCode().ToString("x").PadLeft(64, '0');
+            // 1. Get project to retrieve founder key
+            var projectResult = await projectService.GetAsync(projectId);
+            if (projectResult.IsFailure)
+            {
+                return Result.Failure<string>($"Project not found: {projectResult.Error}");
+            }
+
+            var project = projectResult.Value;
+
+            // 2. Get wallet words
+            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletId.Value);
+            if (sensitiveDataResult.IsFailure)
+            {
+                return Result.Failure<string>($"Failed to get wallet data: {sensitiveDataResult.Error}");
+            }
+
+            var walletWords = sensitiveDataResult.Value.ToWalletWords();
+
+            // 3. Derive investor key using founder key from project
+            // This is the same key derivation used for investments, ensuring consistency
+            var refundPubKey = derivationOperations.DeriveInvestorKey(walletWords, project.FounderKey);
+
+            logger.LogDebug(
+                "Generated refund public key for wallet {WalletId}, project {ProjectId}",
+                walletId.Value, projectId);
+
+            return Result.Success(refundPubKey);
         }
     }
 }
