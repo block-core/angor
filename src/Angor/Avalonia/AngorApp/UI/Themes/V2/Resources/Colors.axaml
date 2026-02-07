@@ -77,12 +77,12 @@
             <BoxShadows x:Key="ItemShadowBig">0 5 25 0 LightGray</BoxShadows>
 
             <!-- Button Brushes -->
-            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="{StaticResource SurfaceHover}" />
+            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="{DynamicResource SurfaceHover}" />
             <SolidColorBrush x:Key="PrimaryButtonBackground" Color="{StaticResource TextStrong}" />
             <SolidColorBrush x:Key="PrimaryButtonBorder" Color="{StaticResource TextStrong}" />
 
             <SolidColorBrush x:Key="SecondaryButtonForeground" Color="{StaticResource TextStrong}" />
-            <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{StaticResource SurfaceHover}" />
+            <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{DynamicResource SurfaceHover}" />
             <SolidColorBrush x:Key="SecondaryButtonBorder" Color="{StaticResource TextStrong}" />
 
             <!-- Decorative Brushes -->
@@ -165,14 +165,7 @@
                     <GradientStop Offset="1" Color="#1AF7931A" />
                 </GradientStops>
             </LinearGradientBrush>
-
-            <LinearGradientBrush x:Key="ProgressBrush">
-                <GradientStops>
-                    <GradientStop Offset="0" Color="{StaticResource Brand}" />
-                    <GradientStop Offset="1" Color="#7DCE96" />
-                </GradientStops>
-            </LinearGradientBrush>
-
+            
             <!-- Shadows (disabled for dark theme) -->
             <BoxShadows x:Key="SectionShadow">0 0 0 0 Transparent</BoxShadows>
             <BoxShadows x:Key="ItemShadow">0 0 0 0 LightGray</BoxShadows>
@@ -188,7 +181,7 @@
             </LinearGradientBrush>
             <SolidColorBrush x:Key="PrimaryButtonBorder" Color="{StaticResource Stroke}" />
 
-            <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource SurfaceHover}" />
+            <SolidColorBrush x:Key="AccentButtonForeground" Color="{DynamicResource SurfaceHover}" />
             <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource Accent}" />
             <SolidColorBrush x:Key="AccentButtonBorder" Color="{StaticResource Stroke}" />
 
@@ -213,18 +206,10 @@
     <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUnchecked" ResourceKey="Stroke" />
     <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" ResourceKey="Accent" />
 
-    <!-- Progress -->
-    <LinearGradientBrush x:Key="ProgressBrush">
-        <GradientStops>
-            <GradientStop Offset="0" Color="{StaticResource PrimaryGreenDark}" />
-            <GradientStop Offset="1" Color="#4A8F5F" />
-        </GradientStops>
-    </LinearGradientBrush>
-
     <!-- Accent Button (fallback) -->
-    <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource SurfaceHover}" />
-    <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource Accent}" />
-    <SolidColorBrush x:Key="AccentButtonBorder" Color="{StaticResource Accent}" />
+    <SolidColorBrush x:Key="AccentButtonForeground" Color="{DynamicResource SurfaceHover}" />
+    <SolidColorBrush x:Key="AccentButtonBackground" Color="{DynamicResource Accent}" />
+    <SolidColorBrush x:Key="AccentButtonBorder" Color="{DynamicResource Accent}" />
 
     <!-- Translucid Background -->
     <LinearGradientBrush x:Key="TranslucidBackground" StartPoint="0,0" EndPoint="1,1">
@@ -236,6 +221,5 @@
     <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="BitcoinOrange" />
     <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="SurfaceHover" />
     <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
-    
 
 </ResourceDictionary>

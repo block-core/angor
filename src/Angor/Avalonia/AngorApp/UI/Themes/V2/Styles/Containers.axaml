@@ -192,30 +192,33 @@
         <Setter Property="Background" Value="{DynamicResource BlueThreshold.ContainerBackground}" />
     </Style>
 
-    <Style Selector="HeaderedContainer.StagesCard">
-        <Style.Resources>
-            <ResourceDictionary>
-                <ResourceDictionary.ThemeDictionaries>
-                    <ResourceDictionary x:Key="Light">
-                        <SolidColorBrush x:Key="StagesCard.Border" Color="#e5e7eb" />
-                        <LinearGradientBrush x:Key="StagesCard.Background" StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Offset="0" Color="#f9fafb" />
-                            <GradientStop Offset="1" Color="#f3f4f6" />
-                        </LinearGradientBrush>
-                    </ResourceDictionary>
-                    <ResourceDictionary x:Key="Dark">
-                        <SolidColorBrush x:Key="StagesCard.Background" Color="#bfdbfe" />
-                    </ResourceDictionary>
-                </ResourceDictionary.ThemeDictionaries>
-            </ResourceDictionary>
-        </Style.Resources>
-        <Setter Property="CornerRadius" Value="12" />
-        <Setter Property="BorderThickness" Value="1" />
-
-        <Setter Property="BorderBrush" Value="{DynamicResource StagesCard.Border}" />
-        <Setter Property="Background" Value="{DynamicResource StagesCard.Background}" />
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryBlack}" />
-    </Style>
+    <!-- <Style Selector="HeaderedContainer.StagesCard"> -->
+    <!--     <Style.Resources> -->
+    <!--         <ResourceDictionary> -->
+    <!--             <ResourceDictionary.ThemeDictionaries> -->
+    <!--                 <ResourceDictionary x:Key="Light"> -->
+    <!--                     <SolidColorBrush x:Key="StagesCard.Border" Color="#e5e7eb" /> -->
+    <!--                     <LinearGradientBrush x:Key="StagesCard.Background" StartPoint="0%,0%" EndPoint="100%,100%"> -->
+    <!--                         <GradientStop Offset="0" Color="#f9fafb" /> -->
+    <!--                         <GradientStop Offset="1" Color="#f3f4f6" /> -->
+    <!--                     </LinearGradientBrush> -->
+    <!--                 </ResourceDictionary> -->
+    <!--                 <ResourceDictionary x:Key="Dark"> -->
+    <!--                     <LinearGradientBrush x:Key="StagesCard.Background" StartPoint="0%,0%" EndPoint="100%,100%"> -->
+    <!--                         <GradientStop Offset="0" Color="#1a1a1a" /> -->
+    <!--                         <GradientStop Offset="1" Color="#0f0f0f" /> -->
+    <!--                     </LinearGradientBrush> -->
+    <!--                 </ResourceDictionary> -->
+    <!--             </ResourceDictionary.ThemeDictionaries> -->
+    <!--         </ResourceDictionary> -->
+    <!--     </Style.Resources> -->
+    <!--     <Setter Property="CornerRadius" Value="12" /> -->
+    <!--     <Setter Property="BorderThickness" Value="1" /> -->
+    <!-- -->
+    <!--     <Setter Property="BorderBrush" Value="{DynamicResource StagesCard.Border}" /> -->
+    <!--     <Setter Property="Background" Value="{DynamicResource StagesCard.Background}" /> -->
+    <!--     <Setter Property="Foreground" Value="{DynamicResource PrimaryBlack}" /> -->
+    <!-- </Style> -->
 
     <!-- ═══════════════════════════════════════════════════════════════════════
          Border Styles

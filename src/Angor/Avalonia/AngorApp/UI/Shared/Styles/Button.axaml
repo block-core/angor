@@ -27,6 +27,10 @@
     <Style Selector="CheckBox">
         <Setter Property="Cursor" Value="Hand" />
     </Style>
+    
+    <Style Selector="Expander /template/ ToggleButton#Header">
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
 
     <Styles.Resources>
         <ControlTheme x:Key="ThinTransparentButton" TargetType="EnhancedButton" BasedOn="{StaticResource TransparentButton}">

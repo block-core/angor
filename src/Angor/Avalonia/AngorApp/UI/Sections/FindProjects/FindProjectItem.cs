@@ -4,6 +4,7 @@ using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Shared;
 using AngorApp.UI.Sections.Browse.Details;
+using AngorApp.UI.Sections.FindProjects.Details;
 using ReactiveUI;
 using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.Reactive;
@@ -23,7 +24,7 @@ namespace AngorApp.UI.Sections.FindProjects
         public FindProjectItem(
             ProjectDto dto,
             IProjectAppService projectAppService,
-            Func<IFullProject, IProjectDetailsViewModel> projectDetailsViewModelFactory,
+            Func<IFullProject, IDetailsViewModel> detailsFactory,
             INavigator navigator)
         {
             this.dto = dto;
@@ -36,12 +37,7 @@ namespace AngorApp.UI.Sections.FindProjects
                              .Successes()
                              .Publish();
 
-            GoToDetails = EnhancedCommand.Create(() =>
-            {
-                return projectAppService.GetFullProject(Id)
-                    .Map(projectDetailsViewModelFactory)
-                    .Map(details => navigator.Go(() => details));
-            });
+            GoToDetails = EnhancedCommand.Create(() => projectAppService.GetFullProject(Id).Map(project => navigator.Go(() => detailsFactory(project))));
             
             fundingRaisedHelper = statistics.Select(statisticsDto => new AmountUI(statisticsDto.TotalInvested)).ToProperty(this, item => item.FundingRaised);
             investorsCountHelper = statistics.Select(statisticsDto => statisticsDto.TotalInvestors).ToProperty(this, item => item.InvestorsCount);
