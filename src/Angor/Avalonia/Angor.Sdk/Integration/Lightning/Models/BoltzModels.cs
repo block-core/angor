@@ -182,28 +182,6 @@ public enum SwapState
     SwapExpired
 }
 
-/// <summary>
-/// Information about a trading pair (e.g., BTC/BTC for Lightning ↔ On-chain)
-/// </summary>
-public class BoltzPairInfo
-{
-    public string PairId { get; set; } = "BTC/BTC";
-    
-    /// <summary>Minimum swap amount in satoshis</summary>
-    public long MinAmount { get; set; }
-    
-    /// <summary>Maximum swap amount in satoshis</summary>
-    public long MaxAmount { get; set; }
-    
-    /// <summary>Fee percentage (e.g., 0.5 = 0.5%)</summary>
-    public decimal FeePercentage { get; set; }
-    
-    /// <summary>Miner fee in satoshis</summary>
-    public long MinerFee { get; set; }
-    
-    /// <summary>Hash of the pair configuration</summary>
-    public string Hash { get; set; } = string.Empty;
-}
 
 /// <summary>
 /// Extension methods for swap states

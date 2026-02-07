@@ -54,19 +54,6 @@ public class BoltzSwapService : IBoltzSwapService
                 "Creating reverse submarine swap: {Amount} sats to address {Address}",
                 amountSats, onchainAddress);
 
-            // First get pair info to validate amount
-            var pairResult = await GetPairInfoAsync();
-            if (pairResult.IsFailure)
-            {
-                return Result.Failure<BoltzSubmarineSwap>(pairResult.Error);
-            }
-
-            var pairInfo = pairResult.Value;
-            if (amountSats < pairInfo.MinAmount || amountSats > pairInfo.MaxAmount)
-            {
-                return Result.Failure<BoltzSubmarineSwap>(
-                    $"Amount must be between {pairInfo.MinAmount} and {pairInfo.MaxAmount} sats");
-            }
 
             // Generate preimage (32 bytes random) and its SHA256 hash
             var preimage = GeneratePreimage();
@@ -196,56 +183,6 @@ public class BoltzSwapService : IBoltzSwapService
         }
     }
 
-    public async Task<Result<BoltzPairInfo>> GetPairInfoAsync()
-    {
-        try
-        {
-            _logger.LogDebug("Getting pair info for reverse submarine swaps");
-
-            // Use v2 API endpoint for reverse swaps (Lightning → On-chain)
-            var response = await _httpClient.GetAsync("/v2/swap/reverse");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Failed to get reverse swap info: {StatusCode} - {Error}", response.StatusCode, error);
-                return Result.Failure<BoltzPairInfo>($"Failed to get pair info: {error}");
-            }
-
-            var reverseInfo = await response.Content.ReadFromJsonAsync<ReverseSwapInfoResponse>(_jsonOptions);
-            if (reverseInfo?.BTC == null)
-            {
-                return Result.Failure<BoltzPairInfo>("BTC pair not found in response");
-            }
-
-            var btcInfo = reverseInfo.BTC.BTC; // BTC (Lightning) -> BTC (on-chain)
-            if (btcInfo == null)
-            {
-                return Result.Failure<BoltzPairInfo>("BTC/BTC pair not found");
-            }
-
-            var pairInfo = new BoltzPairInfo
-            {
-                PairId = "BTC/BTC",
-                MinAmount = btcInfo.Limits.Minimal,
-                MaxAmount = btcInfo.Limits.Maximal,
-                FeePercentage = btcInfo.Fees.Percentage,
-                MinerFee = btcInfo.Fees.MinerFees.Claim + btcInfo.Fees.MinerFees.Lockup,
-                Hash = btcInfo.Hash
-            };
-
-            _logger.LogDebug(
-                "Pair info: Min={Min}, Max={Max}, Fee={Fee}%",
-                pairInfo.MinAmount, pairInfo.MaxAmount, pairInfo.FeePercentage);
-
-            return Result.Success(pairInfo);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting pair info");
-            return Result.Failure<BoltzPairInfo>($"Error getting pair info: {ex.Message}");
-        }
-    }
 
     /// <summary>
     /// Claims the on-chain funds after the Lightning invoice has been paid.

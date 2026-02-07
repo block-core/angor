@@ -34,10 +34,7 @@ public static class CreateLightningSwapForInvestment
     /// Response containing the swap details
     /// </summary>
     /// <param name="Swap">The created submarine swap with Lightning invoice</param>
-    /// <param name="PairInfo">Current swap fees and limits</param>
-    public record CreateLightningSwapResponse(
-        BoltzSubmarineSwap Swap,
-        BoltzPairInfo PairInfo);
+    public record CreateLightningSwapResponse(BoltzSubmarineSwap Swap);
 
     public class CreateLightningSwapHandler(
         IBoltzSwapService boltzSwapService,
@@ -57,44 +54,21 @@ public static class CreateLightningSwapForInvestment
                     "Creating Lightning swap for wallet {WalletId}, project {ProjectId}, amount: {Amount} sats",
                     request.WalletId.Value, request.ProjectId, request.InvestmentAmount.Sats);
 
-                // Get pair info first to show fees to user
-                var pairResult = await boltzSwapService.GetPairInfoAsync();
-                if (pairResult.IsFailure)
+                // Generate claim public key from wallet and project
+                var claimPubKeyResult = await GenerateClaimPublicKey(request.WalletId, request.ProjectId);
+                if (claimPubKeyResult.IsFailure)
                 {
-                    logger.LogError("Failed to get pair info: {Error}", pairResult.Error);
-                    return Result.Failure<CreateLightningSwapResponse>(pairResult.Error);
+                    logger.LogError("Failed to generate claim public key: {Error}", claimPubKeyResult.Error);
+                    return Result.Failure<CreateLightningSwapResponse>(claimPubKeyResult.Error);
                 }
 
-                var pairInfo = pairResult.Value;
+                var claimPubKey = claimPubKeyResult.Value;
 
-                // Validate amount is within limits
-                if (request.InvestmentAmount.Sats < pairInfo.MinAmount)
-                {
-                    return Result.Failure<CreateLightningSwapResponse>(
-                        $"Amount too small. Minimum: {pairInfo.MinAmount} sats");
-                }
-
-                if (request.InvestmentAmount.Sats > pairInfo.MaxAmount)
-                {
-                    return Result.Failure<CreateLightningSwapResponse>(
-                        $"Amount too large. Maximum: {pairInfo.MaxAmount} sats");
-                }
-
-                // Generate refund public key from wallet and project
-                var refundPubKeyResult = await GenerateRefundPublicKey(request.WalletId, request.ProjectId);
-                if (refundPubKeyResult.IsFailure)
-                {
-                    logger.LogError("Failed to generate refund public key: {Error}", refundPubKeyResult.Error);
-                    return Result.Failure<CreateLightningSwapResponse>(refundPubKeyResult.Error);
-                }
-
-                var refundPubKey = refundPubKeyResult.Value;
-
-                // Create the submarine swap
+                // Create the reverse submarine swap
                 var swapResult = await boltzSwapService.CreateSubmarineSwapAsync(
                     request.ReceivingAddress,
                     request.InvestmentAmount.Sats,
-                    refundPubKey);
+                    claimPubKey);
 
                 if (swapResult.IsFailure)
                 {
@@ -108,7 +82,7 @@ public static class CreateLightningSwapForInvestment
                     "Lightning swap created successfully. SwapId: {SwapId}, Invoice: {Invoice}",
                     swap.Id, swap.Invoice.Substring(0, Math.Min(30, swap.Invoice.Length)) + "...");
 
-                return Result.Success(new CreateLightningSwapResponse(swap, pairInfo));
+                return Result.Success(new CreateLightningSwapResponse(swap));
             }
             catch (Exception ex)
             {
@@ -117,7 +91,7 @@ public static class CreateLightningSwapForInvestment
             }
         }
 
-        private async Task<Result<string>> GenerateRefundPublicKey(WalletId walletId, ProjectId projectId)
+        private async Task<Result<string>> GenerateClaimPublicKey(WalletId walletId, ProjectId projectId)
         {
             // 1. Get project to retrieve founder key
             var projectResult = await projectService.GetAsync(projectId);
@@ -138,14 +112,14 @@ public static class CreateLightningSwapForInvestment
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
 
             // 3. Derive investor key using founder key from project
-            // This is the same key derivation used for investments, ensuring consistency
-            var refundPubKey = derivationOperations.DeriveInvestorKey(walletWords, project.FounderKey);
+            // This key is used to claim the on-chain funds from the Boltz swap
+            var claimPubKey = derivationOperations.DeriveInvestorKey(walletWords, project.FounderKey);
 
             logger.LogDebug(
-                "Generated refund public key for wallet {WalletId}, project {ProjectId}",
+                "Generated claim public key for wallet {WalletId}, project {ProjectId}",
                 walletId.Value, projectId);
 
-            return Result.Success(refundPubKey);
+            return Result.Success(claimPubKey);
         }
     }
 }
