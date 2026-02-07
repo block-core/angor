@@ -58,13 +58,12 @@ public class LightningFundingExamples
         }
 
         var swap = createResult.Value.Swap;
-        var fees = createResult.Value.PairInfo;
 
         _logger.LogInformation("✓ Swap created successfully!");
         _logger.LogInformation("  Swap ID: {SwapId}", swap.Id);
         _logger.LogInformation("  Lightning Invoice: {Invoice}", swap.Invoice);
+        _logger.LogInformation("  Invoice Amount: {Amount} sats", swap.InvoiceAmount);
         _logger.LogInformation("  Expected on-chain: {Amount} sats", swap.ExpectedAmount);
-        _logger.LogInformation("  Fee: {Fee}% + {MinerFee} sats miner fee", fees.FeePercentage, fees.MinerFee);
 
         // Display the invoice to the user (QR code, copy button, etc.)
         _logger.LogInformation("");
@@ -100,43 +99,7 @@ public class LightningFundingExamples
     }
 
     /// <summary>
-    /// Example 2: Check fees before creating swap
-    /// </summary>
-    public async Task<BoltzPairInfo?> CheckFeesExample()
-    {
-        _logger.LogInformation("=== Example 2: Check Boltz Swap Fees ===");
-
-        var pairResult = await _boltzSwapService.GetPairInfoAsync();
-
-        if (pairResult.IsFailure)
-        {
-            _logger.LogError("✗ Failed to get fees: {Error}", pairResult.Error);
-            return null;
-        }
-
-        var info = pairResult.Value;
-        _logger.LogInformation("✓ Boltz Swap Info:");
-        _logger.LogInformation("  Min amount: {Min} sats", info.MinAmount);
-        _logger.LogInformation("  Max amount: {Max} sats", info.MaxAmount);
-        _logger.LogInformation("  Fee: {Fee}%", info.FeePercentage);
-        _logger.LogInformation("  Miner fee: {MinerFee} sats", info.MinerFee);
-
-        // Calculate example
-        long exampleAmount = 100000;
-        var feeAmount = (long)(exampleAmount * info.FeePercentage / 100);
-        var totalFee = feeAmount + info.MinerFee;
-        var netAmount = exampleAmount - totalFee;
-
-        _logger.LogInformation("");
-        _logger.LogInformation("  Example: {Amount} sats Lightning payment", exampleAmount);
-        _logger.LogInformation("  → Fee: {Fee} sats", totalFee);
-        _logger.LogInformation("  → You receive: {Net} sats on-chain", netAmount);
-
-        return info;
-    }
-
-    /// <summary>
-    /// Example 3: Create swap only (for async monitoring later)
+    /// Example 2: Create swap only (for async monitoring later)
     /// </summary>
     public async Task<string?> CreateSwapOnlyExample(
         WalletId walletId,
@@ -144,7 +107,7 @@ public class LightningFundingExamples
         long amountSats,
         string receivingAddress)
     {
-        _logger.LogInformation("=== Example 3: Create Swap Only ===");
+        _logger.LogInformation("=== Example 2: Create Swap Only ===");
 
         var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
             WalletId: walletId,
@@ -222,16 +185,6 @@ public class LightningFundingExamples
             if (amountSats < 10000)
             {
                 _logger.LogError("Amount too small (minimum ~10,000 sats for Boltz)");
-                return;
-            }
-
-            // Check fees first
-            var fees = await CheckFeesExample();
-            if (fees == null) return;
-
-            if (amountSats < fees.MinAmount || amountSats > fees.MaxAmount)
-            {
-                _logger.LogError("Amount out of range: {Min} - {Max}", fees.MinAmount, fees.MaxAmount);
                 return;
             }
 

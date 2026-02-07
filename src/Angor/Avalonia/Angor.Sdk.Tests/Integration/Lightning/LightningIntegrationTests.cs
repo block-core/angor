@@ -77,14 +77,6 @@ public class CreateLightningSwapTests
 
         SetupSuccessfulDependencies(projectId);
 
-        var pairInfo = new BoltzPairInfo
-        {
-            MinAmount = 10000,
-            MaxAmount = 10000000,
-            FeePercentage = 0.5m,
-            MinerFee = 500
-        };
-
         var expectedSwap = new BoltzSubmarineSwap
         {
             Id = "swap-123",
@@ -93,10 +85,6 @@ public class CreateLightningSwapTests
             ExpectedAmount = 99000,
             Status = SwapState.Created
         };
-
-        _mockBoltzService
-            .Setup(x => x.GetPairInfoAsync())
-            .ReturnsAsync(Result.Success(pairInfo));
 
         _mockBoltzService
             .Setup(x => x.CreateSubmarineSwapAsync(address, amount.Sats, It.IsAny<string>()))
@@ -115,25 +103,19 @@ public class CreateLightningSwapTests
     }
 
     [Fact]
-    public async Task CreateSwap_AmountTooSmall_ReturnsFailure()
+    public async Task CreateSwap_BoltzServiceFails_ReturnsFailure()
     {
         // Arrange
         var walletId = new WalletId("test-wallet");
         var projectId = new ProjectId("test-project");
-        var amount = new Amount(1000); // Too small
+        var amount = new Amount(100000);
         var address = "bc1qtest123";
 
-        var pairInfo = new BoltzPairInfo
-        {
-            MinAmount = 10000,
-            MaxAmount = 10000000,
-            FeePercentage = 0.5m,
-            MinerFee = 500
-        };
+        SetupSuccessfulDependencies(projectId);
 
         _mockBoltzService
-            .Setup(x => x.GetPairInfoAsync())
-            .ReturnsAsync(Result.Success(pairInfo));
+            .Setup(x => x.CreateSubmarineSwapAsync(address, amount.Sats, It.IsAny<string>()))
+            .ReturnsAsync(Result.Failure<BoltzSubmarineSwap>("Boltz API error"));
 
         var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
             walletId, projectId, amount, address);
@@ -143,39 +125,7 @@ public class CreateLightningSwapTests
 
         // Assert
         Assert.True(result.IsFailure);
-        Assert.Contains("too small", result.Error.ToLower());
-    }
-
-    [Fact]
-    public async Task CreateSwap_AmountTooLarge_ReturnsFailure()
-    {
-        // Arrange
-        var walletId = new WalletId("test-wallet");
-        var projectId = new ProjectId("test-project");
-        var amount = new Amount(100000000); // Too large
-        var address = "bc1qtest123";
-
-        var pairInfo = new BoltzPairInfo
-        {
-            MinAmount = 10000,
-            MaxAmount = 10000000,
-            FeePercentage = 0.5m,
-            MinerFee = 500
-        };
-
-        _mockBoltzService
-            .Setup(x => x.GetPairInfoAsync())
-            .ReturnsAsync(Result.Success(pairInfo));
-
-        var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
-            walletId, projectId, amount, address);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsFailure);
-        Assert.Contains("too large", result.Error.ToLower());
+        Assert.Contains("Boltz API error", result.Error);
     }
 
     [Fact]
@@ -183,21 +133,9 @@ public class CreateLightningSwapTests
     {
         // Arrange
         var walletId = new WalletId("test-wallet");
-        var projectId = new ProjectId("nonexistent-project");
+        var projectId = new ProjectId("non-existent-project");
         var amount = new Amount(100000);
         var address = "bc1qtest123";
-
-        var pairInfo = new BoltzPairInfo
-        {
-            MinAmount = 10000,
-            MaxAmount = 10000000,
-            FeePercentage = 0.5m,
-            MinerFee = 500
-        };
-
-        _mockBoltzService
-            .Setup(x => x.GetPairInfoAsync())
-            .ReturnsAsync(Result.Success(pairInfo));
 
         _mockProjectService
             .Setup(x => x.GetAsync(projectId))
@@ -211,25 +149,17 @@ public class CreateLightningSwapTests
 
         // Assert
         Assert.True(result.IsFailure);
-        Assert.Contains("project", result.Error.ToLower());
+        Assert.Contains("Project not found", result.Error);
     }
 
     [Fact]
-    public async Task CreateSwap_WalletNotFound_ReturnsFailure()
+    public async Task CreateSwap_WalletDataNotAvailable_ReturnsFailure()
     {
         // Arrange
-        var walletId = new WalletId("nonexistent-wallet");
+        var walletId = new WalletId("test-wallet");
         var projectId = new ProjectId("test-project");
         var amount = new Amount(100000);
         var address = "bc1qtest123";
-
-        var pairInfo = new BoltzPairInfo
-        {
-            MinAmount = 10000,
-            MaxAmount = 10000000,
-            FeePercentage = 0.5m,
-            MinerFee = 500
-        };
 
         var project = new Project
         {
@@ -238,17 +168,13 @@ public class CreateLightningSwapTests
             FounderKey = "02abc123founderkey"
         };
 
-        _mockBoltzService
-            .Setup(x => x.GetPairInfoAsync())
-            .ReturnsAsync(Result.Success(pairInfo));
-
         _mockProjectService
             .Setup(x => x.GetAsync(projectId))
             .ReturnsAsync(Result.Success(project));
 
         _mockSeedwordsProvider
-            .Setup(x => x.GetSensitiveData(walletId.Value))
-            .ReturnsAsync(Result.Failure<(string, Maybe<string>)>("Wallet not found"));
+            .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
+            .ReturnsAsync(Result.Failure<(string, Maybe<string>)>("Wallet locked"));
 
         var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
             walletId, projectId, amount, address);
@@ -258,7 +184,7 @@ public class CreateLightningSwapTests
 
         // Assert
         Assert.True(result.IsFailure);
-        Assert.Contains("wallet", result.Error.ToLower());
+        Assert.Contains("Wallet", result.Error);
     }
 }
 
@@ -267,7 +193,7 @@ public class CreateLightningSwapTests
 /// </summary>
 public class MonitorLightningSwapTests
 {
-    private readonly Mock<IBoltzSwapService> _mockBoltzService;
+    private readonly Mock<IBoltzWebSocketClient> _mockWebSocketClient;
     private readonly Mock<IIndexerService> _mockIndexerService;
     private readonly Mock<IWalletAccountBalanceService> _mockWalletService;
     private readonly Mock<ILogger<MonitorLightningSwap.MonitorLightningSwapHandler>> _mockLogger;
@@ -275,13 +201,13 @@ public class MonitorLightningSwapTests
 
     public MonitorLightningSwapTests()
     {
-        _mockBoltzService = new Mock<IBoltzSwapService>();
+        _mockWebSocketClient = new Mock<IBoltzWebSocketClient>();
         _mockIndexerService = new Mock<IIndexerService>();
         _mockWalletService = new Mock<IWalletAccountBalanceService>();
         _mockLogger = new Mock<ILogger<MonitorLightningSwap.MonitorLightningSwapHandler>>();
 
         _handler = new MonitorLightningSwap.MonitorLightningSwapHandler(
-            _mockBoltzService.Object,
+            _mockWebSocketClient.Object,
             _mockIndexerService.Object,
             _mockWalletService.Object,
             _mockLogger.Object);
@@ -299,139 +225,91 @@ public class MonitorLightningSwapTests
         {
             SwapId = swapId,
             Status = SwapState.TransactionClaimed,
-            TransactionId = "txid123"
+            TransactionId = "tx123"
         };
+
+        _mockWebSocketClient
+            .Setup(x => x.MonitorSwapAsync(swapId, It.IsAny<TimeSpan?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(completedStatus));
 
         var utxos = new List<UtxoData>
         {
-            new UtxoData
-            {
-                outpoint = new Outpoint { transactionId = "txid123", outputIndex = 0 },
-                value = 100000,
-                address = address
-            }
+            new() { outpoint = new Outpoint { transactionId = "tx123", outputIndex = 0 }, value = 99000 }
         };
-
-        _mockBoltzService
-            .Setup(x => x.GetSwapStatusAsync(swapId))
-            .ReturnsAsync(Result.Success(completedStatus));
 
         _mockIndexerService
             .Setup(x => x.FetchUtxoAsync(address, It.IsAny<int>(), It.IsAny<int>()))
             .ReturnsAsync(utxos);
 
-        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(
-            walletId, swapId, address);
+        _mockWalletService
+            .Setup(x => x.GetAccountBalanceInfoAsync(walletId))
+            .ReturnsAsync(Result.Failure<AccountBalanceInfo>("Not needed for this test"));
+
+        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(walletId, swapId, address);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(SwapState.TransactionClaimed, result.Value.SwapStatus.Status);
-        Assert.Equal("txid123", result.Value.TransactionId);
-        Assert.NotNull(result.Value.DetectedUtxos);
+        Assert.Equal("tx123", result.Value.TransactionId);
         Assert.Single(result.Value.DetectedUtxos);
-
-        // Verify indexer was called once (not polling)
-        _mockIndexerService.Verify(
-            x => x.FetchUtxoAsync(address, It.IsAny<int>(), It.IsAny<int>()),
-            Times.Once);
+        Assert.Equal(99000, result.Value.DetectedUtxos[0].value);
     }
 
     [Fact]
-    public async Task Handle_WhenSwapInMempool_ReturnsSuccessWithTxId()
+    public async Task Handle_WhenSwapFails_ReturnsFailure()
     {
         // Arrange
         var walletId = new WalletId("test-wallet");
-        var swapId = "swap-mempool";
-        var address = "bc1qtest456";
+        var swapId = "swap-123";
+        var address = "bc1qtest123";
 
-        var mempoolStatus = new BoltzSwapStatus
+        _mockWebSocketClient
+            .Setup(x => x.MonitorSwapAsync(swapId, It.IsAny<TimeSpan?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure<BoltzSwapStatus>("Swap expired"));
+
+        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(walletId, swapId, address);
+
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.Contains("expired", result.Error);
+    }
+
+    [Fact]
+    public async Task Handle_WhenNoUtxosFound_StillReturnsSuccess()
+    {
+        // Arrange
+        var walletId = new WalletId("test-wallet");
+        var swapId = "swap-123";
+        var address = "bc1qtest123";
+
+        var completedStatus = new BoltzSwapStatus
         {
             SwapId = swapId,
             Status = SwapState.TransactionMempool,
-            TransactionId = "txid456"
+            TransactionId = "tx123"
         };
 
-        _mockBoltzService
-            .Setup(x => x.GetSwapStatusAsync(swapId))
-            .ReturnsAsync(Result.Success(mempoolStatus));
+        _mockWebSocketClient
+            .Setup(x => x.MonitorSwapAsync(swapId, It.IsAny<TimeSpan?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(completedStatus));
 
         _mockIndexerService
             .Setup(x => x.FetchUtxoAsync(address, It.IsAny<int>(), It.IsAny<int>()))
             .ReturnsAsync(new List<UtxoData>());
 
-        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(
-            walletId, swapId, address);
+        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(walletId, swapId, address);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(SwapState.TransactionMempool, result.Value.SwapStatus.Status);
-        Assert.Equal("txid456", result.Value.TransactionId);
-    }
-
-    [Fact]
-    public async Task Handle_WhenSwapExpired_ReturnsFailure()
-    {
-        // Arrange
-        var walletId = new WalletId("test-wallet");
-        var swapId = "swap-expired";
-        var address = "bc1qtest789";
-
-        var expiredStatus = new BoltzSwapStatus
-        {
-            SwapId = swapId,
-            Status = SwapState.SwapExpired,
-            FailureReason = "Invoice not paid in time"
-        };
-
-        _mockBoltzService
-            .Setup(x => x.GetSwapStatusAsync(swapId))
-            .ReturnsAsync(Result.Success(expiredStatus));
-
-        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(
-            walletId, swapId, address);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsFailure);
-        Assert.Contains("expired", result.Error.ToLower());
-    }
-
-    [Fact]
-    public async Task Handle_WhenInvoiceExpired_ReturnsFailure()
-    {
-        // Arrange
-        var walletId = new WalletId("test-wallet");
-        var swapId = "swap-invoice-expired";
-        var address = "bc1qtest000";
-
-        var expiredStatus = new BoltzSwapStatus
-        {
-            SwapId = swapId,
-            Status = SwapState.InvoiceExpired,
-            FailureReason = "Invoice expired before payment"
-        };
-
-        _mockBoltzService
-            .Setup(x => x.GetSwapStatusAsync(swapId))
-            .ReturnsAsync(Result.Success(expiredStatus));
-
-        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(
-            walletId, swapId, address);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsFailure);
-        Assert.Contains("InvoiceExpired", result.Error);
+        Assert.Empty(result.Value.DetectedUtxos);
     }
 }
 
@@ -475,31 +353,4 @@ public class SwapStateExtensionTests
     }
 }
 
-/// <summary>
-/// Unit tests for BoltzPairInfo
-/// </summary>
-public class BoltzPairInfoTests
-{
-    [Fact]
-    public void FeeCalculation_ReturnsCorrectValues()
-    {
-        var pairInfo = new BoltzPairInfo
-        {
-            MinAmount = 10000,
-            MaxAmount = 10000000,
-            FeePercentage = 0.5m,
-            MinerFee = 500
-        };
-
-        // Calculate expected fee for 100,000 sats
-        long amount = 100000;
-        var percentageFee = (long)(amount * pairInfo.FeePercentage / 100);
-        var totalFee = percentageFee + pairInfo.MinerFee;
-        var expectedReceived = amount - totalFee;
-
-        Assert.Equal(500, percentageFee); // 0.5% of 100,000
-        Assert.Equal(1000, totalFee);     // 500 + 500 miner fee
-        Assert.Equal(99000, expectedReceived);
-    }
-}
 

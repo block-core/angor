@@ -28,10 +28,6 @@ public interface IBoltzSwapService
     /// <param name="swapId">The swap ID returned from CreateSubmarineSwapAsync</param>
     Task<Result<BoltzSwapStatus>> GetSwapStatusAsync(string swapId);
 
-    /// <summary>
-    /// Gets current swap pairs and their limits/fees for reverse swaps
-    /// </summary>
-    Task<Result<BoltzPairInfo>> GetPairInfoAsync();
 
     /// <summary>
     /// Gets a partial signature from Boltz for cooperative claim transaction signing (MuSig2).
