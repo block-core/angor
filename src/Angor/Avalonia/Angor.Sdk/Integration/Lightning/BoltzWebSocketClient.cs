@@ -25,12 +25,16 @@ public class BoltzWebSocketClient : IBoltzWebSocketClient, IAsyncDisposable
         ILogger<BoltzWebSocketClient> logger)
     {
         // Convert HTTP URL to WebSocket URL
-        // https://testnet.boltz.exchange/api -> wss://testnet.boltz.exchange/v2/ws
+        // https://api.boltz.exchange -> wss://api.boltz.exchange/v2/ws (if UseV2Prefix)
+        // http://localhost:9001 -> ws://localhost:9001/v2/ws (if UseV2Prefix)
         var baseUrl = configuration.BaseUrl
             .Replace("https://", "wss://")
             .Replace("http://", "ws://")
-            .Replace("/api", "");
-        _webSocketUrl = $"{baseUrl}/v2/ws";
+            .TrimEnd('/');
+        
+        // Use the same prefix configuration as HTTP API
+        var wsPath = configuration.UseV2Prefix ? "/v2/ws" : "/ws";
+        _webSocketUrl = $"{baseUrl}{wsPath}";
         
         _logger = logger;
         _jsonOptions = new JsonSerializerOptions

@@ -18,6 +18,7 @@ public class BoltzSwapService : IBoltzSwapService
     private readonly BoltzConfiguration _configuration;
     private readonly ILogger<BoltzSwapService> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly string _apiPrefix;
 
     public BoltzSwapService(
         HttpClient httpClient,
@@ -30,6 +31,7 @@ public class BoltzSwapService : IBoltzSwapService
 
         _httpClient.BaseAddress = new Uri(_configuration.BaseUrl);
         _httpClient.Timeout = TimeSpan.FromSeconds(_configuration.TimeoutSeconds);
+        _apiPrefix = _configuration.ApiPrefix;
 
         _jsonOptions = new JsonSerializerOptions
         {
@@ -73,7 +75,7 @@ public class BoltzSwapService : IBoltzSwapService
                 Address = onchainAddress  // Optional: direct claim to this address
             };
 
-            var response = await _httpClient.PostAsJsonAsync("/v2/swap/reverse", request, _jsonOptions);
+            var response = await _httpClient.PostAsJsonAsync($"{_apiPrefix}/swap/reverse", request, _jsonOptions);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -97,8 +99,10 @@ public class BoltzSwapService : IBoltzSwapService
                 ExpectedAmount = swapResponse.OnchainAmount,
                 InvoiceAmount = amountSats,
                 TimeoutBlockHeight = swapResponse.TimeoutBlockHeight,
-                RedeemScript = swapResponse.RedeemScript ?? string.Empty,
-                SwapTree = swapResponse.SwapTree ?? string.Empty,
+                RedeemScript = string.Empty, // Not used in v2 API (Taproot uses SwapTree instead)
+                SwapTree = swapResponse.SwapTree != null 
+                    ? JsonSerializer.Serialize(swapResponse.SwapTree, _jsonOptions) 
+                    : string.Empty,
                 RefundPublicKey = swapResponse.RefundPublicKey ?? string.Empty,
                 ClaimPublicKey = claimPublicKey,
                 BlindingKey = swapResponse.BlindingKey,
@@ -146,8 +150,8 @@ public class BoltzSwapService : IBoltzSwapService
         {
             _logger.LogDebug("Getting swap status for {SwapId}", swapId);
 
-            // Use v2 API endpoint
-            var response = await _httpClient.GetAsync($"/v2/swap/{swapId}");
+            // Use configurable API prefix
+            var response = await _httpClient.GetAsync($"{_apiPrefix}/swap/{swapId}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -211,7 +215,7 @@ public class BoltzSwapService : IBoltzSwapService
                 PubNonce = pubNonce
             };
 
-            var response = await _httpClient.PostAsJsonAsync($"/v2/swap/reverse/{swapId}/claim", request, _jsonOptions);
+            var response = await _httpClient.PostAsJsonAsync($"{_apiPrefix}/swap/reverse/{swapId}/claim", request, _jsonOptions);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -249,7 +253,7 @@ public class BoltzSwapService : IBoltzSwapService
             _logger.LogInformation("Broadcasting transaction");
 
             var request = new BroadcastRequest { Hex = transactionHex };
-            var response = await _httpClient.PostAsJsonAsync("/v2/chain/BTC/transaction", request, _jsonOptions);
+            var response = await _httpClient.PostAsJsonAsync($"{_apiPrefix}/chain/BTC/transaction", request, _jsonOptions);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -358,17 +362,38 @@ public class BoltzSwapService : IBoltzSwapService
         [JsonPropertyName("timeoutBlockHeight")]
         public long TimeoutBlockHeight { get; set; }
 
-        [JsonPropertyName("redeemScript")]
-        public string? RedeemScript { get; set; }
-
         [JsonPropertyName("swapTree")]
-        public string? SwapTree { get; set; }
+        public SwapTreeResponse? SwapTree { get; set; }
 
         [JsonPropertyName("refundPublicKey")]
         public string? RefundPublicKey { get; set; }
 
         [JsonPropertyName("blindingKey")]
         public string? BlindingKey { get; set; }
+    }
+
+    /// <summary>
+    /// Taproot swap tree containing claim and refund leaf scripts
+    /// </summary>
+    private class SwapTreeResponse
+    {
+        [JsonPropertyName("claimLeaf")]
+        public SwapLeafResponse ClaimLeaf { get; set; } = new();
+
+        [JsonPropertyName("refundLeaf")]
+        public SwapLeafResponse RefundLeaf { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Individual leaf in the swap tree (Taproot script)
+    /// </summary>
+    private class SwapLeafResponse
+    {
+        [JsonPropertyName("version")]
+        public int Version { get; set; }
+
+        [JsonPropertyName("output")]
+        public string Output { get; set; } = string.Empty;
     }
 
     private class CreateSwapResponse

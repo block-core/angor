@@ -7,7 +7,7 @@ namespace Angor.Sdk.Integration.Lightning.Models;
 public class BoltzConfiguration
 {
     public const string MainnetUrl = "https://api.boltz.exchange";
-    public const string TestnetUrl = "https://testnet.boltz.exchange/api";
+    public const string TestnetUrl = "http://localhost:9001";
     
     /// <summary>
     /// The Boltz API base URL. Defaults to mainnet.
@@ -18,6 +18,18 @@ public class BoltzConfiguration
     /// Request timeout in seconds.
     /// </summary>
     public int TimeoutSeconds { get; set; } = 30;
+    
+    /// <summary>
+    /// Whether to use /v2/ prefix for API endpoints.
+    /// Mainnet API uses no prefix (endpoints like /swap/reverse).
+    /// Some local/test instances may require /v2/ prefix.
+    /// </summary>
+    public bool UseV2Prefix { get; set; } = false;
+    
+    /// <summary>
+    /// Gets the API path prefix based on configuration.
+    /// </summary>
+    public string ApiPrefix => UseV2Prefix ? "/v2" : "";
 }
 
 /// <summary>
