@@ -67,7 +67,7 @@
             <Setter Property="IconOptions.Fill" Value="White" />
         </Style>
         <Style Selector="ListBoxItem">
-            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceLow}" />
             <Setter Property="Background" Value="{DynamicResource Surface}" />
             <Setter Property="BorderThickness" Value="2" />
             <Setter Property="CornerRadius" Value="20" />
@@ -98,11 +98,11 @@
             <Setter Property="BorderBrush" Value="{Binding $parent[ListBoxItem].Foreground}" />
         </Style>
         <Style Selector="ListBoxItem RadioButton">
-            <Setter Property="Background" Value="{DynamicResource SurfaceSubtle}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceLow}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceLow}" />
         </Style>
         <Style Selector="ListBoxItem Border">
-            <Setter Property="Background" Value="{DynamicResource SurfaceSubtle}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceLow}" />
         </Style>
     </UserControl.Styles>
 

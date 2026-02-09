@@ -8,6 +8,7 @@
         <ResourceDictionary>
 
             <ResourceDictionary.MergedDictionaries>
+                <MergeResourceInclude Source="/UI/Shared/Controls/Common/CopyButton.axaml" />
                 <MergeResourceInclude Source="UI/Shared/Controls/Header.axaml" />
                 <MergeResourceInclude Source="UI/Shared/Controls/SectionItem.axaml" />
                 <MergeResourceInclude Source="UI/Shared/Resources/Icons.axaml" />

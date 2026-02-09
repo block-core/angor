@@ -1,0 +1,171 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.PreviewWith>
+        <ScrollViewer>
+            <StackPanel Spacing="20" Width="500">
+                <ThemeVariantScope RequestedThemeVariant="Light">
+                    <Border Padding="20" Background="{DynamicResource AppBackground}">
+                        <StackPanel Spacing="15">
+                            <TextBlock FontWeight="Bold" FontSize="16">Light Theme</TextBlock>
+                            <HeaderedContainer Header="WizardSection" Content="Neutral style" Classes="Card WizardSection" />
+                            <HeaderedContainer Header="Accent" Content="Accent translucent" Classes="Card Accent" />
+                            <HeaderedContainer Header="Bitcoin" Content="Bitcoin accent" Classes="Card Bitcoin" />
+                            <HeaderedContainer Header="Blue" Content="Blue gradient" Classes="Card Blue" />
+                        </StackPanel>
+                    </Border>
+                </ThemeVariantScope>
+                <ThemeVariantScope RequestedThemeVariant="Dark">
+                    <Border Padding="20" Background="{DynamicResource AppBackground}">
+                        <StackPanel Spacing="15">
+                            <TextBlock FontWeight="Bold" FontSize="16" Foreground="White">Dark Theme</TextBlock>
+                            <HeaderedContainer Header="WizardSection" Content="Neutral style" Classes="WizardSection" />
+                            <HeaderedContainer Header="Accent" Content="Accent translucent" Classes="Card Accent" />
+                            <HeaderedContainer Header="Bitcoin" Content="Bitcoin accent" Classes="Card Bitcoin" />
+                        </StackPanel>
+                    </Border>
+                </ThemeVariantScope>
+            </StackPanel>
+        </ScrollViewer>
+    </Design.PreviewWith>
+
+    <!-- Base -->
+    <Style Selector="HeaderedContainer">
+        <Setter Property="Padding" Value="0 5" />
+    </Style>
+    
+    <!-- Icon styling in header -->
+    <Style Selector="HeaderedContainer /template/ ContentPresenter#Header EdgePanel /template/ ContentControl#StartContent">
+        <Setter Property="IconOptions.Size" Value="20" />
+        <Setter Property="IconOptions.Fill" Value="White" />
+        <Setter Property="IconOptions.Padding" Value="10" />
+        <Setter Property="IconOptions.CornerRadius" Value="10" />
+    </Style>
+
+    <Style Selector="HeaderedContainer.Title /template/ ContentControl#Header">
+        <Setter Property="FontSize" Value="25" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+    </Style>
+    
+    <Style Selector="HeaderedContainer.WizardSection /template/ ContentPresenter#Header EdgePanel /template/ ContentControl#StartContent">
+        <Setter Property="IconOptions.Background" Value="{DynamicResource Accent}" />
+    </Style>
+
+    <!-- Translucid: DEPRECATED - use ".Card Accent" or ".Card.Accent" instead -->
+    <!-- Kept for backward compat, colors come from .Accent in ColorVariants -->
+    <Style Selector="HeaderedContainer.Translucid /template/ ContentPresenter#Header EdgePanel /template/ ContentControl#StartContent">
+        <Setter Property="IconOptions.Background" Value="{DynamicResource Accent}" />
+    </Style>
+
+    <!-- WizardHighlight: DEPRECATED - use ".Card Radius-L Bitcoin" instead -->
+    <!-- Kept for backward compat, colors come from .Bitcoin in ColorVariants -->
+    <Style Selector="HeaderedContainer.WizardHighlight /template/ ContentPresenter#Header EdgePanel /template/ ContentControl#StartContent">
+        <Setter Property="IconOptions.Background" Value="{DynamicResource BitcoinAccent}" />
+    </Style>
+    <Style Selector="HeaderedContainer.WizardHighlight EdgePanel ContentControl#EndContent">
+        <Setter Property="Foreground" Value="{DynamicResource BitcoinAccent}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+    </Style>
+    
+    
+    <Style Selector="HeaderedContainer.MediumHeader /template/ ContentPresenter#Header">
+        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="HeaderedContainer.Fields">
+        <Setter Property="ContentTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-XL Weight-Bold Strong" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+    </Style>
+    
+    <Style Selector="HeaderedContainer.Fields EdgePanel">
+        <Setter Property="StartContentTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-S Weight-Bold" Foreground="{DynamicResource StatLabel}" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="HeaderedContainer.Fields EdgePanel /template/ ContentControl#EndContent">
+        <Setter Property="IconOptions.Fill" Value="{DynamicResource BitcoinOrange}" />
+    </Style>
+    
+    <Style Selector="HeaderedContainer.FieldsSmall">
+        <Setter Property="HeaderTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-XS Weight-Bold Dimmed" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+        <Setter Property="ContentTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-M Weight-Bold Strong" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+    </Style>
+    
+    <Style Selector="HeaderedContainer.FieldsSmall EdgePanel">
+        <Setter Property="StartContentTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-M Weight-Bold" Foreground="{DynamicResource StatLabel}" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="HeaderedContainer.FieldsSmall EdgePanel /template/ ContentControl#EndContent">
+        <Setter Property="IconOptions.Fill" Value="{DynamicResource BitcoinOrange}" />
+    </Style>
+
+   
+    <Style Selector="HeaderedContainer.MediumBigHeader /template/ ContentPresenter#Header">
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryBlack}" />
+    </Style>
+
+    <Style Selector="HeaderedContainer.BigHeader EdgePanel">
+        <Setter Property="ContentTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-XL Weight-Bold" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+    </Style>
+    
+    <Style Selector="HeaderedContainer.BigHeader.BigIcon EdgePanel /template/ ContentControl#StartContent">
+        <Setter Property="IconOptions.Size" Value="40" />
+        <Setter Property="IconOptions.Fill" Value="{DynamicResource BitcoinOrange}" />
+    </Style>
+    <Style Selector="HeaderedContainer.SmallIcon EdgePanel /template/ ContentControl#StartContent">
+        <Setter Property="IconOptions.Size" Value="25" />
+        <Setter Property="IconOptions.Fill" Value="#4a4a4a" />
+    </Style>
+    
+    <Style Selector="HeaderedContainer.OrangeIcon">
+        <Setter Property="IconOptions.Background" Value="{DynamicResource BitcoinOrangeDarker}" />
+    </Style>
+    
+    <Style Selector="HeaderedContainer.GreenIcon">
+        <Setter Property="IconOptions.Background" Value="{DynamicResource PrimaryGreenDark}" />
+    </Style>
+    
+    <Style Selector="HeaderedContainer.Card">
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="HeaderPadding" Value="24" />
+        <Setter Property="ContentPadding" Value="24 0 24 24" />
+        <Setter Property="IconOptions.CornerRadius" Value="8" />
+        <Setter Property="IconOptions.Size" Value="20" />
+    </Style>
+    
+    <Style Selector="HeaderedContainer.Card.WizardSection">
+        <Setter Property="HeaderBackground" Value="{DynamicResource SurfaceMedium}" />
+        <Setter Property="HeaderPadding" Value="24 12 24 12" />
+        <Setter Property="ContentPadding" Value="24 12 24 24" />
+    </Style>
+
+</Styles>
+

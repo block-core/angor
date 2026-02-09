@@ -27,7 +27,7 @@
 
     <StackPanel Classes="BigGap">
         <StackPanel Classes="BigGap" IsVisible="{Binding !!!NewProject.Stages.Count}">
-            <HeaderedContainer Classes="WizardSection">
+            <HeaderedContainer Classes="Card Neutral WizardSection">
                 <HeaderedContainer.Header>
                     <TextBlock>Project length</TextBlock>
                 </HeaderedContainer.Header>
@@ -83,7 +83,7 @@
 
                 </HeaderedContainer>
             </HeaderedContainer>
-            <HeaderedContainer Classes="WizardSection">
+            <HeaderedContainer Classes="Card Neutral WizardSection">
                 <HeaderedContainer.Header>
                     <TextBlock>How often do you need funding released?</TextBlock>
                 </HeaderedContainer.Header>

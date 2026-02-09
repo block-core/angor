@@ -12,27 +12,14 @@
         <investV2:InvestViewModelSample />
     </Design.DataContext>
 
-    <UserControl.Styles>
-        <Style Selector="Border.Shadow">
-            <Setter Property="BoxShadow" Value="{StaticResource CardShadow}" />
-        </Style>
-        <Style Selector="Border">
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Background" Value="White" />
-            <Setter Property="Padding" Value="10" />
-            <Setter Property="BoxShadow" Value="{StaticResource SectionShadow}" />
-        </Style>
-    </UserControl.Styles>
-
     <StackPanel Spacing="30" Margin="10" HorizontalAlignment="Right" Orientation="Horizontal">
         <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center">
             <Run>Total (incl. fees):</Run>
-            <Run Foreground="Black" FontWeight="Bold" Text="{Binding  AmountToInvest.Value.DecimalString}" />
+            <Run Foreground="{DynamicResource TextStrong}" FontWeight="Bold" Text="{Binding  AmountToInvest.Value.DecimalString}" />
         </TextBlock>
         <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center">
             <Run>Stages:</Run>
-            <Run Foreground="Black" FontWeight="Bold" Text="{Binding  StageCount, StringFormat='{}{0} releases'}" />
+            <Run Foreground="{DynamicResource TextStrong}" FontWeight="Bold" Text="{Binding  StageCount, StringFormat='{}{0} releases'}" />
         </TextBlock>
         <EnhancedButton Command="{Binding Invest}" DockPanel.Dock="Right" Classes="Outline" Icon="{Icon fa-chart-line}" Content="Invest" />
     </StackPanel>

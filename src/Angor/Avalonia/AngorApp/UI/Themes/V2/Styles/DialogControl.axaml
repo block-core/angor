@@ -1,0 +1,107 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+        xmlns:dialogs="clr-namespace:Zafiro.Avalonia.Dialogs;assembly=Zafiro.Avalonia.Dialogs">
+    <Design.PreviewWith>
+        <DialogControl Content="Some context">
+            <DialogControl.Options>
+                <generic:List x:TypeArguments="IOption">
+                    <OptionDesign Title="Primary" Role="Primary" />
+                    <OptionDesign Title="Secondary" Role="Secondary" />
+                    <OptionDesign Title="Cancel" Role="Cancel" />
+                    <OptionDesign Title="Destructive" Role="Destructive" />
+                </generic:List>
+            </DialogControl.Options>
+        </DialogControl>
+    </Design.PreviewWith>
+
+    <Style Selector="DialogControl">
+        <Setter Property="MinWidth" Value="448" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <DockPanel VerticalSpacing="12">
+                    <ContentPresenter DockPanel.Dock="Top" Content="{TemplateBinding Content}" />
+                    <ItemsControl ItemsSource="{TemplateBinding Options}">
+                        <!-- <ItemsControl.Styles> -->
+                        <!--     ~1~ Primary Role: Main action button @1@ -->
+                        <!--     <Style Selector="EnhancedButton[Role=Primary]"> -->
+                        <!--         <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" /> -->
+                        <!--         <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackground}" /> -->
+                        <!--         <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBorder}" /> -->
+                        <!--         <Setter Property="Padding" Value="24 12" /> -->
+                        <!--     </Style> -->
+                        <!-- -->
+                        <!--     ~1~ Secondary Role: Complementary action @1@ -->
+                        <!--     <Style Selector="EnhancedButton[Role=Secondary]"> -->
+                        <!--         <Setter Property="Foreground" Value="{DynamicResource SecondaryButtonForeground}" /> -->
+                        <!--         <Setter Property="Background" Value="{DynamicResource SecondaryButtonBackground}" /> -->
+                        <!--         <Setter Property="BorderBrush" Value="{DynamicResource SecondaryButtonBorder}" /> -->
+                        <!--         <Setter Property="Padding" Value="24 12" /> -->
+                        <!--     </Style> -->
+                        <!-- -->
+                        <!--     ~1~ Destructive Role: Dangerous action (delete, remove, etc.) @1@ -->
+                        <!--     <Style Selector="EnhancedButton[Role=Destructive]"> -->
+                        <!--         <Setter Property="Foreground" Value="White" /> -->
+                        <!--         <Setter Property="Background" Value="{DynamicResource Error}" /> -->
+                        <!--         <Setter Property="BorderBrush" Value="{DynamicResource Error}" /> -->
+                        <!--         <Setter Property="Padding" Value="24 12" /> -->
+                        <!--     </Style> -->
+                        <!-- -->
+                        <!--     ~1~ Ghost Role: Cancel/Close actions (minimal visual weight) @1@ -->
+                        <!--     <Style Selector="EnhancedButton[Role=Ghost]"> -->
+                        <!--         <Setter Property="Foreground" Value="{DynamicResource TextMuted}" /> -->
+                        <!--         <Setter Property="Background" Value="Transparent" /> -->
+                        <!--         <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" /> -->
+                        <!--         <Setter Property="BorderThickness" Value="1" /> -->
+                        <!--         <Setter Property="Padding" Value="24 12" /> -->
+                        <!--     </Style> -->
+                        <!-- -->
+                        <!--     ~1~ Link Role: Informational/Help actions (looks like a link) @1@ -->
+                        <!--     <Style Selector="EnhancedButton[Role=Link]"> -->
+                        <!--         <Setter Property="Foreground" Value="{DynamicResource Accent}" /> -->
+                        <!--         <Setter Property="Background" Value="Transparent" /> -->
+                        <!--         <Setter Property="BorderBrush" Value="Transparent" /> -->
+                        <!--         <Setter Property="BorderThickness" Value="0" /> -->
+                        <!--         <Setter Property="Padding" Value="8 4" /> -->
+                        <!--     </Style> -->
+                        <!-- </ItemsControl.Styles> -->
+                        <ItemsControl.ItemContainerTheme>
+                            <ControlTheme TargetType="ContentPresenter">
+                                <Setter Property="IsVisible" Value="{Binding IsVisible^, DataType=IOption}" />
+                            </ControlTheme>
+                        </ItemsControl.ItemContainerTheme>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Classes="MediumGap" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="IOption">
+                                <EnhancedButton Height="52" HorizontalAlignment="Stretch"
+                                                IsCancel="{Binding IsCancel}"
+                                                IsDefault="{Binding IsDefault}"
+                                                Role="{Binding Role, Converter={x:Static dialogs:OptionRoleToButtonRoleConverter.Instance}}"
+                                                Content="{Binding Title^}" Command="{Binding Command}">
+                                    <Interaction.Behaviors>
+                                        <BindingTriggerBehavior Binding="{Binding Role}" Value="Primary">
+                                            <AddClassAction ClassName="Accent" />
+                                        </BindingTriggerBehavior>
+                                        <BindingTriggerBehavior Binding="{Binding Role}" Value="Secondary">
+                                            <AddClassAction ClassName="Secondary" />
+                                        </BindingTriggerBehavior>
+                                        <BindingTriggerBehavior Binding="{Binding Role}" Value="Cancel">
+                                            <AddClassAction ClassName="Outline" />
+                                        </BindingTriggerBehavior>
+                                        <BindingTriggerBehavior Binding="{Binding Role}" Value="Destructive">
+                                            <AddClassAction ClassName="Destructive" />
+                                        </BindingTriggerBehavior>
+                                    </Interaction.Behaviors>
+                                </EnhancedButton>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

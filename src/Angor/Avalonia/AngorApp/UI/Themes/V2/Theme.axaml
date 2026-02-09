@@ -37,191 +37,33 @@
     <StyleInclude Source="/UI/Shared/Styles/HeaderedContainer.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/EdgePanel.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/Border.axaml" />
-    <StyleInclude Source="Styles/Containers.axaml" />
+    <StyleInclude Source="Styles/HeaderedContainer.axaml" />
+    <StyleInclude Source="Styles/EdgePanel.axaml" />
+    <StyleInclude Source="Styles/Border.axaml" />
+    <StyleInclude Source="Styles/OverlayBorder.axaml" />
+    <StyleInclude Source="Styles/SectionStrip.axaml" />
+    <StyleInclude Source="Styles/Layout.axaml" />
     <StyleInclude Source="Styles/Buttons.axaml" />
     <StyleInclude Source="Styles/Typography.axaml" />
-    <StyleInclude Source="Styles/Borders.axaml" />
+    <StyleInclude Source="Styles/ColorVariants.axaml" />
     <StyleInclude Source="Controls/Frame.axaml" />
+    <StyleInclude Source="Styles/CheckBox.axaml" />
+    <StyleInclude Source="Styles/ComboBox.axaml" />
+    <StyleInclude Source="Styles/ProgressBar.axaml" />
+    <StyleInclude Source="Styles/ProgressRing.axaml" />
+    <StyleInclude Source="Styles/Expander.axaml" />
+    <StyleInclude Source="Styles/DialogControl.axaml" />
+    <StyleInclude Source="Styles/DialogViewContainer.axaml" />
     
     <Style Selector=":is(UserControl)">
         <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
         <Setter Property="IconOptions.Fill" Value="{DynamicResource TextMuted}" />
     </Style>
-
-    <Style Selector="Border.Panel">
-        <Setter Property="CornerRadius" Value="20" />
-        <Setter Property="Padding" Value="20" />
-        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Background" Value="{DynamicResource Surface}" />
-    </Style>
-
-    <Style Selector="OverlayBorder.Panel">
-        <Setter Property="CornerRadius" Value="20" />
-        <Setter Property="Padding" Value="20" />
-        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Background" Value="{DynamicResource Surface}" />
-    </Style>
-
-    <Style Selector="SectionStrip.Nav SectionStripGroupHeader">
-        <Setter Property="Foreground" Value="{DynamicResource Brand}" />
-        <Setter Property="FontFamily" Value="Sans Serif" />
-        <Setter Property="FontWeight" Value="SemiLight" />
-        <Setter Property="FontSize" Value="18" />
-        <Setter Property="Margin" Value="10" />
-    </Style>
-
-    <Style Selector="SectionStrip.Nav SectionStripItem">
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Padding" Value="8" />
-        <Setter Property="IconOptions.Fill" Value="{Binding $self.Foreground}" />
-        <Setter Property="Margin" Value="10" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
-        <Setter Property="ClipToBounds" Value="False" />
-        <Setter Property="BorderThickness" Value="1" />
-    </Style>
-
-    <Style Selector="SectionStrip.Nav SectionStripItem:pointerover">
-        <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
-    </Style>
-
-    <Style Selector="SectionStrip.Nav SectionStripItem:selected">
-        <Setter Property="Background" Value="{DynamicResource SurfaceSelected}" />
-        <Setter Property="Foreground" Value="{DynamicResource Highlight}" />
-    </Style>
-
-    <Style Selector="SectionStrip.Nav SectionStripItem:selected Border">
-        <Setter Property="BoxShadow" Value="{DynamicResource SectionShadow}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
-    </Style>
-
-    <Style Selector="controls|ProgressRing">
-        <Setter Property="Foreground" Value="{DynamicResource Brand}" />
-    </Style>
-
-    <Style Selector="Border.Elevated">
-        <Setter Property="Background" Value="{DynamicResource CardSurface}" />
-        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
-        <Setter Property="Transitions">
-            <Transitions>
-                <BoxShadowsTransition Property="BoxShadow" Duration="0:0:1" />
-            </Transitions>
-        </Setter>
-    </Style>
-    <Style Selector="Border.Elevated:pointerover">
-        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadowBig}" />
-    </Style>
-    <Style Selector="Border.Interactive">
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Transitions">
-            <Transitions>
-                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:.125" />
-            </Transitions>
-        </Setter>
-        <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
-    </Style>
-    <Style Selector="Border.Interactive:pointerover">
-        <Setter Property="RenderTransform" Value="translate(0px, -3px)" />
-    </Style>
-
-
-    <!-- <Style Selector="Frame"> -->
-    <!--     <Setter Property="Template"> -->
-    <!--         <ControlTemplate> -->
-    <!--             <DockPanel VerticalSpacing="25"> -->
-    <!--                 <EnhancedButton Command="{Binding $parent[Frame].Navigator.Back}" -->
-    <!--                                 Margin="20" -->
-    <!--                                 x:Name="BackButton" -->
-    <!--                                 Classes="Outline" -->
-    <!--                                 DockPanel.Dock="Top" -->
-    <!--                                 Content="{TemplateBinding BackButtonContent}"> -->
-    <!--                     <Button.IsVisible> -->
-    <!--                         <MultiBinding Converter="{x:Static BoolConverters.And}"> -->
-    <!--                             <Binding Path="$parent[Frame].IsBackButtonVisible" /> -->
-    <!--                             <Binding Path="$self.IsEffectivelyEnabled" /> -->
-    <!--                         </MultiBinding> -->
-    <!--                     </Button.IsVisible> -->
-    <!--                 </EnhancedButton> -->
-    <!--                 <ContentControl Margin="{TemplateBinding Padding}" Content="{Binding $parent[Frame].Navigator.Content^,  FallbackValue='No content', TargetNullValue='Navigator.Content is a null'}" /> -->
-    <!--             </DockPanel> -->
-    <!--         </ControlTemplate> -->
-    <!--     </Setter> -->
-    <!--     <Setter Property="BackButtonContent"> -->
-    <!--         <Setter.Value> -->
-    <!--             <Template> -->
-    <!--                 <DockPanel HorizontalSpacing="8"> -->
-    <!--                     <ContentControl Content="{Icon fa-angle-left}" /> -->
-    <!--                     <TextBlock VerticalAlignment="Center">Back</TextBlock> -->
-    <!--                 </DockPanel> -->
-    <!--             </Template> -->
-    <!--         </Setter.Value> -->
-    <!--     </Setter> -->
-    <!-- </Style> -->
-
-    <Style Selector="ComboBox">
-        <Setter Property="Background" Value="{DynamicResource Surface}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
-        <Setter Property="Padding" Value="12" />
-        <Setter Property="FontWeight" Value="Bold"></Setter>
-    </Style>
-    <Style Selector="ComboBox:pointerover /template/ Border">
-        <Setter Property="Background" Value="{DynamicResource Surface}" />
-    </Style>
-
-    <Style Selector="CheckBox">
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Grid x:Name="RootGrid" ColumnDefinitions="24,*">
-                    <Border x:Name="PART_Border"
-                            Grid.ColumnSpan="2"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="{TemplateBinding CornerRadius}" />
-
-                    <Grid VerticalAlignment="Top" Height="{DynamicResource CheckBoxMinHeight}">
-                        <Border x:Name="NormalRectangle"
-                                BorderBrush="{DynamicResource CheckBoxCheckBackgroundStrokeUnchecked}"
-                                Background="{DynamicResource CheckBoxCheckBackgroundFillUnchecked}"
-                                BorderThickness="{DynamicResource CheckBoxBorderThemeThickness}"
-                                CornerRadius="{TemplateBinding CornerRadius}"
-                                UseLayoutRounding="False"
-                                Height="24"
-                                Width="24" />
-
-                        <Viewbox UseLayoutRounding="False">
-                            <Panel>
-                                <Panel Height="16" Width="16" />
-                                <Path x:Name="CheckGlyph"
-                                      Opacity="0"
-                                      Fill="{DynamicResource CheckBoxCheckGlyphForegroundUnchecked}"
-                                      Stretch="Uniform"
-                                      VerticalAlignment="Center"
-                                      FlowDirection="LeftToRight" />
-                            </Panel>
-                        </Viewbox>
-                    </Grid>
-                    <ContentPresenter x:Name="PART_ContentPresenter"
-                                      ContentTemplate="{TemplateBinding ContentTemplate}"
-                                      Content="{TemplateBinding Content}"
-                                      Margin="{TemplateBinding Padding}"
-                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                      TextWrapping="Wrap"
-                                      Grid.Column="1" />
-                </Grid>
-            </ControlTemplate>
-        </Setter>
-    </Style>
-
-    <Style Selector=":is(Control).Padded">
-        <Setter Property="Margin" Value="20 0" />
+    
+    <Style Selector="Separator">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceLow}" />
     </Style>
     
     <Styles.Resources>
@@ -237,7 +79,7 @@
                           BasedOn="{StaticResource {x:Type TextBox}}">
                 <Setter Property="CornerRadius" Value="8" />
                 <Setter Property="BorderThickness" Value="1" />
-                <Setter Property="BorderBrush" Value="{DynamicResource SurfaceSubtle}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource SurfaceLow}" />
                 <Setter Property="Background" Value="{DynamicResource Surface}" />
                 <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
                 <Setter Property="Padding" Value="14 12" />

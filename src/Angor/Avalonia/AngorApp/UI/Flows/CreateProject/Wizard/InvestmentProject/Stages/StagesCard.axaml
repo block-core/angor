@@ -12,7 +12,7 @@
     </Design.DataContext>
 
     <StackPanel>
-        <HeaderedContainer FontWeight="Bold" Classes="Translucid">
+        <HeaderedContainer FontWeight="Bold" Classes="Card Accent GreenIcon">
             <HeaderedContainer.Header>
                 <EdgePanel StartContent="{Icon fa-regular fa-clipboard}">
                     <EdgePanel.EndContent>

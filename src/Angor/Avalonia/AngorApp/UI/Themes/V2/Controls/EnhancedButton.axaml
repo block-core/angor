@@ -16,6 +16,7 @@
                                 HorizontalContentAlignment="Left" Icon="{Icon fa-wallet}">
                 </EnhancedButton>
                 <EnhancedButton Icon="{Icon fa-wallet}" />
+                <EnhancedButton Icon="{Icon mdi-close}" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch">Button with icon</EnhancedButton>
             </StackPanel>
         </Border>
     </Design.PreviewWith>
@@ -36,9 +37,10 @@
                                                      Background="{TemplateBinding Background}"
                                                      BorderBrush="{TemplateBinding BorderBrush}"
                                                      CornerRadius="{TemplateBinding CornerRadius}"
-                                                     BoxShadow="{TemplateBinding BoxShadow}"
-                                                     >
-                            <SmartDockPanel HorizontalSpacing="{Binding $parent[EnhancedButton].Spacing}">
+                                                     BoxShadow="{TemplateBinding BoxShadow}">
+                            <SmartDockPanel HorizontalSpacing="{Binding $parent[EnhancedButton].Spacing}" 
+                                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
                                 <ContentPresenter IsVisible="{Binding !!$self.Content}"
                                                   VerticalAlignment="Center"
                                                   x:Name="IconPresenter"
@@ -46,7 +48,6 @@
                                 <ContentPresenter x:Name="ContentPresenter"
                                                   IsVisible="{Binding !!$self.Content}"
                                                   VerticalAlignment="Center"
-                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                   Content="{TemplateBinding Content}"
                                                   ContentTemplate="{TemplateBinding ContentTemplate}" />
                             </SmartDockPanel>

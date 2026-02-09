@@ -1,0 +1,29 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="using:AngorApp.UI.Shared.Controls.Common">
+    <Design.PreviewWith>
+        <c:CopyButton />
+    </Design.PreviewWith>
+
+    <ControlTheme x:Key="{x:Type c:CopyButton}" TargetType="{x:Type c:CopyButton}">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <EnhancedButton CommandParameter="{TemplateBinding Content}"
+                                Command="{Binding CopyParameter, Source={x:Static Commands.Instance}}" 
+                                Icon="{Icon fa-copy}">
+                    <EnhancedButton.Styles>
+                        <Style Selector="EnhancedButton">
+                            <Setter Property="CornerRadius" Value="5"></Setter>
+                            <Setter Property="IconOptions.Size" Value="11"></Setter>
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderBrush" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="1" />
+                            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+                            <Setter Property="Padding" Value="6" />
+                        </Style>
+                    </EnhancedButton.Styles>
+                </EnhancedButton>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+</ResourceDictionary>

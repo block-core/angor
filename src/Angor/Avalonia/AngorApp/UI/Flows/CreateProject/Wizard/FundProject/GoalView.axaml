@@ -51,9 +51,8 @@
     <controls:ScrollableView MaxContentWidth="766">
         <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}">
             <TextBlock Classes="Subtitle">Configure your funding goal and project nature.</TextBlock>
-
-
-            <HeaderedContainer Classes="WizardHighlight">
+            
+            <HeaderedContainer Classes="Card Radius-L Bitcoin">
                 <HeaderedContainer.Header>
                     <EdgePanel Content="Goal">
                         <EdgePanel.StartContent>
@@ -116,7 +115,7 @@
                 </StackPanel>
             </HeaderedContainer>
 
-            <HeaderedContainer Classes="BlueThreshold" HeaderPadding="24 24 24 0" ContentPadding="12 12 12 12">
+            <HeaderedContainer Classes="Card Radius-L Blue">
                 <HeaderedContainer.Header>
                     <EdgePanel Content="Threshold for Approval">
                         <EdgePanel.StartContent>

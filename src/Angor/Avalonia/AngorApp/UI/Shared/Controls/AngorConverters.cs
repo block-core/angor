@@ -305,5 +305,8 @@ namespace AngorApp.UI.Shared.Controls
 
         public static IValueConverter JoinStrings { get; } = new FuncValueConverter<IEnumerable<int>?, string?>(
             values => values == null ? null : string.Join(", ", values));
+
+        public static IValueConverter ThicknessWithoutTop { get; } = new FuncValueConverter<Thickness, Thickness>(
+            thickness => new Thickness(thickness.Left, 0, thickness.Right, thickness.Bottom));
     }
 }

@@ -1,0 +1,124 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:AngorApp.UI.Shared.Controls">
+
+    <Styles.Resources>
+        <ControlTheme x:Key="ExpanderToggleButton" TargetType="ToggleButton">
+            <Setter Property="MinHeight" Value="48"></Setter>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <DockPanel Background="Transparent">
+                        <Path x:Name="Icon"
+                              Margin="10 0 20 0"
+                              DockPanel.Dock="Right"
+                              Width="20"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              RenderTransformOrigin="50%,25%"
+                              Stretch="Uniform"
+                              Stroke="{TemplateBinding Foreground}"
+                              StrokeThickness="2"
+                              Data="M -7 -3.5 L 0 3.5 L 7 -3.5">
+                            <Path.RenderTransform>
+                                <RotateTransform Angle="0" />
+                            </Path.RenderTransform>
+                            <Path.Transitions>
+                                <Transitions>
+                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
+                                </Transitions>
+                            </Path.Transitions>
+                        </Path>
+                        <ContentPresenter Padding="{TemplateBinding Padding}" VerticalAlignment="Center" Content="{TemplateBinding Content}" />
+                    </DockPanel>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:checked /template/ Path#Icon">
+                <Setter Property="RenderTransform" Value="rotate(180deg)" />
+            </Style>
+        </ControlTheme>
+    </Styles.Resources>
+
+    <Style Selector="Expander /template/ Border#Root">
+        <Setter Property="BoxShadow" Value="{DynamicResource CardShadow}" />
+        <!-- <Setter Property="Margin" Value="10" /> -->
+    </Style>
+
+    <Style Selector="Expander">
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="ClipToBounds" Value="False" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border x:Name="Root" Background="{DynamicResource Surface}" CornerRadius="16">
+                    <SmartDockPanel>
+                        <ToggleButton Theme="{StaticResource ExpanderToggleButton}" x:Name="Header" Content="{TemplateBinding Header}" 
+                                      Padding="{TemplateBinding Padding}"
+                                      HorizontalAlignment="Stretch" DockPanel.Dock="Top" IsChecked="{TemplateBinding IsExpanded, Mode=TwoWay}" />
+                        <ContentPresenter x:Name="Content" 
+                                          Padding="{TemplateBinding Padding, Converter={x:Static controls:AngorConverters.ThicknessWithoutTop}}" 
+                                          IsVisible="{TemplateBinding IsExpanded}" 
+                                          Content="{TemplateBinding Content}" />
+                    </SmartDockPanel>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <!-- EdgePanel header styling -->
+    <Style Selector="Expander > EdgePanel">
+        <Setter Property="Margin" Value="10" />
+        <Setter Property="IconOptions.Size" Value="25" />
+        <Setter Property="IconOptions.Fill" Value="#4a4a4a" />
+        <Setter Property="ContentTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-XL Weight-Bold" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+    </Style>
+
+
+    <Design.PreviewWith>
+        <Border Padding="20" Background="White">
+            <StackPanel Orientation="Vertical" Spacing="20" Width="350" Height="600">
+                <Expander></Expander>
+                <Expander BorderBrush="Blue" BorderThickness="3" ExpandDirection="Up" Header="Expand Up">
+                    <StackPanel>
+                        <TextBlock>Expanded content</TextBlock>
+                    </StackPanel>
+                </Expander>
+                <Expander Classes="Transparent" ExpandDirection="Down" Header="Expand Down">
+                    <StackPanel>
+                        <TextBlock>Expanded content</TextBlock>
+                    </StackPanel>
+                </Expander>
+                <Expander ExpandDirection="Left" Header="Expand Left">
+                    <StackPanel>
+                        <TextBlock>Expanded content</TextBlock>
+                    </StackPanel>
+                </Expander>
+                <Expander ExpandDirection="Right" Header="Expand Right">
+                    <StackPanel>
+                        <TextBlock>Expanded content</TextBlock>
+                    </StackPanel>
+                </Expander>
+                <Expander ExpandDirection="Up">
+                    <Expander.Header>
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBlock Grid.Column="0" Text="Control" />
+                            <TextBlock Grid.Column="1" Text="Header" />
+                        </Grid>
+                    </Expander.Header>
+                    <StackPanel>
+                        <TextBlock>Expanded content</TextBlock>
+                    </StackPanel>
+                </Expander>
+                <Expander ExpandDirection="Up" Header="Rounded" CornerRadius="25">
+                    <StackPanel>
+                        <TextBlock>Expanded content</TextBlock>
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+        </Border>
+
+    </Design.PreviewWith>
+
+</Styles>

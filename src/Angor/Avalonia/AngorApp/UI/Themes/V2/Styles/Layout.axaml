@@ -1,0 +1,18 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <StackPanel Spacing="10">
+                <Border Classes="Padded" Background="LightBlue" Width="200" Height="50">
+                    <TextBlock>Control.Padded</TextBlock>
+                </Border>
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+
+    <Style Selector=":is(Control).Padded">
+        <Setter Property="Margin" Value="20 0" />
+    </Style>
+
+</Styles>

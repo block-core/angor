@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:l="clr-namespace:AngorApp.UI.Flows.InvestV2"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:c="clr-namespace:AngorApp.UI.Shared.Controls.Common"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="AngorApp.UI.Flows.InvestV2.InvestView"
              x:DataType="l:IInvestViewModel">
@@ -11,6 +12,16 @@
     <Design.DataContext>
         <l:InvestViewModelSample />
     </Design.DataContext>
+    
+    <UserControl.Styles>
+        <Style Selector="HeaderedContainer.RoundedSquareIcon">
+            <Setter Property="IconOptions.CornerRadius" Value="8" />
+            <Setter Property="IconOptions.Size" Value="20" />
+        </Style>
+        <Style Selector="HeaderedContainer.RoundedSquareIcon.OrangeIcon">
+            <Setter Property="IconOptions.Background" Value="{DynamicResource BitcoinOrangeDarker}" />
+        </Style>
+    </UserControl.Styles>
 
     <controls:ScrollableView>
         <Grid RowDefinitions="Auto, *, Auto">
@@ -19,7 +30,7 @@
             <BalancedWrapGrid MinItemWidth="346" Grid.Row="1" HorizontalSpacing="24" VerticalSpacing="24">
 
                 <!-- Amount Section -->
-                <HeaderedContainer Classes="WizardHighlight Shadow">
+                <HeaderedContainer Classes="Card Peach Shadow MediumHeader OrangeIcon">
                     <HeaderedContainer.Header>
                         <EdgePanel StartContent="{Icon fa-bitcoin}" Content="Investment Amount" />
                     </HeaderedContainer.Header>
@@ -32,10 +43,7 @@
                                        x:Name="AmountBox"
                                        Watermark="0.00">
                             <NumericUpDown.InnerRightContent>
-                                <TextBlock VerticalAlignment="Center" Classes="Weight-Bold" Foreground="{DynamicResource Labels}"
-                                           Margin="0 0 12 0">
-                                    BTC
-                                </TextBlock>
+                                <TextBlock VerticalAlignment="Center" Classes="Weight-Bold" Foreground="{DynamicResource Labels}" Margin="0 0 12 0">BTC</TextBlock>
                             </NumericUpDown.InnerRightContent>
                         </NumericUpDown>
 
@@ -63,33 +71,33 @@
                 </HeaderedContainer>
 
                 <!-- Release Schedule Section -->
-                <HeaderedContainer Header="Release Schedule" Classes="StagesCard Shadow">
+                <HeaderedContainer Header="Release Schedule" Classes="Card Sky Shadow MediumHeader">
                     <ScrollViewer>
                         <StackPanel Classes="BigGap">
                             <TextBlock Classes="Text-Muted">Your investment will be released in stages:</TextBlock>
-                            <ItemsControl ItemsSource="{Binding StageBreakdowns^}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Classes="BigGap" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
+                            <ItemsControl Classes="Vertical" ItemsSource="{Binding StageBreakdowns^}">
+                                <!-- <ItemsControl.ItemsPanel> -->
+                                <!--     <ItemsPanelTemplate> -->
+                                <!--         <StackPanel Classes="BigGap" /> -->
+                                <!--     </ItemsPanelTemplate> -->
+                                <!-- </ItemsControl.ItemsPanel> -->
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="{DynamicResource Surface}" CornerRadius="10" Padding="14" BorderThickness="1" BorderBrush="{DynamicResource Stroke}">
-                                            <StackPanel Classes="SmallGap">
+                                        <Border Classes="White" CornerRadius="10" Padding="12">
+                                            <StackPanel Classes="TinyGap">
                                                 <EdgePanel>
                                                     <EdgePanel.StartContent>
-                                                        <TextBlock Classes="Size-S Weight-Bold" Text="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}" />
+                                                        <TextBlock Classes="Size-XS Weight-Bold Strong" Text="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}" />
                                                     </EdgePanel.StartContent>
                                                     <EdgePanel.EndContent>
-                                                        <Border Padding="8 2" CornerRadius="4" Background="{DynamicResource SurfaceSubtle}">
+                                                        <Border Padding="8 2" CornerRadius="4" Background="{DynamicResource SoftGreen}">
                                                             <TextBlock Classes="Size-XS Weight-Bold" Foreground="{DynamicResource Brand}" Text="{Binding RatioOfTotal, StringFormat='p0'}" />
                                                         </Border>
                                                     </EdgePanel.EndContent>
                                                 </EdgePanel>
                                                 <EdgePanel>
                                                     <EdgePanel.EndContent>
-                                                        <TextBlock Classes="Size-S Weight-Bold" Text="{Binding Amount.DecimalString}" />
+                                                        <TextBlock Classes="Size-S Weight-Bold Strong" Text="{Binding Amount.DecimalString}" />
                                                     </EdgePanel.EndContent>
                                                     <EdgePanel.StartContent>
                                                         <TextBlock Text="{Binding ReleaseDate, StringFormat='d'}" Classes="Size-XS Weight-Light Dimmed" />
@@ -105,19 +113,22 @@
                 </HeaderedContainer>
 
                 <!-- Transaction Details Section -->
-                <HeaderedContainer Header="Transaction Details" Classes="TransactionCard Shadow">
+                <HeaderedContainer Header="Transaction Details" Classes="Card White Shadow MediumHeader">
                     <StackPanel Spacing="15">
-                        <HeaderedContainer Header="Project ID" Content="{Binding ProjectId}" Classes="ProjectIdBox" />
+                        <HeaderedContainer Header="Project ID">
+                            <EdgePanel Classes="LightGray" Padding="8" CornerRadius="8">
+                                <EdgePanel.EndContent>
+                                    <c:CopyButton Content="{Binding ProjectId}" />
+                                </EdgePanel.EndContent>
+                                <TextBlock Classes="Size-XS Weight-Bold Strong Wrap" Text="{Binding ProjectId}" />
+                            </EdgePanel>
+                        </HeaderedContainer>
+                        
+                        <HeaderedContainer Classes="FieldsSmall" Header="Amount to Invest" Content="{Binding AmountToInvest.DecimalString}" />
                         <Separator />
-                        <EdgePanel Classes="BreakdownItem" StartContent="Amount to Invest" EndContent="{Binding AmountToInvest.DecimalString}" />
-                        <EdgePanel Classes="BreakdownItem" StartContent="Miner Fee" EndContent="{Binding Details^.MinerFee.ShortDecimalString}" />
-                        <EdgePanel Classes="BreakdownItem" StartContent="Angor Fee" EndContent="{Binding Details^.AngorFee.ShortDecimalString}" />
+                        <HeaderedContainer Classes="FieldsSmall" Header="Miner Fee" Content="{Binding Details^.MinerFee.ShortDecimalString}" />
                         <Separator />
-                        <EdgePanel StartContent="Total (incl. fees)">
-                            <EdgePanel.EndContent>
-                                <TextBlock Text="{Binding Details^.Total.DecimalString}" FontWeight="Bold" Foreground="{DynamicResource Accent}" />
-                            </EdgePanel.EndContent>
-                        </EdgePanel>
+                        <HeaderedContainer Classes="FieldsSmall" Header="Angor Fee" Content="{Binding Details^.AngorFee.ShortDecimalString}" />
                     </StackPanel>
                 </HeaderedContainer>
 

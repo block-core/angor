@@ -13,32 +13,30 @@
     </Design.DataContext>
 
     <UserControl.Styles>
-        <Style Selector="Border.Shadow">
-            <Setter Property="BoxShadow" Value="{StaticResource SectionShadow}" />
-        </Style>
-        <Style Selector="Border">
+        <Style Selector="Border.Button">
             <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Background" Value="White"></Setter>
-            <Setter Property="Padding" Value="10"></Setter>
-            <Setter Property="BoxShadow" Value="{StaticResource SectionShadow}" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="Height" Value="44" />
+        </Style>
+        <Style Selector="Border.Button TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
     </UserControl.Styles>
 
     <DockPanel HorizontalSpacing="10" LastChildFill="False" Margin="10">
-        <Border DockPanel.Dock="Left">
+        <Border DockPanel.Dock="Left" Classes="White Button Shadow">
             <TextBlock Classes="Weight-Bold Strong" Text="{Binding ProjectTitle}" />
         </Border>
-        <Border DockPanel.Dock="Right">
+        <Border DockPanel.Dock="Right" Classes="White Button Shadow">
             <TextBlock>
                 <Run>Progress:</Run>
-                <Run Foreground="Black" FontWeight="Bold" Text="{Binding  Progress, StringFormat=p0}" />
+                <Run FontWeight="Bold" Foreground="{DynamicResource TextStrong}" Text="{Binding  Progress, StringFormat=p0}" />
             </TextBlock>
         </Border>
-        <Border DockPanel.Dock="Right">
+        <Border DockPanel.Dock="Right" Classes="White Button Shadow">
             <TextBlock>
                 <Run>Total Raised:</Run>
-                <Run Foreground="Black" FontWeight="Bold" Text="{Binding  Raised.DecimalString}" />
+                <Run FontWeight="Bold" Foreground="{DynamicResource TextStrong}" Text="{Binding  Raised.DecimalString}" />
             </TextBlock>
         </Border>
     </DockPanel>

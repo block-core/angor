@@ -30,7 +30,7 @@
         <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}">
             <TextBlock Classes="Subtitle">Tell us about your project and what you're building.</TextBlock>
 
-            <HeaderedContainer Classes="WizardSection" Header="What's the project called?">
+            <HeaderedContainer Classes="Card Neutral WizardSection" Header="What's the project called?">
                 <StackPanel Classes="SmallGap">
                     <HeaderedContainer>
                         <HeaderedContainer.Header>
@@ -57,7 +57,7 @@
                 </StackPanel>
             </HeaderedContainer>
 
-            <HeaderedContainer Classes="WizardSection" Header="Tell us about it">
+            <HeaderedContainer Classes="Card Neutral WizardSection" Header="Tell us about it">
                 <StackPanel Classes="SmallGap">
                     <HeaderedContainer>
                         <HeaderedContainer.Header>
@@ -84,7 +84,7 @@
                 </StackPanel>
             </HeaderedContainer>
 
-            <HeaderedContainer Classes="WizardSection" Header="Do you have a website?">
+            <HeaderedContainer Classes="Card Neutral WizardSection" Header="Do you have a website?">
                 <StackPanel Classes="SmallGap">
                     <HeaderedContainer>
                         <HeaderedContainer.Header>

@@ -4,8 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:angorApp="clr-namespace:AngorApp"
              xmlns:funds="clr-namespace:AngorApp.UI.Sections.Funds"
-             xmlns:l="clr-namespace:AngorApp.UI.Sections.Fund"
-             xmlns:main="clr-namespace:AngorApp.UI.Sections.Wallet.Main"
              xmlns:a="clr-namespace:AngorApp.UI.Sections.Funds.Accounts"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.UI.Sections.Funds.FundsSectionView"
