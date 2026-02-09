@@ -19,6 +19,10 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly BehaviorSubject<bool> paymentReceivedSubject = new(false);
     private ICloseable? closeable;
+    
+    // Separate CTS for monitoring that can be cancelled when invoice type changes
+    private CancellationTokenSource? monitoringCts;
+    private readonly object monitoringLock = new();
 
     [Reactive] private IEnumerable<IInvoiceType> invoiceTypes = [new InvoiceTypeSample { Name = "Loading...", Address = "" }];
     [Reactive] private IInvoiceType? selectedInvoiceType;
@@ -42,6 +46,15 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         
         // Start initialization asynchronously on the UI thread
         Observable.StartAsync(async ct => await InitializeAsync(wallet, investmentAppService, uiServices, projectId, shell, ct), RxApp.MainThreadScheduler)
+            .Subscribe()
+            .DisposeWith(disposable);
+        
+        // React to invoice type changes - cancel current monitoring and start new one
+        this.WhenAnyValue(x => x.SelectedInvoiceType)
+            .Where(x => x != null)
+            .Skip(1) // Skip initial selection (handled in InitializeAsync)
+            .SelectMany(invoiceType => 
+                Observable.FromAsync(ct => MonitorAndProcessPaymentAsync(invoiceType!, wallet.Id, projectId, investmentAppService, uiServices, shell, ct)))
             .Subscribe()
             .DisposeWith(disposable);
     }
@@ -101,7 +114,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             var address = addressResult.Value;
 
             // Create the on-chain invoice type
-            var onChainInvoice = new InvoiceTypeSample
+            var onChainInvoice = new OnChainInvoiceType
             {
                 Name = $"{wallet.Name} Address",
                 Address = address
@@ -120,14 +133,19 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             {
                 var swap = lightningResult.Value.Swap;
                 
+                // TODO: Lightning invoices expire (~10 min). Consider showing expiry countdown in UI
+                // or auto-regenerating the invoice when it expires.
+                
                 // Add both options to InvoiceTypes
                 InvoiceTypes =
                 [
                     onChainInvoice,
-                    new InvoiceTypeSample
+                    new LightningInvoiceType
                     {
                         Name = "Lightning",
-                        Address = swap.Invoice
+                        Address = swap.Invoice,
+                        SwapId = swap.Id,
+                        ReceivingAddress = address
                     }
                 ];
             }
@@ -139,8 +157,57 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
 
             SelectedInvoiceType = InvoiceTypes.First();
 
-            // Start monitoring the address for funds
-            var monitorResult = await MonitorAddressForFundsAsync(wallet.Id, address, investmentAppService, uiServices, token);
+            // Start monitoring for the initially selected invoice type
+            await MonitorAndProcessPaymentAsync(SelectedInvoiceType, wallet.Id, projectId, investmentAppService, uiServices, shell, token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Normal cleanup, don't show error
+        }
+    }
+
+    private async Task MonitorAndProcessPaymentAsync(
+        IInvoiceType invoiceType,
+        WalletId walletId,
+        ProjectId projectId,
+        IInvestmentAppService investmentAppService,
+        UIServices uiServices,
+        IShellViewModel shell,
+        CancellationToken cancellationToken)
+    {
+        // Cancel any existing monitoring before starting new one
+        CancelCurrentMonitoring();
+        
+        // Create new CTS for this monitoring session, linked to both the passed token and our disposal token
+        CancellationToken token;
+        lock (monitoringLock)
+        {
+            monitoringCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
+            token = monitoringCts.Token;
+        }
+        try
+        {
+            Result monitorResult;
+            
+            if (invoiceType.PaymentMethod == PaymentMethod.Lightning && invoiceType is LightningInvoiceType lightningInvoice)
+            {
+                monitorResult = await MonitorLightningSwapAsync(
+                    walletId,
+                    lightningInvoice.SwapId,
+                    lightningInvoice.ReceivingAddress,
+                    investmentAppService,
+                    uiServices,
+                    token);
+            }
+            else
+            {
+                monitorResult = await MonitorAddressForFundsAsync(
+                    walletId,
+                    invoiceType.ReceivingAddress ?? invoiceType.Address,
+                    investmentAppService,
+                    uiServices,
+                    token);
+            }
             
             if (monitorResult.IsFailure)
             {
@@ -148,11 +215,69 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             }
 
             // Funds received - now build and submit the investment transaction
-            await BuildAndSubmitInvestmentAsync(wallet.Id, projectId, address, investmentAppService, uiServices, shell, token);
+            var receivingAddress = invoiceType.ReceivingAddress ?? invoiceType.Address;
+            await BuildAndSubmitInvestmentAsync(walletId, projectId, receivingAddress, investmentAppService, uiServices, shell, token);
         }
         catch (OperationCanceledException)
         {
-            // Normal cleanup, don't show error
+            // Normal cancellation when switching invoice types
+        }
+    }
+
+    private void CancelCurrentMonitoring()
+    {
+        lock (monitoringLock)
+        {
+            if (monitoringCts != null)
+            {
+                monitoringCts.Cancel();
+                monitoringCts.Dispose();
+                monitoringCts = null;
+            }
+        }
+    }
+
+    private async Task<Result> MonitorLightningSwapAsync(
+        WalletId walletId,
+        string swapId,
+        string receivingAddress,
+        IInvestmentAppService investmentAppService,
+        UIServices uiServices,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var request = new MonitorLightningSwap.MonitorLightningSwapRequest(
+                walletId,
+                swapId,
+                receivingAddress,
+                TimeSpan.FromMinutes(10));
+
+            var result = await investmentAppService.MonitorLightningSwap(request);
+
+            // Check if cancelled before continuing
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (result.IsFailure)
+            {
+                await uiServices.NotificationService.Show(
+                    result.Error,
+                    "Lightning Payment Monitoring Failed");
+                return Result.Failure(result.Error);
+            }
+
+            return Result.Success();
+        }
+        catch (OperationCanceledException)
+        {
+            return Result.Failure("Monitoring cancelled");
+        }
+        catch (Exception ex)
+        {
+            await uiServices.NotificationService.Show(
+                $"Error monitoring Lightning payment: {ex.Message}",
+                "Lightning Payment Error");
+            return Result.Failure(ex.Message);
         }
     }
 
@@ -328,6 +453,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
 
     public void Dispose()
     {
+        CancelCurrentMonitoring();
         cancellationTokenSource.Cancel();
         cancellationTokenSource.Dispose();
         paymentReceivedSubject.Dispose();
