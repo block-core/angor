@@ -18,7 +18,7 @@
                     <EdgePanel.EndContent>
                         <StackPanel Orientation="Horizontal" Classes="SmallGap">
                             <EnhancedButton IconOptions.Fill="{DynamicResource Accent}" Icon="{Icon fa-trash}" Classes="Outline" Command="{Binding ClearStages}">Delete</EnhancedButton>
-                            <EnhancedButton IconOptions.Fill="{DynamicResource PrimaryButtonForeground}" Icon="{Icon fa-pen-to-square}" Classes="Accent" Command="{Binding ToggleEditor}">Edit</EnhancedButton>
+                            <EnhancedButton IconOptions.Fill="{DynamicResource PrimaryButtonForeground}" Icon="{Icon fa-pen-to-square}" Classes="Emphasized" Command="{Binding ToggleEditor}">Edit</EnhancedButton>
                         </StackPanel>
                     </EdgePanel.EndContent>
                     <TextBlock>Funding Stages</TextBlock>

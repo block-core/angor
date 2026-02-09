@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="clr-namespace:Zafiro.UI;assembly=Zafiro.UI"
              xmlns:common="clr-namespace:AngorApp.Model.Common;assembly=AngorApp.Model"
+             xmlns:shared="clr-namespace:AngorApp.UI.Shared"
              x:Class="AngorApp.App"
              RequestedThemeVariant="Default">
     <Application.Resources>
@@ -11,11 +12,12 @@
                 <MergeResourceInclude Source="/UI/Shared/Controls/Common/CopyButton.axaml" />
                 <MergeResourceInclude Source="UI/Shared/Controls/Header.axaml" />
                 <MergeResourceInclude Source="UI/Shared/Controls/SectionItem.axaml" />
+                <MergeResourceInclude Source="UI/Shared/Controls/NewCard.axaml" />
                 <MergeResourceInclude Source="UI/Shared/Resources/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
-            
+
             <IconDataTemplate x:Key="IconDataTemplate" />
-            
+
             <DataTemplate x:Key="BigIcon" DataType="x:Object">
                 <ContentPresenter Content="{Binding}">
                     <ContentPresenter.DataTemplates>
@@ -50,7 +52,7 @@
         <DataTypeViewLocator />
         <DataTemplateInclude Source="avares://Zafiro.Avalonia/DataTemplates.axaml" />
         <DataTemplate DataType="common:ClipboardText">
-        <SelectableTextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding Text}" />
+            <SelectableTextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding Text}" />
         </DataTemplate>
     </Application.DataTemplates>
 

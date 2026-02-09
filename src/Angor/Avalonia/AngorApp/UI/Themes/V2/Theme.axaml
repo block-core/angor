@@ -1,18 +1,10 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     
     <FluentTheme />
     <StyleInclude Source="avares://Zafiro.Avalonia/Styles.axaml" />
     <StyleInclude Source="avares://Zafiro.Avalonia.Dialogs/Styles.axaml" />
     <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
-
-    <StyleInclude Source="Controls/EnhancedButton.axaml" />
-    <StyleInclude Source="Styles/ToggleButtons.axaml" />
-    <StyleInclude Source="Controls/ListBox.axaml" />
-    <StyleInclude Source="Controls/Wizard.axaml" />
-    <StyleInclude Source="Controls/CalendarPicker.axaml" />
-    <StyleInclude Source="Controls/NumericUpDown.axaml" />
 
     <StyleInclude Source="/UI/Shared/Styles/Styles.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/Pane.axaml" />
@@ -37,15 +29,27 @@
     <StyleInclude Source="/UI/Shared/Styles/HeaderedContainer.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/EdgePanel.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/Border.axaml" />
+    
+    
+    <StyleInclude Source="Controls/EnhancedButton.axaml" />
+    <StyleInclude Source="Styles/ToggleButtons.axaml" />
+    <StyleInclude Source="Controls/ListBox.axaml" />
+    <StyleInclude Source="Controls/Wizard.axaml" />
+    <StyleInclude Source="Controls/CalendarPicker.axaml" />
+    <StyleInclude Source="Controls/NumericUpDown.axaml" />
+    
     <StyleInclude Source="Styles/HeaderedContainer.axaml" />
     <StyleInclude Source="Styles/EdgePanel.axaml" />
     <StyleInclude Source="Styles/Border.axaml" />
+    <StyleInclude Source="Styles/Effects.axaml" />
     <StyleInclude Source="Styles/OverlayBorder.axaml" />
     <StyleInclude Source="Styles/SectionStrip.axaml" />
     <StyleInclude Source="Styles/Layout.axaml" />
     <StyleInclude Source="Styles/Buttons.axaml" />
     <StyleInclude Source="Styles/Typography.axaml" />
     <StyleInclude Source="Styles/ColorVariants.axaml" />
+    <StyleInclude Source="Styles/Pills.axaml" />
+    <StyleInclude Source="Styles/Boxes.axaml" />
     <StyleInclude Source="Controls/Frame.axaml" />
     <StyleInclude Source="Styles/CheckBox.axaml" />
     <StyleInclude Source="Styles/ComboBox.axaml" />
@@ -95,5 +99,4 @@
 
         </ResourceDictionary>
     </Styles.Resources>
-    
 </Styles>

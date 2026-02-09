@@ -21,7 +21,7 @@
     <ItemsControl ItemsSource="{Binding Stages, RelativeSource={RelativeSource AncestorType=stages:StagesList}}" FontWeight="Bold" Foreground="{DynamicResource Accent}">
         <ItemsControl.ItemTemplate>
             <DataTemplate DataType="model:IFundingStageConfig">
-                <Border Classes="Translucid">
+                <Border Classes="ColorPanel Accent">
                     <Grid ColumnDefinitions="* Auto" ColumnSpacing="10">
                         <TextBlock Text="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}"></TextBlock>
                         <TextBlock Grid.Column="1">

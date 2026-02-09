@@ -38,7 +38,7 @@
     </Styles.Resources>
 
     <Style Selector="Expander /template/ Border#Root">
-        <Setter Property="BoxShadow" Value="{DynamicResource CardShadow}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource DefaultShadow}" />
         <!-- <Setter Property="Margin" Value="10" /> -->
     </Style>
 

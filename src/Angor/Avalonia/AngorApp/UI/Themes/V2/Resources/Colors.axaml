@@ -77,7 +77,9 @@
             <!-- Shadows -->
             <BoxShadows x:Key="SectionShadow">0 0 30 0 LightGray</BoxShadows>
             <BoxShadows x:Key="ItemShadow">0 0 20 0 LightGray</BoxShadows>
-            <BoxShadows x:Key="CardShadow">0 2 15 0 #40000000</BoxShadows>
+            <BoxShadows x:Key="ShadowNone">0 0 0 0 #40000000</BoxShadows>
+            <BoxShadows x:Key="DefaultShadow">0 2 15 0 #40000000</BoxShadows>
+            <BoxShadows x:Key="DefaultShadowHover">0 6 20 0 #40000000</BoxShadows>
             <BoxShadows x:Key="ItemShadowBig">0 5 25 0 LightGray</BoxShadows>
 
             <!-- Button Brushes -->
@@ -96,21 +98,7 @@
                 </VisualBrush.Visual>
             </VisualBrush>
 
-            <LinearGradientBrush x:Key="Translucid" Opacity="0.5">
-                <GradientStops>
-                    <GradientStop Color="#1A2D5A3D" Offset="0" />
-                    <GradientStop Color="#0D2D5A3D" Offset="1" />
-                </GradientStops>
-            </LinearGradientBrush>
-
-            <LinearGradientBrush x:Key="TranslucidOrange" StartPoint="0%,0%" EndPoint="100%,100%">
-                <GradientStops>
-                    <GradientStop Offset="0" Color="#fff7ed" />
-                    <GradientStop Offset="1" Color="#fff7ed" />
-                </GradientStops>
-            </LinearGradientBrush>
-            
-            <LinearGradientBrush x:Key="TranslucidOrange2" StartPoint="0%,0%" EndPoint="100%,100%">
+            <LinearGradientBrush x:Key="BitcoinWash" StartPoint="0%,0%" EndPoint="100%,100%">
                 <GradientStops>
                     <GradientStop Offset="0" Color="#fff7ed" />
                     <GradientStop Offset="1" Color="#fef3c7" />
@@ -162,9 +150,7 @@
             <SolidColorBrush x:Key="ErrorForeground" Color="#80991b1b" />
 
             <!-- Decorative Brushes -->
-            <SolidColorBrush x:Key="Translucid" Color="#0A0A0A" />
-
-            <LinearGradientBrush x:Key="TranslucidOrange" StartPoint="0%,0%" EndPoint="100%,100%">
+            <LinearGradientBrush x:Key="BitcoinWash" StartPoint="0%,0%" EndPoint="100%,100%">
                 <GradientStops>
                     <GradientStop Offset="0" Color="#0EF7931A" />
                     <GradientStop Offset="1" Color="#1AF7931A" />
@@ -216,8 +202,8 @@
     <SolidColorBrush x:Key="AccentButtonBackground" Color="{DynamicResource Accent}" />
     <SolidColorBrush x:Key="AccentButtonBorder" Color="{DynamicResource Accent}" />
 
-    <!-- Translucid Background -->
-    <LinearGradientBrush x:Key="TranslucidBackground" StartPoint="0,0" EndPoint="1,1">
+    <!-- Brand Wash - subtle green brand tint -->
+    <LinearGradientBrush x:Key="BrandWash" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="#192D5A3D" Offset="0" />
         <GradientStop Color="#102D5A3D" Offset="1" />
     </LinearGradientBrush>

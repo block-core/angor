@@ -22,7 +22,7 @@ namespace AngorApp.UI.Shared.Controls
         public static readonly FuncValueConverter<DateTime, string> TimeLeftDateTime =
             new(offset => { return offset.Humanize(dateToCompareAgainst: DateTime.Now); });
 
-        public static readonly FuncValueConverter<TimeSpan, string> HumanizeTimeSpan = new(offset => offset.Humanize());
+        public static readonly FuncValueConverter<TimeSpan, string> HumanizeTimeSpan = new(ts => ts.Humanize(2));
 
         public static readonly FuncValueConverter<DateTimeOffset, string> HumanizeDateTimeOffset = new(offset =>
         {

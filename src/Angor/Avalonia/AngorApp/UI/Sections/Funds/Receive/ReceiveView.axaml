@@ -29,7 +29,7 @@
                 </TextBlock.Inlines>
             </TextBlock>
         </Border>
-        <HeaderedContainer Classes="LightGray" DockPanel.Dock="Bottom">
+        <HeaderedContainer Classes="ColorPanel LightGray" DockPanel.Dock="Bottom">
             <HeaderedContainer.Header>
                 <TextBlock HorizontalAlignment="Center">Bitcoin Address</TextBlock>
             </HeaderedContainer.Header>

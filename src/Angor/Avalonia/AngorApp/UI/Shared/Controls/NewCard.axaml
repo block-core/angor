@@ -1,0 +1,34 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+                    xmlns:misc="clr-namespace:Zafiro.Avalonia.Misc;assembly=Zafiro.Avalonia">
+
+    <Design.PreviewWith>
+        <StackPanel Spacing="10" Margin="20" Width="400">
+            <controls:NewCard ContainerClasses="Card ApricotBorder" Left="Left" Center="Center" Right="Right" Content="Content" />
+            <controls:NewCard ContainerClasses="Card LightGray" Left="Left" Center="Center" Right="Right" Content="Content" />
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <ControlTheme x:Key="{x:Type controls:NewCard}" TargetType="controls:NewCard">
+        <Setter Property="ClipToBounds" Value="False" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <HeaderedContainer misc:ClassAssist.Classes="{TemplateBinding ContainerClasses}"
+                                   ContentClasses="{TemplateBinding ContentClasses}"
+                                   Content="{TemplateBinding Content}"
+                                   ContentTemplate="{TemplateBinding ContentTemplate}">
+                    <HeaderedContainer.Header>
+                        <EdgePanel misc:ClassAssist.Classes="{Binding $parent[controls:NewCard].HeaderPanelClasses}"
+                                   StartContent="{Binding $parent[controls:NewCard].Left}"
+                                   StartContentClasses="{Binding $parent[controls:NewCard].LeftClasses}"
+                                   Content="{Binding $parent[controls:NewCard].Center}"
+                                   ContentClasses="{Binding $parent[controls:NewCard].CenterClasses}"
+                                   EndContent="{Binding $parent[controls:NewCard].Right}"
+                                   EndContentClasses="{Binding $parent[controls:NewCard].RightClasses}" />
+                    </HeaderedContainer.Header>
+                </HeaderedContainer>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+</ResourceDictionary>
