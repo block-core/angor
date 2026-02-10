@@ -75,7 +75,7 @@ public class BoltzSwapService : IBoltzSwapService
                 Address = onchainAddress  // Optional: direct claim to this address
             };
 
-            var response = await _httpClient.PostAsJsonAsync($"{_apiPrefix}/swap/reverse", request, _jsonOptions);
+            var response = await _httpClient.PostAsJsonAsync($"{_apiPrefix}swap/reverse", request, _jsonOptions);
 
             if (!response.IsSuccessStatusCode)
             {

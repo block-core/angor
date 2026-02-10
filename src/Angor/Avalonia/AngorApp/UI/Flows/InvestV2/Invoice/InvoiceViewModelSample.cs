@@ -28,6 +28,8 @@ public partial class InvoiceViewModelSample : ReactiveObject, IInvoiceViewModel
 
     [Reactive] private IInvoiceType? selectedInvoiceType;
     
+    public bool IsLoadingInvoice => false;
+    
     public IEnhancedCommand CopyAddress { get; }
     
     public void SetCloseable(ICloseable closeable)

@@ -40,18 +40,22 @@
                 </HeaderedContainer>
             </DockPanel>
         </Border>
-        <HeaderedContainer Classes="Card LightGray" DockPanel.Dock="Bottom" Header="{Binding SelectedInvoiceType.Name}">
+        <HeaderedContainer Classes="Card LightGray Rounded" DockPanel.Dock="Bottom" Header="{Binding SelectedInvoiceType.Name}">
             <DockPanel>
-                <common:CopyButton DockPanel.Dock="Right" Content="{Binding SelectedInvoiceType.Address}"
-                                   ToolTip.Tip="Copy address to clipboard"
-                                   Padding="4" VerticalAlignment="Center">
-                </common:CopyButton>
-                <TextBlock Classes="Weight-Light Size-XS" Text="{Binding SelectedInvoiceType.Address}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <Button DockPanel.Dock="Right" Command="{Binding CopyAddress}" 
+                        Classes="Transparent" ToolTip.Tip="Copy address to clipboard"
+                        Padding="4" VerticalAlignment="Center">
+                    <ContentControl IconOptions.Size="12" Content="{Icon fa-copy}" />
+                </Button>
+                <c:ProgressRing IsVisible="{Binding IsLoadingInvoice}" Height="16" Width="16" VerticalAlignment="Center" />
+                <TextBlock IsVisible="{Binding !IsLoadingInvoice}" Classes="Weight-Light Size-XS" Text="{Binding SelectedInvoiceType.Address}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             </DockPanel>
         </HeaderedContainer>
-
-        <OverlayBorder Width="300" Height="300" BorderThickness="3" BorderBrush="{DynamicResource Stroke}" CornerRadius="20" >
-            <Image Source="{Binding Path=SelectedInvoiceType.Address, Converter={x:Static conv:AngorConverters.StringToQRCode}}" />
-        </OverlayBorder>
+        
+        <Panel>
+            <c:ProgressRing IsVisible="{Binding IsLoadingInvoice}" Width="100" Height="100" />
+            <Image IsVisible="{Binding !IsLoadingInvoice}" Width="300" Height="300"
+                   Source="{Binding Path=SelectedInvoiceType.Address, Converter={x:Static conv:AngorConverters.StringToQRCode}}" />
+        </Panel>
     </DockPanel>
 </UserControl>
