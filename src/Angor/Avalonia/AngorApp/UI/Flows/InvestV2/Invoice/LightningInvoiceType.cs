@@ -11,6 +11,7 @@ namespace AngorApp.UI.Flows.InvestV2.Invoice
         
         /// <summary>
         /// The Lightning invoice (BOLT11) to display/pay.
+        /// Empty string when not yet loaded.
         /// </summary>
         public required string Address { get; set; }
         
@@ -18,12 +19,18 @@ namespace AngorApp.UI.Flows.InvestV2.Invoice
         
         /// <summary>
         /// The Boltz swap ID for monitoring swap status.
+        /// Null when invoice is not yet loaded.
         /// </summary>
-        public required string SwapId { get; init; }
+        public string? SwapId { get; set; }
         
         /// <summary>
         /// The on-chain address where Boltz will deposit funds after Lightning payment.
         /// </summary>
-        public required string ReceivingAddress { get; init; }
+        public required string ReceivingAddress { get; set; }
+        
+        /// <summary>
+        /// Indicates whether the Lightning invoice has been loaded from Boltz.
+        /// </summary>
+        public bool IsLoaded => !string.IsNullOrEmpty(SwapId) && !string.IsNullOrEmpty(Address);
     }
 }

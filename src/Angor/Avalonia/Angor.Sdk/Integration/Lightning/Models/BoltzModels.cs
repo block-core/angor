@@ -7,7 +7,7 @@ namespace Angor.Sdk.Integration.Lightning.Models;
 public class BoltzConfiguration
 {
     public const string MainnetUrl = "https://api.boltz.exchange";
-    public const string TestnetUrl = "http://localhost:9001";
+    public const string TestnetUrl = "http://15.235.3.224:9001/";
     
     /// <summary>
     /// The Boltz API base URL. Defaults to mainnet.

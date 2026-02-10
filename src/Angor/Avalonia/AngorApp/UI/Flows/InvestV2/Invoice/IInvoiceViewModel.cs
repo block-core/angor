@@ -9,6 +9,7 @@ namespace AngorApp.UI.Flows.InvestV2.Invoice
         IAmountUI Amount { get; }
         IObservable<bool> PaymentReceived { get; }
         IEnhancedCommand CopyAddress { get; }
+        bool IsLoadingInvoice { get; }
         void SetCloseable(ICloseable closeable);
     }
 }

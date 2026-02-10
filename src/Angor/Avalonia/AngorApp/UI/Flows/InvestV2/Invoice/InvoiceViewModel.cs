@@ -23,9 +23,18 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     // Separate CTS for monitoring that can be cancelled when invoice type changes
     private CancellationTokenSource? monitoringCts;
     private readonly object monitoringLock = new();
+    
+    // Dependencies stored for lazy loading Lightning invoice
+    private IWallet? wallet;
+    private IInvestmentAppService? investmentAppService;
+    private UIServices? uiServices;
+    private ProjectId? projectId;
+    private IShellViewModel? shell;
+    private string? generatedAddress;
 
     [Reactive] private IEnumerable<IInvoiceType> invoiceTypes = [new InvoiceTypeSample { Name = "Loading...", Address = "" }];
     [Reactive] private IInvoiceType? selectedInvoiceType;
+    [Reactive] private bool isLoadingInvoice;
 
     public InvoiceViewModel(
         IWallet wallet, 
@@ -35,6 +44,13 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         ProjectId projectId,
         IShellViewModel shell)
     {
+        // Store dependencies for lazy loading
+        this.wallet = wallet;
+        this.investmentAppService = investmentAppService;
+        this.uiServices = uiServices;
+        this.projectId = projectId;
+        this.shell = shell;
+        
         Amount = amount;
         PaymentReceived = paymentReceivedSubject.AsObservable();
         
@@ -49,12 +65,12 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             .Subscribe()
             .DisposeWith(disposable);
         
-        // React to invoice type changes - cancel current monitoring and start new one
+        // React to invoice type changes - load data if needed and start monitoring
         this.WhenAnyValue(x => x.SelectedInvoiceType)
             .Where(x => x != null)
             .Skip(1) // Skip initial selection (handled in InitializeAsync)
             .SelectMany(invoiceType => 
-                Observable.FromAsync(ct => MonitorAndProcessPaymentAsync(invoiceType!, wallet.Id, projectId, investmentAppService, uiServices, shell, ct)))
+                Observable.FromAsync(ct => OnInvoiceTypeSelectedAsync(invoiceType!, ct)))
             .Subscribe()
             .DisposeWith(disposable);
     }
@@ -112,6 +128,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             }
 
             var address = addressResult.Value;
+            generatedAddress = address;
 
             // Create the on-chain invoice type
             var onChainInvoice = new OnChainInvoiceType
@@ -120,49 +137,112 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 Address = address
             };
 
-            // Create Lightning swap to get invoice
-            var lightningRequest = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
-                wallet.Id,
-                projectId,
-                new Amount(Amount.Sats),
-                address);
-
-            var lightningResult = await investmentAppService.CreateLightningSwap(lightningRequest);
-
-            if (lightningResult.IsSuccess)
+            // Create placeholder Lightning invoice type (will be loaded when selected)
+            var lightningInvoice = new LightningInvoiceType
             {
-                var swap = lightningResult.Value.Swap;
-                
-                // TODO: Lightning invoices expire (~10 min). Consider showing expiry countdown in UI
-                // or auto-regenerating the invoice when it expires.
-                
-                // Add both options to InvoiceTypes
-                InvoiceTypes =
-                [
-                    onChainInvoice,
-                    new LightningInvoiceType
-                    {
-                        Name = "Lightning",
-                        Address = swap.Invoice,
-                        SwapId = swap.Id,
-                        ReceivingAddress = address
-                    }
-                ];
-            }
-            else
-            {
-                // Lightning swap failed, only show on-chain option
-                InvoiceTypes = [onChainInvoice];
-            }
+                Name = "Lightning",
+                Address = "", // Will be populated when selected
+                SwapId = null, // Will be populated when selected
+                ReceivingAddress = address
+            };
 
-            SelectedInvoiceType = InvoiceTypes.First();
+            // Add both options to InvoiceTypes (Lightning will lazy load when selected)
+            InvoiceTypes = [onChainInvoice, lightningInvoice];
 
-            // Start monitoring for the initially selected invoice type
+            SelectedInvoiceType = onChainInvoice;
+
+            // Start monitoring for the initially selected invoice type (on-chain)
             await MonitorAndProcessPaymentAsync(SelectedInvoiceType, wallet.Id, projectId, investmentAppService, uiServices, shell, token);
         }
         catch (OperationCanceledException)
         {
             // Normal cleanup, don't show error
+        }
+    }
+
+    private async Task OnInvoiceTypeSelectedAsync(IInvoiceType invoiceType, CancellationToken cancellationToken)
+    {
+        if (wallet == null || investmentAppService == null || uiServices == null || projectId == null || shell == null)
+            return;
+            
+        // Link with our disposal token
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
+        var token = linkedCts.Token;
+
+        try
+        {
+            // If this is a Lightning invoice that hasn't been loaded yet, load it
+            if (invoiceType is LightningInvoiceType lightningInvoice && !lightningInvoice.IsLoaded)
+            {
+                IsLoadingInvoice = true;
+                
+                var loadResult = await LoadLightningInvoiceAsync(lightningInvoice, token);
+                
+                IsLoadingInvoice = false;
+                
+                if (loadResult.IsFailure)
+                {
+                    // Loading failed, switch back to on-chain
+                    await uiServices.NotificationService.Show(
+                        loadResult.Error,
+                        "Lightning Invoice Error");
+                    SelectedInvoiceType = InvoiceTypes.FirstOrDefault(x => x.PaymentMethod == PaymentMethod.OnChain);
+                    return;
+                }
+            }
+
+            // Start monitoring for the selected invoice type
+            await MonitorAndProcessPaymentAsync(invoiceType, wallet.Id, projectId, investmentAppService, uiServices, shell, token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Normal cleanup
+        }
+    }
+
+    private async Task<Result> LoadLightningInvoiceAsync(LightningInvoiceType lightningInvoice, CancellationToken cancellationToken)
+    {
+        if (wallet == null || investmentAppService == null || projectId == null || generatedAddress == null)
+            return Result.Failure("Dependencies not initialized");
+
+        try
+        {
+            // Create Lightning swap to get invoice
+            // TODO: Lightning invoices expire (~10 min). Consider showing expiry countdown in UI
+            // or auto-regenerating the invoice when it expires.
+            var lightningRequest = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
+                wallet.Id,
+                projectId,
+                new Amount(Amount.Sats),
+                generatedAddress);
+
+            var lightningResult = await investmentAppService.CreateLightningSwap(lightningRequest);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (lightningResult.IsFailure)
+            {
+                return Result.Failure(lightningResult.Error);
+            }
+
+            var swap = lightningResult.Value.Swap;
+            
+            // Update the Lightning invoice with the loaded data
+            lightningInvoice.Address = swap.Invoice;
+            lightningInvoice.SwapId = swap.Id;
+            
+            // Trigger UI update by re-setting the selected type
+            this.RaisePropertyChanged(nameof(SelectedInvoiceType));
+
+            return Result.Success();
+        }
+        catch (OperationCanceledException)
+        {
+            return Result.Failure("Loading cancelled");
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Failed to load Lightning invoice: {ex.Message}");
         }
     }
 
@@ -191,6 +271,12 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             
             if (invoiceType.PaymentMethod == PaymentMethod.Lightning && invoiceType is LightningInvoiceType lightningInvoice)
             {
+                // SwapId should never be null here since we check IsLoaded before monitoring
+                if (string.IsNullOrEmpty(lightningInvoice.SwapId))
+                {
+                    return; // Lightning invoice not loaded yet
+                }
+                
                 monitorResult = await MonitorLightningSwapAsync(
                     walletId,
                     lightningInvoice.SwapId,
