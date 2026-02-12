@@ -1,7 +1,6 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Angor.Sdk.Integration.Lightning.Models;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
@@ -18,7 +17,6 @@ public class BoltzWebSocketClient : IBoltzWebSocketClient, IAsyncDisposable
     private readonly ILogger<BoltzWebSocketClient> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
     private ClientWebSocket? _webSocket;
-    private CancellationTokenSource? _receiveCts;
 
     public BoltzWebSocketClient(
         BoltzConfiguration configuration,
@@ -158,26 +156,84 @@ public class BoltzWebSocketClient : IBoltzWebSocketClient, IAsyncDisposable
     {
         try
         {
-            var wsMessage = JsonSerializer.Deserialize<WebSocketMessage>(message, _jsonOptions);
+            _logger.LogDebug("Received WebSocket message: {Message}", message);
             
-            if (wsMessage?.Event != "update" || wsMessage.Args == null || !wsMessage.Args.Any())
+            // Parse as JsonDocument first to handle variable message formats
+            using var doc = JsonDocument.Parse(message);
+            var root = doc.RootElement;
+            
+            // Check for event type
+            if (!root.TryGetProperty("event", out var eventProp) || 
+                eventProp.GetString() != "update")
             {
+                _logger.LogDebug("Ignoring non-update event: {Event}", 
+                    eventProp.ValueKind == JsonValueKind.String ? eventProp.GetString() : "unknown");
                 return null;
             }
-
-            var update = wsMessage.Args[0];
+            
+            // Get the args array
+            if (!root.TryGetProperty("args", out var argsProp) || 
+                argsProp.ValueKind != JsonValueKind.Array ||
+                argsProp.GetArrayLength() == 0)
+            {
+                _logger.LogDebug("No args in update message");
+                return null;
+            }
+            
+            var firstArg = argsProp[0];
+            
+            // Extract swap update fields - Boltz API may send additional fields we don't care about
+            string? updateId = null;
+            string? status = null;
+            string? failureReason = null;
+            string? transactionId = null;
+            string? transactionHex = null;
+            
+            if (firstArg.TryGetProperty("id", out var idProp))
+                updateId = idProp.GetString();
+            
+            if (firstArg.TryGetProperty("status", out var statusProp))
+                status = statusProp.GetString();
+            
+            if (firstArg.TryGetProperty("failureReason", out var failureProp))
+                failureReason = failureProp.GetString();
+            
+            if (firstArg.TryGetProperty("transaction", out var txProp) && 
+                txProp.ValueKind == JsonValueKind.Object)
+            {
+                if (txProp.TryGetProperty("id", out var txIdProp))
+                    transactionId = txIdProp.GetString();
+                if (txProp.TryGetProperty("hex", out var txHexProp))
+                    transactionHex = txHexProp.GetString();
+            }
+            
+            // Validate we got at least the status
+            if (string.IsNullOrEmpty(status))
+            {
+                _logger.LogWarning("WebSocket update missing status field. Message: {Message}", message);
+                return null;
+            }
+            
+            _logger.LogDebug("Parsed swap update - Id: {Id}, Status: {Status}, TxId: {TxId}", 
+                updateId ?? swapId, status, transactionId ?? "none");
+            
             return new BoltzSwapStatus
             {
-                SwapId = swapId,
-                Status = ParseSwapState(update.Status),
-                TransactionId = update.Transaction?.Id,
-                TransactionHex = update.Transaction?.Hex,
-                FailureReason = update.FailureReason
+                SwapId = updateId ?? swapId,
+                Status = ParseSwapState(status),
+                TransactionId = transactionId,
+                TransactionHex = transactionHex,
+                FailureReason = failureReason
             };
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogWarning(ex, "Failed to parse WebSocket message as JSON. Message: {Message}", message);
+            return null;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to parse WebSocket message: {Message}", message);
+            _logger.LogWarning(ex, "Unexpected error processing WebSocket message: {Message}", message);
             return null;
         }
     }
@@ -221,44 +277,7 @@ public class BoltzWebSocketClient : IBoltzWebSocketClient, IAsyncDisposable
         }
     }
 
-    #region DTOs
-
-    private class WebSocketMessage
-    {
-        [JsonPropertyName("event")]
-        public string? Event { get; set; }
-
-        [JsonPropertyName("channel")]
-        public string? Channel { get; set; }
-
-        [JsonPropertyName("args")]
-        public List<SwapUpdate>? Args { get; set; }
-    }
-
-    private class SwapUpdate
-    {
-        [JsonPropertyName("id")]
-        public string? Id { get; set; }
-
-        [JsonPropertyName("status")]
-        public string? Status { get; set; }
-
-        [JsonPropertyName("failureReason")]
-        public string? FailureReason { get; set; }
-
-        [JsonPropertyName("transaction")]
-        public TransactionUpdate? Transaction { get; set; }
-    }
-
-    private class TransactionUpdate
-    {
-        [JsonPropertyName("id")]
-        public string? Id { get; set; }
-
-        [JsonPropertyName("hex")]
-        public string? Hex { get; set; }
-    }
-
-    #endregion
+    // Note: DTOs removed - using JsonDocument for flexible parsing of Boltz WebSocket messages
+    // This handles API version differences and additional fields gracefully
 }
 

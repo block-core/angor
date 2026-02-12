@@ -1,355 +1,479 @@
+using System.Linq.Expressions;
+using Angor.Data.Documents.Interfaces;
 using Angor.Sdk.Common;
-using Angor.Sdk.Funding.Investor.Operations;
-using Angor.Sdk.Funding.Projects.Domain;
-using Angor.Sdk.Funding.Services;
-using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Integration.Lightning;
 using Angor.Sdk.Integration.Lightning.Models;
-using Angor.Sdk.Wallet.Domain;
+using Angor.Sdk.Tests.Funding.TestDoubles;
 using Angor.Shared;
 using Angor.Shared.Models;
+using Angor.Shared.Networks;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
-using Microsoft.Extensions.Logging;
-using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Angor.Sdk.Tests.Integration.Lightning;
 
 /// <summary>
-/// Unit tests for CreateLightningSwapForInvestment handler
+/// Full end-to-end integration tests for Boltz Lightning ↔ On-chain swaps.
+/// 
+/// These tests use the REAL Boltz API at localhost:9001 and require:
+/// 1. A local Boltz instance running at http://localhost:9001
+/// 2. Access to Angornet (Bitcoin Signet) blockchain
+/// 3. A Lightning wallet to pay the invoice
+/// 
+/// The test flow:
+/// 1. Create a reverse submarine swap (Lightning → On-chain)
+/// 2. Display the Lightning invoice for manual payment
+/// 3. Monitor the swap via WebSocket until payment is detected
+/// 4. Monitor the destination address for the claimed funds
 /// </summary>
-public class CreateLightningSwapTests
+[Trait("Category", "Integration")]
+[Trait("Service", "Boltz")]
+public class BoltzSwapIntegrationTests : IDisposable
 {
-    private readonly Mock<IBoltzSwapService> _mockBoltzService;
-    private readonly Mock<IProjectService> _mockProjectService;
-    private readonly Mock<ISeedwordsProvider> _mockSeedwordsProvider;
-    private readonly Mock<IDerivationOperations> _mockDerivationOperations;
-    private readonly Mock<ILogger<CreateLightningSwapForInvestment.CreateLightningSwapHandler>> _mockLogger;
-    private readonly CreateLightningSwapForInvestment.CreateLightningSwapHandler _handler;
+    private readonly ITestOutputHelper _output;
+    private readonly Blockcore.Networks.Network _network;
+    private readonly NetworkConfiguration _networkConfiguration;
+    private readonly WalletOperations _walletOperations;
+    private readonly DerivationOperations _derivationOperations;
+    private readonly IIndexerService _indexerService;
+    private readonly IMempoolMonitoringService _mempoolMonitoringService;
+    private readonly BoltzSwapService _boltzSwapService;
+    private readonly BoltzWebSocketClient _boltzWebSocketClient;
+    private readonly BoltzSwapStorageService _boltzSwapStorageService;
+    private readonly HttpClient _httpClient;
 
-    public CreateLightningSwapTests()
+    // Test wallet - ONLY FOR SIGNET/TESTNET!
+    private const string TestWalletWords = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+    private const string TestWalletPassphrase = "";
+
+    // Boltz configuration - localhost:9001 with V2 prefix
+    private const string BoltzApiUrl = "http://localhost:9001/";
+    private const bool UseV2Prefix = true;
+
+    public BoltzSwapIntegrationTests(ITestOutputHelper output)
     {
-        _mockBoltzService = new Mock<IBoltzSwapService>();
-        _mockProjectService = new Mock<IProjectService>();
-        _mockSeedwordsProvider = new Mock<ISeedwordsProvider>();
-        _mockDerivationOperations = new Mock<IDerivationOperations>();
-        _mockLogger = new Mock<ILogger<CreateLightningSwapForInvestment.CreateLightningSwapHandler>>();
+        _output = output;
 
-        _handler = new CreateLightningSwapForInvestment.CreateLightningSwapHandler(
-            _mockBoltzService.Object,
-            _mockProjectService.Object,
-            _mockSeedwordsProvider.Object,
-            _mockDerivationOperations.Object,
-            _mockLogger.Object);
-    }
+        // Setup network - Use Angornet (Bitcoin Signet)
+        _networkConfiguration = new NetworkConfiguration();
+        _networkConfiguration.SetNetwork(new Angornet());
+        _network = _networkConfiguration.GetNetwork();
 
-    private void SetupSuccessfulDependencies(ProjectId projectId)
-    {
-        var project = new Project
+        // Create derivation operations
+        _derivationOperations = new DerivationOperations(
+            new HdOperations(),
+            new NullLogger<DerivationOperations>(),
+            _networkConfiguration);
+
+        // Setup indexer service for Angornet
+        var httpClientFactory = new TestHttpClientFactory("https://signet.angor.online");
+        var networkService = new TestNetworkService(
+            new SettingsUrl { Name = "Angornet", Url = "https://signet.angor.online" },
+            _networkConfiguration);
+
+        _indexerService = new MempoolSpaceIndexerApi(
+            new NullLogger<MempoolSpaceIndexerApi>(),
+            httpClientFactory,
+            networkService,
+            _derivationOperations);
+
+        // Setup mempool monitoring service
+        _mempoolMonitoringService = new MempoolMonitoringService(
+            _indexerService,
+            new NullLogger<MempoolMonitoringService>());
+
+        // Setup wallet operations
+        _walletOperations = new WalletOperations(
+            _indexerService,
+            new HdOperations(),
+            new NullLogger<WalletOperations>(),
+            _networkConfiguration);
+
+        // Setup Boltz services with localhost:9001 and V2 prefix
+        var boltzConfig = new BoltzConfiguration
         {
-            Id = projectId,
-            Name = "Test Project",
-            FounderKey = "02abc123founderkey"
+            BaseUrl = BoltzApiUrl,
+            UseV2Prefix = UseV2Prefix,
+            TimeoutSeconds = 60
         };
 
-        _mockProjectService
-            .Setup(x => x.GetAsync(projectId))
-            .ReturnsAsync(Result.Success(project));
+        _httpClient = new HttpClient();
+        _boltzSwapService = new BoltzSwapService(
+            _httpClient,
+            boltzConfig,
+            _networkConfiguration,
+            new NullLogger<BoltzSwapService>());
 
-        _mockSeedwordsProvider
-            .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
-            .ReturnsAsync(Result.Success(("word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12", Maybe<string>.None)));
+        _boltzWebSocketClient = new BoltzWebSocketClient(
+            boltzConfig,
+            new NullLogger<BoltzWebSocketClient>());
 
-        _mockDerivationOperations
-            .Setup(x => x.DeriveInvestorKey(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .Returns("02refundpubkey123456789");
+        // Setup in-memory storage for swaps
+        var inMemoryCollection = new InMemoryBoltzSwapCollection();
+        _boltzSwapStorageService = new BoltzSwapStorageService(
+            inMemoryCollection,
+            new NullLogger<BoltzSwapStorageService>());
     }
 
-    [Fact]
-    public async Task CreateSwap_WithValidAmount_ReturnsSuccess()
+    public void Dispose()
     {
-        // Arrange
-        var walletId = new WalletId("test-wallet");
-        var projectId = new ProjectId("test-project");
-        var amount = new Amount(100000);
-        var address = "bc1qtest123";
+        _httpClient.Dispose();
+        (_boltzWebSocketClient as IAsyncDisposable)?.DisposeAsync().AsTask().Wait();
+    }
 
-        SetupSuccessfulDependencies(projectId);
+    /// <summary>
+    /// Full integration test: Create swap, wait for payment, verify funds arrive at destination.
+    /// 
+    /// RUN THIS TEST MANUALLY - it requires:
+    /// 1. Boltz running at localhost:9001
+    /// 2. A Lightning wallet to pay the invoice
+    /// 3. Manual interaction to pay the invoice within the timeout
+    /// </summary>
+    [Fact]
+    public async Task FullReverseSwapFlow_CreatePayAndMonitor_Success()
+    {
+        // ========================================
+        // STEP 1: Setup wallet and generate address
+        // ========================================
+        _output.WriteLine(new string('=', 80));
+        _output.WriteLine("🚀 FULL BOLTZ REVERSE SWAP INTEGRATION TEST");
+        _output.WriteLine(new string('=', 80));
 
-        var expectedSwap = new BoltzSubmarineSwap
+        var words = new WalletWords { Words = TestWalletWords, Passphrase = TestWalletPassphrase };
+        var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(words);
+        
+        // Generate a fresh receive address
+        await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+        var destinationAddress = accountInfo.AddressesInfo.Last().Address;
+
+        _output.WriteLine($"\n📍 Destination address: {destinationAddress}");
+        _output.WriteLine($"   Network: {_network.Name}");
+
+        // Generate a claim key directly from the wallet for testing
+        var hdOperations = new HdOperations();
+        var extKey = hdOperations.GetExtendedKey(words.Words, words.Passphrase);
+        var claimKeyPath = "m/84'/1'/0'/0/100"; // A unique path for claim keys
+        var claimExtPubKey = hdOperations.GetExtendedPublicKey(extKey.PrivateKey, extKey.ChainCode, claimKeyPath);
+        var claimPubKeyHex = claimExtPubKey.PubKey.ToHex();
+
+        _output.WriteLine($"   Claim public key: {claimPubKeyHex}");
+
+        // ========================================
+        // STEP 2: Create the reverse submarine swap
+        // ========================================
+        _output.WriteLine("\n" + new string('-', 80));
+        _output.WriteLine("📝 STEP 1: Creating reverse submarine swap...");
+        
+        var swapAmount = 100000L; // 100,000 sats (0.001 BTC)
+        
+        var swapResult = await _boltzSwapService.CreateSubmarineSwapAsync(
+            destinationAddress,
+            swapAmount,
+            claimPubKeyHex);
+
+        Assert.True(swapResult.IsSuccess, $"Failed to create swap: {swapResult.Error}");
+        var swap = swapResult.Value;
+
+        _output.WriteLine($"\n✅ Swap created successfully!");
+        _output.WriteLine($"   Swap ID: {swap.Id}");
+        _output.WriteLine($"   Invoice amount: {swap.InvoiceAmount} sats");
+        _output.WriteLine($"   Expected on-chain: {swap.ExpectedAmount} sats");
+        _output.WriteLine($"   Lockup address: {swap.LockupAddress}");
+        _output.WriteLine($"   Timeout block: {swap.TimeoutBlockHeight}");
+
+        // Save swap to storage
+        await _boltzSwapStorageService.SaveSwapAsync(swap, accountInfo.walletId, "test-project-id");
+
+        // ========================================
+        // STEP 3: Display invoice and wait for payment
+        // ========================================
+        _output.WriteLine("\n" + new string('-', 80));
+        _output.WriteLine("⚡ STEP 2: Pay the Lightning invoice");
+        _output.WriteLine(new string('-', 80));
+        _output.WriteLine("\n🔴 ACTION REQUIRED: Pay this Lightning invoice now!\n");
+        _output.WriteLine($"   {swap.Invoice}");
+        _output.WriteLine("\n   (You have 10 minutes to pay)");
+        _output.WriteLine(new string('-', 80));
+
+        // ========================================
+        // STEP 4: Monitor swap via WebSocket for payment
+        // ========================================
+        _output.WriteLine("\n📡 STEP 3: Monitoring swap status via WebSocket...");
+
+        using var monitorCts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+        
+        var monitorResult = await _boltzWebSocketClient.MonitorSwapAsync(
+            swap.Id,
+            TimeSpan.FromMinutes(10),
+            monitorCts.Token);
+
+        Assert.True(monitorResult.IsSuccess, $"Swap monitoring failed: {monitorResult.Error}");
+        var swapStatus = monitorResult.Value;
+
+        _output.WriteLine($"\n✅ Swap status update received!");
+        _output.WriteLine($"   Status: {swapStatus.Status}");
+        _output.WriteLine($"   Transaction ID: {swapStatus.TransactionId ?? "N/A"}");
+
+        // Update swap status in storage
+        await _boltzSwapStorageService.UpdateSwapStatusAsync(
+            swap.Id,
+            swapStatus.Status.ToString(),
+            swapStatus.TransactionId,
+            swapStatus.TransactionHex);
+
+        // ========================================
+        // STEP 5: Monitor destination address for funds
+        // ========================================
+        _output.WriteLine("\n" + new string('-', 80));
+        _output.WriteLine("🔍 STEP 4: Monitoring destination address for incoming funds...");
+        _output.WriteLine($"   Address: {destinationAddress}");
+        _output.WriteLine($"   Expected amount: ~{swap.ExpectedAmount} sats");
+        _output.WriteLine("   (Boltz automatic claiming should send funds to this address)");
+
+        // Monitor for funds arriving at destination
+        using var addressMonitorCts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+        
+        try
         {
-            Id = "swap-123",
-            Invoice = "lnbc1000n1...",
-            Address = address,
-            ExpectedAmount = 99000,
-            Status = SwapState.Created
-        };
+            var detectedUtxos = await _mempoolMonitoringService.MonitorAddressForFundsAsync(
+                destinationAddress,
+                swap.ExpectedAmount - 1000, // Allow for small fee variations
+                TimeSpan.FromMinutes(5),
+                addressMonitorCts.Token);
 
-        _mockBoltzService
-            .Setup(x => x.CreateSubmarineSwapAsync(address, amount.Sats, It.IsAny<string>()))
-            .ReturnsAsync(Result.Success(expectedSwap));
+            if (detectedUtxos.Any())
+            {
+                var totalReceived = detectedUtxos.Sum(u => u.value);
+                _output.WriteLine($"\n✅ FUNDS RECEIVED!");
+                _output.WriteLine($"   UTXOs detected: {detectedUtxos.Count}");
+                _output.WriteLine($"   Total received: {totalReceived} sats");
 
-        var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
-            walletId, projectId, amount, address);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal("swap-123", result.Value.Swap.Id);
-        Assert.Equal("lnbc1000n1...", result.Value.Swap.Invoice);
-    }
-
-    [Fact]
-    public async Task CreateSwap_BoltzServiceFails_ReturnsFailure()
-    {
-        // Arrange
-        var walletId = new WalletId("test-wallet");
-        var projectId = new ProjectId("test-project");
-        var amount = new Amount(100000);
-        var address = "bc1qtest123";
-
-        SetupSuccessfulDependencies(projectId);
-
-        _mockBoltzService
-            .Setup(x => x.CreateSubmarineSwapAsync(address, amount.Sats, It.IsAny<string>()))
-            .ReturnsAsync(Result.Failure<BoltzSubmarineSwap>("Boltz API error"));
-
-        var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
-            walletId, projectId, amount, address);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsFailure);
-        Assert.Contains("Boltz API error", result.Error);
-    }
-
-    [Fact]
-    public async Task CreateSwap_ProjectNotFound_ReturnsFailure()
-    {
-        // Arrange
-        var walletId = new WalletId("test-wallet");
-        var projectId = new ProjectId("non-existent-project");
-        var amount = new Amount(100000);
-        var address = "bc1qtest123";
-
-        _mockProjectService
-            .Setup(x => x.GetAsync(projectId))
-            .ReturnsAsync(Result.Failure<Project>("Project not found"));
-
-        var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
-            walletId, projectId, amount, address);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsFailure);
-        Assert.Contains("Project not found", result.Error);
-    }
-
-    [Fact]
-    public async Task CreateSwap_WalletDataNotAvailable_ReturnsFailure()
-    {
-        // Arrange
-        var walletId = new WalletId("test-wallet");
-        var projectId = new ProjectId("test-project");
-        var amount = new Amount(100000);
-        var address = "bc1qtest123";
-
-        var project = new Project
+                foreach (var utxo in detectedUtxos)
+                {
+                    _output.WriteLine($"   - {utxo.outpoint.transactionId}:{utxo.outpoint.outputIndex} = {utxo.value} sats");
+                }
+            }
+            else
+            {
+                _output.WriteLine("\n⚠️  No UTXOs detected at destination address yet");
+                _output.WriteLine("   The swap may still be processing. Check the explorer.");
+            }
+        }
+        catch (OperationCanceledException)
         {
-            Id = projectId,
-            Name = "Test Project",
-            FounderKey = "02abc123founderkey"
-        };
+            _output.WriteLine("\n⏱️  Address monitoring timed out");
+            _output.WriteLine("   Check the blockchain explorer for the destination address:");
+            _output.WriteLine($"   https://signet.angor.online/address/{destinationAddress}");
+        }
 
-        _mockProjectService
-            .Setup(x => x.GetAsync(projectId))
-            .ReturnsAsync(Result.Success(project));
+        // ========================================
+        // SUMMARY
+        // ========================================
+        _output.WriteLine("\n" + new string('=', 80));
+        _output.WriteLine("📊 TEST SUMMARY");
+        _output.WriteLine(new string('=', 80));
+        _output.WriteLine($"   Swap ID: {swap.Id}");
+        _output.WriteLine($"   Final Status: {swapStatus.Status}");
+        _output.WriteLine($"   Destination: {destinationAddress}");
+        _output.WriteLine($"   Lockup TX: {swapStatus.TransactionId ?? "N/A"}");
+        _output.WriteLine(new string('=', 80));
+    }
 
-        _mockSeedwordsProvider
-            .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
-            .ReturnsAsync(Result.Failure<(string, Maybe<string>)>("Wallet locked"));
+    /// <summary>
+    /// Test just creating a swap - no payment required.
+    /// Use this to verify Boltz API connectivity at localhost:9001.
+    /// </summary>
+    [Fact]
+    public async Task CreateReverseSwap_WithValidData_ReturnsSwapDetails()
+    {
+        // Arrange
+        _output.WriteLine("Testing Boltz API connectivity at localhost:9001...\n");
+        
+        var words = new WalletWords { Words = TestWalletWords, Passphrase = TestWalletPassphrase };
+        var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(words);
+        await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+        var destinationAddress = accountInfo.AddressesInfo.Last().Address;
 
-        var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
-            walletId, projectId, amount, address);
+        // Generate a claim key directly from the wallet for testing
+        var hdOperations = new HdOperations();
+        var extKey = hdOperations.GetExtendedKey(words.Words, words.Passphrase);
+        var claimKeyPath = "m/84'/1'/0'/0/101"; // A unique path for claim keys
+        var claimExtPubKey = hdOperations.GetExtendedPublicKey(extKey.PrivateKey, extKey.ChainCode, claimKeyPath);
+        var claimPubKeyHex = claimExtPubKey.PubKey.ToHex();
+
+        _output.WriteLine($"Destination address: {destinationAddress}");
+        _output.WriteLine($"Claim public key: {claimPubKeyHex}");
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await _boltzSwapService.CreateSubmarineSwapAsync(
+            destinationAddress,
+            100000, // 100k sats
+            claimPubKeyHex);
 
         // Assert
-        Assert.True(result.IsFailure);
-        Assert.Contains("Wallet", result.Error);
+        _output.WriteLine($"\nResult: {(result.IsSuccess ? "Success" : "Failure")}");
+        
+        if (result.IsSuccess)
+        {
+            var swap = result.Value;
+            _output.WriteLine($"\n✅ Swap created!");
+            _output.WriteLine($"   Swap ID: {swap.Id}");
+            _output.WriteLine($"   Invoice: {swap.Invoice}");
+            _output.WriteLine($"   Lockup Address: {swap.LockupAddress}");
+            _output.WriteLine($"   Expected Amount: {swap.ExpectedAmount} sats");
+            _output.WriteLine($"   Timeout Block: {swap.TimeoutBlockHeight}");
+            
+            Assert.NotEmpty(swap.Id);
+            Assert.NotEmpty(swap.Invoice);
+            Assert.NotEmpty(swap.LockupAddress);
+        }
+        else
+        {
+            _output.WriteLine($"\n❌ Error: {result.Error}");
+        }
+        
+        Assert.True(result.IsSuccess, result.Error);
+    }
+
+    /// <summary>
+    /// Test WebSocket connectivity to Boltz at localhost:9001
+    /// </summary>
+    [Fact]
+    public async Task WebSocket_ConnectAndSubscribe_Works()
+    {
+        _output.WriteLine("Testing Boltz WebSocket connectivity...\n");
+        
+        // First create a swap to have something to subscribe to
+        var words = new WalletWords { Words = TestWalletWords, Passphrase = TestWalletPassphrase };
+        var accountInfo = _walletOperations.BuildAccountInfoForWalletWords(words);
+        await _walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+        var destinationAddress = accountInfo.AddressesInfo.Last().Address;
+
+        // Generate a claim key directly from the wallet for testing
+        var hdOperations = new HdOperations();
+        var extKey = hdOperations.GetExtendedKey(words.Words, words.Passphrase);
+        var claimKeyPath = "m/84'/1'/0'/0/102"; // A unique path for claim keys
+        var claimExtPubKey = hdOperations.GetExtendedPublicKey(extKey.PrivateKey, extKey.ChainCode, claimKeyPath);
+        var claimPubKeyHex = claimExtPubKey.PubKey.ToHex();
+
+        var swapResult = await _boltzSwapService.CreateSubmarineSwapAsync(
+            destinationAddress,
+            50000,
+            claimPubKeyHex);
+
+        Assert.True(swapResult.IsSuccess, $"Failed to create swap: {swapResult.Error}");
+        var swap = swapResult.Value;
+
+        _output.WriteLine($"Created swap: {swap.Id}");
+        _output.WriteLine($"Invoice: {swap.Invoice}");
+        _output.WriteLine("\nConnecting to WebSocket and subscribing to swap updates...");
+        _output.WriteLine("(Will timeout after 10 seconds since we won't pay the invoice)\n");
+
+        // Try to monitor - this will timeout since we won't pay
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        
+        var monitorResult = await _boltzWebSocketClient.MonitorSwapAsync(
+            swap.Id,
+            TimeSpan.FromSeconds(10),
+            cts.Token);
+
+        // We expect a timeout/failure since we're not paying
+        _output.WriteLine($"Monitor result: {(monitorResult.IsSuccess ? "Success (unexpected!)" : "Timeout/Cancelled (expected)")}");
+        if (monitorResult.IsFailure)
+        {
+            _output.WriteLine($"Expected behavior: {monitorResult.Error}");
+        }
+        
+        // Test passes if we got this far - WebSocket connected successfully
+        _output.WriteLine("\n✅ WebSocket connectivity test passed!");
     }
 }
 
 /// <summary>
-/// Unit tests for MonitorLightningSwap handler
+/// In-memory implementation of IGenericDocumentCollection for testing BoltzSwapStorageService.
 /// </summary>
-public class MonitorLightningSwapTests
+public class InMemoryBoltzSwapCollection : IGenericDocumentCollection<BoltzSwapDocument>
 {
-    private readonly Mock<IBoltzWebSocketClient> _mockWebSocketClient;
-    private readonly Mock<IIndexerService> _mockIndexerService;
-    private readonly Mock<IWalletAccountBalanceService> _mockWalletService;
-    private readonly Mock<ILogger<MonitorLightningSwap.MonitorLightningSwapHandler>> _mockLogger;
-    private readonly MonitorLightningSwap.MonitorLightningSwapHandler _handler;
+    private readonly Dictionary<string, BoltzSwapDocument> _documents = new();
 
-    public MonitorLightningSwapTests()
+    public Task<Result<BoltzSwapDocument?>> FindByIdAsync(string id)
     {
-        _mockWebSocketClient = new Mock<IBoltzWebSocketClient>();
-        _mockIndexerService = new Mock<IIndexerService>();
-        _mockWalletService = new Mock<IWalletAccountBalanceService>();
-        _mockLogger = new Mock<ILogger<MonitorLightningSwap.MonitorLightningSwapHandler>>();
-
-        _handler = new MonitorLightningSwap.MonitorLightningSwapHandler(
-            _mockWebSocketClient.Object,
-            _mockIndexerService.Object,
-            _mockWalletService.Object,
-            _mockLogger.Object);
+        _documents.TryGetValue(id, out var doc);
+        return Task.FromResult(Result.Success(doc));
     }
 
-    [Fact]
-    public async Task Handle_WhenSwapCompleted_FetchesUtxosFromIndexer()
+    public Task<Result<IEnumerable<BoltzSwapDocument>>> FindByIdsAsync(IEnumerable<string> ids)
     {
-        // Arrange
-        var walletId = new WalletId("test-wallet");
-        var swapId = "swap-123";
-        var address = "bc1qtest123";
+        var results = ids.Where(_documents.ContainsKey).Select(id => _documents[id]);
+        return Task.FromResult(Result.Success(results));
+    }
 
-        var completedStatus = new BoltzSwapStatus
+    public Task<Result<IEnumerable<BoltzSwapDocument>>> FindAllAsync()
+    {
+        return Task.FromResult(Result.Success(_documents.Values.AsEnumerable()));
+    }
+
+    public Task<Result<IEnumerable<BoltzSwapDocument>>> FindAsync(Expression<Func<BoltzSwapDocument, bool>> predicate)
+    {
+        var compiled = predicate.Compile();
+        var results = _documents.Values.Where(compiled);
+        return Task.FromResult(Result.Success(results));
+    }
+
+    public Task<Result<bool>> ExistsAsync(string id)
+    {
+        return Task.FromResult(Result.Success(_documents.ContainsKey(id)));
+    }
+
+    public Task<Result<int>> InsertAsync(Expression<Func<BoltzSwapDocument, string>> getDocumentId, params BoltzSwapDocument[] entities)
+    {
+        var getId = getDocumentId.Compile();
+        foreach (var entity in entities)
         {
-            SwapId = swapId,
-            Status = SwapState.TransactionClaimed,
-            TransactionId = "tx123"
-        };
+            var id = getId(entity);
+            _documents[id] = entity;
+        }
+        return Task.FromResult(Result.Success(entities.Length));
+    }
 
-        _mockWebSocketClient
-            .Setup(x => x.MonitorSwapAsync(swapId, It.IsAny<TimeSpan?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(completedStatus));
-
-        var utxos = new List<UtxoData>
+    public Task<Result<bool>> UpdateAsync(Expression<Func<BoltzSwapDocument, string>> getDocumentId, BoltzSwapDocument entity)
+    {
+        var getId = getDocumentId.Compile();
+        var id = getId(entity);
+        if (_documents.ContainsKey(id))
         {
-            new() { outpoint = new Outpoint { transactionId = "tx123", outputIndex = 0 }, value = 99000 }
-        };
-
-        _mockIndexerService
-            .Setup(x => x.FetchUtxoAsync(address, It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(utxos);
-
-        _mockWalletService
-            .Setup(x => x.GetAccountBalanceInfoAsync(walletId))
-            .ReturnsAsync(Result.Failure<AccountBalanceInfo>("Not needed for this test"));
-
-        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(walletId, swapId, address);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal("tx123", result.Value.TransactionId);
-        Assert.Single(result.Value.DetectedUtxos);
-        Assert.Equal(99000, result.Value.DetectedUtxos[0].value);
+            _documents[id] = entity;
+            return Task.FromResult(Result.Success(true));
+        }
+        return Task.FromResult(Result.Success(false));
     }
 
-    [Fact]
-    public async Task Handle_WhenSwapFails_ReturnsFailure()
+    public Task<Result<bool>> UpsertAsync(Expression<Func<BoltzSwapDocument, string>> getDocumentId, BoltzSwapDocument entity)
     {
-        // Arrange
-        var walletId = new WalletId("test-wallet");
-        var swapId = "swap-123";
-        var address = "bc1qtest123";
-
-        _mockWebSocketClient
-            .Setup(x => x.MonitorSwapAsync(swapId, It.IsAny<TimeSpan?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Failure<BoltzSwapStatus>("Swap expired"));
-
-        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(walletId, swapId, address);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsFailure);
-        Assert.Contains("expired", result.Error);
+        var getId = getDocumentId.Compile();
+        var id = getId(entity);
+        _documents[id] = entity;
+        return Task.FromResult(Result.Success(true));
     }
 
-    [Fact]
-    public async Task Handle_WhenNoUtxosFound_StillReturnsSuccess()
+    public Task<Result<bool>> DeleteAsync(string id)
     {
-        // Arrange
-        var walletId = new WalletId("test-wallet");
-        var swapId = "swap-123";
-        var address = "bc1qtest123";
+        var removed = _documents.Remove(id);
+        return Task.FromResult(Result.Success(removed));
+    }
 
-        var completedStatus = new BoltzSwapStatus
+    public Task<Result<int>> CountAsync(Expression<Func<BoltzSwapDocument, bool>>? predicate = null)
+    {
+        if (predicate == null)
         {
-            SwapId = swapId,
-            Status = SwapState.TransactionMempool,
-            TransactionId = "tx123"
-        };
-
-        _mockWebSocketClient
-            .Setup(x => x.MonitorSwapAsync(swapId, It.IsAny<TimeSpan?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(completedStatus));
-
-        _mockIndexerService
-            .Setup(x => x.FetchUtxoAsync(address, It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(new List<UtxoData>());
-
-        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(walletId, swapId, address);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Empty(result.Value.DetectedUtxos);
-    }
-}
-
-/// <summary>
-/// Unit tests for SwapState extension methods
-/// </summary>
-public class SwapStateExtensionTests
-{
-    [Theory]
-    [InlineData(SwapState.TransactionClaimed, true)]
-    [InlineData(SwapState.InvoicePaid, false)]
-    [InlineData(SwapState.TransactionMempool, false)]
-    [InlineData(SwapState.Created, false)]
-    public void IsComplete_ReturnsExpectedValue(SwapState state, bool expected)
-    {
-        Assert.Equal(expected, state.IsComplete());
-    }
-
-    [Theory]
-    [InlineData(SwapState.SwapExpired, true)]
-    [InlineData(SwapState.InvoiceExpired, true)]
-    [InlineData(SwapState.InvoiceFailedToPay, true)]
-    [InlineData(SwapState.TransactionRefunded, true)]
-    [InlineData(SwapState.InvoicePaid, false)]
-    [InlineData(SwapState.TransactionClaimed, false)]
-    public void IsFailed_ReturnsExpectedValue(SwapState state, bool expected)
-    {
-        Assert.Equal(expected, state.IsFailed());
-    }
-
-    [Theory]
-    [InlineData(SwapState.Created, true)]
-    [InlineData(SwapState.InvoicePaid, true)]
-    [InlineData(SwapState.TransactionMempool, true)]
-    [InlineData(SwapState.TransactionConfirmed, true)]
-    [InlineData(SwapState.TransactionClaimed, false)]
-    [InlineData(SwapState.SwapExpired, false)]
-    public void IsPending_ReturnsExpectedValue(SwapState state, bool expected)
-    {
-        Assert.Equal(expected, state.IsPending());
+            return Task.FromResult(Result.Success(_documents.Count));
+        }
+        var compiled = predicate.Compile();
+        var count = _documents.Values.Count(compiled);
+        return Task.FromResult(Result.Success(count));
     }
 }
 

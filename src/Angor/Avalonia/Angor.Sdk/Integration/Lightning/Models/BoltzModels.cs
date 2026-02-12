@@ -7,7 +7,8 @@ namespace Angor.Sdk.Integration.Lightning.Models;
 public class BoltzConfiguration
 {
     public const string MainnetUrl = "https://api.boltz.exchange";
-    public const string TestnetUrl = "http://15.235.3.224:9001/";
+    public const string TestnetUrl = "http://localhost:9001/";
+    //public const string TestnetUrl = "http://15.235.3.224:9001/";
     
     /// <summary>
     /// The Boltz API base URL. Defaults to mainnet.
@@ -29,12 +30,21 @@ public class BoltzConfiguration
     /// <summary>
     /// Gets the API path prefix based on configuration.
     /// </summary>
-    public string ApiPrefix => UseV2Prefix ? "/v2" : "";
+    public string ApiPrefix => UseV2Prefix ? "v2/" : "";
 }
 
 /// <summary>
 /// Response from creating a reverse submarine swap (Lightning → On-chain).
 /// User pays Lightning invoice, receives BTC on-chain.
+/// 
+/// IMPORTANT - Address Flow:
+/// 1. User pays the Lightning invoice
+/// 2. Boltz locks funds at the LockupAddress (this is what appears in blockchain explorers initially)
+/// 3. Funds are claimed from LockupAddress to the destination Address using MuSig2 cooperative signing
+/// 4. Final funds appear at the user's wallet Address
+/// 
+/// If you see a different address in a blockchain explorer during/after swap,
+/// it's likely the LockupAddress where Boltz temporarily holds the funds in an HTLC.
 /// </summary>
 public class BoltzSubmarineSwap
 {
@@ -49,12 +59,16 @@ public class BoltzSubmarineSwap
     public string Invoice { get; set; } = string.Empty;
     
     /// <summary>
-    /// On-chain address where funds will be sent after claiming
+    /// Final destination on-chain address where funds will be sent after claiming from Boltz.
+    /// This is the address you specified when creating the swap.
+    /// NOTE: This address won't show in blockchain explorers until the claim transaction is broadcast.
     /// </summary>
     public string Address { get; set; } = string.Empty;
     
     /// <summary>
-    /// Boltz lockup address where funds are held in HTLC until claimed
+    /// Boltz lockup address where funds are held in HTLC until claimed.
+    /// THIS is the address you'll see in blockchain explorers after paying the Lightning invoice.
+    /// Funds are transferred from here to your Address via a claim transaction using MuSig2.
     /// </summary>
     public string LockupAddress { get; set; } = string.Empty;
     
