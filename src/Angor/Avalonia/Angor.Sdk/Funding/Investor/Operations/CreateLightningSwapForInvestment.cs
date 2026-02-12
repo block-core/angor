@@ -38,6 +38,7 @@ public static class CreateLightningSwapForInvestment
 
     public class CreateLightningSwapHandler(
         IBoltzSwapService boltzSwapService,
+        IBoltzSwapStorageService swapStorageService,
         IProjectService projectService,
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations,
@@ -78,6 +79,20 @@ public static class CreateLightningSwapForInvestment
 
                 var swap = swapResult.Value;
 
+                // Save the swap to the database for later retrieval (claiming, status tracking)
+                var saveResult = await swapStorageService.SaveSwapAsync(
+                    swap, 
+                    request.WalletId.Value, 
+                    request.ProjectId.Value);
+                
+                if (saveResult.IsFailure)
+                {
+                    logger.LogWarning(
+                        "Failed to save swap to database: {Error}. Swap created but not persisted!", 
+                        saveResult.Error);
+                    // Don't fail the operation - the swap was created successfully
+                }
+
                 logger.LogInformation(
                     "Lightning swap created successfully. SwapId: {SwapId}, Invoice: {Invoice}",
                     swap.Id, swap.Invoice.Substring(0, Math.Min(30, swap.Invoice.Length)) + "...");
@@ -113,11 +128,15 @@ public static class CreateLightningSwapForInvestment
 
             // 3. Derive investor key using founder key from project
             // This key is used to claim the on-chain funds from the Boltz swap
-            var claimPubKey = derivationOperations.DeriveInvestorKey(walletWords, project.FounderKey);
+            var compressedPubKey = derivationOperations.DeriveInvestorKey(walletWords, project.FounderKey);
 
-            logger.LogDebug(
-                "Generated claim public key for wallet {WalletId}, project {ProjectId}",
-                walletId.Value, projectId);
+            // Keep the compressed format (66 chars with 02/03 prefix)
+            // Boltz API requires all pubkeys to have the same length, and internally uses compressed keys
+            var claimPubKey = compressedPubKey.Trim().ToLowerInvariant();
+
+            logger.LogInformation(
+                "Generated claim public key (compressed format): {Key} ({Len} chars)",
+                claimPubKey, claimPubKey.Length);
 
             return Result.Success(claimPubKey);
         }

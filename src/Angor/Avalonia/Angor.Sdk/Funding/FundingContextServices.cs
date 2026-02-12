@@ -72,9 +72,11 @@ public static class FundingContextServices
         services.TryAddSingleton<BoltzConfiguration>(_ => new BoltzConfiguration
         {
             BaseUrl = Environment.GetEnvironmentVariable("BOLTZ_API_URL") ?? BoltzConfiguration.TestnetUrl,
-            TimeoutSeconds = 30
+            TimeoutSeconds = 30,
+            UseV2Prefix = true
         });
         services.TryAddSingleton<IBoltzSwapService, BoltzSwapService>();
+        services.TryAddSingleton<IBoltzSwapStorageService, BoltzSwapStorageService>();
         services.TryAddTransient<IBoltzWebSocketClient, BoltzWebSocketClient>();
         
         //services.AddHttpClient();

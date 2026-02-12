@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Angor.Sdk.Integration.Lightning.Models;
+using Angor.Shared;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 
@@ -16,6 +17,7 @@ public class BoltzSwapService : IBoltzSwapService
 {
     private readonly HttpClient _httpClient;
     private readonly BoltzConfiguration _configuration;
+    private readonly INetworkConfiguration _networkConfiguration;
     private readonly ILogger<BoltzSwapService> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly string _apiPrefix;
@@ -23,10 +25,12 @@ public class BoltzSwapService : IBoltzSwapService
     public BoltzSwapService(
         HttpClient httpClient,
         BoltzConfiguration configuration,
+        INetworkConfiguration networkConfiguration,
         ILogger<BoltzSwapService> logger)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _networkConfiguration = networkConfiguration ?? throw new ArgumentNullException(nameof(networkConfiguration));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         _httpClient.BaseAddress = new Uri(_configuration.BaseUrl);
@@ -37,6 +41,7 @@ public class BoltzSwapService : IBoltzSwapService
         {
             PropertyNameCaseInsensitive = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
         };
     }
@@ -44,6 +49,9 @@ public class BoltzSwapService : IBoltzSwapService
     /// <summary>
     /// Creates a reverse submarine swap (Lightning → On-chain).
     /// User pays a Lightning invoice, receives BTC on-chain.
+    /// 
+    /// When an onchainAddress is provided, Boltz performs automatic claiming.
+    /// The claimPublicKey is stored for reference but NOT sent to the API when using automatic claim.
     /// </summary>
     public async Task<Result<BoltzSubmarineSwap>> CreateSubmarineSwapAsync(
         string onchainAddress,
@@ -56,6 +64,23 @@ public class BoltzSwapService : IBoltzSwapService
                 "Creating reverse submarine swap: {Amount} sats to address {Address}",
                 amountSats, onchainAddress);
 
+            // Keep the claim public key in its original format (compressed, 66 chars with 02/03 prefix)
+            // Boltz API may use compressed keys internally for comparison
+            var normalizedClaimPubKey = claimPublicKey.Trim().ToLowerInvariant();
+            
+            _logger.LogDebug(
+                "Claim public key (keeping original format): {Key} ({Len} chars)",
+                normalizedClaimPubKey, normalizedClaimPubKey.Length);
+
+            // Validate the key is either compressed (66 chars) or x-only (64 chars)
+            if (normalizedClaimPubKey.Length != 64 && normalizedClaimPubKey.Length != 66)
+            {
+                _logger.LogError(
+                    "Invalid claim public key length: {Length} chars (expected 64 or 66). Key: {Key}",
+                    normalizedClaimPubKey.Length, normalizedClaimPubKey);
+                return Result.Failure<BoltzSubmarineSwap>(
+                    $"Invalid claim public key: expected 64 or 66 hex chars, got {normalizedClaimPubKey.Length}");
+            }
 
             // Generate preimage (32 bytes random) and its SHA256 hash
             var preimage = GeneratePreimage();
@@ -64,18 +89,39 @@ public class BoltzSwapService : IBoltzSwapService
             _logger.LogDebug("Generated preimage hash: {Hash}", preimageHash);
 
             // Boltz API v2 reverse submarine swap request
-            // User sends Lightning → receives on-chain BTC
+            // claimPublicKey is REQUIRED - used to construct the Taproot swap script
+            // address is OPTIONAL - if provided, Boltz automatically claims to this address
+            //
+            // IMPORTANT: Boltz expects 'address' to be the OUTPUT SCRIPT HEX, not the Bech32 address string!
+            // We convert the address to its scriptPubKey hex representation
+            var addressScriptHex = AddressToScriptHex(onchainAddress);
+            
+            _logger.LogDebug(
+                "Address to script conversion - Address: {Address}, ScriptHex: {ScriptHex}",
+                onchainAddress, addressScriptHex);
+            
             var request = new CreateReverseSubmarineSwapRequest
             {
                 From = "BTC",           // From Lightning BTC
                 To = "BTC",             // To on-chain BTC
-                ClaimPublicKey = claimPublicKey,
+                ClaimPublicKey = normalizedClaimPubKey,  // REQUIRED: x-only format for Taproot
                 PreimageHash = preimageHash,
                 InvoiceAmount = amountSats,
-                Address = onchainAddress  // Optional: direct claim to this address
+                Address = addressScriptHex  // Output script hex (NOT Bech32 address!)
             };
 
-            var response = await _httpClient.PostAsJsonAsync($"{_apiPrefix}swap/reverse", request, _jsonOptions);
+            // Log the request for debugging
+            var requestJson = JsonSerializer.Serialize(request, _jsonOptions);
+            _logger.LogInformation(
+                "Sending reverse swap request (automatic claim mode) - " +
+                "PreimageHash: {PreimageHash} ({HashLen} chars), Amount: {Amount}, Address: {Address}",
+                preimageHash, preimageHash.Length,
+                amountSats, onchainAddress);
+            _logger.LogInformation("Request JSON: {Json}", requestJson);
+
+            // Use explicit JSON content to ensure our serialization options are applied
+            var content = new StringContent(requestJson, System.Text.Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync($"{_apiPrefix}swap/reverse", content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -104,7 +150,7 @@ public class BoltzSwapService : IBoltzSwapService
                     ? JsonSerializer.Serialize(swapResponse.SwapTree, _jsonOptions) 
                     : string.Empty,
                 RefundPublicKey = swapResponse.RefundPublicKey ?? string.Empty,
-                ClaimPublicKey = claimPublicKey,
+                ClaimPublicKey = normalizedClaimPubKey,
                 BlindingKey = swapResponse.BlindingKey,
                 Preimage = preimage,
                 PreimageHash = preimageHash,
@@ -142,6 +188,57 @@ public class BoltzSwapService : IBoltzSwapService
         var preimageBytes = Convert.FromHexString(preimageHex);
         var hashBytes = SHA256.HashData(preimageBytes);
         return Convert.ToHexString(hashBytes).ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Normalizes a public key to x-only format (32 bytes, 64 hex chars, lowercase).
+    /// Boltz V2 Taproot API requires x-only public keys.
+    /// </summary>
+    private static string NormalizePublicKey(string publicKeyHex)
+    {
+        var key = publicKeyHex.Trim();
+        
+        // If it's a compressed key (33 bytes = 66 hex chars with 02/03 prefix), strip the prefix
+        if (key.Length == 66 && 
+            (key.StartsWith("02", StringComparison.OrdinalIgnoreCase) || 
+             key.StartsWith("03", StringComparison.OrdinalIgnoreCase)))
+        {
+            key = key[2..];
+        }
+        
+        // Ensure lowercase for Boltz API
+        return key.ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Converts a Bitcoin address (Bech32) to its output script hex.
+    /// Boltz API expects the 'address' field to be the scriptPubKey hex, not the address string.
+    /// </summary>
+    private string AddressToScriptHex(string address)
+    {
+        try
+        {
+            var network = _networkConfiguration.GetNetwork();
+            
+            // Parse the address based on type
+            if (address.StartsWith("bc1") || address.StartsWith("tb1") || address.StartsWith("bcrt1"))
+            {
+                // Native SegWit address (Bech32)
+                var segwitAddress = new Blockcore.NBitcoin.BitcoinWitPubKeyAddress(address, network);
+                return segwitAddress.ScriptPubKey.ToHex();
+            }
+            else
+            {
+                // Legacy or P2SH address
+                var bitcoinAddress = Blockcore.NBitcoin.BitcoinAddress.Create(address, network);
+                return bitcoinAddress.ScriptPubKey.ToHex();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to convert address {Address} to script hex", address);
+            throw new InvalidOperationException($"Failed to convert address to script: {ex.Message}", ex);
+        }
     }
 
     public async Task<Result<BoltzSwapStatus>> GetSwapStatusAsync(string swapId)
@@ -320,6 +417,14 @@ public class BoltzSwapService : IBoltzSwapService
     /// <summary>
     /// Boltz API v2 reverse submarine swap request.
     /// Reverse swap: User pays Lightning → receives on-chain BTC
+    /// 
+    /// Required fields:
+    /// - ClaimPublicKey: x-only format (64 hex chars) - used to construct Taproot swap script
+    /// - PreimageHash: SHA256 hash of preimage (64 hex chars)
+    /// - InvoiceAmount: Amount in satoshis
+    /// 
+    /// Optional fields:
+    /// - Address: If provided, Boltz automatically claims to this address after payment
     /// </summary>
     private class CreateReverseSubmarineSwapRequest
     {
@@ -330,7 +435,7 @@ public class BoltzSwapService : IBoltzSwapService
         public string To { get; set; } = "BTC";    // To on-chain BTC
 
         [JsonPropertyName("claimPublicKey")]
-        public string ClaimPublicKey { get; set; } = string.Empty;
+        public string ClaimPublicKey { get; set; } = string.Empty;  // REQUIRED: x-only format
 
         [JsonPropertyName("preimageHash")]
         public string PreimageHash { get; set; } = string.Empty;
@@ -339,7 +444,8 @@ public class BoltzSwapService : IBoltzSwapService
         public long InvoiceAmount { get; set; }
 
         [JsonPropertyName("address")]
-        public string? Address { get; set; }  // Optional: direct claim address
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Address { get; set; }  // OPTIONAL: for automatic claiming
     }
 
     /// <summary>

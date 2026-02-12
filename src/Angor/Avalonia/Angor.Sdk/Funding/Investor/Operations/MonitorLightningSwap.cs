@@ -52,6 +52,7 @@ public static class MonitorLightningSwap
 
     public class MonitorLightningSwapHandler(
         IBoltzWebSocketClient webSocketClient,
+        IBoltzSwapStorageService swapStorageService,
         IIndexerService indexerService,
         IWalletAccountBalanceService walletAccountBalanceService,
         ILogger<MonitorLightningSwapHandler> logger)
@@ -81,6 +82,13 @@ public static class MonitorLightningSwap
                 }
 
                 var finalStatus = swapResult.Value;
+
+                // Step 1.5: Update swap status in database
+                await swapStorageService.UpdateSwapStatusAsync(
+                    request.SwapId,
+                    finalStatus.Status.ToString(),
+                    finalStatus.TransactionId,
+                    lockupTxHex: null); // We don't have the hex here, would need to fetch from indexer
 
                 // Step 2: Fetch UTXOs from indexer (single call, no polling needed)
                 var utxos = await FetchUtxosFromIndexer(request.ReceivingAddress);

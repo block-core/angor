@@ -43,5 +43,12 @@ public interface IBoltzSwapService
         string claimTransaction,
         string preimage,
         string pubNonce);
+
+    /// <summary>
+    /// Broadcasts a signed transaction to the Bitcoin network via Boltz.
+    /// </summary>
+    /// <param name="transactionHex">The signed transaction hex to broadcast</param>
+    /// <returns>The transaction ID if successful</returns>
+    Task<Result<string>> BroadcastTransactionAsync(string transactionHex);
 }
 
