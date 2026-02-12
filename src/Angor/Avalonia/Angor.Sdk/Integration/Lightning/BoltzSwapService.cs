@@ -248,7 +248,7 @@ public class BoltzSwapService : IBoltzSwapService
             _logger.LogDebug("Getting swap status for {SwapId}", swapId);
 
             // Use configurable API prefix
-            var response = await _httpClient.GetAsync($"{_apiPrefix}/swap/{swapId}");
+            var response = await _httpClient.GetAsync($"{_apiPrefix}swap/{swapId}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -284,6 +284,53 @@ public class BoltzSwapService : IBoltzSwapService
         }
     }
 
+    public async Task<Result<BoltzSubmarineSwap>> GetSwapDetailsAsync(string swapId)
+    {
+        try
+        {
+            _logger.LogDebug("Getting swap details for {SwapId}", swapId);
+
+            // Use the swap/reverse/{id} endpoint to get full swap details including tree
+            var response = await _httpClient.GetAsync($"{_apiPrefix}swap/reverse/{swapId}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to get swap details: {StatusCode} - {Error}", response.StatusCode, error);
+                return Result.Failure<BoltzSubmarineSwap>($"Failed to get swap details: {error}");
+            }
+
+            var swapResponse = await response.Content.ReadFromJsonAsync<CreateReverseSwapV2Response>(_jsonOptions);
+            if (swapResponse == null)
+            {
+                return Result.Failure<BoltzSubmarineSwap>("Failed to deserialize swap details response");
+            }
+
+            var swap = new BoltzSubmarineSwap
+            {
+                Id = swapResponse.Id,
+                Invoice = swapResponse.Invoice,
+                LockupAddress = swapResponse.LockupAddress,
+                ExpectedAmount = swapResponse.OnchainAmount,
+                TimeoutBlockHeight = swapResponse.TimeoutBlockHeight,
+                SwapTree = swapResponse.SwapTree != null 
+                    ? JsonSerializer.Serialize(swapResponse.SwapTree, _jsonOptions) 
+                    : string.Empty,
+                RefundPublicKey = swapResponse.RefundPublicKey ?? string.Empty,
+            };
+
+            _logger.LogDebug("Got swap details for {SwapId}, SwapTree: {HasSwapTree}", 
+                swapId, !string.IsNullOrEmpty(swap.SwapTree));
+
+            return Result.Success(swap);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting swap details for {SwapId}", swapId);
+            return Result.Failure<BoltzSubmarineSwap>($"Error getting swap details: {ex.Message}");
+        }
+    }
+
 
     /// <summary>
     /// Claims the on-chain funds after the Lightning invoice has been paid.
@@ -312,7 +359,7 @@ public class BoltzSwapService : IBoltzSwapService
                 PubNonce = pubNonce
             };
 
-            var response = await _httpClient.PostAsJsonAsync($"{_apiPrefix}/swap/reverse/{swapId}/claim", request, _jsonOptions);
+            var response = await _httpClient.PostAsJsonAsync($"{_apiPrefix}swap/reverse/{swapId}/claim", request, _jsonOptions);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -347,10 +394,11 @@ public class BoltzSwapService : IBoltzSwapService
     {
         try
         {
-            _logger.LogInformation("Broadcasting transaction");
+            _logger.LogInformation("Broadcasting transaction via Boltz API");
 
             var request = new BroadcastRequest { Hex = transactionHex };
-            var response = await _httpClient.PostAsJsonAsync($"{_apiPrefix}/chain/BTC/transaction", request, _jsonOptions);
+            // Note: _apiPrefix is "v2/" so we don't add another slash
+            var response = await _httpClient.PostAsJsonAsync($"{_apiPrefix}chain/BTC/transaction", request, _jsonOptions);
 
             if (!response.IsSuccessStatusCode)
             {

@@ -28,6 +28,13 @@ public interface IBoltzSwapService
     /// <param name="swapId">The swap ID returned from CreateSubmarineSwapAsync</param>
     Task<Result<BoltzSwapStatus>> GetSwapStatusAsync(string swapId);
 
+    /// <summary>
+    /// Gets the detailed swap data including the swap tree (for manual claiming)
+    /// </summary>
+    /// <param name="swapId">The swap ID</param>
+    /// <returns>Swap details including the swap tree for claiming</returns>
+    Task<Result<BoltzSubmarineSwap>> GetSwapDetailsAsync(string swapId);
+
 
     /// <summary>
     /// Gets a partial signature from Boltz for cooperative claim transaction signing (MuSig2).

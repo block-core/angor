@@ -142,4 +142,3 @@ public static class CreateLightningSwapForInvestment
         }
     }
 }
-
