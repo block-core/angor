@@ -5,7 +5,7 @@ namespace AngorApp.UI.Flows.InvestV2.Invoice
     /// Address contains the Lightning invoice to pay.
     /// ReceivingAddress is where funds will arrive on-chain after swap completes.
     /// </summary>
-    public class LightningInvoiceType : IInvoiceType
+    public partial class LightningInvoiceType : ReactiveObject, IInvoiceType
     {
         public required string Name { get; init; }
         
@@ -13,7 +13,7 @@ namespace AngorApp.UI.Flows.InvestV2.Invoice
         /// The Lightning invoice (BOLT11) to display/pay.
         /// Empty string when not yet loaded.
         /// </summary>
-        public required string Address { get; set; }
+        [Reactive] private string address = "";
         
         public PaymentMethod PaymentMethod => PaymentMethod.Lightning;
         
@@ -21,7 +21,7 @@ namespace AngorApp.UI.Flows.InvestV2.Invoice
         /// The Boltz swap ID for monitoring swap status.
         /// Null when invoice is not yet loaded.
         /// </summary>
-        public string? SwapId { get; set; }
+        [Reactive] private string? swapId;
         
         /// <summary>
         /// The on-chain address where Boltz will deposit funds after Lightning payment.

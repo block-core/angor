@@ -14,11 +14,17 @@
         <l:InvoiceViewModelSample />
     </Design.DataContext>
 
-    <DockPanel VerticalSpacing="20">
-        <ListBox SelectedIndex="0" DockPanel.Dock="Top" Classes="Horizontal" ItemContainerTheme="{StaticResource SmallSelectorListBoxItem}" ItemsSource="{Binding InvoiceTypes}" SelectedItem="{Binding SelectedInvoiceType}"
-                 DisplayMemberBinding="{Binding Name}" />
-        <Border Classes="Card Pink" DockPanel.Dock="Bottom">
-            <DockPanel HorizontalSpacing="10">
+    <DockPanel VerticalSpacing="20" Classes="Padded">
+        <ListBox SelectedIndex="0" DockPanel.Dock="Top" ItemContainerTheme="{StaticResource SmallSelectorListBoxItem}" ItemsSource="{Binding InvoiceTypes}" SelectedItem="{Binding SelectedInvoiceType}"
+                 DisplayMemberBinding="{Binding PaymentMethod}">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="10" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+        </ListBox>
+        <Border Classes="Pink Rounded" DockPanel.Dock="Bottom">
+            <DockPanel HorizontalSpacing="10" Classes="Padded">
                 <Border IsVisible="{Binding !PaymentReceived^}" VerticalAlignment="Center" DockPanel.Dock="Right" Classes="Yellow Rounded SmallPadding">
                     <EdgePanel>
                         <EdgePanel.Content>
@@ -40,7 +46,7 @@
                 </HeaderedContainer>
             </DockPanel>
         </Border>
-        <HeaderedContainer Classes="Card LightGray Rounded" DockPanel.Dock="Bottom" Header="{Binding SelectedInvoiceType.Name}">
+        <HeaderedContainer Classes="LightGray Rounded" DockPanel.Dock="Bottom" Header="{Binding SelectedInvoiceType.Name}">
             <DockPanel>
                 <Button DockPanel.Dock="Right" Command="{Binding CopyAddress}" 
                         Classes="Transparent" ToolTip.Tip="Copy address to clipboard"

@@ -141,10 +141,11 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             var lightningInvoice = new LightningInvoiceType
             {
                 Name = "Lightning",
-                Address = "", // Will be populated when selected
-                SwapId = null, // Will be populated when selected
                 ReceivingAddress = address
             };
+            // Address and SwapId are reactive properties, set after construction
+            lightningInvoice.Address = ""; // Will be populated when selected
+            lightningInvoice.SwapId = null; // Will be populated when selected
 
             // Add both options to InvoiceTypes (Lightning will lazy load when selected)
             InvoiceTypes = [onChainInvoice, lightningInvoice];
