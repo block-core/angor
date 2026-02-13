@@ -12,5 +12,5 @@ public interface IFounderTransactionActions
 
     TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<StageTransactionInput> stageTransactionInput, Script founderRecieveAddress, string founderPrivateKey, FeeEstimation fee);
 
-    Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis, short keyType, string nostrEventId);
+    Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis, NostrKeyType keyType, string nostrEventId);
 }

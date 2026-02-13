@@ -40,11 +40,11 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
         return new Script(ops);
     }
 
-    public Script BuildFounderInfoScript(string founderKey, short keyType, string nostrEventId)
+    public Script BuildFounderInfoScript(string founderKey, NostrKeyType keyType, string nostrEventId)
     {
         return new Script(OpcodeType.OP_RETURN,
             Op.GetPushOp(new PubKey(founderKey).ToBytes()),
-            Op.GetPushOp(BitConverter.GetBytes(keyType)),
+            Op.GetPushOp(BitConverter.GetBytes((short)keyType)),
             Op.GetPushOp(Encoders.Hex.DecodeData(nostrEventId)));
     }
 

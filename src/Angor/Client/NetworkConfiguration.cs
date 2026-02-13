@@ -11,7 +11,7 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public static long AngorCreateFeeSats = 10001; // versioning :)
     public static int AngorInvestFeePercentage = 1;
-    public static short NostrEventIdKeyType = 1; //TODO David use an enum for this?
+    public static NostrKeyType NostrEventIdKeyType = NostrKeyType.EventId;
     
     public int GetAngorInvestFeePercentage => AngorInvestFeePercentage;
     public string GetAngorKey()

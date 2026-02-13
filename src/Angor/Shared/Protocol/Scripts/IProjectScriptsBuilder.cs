@@ -10,7 +10,7 @@ public interface IProjectScriptsBuilder
 
     Script BuildInvestorInfoScript(ProjectInfo projectInfo, FundingParameters parameters);
 
-    Script BuildFounderInfoScript(string founderKey, short keyType, string nostrEventId);
+    Script BuildFounderInfoScript(string founderKey, NostrKeyType keyType, string nostrEventId);
 
     Script BuildSeederInfoScript(ProjectInfo projectInfo, FundingParameters parameters);
 
