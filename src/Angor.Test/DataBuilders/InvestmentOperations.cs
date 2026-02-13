@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Angor.Shared;
+using Angor.Shared.Services;
 using Angor.Shared.Models;
 using Blockcore.NBitcoin.DataEncoders;
 using NBitcoin;
@@ -80,7 +81,7 @@ public class InvestmentOperations
         return Convert.ToInt64(amount * stage.AmountToRelease);
     }
     
-    public Transaction SignInvestmentTransaction(Network network,string changeAddress, Transaction transaction, WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths,
+    public Transaction SignInvestmentTransaction(Network network,string changeAddress, Transaction transaction, IWalletSigner walletSigner, List<UtxoDataWithPath> utxoDataWithPaths,
         FeeEstimation feeRate)
     {
         // We must use the NBitcoin lib because taproot outputs are non standard before taproot activated
@@ -88,7 +89,7 @@ public class InvestmentOperations
         //var nbitcoinNetwork = NetworkMapper.Map(network);
         //var trx = NBitcoin.Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
 
-        var coins = _walletOperations.GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+        var coins = _walletOperations.GetUnspentOutputsForTransaction(walletSigner, utxoDataWithPaths);
 
         // var fees = _walletOperations.GetFeeEstimationAsync().GetAwaiter().GetResult();
         // var fee = fees.First(f => f.Confirmations == 1);

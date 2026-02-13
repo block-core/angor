@@ -10,6 +10,8 @@ using CSharpFunctionalExtensions;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
+    using Angor.Shared.Services;
+
 public class WalletAppService(
     ISensitiveWalletDataProvider sensitiveWalletDataProvider,
     IWalletFactory walletFactory,
@@ -18,7 +20,8 @@ public class WalletAppService(
     IPsbtOperations psbtOperations,
     ITransactionHistory transactionHistory,
     IHttpClientFactory httpClientFactory,
-    IWalletAccountBalanceService accountBalanceService)
+    IWalletAccountBalanceService accountBalanceService,
+    INetworkConfiguration networkConfiguration)
     : IWalletAppService
 {
     //public static readonly WalletId SingleWalletId = new("8E3C5250-4E26-4A13-8075-0A189AEAF793");
@@ -188,7 +191,8 @@ public class WalletAppService(
                 return Result.Failure<TxId>("Could not calculate transaction fee: " + feeCalculationResult.Error);
             }
             
-            var result = await walletOperations.SendAmountToAddress(walletWords, sendInfo);
+            var walletSigner = new WalletSigner(walletWords, networkConfiguration.GetNetwork());
+            var result = await walletOperations.SendAmountToAddress(walletSigner, sendInfo);
             if (!result.Success)
                 return Result.Failure<TxId>(result.Message);
 

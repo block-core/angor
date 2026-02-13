@@ -1112,8 +1112,9 @@ else
             }
             else
             {
+                var walletSigner = new WalletSigner(words, network);
                 signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(),
-                    unSignedTransaction, words, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
+                    unSignedTransaction, walletSigner, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
             }
 
             showCreateModal = true;
@@ -1160,10 +1161,12 @@ else
             }
             else
             {
+                var words = await passwordComponent.GetWalletAsync();
+                var walletSigner = new WalletSigner(words, network);
                 signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
                     accountInfo.GetNextChangeReceiveAddress(),
                     unSignedTransaction,
-                    await passwordComponent.GetWalletAsync(),
+                    walletSigner,
                     accountInfo,
                     feeData.SelectedFeeEstimation.FeeRate);
             }

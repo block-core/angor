@@ -1534,7 +1534,8 @@
             }
             else
             {
-                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+                var walletSigner = new WalletSigner(words, network);
+                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedTransaction, walletSigner, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
             }
 
             showCreateModal = true;
@@ -1575,10 +1576,11 @@
             }
             else
             {
-                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
+                 var walletSigner = new WalletSigner(words, network);
+                 signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
                     accountInfo.GetNextChangeReceiveAddress(),
                     unsignedTransaction,
-                    words,
+                    walletSigner,
                     accountInfo,
                     feeData.SelectedFeeEstimation.FeeRate);
             }

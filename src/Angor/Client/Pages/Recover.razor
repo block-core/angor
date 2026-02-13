@@ -915,7 +915,8 @@
             foreach (var txIn in removeTxin) unsignedRecoveryTransaction.Inputs.Remove(txIn);
 
             // add fee to the recovery trx
-            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            var walletSigner = new WalletSigner(words, network);
+            recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedRecoveryTransaction, walletSigner, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
             // todo: instead call the method psbt.CreatePsbtForTransactionFee 
 
             Logger.LogInformation($"recoveryTransaction={recoveryTransaction.Transaction.GetHash().ToString()}");
@@ -958,10 +959,11 @@
             var accountInfo = storage.GetAccountInfo(network.Name);
 
             // todo: instead call the method psbt.CreatePsbtForTransactionFee
+            var walletSigner = new WalletSigner(words, network);
             recoveryTransaction = _WalletOperations.AddFeeAndSignTransaction(
                 accountInfo.GetNextChangeReceiveAddress(),
                 unsignedRecoveryTransaction,
-                words,
+                walletSigner,
                 accountInfo,
                 feeData.SelectedFeeEstimation.FeeRate);
 

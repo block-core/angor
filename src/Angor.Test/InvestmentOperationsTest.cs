@@ -35,9 +35,9 @@ namespace Angor.Test
             _walletOperations.Setup(_ => _.GetFeeEstimationAsync())
                 .ReturnsAsync(new List<FeeEstimation> { _expectedFeeEstimation });
 
-            _walletOperations.Setup(_ => _.GetUnspentOutputsForTransaction(It.IsAny<WalletWords>(),
+            _walletOperations.Setup(_ => _.GetUnspentOutputsForTransaction(It.IsAny<IWalletSigner>(),
                     It.IsAny<List<UtxoDataWithPath>>()))
-                .Returns<WalletWords, List<UtxoDataWithPath>>((_, _) =>
+                .Returns<IWalletSigner, List<UtxoDataWithPath>>((_, _) =>
                 {
                     var network = Networks.Bitcoin.Testnet();
 

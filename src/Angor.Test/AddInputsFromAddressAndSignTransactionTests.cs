@@ -86,11 +86,12 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         transaction.AddOutput(Money.Satoshis(250000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey);
 
         // Act
+        var walletSigner = new WalletSigner(words, _network);
         var result = _sut.AddInputsFromAddressAndSignTransaction(
                 fundingAddress.Address,
                 accountInfo.GetNextChangeReceiveAddress()!,
                 transaction,
-                words,
+                walletSigner,
                 accountInfo,
                 3000);
 
@@ -137,12 +138,13 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         transaction.AddOutput(Money.Satoshis(500000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey); // Trying to send 5 BTC
 
         // Act & Assert
+        var walletSigner = new WalletSigner(words, _network);
         var exception = Assert.Throws<ApplicationException>(() =>
             _sut.AddInputsFromAddressAndSignTransaction(
             fundingAddress.Address,
             accountInfo.GetNextChangeReceiveAddress()!,
             transaction,
-            words,
+            walletSigner,
             accountInfo,
             3000));
 
@@ -172,12 +174,13 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
               BitcoinAddress.Create(accountInfo.AddressesInfo[0].Address, _network).ScriptPubKey);
 
         // Act & Assert
+        var walletSigner = new WalletSigner(words, _network);
         var exception = Assert.Throws<ApplicationException>(() =>
             _sut.AddInputsFromAddressAndSignTransaction(
             "bc1qinvalidaddressnotinwallet",
             accountInfo.GetNextChangeReceiveAddress()!,
             transaction,
-            words,
+            walletSigner,
             accountInfo,
             3000));
 
@@ -216,11 +219,12 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         transaction.AddOutput(Money.Satoshis(150000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey);
 
         // Act
+        var walletSigner = new WalletSigner(words, _network);
         var result = _sut.AddInputsFromAddressAndSignTransaction(
             fundingAddress.Address,
             accountInfo.GetNextChangeReceiveAddress()!,
             transaction,
-            words,
+            walletSigner,
             accountInfo,
             3000);
 
@@ -262,11 +266,12 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         transaction.AddOutput(Money.Satoshis(50000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey);
 
         // Act
+        var walletSigner = new WalletSigner(words, _network);
         var result = _sut.AddInputsFromAddressAndSignTransaction(
             fundingAddress.Address,
             accountInfo.GetNextChangeReceiveAddress()!,
             transaction,
-            words,
+            walletSigner,
             accountInfo,
             3000);
 
@@ -315,11 +320,12 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         transaction.AddOutput(Money.Satoshis(150000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey);
 
         // Act
+        var walletSigner = new WalletSigner(words, _network);
         var result = _sut.AddInputsFromAddressAndSignTransaction(
             fundingAddress.Address,
             accountInfo.GetNextChangeReceiveAddress()!,
             transaction,
-            words,
+            walletSigner,
             accountInfo,
             3000);
 
@@ -361,11 +367,12 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         transaction.AddOutput(Money.Satoshis(95000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey);
 
         // Act
+        var walletSigner = new WalletSigner(words, _network);
         var result = _sut.AddInputsFromAddressAndSignTransaction(
             fundingAddress.Address,
             accountInfo.GetNextChangeReceiveAddress()!,
             transaction,
-            words,
+            walletSigner,
             accountInfo,
             3000);
 
@@ -403,11 +410,12 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         transaction.AddOutput(Money.Satoshis(50000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey);
 
         // Act
+        var walletSigner = new WalletSigner(words, _network);
         var result = _sut.AddInputsFromAddressAndSignTransaction(
             fundingAddress.Address,
             accountInfo.GetNextChangeReceiveAddress()!,
             transaction,
-            words,
+            walletSigner,
             accountInfo,
             3000);
 

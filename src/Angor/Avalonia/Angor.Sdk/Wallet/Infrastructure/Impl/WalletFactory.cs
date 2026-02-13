@@ -7,6 +7,8 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 
+using Angor.Shared.Services;
+
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
 public class WalletFactory(
@@ -24,7 +26,8 @@ public class WalletFactory(
     {
         // Derive the wallet ID from the master public key (xpub) hash
         var walletWords = new WalletWords { Words = seedwords, Passphrase = passphrase.GetValueOrDefault() };
-        var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
+        var walletSigner = new WalletSigner(walletWords, networkConfiguration.GetNetwork());
+        var accountInfo = walletOperations.BuildAccountInfo(walletSigner);
         var walletId = new WalletId(accountInfo.walletId);
         
         var descriptor = WalletDescriptorFactory.Create(seedwords, passphrase, network.ToNBitcoin());

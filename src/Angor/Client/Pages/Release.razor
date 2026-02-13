@@ -415,7 +415,8 @@
                 throw new Exception("Failed to validate signatures");
 
             // add fee to the recovery trx
-            releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedReleaseTransaction, words, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
+            var walletSigner = new WalletSigner(words, network);
+            releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(accountInfo.GetNextChangeReceiveAddress(), unsignedReleaseTransaction, walletSigner, accountInfo, feeData.SelectedFeeEstimation.FeeRate);
             // todo: instead call the method psbt.CreatePsbtForTransactionFee
 
             explorerLink = _NetworkService.GetPrimaryExplorer().Url + $"/tx/{InvestorProject.UnfundedReleaseTransactionId}";
@@ -458,10 +459,11 @@
             var accountInfo = Storage.GetAccountInfo(network.Name);
 
             // todo: instead call the method psbt.CreatePsbtForTransactionFee
+            var walletSigner = new WalletSigner(words, network);
             releaseTransaction = _WalletOperations.AddFeeAndSignTransaction(
                 accountInfo.GetNextChangeReceiveAddress(),
                 unsignedReleaseTransaction,
-                words,
+                walletSigner,
                 accountInfo,
                 feeData.SelectedFeeEstimation.FeeRate);
 

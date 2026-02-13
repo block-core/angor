@@ -39,12 +39,12 @@ public class WalletOperations : IWalletOperations
     }
 
     public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo, long feeRate)
+        IWalletSigner walletSigner, AccountInfo accountInfo, long feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
         var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
-        var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+        var coins = GetUnspentOutputsForTransaction(walletSigner, utxoDataWithPaths);
 
         if (coins.coins == null)
             throw new ApplicationException("No coins found");
@@ -136,7 +136,7 @@ public class WalletOperations : IWalletOperations
     }
 
     public TransactionInfo AddInputsFromAddressAndSignTransaction(string fundingAddress, string changeAddress,
-        Transaction transaction, WalletWords walletWords, AccountInfo accountInfo, long feeRate)
+        Transaction transaction, IWalletSigner walletSigner, AccountInfo accountInfo, long feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -169,7 +169,7 @@ public class WalletOperations : IWalletOperations
             throw new ApplicationException(
                 $"Insufficient funds in address {fundingAddress}. Required: {requiredAmount} sats ({Money.Satoshis(requiredAmount).ToUnit(MoneyUnit.BTC):F8} BTC), Available: {totalAvailable} sats ({Money.Satoshis(totalAvailable).ToUnit(MoneyUnit.BTC):F8} BTC)");
 
-        var coins = GetUnspentOutputsForTransaction(walletWords, availableUtxos);
+        var coins = GetUnspentOutputsForTransaction(walletSigner, availableUtxos);
 
         if (coins.coins == null || !coins.coins.Any())
             throw new ApplicationException("Failed to get coins for the funding address");
@@ -224,7 +224,7 @@ public class WalletOperations : IWalletOperations
     }
 
     public TransactionInfo AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
-        WalletWords walletWords, AccountInfo accountInfo, long feeRate)
+        IWalletSigner walletSigner, AccountInfo accountInfo, long feeRate)
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -239,7 +239,7 @@ public class WalletOperations : IWalletOperations
 
         // Step 2: Find UTXOs to fund the total cost of transaction (outputs + initial fee)
         var utxoDataWithPaths = FindOutputsForTransaction((long)initialFee, accountInfo);
-        var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+        var coins = GetUnspentOutputsForTransaction(walletSigner, utxoDataWithPaths);
 
         // Step 3: Add inputs and recalculate the transaction size
         foreach (var coin in coins.coins)
@@ -289,8 +289,8 @@ public class WalletOperations : IWalletOperations
     }
 
     public async Task<OperationResult<Transaction>>
-        SendAmountToAddress(WalletWords walletWords,
-            SendInfo sendInfo) //TODO change the passing of wallet words as parameter after refactoring is complete
+        SendAmountToAddress(IWalletSigner walletSigner,
+            SendInfo sendInfo)
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -300,7 +300,7 @@ public class WalletOperations : IWalletOperations
         }
 
         var (coins, keys) =
-            GetUnspentOutputsForTransaction(walletWords, sendInfo.SendUtxos.Values.ToList());
+            GetUnspentOutputsForTransaction(walletSigner, sendInfo.SendUtxos.Values.ToList());
 
         if (coins == null)
         {
@@ -403,23 +403,8 @@ public class WalletOperations : IWalletOperations
         return utxosToSpend;
     }
 
-    public (List<Coin>? coins,List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords , List<UtxoDataWithPath> utxoDataWithPaths)
+    public (List<Coin>? coins,List<Key> keys) GetUnspentOutputsForTransaction(IWalletSigner walletSigner , List<UtxoDataWithPath> utxoDataWithPaths)
     {
-        ExtKey extendedKey;
-        try
-        {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase); //TODO change this to be the extended key 
-        }
-        catch (NotSupportedException ex)
-        {
-            Console.WriteLine("Exception occurred: {0}", ex);
-
-            if (ex.Message == "Unknown")
-                throw new Exception("Please make sure you enter valid mnemonic words.");
-
-            throw;
-        }
-
         var coins = new List<Coin>();
         var keys = new List<Key>();
 
@@ -431,8 +416,7 @@ public class WalletOperations : IWalletOperations
                 Money.Satoshis(utxo.value), Script.FromHex(utxo.scriptHex)));
 
             // derive the private key
-            var extKey = extendedKey.Derive(new KeyPath(utxoDataWithPath.HdPath));
-            Key privateKey = extKey.PrivateKey;
+            Key privateKey = walletSigner.GetPrivateKey(utxoDataWithPath.HdPath);
             keys.Add(privateKey);
         }
 
@@ -440,7 +424,7 @@ public class WalletOperations : IWalletOperations
     }
 
 
-    public AccountInfo BuildAccountInfoForWalletWords(WalletWords walletWords)
+    public AccountInfo BuildAccountInfo(IWalletSigner walletSigner)
     {
         ExtKey.UseBCForHMACSHA512 = true;
         Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
@@ -448,28 +432,13 @@ public class WalletOperations : IWalletOperations
         Network network = _networkConfiguration.GetNetwork();
         var coinType = network.Consensus.CoinType;
 
-        ExtKey extendedKey;
-        try
-        {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
-        }
-        catch (NotSupportedException ex)
-        {
-            Console.WriteLine("Exception occurred: {0}", ex.ToString());
-
-            if (ex.Message == "Unknown")
-                throw new Exception("Please make sure you enter valid mnemonic words.");
-
-            throw;
-        }
-
         string accountHdPath = _hdOperations.GetAccountHdPath(Purpose, coinType, AccountIndex);
-        Key privateKey = extendedKey.PrivateKey;
+        
+        var accountExtKey = walletSigner.GetAccountExtKey(AccountIndex);
+        var accountExtPubKeyTostore = accountExtKey.Neuter();
 
-        ExtPubKey accountExtPubKeyTostore =
-            _hdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
-
-        var rootExtPubKey = extendedKey.Neuter();
+        var rootExtPubKeyString = walletSigner.GetRootExtPubKey();
+        var rootExtPubKey = ExtPubKey.Parse(rootExtPubKeyString, network);
         
         var rootExtPubKeyHash = Convert.ToHexString(Hashes.SHA256(rootExtPubKey.ToBytes()));
 
