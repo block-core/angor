@@ -64,22 +64,23 @@ public class BoltzSwapService : IBoltzSwapService
                 "Creating reverse submarine swap: {Amount} sats to address {Address}",
                 amountSats, onchainAddress);
 
-            // Keep the claim public key in its original format (compressed, 66 chars with 02/03 prefix)
-            // Boltz API may use compressed keys internally for comparison
+            // Boltz v2 API accepts compressed public keys (66 hex chars, 33 bytes with 02/03 prefix).
+            // The refundPublicKey returned by Boltz is also in compressed format.
+            // Just ensure lowercase for consistency.
             var normalizedClaimPubKey = claimPublicKey.Trim().ToLowerInvariant();
             
             _logger.LogDebug(
-                "Claim public key (keeping original format): {Key} ({Len} chars)",
+                "Claim public key: {Key} ({Len} chars)",
                 normalizedClaimPubKey, normalizedClaimPubKey.Length);
 
-            // Validate the key is either compressed (66 chars) or x-only (64 chars)
-            if (normalizedClaimPubKey.Length != 64 && normalizedClaimPubKey.Length != 66)
+            // Validate the key is compressed (66 chars) or x-only (64 chars)
+            if (normalizedClaimPubKey.Length != 66 && normalizedClaimPubKey.Length != 64)
             {
                 _logger.LogError(
-                    "Invalid claim public key length: {Length} chars (expected 64 or 66). Key: {Key}",
+                    "Invalid claim public key length: {Length} chars (expected 66 or 64). Key: {Key}",
                     normalizedClaimPubKey.Length, normalizedClaimPubKey);
                 return Result.Failure<BoltzSubmarineSwap>(
-                    $"Invalid claim public key: expected 64 or 66 hex chars, got {normalizedClaimPubKey.Length}");
+                    $"Invalid claim public key: expected 66 or 64 hex chars, got {normalizedClaimPubKey.Length}");
             }
 
             // Generate preimage (32 bytes random) and its SHA256 hash

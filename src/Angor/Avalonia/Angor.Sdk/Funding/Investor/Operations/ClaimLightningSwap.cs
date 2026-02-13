@@ -252,6 +252,11 @@ public static class ClaimLightningSwap
                 return Result.Failure<ClaimLightningSwapResponse>("Boltz refund public key is missing - required for MuSig2");
             }
             
+            if (string.IsNullOrEmpty(swap.SwapTree))
+            {
+                return Result.Failure<ClaimLightningSwapResponse>("Swap tree is missing - required for Taproot tweak computation");
+            }
+            
             // Parse the lockup transaction
             var network = GetNBitcoinNetwork();
             var lockupTx = NBitcoin.Transaction.Parse(lockupTransactionHex, network);
@@ -284,6 +289,42 @@ public static class ClaimLightningSwap
             var boltzRefundKeyBytes = Convert.FromHexString(swap.RefundPublicKey);
             
             var musig = new BoltzMusig2(claimPrivateKeyBytes, boltzRefundKeyBytes, logger);
+            
+            // --- Compute Taproot tweak from swap tree ---
+            // Parse the swap tree to get claim and refund scripts
+            var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var swapTree = JsonSerializer.Deserialize<SwapTreeDto>(swap.SwapTree, jsonOptions);
+            
+            if (swapTree?.ClaimLeaf?.Output == null || swapTree?.RefundLeaf?.Output == null)
+            {
+                return Result.Failure<ClaimLightningSwapResponse>(
+                    $"Invalid swap tree - missing claim or refund leaf. SwapTree: {swap.SwapTree}");
+            }
+            
+            // Compute merkle root from the two script leaves
+            var merkleRoot = ComputeSwapTreeMerkleRoot(swapTree.ClaimLeaf.Output, swapTree.RefundLeaf.Output);
+            logger.LogDebug("Computed swap tree merkle root: {MerkleRoot}", Convert.ToHexString(merkleRoot));
+            
+            // Apply the Taproot tweak: P = Q + t*G where t = TH("TapTweak", Q || merkleRoot)
+            musig.SetTaprootTweak(merkleRoot);
+            
+            // Verify the tweaked output key matches the lockup address
+            var outputKeyXOnly = musig.GetOutputPubKeyXOnly();
+            var outputKey = new NBitcoin.TaprootPubKey(outputKeyXOnly);
+            var computedAddress = outputKey.GetAddress(network).ToString();
+            
+            if (computedAddress != swap.LockupAddress)
+            {
+                logger.LogWarning(
+                    "Tweaked output key address mismatch! Computed: {Computed}, Expected: {Expected}. " +
+                    "This indicates key aggregation or tweak computation differs from Boltz.",
+                    computedAddress, swap.LockupAddress);
+                // Don't fail - let Boltz's response tell us if something is wrong
+            }
+            else
+            {
+                logger.LogInformation("Tweaked output key matches lockup address: {Address}", computedAddress);
+            }
             
             // Build the claim transaction (without witness initially)
             var destAddress = NBitcoin.BitcoinAddress.Create(swap.Address, network);
@@ -352,6 +393,22 @@ public static class ClaimLightningSwap
             // Aggregate partial signatures
             var boltzPartialSig = Convert.FromHexString(boltzResponse.PartialSignature);
             var aggregatedSig = musig.AggregatePartials(boltzPartialSig, ourPartialSig);
+            
+            // Verify the aggregated Schnorr signature before broadcasting
+            var outputPubKeyForVerify = new NBitcoin.TaprootPubKey(musig.GetOutputPubKeyXOnly());
+            var schnorrSig = new NBitcoin.Crypto.SchnorrSignature(aggregatedSig);
+            if (!outputPubKeyForVerify.VerifySignature(sighash, schnorrSig))
+            {
+                logger.LogError(
+                    "Schnorr signature verification FAILED before broadcast! " +
+                    "OutputKey: {Key}, Sighash: {Sighash}, Sig: {Sig}",
+                    Convert.ToHexString(outputKeyXOnly),
+                    Convert.ToHexString(sighash.ToBytes()),
+                    Convert.ToHexString(aggregatedSig));
+                return Result.Failure<ClaimLightningSwapResponse>(
+                    "Aggregated Schnorr signature failed verification - signing protocol error");
+            }
+            logger.LogInformation("Schnorr signature verification PASSED");
             
             // Set the witness with the aggregated signature
             claimTx.Inputs[0].WitScript = new NBitcoin.WitScript(new[] { aggregatedSig });
@@ -701,37 +758,30 @@ public static class ClaimLightningSwap
             logger.LogDebug("Claim public key: {ClaimPubKey}", claimPublicKeyHex);
             logger.LogDebug("Refund public key: {RefundPubKey}", refundPublicKeyHex);
 
-            // For Boltz swaps, the internal key is derived from the combination of 
+            // For Boltz swaps, the internal key is the MuSig2 aggregate of 
             // the claim public key (ours) and refund public key (Boltz's).
-            // Boltz uses a simple key aggregation (not full MuSig2) for the internal key.
-            // The formula is: internalKey = claimKey + refundKey (point addition)
-            // 
-            // However, computing this requires elliptic curve point addition.
-            // As a fallback, we try the standard unspendable key which some implementations use.
+            // Both keys are normalized to even-Y and sorted by BoltzMusig2.KeyAggSorted.
             NBitcoin.TaprootInternalPubKey internalKey;
             
             try
             {
-                // Try to compute the aggregate internal key
-                // Parse both public keys and add them
                 var claimPubKeyBytes = Convert.FromHexString(claimPublicKeyHex.Length == 66 
-                    ? claimPublicKeyHex.Substring(2) // Remove 02/03 prefix
+                    ? claimPublicKeyHex.Substring(2)
                     : claimPublicKeyHex);
                 var refundPubKeyBytes = Convert.FromHexString(refundPublicKeyHex.Length == 66 
-                    ? refundPublicKeyHex.Substring(2) // Remove 02/03 prefix  
+                    ? refundPublicKeyHex.Substring(2)
                     : refundPublicKeyHex);
                 
-                // For now, use the standard unspendable internal key
-                // Full MuSig2 key aggregation would require secp256k1 point addition
-                // which NBitcoin doesn't expose directly
-                internalKey = NBitcoin.TaprootInternalPubKey.Parse(
-                    "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0");
+                // Use MuSig2 sorted key aggregation to compute the real internal key
+                var aggregateXOnly = BoltzMusig2.KeyAggSorted(claimPubKeyBytes, refundPubKeyBytes);
+                internalKey = new NBitcoin.TaprootInternalPubKey(aggregateXOnly);
                     
-                logger.LogDebug("Using standard unspendable internal key (MuSig aggregation not implemented)");
+                logger.LogDebug("Computed MuSig2 aggregate internal key: {Key}", 
+                    Convert.ToHexString(aggregateXOnly));
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to compute internal key, using standard unspendable key");
+                logger.LogWarning(ex, "Failed to compute MuSig2 internal key, falling back to unspendable key");
                 internalKey = NBitcoin.TaprootInternalPubKey.Parse(
                     "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0");
             }
@@ -758,16 +808,21 @@ public static class ClaimLightningSwap
             NBitcoin.TaprootSpendInfo spendInfo;
             string computedAddress;
 
-            // Check if either computed address matches - if so, use that ordering
-            // Neither ordering matches - this means the internal key is wrong (expected for MuSig)
-            logger.LogWarning(
-                "Neither tree ordering matches the expected lockup address. " +
-                "This is expected because Boltz uses MuSig2 key aggregation for the internal key. " +
-                "Script path spending may not work - cooperative claiming is required.");
-            
-            // Default to ordering 1 (claim first)
-            spendInfo = spendInfo1;
-            computedAddress = address1;
+            if (address1 == address2)
+            {
+                // Both orderings produce the same address (leaf sort is deterministic)
+                spendInfo = spendInfo1;
+                computedAddress = address1;
+                logger.LogDebug("Both tree orderings match: {Address}", computedAddress);
+            }
+            else
+            {
+                // Default to ordering 1; caller can compare computedAddress to lockup address
+                spendInfo = spendInfo1;
+                computedAddress = address1;
+                logger.LogDebug("Tree ordering 1: {Addr1}, ordering 2: {Addr2}. Using ordering 1.",
+                    address1, address2);
+            }
 
             logger.LogDebug("Using tree with computed address: {Address}", computedAddress);
 
@@ -782,6 +837,56 @@ public static class ClaimLightningSwap
             logger.LogDebug("Control block hex: {ControlBlockHex}", Convert.ToHexString(controlBlock.ToBytes()));
 
             return (controlBlock.ToBytes(), computedAddress);
+        }
+
+        /// <summary>
+        /// Compute the merkle root of a Boltz swap tree with two leaves (claim + refund).
+        /// Uses BIP-341 tagged hashes: TapLeaf for leaf hashing, TapBranch for branch.
+        /// </summary>
+        private static byte[] ComputeSwapTreeMerkleRoot(string claimScriptHex, string refundScriptHex)
+        {
+            var claimScript = new NBitcoin.Script(Convert.FromHexString(claimScriptHex));
+            var refundScript = new NBitcoin.Script(Convert.FromHexString(refundScriptHex));
+
+            var claimLeafHash = claimScript.ToTapScript(NBitcoin.TapLeafVersion.C0).LeafHash;
+            var refundLeafHash = refundScript.ToTapScript(NBitcoin.TapLeafVersion.C0).LeafHash;
+
+            var claimHashBytes = claimLeafHash.ToBytes();
+            var refundHashBytes = refundLeafHash.ToBytes();
+
+            // Sort leaf hashes lexicographically for TapBranch (BIP-341)
+            byte[] left, right;
+            if (CompareBytesLex(claimHashBytes, refundHashBytes) <= 0)
+            {
+                left = claimHashBytes;
+                right = refundHashBytes;
+            }
+            else
+            {
+                left = refundHashBytes;
+                right = claimHashBytes;
+            }
+
+            // TapBranch hash = TaggedHash("TapBranch", left || right)
+            var tagBytes = System.Text.Encoding.UTF8.GetBytes("TapBranch");
+            var tagHash = System.Security.Cryptography.SHA256.HashData(tagBytes);
+            var data = new byte[tagHash.Length * 2 + 32 + 32];
+            var offset = 0;
+            Array.Copy(tagHash, 0, data, offset, tagHash.Length); offset += tagHash.Length;
+            Array.Copy(tagHash, 0, data, offset, tagHash.Length); offset += tagHash.Length;
+            Array.Copy(left, 0, data, offset, 32); offset += 32;
+            Array.Copy(right, 0, data, offset, 32);
+
+            return System.Security.Cryptography.SHA256.HashData(data);
+        }
+
+        private static int CompareBytesLex(byte[] a, byte[] b)
+        {
+            for (int i = 0; i < Math.Min(a.Length, b.Length); i++)
+            {
+                if (a[i] != b[i]) return a[i].CompareTo(b[i]);
+            }
+            return a.Length.CompareTo(b.Length);
         }
 
         // DTO for deserializing the swap tree
