@@ -15,7 +15,7 @@
     </Design.DataContext>
 
     <DockPanel VerticalSpacing="20" Classes="Padded">
-        <ListBox SelectedIndex="0" DockPanel.Dock="Top" ItemContainerTheme="{StaticResource SmallSelectorListBoxItem}" ItemsSource="{Binding InvoiceTypes}" SelectedItem="{Binding SelectedInvoiceType}"
+        <ListBox SelectedIndex="0" DockPanel.Dock="Top" Background="Transparent" ItemContainerTheme="{StaticResource SmallSelectorListBoxItem}" ItemsSource="{Binding InvoiceTypes}" SelectedItem="{Binding SelectedInvoiceType}"
                  DisplayMemberBinding="{Binding PaymentMethod}">
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
