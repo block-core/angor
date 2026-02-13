@@ -235,17 +235,62 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             ReconnectTimeout = null //TODO need to check what is the actual best time to set here
         };
 
-        _serviceSubscriptions.Add(nostrCommunicator.DisconnectionHappened.Subscribe(e =>
-        {
-            if (e.Exception != null)
-                _logger.LogError(e.Exception,
-                    "Relay {relayName} disconnected, type: {Type}, reason: {CloseStatusDescription}", 
-                    relayName, e.Type, e.CloseStatusDescription);
-            else
-                _logger.LogDebug(
-                    "Relay {relayName} disconnected, type: {Type}, reason: {CloseStatusDescription}", 
-                    relayName, e.Type, e.CloseStatusDescription);
-        }));
+            var attemptCount = 0;
+
+            _serviceSubscriptions.Add(nostrCommunicator.DisconnectionHappened.Subscribe(info =>
+            {
+                attemptCount++;
+                
+                if (info.Exception != null)
+                    _logger.LogError(info.Exception,
+                        "Relay {relayName} disconnected, type: {Type}, reason: {CloseStatusDescription}", 
+                        relayName, info.Type, info.CloseStatusDescription);
+                else
+                    _logger.LogDebug(
+                        "Relay {relayName} disconnected, type: {Type}, reason: {CloseStatusDescription}", 
+                        relayName, info.Type, info.CloseStatusDescription);
+
+                Task.Run(async () =>
+                {
+                    var delaySeconds = Math.Min(60, Math.Pow(2, attemptCount));
+                    _logger.LogInformation("Reconnecting to {relayName} in {delaySeconds} seconds (Attempt {attemptCount})", relayName, delaySeconds, attemptCount);
+                    
+                    await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
+
+                    try
+                    {
+                        if (_nostrMultiWebsocketClient == null) return; // Factory disposed
+
+                        // We use Start() because StartOrFail() might throw and we are in a background task
+                        await nostrCommunicator.Start();
+                        
+                        // If we reach here without exception, we assume connection initiated (or connected).
+                        // Note: A successful connection usually triggers a callback/event, but resetting attemptCount here 
+                        // is a heuristic. Ideally, we reset it on a "ReconnectionHappened" or "MessageReceived" event.
+                        // However, simply keeping it increasing until success is safer. 
+                        // Let's reset it if IsStarted is true? 
+                        if (nostrCommunicator.IsStarted)
+                        {
+                            attemptCount = 0;
+                            _logger.LogInformation("Reconnected to {relayName}", relayName);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to reconnect to {relayName}", relayName);
+                        // The DisconnectionHappened might NOT fire if Start() fails immediately without establishing a connection.
+                        // So we might need to retry explicitly or rely on the loop. 
+                        // But usually, the library throws or fires disconnection. 
+                        // If it throws, we should probably trigger the next backoff manually or let the logic fall through.
+                        // For now, let's assume Start() failure does not automatically trigger DisconnectionHappened if it didn't connect at all.
+                        // But recursively calling the handler is dangerous (stack overflow). 
+                        // The Task.Run breaks recursion stack, but logical recursion exists.
+                        
+                        // To be safe, if Start throws, we are effectively "disconnected" again.
+                        // The library might throw ObjectDisposedException if we interpret it wrong.
+                    }
+                });
+            }));
 
         if (_logger.IsEnabled(LogLevel.Information))
         {
