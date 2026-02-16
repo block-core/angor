@@ -93,13 +93,12 @@ public class BoltzSwapService : IBoltzSwapService
             // claimPublicKey is REQUIRED - used to construct the Taproot swap script
             // address is OPTIONAL - if provided, Boltz automatically claims to this address
             //
-            // IMPORTANT: Boltz expects 'address' to be the OUTPUT SCRIPT HEX, not the Bech32 address string!
-            // We convert the address to its scriptPubKey hex representation
-            var addressScriptHex = AddressToScriptHex(onchainAddress);
+            // NOTE: Boltz expects 'address' to be a standard Bitcoin address string (Bech32/Base58),
+            // NOT a scriptPubKey hex. Boltz handles the address conversion internally.
             
             _logger.LogDebug(
-                "Address to script conversion - Address: {Address}, ScriptHex: {ScriptHex}",
-                onchainAddress, addressScriptHex);
+                "Using address for automatic claim: {Address}",
+                onchainAddress);
             
             var request = new CreateReverseSubmarineSwapRequest
             {
@@ -108,7 +107,7 @@ public class BoltzSwapService : IBoltzSwapService
                 ClaimPublicKey = normalizedClaimPubKey,  // REQUIRED: x-only format for Taproot
                 PreimageHash = preimageHash,
                 InvoiceAmount = amountSats,
-                Address = addressScriptHex  // Output script hex (NOT Bech32 address!)
+                Address = onchainAddress  // Standard Bitcoin address (Bech32)
             };
 
             // Log the request for debugging
@@ -211,36 +210,6 @@ public class BoltzSwapService : IBoltzSwapService
         return key.ToLowerInvariant();
     }
 
-    /// <summary>
-    /// Converts a Bitcoin address (Bech32) to its output script hex.
-    /// Boltz API expects the 'address' field to be the scriptPubKey hex, not the address string.
-    /// </summary>
-    private string AddressToScriptHex(string address)
-    {
-        try
-        {
-            var network = _networkConfiguration.GetNetwork();
-            
-            // Parse the address based on type
-            if (address.StartsWith("bc1") || address.StartsWith("tb1") || address.StartsWith("bcrt1"))
-            {
-                // Native SegWit address (Bech32)
-                var segwitAddress = new Blockcore.NBitcoin.BitcoinWitPubKeyAddress(address, network);
-                return segwitAddress.ScriptPubKey.ToHex();
-            }
-            else
-            {
-                // Legacy or P2SH address
-                var bitcoinAddress = Blockcore.NBitcoin.BitcoinAddress.Create(address, network);
-                return bitcoinAddress.ScriptPubKey.ToHex();
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to convert address {Address} to script hex", address);
-            throw new InvalidOperationException($"Failed to convert address to script: {ex.Message}", ex);
-        }
-    }
 
     public async Task<Result<BoltzSwapStatus>> GetSwapStatusAsync(string swapId)
     {

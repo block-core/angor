@@ -5,8 +5,8 @@
              xmlns:l="clr-namespace:AngorApp.UI.Flows.InvestV2.Invoice"
              xmlns:c="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:conv="clr-namespace:AngorApp.UI.Shared.Controls"
-             xmlns:common="clr-namespace:AngorApp.UI.Shared.Controls.Common"
-             d:DesignWidth="448"
+             xmlns:commands="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
+             d:DesignWidth="800"
              mc:Ignorable="d"
              x:Class="AngorApp.UI.Flows.InvestV2.Invoice.InvoiceView" x:DataType="l:IInvoiceViewModel">
 
@@ -48,7 +48,9 @@
         </Border>
         <HeaderedContainer Classes="LightGray Rounded" DockPanel.Dock="Bottom" Header="{Binding SelectedInvoiceType.Name}">
             <DockPanel>
-                <Button DockPanel.Dock="Right" Command="{Binding CopyAddress}" 
+                <Button DockPanel.Dock="Right" 
+                        Command="{Binding Source={x:Static commands:Commands.Instance}, Path=CopyParameter}" 
+                        CommandParameter="{Binding SelectedInvoiceType.Address}"
                         Classes="Transparent" ToolTip.Tip="Copy address to clipboard"
                         Padding="4" VerticalAlignment="Center">
                     <ContentControl IconOptions.Size="12" Content="{Icon fa-copy}" />

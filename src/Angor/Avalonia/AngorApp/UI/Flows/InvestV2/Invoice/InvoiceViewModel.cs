@@ -7,6 +7,7 @@ using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using AngorApp.UI.Flows.InvestV2.InvestmentResult;
 using AngorApp.UI.Shell;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using Zafiro.Avalonia.Dialogs;
@@ -96,7 +97,12 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            return desktop.MainWindow?.Clipboard;
+            return TopLevel.GetTopLevel(desktop.MainWindow)?.Clipboard;
+        }
+        
+        if (Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime singleView)
+        {
+            return TopLevel.GetTopLevel(singleView.MainView)?.Clipboard;
         }
         
         return null;
