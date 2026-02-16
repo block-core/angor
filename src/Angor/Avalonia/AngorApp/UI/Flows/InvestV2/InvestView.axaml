@@ -30,7 +30,7 @@
             <BalancedWrapGrid MinItemWidth="346" Grid.Row="1" HorizontalSpacing="24" VerticalSpacing="24">
 
                 <!-- Amount Section -->
-                <HeaderedContainer Classes="Card Peach Shadow MediumHeader OrangeIcon">
+                <HeaderedContainer Classes="Card ApricotGradient Shadow MediumHeader OrangeIcon">
                     <HeaderedContainer.Header>
                         <EdgePanel StartContent="{Icon fa-bitcoin}" Content="Investment Amount" />
                     </HeaderedContainer.Header>
@@ -71,19 +71,14 @@
                 </HeaderedContainer>
 
                 <!-- Release Schedule Section -->
-                <HeaderedContainer Header="Release Schedule" Classes="Card Sky Shadow MediumHeader">
+                <HeaderedContainer Header="Release Schedule" Classes="Card Silver Shadow MediumHeader">
                     <ScrollViewer>
                         <StackPanel Classes="BigGap">
                             <TextBlock Classes="Text-Muted">Your investment will be released in stages:</TextBlock>
                             <ItemsControl Classes="Vertical" ItemsSource="{Binding StageBreakdowns^}">
-                                <!-- <ItemsControl.ItemsPanel> -->
-                                <!--     <ItemsPanelTemplate> -->
-                                <!--         <StackPanel Classes="BigGap" /> -->
-                                <!--     </ItemsPanelTemplate> -->
-                                <!-- </ItemsControl.ItemsPanel> -->
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Classes="White" CornerRadius="10" Padding="12">
+                                        <Border Classes="ColorPanel White" CornerRadius="10" Padding="12">
                                             <StackPanel Classes="TinyGap">
                                                 <EdgePanel>
                                                     <EdgePanel.StartContent>
@@ -116,7 +111,7 @@
                 <HeaderedContainer Header="Transaction Details" Classes="Card White Shadow MediumHeader">
                     <StackPanel Spacing="15">
                         <HeaderedContainer Header="Project ID">
-                            <EdgePanel Classes="LightGray" Padding="8" CornerRadius="8">
+                            <EdgePanel Classes="ColorPanel LightGray" Padding="8" CornerRadius="8">
                                 <EdgePanel.EndContent>
                                     <c:CopyButton Content="{Binding ProjectId}" />
                                 </EdgePanel.EndContent>

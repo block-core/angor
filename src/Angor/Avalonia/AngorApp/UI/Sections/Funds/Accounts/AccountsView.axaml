@@ -35,9 +35,9 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Classes="SmallGap">
                 <EnhancedButton Command="{Binding RefreshBalances}" Classes="Outline" Classes.Spinning="{Binding RefreshBalances.IsExecuting}" Icon="{Icon fa-sync}">Refresh</EnhancedButton>
                 <EnhancedButton Command="{Binding ImportAccount}" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False">Import Wallet</EnhancedButton>
-                <EnhancedButton Command="{Binding GetTestCoins}" IsVisible="{Binding CanGetTestCoins}" Classes="Accent" Icon="{Icon fa-plus}">Get Testnet Coins</EnhancedButton>
+                <EnhancedButton Command="{Binding GetTestCoins}" IsVisible="{Binding CanGetTestCoins}" Classes="Emphasized" Icon="{Icon fa-plus}">Get Testnet Coins</EnhancedButton>
             </StackPanel>
-            <HeaderedContainer Classes="Card Radius-L Big Bitcoin Shadow MediumBigHeader" Header="Balance Summary" Background="{DynamicResource TranslucidOrange2}">
+            <HeaderedContainer Classes="Card Radius-L Big Bitcoin Shadow MediumBigHeader" Header="Balance Summary" Background="{DynamicResource BitcoinWash}">
                 <ItemsControl ItemsSource="{Binding Balances}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -46,7 +46,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <HeaderedContainer Header="{Binding Name}" Classes="Card StatCard Fields" HeaderPadding="20" ContentPadding="20 0 0 20" Content="{Binding Balance^.DecimalString}">
+                            <HeaderedContainer Header="{Binding Name}" Classes="Card ApricotBorder Fields" HeaderPadding="20" ContentPadding="20 0 0 20" Content="{Binding Balance^.DecimalString}">
                             </HeaderedContainer>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -98,7 +98,7 @@
                                                         </StackPanel>
                                                     </StackPanel>
                                                     <ItemsControl ItemsSource="{Binding Wallet.Labels}" Classes="Horizontal" />
-                                                    <EnhancedButton Command="{Binding Send}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-arrow-up}" Classes="Accent" />
+                                                    <EnhancedButton Command="{Binding Send}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-arrow-up}" Classes="Emphasized" />
                                                     <EnhancedButton Command="{Binding Receive}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-arrow-down}" Classes="Outline" />
                                                     <EnhancedButton Command="{Binding ShowDetails}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-coins}" Classes="Outline" />
                                                 </StackPanel>

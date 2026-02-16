@@ -11,7 +11,7 @@
     </Design.DataContext>
     
     <StackPanel Classes="BigGap">
-        <Border Classes="Orange Circle" IconOptions.Size="36" Padding="20">
+        <Border Classes="ColorPanel Amber Circle" IconOptions.Size="36" Padding="20">
             <Border.Child>
                 <ContentControl Content="{Icon fa-lock}" />
             </Border.Child>

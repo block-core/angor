@@ -98,9 +98,9 @@
                             <Separator Grid.Column="2" />
                         </Grid>
                         <OverlayBorder Classes="Panel" Padding="0" Margin="0 20">
-                            <Grid ColumnDefinitions="Auto,120, *, Auto" RowDefinitions="Auto Auto">
+                            <Grid ColumnDefinitions="Auto,120, *, Auto" RowDefinitions="Auto Auto" ColumnSpacing="20">
                                 <Border Grid.RowSpan="2" Background="{DynamicResource SurfaceHover}" Padding="20">
-                                    <Border CornerRadius="40" Width="40" Height="40" Background="{DynamicResource Translucid}" BorderBrush="{DynamicResource Dimmed}" BorderThickness="2">
+                                    <Border CornerRadius="40" Width="40" Height="40" Background="{DynamicResource BrandWash}" BorderBrush="{DynamicResource Dimmed}" BorderThickness="2">
                                         <TextBlock x:Name="ItemIndex" Tag="{ItemIndex StartFromOne=True}" HorizontalAlignment="Center" Classes="Weight-Bold" VerticalAlignment="Center" Foreground="{DynamicResource Dimmed}" Text="{ItemIndex StartFromOne=True}" />
                                     </Border>
                                 </Border>

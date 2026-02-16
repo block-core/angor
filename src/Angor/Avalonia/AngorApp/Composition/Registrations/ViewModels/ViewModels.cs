@@ -5,6 +5,7 @@ using AngorApp.UI.Sections.Browse.Details;
 using AngorApp.UI.Sections.Browse.ProjectLookup;
 using AngorApp.UI.Sections.Founder;
 using AngorApp.UI.Sections.Founder.ProjectDetails;
+using AngorApp.UI.Sections.MyProjects;
 using AngorApp.UI.Sections.Portfolio;
 using AngorApp.UI.Sections.Portfolio.Penalties;
 using AngorApp.UI.Sections.Portfolio.Recover;
@@ -22,6 +23,7 @@ using AngorApp.UI.Flows.InvestV2.PaymentSelector;
 using AngorApp.UI.Sections.Funds.Accounts;
 using AngorApp.UI.Sections.Funds.Empty;
 using AngorApp.UI.Sections.FindProjects.Details;
+using AngorApp.UI.Sections.MyProjects.ManageFunds;
 
 namespace AngorApp.Composition.Registrations.ViewModels;
 
@@ -35,6 +37,7 @@ public static class ViewModels
                 .AddScoped<Func<IProjectLookupViewModel>>(provider => () => ActivatorUtilities.CreateInstance<ProjectLookupViewModel>(provider))
                 .AddScoped<Func<ProjectId, IFoundedProjectOptionsViewModel>>(provider => projectId => ActivatorUtilities.CreateInstance<FoundedProjectOptionsViewModel>(provider, projectId))
                 .AddScoped<Func<IFullProject, IDetailsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<DetailsViewModel>(provider, project))
+                .AddScoped<Func<ProjectId, IManageFundsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<ManageFundsViewModel>(provider, project))
                 .AddScoped<Func<ProjectId, IFounderProjectDetailsViewModel>>(provider => projectId => ActivatorUtilities.CreateInstance<FounderProjectDetailsViewModel>(provider, projectId))
                 .AddScoped<Func<ProjectDto, IFounderProjectViewModel>>(provider => dto => ActivatorUtilities.CreateInstance<FounderProjectViewModel>(provider, dto))
                 .AddTransient<IWalletSectionViewModel, WalletSectionViewModel>()
@@ -42,7 +45,7 @@ public static class ViewModels
                 .AddTransient<IEmptyViewModel, EmptyViewModel>()
                 .AddTransient<IBrowseSectionViewModel, BrowseSectionViewModel>()
                 .AddTransient<IPortfolioSectionViewModel, PortfolioSectionViewModel>()
-                .AddTransient<IFounderSectionViewModel, FounderSectionViewModel>()
+                .AddTransient<IMyProjectsSectionViewModel, MyProjectsSectionViewModel>()
                 .AddTransient<ISettingsSectionViewModel, SettingsSectionViewModel>()
                 .AddScoped<IPenaltiesViewModel, PenaltiesViewModel>()
                 .AddScoped<Func<IFullProject, IInvestViewModel>>(provider => proj => ActivatorUtilities.CreateInstance<InvestViewModel>(provider, proj))

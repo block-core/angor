@@ -1,0 +1,82 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ctrl="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:common="clr-namespace:AngorApp.UI.Shared.Controls.Common"
+             xmlns:l="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds"
+             xmlns:r="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Release"
+             xmlns:c="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Claim"
+             mc:Ignorable="d" d:DesignWidth="900"
+             x:Class="AngorApp.UI.Sections.MyProjects.ManageFunds.ManageFundsView" x:DataType="l:IManageFundsViewModel">
+
+    <Design.DataContext>
+        <l:ManageFundsViewModelSample />
+    </Design.DataContext>
+    
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Load}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+    
+    <UserControl.Styles>
+        <Style Selector="BalancedWrapGrid">
+            <Setter Property="HorizontalSpacing" Value="24" />
+            <Setter Property="VerticalSpacing" Value="24" />
+        </Style>
+    </UserControl.Styles>
+
+    <Loading IsLoading="{Binding Load.IsExecuting^}">
+        <ctrl:ScrollableView>
+            <StackPanel Classes="BigGap">
+                <Border Classes="ColorPanel White Shadow">
+                    <DockPanel>
+                        <common:CopyButton DockPanel.Dock="Right" VerticalAlignment="Center" />
+                        <HeaderedContainer Header="Project ID" Content="{Binding ProjectObs^.ProjectId.Value}" />
+                    </DockPanel>
+                </Border>
+                <HeaderedContainer Classes="Card Apricot Shadow">
+                    <HeaderedContainer.Header>
+                        <EdgePanel ContentClasses="Size-XL BlackText" IconOptions.Fill="{DynamicResource BitcoinOrange}" IconOptions.Size="48" IconOptions.Padding="5" StartContent="{Icon fa-bitcoin}" Content="Project Statistics" />
+                    </HeaderedContainer.Header>
+                    <BalancedWrapGrid MinItemWidth="160">
+                        <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Investment" Content="0.00505" />
+                        <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Available Balance" Content="0.00505" />
+                        <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Withdrawable" Content="0.00505" />
+                        <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Stages" Content="0.00505" />
+                    </BalancedWrapGrid>
+                </HeaderedContainer>
+                <BalancedWrapGrid>
+                    <HeaderedContainer Classes="Card AccentWash Shadow" Header="Next Stage" HeaderClasses="Size-XL BlackText">
+                        <BalancedWrapGrid>
+                            <ctrl:NewCard ContainerClasses="Card Elevate GreenBorder ThickBorder GreenText" CenterClasses="Size-XL Center" ContentClasses="Size-XS Center" Center="3" Content="Total" />
+                            <ctrl:NewCard ContainerClasses="Card Elevate GreenBorder ThickBorder GreenText" CenterClasses="Size-XL Center" ContentClasses="Size-XS Center" Center="3" Content="Total" />
+                            <ctrl:NewCard ContainerClasses="Card Elevate GreenBorder ThickBorder GreenText" CenterClasses="Size-XL Center" ContentClasses="Size-XS Center" Center="3" Content="Total" />
+                        </BalancedWrapGrid>
+                    </HeaderedContainer>
+                    <HeaderedContainer Classes="Card White Shadow" Header="Transaction Statistics" HeaderClasses="Size-XL BlackText">
+                        <BalancedWrapGrid>
+                            <ctrl:NewCard ContainerClasses="Card Elevate LightGray BlackText" CenterClasses="Size-XL Center" ContentClasses="Size-XS Center" Center="3" Content="Total" />
+                            <ctrl:NewCard ContainerClasses="Card Elevate LightGray BlackText" CenterClasses="Size-XL Center" ContentClasses="Size-XS Center" Center="3" Content="Spent" />
+                            <ctrl:NewCard ContainerClasses="Card Elevate LightGray BlackText" CenterClasses="Size-XL Center" ContentClasses="Size-XS Center" Center="3" Content="Available" />
+                        </BalancedWrapGrid>
+                    </HeaderedContainer>
+                </BalancedWrapGrid>
+                <ContentControl Content="{Binding ReleaseViewModel^}" ClipToBounds="False">
+                    <ContentControl.ContentTemplate>
+                        <DataTemplate DataType="r:IReleaseViewModel">
+                            <r:ReleaseView DataContext="{Binding}" ClipToBounds="False" />
+                        </DataTemplate>
+                    </ContentControl.ContentTemplate>
+                </ContentControl>
+                <ContentControl Content="{Binding ClaimViewModel^}" ClipToBounds="False">
+                    <ContentControl.ContentTemplate>
+                        <DataTemplate DataType="c:IClaimViewModel">
+                            <c:ClaimView ClipToBounds="False" DataContext="{Binding}" />
+                        </DataTemplate>
+                    </ContentControl.ContentTemplate>
+                </ContentControl>
+            </StackPanel>
+        </ctrl:ScrollableView></Loading>
+</UserControl>

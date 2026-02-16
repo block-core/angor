@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:claim="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.ClaimDialog"
+             xmlns:tx="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Transactions"
+             mc:Ignorable="d"
+             x:Class="AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.ClaimDialog.ClaimDialogView"
+             x:DataType="claim:IClaimDialogViewModel">
+
+    <Design.DataContext>
+        <claim:ClaimDialogViewModelSample />
+    </Design.DataContext>
+
+    <StackPanel Classes="Gap-M">
+        <Separator />
+        <TextBlock Text="{Binding Message}" />
+        <ListBox ItemsSource="{Binding Items}"
+                 Classes="Vertical"
+                 SelectionMode="Multiple"
+                 Selection="{Binding SelectedItems.SelectionModel}"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <ListBox.ItemContainerTheme>
+                <ControlTheme TargetType="ListBoxItem">
+                    <Setter Property="Template">
+                        <ControlTemplate>
+                            <Panel>
+                                <Border x:Name="Border" Classes="ColorPanel GreenBorder ThickBorder Radius-M" />
+                                <CheckBox IsChecked="{TemplateBinding IsSelected, Mode=TwoWay}" Margin="{Binding #Border.Padding}">
+                                    <ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                      Content="{TemplateBinding Content}" />
+                                </CheckBox>
+                            </Panel>
+                        </ControlTemplate>
+                    </Setter>
+                </ControlTheme>
+            </ListBox.ItemContainerTheme>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="tx:IClaimableTransaction">
+                    <StackPanel Classes="SmallGap">
+                        <TextBlock Classes="Size-M Weight-Bold Strong"
+                                   Text="{Binding Amount.ShortDecimalString}" />
+                        <TextBlock Classes="Size-XS Text-Muted"
+                                   Text="{Binding Address}"
+                                   TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </StackPanel>
+</UserControl>

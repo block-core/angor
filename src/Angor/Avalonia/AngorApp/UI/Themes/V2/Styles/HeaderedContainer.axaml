@@ -12,6 +12,7 @@
                             <HeaderedContainer Header="Accent" Content="Accent translucent" Classes="Card Accent" />
                             <HeaderedContainer Header="Bitcoin" Content="Bitcoin accent" Classes="Card Bitcoin" />
                             <HeaderedContainer Header="Blue" Content="Blue gradient" Classes="Card Blue" />
+                            <HeaderedContainer Header="Elevate" Content="Hover me to see lift + shadow" Classes="Card Elevate" />
                         </StackPanel>
                     </Border>
                 </ThemeVariantScope>
@@ -52,12 +53,6 @@
         <Setter Property="IconOptions.Background" Value="{DynamicResource Accent}" />
     </Style>
 
-    <!-- Translucid: DEPRECATED - use ".Card Accent" or ".Card.Accent" instead -->
-    <!-- Kept for backward compat, colors come from .Accent in ColorVariants -->
-    <Style Selector="HeaderedContainer.Translucid /template/ ContentPresenter#Header EdgePanel /template/ ContentControl#StartContent">
-        <Setter Property="IconOptions.Background" Value="{DynamicResource Accent}" />
-    </Style>
-
     <!-- WizardHighlight: DEPRECATED - use ".Card Radius-L Bitcoin" instead -->
     <!-- Kept for backward compat, colors come from .Bitcoin in ColorVariants -->
     <Style Selector="HeaderedContainer.WizardHighlight /template/ ContentPresenter#Header EdgePanel /template/ ContentControl#StartContent">
@@ -80,7 +75,12 @@
     <Style Selector="HeaderedContainer.Fields">
         <Setter Property="ContentTemplate">
             <DataTemplate>
-                <TextBlock Classes="Size-XL Weight-Bold Strong" Text="{Binding DataType={x:Type x:String}}" />
+                <TextBlock Classes="Size-XL Weight-Bold Strong Wrap" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+        <Setter Property="HeaderTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-S Weight-Light NoWrap" Text="{Binding DataType={x:Type x:String}}" />
             </DataTemplate>
         </Setter>
     </Style>
@@ -88,7 +88,7 @@
     <Style Selector="HeaderedContainer.Fields EdgePanel">
         <Setter Property="StartContentTemplate">
             <DataTemplate>
-                <TextBlock Classes="Size-S Weight-Bold" Foreground="{DynamicResource StatLabel}" Text="{Binding DataType={x:Type x:String}}" />
+                <TextBlock Classes="Size-S Weight-Bold NoWrap" Foreground="{DynamicResource StatLabel}" Text="{Binding DataType={x:Type x:String}}" />
             </DataTemplate>
         </Setter>
     </Style>
@@ -126,7 +126,7 @@
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryBlack}" />
     </Style>
-
+    
     <Style Selector="HeaderedContainer.BigHeader EdgePanel">
         <Setter Property="ContentTemplate">
             <DataTemplate>
@@ -145,10 +145,12 @@
     </Style>
     
     <Style Selector="HeaderedContainer.OrangeIcon">
+        <Setter Property="IconOptions.Fill" Value="White" />
         <Setter Property="IconOptions.Background" Value="{DynamicResource BitcoinOrangeDarker}" />
     </Style>
     
     <Style Selector="HeaderedContainer.GreenIcon">
+        <Setter Property="IconOptions.Fill" Value="White" />
         <Setter Property="IconOptions.Background" Value="{DynamicResource PrimaryGreenDark}" />
     </Style>
     
@@ -168,4 +170,3 @@
     </Style>
 
 </Styles>
-

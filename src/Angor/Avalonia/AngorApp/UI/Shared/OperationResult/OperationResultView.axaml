@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:operationResult="clr-namespace:AngorApp.UI.Shared.OperationResult" d:DesignWidth="660"
+             mc:Ignorable="d" 
+             x:Class="AngorApp.UI.Shared.OperationResult.OperationResultView" x:DataType="operationResult:IOperationResultViewModel">
+    
+    <Design.DataContext>
+        <operationResult:OperationResultViewModelSample Text="The operation has finished correctly and your funds are on your way" Title="Operation Succeeded" 
+                                                        Icon="{Icon fa-check}" />
+    </Design.DataContext>
+    
+    <StackPanel Classes="BigGap" Margin="10 10 10 20">
+        <ContentControl IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}" 
+                        Content="{Binding Icon}" IconOptions.CornerRadius="1000" IconOptions.Padding="20" IconOptions.Size="40">
+            <Interaction.Behaviors>
+                <BindingTriggerBehavior Binding="{Binding Feeling}" Value="Good">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static IconOptions.FillProperty}" Value="{DynamicResource PrimaryGreen}" />
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static IconOptions.BackgroundProperty}" Value="{DynamicResource BrandWash}" />
+                </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding Feeling}" Value="Bad">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static IconOptions.FillProperty}" Value="{DynamicResource Error}" />
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static IconOptions.BackgroundProperty}" Value="{DynamicResource ErrorSoft}" />
+                </BindingTriggerBehavior>
+            </Interaction.Behaviors>
+        </ContentControl>
+        <TextBlock TextAlignment="Center" Classes="Weight-Bold Size-XXL Strong Wrap" Text="{Binding Title}" />
+        <TextBlock Classes="Size-M Center" Text="{Binding Text}" />
+    </StackPanel>
+</UserControl>

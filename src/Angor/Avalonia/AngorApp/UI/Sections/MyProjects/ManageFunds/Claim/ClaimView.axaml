@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:claim="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Claim"
+             xmlns:stage="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Stage"
+             mc:Ignorable="d"
+             d:DesignWidth="900"
+             x:Class="AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.ClaimView"
+             x:DataType="claim:IClaimViewModel">
+
+    <Design.DataContext>
+        <claim:ClaimViewModelSample />
+    </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Load}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <Loading ClipToBounds="False" IsLoading="{Binding Load.IsExecuting^}">
+        <HeaderedContainer Header="Stages" Classes="Card White MediumBigHeader Shadow">
+            <StackPanel Classes="Gap-L">
+                <TextBlock Classes="Size-M">
+                    Use the Claim button to view and select UTXOs. After selecting UTXOs, click Claim Selected to proceed with claiming them into your Angor wallet.
+                </TextBlock>
+                <ItemsControl Classes="Vertical" ItemsSource="{Binding Stages}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <stage:ClaimStageView />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </HeaderedContainer>
+    </Loading>
+</UserControl>

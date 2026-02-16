@@ -1,14 +1,11 @@
 using System.Reactive.Disposables;
 using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 using Zafiro.CSharpFunctionalExtensions;
-using Zafiro.UI.Shell.Utils;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 
 namespace AngorApp.UI.Sections.Founder;
 
-[Section("My Projects", icon: "fa-regular fa-file-lines", sortIndex: 4)]
-[SectionGroup("FOUNDER")]
 public class FounderSectionViewModel : ReactiveObject, IFounderSectionViewModel, IDisposable
 {
     private readonly CompositeDisposable disposable = new();

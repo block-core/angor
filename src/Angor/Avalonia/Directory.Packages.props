@@ -2,7 +2,7 @@
   <!-- https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <AvaloniaVersion>11.3.11</AvaloniaVersion>
+    <AvaloniaVersion>11.3.12</AvaloniaVersion>
   </PropertyGroup>
   <ItemGroup>
     <!-- Avalonia packages -->
@@ -48,13 +48,13 @@
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
     <PackageVersion Include="Zafiro" Version="45.0.10" />
     <PackageVersion Include="Zafiro.Avalonia" Version="49.0.2" />
-    <PackageVersion Include="Zafiro.Avalonia.Generators" Version="49.0.2" />
-    <PackageVersion Include="Zafiro.Avalonia.Icons.Projektanker" Version="49.0.2" />
-    <PackageVersion Include="Zafiro.Avalonia.Icons.Svg" Version="49.0.2" />
+    <PackageVersion Include="Zafiro.Avalonia.Generators" Version="49.1.2" />
+    <PackageVersion Include="Zafiro.Avalonia.Icons.Projektanker" Version="49.1.2" />
+    <PackageVersion Include="Zafiro.Avalonia.Icons.Svg" Version="49.1.2" />
     <PackageVersion Include="Zafiro.FileSystem" Version="45.0.9" />
     <PackageVersion Include="Zafiro.UI" Version="45.0.9" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="49.0.2" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="49.1.2" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />
     <PackageVersion Include="FluentAssertions.Reactive" Version="0.2.0" />

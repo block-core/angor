@@ -7,17 +7,8 @@
                 <Border Padding="20" Background="{DynamicResource AppBackground}">
                     <StackPanel Spacing="10">
                         <TextBlock FontWeight="Bold">Light Theme</TextBlock>
-                        <Border Classes="Translucid">
-                            <TextBlock>Border.Translucid</TextBlock>
-                        </Border>
                         <Border Classes="Panel">
                             <TextBlock>Border.Panel</TextBlock>
-                        </Border>
-                        <Border Classes="Elevated">
-                            <TextBlock>Border.Elevated (hover me)</TextBlock>
-                        </Border>
-                        <Border Classes="Interactive Elevated">
-                            <TextBlock>Border.Interactive.Elevated</TextBlock>
                         </Border>
                     </StackPanel>
                 </Border>
@@ -26,9 +17,6 @@
                 <Border Padding="20" Background="{DynamicResource AppBackground}">
                     <StackPanel Spacing="10">
                         <TextBlock FontWeight="Bold" Foreground="White">Dark Theme</TextBlock>
-                        <Border Classes="Translucid">
-                            <TextBlock>Border.Translucid</TextBlock>
-                        </Border>
                         <Border Classes="Panel">
                             <TextBlock>Border.Panel</TextBlock>
                         </Border>
@@ -38,46 +26,12 @@
         </StackPanel>
     </Design.PreviewWith>
 
-    <Style Selector="Border.Translucid">
-        <Setter Property="Padding" Value="20" />
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="BorderBrush" Value="#3F22005A" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Background" Value="{StaticResource TranslucidBackground}" />
-    </Style>
-
     <Style Selector="Border.Panel">
         <Setter Property="CornerRadius" Value="20" />
         <Setter Property="Padding" Value="20" />
         <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Background" Value="{DynamicResource Surface}" />
-    </Style>
-
-    <Style Selector="Border.Elevated">
-        <Setter Property="Background" Value="{DynamicResource CardSurface}" />
-        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
-        <Setter Property="Transitions">
-            <Transitions>
-                <BoxShadowsTransition Property="BoxShadow" Duration="0:0:1" />
-            </Transitions>
-        </Setter>
-    </Style>
-    <Style Selector="Border.Elevated:pointerover">
-        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadowBig}" />
-    </Style>
-
-    <Style Selector="Border.Interactive">
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Transitions">
-            <Transitions>
-                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:.125" />
-            </Transitions>
-        </Setter>
-        <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
-    </Style>
-    <Style Selector="Border.Interactive:pointerover">
-        <Setter Property="RenderTransform" Value="translate(0px, -3px)" />
     </Style>
 
 </Styles>

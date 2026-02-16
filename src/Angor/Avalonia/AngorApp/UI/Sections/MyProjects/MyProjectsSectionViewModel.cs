@@ -1,0 +1,80 @@
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using Angor.Sdk.Funding.Projects;
+using AngorApp.Model.Common;
+using AngorApp.UI.Sections.MyProjects.Items;
+using AngorApp.UI.Sections.MyProjects.ManageFunds;
+using DynamicData;
+using DynamicData.Aggregation;
+using DynamicData.Kernel;
+using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.UI.Navigation;
+using Zafiro.UI.Shell.Utils;
+using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
+
+namespace AngorApp.UI.Sections.MyProjects;
+
+[Section("My Projects", icon: "fa-regular fa-file-lines", sortIndex: 4)]
+[SectionGroup("FOUNDER")]
+public partial class MyProjectsSectionViewModel : ReactiveObject, IMyProjectsSectionViewModel, IDisposable
+{
+    private readonly CompositeDisposable disposable = new();
+    private readonly IProjectAppService projectAppService;
+    private readonly IWalletContext walletContext;
+    private readonly Func<ProjectId, IManageFundsViewModel> manageFundsFactory;
+    private readonly INavigator navigator;
+
+    public MyProjectsSectionViewModel(
+        UIServices uiServices,
+        IProjectAppService projectAppService,
+        ICreateProjectFlow createProjectFlow,
+        IWalletContext walletContext,
+        Func<ProjectId, IManageFundsViewModel> manageFundsFactory,
+        INavigator navigator)
+    {
+        this.projectAppService = projectAppService;
+        this.walletContext = walletContext;
+        this.manageFundsFactory = manageFundsFactory;
+        this.navigator = navigator;
+
+        var projectsCollection = RefreshableCollection.Create(DoLoadProjects, item => item.Id).DisposeWith(disposable);
+
+        LoadProjects = projectsCollection.Refresh;
+        LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Failed to load projects").DisposeWith(disposable);
+
+        var projectChanges = projectsCollection.Changes;
+        Projects = projectsCollection.Items;
+
+        ActiveProjectsCount = projectChanges.FilterOnObservable(item => item.ProjectStatus.Select(status => status == ProjectStatus.Open)).Count();
+
+        TotalRaised = projectChanges.TransformOnObservable(item => item.FundingRaised)
+                                    .ForAggregation()
+                                    .Sum(x => x.Sats)
+                                    .Select(sats => new AmountUI(sats));
+
+        Create = ReactiveCommand.CreateFromTask(createProjectFlow.CreateProject)
+            .Enhance()
+            .DisposeWith(disposable);
+        Create.HandleErrorsWith(uiServices.NotificationService, "Cannot create project").DisposeWith(disposable);
+    }
+
+    private async Task<Result<IEnumerable<IMyProjectItem>>> DoLoadProjects()
+    {
+        // await Task.Delay(5000);
+        return await walletContext
+            .Require()
+            .Bind(wallet => projectAppService.GetFounderProjects(wallet.Id))
+            .Map(response => response.Projects.Select(dto => (IMyProjectItem)new MyProjectItem(dto, projectAppService, manageFundsFactory, navigator)));
+    }
+
+    public IReadOnlyCollection<IMyProjectItem> Projects { get; }
+    public IEnhancedCommand<Result<IEnumerable<IMyProjectItem>>> LoadProjects { get; }
+    public IEnhancedCommand<Result<Maybe<string>>> Create { get; }
+    public IObservable<int> ActiveProjectsCount { get; }
+    public IObservable<IAmountUI> TotalRaised { get; }
+
+    public void Dispose()
+    {
+        disposable.Dispose();
+    }
+}

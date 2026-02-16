@@ -1,0 +1,53 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <WrapPanel>
+                <StackPanel Spacing="10">
+                    <ContentControl Classes="Box Red" Content="SOMETHING" />
+                    <ContentControl Classes="Box Green" Content="SOMETHING" />
+                    <ContentControl Classes="Box Orange" Content="SOMETHING" />
+                    <ContentControl Classes="Box BrightGreen" Content="SOMETHING" />
+                </StackPanel>
+                <ThemeVariantScope RequestedThemeVariant="Dark">
+                    <StackPanel Spacing="10" Background="Black">
+                        <ContentControl Classes="Box Red" Content="SOMETHING" />
+                        <ContentControl Classes="Box Green" Content="SOMETHING" />
+                        <ContentControl Classes="Box Orange" Content="SOMETHING" />
+                        <ContentControl Classes="Box BrightGreen" Content="SOMETHING" />
+                    </StackPanel>
+                </ThemeVariantScope>
+            </WrapPanel>
+        </Border>
+    </Design.PreviewWith>
+
+    <Style Selector=":is(Control).Box">
+        <Setter Property="Border.CornerRadius" Value="6" />
+        <Setter Property="Border.BorderThickness" Value="1" />
+        <Setter Property="TextElement.FontSize" Value="13" />
+        <Setter Property="TextElement.FontWeight" Value="Bold" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Border.Padding" Value="16 10" />
+    </Style>
+    <Style Selector=":is(Control).Box.Green">
+        <Setter Property="Border.BorderBrush" Value="#4b7c5a" />
+        <Setter Property="Border.Background" Value="#1a4b7c5a" />
+        <Setter Property="TextElement.Foreground" Value="#4b7c5a" />
+    </Style>
+    <Style Selector=":is(Control).Box.BrightGreen">
+        <Setter Property="Border.BorderBrush" Value="#22c55e" />
+        <Setter Property="Border.Background" Value="#1a22c55e" />
+        <Setter Property="TextElement.Foreground" Value="#22c55e" />
+    </Style>
+    <Style Selector=":is(Control).Box.Red">
+        <Setter Property="Border.BorderBrush" Value="#ef4444" />
+        <Setter Property="Border.Background" Value="#1aef4444" />
+        <Setter Property="TextElement.Foreground" Value="#ef4444" />
+    </Style>
+    <Style Selector=":is(Control).Box.Orange">
+        <Setter Property="Border.BorderBrush" Value="#f7931a" />
+        <Setter Property="Border.Background" Value="#1af7931a" />
+        <Setter Property="TextElement.Foreground" Value="#f7931a" />
+    </Style>
+
+</Styles>
