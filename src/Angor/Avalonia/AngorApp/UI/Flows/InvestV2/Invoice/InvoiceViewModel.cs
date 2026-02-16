@@ -278,8 +278,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         }
         try
         {
-            Result monitorResult;
-            
+            // For Lightning payments, first monitor and claim the swap
             if (invoiceType.PaymentMethod == PaymentMethod.Lightning && invoiceType is LightningInvoiceType lightningInvoice)
             {
                 // SwapId should never be null here since we check IsLoaded before monitoring
@@ -288,23 +287,28 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                     return; // Lightning invoice not loaded yet
                 }
                 
-                monitorResult = await MonitorLightningSwapAsync(
+                // Monitor the swap and claim funds
+                var swapResult = await MonitorLightningSwapAsync(
                     walletId,
                     lightningInvoice.SwapId,
-                    lightningInvoice.ReceivingAddress,
                     investmentAppService,
                     uiServices,
                     token);
+                
+                if (swapResult.IsFailure)
+                {
+                    return;
+                }
             }
-            else
-            {
-                monitorResult = await MonitorAddressForFundsAsync(
-                    walletId,
-                    invoiceType.ReceivingAddress ?? invoiceType.Address,
-                    investmentAppService,
-                    uiServices,
-                    token);
-            }
+            
+            // Monitor the receiving address for funds (both Lightning and on-chain payments)
+            var receivingAddress = invoiceType.ReceivingAddress ?? invoiceType.Address;
+            var monitorResult = await MonitorAddressForFundsAsync(
+                walletId,
+                receivingAddress,
+                investmentAppService,
+                uiServices,
+                token);
             
             if (monitorResult.IsFailure)
             {
@@ -312,7 +316,6 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             }
 
             // Funds received - now build and submit the investment transaction
-            var receivingAddress = invoiceType.ReceivingAddress ?? invoiceType.Address;
             await BuildAndSubmitInvestmentAsync(walletId, projectId, receivingAddress, DefaultFeeRateSatsPerVbyte, investmentAppService, uiServices, shell, token);
         }
         catch (OperationCanceledException)
@@ -337,7 +340,6 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     private async Task<Result> MonitorLightningSwapAsync(
         WalletId walletId,
         string swapId,
-        string receivingAddress,
         IInvestmentAppService investmentAppService,
         UIServices uiServices,
         CancellationToken cancellationToken)
@@ -347,7 +349,6 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             var request = new MonitorLightningSwap.MonitorLightningSwapRequest(
                 walletId,
                 swapId,
-                receivingAddress,
                 TimeSpan.FromMinutes(10));
 
             var result = await investmentAppService.MonitorLightningSwap(request);

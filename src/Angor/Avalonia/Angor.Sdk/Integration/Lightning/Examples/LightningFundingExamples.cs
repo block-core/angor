@@ -70,11 +70,10 @@ public class LightningFundingExamples
         _logger.LogInformation(">>> PAY THIS INVOICE: {Invoice}", swap.Invoice);
         _logger.LogInformation("");
 
-        // Step 2: Monitor the swap
+        // Step 2: Monitor the swap and claim funds
         var monitorRequest = new MonitorLightningSwap.MonitorLightningSwapRequest(
             WalletId: walletId,
             SwapId: swap.Id,
-            ReceivingAddress: receivingAddress,
             Timeout: TimeSpan.FromMinutes(30)
         );
 
@@ -86,14 +85,9 @@ public class LightningFundingExamples
             return false;
         }
 
-        _logger.LogInformation("✓ Swap completed!");
-        _logger.LogInformation("  Transaction ID: {TxId}", monitorResult.Value.TransactionId);
-        
-        if (monitorResult.Value.DetectedUtxos != null)
-        {
-            _logger.LogInformation("  UTXOs detected: {Count}", monitorResult.Value.DetectedUtxos.Count);
-            _logger.LogInformation("  Ready for investment transaction!");
-        }
+        _logger.LogInformation("✓ Swap claimed!");
+        _logger.LogInformation("  Claim Transaction ID: {TxId}", monitorResult.Value.ClaimTransactionId);
+        _logger.LogInformation("  Now monitor the receiving address for funds to arrive...");
 
         return true;
     }
@@ -141,15 +135,13 @@ public class LightningFundingExamples
     /// </summary>
     public async Task<bool> MonitorExistingSwapExample(
         WalletId walletId,
-        string swapId,
-        string receivingAddress)
+        string swapId)
     {
         _logger.LogInformation("=== Example 4: Monitor Existing Swap ===");
 
         var request = new MonitorLightningSwap.MonitorLightningSwapRequest(
             WalletId: walletId,
-            SwapId: swapId,
-            ReceivingAddress: receivingAddress
+            SwapId: swapId
         );
 
         var result = await _investmentAppService.MonitorLightningSwap(request);
@@ -158,7 +150,7 @@ public class LightningFundingExamples
         {
             var status = result.Value.SwapStatus;
             _logger.LogInformation("✓ Swap status: {Status}", status.Status);
-            _logger.LogInformation("  Transaction: {TxId}", result.Value.TransactionId ?? "pending");
+            _logger.LogInformation("  Claim Transaction: {TxId}", result.Value.ClaimTransactionId ?? "pending");
             return status.Status.IsComplete();
         }
         else

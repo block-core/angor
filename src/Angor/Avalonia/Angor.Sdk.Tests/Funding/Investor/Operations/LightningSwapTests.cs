@@ -1,4 +1,4 @@
-﻿using Angor.Sdk.Common;
+﻿﻿using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
@@ -10,6 +10,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -198,8 +199,7 @@ public class MonitorLightningSwapTests
 {
     private readonly Mock<IBoltzWebSocketClient> _mockWebSocketClient;
     private readonly Mock<IBoltzSwapStorageService> _mockSwapStorageService;
-    private readonly Mock<IIndexerService> _mockIndexerService;
-    private readonly Mock<IWalletAccountBalanceService> _mockWalletService;
+    private readonly Mock<IMediator> _mockMediator;
     private readonly Mock<ILogger<MonitorLightningSwap.MonitorLightningSwapHandler>> _mockLogger;
     private readonly MonitorLightningSwap.MonitorLightningSwapHandler _handler;
 
@@ -207,25 +207,22 @@ public class MonitorLightningSwapTests
     {
         _mockWebSocketClient = new Mock<IBoltzWebSocketClient>();
         _mockSwapStorageService = new Mock<IBoltzSwapStorageService>();
-        _mockIndexerService = new Mock<IIndexerService>();
-        _mockWalletService = new Mock<IWalletAccountBalanceService>();
+        _mockMediator = new Mock<IMediator>();
         _mockLogger = new Mock<ILogger<MonitorLightningSwap.MonitorLightningSwapHandler>>();
 
         _handler = new MonitorLightningSwap.MonitorLightningSwapHandler(
             _mockWebSocketClient.Object,
             _mockSwapStorageService.Object,
-            _mockIndexerService.Object,
-            _mockWalletService.Object,
+            _mockMediator.Object,
             _mockLogger.Object);
     }
 
     [Fact]
-    public async Task Handle_WhenSwapCompleted_FetchesUtxosFromIndexer()
+    public async Task Handle_WhenSwapAlreadyClaimed_ReturnsSuccess()
     {
         // Arrange
         var walletId = new WalletId("test-wallet");
         var swapId = "swap-123";
-        var address = "bc1qtest123";
 
         var completedStatus = new BoltzSwapStatus
         {
@@ -238,29 +235,18 @@ public class MonitorLightningSwapTests
             .Setup(x => x.MonitorSwapAsync(swapId, It.IsAny<TimeSpan?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(completedStatus));
 
-        var utxos = new List<UtxoData>
-        {
-            new() { outpoint = new Outpoint { transactionId = "tx123", outputIndex = 0 }, value = 99000 }
-        };
+        _mockSwapStorageService
+            .Setup(x => x.UpdateSwapStatusAsync(swapId, walletId.Value, It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>()))
+            .ReturnsAsync(Result.Success());
 
-        _mockIndexerService
-            .Setup(x => x.FetchUtxoAsync(address, It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(utxos);
-
-        _mockWalletService
-            .Setup(x => x.GetAccountBalanceInfoAsync(walletId))
-            .ReturnsAsync(Result.Failure<AccountBalanceInfo>("Not needed for this test"));
-
-        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(walletId, swapId, address);
+        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(walletId, swapId);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal("tx123", result.Value.TransactionId);
-        Assert.Single(result.Value.DetectedUtxos);
-        Assert.Equal(99000, result.Value.DetectedUtxos[0].value);
+        Assert.Equal("tx123", result.Value.ClaimTransactionId);
     }
 
     [Fact]
@@ -269,13 +255,12 @@ public class MonitorLightningSwapTests
         // Arrange
         var walletId = new WalletId("test-wallet");
         var swapId = "swap-123";
-        var address = "bc1qtest123";
 
         _mockWebSocketClient
             .Setup(x => x.MonitorSwapAsync(swapId, It.IsAny<TimeSpan?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<BoltzSwapStatus>("Swap expired"));
 
-        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(walletId, swapId, address);
+        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(walletId, swapId);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -286,36 +271,51 @@ public class MonitorLightningSwapTests
     }
 
     [Fact]
-    public async Task Handle_WhenNoUtxosFound_StillReturnsSuccess()
+    public async Task Handle_WhenFundsLocked_ClaimsAndReturnsSuccess()
     {
         // Arrange
         var walletId = new WalletId("test-wallet");
         var swapId = "swap-123";
-        var address = "bc1qtest123";
 
-        var completedStatus = new BoltzSwapStatus
+        var lockedStatus = new BoltzSwapStatus
         {
             SwapId = swapId,
             Status = SwapState.TransactionMempool,
-            TransactionId = "tx123"
+            TransactionId = "lockup-tx-123",
+            TransactionHex = "0100..."
         };
 
         _mockWebSocketClient
             .Setup(x => x.MonitorSwapAsync(swapId, It.IsAny<TimeSpan?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(completedStatus));
+            .ReturnsAsync(Result.Success(lockedStatus));
 
-        _mockIndexerService
-            .Setup(x => x.FetchUtxoAsync(address, It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(new List<UtxoData>());
+        _mockSwapStorageService
+            .Setup(x => x.UpdateSwapStatusAsync(swapId, walletId.Value, It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>()))
+            .ReturnsAsync(Result.Success());
 
-        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(walletId, swapId, address);
+        _mockSwapStorageService
+            .Setup(x => x.MarkSwapClaimedAsync(swapId, walletId.Value, It.IsAny<string>()))
+            .ReturnsAsync(Result.Success());
+
+        var claimResponse = new ClaimLightningSwap.ClaimLightningSwapResponse("claim-tx-123", "signed-hex");
+        _mockMediator
+            .Setup(x => x.Send(It.IsAny<ClaimLightningSwap.ClaimLightningSwapByIdRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(claimResponse));
+
+        var request = new MonitorLightningSwap.MonitorLightningSwapRequest(walletId, swapId);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Empty(result.Value.DetectedUtxos);
+        Assert.Equal("claim-tx-123", result.Value.ClaimTransactionId);
+        
+        _mockMediator.Verify(x => x.Send(
+            It.Is<ClaimLightningSwap.ClaimLightningSwapByIdRequest>(r => r.SwapId == swapId),
+            It.IsAny<CancellationToken>()), Times.Once);
+        
+        _mockSwapStorageService.Verify(x => x.MarkSwapClaimedAsync(swapId, walletId.Value, "claim-tx-123"), Times.Once);
     }
 }
 
