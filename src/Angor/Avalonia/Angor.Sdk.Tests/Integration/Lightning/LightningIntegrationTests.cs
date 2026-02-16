@@ -36,6 +36,7 @@ public class BoltzSwapIntegrationTests : IDisposable
     private readonly IIndexerService _indexerService;
     private readonly IMempoolMonitoringService _mempoolMonitoringService;
     private readonly BoltzSwapService _boltzSwapService;
+    private readonly BoltzClaimService _boltzClaimService;
     private readonly BoltzWebSocketClient _boltzWebSocketClient;
     private readonly BoltzSwapStorageService _boltzSwapStorageService;
     private readonly ClaimLightningSwap.ClaimLightningSwapByIdHandler _claimHandler;
@@ -96,6 +97,12 @@ public class BoltzSwapIntegrationTests : IDisposable
             _networkConfiguration,
             new NullLogger<BoltzSwapService>());
 
+        _boltzClaimService = new BoltzClaimService(
+            _boltzSwapService,
+            _indexerService,
+            _networkConfiguration,
+            new NullLogger<BoltzClaimService>());
+
         _boltzWebSocketClient = new BoltzWebSocketClient(
             boltzConfig,
             new NullLogger<BoltzWebSocketClient>());
@@ -113,11 +120,9 @@ public class BoltzSwapIntegrationTests : IDisposable
         _mockProjectService = new Mock<IProjectService>();
 
         _claimHandler = new ClaimLightningSwap.ClaimLightningSwapByIdHandler(
-            _boltzSwapService,
+            _boltzClaimService,
             _boltzSwapStorageService,
             _mockProjectService.Object,
-            _indexerService,
-            _networkConfiguration,
             _mockSeedwordsProvider.Object,
             _derivationOperations,
             new NullLogger<ClaimLightningSwap.ClaimLightningSwapByIdHandler>());

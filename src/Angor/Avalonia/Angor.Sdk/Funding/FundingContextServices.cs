@@ -76,6 +76,7 @@ public static class FundingContextServices
             UseV2Prefix = true
         });
         services.TryAddSingleton<IBoltzSwapService, BoltzSwapService>();
+        services.TryAddSingleton<IBoltzClaimService, BoltzClaimService>();
         services.TryAddSingleton<IBoltzSwapStorageService, BoltzSwapStorageService>();
         services.TryAddTransient<IBoltzWebSocketClient, BoltzWebSocketClient>();
         
