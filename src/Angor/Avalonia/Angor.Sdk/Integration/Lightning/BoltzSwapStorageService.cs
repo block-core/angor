@@ -172,9 +172,15 @@ public interface IBoltzSwapStorageService
     Task<Result> SaveSwapAsync(BoltzSubmarineSwap swap, string walletId, string? projectId = null);
     
     /// <summary>
-    /// Get a swap by its ID
+    /// Get a swap by its ID (without wallet validation - use GetSwapForWalletAsync for secure access)
     /// </summary>
     Task<Result<BoltzSwapDocument?>> GetSwapAsync(string swapId);
+    
+    /// <summary>
+    /// Get a swap by its ID, validating that it belongs to the specified wallet.
+    /// Returns failure if the swap doesn't exist or belongs to a different wallet.
+    /// </summary>
+    Task<Result<BoltzSwapDocument>> GetSwapForWalletAsync(string swapId, string walletId);
     
     /// <summary>
     /// Get all swaps for a wallet
@@ -187,14 +193,14 @@ public interface IBoltzSwapStorageService
     Task<Result<IEnumerable<BoltzSwapDocument>>> GetPendingSwapsAsync(string walletId);
     
     /// <summary>
-    /// Update the status of a swap
+    /// Update the status of a swap, validating wallet ownership
     /// </summary>
-    Task<Result> UpdateSwapStatusAsync(string swapId, string status, string? lockupTxId = null, string? lockupTxHex = null);
+    Task<Result> UpdateSwapStatusAsync(string swapId, string walletId, string status, string? lockupTxId = null, string? lockupTxHex = null);
     
     /// <summary>
-    /// Mark a swap as claimed
+    /// Mark a swap as claimed, validating wallet ownership
     /// </summary>
-    Task<Result> MarkSwapClaimedAsync(string swapId, string claimTransactionId);
+    Task<Result> MarkSwapClaimedAsync(string swapId, string walletId, string claimTransactionId);
 }
 
 /// <summary>
@@ -249,6 +255,27 @@ public class BoltzSwapStorageService(
         }
     }
 
+    public async Task<Result<BoltzSwapDocument>> GetSwapForWalletAsync(string swapId, string walletId)
+    {
+        try
+        {
+            var result = await collection.FindAsync(d => d.SwapId == swapId && d.WalletId == walletId);
+            
+            if (result.IsFailure || result.Value == null || !result.Value.Any())
+            {
+                logger.LogError("Swap {SwapId} not found for wallet {WalletId}", swapId, walletId);
+                return Result.Failure<BoltzSwapDocument>("Swap not found or does not belong to the specified wallet.");
+            }
+            
+            return Result.Success(result.Value.First());
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting swap {SwapId} for wallet {WalletId}", swapId, walletId);
+            return Result.Failure<BoltzSwapDocument>($"Error getting swap: {ex.Message}");
+        }
+    }
+
     public async Task<Result<IEnumerable<BoltzSwapDocument>>> GetSwapsForWalletAsync(string walletId)
     {
         try
@@ -298,7 +325,7 @@ public class BoltzSwapStorageService(
         }
     }
 
-    public async Task<Result> UpdateSwapStatusAsync(string swapId, string status, string? lockupTxId = null, string? lockupTxHex = null)
+    public async Task<Result> UpdateSwapStatusAsync(string swapId, string walletId, string status, string? lockupTxId = null, string? lockupTxHex = null)
     {
         try
         {
@@ -311,6 +338,15 @@ public class BoltzSwapStorageService(
             }
             
             var doc = getResult.Value;
+            
+            // Validate wallet ownership
+            if (doc.WalletId != walletId)
+            {
+                logger.LogError("Swap {SwapId} belongs to wallet {SwapWalletId}, not {RequestedWalletId}", 
+                    swapId, doc.WalletId, walletId);
+                return Result.Failure($"Swap {swapId} does not belong to this wallet");
+            }
+            
             doc.Status = status;
             doc.UpdatedAt = DateTime.UtcNow;
             
@@ -338,7 +374,7 @@ public class BoltzSwapStorageService(
         }
     }
 
-    public async Task<Result> MarkSwapClaimedAsync(string swapId, string claimTransactionId)
+    public async Task<Result> MarkSwapClaimedAsync(string swapId, string walletId, string claimTransactionId)
     {
         try
         {
@@ -351,6 +387,15 @@ public class BoltzSwapStorageService(
             }
             
             var doc = getResult.Value;
+            
+            // Validate wallet ownership
+            if (doc.WalletId != walletId)
+            {
+                logger.LogError("Swap {SwapId} belongs to wallet {SwapWalletId}, not {RequestedWalletId}", 
+                    swapId, doc.WalletId, walletId);
+                return Result.Failure($"Swap {swapId} does not belong to this wallet");
+            }
+            
             doc.Status = "Claimed";
             doc.ClaimTransactionId = claimTransactionId;
             doc.UpdatedAt = DateTime.UtcNow;

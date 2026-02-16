@@ -160,6 +160,63 @@ public class BoltzClaimResponse
 }
 
 /// <summary>
+/// Fee information for Boltz reverse submarine swaps (Lightning → On-chain)
+/// </summary>
+public class BoltzSwapFees
+{
+    /// <summary>
+    /// Percentage fee (e.g., 0.5 means 0.5%)
+    /// </summary>
+    public decimal Percentage { get; set; }
+    
+    /// <summary>
+    /// Fixed miner fee in satoshis
+    /// </summary>
+    public long MinerFees { get; set; }
+    
+    /// <summary>
+    /// Minimum swap amount in satoshis
+    /// </summary>
+    public long MinAmount { get; set; }
+    
+    /// <summary>
+    /// Maximum swap amount in satoshis
+    /// </summary>
+    public long MaxAmount { get; set; }
+    
+    /// <summary>
+    /// Calculates the invoice amount needed to receive the desired on-chain amount after fees.
+    /// Formula: invoiceAmount = ceil((desiredOnChainAmount + minerFees) / (1 - percentage/100))
+    /// </summary>
+    public long CalculateInvoiceAmount(long desiredOnChainAmount)
+    {
+        // onChainAmount = invoiceAmount * (1 - percentage/100) - minerFees
+        // So: invoiceAmount = (desiredOnChainAmount + minerFees) / (1 - percentage/100)
+        var percentageMultiplier = 1m - (Percentage / 100m);
+        var invoiceAmount = (desiredOnChainAmount + MinerFees) / percentageMultiplier;
+        return (long)Math.Ceiling(invoiceAmount);
+    }
+    
+    /// <summary>
+    /// Calculates the on-chain amount that will be received for a given invoice amount.
+    /// </summary>
+    public long CalculateOnChainAmount(long invoiceAmount)
+    {
+        var percentageMultiplier = 1m - (Percentage / 100m);
+        var onChainAmount = (invoiceAmount * percentageMultiplier) - MinerFees;
+        return (long)Math.Floor(onChainAmount);
+    }
+    
+    /// <summary>
+    /// Gets the total fees that will be deducted for a given invoice amount.
+    /// </summary>
+    public long GetTotalFees(long invoiceAmount)
+    {
+        return invoiceAmount - CalculateOnChainAmount(invoiceAmount);
+    }
+}
+
+/// <summary>
 /// Current status of a swap
 /// </summary>
 public class BoltzSwapStatus

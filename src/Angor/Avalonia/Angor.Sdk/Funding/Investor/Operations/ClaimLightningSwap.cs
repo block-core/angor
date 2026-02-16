@@ -77,12 +77,11 @@ public static class ClaimLightningSwap
                 logger.LogInformation("Claiming swap {SwapId} for wallet {WalletId}", 
                     request.SwapId, request.WalletId.Value);
 
-                // Step 1: Get the swap from storage
-                var swapResult = await swapStorageService.GetSwapAsync(request.SwapId);
-                if (swapResult.IsFailure || swapResult.Value == null)
+                // Step 1: Get the swap from storage, validating wallet ownership
+                var swapResult = await swapStorageService.GetSwapForWalletAsync(request.SwapId, request.WalletId.Value);
+                if (swapResult.IsFailure)
                 {
-                    return Result.Failure<ClaimLightningSwapResponse>(
-                        $"Swap not found in storage: {request.SwapId}");
+                    return Result.Failure<ClaimLightningSwapResponse>(swapResult.Error);
                 }
 
                 var swapDoc = swapResult.Value;
@@ -122,6 +121,7 @@ public static class ClaimLightningSwap
                 // Step 5: Claim the swap using the private method
                 return await ClaimSwapAsync(
                     swap,
+                    request.WalletId.Value,
                     privateKeyResult.Value,
                     lockupTxHex,
                     request.LockupOutputIndex,
@@ -163,6 +163,7 @@ public static class ClaimLightningSwap
         /// </summary>
         private async Task<Result<ClaimLightningSwapResponse>> ClaimSwapAsync(
             BoltzSubmarineSwap swap,
+            string walletId,
             string claimPrivateKeyHex,
             string lockupTransactionHex,
             int lockupOutputIndex,
@@ -199,7 +200,7 @@ public static class ClaimLightningSwap
                 try
                 {
                     var cooperativeResult = await CooperativeMusig2Claim(
-                        swap, claimPrivateKeyHex, lockupTransactionHex, lockupOutputIndex, feeRate, preimageBytes);
+                        swap, walletId, claimPrivateKeyHex, lockupTransactionHex, lockupOutputIndex, feeRate, preimageBytes);
                     
                     if (cooperativeResult.IsSuccess)
                     {
@@ -223,7 +224,7 @@ public static class ClaimLightningSwap
                 logger.LogInformation("Proceeding with manual claim transaction (Taproot script path spend)...");
                 
                 return await BuildAndBroadcastClaimTransaction(
-                    swap, claimPrivateKeyHex, lockupTransactionHex, lockupOutputIndex, feeRate, preimageBytes);
+                    swap, walletId, claimPrivateKeyHex, lockupTransactionHex, lockupOutputIndex, feeRate, preimageBytes);
             }
             catch (Exception ex)
             {
@@ -238,6 +239,7 @@ public static class ClaimLightningSwap
         /// </summary>
         private async Task<Result<ClaimLightningSwapResponse>> CooperativeMusig2Claim(
             BoltzSubmarineSwap swap,
+            string walletId,
             string claimPrivateKeyHex,
             string lockupTransactionHex,
             int lockupOutputIndex,
@@ -288,6 +290,33 @@ public static class ClaimLightningSwap
             var claimPrivateKeyBytes = Convert.FromHexString(claimPrivateKeyHex);
             var boltzRefundKeyBytes = Convert.FromHexString(swap.RefundPublicKey);
             
+            // Verify the derived claim key matches what was registered with Boltz
+            // This catches key derivation issues early
+            if (!string.IsNullOrEmpty(swap.ClaimPublicKey))
+            {
+                var derivedPubKeyBytes = NBitcoin.Secp256k1.ECPrivKey.Create(claimPrivateKeyBytes).CreatePubKey().ToBytes();
+                var derivedPubKeyHex = Convert.ToHexString(derivedPubKeyBytes).ToLowerInvariant();
+                var storedClaimKey = swap.ClaimPublicKey.ToLowerInvariant();
+                
+                // Compare compressed keys (strip 02/03 prefix if needed for comparison)
+                var derivedXOnly = derivedPubKeyHex.Length == 66 ? derivedPubKeyHex.Substring(2) : derivedPubKeyHex;
+                var storedXOnly = storedClaimKey.Length == 66 ? storedClaimKey.Substring(2) : storedClaimKey;
+                
+                if (derivedXOnly != storedXOnly)
+                {
+                    logger.LogError(
+                        "CRITICAL: Derived claim key does not match stored claim key! " +
+                        "Derived: {Derived}, Stored: {Stored}. " +
+                        "This will cause claim to fail.",
+                        derivedPubKeyHex, storedClaimKey);
+                    return Result.Failure<ClaimLightningSwapResponse>(
+                        $"Claim key mismatch - derived key ({derivedPubKeyHex}) doesn't match registered key ({storedClaimKey}). " +
+                        "This usually means the wallet or project data has changed since swap creation.");
+                }
+                
+                logger.LogDebug("Derived claim key matches stored key: {Key}", derivedPubKeyHex);
+            }
+            
             var musig = new BoltzMusig2(claimPrivateKeyBytes, boltzRefundKeyBytes, logger);
             
             // --- Compute Taproot tweak from swap tree ---
@@ -315,16 +344,16 @@ public static class ClaimLightningSwap
             
             if (computedAddress != swap.LockupAddress)
             {
-                logger.LogWarning(
-                    "Tweaked output key address mismatch! Computed: {Computed}, Expected: {Expected}. " +
-                    "This indicates key aggregation or tweak computation differs from Boltz.",
+                logger.LogError(
+                    "CRITICAL: Tweaked output key address mismatch! Computed: {Computed}, Expected: {Expected}. " +
+                    "Key aggregation or tweak computation differs from Boltz. Claim will fail.",
                     computedAddress, swap.LockupAddress);
-                // Don't fail - let Boltz's response tell us if something is wrong
+                return Result.Failure<ClaimLightningSwapResponse>(
+                    $"Address mismatch - computed lockup address ({computedAddress}) doesn't match expected ({swap.LockupAddress}). " +
+                    "This indicates key aggregation or script tree computation differs from Boltz.");
             }
-            else
-            {
-                logger.LogInformation("Tweaked output key matches lockup address: {Address}", computedAddress);
-            }
+            
+            logger.LogInformation("Tweaked output key matches lockup address: {Address}", computedAddress);
             
             // Build the claim transaction (without witness initially)
             var destAddress = NBitcoin.BitcoinAddress.Create(swap.Address, network);
@@ -435,7 +464,7 @@ public static class ClaimLightningSwap
             }
             
             // Mark as claimed
-            await swapStorageService.MarkSwapClaimedAsync(swap.Id, claimTxId);
+            await swapStorageService.MarkSwapClaimedAsync(swap.Id, walletId, claimTxId);
             
             logger.LogInformation("Successfully claimed swap {SwapId} via MuSig2. TxId: {TxId}", swap.Id, claimTxId);
             
@@ -444,6 +473,7 @@ public static class ClaimLightningSwap
 
         private async Task<Result<ClaimLightningSwapResponse>> BuildAndBroadcastClaimTransaction(
             BoltzSubmarineSwap swap,
+            string walletId,
             string claimPrivateKeyHex,
             string lockupTransactionHex,
             int lockupOutputIndex,
@@ -668,7 +698,7 @@ public static class ClaimLightningSwap
                 }
 
                 // Step 6: Mark swap as claimed in the database
-                await swapStorageService.MarkSwapClaimedAsync(swap.Id, claimTxId);
+                await swapStorageService.MarkSwapClaimedAsync(swap.Id, walletId, claimTxId);
 
                 logger.LogInformation(
                     "Successfully claimed swap {SwapId}. Claim TxId: {TxId}",
@@ -909,6 +939,22 @@ public static class ClaimLightningSwap
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

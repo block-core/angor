@@ -57,5 +57,21 @@ public interface IBoltzSwapService
     /// <param name="transactionHex">The signed transaction hex to broadcast</param>
     /// <returns>The transaction ID if successful</returns>
     Task<Result<string>> BroadcastTransactionAsync(string transactionHex);
+
+    /// <summary>
+    /// Gets the fee information for reverse submarine swaps (Lightning → On-chain).
+    /// Use this to calculate the correct invoice amount that will result in the desired on-chain amount.
+    /// </summary>
+    /// <returns>Fee information including percentage and miner fees</returns>
+    Task<Result<BoltzSwapFees>> GetReverseSwapFeesAsync();
+
+    /// <summary>
+    /// Calculates the invoice amount needed to receive a specific on-chain amount after fees.
+    /// </summary>
+    /// <param name="desiredOnChainAmount">The amount you want to receive on-chain (in sats)</param>
+    /// <returns>The invoice amount to pay, or failure if amount is out of limits</returns>
+    Task<Result<long>> CalculateInvoiceAmountAsync(long desiredOnChainAmount);
 }
+
+
 

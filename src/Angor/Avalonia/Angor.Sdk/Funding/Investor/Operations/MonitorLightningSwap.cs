@@ -38,7 +38,8 @@ public static class MonitorLightningSwap
         WalletId WalletId,
         string SwapId,
         string ReceivingAddress,
-        TimeSpan? Timeout = null) : IRequest<Result<MonitorLightningSwapResponse>>;
+        TimeSpan? Timeout = null
+    ) : IRequest<Result<MonitorLightningSwapResponse>>;
 
     /// <summary>
     /// Response containing the completed swap details.
@@ -51,7 +52,8 @@ public static class MonitorLightningSwap
     public record MonitorLightningSwapResponse(
         BoltzSwapStatus SwapStatus,
         string TransactionId,
-        List<UtxoData> DetectedUtxos);
+        List<UtxoData> DetectedUtxos
+    );
 
     public class MonitorLightningSwapHandler(
         IBoltzWebSocketClient webSocketClient,
@@ -59,7 +61,8 @@ public static class MonitorLightningSwap
         IIndexerService indexerService,
         IWalletAccountBalanceService walletAccountBalanceService,
         IMediator mediator,
-        ILogger<MonitorLightningSwapHandler> logger)
+        ILogger<MonitorLightningSwapHandler> logger
+    )
         : IRequestHandler<MonitorLightningSwapRequest, Result<MonitorLightningSwapResponse>>
     {
         private static readonly TimeSpan DefaultTimeout = TimeSpan.FromMinutes(30);
@@ -68,13 +71,15 @@ public static class MonitorLightningSwap
 
         public async Task<Result<MonitorLightningSwapResponse>> Handle(
             MonitorLightningSwapRequest request,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
             try
             {
                 logger.LogInformation(
                     "Monitoring Lightning swap {SwapId} via WebSocket for wallet {WalletId}",
-                    request.SwapId, request.WalletId.Value);
+                    request.SwapId,
+                    request.WalletId.Value);
 
                 // Step 1: Monitor swap via WebSocket until funds are locked or claimed
                 var swapResult = await webSocketClient.MonitorSwapAsync(
@@ -93,21 +98,32 @@ public static class MonitorLightningSwap
                 // Step 2: Update swap status in database
                 await swapStorageService.UpdateSwapStatusAsync(
                     request.SwapId,
+                    request.WalletId.Value,
                     swapStatus.Status.ToString(),
                     swapStatus.TransactionId,
                     lockupTxHex: swapStatus.TransactionHex);
 
-                // Step 3: If funds are locked but not claimed, we need to claim manually
-                if (swapStatus.Status == SwapState.TransactionMempool || 
-                    swapStatus.Status == SwapState.TransactionConfirmed)
+                // Step 3: Check if already claimed
+                if (swapStatus.Status == SwapState.TransactionClaimed)
                 {
                     logger.LogInformation(
-                        "Swap {SwapId} has funds locked (status: {Status}). Initiating claim...",
-                        request.SwapId, swapStatus.Status);
+                        "Swap {SwapId} already claimed. TxId: {TxId}",
+                        request.SwapId,
+                        claimTxId);
+                }
+                // Step 4: If funds are locked but not claimed, we need to claim
+                // For reverse submarine swaps, only WE have the preimage, so we must claim manually
+                else if (swapStatus.Status == SwapState.TransactionMempool ||
+                         swapStatus.Status == SwapState.TransactionConfirmed)
+                {
+                    logger.LogInformation(
+                        "Swap {SwapId} has funds locked (status: {Status}). Claiming with preimage...",
+                        request.SwapId,
+                        swapStatus.Status);
 
                     var claimResult = await ClaimSwapFundsAsync(
-                        request.WalletId, 
-                        request.SwapId, 
+                        request.WalletId,
+                        request.SwapId,
                         swapStatus.TransactionHex,
                         cancellationToken);
 
@@ -119,10 +135,11 @@ public static class MonitorLightningSwap
                     }
 
                     claimTxId = claimResult.Value;
-                    logger.LogInformation("Swap {SwapId} claimed successfully. Claim TX: {TxId}", 
-                        request.SwapId, claimTxId);
+                    logger.LogInformation(
+                        "Swap {SwapId} claimed successfully. Claim TX: {TxId}",
+                        request.SwapId,
+                        claimTxId);
 
-                    // Update status to claimed
                     swapStatus.Status = SwapState.TransactionClaimed;
                     swapStatus.TransactionId = claimTxId;
                 }
@@ -134,27 +151,33 @@ public static class MonitorLightningSwap
                 {
                     logger.LogWarning(
                         "Swap claimed but no UTXOs found on address {Address}. Claim TX: {TxId}",
-                        request.ReceivingAddress, claimTxId);
-                    
+                        request.ReceivingAddress,
+                        claimTxId);
+
                     // Return success anyway - claim tx was broadcast
-                    return Result.Success(new MonitorLightningSwapResponse(
-                        swapStatus,
-                        claimTxId ?? string.Empty,
-                        new List<UtxoData>()));
+                    return Result.Success(
+                        new MonitorLightningSwapResponse(
+                            swapStatus,
+                            claimTxId ?? string.Empty,
+                            new List<UtxoData>()));
                 }
 
                 var totalAmount = utxos.Sum(u => u.value);
                 logger.LogInformation(
                     "Swap {SwapId} complete. Detected {Count} UTXO(s) totaling {Amount} sats on {Address}",
-                    request.SwapId, utxos.Count, totalAmount, request.ReceivingAddress);
+                    request.SwapId,
+                    utxos.Count,
+                    totalAmount,
+                    request.ReceivingAddress);
 
                 // Step 5: Update wallet balance
-                await UpdateWalletBalance(request.WalletId, request.ReceivingAddress, utxos);
+                await UpdateWalletBalance(request.WalletId, utxos);
 
-                return Result.Success(new MonitorLightningSwapResponse(
-                    swapStatus,
-                    claimTxId ?? string.Empty,
-                    utxos));
+                return Result.Success(
+                    new MonitorLightningSwapResponse(
+                        swapStatus,
+                        claimTxId ?? string.Empty,
+                        utxos));
             }
             catch (OperationCanceledException)
             {
@@ -169,10 +192,11 @@ public static class MonitorLightningSwap
         }
 
         private async Task<Result<string>> ClaimSwapFundsAsync(
-            WalletId walletId, 
-            string swapId, 
+            WalletId walletId,
+            string swapId,
             string? lockupTxHex,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
             try
             {
@@ -200,8 +224,9 @@ public static class MonitorLightningSwap
         }
 
         private async Task<List<UtxoData>?> FetchUtxosWithPollingAsync(
-            string address, 
-            CancellationToken cancellationToken)
+            string address,
+            CancellationToken cancellationToken
+        )
         {
             var startTime = DateTime.UtcNow;
             var endTime = startTime.Add(UtxoPollingTimeout);
@@ -209,15 +234,17 @@ public static class MonitorLightningSwap
             while (DateTime.UtcNow < endTime && !cancellationToken.IsCancellationRequested)
             {
                 var utxos = await FetchUtxosFromIndexer(address);
-                
+
                 if (utxos != null && utxos.Any())
                 {
                     return utxos;
                 }
 
-                logger.LogDebug("No UTXOs found yet on {Address}, polling again in {Interval}s...", 
-                    address, UtxoPollingInterval.TotalSeconds);
-                
+                logger.LogDebug(
+                    "No UTXOs found yet on {Address}, polling again in {Interval}s...",
+                    address,
+                    UtxoPollingInterval.TotalSeconds);
+
                 await Task.Delay(UtxoPollingInterval, cancellationToken);
             }
 
@@ -231,45 +258,39 @@ public static class MonitorLightningSwap
             {
                 logger.LogDebug("Fetching UTXOs for address {Address} from indexer", address);
                 
-                var utxos = await indexerService.FetchUtxoAsync(address, limit: 100, offset: 0);
+                var utxos = await indexerService.FetchUtxoAsync(address, 0, 1);
                 
-                if (utxos != null && utxos.Any())
+                if (utxos == null || !utxos.Any())
                 {
-                    logger.LogDebug("Found {Count} UTXO(s) on address {Address}", utxos.Count, address);
+                    return null;
                 }
-                
-                return utxos;
+
+                return utxos.ToList();
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to fetch UTXOs for address {Address}", address);
+                logger.LogWarning(ex, "Error fetching UTXOs for address {Address}", address);
                 return null;
             }
         }
 
-        private async Task UpdateWalletBalance(WalletId walletId, string address, List<UtxoData> utxos)
+        private async Task UpdateWalletBalance(WalletId walletId, List<UtxoData> utxos)
         {
             try
             {
-                var accountResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
-                if (accountResult.IsSuccess)
-                {
-                    var accountInfo = accountResult.Value.AccountInfo;
-                    var addedCount = accountInfo.AddNewUtxos(address, utxos);
+                // Update the wallet balance with the new UTXOs
+                var totalValue = utxos.Sum(u => u.value);
+                logger.LogDebug(
+                    "Updating wallet {WalletId} balance with {Count} UTXO(s) totaling {Amount} sats",
+                    walletId.Value, utxos.Count, totalValue);
 
-                    if (addedCount > 0)
-                    {
-                        await walletAccountBalanceService.SaveAccountBalanceInfoAsync(
-                            walletId, accountResult.Value);
-                        logger.LogDebug("Added {Count} UTXOs to wallet {WalletId}", addedCount, walletId.Value);
-                    }
-                }
+                await walletAccountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to update wallet balance - UTXOs still valid");
+                logger.LogWarning(ex, "Error updating wallet balance for {WalletId}", walletId.Value);
+                // Don't fail the operation if balance update fails
             }
         }
     }
 }
-

@@ -393,6 +393,90 @@ public class BoltzSwapService : IBoltzSwapService
         }
     }
 
+    /// <summary>
+    /// Gets the fee information for reverse submarine swaps (Lightning → On-chain).
+    /// </summary>
+    public async Task<Result<BoltzSwapFees>> GetReverseSwapFeesAsync()
+    {
+        try
+        {
+            _logger.LogDebug("Fetching reverse swap fee information from Boltz");
+
+            // Boltz v2 API endpoint for reverse swap info
+            var response = await _httpClient.GetAsync($"{_apiPrefix}swap/reverse");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to get reverse swap fees: {StatusCode} - {Error}", response.StatusCode, error);
+                return Result.Failure<BoltzSwapFees>($"Failed to get swap fees: {error}");
+            }
+
+            var feesResponse = await response.Content.ReadFromJsonAsync<ReverseSwapInfoResponse>(_jsonOptions);
+            if (feesResponse == null)
+            {
+                return Result.Failure<BoltzSwapFees>("Failed to deserialize fees response");
+            }
+
+            // Navigate nested structure: response.BTC.BTC contains the actual fee info
+            var btcInfo = feesResponse.BTC?.BTC;
+            if (btcInfo == null)
+            {
+                return Result.Failure<BoltzSwapFees>("Invalid fees response: missing BTC pair info");
+            }
+
+            var fees = new BoltzSwapFees
+            {
+                Percentage = btcInfo.Fees.Percentage,
+                MinerFees = btcInfo.Fees.MinerFees.Claim,
+                MinAmount = btcInfo.Limits.Minimal,
+                MaxAmount = btcInfo.Limits.Maximal
+            };
+
+            _logger.LogDebug(
+                "Reverse swap fees: {Percentage}% + {MinerFees} sats, limits: {Min}-{Max}",
+                fees.Percentage, fees.MinerFees, fees.MinAmount, fees.MaxAmount);
+
+            return Result.Success(fees);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting reverse swap fees");
+            return Result.Failure<BoltzSwapFees>($"Error getting swap fees: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Calculates the invoice amount needed to receive a specific on-chain amount after fees.
+    /// </summary>
+    public async Task<Result<long>> CalculateInvoiceAmountAsync(long desiredOnChainAmount)
+    {
+        var feesResult = await GetReverseSwapFeesAsync();
+        if (feesResult.IsFailure)
+        {
+            return Result.Failure<long>(feesResult.Error);
+        }
+
+        var fees = feesResult.Value;
+        var invoiceAmount = fees.CalculateInvoiceAmount(desiredOnChainAmount);
+
+        // Validate against limits
+        if (invoiceAmount < fees.MinAmount)
+        {
+            return Result.Failure<long>($"Invoice amount {invoiceAmount} sats is below minimum {fees.MinAmount} sats");
+        }
+        if (invoiceAmount > fees.MaxAmount)
+        {
+            return Result.Failure<long>($"Invoice amount {invoiceAmount} sats exceeds maximum {fees.MaxAmount} sats");
+        }
+
+        _logger.LogDebug(
+            "Calculated invoice amount: {InvoiceAmount} sats to receive {OnChainAmount} sats on-chain",
+            invoiceAmount, desiredOnChainAmount);
+
+        return Result.Success(invoiceAmount);
+    }
+
     private static SwapState ParseSwapState(string status)
     {
         return status.ToLowerInvariant() switch

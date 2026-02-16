@@ -194,7 +194,7 @@ public class BoltzSwapIntegrationTests : IDisposable
         _output.WriteLine($"   Transaction ID: {swapStatus.TransactionId ?? "N/A"}");
 
         await _boltzSwapStorageService.UpdateSwapStatusAsync(
-            swap.Id, swapStatus.Status.ToString(), swapStatus.TransactionId, swapStatus.TransactionHex);
+            swap.Id, accountInfo.walletId, swapStatus.Status.ToString(), swapStatus.TransactionId, swapStatus.TransactionHex);
 
         // Claim funds
         _output.WriteLine("\n💰 STEP 4: Claiming on-chain funds...");

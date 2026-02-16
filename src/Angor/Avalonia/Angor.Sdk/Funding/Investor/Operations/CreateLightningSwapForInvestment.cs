@@ -24,11 +24,13 @@ public static class CreateLightningSwapForInvestment
     /// <param name="ProjectId">The project to invest in</param>
     /// <param name="InvestmentAmount">Amount to invest in satoshis</param>
     /// <param name="ReceivingAddress">On-chain address to receive the swapped funds</param>
+    /// <param name="EstimatedFeeRateSatsPerVbyte">Estimated fee rate for the investment transaction (used to calculate total on-chain amount needed)</param>
     public record CreateLightningSwapRequest(
         WalletId WalletId,
         ProjectId ProjectId,
         Amount InvestmentAmount,
-        string ReceivingAddress) : IRequest<Result<CreateLightningSwapResponse>>;
+        string ReceivingAddress,
+        int EstimatedFeeRateSatsPerVbyte = 2) : IRequest<Result<CreateLightningSwapResponse>>;
 
     /// <summary>
     /// Response containing the swap details
@@ -52,10 +54,45 @@ public static class CreateLightningSwapForInvestment
             try
             {
                 logger.LogInformation(
-                    "Creating Lightning swap for wallet {WalletId}, project {ProjectId}, amount: {Amount} sats",
+                    "Creating Lightning swap for wallet {WalletId}, project {ProjectId}, investment amount: {Amount} sats",
                     request.WalletId.Value, request.ProjectId, request.InvestmentAmount.Sats);
 
-                // Generate claim public key from wallet and project
+                // Step 1: Calculate the total on-chain amount needed for the investment
+                // This includes:
+                // - Investment amount (what goes to the project)
+                // - Angor fee (1% of investment amount)
+                // - Estimated investment transaction miner fee (based on provided fee rate)
+                
+                const int AngorFeePercentage = 1; // 1% Angor fee
+                // Estimate investment tx size at ~250 vbytes (typical for 1-in, 2-out segwit tx)
+                const int EstimatedInvestmentTxVbytes = 250;
+                long estimatedInvestmentTxFee = request.EstimatedFeeRateSatsPerVbyte * EstimatedInvestmentTxVbytes;
+                
+                long investmentAmount = request.InvestmentAmount.Sats;
+                long angorFee = (investmentAmount * AngorFeePercentage) / 100;
+                long totalOnChainNeeded = investmentAmount + angorFee + estimatedInvestmentTxFee;
+                
+                logger.LogInformation(
+                    "Total on-chain amount needed: {Total} sats (investment: {Investment} + angorFee: {AngorFee} + txFee: {TxFee} @ {FeeRate} sat/vb)",
+                    totalOnChainNeeded, investmentAmount, angorFee, estimatedInvestmentTxFee, request.EstimatedFeeRateSatsPerVbyte);
+
+                // Step 2: Calculate the invoice amount needed to receive the required on-chain amount
+                // Boltz deducts fees from the invoice amount, so we need to pay more
+                var invoiceAmountResult = await boltzSwapService.CalculateInvoiceAmountAsync(totalOnChainNeeded);
+                if (invoiceAmountResult.IsFailure)
+                {
+                    logger.LogError("Failed to calculate invoice amount: {Error}", invoiceAmountResult.Error);
+                    return Result.Failure<CreateLightningSwapResponse>(invoiceAmountResult.Error);
+                }
+
+                var invoiceAmount = invoiceAmountResult.Value;
+                var boltzFees = invoiceAmount - totalOnChainNeeded;
+                
+                logger.LogInformation(
+                    "Invoice amount calculated: {InvoiceAmount} sats (onChainNeeded: {OnChain} + boltzFees: {BoltzFees})",
+                    invoiceAmount, totalOnChainNeeded, boltzFees);
+
+                // Step 3: Generate claim public key from wallet and project
                 var claimPubKeyResult = await GenerateClaimPublicKey(request.WalletId, request.ProjectId);
                 if (claimPubKeyResult.IsFailure)
                 {
@@ -65,10 +102,10 @@ public static class CreateLightningSwapForInvestment
 
                 var claimPubKey = claimPubKeyResult.Value;
 
-                // Create the reverse submarine swap
+                // Step 4: Create the reverse submarine swap with the calculated invoice amount
                 var swapResult = await boltzSwapService.CreateSubmarineSwapAsync(
                     request.ReceivingAddress,
-                    request.InvestmentAmount.Sats,
+                    invoiceAmount,  // Use calculated amount that includes fees
                     claimPubKey);
 
                 if (swapResult.IsFailure)

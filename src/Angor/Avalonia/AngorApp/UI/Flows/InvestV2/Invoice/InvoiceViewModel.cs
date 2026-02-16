@@ -21,6 +21,9 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     private readonly BehaviorSubject<bool> paymentReceivedSubject = new(false);
     private ICloseable? closeable;
     
+    // Fee rate in sats/vbyte - used for both Lightning swap calculation and investment transaction
+    private const int DefaultFeeRateSatsPerVbyte = 2;
+    
     // Separate CTS for monitoring that can be cancelled when invoice type changes
     private CancellationTokenSource? monitoringCts;
     private readonly object monitoringLock = new();
@@ -221,7 +224,8 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 wallet.Id,
                 projectId,
                 new Amount(Amount.Sats),
-                generatedAddress);
+                generatedAddress,
+                DefaultFeeRateSatsPerVbyte);
 
             var lightningResult = await investmentAppService.CreateLightningSwap(lightningRequest);
 
@@ -309,7 +313,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
 
             // Funds received - now build and submit the investment transaction
             var receivingAddress = invoiceType.ReceivingAddress ?? invoiceType.Address;
-            await BuildAndSubmitInvestmentAsync(walletId, projectId, receivingAddress, investmentAppService, uiServices, shell, token);
+            await BuildAndSubmitInvestmentAsync(walletId, projectId, receivingAddress, DefaultFeeRateSatsPerVbyte, investmentAppService, uiServices, shell, token);
         }
         catch (OperationCanceledException)
         {
@@ -421,6 +425,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         WalletId walletId,
         ProjectId projectId,
         string fundingAddress,
+        int feeRateSatsPerVbyte,
         IInvestmentAppService investmentAppService,
         UIServices uiServices,
         IShellViewModel shell,
@@ -435,7 +440,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 walletId,
                 projectId,
                 new Amount(Amount.Sats),
-                new DomainFeerate(20), // TODO: Make fee rate configurable
+                new DomainFeerate(feeRateSatsPerVbyte),
                 FundingAddress: fundingAddress);
 
             var buildResult = await investmentAppService.BuildInvestmentDraft(buildRequest);
