@@ -3,12 +3,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:conv="clr-namespace:AngorApp.UI.Shared.Controls"
-             xmlns:accounts="clr-namespace:AngorApp.UI.Sections.Funds.Accounts"
-             xmlns:l="clr-namespace:AngorApp"
-             xmlns:receive="clr-namespace:AngorApp.UI.Sections.Funds.Receive"
+             xmlns:l="clr-namespace:AngorApp.UI.Sections.Funds.Receive"
              mc:Ignorable="d" Width="448"
              x:Class="AngorApp.UI.Sections.Funds.Receive.ReceiveView"
-             x:DataType="receive:IReceiveViewModel">
+             x:DataType="l:IReceiveViewModel">
 
     <Design.DataContext>
         <l:ReceiveViewModelSample />

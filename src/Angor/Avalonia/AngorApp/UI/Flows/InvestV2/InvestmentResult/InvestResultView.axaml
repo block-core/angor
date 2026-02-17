@@ -6,7 +6,7 @@
              xmlns:l="clr-namespace:AngorApp.UI.Flows.InvestV2.InvestmentResult"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="350"
              x:Class="AngorApp.UI.Flows.InvestV2.InvestmentResult.InvestResultView" x:DataType="l:InvestResultViewModel">
-    <StackPanel Classes="BigGap">
+    <StackPanel Classes="Gap-XL">
         <Border Classes="AccentWash Circle" IconOptions.Size="36" Padding="20">
             <Border.Child>
                 <ContentControl IconOptions.Fill="{DynamicResource Brand}" Padding="8" Content="{Icon fa-check}" />

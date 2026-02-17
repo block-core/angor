@@ -46,6 +46,7 @@
     <StyleInclude Source="Styles/SectionStrip.axaml" />
     <StyleInclude Source="Styles/Layout.axaml" />
     <StyleInclude Source="Styles/Buttons.axaml" />
+    <StyleInclude Source="Styles/Icons.axaml" />
     <StyleInclude Source="Styles/Typography.axaml" />
     <StyleInclude Source="Styles/ColorVariants.axaml" />
     <StyleInclude Source="Styles/Pills.axaml" />
@@ -61,7 +62,6 @@
     
     <Style Selector=":is(UserControl)">
         <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
-        <Setter Property="IconOptions.Fill" Value="{DynamicResource TextMuted}" />
     </Style>
     
     <Style Selector="Separator">

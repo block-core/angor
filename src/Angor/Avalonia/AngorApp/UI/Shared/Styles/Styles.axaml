@@ -21,13 +21,7 @@
         <x:Double x:Key="Gap-XL">24</x:Double>
         <x:Double x:Key="Gap-XXL">40</x:Double>
 
-        <!-- Legacy gap names (kept for compatibility) -->
-        <x:Double x:Key="TinyGap">5</x:Double>
-        <x:Double x:Key="SmallGap">10</x:Double>
-        <x:Double x:Key="MediumGap">12</x:Double>
-        <x:Double x:Key="Bigger">18</x:Double>
-        <x:Double x:Key="BigGap">24</x:Double>
-        <x:Double x:Key="HugeGap">40</x:Double>
+
 
         <Color x:Key="SuccessColor">Green</Color>
         <Color x:Key="WarningColor">Gold</Color>
@@ -127,29 +121,7 @@
     </Style>
 
     <!-- Legacy aliases (prefer Gap-*) -->
-    <Style Selector="StackPanel.HugeGap">
-        <Setter Property="Spacing" Value="{StaticResource Gap-XXL}" />
-    </Style>
 
-    <Style Selector="StackPanel.BigGap">
-        <Setter Property="Spacing" Value="{StaticResource Gap-XL}" />
-    </Style>
-
-    <Style Selector="StackPanel.Bigger">
-        <Setter Property="Spacing" Value="{StaticResource Gap-L}" />
-    </Style>
-
-    <Style Selector="StackPanel.MediumGap">
-        <Setter Property="Spacing" Value="{StaticResource Gap-M}" />
-    </Style>
-
-    <Style Selector="StackPanel.SmallGap">
-        <Setter Property="Spacing" Value="{StaticResource Gap-S}" />
-    </Style>
-
-    <Style Selector="StackPanel.TinyGap">
-        <Setter Property="Spacing" Value="{StaticResource Gap-XS}" />
-    </Style>
 
     <Style Selector="Card Card">
         <Setter Property="BorderThickness" Value="0" />

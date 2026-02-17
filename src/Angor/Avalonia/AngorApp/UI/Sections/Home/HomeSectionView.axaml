@@ -9,7 +9,7 @@
     <controls:ScrollableView>
         <BalancedWrapGrid HorizontalSpacing="20">
             <Border Classes="Panel" Height="500">
-                <StackPanel Classes="HugeGap" VerticalAlignment="Center">
+                <StackPanel Classes="Gap-XXL" VerticalAlignment="Center">
                     <PathIcon Height="96" Width="96" Foreground="{DynamicResource Brand}" Data="{StaticResource BitcoinSymbol}" />
                     <TextBlock Classes="Title Strong Center">Fund Projects</TextBlock>
                     <TextBlock Classes="Subtitle Center">Discover and fund innovative Bitcoin projects on the Angor platform.</TextBlock>
@@ -17,7 +17,7 @@
                 </StackPanel>
             </Border>
             <Border Classes="Panel">
-                <StackPanel Classes="HugeGap" VerticalAlignment="Center">
+                <StackPanel Classes="Gap-XXL" VerticalAlignment="Center">
                     <PathIcon Foreground="Transparent" Height="96" Width="96" Data="{StaticResource Lightning}">
                         <PathIcon.Styles>
                             <Style Selector="PathIcon Path">

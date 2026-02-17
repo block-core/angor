@@ -26,10 +26,10 @@
     </UserControl.Styles>
 
     <Card Header="Nostr Integration" Subheader="Decentralized communication and verification">
-        <StackPanel Classes="BigGap">
+        <StackPanel Classes="Gap-XL">
             <!-- Nostr Keys Section -->
             <HeaderedContainer Header="Public Keys">
-                <StackPanel Classes="BigGap">
+                <StackPanel Classes="Gap-XL">
                     <HeaderedContainer Header="NOSTR Public Key (NPub)" Classes="NoPadding">
                         <Border Classes="CardAlt">
                             <EdgePanel Theme="{StaticResource PropertyEdgePanel}">
@@ -110,11 +110,11 @@
                     </StackPanel>
                 </HeaderedContainer.Header>
 
-                <StackPanel Classes="BigGap">
+                <StackPanel Classes="Gap-XL">
                     <ItemsControl ItemsSource="{Binding Relays}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Classes="SmallGap" />
+                                <StackPanel Classes="Gap-S" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>

@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:chat="clr-namespace:AngorApp.UI.Sections.Funders.Chat"
+             mc:Ignorable="d" d:DesignWidth="400"
+             x:Class="AngorApp.UI.Sections.Funders.Chat.ChatView" x:DataType="chat:IChatViewModel">
+
+    <Design.DataContext>
+        <angorApp:ChatViewModelSample />
+    </Design.DataContext>
+
+    <DockPanel VerticalSpacing="20">
+        <DockPanel DockPanel.Dock="Bottom" HorizontalSpacing="10">
+            <EnhancedButton Icon="{Icon fa-arrow-up}" VerticalAlignment="Center" DockPanel.Dock="Right" Classes="Emphasized"
+                            IsDefault="True"
+                            Command="{Binding SendMessage}" Padding="8">
+            </EnhancedButton>
+            <TextBox Text="{Binding CurrentText, Mode=TwoWay}">
+                <Interaction.Behaviors>
+                    <FocusOnAttachedBehavior />
+                </Interaction.Behaviors>
+            </TextBox>
+        </DockPanel>
+        <ScrollViewer MaxHeight="400">
+            <ItemsControl ItemsSource="{Binding Messages}" Classes="Vertical">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Classes="ColorPanel" Margin="10 0" Padding="14 10">
+                            <TextBlock Classes="Wrap" Text="{Binding Text}" />
+                            <Interaction.Behaviors>
+                                <BindingTriggerBehavior Binding="{Binding IsOwnMessage}" Value="True">
+                                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.HorizontalAlignmentProperty}" Value="Left" />
+                                    <AddClassAction ClassName="Blue" />
+                                </BindingTriggerBehavior>
+                                <BindingTriggerBehavior Binding="{Binding IsOwnMessage}" Value="False">
+                                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.HorizontalAlignmentProperty}" Value="Right" />
+                                    <AddClassAction ClassName="LightGray" />
+                                </BindingTriggerBehavior>
+                            </Interaction.Behaviors>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                <Interaction.Behaviors>
+                    <ScrollToNewItemBehavior />
+                </Interaction.Behaviors>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

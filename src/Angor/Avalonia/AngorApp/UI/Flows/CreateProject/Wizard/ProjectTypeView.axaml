@@ -107,12 +107,12 @@
     </UserControl.Styles>
 
     <controls:ScrollableView MaxContentWidth="800">
-        <StackPanel VerticalAlignment="Center" Classes="BigGap">
+        <StackPanel VerticalAlignment="Center" Classes="Gap-XL">
             <TextBlock>Choose the type of project you want to launch.</TextBlock>
             <ListBox SelectedIndex="0" ItemsSource="{Binding ProjectTypes}" SelectedItem="{Binding ProjectType}">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Classes="BigGap" />
+                        <StackPanel Classes="Gap-XL" />
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
                 <ListBox.ItemContainerTheme>
@@ -131,7 +131,7 @@
                                          BorderThickness="2"
                                          Background="{Binding $parent[ListBoxItem].Foreground}">
                             </RadioButton>
-                            <StackPanel Classes="SmallGap">
+                            <StackPanel Classes="Gap-S">
                                 <TextBlock Classes="Big" Text="{Binding Title}" />
                                 <TextBlock Classes="Regular" Text="{Binding Description}" />
                             </StackPanel>

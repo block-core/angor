@@ -25,14 +25,14 @@
         </Style>
     </UserControl.Styles>
 
-    <StackPanel Classes="BigGap">
-        <StackPanel Classes="BigGap" IsVisible="{Binding !!!NewProject.Stages.Count}">
-            <HeaderedContainer Classes="Card Neutral WizardSection">
+    <StackPanel Classes="Gap-XL">
+        <StackPanel Classes="Gap-XL" IsVisible="{Binding !!!NewProject.Stages.Count}">
+            <HeaderedContainer Classes="Card Neutral Window">
                 <HeaderedContainer.Header>
                     <TextBlock>Project length</TextBlock>
                 </HeaderedContainer.Header>
                 <HeaderedContainer Header="Duration">
-                    <StackPanel Classes="BigGap">
+                    <StackPanel Classes="Gap-XL">
                         <DockPanel HorizontalSpacing="10">
                             <ComboBox DisplayMemberBinding="{Binding Title, DataType=model:PeriodOption}"
                                       SelectedValueBinding="{Binding TimeSpan}"
@@ -83,7 +83,7 @@
 
                 </HeaderedContainer>
             </HeaderedContainer>
-            <HeaderedContainer Classes="Card Neutral WizardSection">
+            <HeaderedContainer Classes="Card Neutral Window">
                 <HeaderedContainer.Header>
                     <TextBlock>How often do you need funding released?</TextBlock>
                 </HeaderedContainer.Header>

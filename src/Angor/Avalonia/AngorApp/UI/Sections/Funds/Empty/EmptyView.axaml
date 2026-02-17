@@ -6,7 +6,7 @@
              mc:Ignorable="d" 
              x:Class="AngorApp.UI.Sections.Funds.Empty.EmptyView"
              x:DataType="empty:IEmptyViewModel">
-    <StackPanel Classes="BigGap" Width="448">
+    <StackPanel Classes="Gap-XL" Width="448">
         <PathIcon Height="112" Width="112" Foreground="{DynamicResource Brand}" Data="{StaticResource AngorLogo}" />
         <TextBlock Text="FUNDS" Classes="Size-XXL Weight-Bold Strong Center"></TextBlock>
         <TextBlock Classes="Size-L Dimmed Center">Wallet's get created when you fund or launch projects, but if you want to import or create one before please do</TextBlock>

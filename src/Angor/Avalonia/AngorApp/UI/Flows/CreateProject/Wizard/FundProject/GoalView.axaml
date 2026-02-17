@@ -49,7 +49,7 @@
     </UserControl.Styles>
     
     <controls:ScrollableView MaxContentWidth="766">
-        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}">
+        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource Gap-XL}">
             <TextBlock Classes="Subtitle">Configure your funding goal and project nature.</TextBlock>
             
             <HeaderedContainer Classes="Card Radius-L Bitcoin">
@@ -65,7 +65,7 @@
                         </EdgePanel.StartContent>
                     </EdgePanel>
                 </HeaderedContainer.Header>
-                <StackPanel Classes="BigGap">
+                <StackPanel Classes="Gap-XL">
                     <StackPanel Spacing="10">
                         <HeaderedContainer HeaderPadding="0" ContentPadding="0 12 0 0">
                             <HeaderedContainer.Header>
@@ -105,7 +105,7 @@
                         </ListBox.ItemsPanel>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel HorizontalAlignment="Center" Classes="TinyGap">
+                                <StackPanel HorizontalAlignment="Center" Classes="Gap-XS">
                                     <TextBlock Classes="Center Bold" Text="{Binding  Btc}" />
                                     <TextBlock Classes="Center Tiny" Text="BTC" />
                                 </StackPanel>
@@ -124,7 +124,7 @@
                     </EdgePanel>
                 </HeaderedContainer.Header>
                 <HeaderedContainer Header="Threshold" Foreground="Black">
-                    <StackPanel Classes="SmallGap">
+                    <StackPanel Classes="Gap-S">
                         <NumericUpDown Watermark="0.001" Classes="AmountInput"
                                        FontSize="{StaticResource FontSizeBig}"
                                        FontWeight="Bold"

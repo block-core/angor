@@ -30,7 +30,7 @@
                 </av:AdvancedImage.Styles>
             </av:AdvancedImage>
             <controls:PageContainer ClipToBounds="False">
-                <StackPanel Classes="BigGap" Margin="0 -50 0 0">
+                <StackPanel Classes="Gap-XL" Margin="0 -50 0 0">
                     <Border Classes="Card" Padding="30">
                         <Border.Styles>
                             <ContainerQuery Name="Root" Query="min-width:0 and max-width:500">
@@ -42,7 +42,7 @@
                         </Border.Styles>
                         <DockPanel HorizontalSpacing="30" VerticalSpacing="20">
                             <av:AdvancedImage VerticalAlignment="Top" Stretch="UniformToFill" Source="{Binding Project.Avatar}" Height="140" Width="140" CornerRadius="120" />
-                            <StackPanel Classes="TinyGap"
+                            <StackPanel Classes="Gap-XS"
                                         DockPanel.Dock="Bottom"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center">

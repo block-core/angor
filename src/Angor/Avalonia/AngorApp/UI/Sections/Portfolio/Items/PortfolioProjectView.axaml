@@ -27,8 +27,8 @@
     </Design.DataContext>
 
     <Border Classes="Card">
-        <StackPanel Classes="BigGap">
-            <StackPanel Classes="BigGap">
+        <StackPanel Classes="Gap-XL">
+            <StackPanel Classes="Gap-XL">
                 <TextBlock Text="{Binding Name}" Classes="SizeBig Center" />
                 <av:AdvancedImage Height="150" Stretch="UniformToFill" CornerRadius="10" Source="{Binding LogoUri}" />
                 <items:ProgressView />
@@ -43,7 +43,7 @@
                         </MultiBinding>
                     </items:OfferAcceptedView.IsVisible>
                 </items:OfferAcceptedView>
-                <StackPanel Classes="BigGap" IsVisible="{Binding !#OfferAcceptedView.IsVisible}">
+                <StackPanel Classes="Gap-XL" IsVisible="{Binding !#OfferAcceptedView.IsVisible}">
                     <BalancedWrapGrid MinItemWidth="230" DockPanel.Dock="Top">
                         <Border Classes="CardAlt" Padding="10">
                             <UniformGrid Grid.IsSharedSizeScope="True" Columns="1" VerticalAlignment="Center" RowSpacing="10">

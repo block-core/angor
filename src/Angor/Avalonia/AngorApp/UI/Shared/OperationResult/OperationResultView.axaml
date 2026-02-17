@@ -11,7 +11,7 @@
                                                         Icon="{Icon fa-check}" />
     </Design.DataContext>
     
-    <StackPanel Classes="BigGap" Margin="10 10 10 20">
+    <StackPanel Classes="Gap-XL" Margin="10 10 10 20">
         <ContentControl IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}" 
                         Content="{Binding Icon}" IconOptions.CornerRadius="1000" IconOptions.Padding="20" IconOptions.Size="40">
             <Interaction.Behaviors>

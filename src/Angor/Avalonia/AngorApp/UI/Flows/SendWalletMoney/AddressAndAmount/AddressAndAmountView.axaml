@@ -14,7 +14,7 @@
         <ad:AddressAndAmountViewModelSample />
     </Design.DataContext>
 
-    <StackPanel Classes="SmallGap">
+    <StackPanel Classes="Gap-S">
         <Card Header="Enter recipient address:">
             <TextBox Text="{Binding Address}" Classes="clearButton" Watermark="Enter address" AcceptsReturn="False">
                 <Interaction.Behaviors>

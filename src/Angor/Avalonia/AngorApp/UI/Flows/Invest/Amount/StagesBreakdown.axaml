@@ -15,7 +15,7 @@
     <ItemsControl ItemsSource="{Binding StageBreakdowns}">
         <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
-                <StackPanel Classes="SmallGap" />
+                <StackPanel Classes="Gap-S" />
             </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>

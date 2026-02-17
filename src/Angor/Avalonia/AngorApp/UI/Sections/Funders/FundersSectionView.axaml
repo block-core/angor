@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:funders="clr-namespace:AngorApp.UI.Sections.Funders"
+             xmlns:items="clr-namespace:AngorApp.UI.Sections.Funders.Items"
+             xmlns:grouping="clr-namespace:AngorApp.UI.Sections.Funders.Grouping"
+             xmlns:common="clr-namespace:AngorApp.UI.Shared.Controls.Common"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             x:Class="AngorApp.UI.Sections.Funders.FundersSectionView"
+             x:DataType="funders:IFundersSectionViewModel">
+
+    <Design.DataContext>
+        <funders:FundersSectionViewModelSample />
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <StaticResource x:Key="TabItemHeaderSelectedPipeFill" ResourceKey="Accent" />
+    </UserControl.Resources>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Load}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <Loading IsLoading="{Binding Load.IsExecuting^}">
+        <HeaderedContainer>
+            <HeaderedContainer.Header>
+                <DockPanel HorizontalSpacing="16">
+                    <EnhancedButton DockPanel.Dock="Right" Classes="Primary" Icon="{Icon fa-check}">Approve All</EnhancedButton>
+                    <ContentControl IconOptions.Size="24" IconOptions.Padding="10" IconOptions.CornerRadius="10" IconOptions.Background="{DynamicResource SurfaceLow}" Content="{Icon fa-user-group}" />
+                    <TextBlock Classes="Size-XL Strong" VerticalAlignment="Center">Funders Overview</TextBlock>
+                </DockPanel>
+            </HeaderedContainer.Header>
+            <Panel>
+                <TabControl ItemsSource="{Binding Groups}" Padding="10 20 10 0" IsVisible="{Binding !IsEmpty^}">
+                    <TabControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Classes="Gap-M">
+                                <TextBlock Text="{Binding Name}" />
+                                <Border Width="20" Height="20" CornerRadius="1000" VerticalAlignment="Center" Background="{DynamicResource BitcoinOrange}">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Classes="Size-XS Weight-Bold" Foreground="{DynamicResource Surface}" Text="{Binding Funders.Count}" />
+                                </Border>
+                            </StackPanel>
+                        </DataTemplate>
+                    </TabControl.ItemTemplate>
+                    <TabControl.ContentTemplate>
+                        <DataTemplate DataType="grouping:IFunderGroup">
+                            <ScrollViewer Padding="10" Margin="-10 0">
+                                <ItemsControl ClipToBounds="False" Classes="VerticalBigGap" ItemsSource="{Binding Funders}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <items:FunderItemView ClipToBounds="False" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </DataTemplate>
+                    </TabControl.ContentTemplate>
+                </TabControl>
+                <StackPanel MaxWidth="448" VerticalAlignment="Center" Classes="Gap-L" IsVisible="{Binding IsEmpty^}">
+                    <ContentControl Width="64" Height="64" IconOptions.Size="24" IconOptions.HorizontalAlignment="Stretch" IconOptions.VerticalAlignment="Stretch" IconOptions.CornerRadius="10"
+                                    IconOptions.Background="{DynamicResource SurfaceLow}" Content="{Icon fa-user-group}" />
+                    <TextBlock Classes="Size-L Strong Center">No Funders Yet</TextBlock>
+                    <TextBlock Classes="Size-S Center">When investors fund your projects, they'll appear here. You can review and approve funding requests from this page.</TextBlock>
+                </StackPanel>
+            </Panel>
+        </HeaderedContainer>
+    </Loading>
+</UserControl>

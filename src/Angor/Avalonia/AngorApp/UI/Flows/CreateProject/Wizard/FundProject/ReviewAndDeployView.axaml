@@ -29,33 +29,33 @@
     </UserControl.Resources>
 
     <controls:ScrollableView MaxContentWidth="766">
-        <StackPanel Classes="BigGap">
-            <HeaderedContainer Classes="Card Accent GreenIcon">
+        <StackPanel Classes="Gap-XL">
+            <HeaderedContainer Classes="Card Accent Icon-M Icon-Bg-Green Icon-Square Icon-Fill-White">
                 <HeaderedContainer.Header>
                     <EdgePanel StartContent="{Icon fa-user}" Content="Project Profile" />
                 </HeaderedContainer.Header>
-                <StackPanel Classes="BigGap">
+                <StackPanel Classes="Gap-XL">
                     <EdgePanel StartContent="Name" EndContent="{Binding NewProject.Name}" />
                     <EdgePanel StartContent="About" EndContent="{Binding NewProject.Description}" />
                     <EdgePanel StartContent="Website" EndContent="{Binding NewProject.Website}" />
                 </StackPanel>
             </HeaderedContainer>
 
-            <HeaderedContainer Classes="Card Radius-L Bitcoin OrangeIcon">
+            <HeaderedContainer Classes="Card Radius-L Bitcoin Icon-M Icon-Bg-Orange Icon-Square Icon-Fill-White">
                 <HeaderedContainer.Header>
                     <EdgePanel StartContent="{Icon fa-bullseye}" Content="Goal" />
                 </HeaderedContainer.Header>
-                <StackPanel Classes="BigGap">
+                <StackPanel Classes="Gap-XL">
                     <EdgePanel StartContent="Goal Amount" EndContent="{Binding NewProject.GoalAmount.DecimalString}" />
                     <EdgePanel StartContent="Threshold" EndContent="{Binding NewProject.Threshold.DecimalString}" />
                 </StackPanel>
             </HeaderedContainer>
             
-            <HeaderedContainer Classes="Card Accent GreenIcon">
+            <HeaderedContainer Classes="Card Accent Icon-M Icon-Bg-Green Icon-Square Icon-Fill-White">
                 <HeaderedContainer.Header>
                     <EdgePanel StartContent="{Icon fa-regular fa-calendar}" Content="Payouts" />
                 </HeaderedContainer.Header>
-                <StackPanel Classes="BigGap">
+                <StackPanel Classes="Gap-XL">
                     <EdgePanel StartContent="Frequency" EndContent="{Binding NewProject.PayoutFrequency}" />
                     <EdgePanel StartContent="Installments" EndContent="{Binding NewProject.SelectedInstallments.SelectedItems, Converter={x:Static controls:AngorConverters.JoinStrings}}" />
                     <EdgePanel IsVisible="{Binding NewProject.PayoutFrequency, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static model:PayoutFrequency.Monthly}}" 
@@ -69,8 +69,8 @@
                                          Frequency="{Binding NewProject.PayoutFrequency}" />
                 </StackPanel>
             </HeaderedContainer>
-            <HeaderedContainer Classes="Card WizardSection Accent">
-                <StackPanel Margin="30" MaxWidth="500" Classes="BigGap">
+            <HeaderedContainer Classes="Card Window Accent">
+                <StackPanel Margin="30" MaxWidth="500" Classes="Gap-XL">
                     <Border Width="64" Height="64" HorizontalAlignment="Center" Padding="20" CornerRadius="40" Background="{DynamicResource Accent}">
                         <PathIcon Foreground="White" Height="32" Width="32" Data="{StaticResource AngorLogo}" />
                     </Border>

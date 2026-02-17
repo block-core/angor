@@ -62,7 +62,7 @@
 
     <controls:PageContainer>
         <ScrollViewer IconOptions.Size="{StaticResource IconSizeSmall}">
-            <StackPanel Classes="BigGap" MaxWidth="700">
+            <StackPanel Classes="Gap-XL" MaxWidth="700">
                 
                 <!-- Network Section -->
                 <Card HeaderStartContent="{Icon fa-globe}" Header="Network">
@@ -175,7 +175,7 @@
 
                 <!-- Currency Display Section -->
                 <Card HeaderStartContent="{Icon fa-bitcoin}" Header="Currency Display">
-                    <StackPanel Classes="BigGap">
+                    <StackPanel Classes="Gap-XL">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Text="Select Currency:" VerticalAlignment="Center" />
                             <ToggleSwitch IsChecked="{Binding IsBitcoinPreferred}" OnContent="Bitcoin (BTC)" OffContent="Satoshis (sats)" />
@@ -186,7 +186,7 @@
 
                 <!-- Debug Mode Section (Testnet only) -->
                 <Card Header="Debug Mode" IsVisible="{Binding IsTestnet}">
-                    <StackPanel Classes="BigGap">
+                    <StackPanel Classes="Gap-XL">
                         <TextBlock Classes="Wrap Muted">Debug mode is only available on testnet networks. When enabled, additional debugging features will be available.</TextBlock>
                         <ToggleSwitch IsChecked="{Binding IsDebugMode}" Content="Debug Mode" OnContent="Enabled" OffContent="Disabled" HorizontalAlignment="Left" />
                     </StackPanel>
@@ -194,7 +194,7 @@
 
                 <!-- Backup Account Section -->
                 <Card HeaderStartContent="{Icon fa-download}" Header="Backup Account" IsVisible="{Binding HasWallet}">
-                    <StackPanel Classes="BigGap">
+                    <StackPanel Classes="Gap-XL">
                         <TextBlock Classes="Wrap Muted">Download a backup of your account (seed) so you never lose access.</TextBlock>
                         <EnhancedButton HorizontalAlignment="Left" Icon="{Icon fa-download}" Content="Download Backup" Command="{Binding BackupWallet}" />
                     </StackPanel>
@@ -202,7 +202,7 @@
 
                 <!-- Wallet Section -->
                 <Card HeaderStartContent="{Icon fa-wallet}" Header="Wallet" IsVisible="{Binding !HasWallet}">
-                    <StackPanel Classes="BigGap">
+                    <StackPanel Classes="Gap-XL">
                         <TextBlock Classes="Wrap Muted">Import an existing wallet using your recovery words.</TextBlock>
                         <EnhancedButton HorizontalAlignment="Right" Command="{Binding ImportWallet}" Content="Import wallet" />
                     </StackPanel>

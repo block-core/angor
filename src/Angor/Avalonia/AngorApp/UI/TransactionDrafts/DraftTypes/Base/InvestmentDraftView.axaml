@@ -15,7 +15,7 @@
 
     <DockPanel>
         <EnhancedButton Margin="20" DockPanel.Dock="Bottom" Content="View Transaction" HorizontalAlignment="Center" Command="{Binding ShowTransaction}" />
-        <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
+        <StackPanel Grid.IsSharedSizeScope="True" Classes="Gap-S">
             <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Transaction Fee" EndContent="{Binding TransactionFee}" />
         </StackPanel>
     </DockPanel>

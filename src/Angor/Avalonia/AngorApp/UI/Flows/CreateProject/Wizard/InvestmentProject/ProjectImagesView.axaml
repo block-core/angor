@@ -18,7 +18,7 @@
     </UserControl.Resources>
 
     <s:ScrollableView ContentPadding="30" MaxContentWidth="820">
-        <StackPanel Classes="BigGap">
+        <StackPanel Classes="Gap-XL">
             <TextBlock>Upload your project's banner and profile images.
             </TextBlock>
             <HeaderedContainer Height="375"
@@ -77,7 +77,7 @@
                             </TappedEventTrigger>
                         </Interaction.Behaviors>
                     </Panel>
-                    <StackPanel Classes="SmallGap">
+                    <StackPanel Classes="Gap-S">
                         <TextBlock Classes="Weight-Bold Size-L Strong" Text="{Binding NewProject.Name}" />
                         <TextBlock Text="{Binding NewProject.Description}" Classes="Weight-Light" />
                     </StackPanel>

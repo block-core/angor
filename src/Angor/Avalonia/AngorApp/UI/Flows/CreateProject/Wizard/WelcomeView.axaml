@@ -8,7 +8,7 @@
              x:Class="AngorApp.UI.Flows.CreateProject.Wizard.WelcomeView" x:DataType="wizard:WelcomeViewModel">
     <controls:ScrollableView MaxContentWidth="768">
         <Border Classes="Panel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="30">
-            <StackPanel Classes="HugeGap">
+            <StackPanel Classes="Gap-XXL">
                 <PathIcon Foreground="Transparent" Height="48" Width="48" Data="{StaticResource Lightning}">
                     <PathIcon.Styles>
                         <Style Selector="PathIcon Path">

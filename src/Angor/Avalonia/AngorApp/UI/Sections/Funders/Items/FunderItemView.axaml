@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:funders="clr-namespace:AngorApp.UI.Sections.Funders"
+             xmlns:items="clr-namespace:AngorApp.UI.Sections.Funders.Items"
+             xmlns:common="clr-namespace:AngorApp.UI.Shared.Controls.Common"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.UI.Sections.Funders.Items.FunderItemView"
+             x:DataType="items:IFunderItem">
+
+  <Expander>
+    <Expander.Header>
+      <DockPanel>
+        <StackPanel VerticalAlignment="Center" Classes="Gap-S" Orientation="Horizontal" DockPanel.Dock="Right">
+          <StackPanel.Styles>
+            <Style Selector="EnhancedButton">
+              <Setter Property="Height" Value="52" />
+              <Setter Property="Padding" Value="14" />
+              <Setter Property="BorderThickness" Value="0" />
+              <Setter Property="FontWeight" Value="SemiBold" />
+              <Setter Property="IconOptions.Size" Value="14" />
+              <Setter Property="IsVisible" Value="{Binding $self.IsEffectivelyEnabled}"></Setter>
+            </Style>
+            <Style Selector="EnhancedButton.Approve">
+              <Setter Property="Background" Value="{DynamicResource PrimaryGreen}" />
+            </Style>
+            <Style Selector="EnhancedButton.Reject">
+              <Setter Property="Background" Value="{DynamicResource Error}" />
+            </Style>
+          </StackPanel.Styles>
+          <EdgePanel Classes="ColorPanel" CornerRadius="8" VerticalAlignment="Stretch" Padding="10">
+            <Interaction.Behaviors>
+              <BindingTriggerBehavior Binding="{Binding Status}" Value="{x:Static items:FunderStatus.Approved}">
+                <AddClassAction ClassName="Green" />
+                <ChangePropertyAction PropertyName="Content" Value="Approved" />
+              </BindingTriggerBehavior>
+              <BindingTriggerBehavior Binding="{Binding Status}" Value="{x:Static items:FunderStatus.Rejected}">
+                <AddClassAction ClassName="Red" />
+                <ChangePropertyAction PropertyName="Content" Value="Rejected" />
+              </BindingTriggerBehavior>
+            </Interaction.Behaviors>
+          </EdgePanel>
+          <EnhancedButton Classes="Approve" Icon="{Icon fa-check}" Content="Approve" Command="{Binding Approve}" />
+          <EnhancedButton Classes="Reject" Icon="{Icon fa-xmark}" Content="Reject" Command="{Binding Reject}" />
+          <EnhancedButton Classes="Outline" Icon="{Icon fa-regular fa-comment-dots}" Command="{Binding OpenChat}" />
+        </StackPanel>
+        <StackPanel Classes="Gap-M">
+          <TextBlock Classes="Size-S Strong" Text="{Binding Name}" />
+          <TextBlock Classes="Size-M Strong" Text="{Binding Amount.DecimalString}" />
+          <EdgePanel StartContent="{Icon fa-regular fa-calendar}" Content="{Binding DateCreated, StringFormat=g}" />
+        </StackPanel>
+      </DockPanel>
+    </Expander.Header>
+    <StackPanel Classes="Gap-M">
+      <Separator />
+      <HeaderedContainer Header="Investor npub">
+        <HeaderedContainer.Content>
+          <EdgePanel Classes="ColorPanel LightGray" Padding="10" StartContent="{Binding InvestorNpub}">
+            <EdgePanel.EndContent>
+              <common:CopyButton Content="{Binding InvestorNpub}" />
+            </EdgePanel.EndContent>
+          </EdgePanel>
+        </HeaderedContainer.Content>
+      </HeaderedContainer>
+    </StackPanel>
+  </Expander>
+</UserControl>

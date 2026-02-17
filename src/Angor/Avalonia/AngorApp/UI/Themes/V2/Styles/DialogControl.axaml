@@ -3,13 +3,13 @@
         xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
         xmlns:dialogs="clr-namespace:Zafiro.Avalonia.Dialogs;assembly=Zafiro.Avalonia.Dialogs">
     <Design.PreviewWith>
-        <DialogControl Content="Some context">
+        <DialogControl Content="This is the content of the dialog">
             <DialogControl.Options>
                 <generic:List x:TypeArguments="IOption">
                     <OptionDesign Title="Primary" Role="Primary" />
                     <OptionDesign Title="Secondary" Role="Secondary" />
-                    <OptionDesign Title="Cancel" Role="Cancel" />
-                    <OptionDesign Title="Destructive" Role="Destructive" />
+                    <!-- <OptionDesign Title="Cancel" Role="Cancel" /> -->
+                    <!-- <OptionDesign Title="Destructive" Role="Destructive" /> -->
                 </generic:List>
             </DialogControl.Options>
         </DialogControl>
@@ -19,9 +19,8 @@
         <Setter Property="MinWidth" Value="448" />
         <Setter Property="Template">
             <ControlTemplate>
-                <DockPanel VerticalSpacing="12">
-                    <ContentPresenter DockPanel.Dock="Top" Content="{TemplateBinding Content}" />
-                    <ItemsControl ItemsSource="{TemplateBinding Options}">
+                <DockPanel VerticalSpacing="24">
+                    <ItemsControl ItemsSource="{TemplateBinding Options}" DockPanel.Dock="Bottom" IsVisible="{TemplateBinding Options, Converter={x:Static Enumerable.NotEmpty}}">
                         <ItemsControl.ItemContainerTheme>
                             <ControlTheme TargetType="ContentPresenter">
                                 <Setter Property="IsVisible" Value="{Binding IsVisible^, DataType=IOption}" />
@@ -29,7 +28,7 @@
                         </ItemsControl.ItemContainerTheme>
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Classes="MediumGap" />
+                                <UniformGrid Rows="1" ColumnSpacing="10" RowSpacing="20" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
@@ -57,6 +56,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                    <ContentPresenter DockPanel.Dock="Top" Content="{TemplateBinding Content}" />
                 </DockPanel>
             </ControlTemplate>
         </Setter>

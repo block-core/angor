@@ -18,7 +18,7 @@
 
     <Card Container.Name="Root" Container.Sizing="Width" Header="Wallet Setup">
         <DockPanel VerticalSpacing="40">
-            <StackPanel DockPanel.Dock="Top" Classes="SmallGap">
+            <StackPanel DockPanel.Dock="Top" Classes="Gap-S">
                 <TextBlock Classes="Warning Wrap Center">It seems you don't have a wallet yet. You need one to unleash the Angor experience!</TextBlock>
                 <StackPanel>
                     <TextBlock>With a wallet you will be able to:</TextBlock>
@@ -35,7 +35,7 @@
             <ItemsControl x:Name="CardGrid" HorizontalAlignment="Center" VerticalAlignment="Top">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <UniformGrid Classes="BigGap"
+                        <UniformGrid Classes="Gap-XL"
                                      ColumnSpacing="20"
                                      RowSpacing="20">
                             <UniformGrid.Styles>
@@ -57,7 +57,7 @@
                     <collections:ArrayList>
                         <EnhancedButton Command="{Binding Create}">
                             <Button.Content>
-                                <StackPanel Classes="SmallGap">
+                                <StackPanel Classes="Gap-S">
                                     <ContentControl ContentTemplate="{StaticResource BigIcon}">
                                         <ui:Icon Source="svg:/Assets/add.svg" />
                                     </ContentControl>

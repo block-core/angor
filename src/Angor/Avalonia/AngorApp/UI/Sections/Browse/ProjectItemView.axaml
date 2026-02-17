@@ -27,7 +27,7 @@
     <Border Padding="0 0 0 20" Classes="Card"  x:DataType="browse:IProjectViewModel">
         <DockPanel VerticalSpacing="15" >
             <av:AdvancedImage  Margin="5" CornerRadius="10" Height="180" Stretch="UniformToFill" Source="{Binding Project.Banner}" DockPanel.Dock="Top" />
-            <StackPanel Classes="SmallGap" Margin="15 0">
+            <StackPanel Classes="Gap-S" Margin="15 0">
                 <TextBlock Classes="SizeBig" Text="{Binding Project.Name}" />
                 <Separator Background="{DynamicResource SystemChromeAltLowColor}" />
                 <TextBlock ToolTip.Tip="{Binding $self.Text}"

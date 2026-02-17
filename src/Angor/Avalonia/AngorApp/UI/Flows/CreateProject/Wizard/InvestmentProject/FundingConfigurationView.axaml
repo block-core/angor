@@ -159,7 +159,7 @@
     </UserControl.Styles>
 
     <controls:ScrollableView MaxContentWidth="766">
-        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}">
+        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource Gap-XL}">
             <TextBlock Classes="Subtitle">Configure your funding target, window, and project nature.</TextBlock>
 
 
@@ -176,7 +176,7 @@
                         </EdgePanel.StartContent>
                     </EdgePanel>
                 </HeaderedContainer.Header>
-                <StackPanel Classes="BigGap">
+                <StackPanel Classes="Gap-XL">
                     <StackPanel Spacing="10">
                         <HeaderedContainer>
                             <HeaderedContainer.Header>
@@ -216,7 +216,7 @@
                         </ListBox.ItemsPanel>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel HorizontalAlignment="Center" Classes="TinyGap">
+                                <StackPanel HorizontalAlignment="Center" Classes="Gap-XS">
                                     <TextBlock Classes="Center Bold" Text="{Binding  Btc}" />
                                     <TextBlock Classes="Center Tiny" Text="BTC" />
                                 </StackPanel>
@@ -227,7 +227,7 @@
             </HeaderedContainer>
 
 
-            <HeaderedContainer Classes="Card Neutral WizardSection">
+            <HeaderedContainer Classes="Card Neutral Window">
                 <HeaderedContainer.Header>
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <TextBlock>Fundraising Window</TextBlock>
@@ -277,7 +277,7 @@
 
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="model:PeriodOption">
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Classes="TinyGap">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Classes="Gap-XS">
                                         <TextBlock Classes="Center Bold Tiny" Text="{Binding Title}" />
                                     </StackPanel>
                                 </DataTemplate>
@@ -288,7 +288,7 @@
             </HeaderedContainer>
 
 
-            <HeaderedContainer Classes="Card Neutral WizardSection">
+            <HeaderedContainer Classes="Card Neutral Window">
                 <HeaderedContainer.Header>
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <TextBlock>Project Nature (Penalty)</TextBlock>
