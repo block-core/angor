@@ -19,7 +19,7 @@
         <Setter Property="ItemsPanel">
             <Setter.Value>
                 <ItemsPanelTemplate>
-                    <StackPanel Classes="MediumGap" />
+                    <StackPanel Classes="Gap-M" />
                 </ItemsPanelTemplate>
             </Setter.Value>
         </Setter>
@@ -29,7 +29,7 @@
         <Setter Property="ItemsPanel">
             <Setter.Value>
                 <ItemsPanelTemplate>
-                    <StackPanel Classes="BigGap" />
+                    <StackPanel Classes="Gap-XL" />
                 </ItemsPanelTemplate>
             </Setter.Value>
         </Setter>

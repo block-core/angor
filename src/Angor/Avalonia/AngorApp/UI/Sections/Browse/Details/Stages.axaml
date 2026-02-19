@@ -44,7 +44,7 @@
                         <ItemsControl ItemsSource="{Binding Project.Stages}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <StackPanel Classes="SmallGap" />
+                                    <StackPanel Classes="Gap-S" />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
@@ -66,7 +66,7 @@
                                             </ContainerQuery>
                                         </Border.Styles>
                                         <HeaderedContainer TextBlock.TextWrapping="Wrap" Padding="0" Margin="10" Header="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}">
-                                            <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
+                                            <StackPanel Grid.IsSharedSizeScope="True" Classes="Gap-S">
                                                 <EdgePanel StartContent="Percentage" EndContent="{Binding RatioOfTotal, StringFormat='{}{0:P0}'}" />
                                                 <EdgePanel StartContent="Release date" EndContent="{Binding ReleaseDate, StringFormat=d}" />
                                                 <EdgePanel StartContent="Time until release" EndContent="{Binding ReleaseDate, Converter={x:Static controls:AngorConverters.TimeLeftDateTime}}" />

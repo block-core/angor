@@ -10,7 +10,7 @@
         <l:PaymentSelectorViewModelSample />
     </Design.DataContext>
     
-    <StackPanel Classes="BigGap">
+    <StackPanel Classes="Gap-XL">
         <Border>
             <EdgePanel StartContent="Amount to Invest" Classes="ColorPanel LightGray">
                 <EdgePanel.EndContent>

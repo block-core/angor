@@ -10,7 +10,7 @@
         <l:BackupWalletViewModelSample></l:BackupWalletViewModelSample>
     </Design.DataContext>
     
-    <StackPanel Classes="BigGap">
+    <StackPanel Classes="Gap-XL">
         <Border Classes="ColorPanel Amber Circle" IconOptions.Size="36" Padding="20">
             <Border.Child>
                 <ContentControl Content="{Icon fa-lock}" />

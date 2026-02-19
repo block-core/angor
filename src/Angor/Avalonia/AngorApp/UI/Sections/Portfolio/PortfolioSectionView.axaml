@@ -77,7 +77,7 @@
             </Card>
             <Loading IsLoading="{Binding IsLoading^}" LoadingText="Your portfolio is loading. Please wait.">
                 <ScrollViewer>
-                    <StackPanel Classes="BigGap">
+                    <StackPanel Classes="Gap-XL">
                         <BalancedWrapGrid DockPanel.Dock="Top">
                             <BalancedWrapGrid.Styles>
                                 <ContainerQuery Name="RootPanel" Query="min-width:0">

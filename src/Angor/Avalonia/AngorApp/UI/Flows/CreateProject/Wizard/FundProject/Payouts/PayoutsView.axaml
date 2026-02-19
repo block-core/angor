@@ -30,12 +30,12 @@
     </UserControl.Styles>
 
     <controls:ScrollableView MaxContentWidth="766">
-        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}">
+        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource Gap-XL}">
             <TextBlock Classes="Subtitle">Select your payout pattern and schedule</TextBlock>
 
-                <StackPanel Spacing="{StaticResource BigGap}" IsVisible="{Binding !!!Payouts.Count}">
+                <StackPanel Spacing="{StaticResource Gap-XL}" IsVisible="{Binding !!!Payouts.Count}">
 
-                <HeaderedContainer Classes="Card Neutral WizardSection">
+                <HeaderedContainer Classes="Card Neutral Window">
                     <HeaderedContainer.Header>
                         <TextBlock Classes="FormLabel">Payout Frequency</TextBlock>
                     </HeaderedContainer.Header>
@@ -59,7 +59,7 @@
                 </HeaderedContainer>
 
 
-                <HeaderedContainer Classes="Card Neutral WizardSection">
+                <HeaderedContainer Classes="Card Neutral Window">
                     <HeaderedContainer.Header>
                         <TextBlock Classes="FormLabel">Number of Installments</TextBlock>
                     </HeaderedContainer.Header>
@@ -70,7 +70,7 @@
                              Background="Transparent">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Classes="BigGap" />
+                                <StackPanel Classes="Gap-XL" />
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>
                         <ListBox.ItemTemplate>
@@ -86,7 +86,7 @@
                 </HeaderedContainer>
 
 
-                <HeaderedContainer Classes="Card Neutral WizardSection" IsVisible="{Binding FundProject.PayoutFrequency, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static model:PayoutFrequency.Monthly}}">
+                <HeaderedContainer Classes="Card Neutral Window" IsVisible="{Binding FundProject.PayoutFrequency, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static model:PayoutFrequency.Monthly}}">
                     <HeaderedContainer.Header>
                         <TextBlock Classes="FormLabel">Monthly Offer Payout Date</TextBlock>
                     </HeaderedContainer.Header>
@@ -110,7 +110,7 @@
                 </HeaderedContainer>
 
 
-                <HeaderedContainer Classes="Card Neutral WizardSection" IsVisible="{Binding FundProject.PayoutFrequency, Converter={x:Static  ObjectConverters.Equal}, ConverterParameter={x:Static model:PayoutFrequency.Weekly}}">
+                <HeaderedContainer Classes="Card Neutral Window" IsVisible="{Binding FundProject.PayoutFrequency, Converter={x:Static  ObjectConverters.Equal}, ConverterParameter={x:Static model:PayoutFrequency.Weekly}}">
                     <HeaderedContainer.Header>
                         <TextBlock Classes="FormLabel">Weekly Payout Day</TextBlock>
                     </HeaderedContainer.Header>
@@ -138,9 +138,9 @@
             </StackPanel>
 
 
-            <HeaderedContainer FontWeight="Bold" Classes="Card Accent GreenIcon" IsVisible="{Binding !!Payouts.Count}">
+            <HeaderedContainer FontWeight="Bold" Classes="Card Accent" IsVisible="{Binding !!Payouts.Count}">
                 <HeaderedContainer.Header>
-                    <EdgePanel StartContent="{Icon fa-regular fa-clipboard}">
+                    <EdgePanel StartContentClasses="Icon-M Icon-Bg-Green Icon-Square Icon-Fill-White" StartContent="{Icon fa-regular fa-clipboard}">
                         <EdgePanel.EndContent>
                             <EnhancedButton IconOptions.Fill="{DynamicResource Accent}" Icon="{Icon fa-trash}" Classes="Outline" Command="{Binding ClearPayouts}">Delete</EnhancedButton>
                         </EdgePanel.EndContent>

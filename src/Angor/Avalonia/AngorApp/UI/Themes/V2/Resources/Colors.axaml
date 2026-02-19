@@ -73,6 +73,8 @@
             <SolidColorBrush x:Key="ErrorSoft" Color="#fee2e2" />
             <SolidColorBrush x:Key="ErrorHard" Color="#fecaca" />
             <SolidColorBrush x:Key="ErrorForeground" Color="#dc2626" />
+            <SolidColorBrush x:Key="ErrorText" Color="#b91c1c" />
+            <SolidColorBrush x:Key="SuccessText" Color="#15803d" />
 
             <!-- Shadows -->
             <BoxShadows x:Key="SectionShadow">0 0 30 0 LightGray</BoxShadows>

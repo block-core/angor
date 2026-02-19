@@ -103,13 +103,13 @@
             <ItemsControl Classes="ShowEmptyContent" ItemsSource="{Binding Investments}" Empty.Content="No investments found">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Classes="SmallGap" />
+                        <StackPanel Classes="Gap-S" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Card Theme="{StaticResource WideCard}" Header="{Binding MostRecentInvestment.Amount.BtcString}">
-                            <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
+                            <StackPanel Grid.IsSharedSizeScope="True" Classes="Gap-S">
                                 <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="From:" Content="{Binding MostRecentInvestment.InvestorNostrPubKey}">
                                     <EdgePanel.ContentTemplate>
                                         <DataTemplate x:DataType="x:String">

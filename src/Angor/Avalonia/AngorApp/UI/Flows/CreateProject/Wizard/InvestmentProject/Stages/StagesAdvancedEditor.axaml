@@ -76,7 +76,7 @@
         </Style>
     </UserControl.Styles>
 
-    <StackPanel Classes="BigGap">
+    <StackPanel Classes="Gap-XL">
         <ItemsControl ItemsSource="{Binding NewProject.Stages}" FontSize="14">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>

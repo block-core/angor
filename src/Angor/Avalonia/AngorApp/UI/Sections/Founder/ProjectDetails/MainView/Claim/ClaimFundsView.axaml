@@ -80,7 +80,7 @@
             <ItemsControl VerticalAlignment="Top" Classes="ShowEmptyContent" ItemsSource="{Binding ClaimableStages}" Empty.Content="No coin items found">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Classes="BigGap" />
+                        <StackPanel Classes="Gap-XL" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.Styles>

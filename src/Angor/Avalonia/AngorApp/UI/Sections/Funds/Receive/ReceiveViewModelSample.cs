@@ -1,8 +1,6 @@
-using AngorApp.UI.Sections.Funds.Accounts;
-using AngorApp.UI.Sections.Funds.Receive;
 using AngorApp.UI.Sections.Wallet;
 
-namespace AngorApp
+namespace AngorApp.UI.Sections.Funds.Receive
 {
     public class ReceiveViewModelSample : IReceiveViewModel
     {

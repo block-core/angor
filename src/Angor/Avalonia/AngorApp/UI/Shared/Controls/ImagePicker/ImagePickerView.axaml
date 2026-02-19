@@ -11,8 +11,8 @@
         <l:ImagePickerViewModelSample />
     </Design.DataContext>
 
-    <HeaderedContainer Classes="Card Neutral WizardSection">
-        <StackPanel Classes="BigGap">
+    <HeaderedContainer Classes="Card Window">
+        <StackPanel Classes="Gap-XL">
             <TextBlock TextWrapping="Wrap">Enter an image URL directly, or browse and upload a local file to a Blossom server</TextBlock>
 
             <!-- URL Entry -->
@@ -25,7 +25,7 @@
             </HeaderedContainer>
 
             <!-- Upload Section -->
-            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+            <Border Classes="ColorPanel White">
                 <StackPanel Spacing="10">
                     <TextBlock FontWeight="SemiBold">Upload to Blossom Server</TextBlock>
 
@@ -45,7 +45,7 @@
 
                     <!-- Custom Server URL -->
                     <DockPanel>
-                        <Button DockPanel.Dock="Right" Content="Add" Command="{Binding AddCustomServer}" Margin="8 0 0 0" />
+                        <EnhancedButton VerticalAlignment="Center" DockPanel.Dock="Right" Content="Add" Command="{Binding AddCustomServer}" Margin="8 0 0 0" />
                         <TextBox Watermark="https://your-blossom-server.com"
                                  Text="{Binding CustomServerUrl}"
                                  HorizontalAlignment="Stretch" />
@@ -54,8 +54,8 @@
                     <!-- Browse + Upload Row -->
                     <DockPanel LastChildFill="True">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
-                            <Button Content="Browse..." Command="{Binding BrowseFile}" IsEnabled="{Binding !IsUploading}" />
-                            <Button Content="Upload" Command="{Binding UploadFile}" Classes="accent" />
+                            <EnhancedButton Classes="Outline" Content="Browse..." Command="{Binding BrowseFile}" IsEnabled="{Binding !IsUploading}" />
+                            <EnhancedButton Content="Upload" Command="{Binding UploadFile}" Classes="Emphasized" />
                         </StackPanel>
                         <TextBlock Text="{Binding SelectedFileName, FallbackValue='No file selected'}"
                                    VerticalAlignment="Center"

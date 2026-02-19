@@ -4,7 +4,7 @@
         xmlns:system="clr-namespace:System;assembly=System.Runtime">
     <Design.PreviewWith>
         <Border Padding="20">
-            <StackPanel Classes="BigGap">
+            <StackPanel Classes="Gap-XL">
                 <CalendarDatePicker />
                 <CalendarDatePicker>
                     <DataValidationErrors.Errors>

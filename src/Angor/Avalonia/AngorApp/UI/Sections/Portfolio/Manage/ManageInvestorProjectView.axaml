@@ -25,7 +25,7 @@
                     <ui:Icon Source="fa-list-check" />
                 </Card.HeaderStartContent>
                 <Card.HeaderEndContent>
-                    <StackPanel Orientation="Horizontal" Classes="SmallGap" HorizontalAlignment="Stretch">
+                    <StackPanel Orientation="Horizontal" Classes="Gap-S" HorizontalAlignment="Stretch">
                         <EnhancedButton Icon="{Icon fa-arrows-rotate}" Command="{Binding Load}" />
                         <EnhancedButton Content="Message" />
                     </StackPanel>
@@ -33,7 +33,7 @@
             </Card>
             <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading investment details...">
                 <ScrollViewer>
-                    <StackPanel Classes="BigGap">
+                    <StackPanel Classes="Gap-XL">
                         <BalancedWrapGrid MinItemWidth="200" HorizontalSpacing="20" VerticalSpacing="20">
                             <Card Header="Total Funds" Theme="{StaticResource LeftItemCard}" Subheader="{Binding State^.Project.TotalFunds.DecimalString}" />
                             <Card Header="Expiry Date" Theme="{StaticResource LeftItemCard}" Subheader="{Binding State^.Project.ExpiryDate, Converter={x:Static co:AngorConverters.HumanizeDateTime}}" />
@@ -91,13 +91,13 @@
                                 <ItemsControl Classes="ShowEmptyContent" Empty.Content="No release items found" ItemsSource="{Binding State^.Stages}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
-                                            <StackPanel Classes="BigGap" />
+                                            <StackPanel Classes="Gap-XL" />
                                         </ItemsPanelTemplate>
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Card Theme="{StaticResource WideCard}" Header="{ItemIndex StartFromOne=True, StringFormat='Investment {0}'}">
-                                                <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
+                                                <StackPanel Grid.IsSharedSizeScope="True" Classes="Gap-S">
                                                     <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Stage:" Content="{Binding  Stage}" />
                                                     <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Amount:" Content="{Binding Amount.DecimalString}" />
                                                     <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Status:" Content="{Binding Status}" />

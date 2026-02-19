@@ -37,7 +37,7 @@
             </ListBox.ItemContainerTheme>
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="tx:IClaimableTransaction">
-                    <StackPanel Classes="SmallGap">
+                    <StackPanel Classes="Gap-S">
                         <TextBlock Classes="Size-M Weight-Bold Strong"
                                    Text="{Binding Amount.ShortDecimalString}" />
                         <TextBlock Classes="Size-XS Text-Muted"

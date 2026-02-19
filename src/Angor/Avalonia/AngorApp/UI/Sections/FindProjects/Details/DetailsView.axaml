@@ -33,7 +33,7 @@
                                 <a:AdvancedImage Source="{Binding Project.Avatar}" />
                             </Border>
                         </Panel>
-                        <StackPanel Margin="20" Classes="SmallGap">
+                        <StackPanel Margin="20" Classes="Gap-S">
                             <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Classes="Weight-Bold Size-XL Strong" />
                             <TextBlock Text="{Binding ShortDescription}" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" TextWrapping="Wrap" Classes="Size-M" />
                         </StackPanel>
@@ -42,7 +42,7 @@
 
                 <!-- Right Column: Investment Opportunity -->
                 <Border Grid.Column="1" Classes="ColorPanel DarkGreen Shadow" IsVisible="{Binding IsInsideInvestmentPeriod}">
-                    <StackPanel Classes="BigGap" VerticalAlignment="Center">
+                    <StackPanel Classes="Gap-XL" VerticalAlignment="Center">
                         <ContentControl IconOptions.Size="32" IconOptions.Fill="White" Content="{Icon fa-bitcoin}" />
                         <TextBlock Text="Investment Opportunity" Classes="Title" Foreground="White" FontWeight="Bold" />
 
@@ -73,7 +73,7 @@
                         <c:NewCard ContainerClasses="Card ApricotBorder" Left="Total Investors" Content="{Binding InvestorsCount}" Right="{Icon fa-clipboard}" LeftClasses="BrownText" ContentClasses="Size-XL" />
                     </UniformGrid>
 
-                    <StackPanel Classes="MediumGap">
+                    <StackPanel Classes="Gap-M">
                         <Grid ColumnDefinitions="*, Auto" Margin="0 0 0 5">
                             <TextBlock Text="Funding Progress" Foreground="#4a4a4a" Classes="Size-S Weight-Bold" />
                             <TextBlock Grid.Column="1" Foreground="{DynamicResource PrimaryGreenDark}" Text="{Binding FundingProgress, StringFormat={}{0:P0}}" FontWeight="Bold" />

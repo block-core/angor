@@ -21,8 +21,8 @@
     
     <OverlayBorder Theme="{StaticResource CardOverlayBorder}">
         <DockPanel VerticalAlignment="Stretch" VerticalSpacing="20">
-            <StackPanel Classes="SmallGap" DockPanel.Dock="Top" Margin="10">
-                <StackPanel Classes="SmallGap">
+            <StackPanel Classes="Gap-S" DockPanel.Dock="Top" Margin="10">
+                <StackPanel Classes="Gap-S">
                     <Viewbox Height="40">
                         <ContentControl Foreground="Orange">
                             <ui:Icon Source="mdi-alert-circle-outline" />
@@ -42,13 +42,13 @@
                     <ItemsControl Classes="ShowEmptyContent" Empty.Content="No release items found" ItemsSource="{Binding Transactions}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Classes="SmallGap" />
+                                <StackPanel Classes="Gap-S" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Card Theme="{StaticResource WideCard}" Header="{ItemIndex StartFromOne=True, StringFormat='Investment {0}'}">
-                                    <StackPanel Grid.IsSharedSizeScope="True" Classes="SmallGap">
+                                    <StackPanel Grid.IsSharedSizeScope="True" Classes="Gap-S">
                                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Arrived:" Content="{Binding Arrived, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
                                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Approved:" Content="{Binding Approved, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />
                                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="Released:" Content="{Binding Released, Converter={x:Static controls:AngorConverters.HumanizeDateTime}}" />

@@ -31,8 +31,8 @@
     </UserControl.Styles>
 
     <controls:ScrollableView>
-        <StackPanel Classes="BigGap" MaxWidth="1152">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Classes="SmallGap">
+        <StackPanel Classes="Gap-XL" MaxWidth="1152">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Classes="Gap-S">
                 <EnhancedButton Command="{Binding RefreshBalances}" Classes="Outline" Classes.Spinning="{Binding RefreshBalances.IsExecuting}" Icon="{Icon fa-sync}">Refresh</EnhancedButton>
                 <EnhancedButton Command="{Binding ImportAccount}" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False">Import Wallet</EnhancedButton>
                 <EnhancedButton Command="{Binding GetTestCoins}" IsVisible="{Binding CanGetTestCoins}" Classes="Emphasized" Icon="{Icon fa-plus}">Get Testnet Coins</EnhancedButton>
@@ -55,11 +55,11 @@
             <ItemsControl Classes="VerticalBigGap" ItemsSource="{Binding AccountGroups}" ClipToBounds="False">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <HeaderedContainer Classes="Card WizardSection Shadow MediumBigHeader" Header="{Binding Name}">
+                        <HeaderedContainer Classes="Card Window Shadow MediumBigHeader" Header="{Binding Name}">
                             <ItemsControl x:Name="WalletList" ItemsSource="{Binding Accounts}" Classes="Vertical" ClipToBounds="False">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <EdgePanel Classes="White" ClipToBounds="False">
+                                        <EdgePanel Classes="ColorPanel White" ClipToBounds="False">
                                             <EdgePanel.Styles>
                                                 <Style Selector="EdgePanel > Border">
                                                     <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
@@ -67,17 +67,16 @@
                                             </EdgePanel.Styles>
                                             <EdgePanel.StartContent>
                                                 <EdgePanel StartContent="{Icon fa-bitcoin}"
-                                                           IconOptions.Padding="10"
-                                                           IconOptions.CornerRadius="10"
-                                                           IconOptions.Background="{DynamicResource Stroke}">
-                                                    <StackPanel VerticalAlignment="Center" Classes="SmallGap">
+                                                           Classes="Icon-M Icon-Bg-LightGray Icon-Square"
+                                                           >
+                                                    <StackPanel VerticalAlignment="Center" Classes="Gap-S">
                                                         <TextBlock Classes="Weight-Bold Strong" Text="{Binding Wallet.Name}" />
                                                         <TextBlock Classes="Weight-Light Dimmed" Text="{Binding Wallet.NetworkKind}" />
                                                     </StackPanel>
                                                 </EdgePanel>
                                             </EdgePanel.StartContent>
                                             <EdgePanel.EndContent>
-                                                <StackPanel Classes="SmallGap" Orientation="Horizontal">
+                                                <StackPanel Classes="Gap-S" Orientation="Horizontal">
                                                     <StackPanel.Styles>
                                                         <Style Selector="EnhancedButton">
                                                             <Setter Property="IconOptions.Size" Value="12" />

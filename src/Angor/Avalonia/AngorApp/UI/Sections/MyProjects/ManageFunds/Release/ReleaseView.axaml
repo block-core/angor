@@ -13,7 +13,7 @@
     
     <HeaderedContainer Header="The project didn't meet its target" Classes="Card White MediumBigHeader Shadow">
         <Border Classes="ColorPanel LightGray">
-            <StackPanel Classes="MediumGap">
+            <StackPanel Classes="Gap-M">
                 <EdgePanel HorizontalAlignment="Left">
                     <EdgePanel.StartContent>
                         <TextBlock Classes="Strong" VerticalAlignment="Center" FontWeight="Bold">Funds Received</TextBlock>

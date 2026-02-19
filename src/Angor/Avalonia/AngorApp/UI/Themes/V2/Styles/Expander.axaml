@@ -66,8 +66,7 @@
     <!-- EdgePanel header styling -->
     <Style Selector="Expander > EdgePanel">
         <Setter Property="Margin" Value="10" />
-        <Setter Property="IconOptions.Size" Value="25" />
-        <Setter Property="IconOptions.Fill" Value="#4a4a4a" />
+
         <Setter Property="ContentTemplate">
             <DataTemplate>
                 <TextBlock Classes="Size-XL Weight-Bold" Text="{Binding DataType={x:Type x:String}}" />

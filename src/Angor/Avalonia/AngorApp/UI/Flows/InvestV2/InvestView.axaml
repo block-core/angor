@@ -60,7 +60,7 @@
                             </ListBox.ItemsPanel>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel HorizontalAlignment="Center" Classes="TinyGap">
+                                    <StackPanel HorizontalAlignment="Center" Classes="Gap-XS">
                                         <TextBlock Classes="Center Bold" Text="{Binding  Btc}" />
                                         <TextBlock Classes="Center Tiny" Text="BTC" />
                                     </StackPanel>
@@ -73,13 +73,13 @@
                 <!-- Release Schedule Section -->
                 <HeaderedContainer Header="Release Schedule" Classes="Card Silver Shadow MediumHeader">
                     <ScrollViewer>
-                        <StackPanel Classes="BigGap">
+                        <StackPanel Classes="Gap-XL">
                             <TextBlock Classes="Text-Muted">Your investment will be released in stages:</TextBlock>
                             <ItemsControl Classes="Vertical" ItemsSource="{Binding StageBreakdowns^}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border Classes="ColorPanel White" CornerRadius="10" Padding="12">
-                                            <StackPanel Classes="TinyGap">
+                                            <StackPanel Classes="Gap-XS">
                                                 <EdgePanel>
                                                     <EdgePanel.StartContent>
                                                         <TextBlock Classes="Size-XS Weight-Bold Strong" Text="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}" />

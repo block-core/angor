@@ -83,8 +83,8 @@
             </BalancedWrapGrid>
 
             <Card Header="Project Information" Subheader="Key project details and metrics">
-                <StackPanel Classes="BigGap" Margin="0 15">
-                    <StackPanel Classes="BigGap">
+                <StackPanel Classes="Gap-XL" Margin="0 15">
+                    <StackPanel Classes="Gap-XL">
                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="{Icon fa-solid fa-clock}" Content="Penalty duration"
                                    EndContent="{Binding Project.PenaltyDuration, Converter={x:Static controls:AngorConverters.HumanizeTimeSpan}}" />
                         <EdgePanel Theme="{StaticResource PropertyEdgePanel}" StartContent="{Icon fa-solid fa-coins}" Content="Penalty threshold"

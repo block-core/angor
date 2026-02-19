@@ -27,11 +27,11 @@
     </UserControl.Styles>
 
     <controls:ScrollableView MaxContentWidth="766">
-        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource BigGap}">
+        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource Gap-XL}">
             <TextBlock Classes="Subtitle">Tell us about your project and what you're building.</TextBlock>
 
-            <HeaderedContainer Classes="Card Neutral WizardSection" Header="What's the project called?">
-                <StackPanel Classes="SmallGap">
+            <HeaderedContainer Classes="Card Neutral Window" Header="What's the project called?">
+                <StackPanel Classes="Gap-S">
                     <HeaderedContainer>
                         <HeaderedContainer.Header>
                             <TextBlock Classes="FormLabel">Project Name *</TextBlock>
@@ -57,8 +57,8 @@
                 </StackPanel>
             </HeaderedContainer>
 
-            <HeaderedContainer Classes="Card Neutral WizardSection" Header="Tell us about it">
-                <StackPanel Classes="SmallGap">
+            <HeaderedContainer Classes="Card Neutral Window" Header="Tell us about it">
+                <StackPanel Classes="Gap-S">
                     <HeaderedContainer>
                         <HeaderedContainer.Header>
                             <TextBlock Classes="FormLabel">About *</TextBlock>
@@ -84,8 +84,8 @@
                 </StackPanel>
             </HeaderedContainer>
 
-            <HeaderedContainer Classes="Card Neutral WizardSection" Header="Do you have a website?">
-                <StackPanel Classes="SmallGap">
+            <HeaderedContainer Classes="Card Neutral Window" Header="Do you have a website?">
+                <StackPanel Classes="Gap-S">
                     <HeaderedContainer>
                         <HeaderedContainer.Header>
                             <TextBlock Classes="FormLabel">Project Website</TextBlock>

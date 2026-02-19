@@ -13,10 +13,10 @@
         </Style>
     </UserControl.Styles>
 
-    <StackPanel IsEnabled="{Binding !CommitDraft.IsExecuting^}" Classes="SmallGap">
+    <StackPanel IsEnabled="{Binding !CommitDraft.IsExecuting^}" Classes="Gap-S">
         <Card IsVisible="{Binding !!Amount}" Header="Amount" Theme="{StaticResource AngorHighlightedContentCard}"
               Content="{Binding  Amount.ShortDecimalString, FallbackValue=unknown}" />
-        <UniformGrid Rows="1" ColumnSpacing="{StaticResource SmallGap}">
+        <UniformGrid Rows="1" ColumnSpacing="{StaticResource Gap-S}">
             <Card Header="Transaction speed">
                 <feerate:FeerateSelector Feerate="{Binding SelectedFeerate}"
                                          Presets="{Binding Feerates}">

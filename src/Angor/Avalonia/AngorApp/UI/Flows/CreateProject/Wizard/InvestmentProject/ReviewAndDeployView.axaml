@@ -28,37 +28,37 @@
     </UserControl.Resources>
 
     <controls:ScrollableView MaxContentWidth="766">
-        <StackPanel Classes="BigGap">
-            <HeaderedContainer Classes="Card Accent RoundedSquareIcon GreenIcon">
+        <StackPanel Classes="Gap-XL">
+            <HeaderedContainer Classes="Card Accent Icon-M Icon-Bg-Green Icon-Square Icon-Fill-White">
                 <HeaderedContainer.Header>
-                    <EdgePanel StartContent="{Icon fa-user}" Content="Project Profile" />
+                    <EdgePanel StartContent="{Icon fa-regular fa-user}" Content="Project Profile" />
                 </HeaderedContainer.Header>
-                <StackPanel Classes="BigGap">
+                <StackPanel Classes="Gap-XL">
                     <EdgePanel StartContent="Name" EndContent="{Binding NewProject.Name}" />
                     <EdgePanel StartContent="About" EndContent="{Binding NewProject.Description}" />
                     <EdgePanel StartContent="Website" EndContent="{Binding NewProject.Website}" />
                 </StackPanel>
             </HeaderedContainer>
 
-            <HeaderedContainer Classes="Card Radius-L Bitcoin RoundedSquareIcon OrangeIcon">
+            <HeaderedContainer Classes="Card Radius-L Bitcoin Icon-M Icon-Bg-Orange Icon-Square Icon-Fill-White">
                 <HeaderedContainer.Header>
                     <EdgePanel StartContent="{Icon fa-bitcoin}" Content="Funding Configuration" />
                 </HeaderedContainer.Header>
-                <StackPanel Classes="BigGap" DataContext="{Binding NewProject}" x:DataType="model:IInvestmentProjectConfig">
+                <StackPanel Classes="Gap-XL" DataContext="{Binding NewProject}" x:DataType="model:IInvestmentProjectConfig">
                     <EdgePanel StartContent="Target Amount" EndContent="{Binding TargetAmount.DecimalString}" />
                     <EdgePanel StartContent="Start Date" EndContent="25/11/2025" />
                     <EdgePanel StartContent="End Date" EndContent="{Binding FundingEndDate, StringFormat='d'}" />
                     <EdgePanel StartContent="Penalty Days" EndContent="{Binding PenaltyDays, StringFormat='{}{0} days'}" />
                 </StackPanel>
             </HeaderedContainer>
-            <HeaderedContainer Classes="Card Accent GreenIcon">
+            <HeaderedContainer Classes="Card Accent Icon-M Icon-Bg-Green Icon-Square Icon-Fill-White">
                 <HeaderedContainer.Header>
                     <EdgePanel StartContent="{Icon fa-regular fa-clipboard}" Content="Funding Stages" />
                 </HeaderedContainer.Header>
                 <stages:StagesList x:DataType="model:IInvestmentProjectConfig" DataContext="{Binding NewProject}" Stages="{Binding Stages}" TotalSats="{Binding TargetAmount.Sats}" />
             </HeaderedContainer>
-            <HeaderedContainer Classes="Card WizardSection Accent">
-                <StackPanel Margin="30" MaxWidth="500" Classes="BigGap">
+            <HeaderedContainer Classes="Card Window Accent">
+                <StackPanel Margin="30" MaxWidth="500" Classes="Gap-XL">
                     <Border Width="64" Height="64" HorizontalAlignment="Center" Padding="20" CornerRadius="40" Background="{DynamicResource Accent}">
                         <PathIcon Foreground="White" Height="32" Width="32" Data="{StaticResource AngorLogo}" />
                     </Border>

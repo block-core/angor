@@ -29,7 +29,7 @@
 
     <Loading IsLoading="{Binding Load.IsExecuting^}">
         <ctrl:ScrollableView>
-            <StackPanel Classes="BigGap">
+            <StackPanel Classes="Gap-XL">
                 <Border Classes="ColorPanel White Shadow">
                     <DockPanel>
                         <common:CopyButton DockPanel.Dock="Right" VerticalAlignment="Center" />

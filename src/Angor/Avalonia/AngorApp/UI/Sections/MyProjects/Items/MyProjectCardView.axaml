@@ -22,7 +22,7 @@
                                        DelayBetweenSeconds="0.5" />
             </DataContextChangedTrigger>
         </Interaction.Behaviors>
-        <StackPanel Classes="Bigger">
+        <StackPanel Classes="Gap-L">
             <Grid>
                 <a:AdvancedImage CornerRadius="10 10 0 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="150" Source="{Binding BannerUrl}" />
             </Grid>

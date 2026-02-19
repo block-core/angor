@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:l="clr-namespace:AngorApp.UI.Sections.MyProjects"
              xmlns:items="clr-namespace:AngorApp.UI.Sections.MyProjects.Items"
+             xmlns:controls="clr-namespace:Zafiro.Avalonia.Controls;assembly=Zafiro.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1900" 
              x:Class="AngorApp.UI.Sections.MyProjects.MyProjectsSectionView"
              x:DataType="l:IMyProjectsSectionViewModel">
@@ -12,6 +13,10 @@
         <l:MyProjectsSectionViewModelSample />
     </Design.DataContext>
 
+    <UserControl.Resources>
+        <controls:CommandPoolMonitor x:Key="PoolMonitor" PoolName="ProjectDetails" />
+    </UserControl.Resources>
+
     <Interaction.Behaviors>
         <DataContextChangedTrigger>
             <InvokeCommandAction Command="{Binding LoadProjects}" />
@@ -19,10 +24,11 @@
     </Interaction.Behaviors>
     
     <DockPanel VerticalSpacing="20" HorizontalSpacing="20">
+        
         <DockPanel HorizontalSpacing="20" VerticalSpacing="20">
             <Border x:Name="Sidebar" Classes="ColorPanel LightGray" Width="300">
-                <StackPanel Classes="BigGap" VerticalAlignment="Center">
-                    <StackPanel Classes="SmallGap" HorizontalAlignment="Center">
+                <StackPanel Classes="Gap-XL" VerticalAlignment="Center">
+                    <StackPanel Classes="Gap-S" HorizontalAlignment="Center">
                         <PathIcon Height="64" Width="64" Foreground="{DynamicResource Brand}" Data="{StaticResource AngorLogo}" />
                         <TextBlock Classes="Header Center" Text="Angor Founder Hub" />
                         <TextBlock Classes="Text-Dimmed Center Wrap" Text="Launch new projects and manage your existing fundraising campaigns." />
@@ -42,6 +48,11 @@
                             </StackPanel>
                         </Border>
                     </BalancedWrapGrid>
+
+                    <StackPanel Spacing="5">
+                        <ProgressBar Maximum="{Binding TotalCount^, Source={StaticResource PoolMonitor}}" Value="{Binding CompletedCount^, Source={StaticResource PoolMonitor}}" />
+                    </StackPanel>
+                    
                     <EnhancedButton Icon="{Icon fa-plus}" Command="{Binding Create}" Content="Launch a Project" Classes="Primary" HorizontalAlignment="Stretch" />
                 </StackPanel>
             </Border>
@@ -60,7 +71,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="items:IMyProjectItem">
-                                        <items:MyProjectCardView />
+                                        <items:MyProjectCardView ClipToBounds="False" />
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>

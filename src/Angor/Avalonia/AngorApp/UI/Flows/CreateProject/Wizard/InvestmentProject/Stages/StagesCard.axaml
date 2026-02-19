@@ -16,7 +16,7 @@
             <HeaderedContainer.Header>
                 <EdgePanel StartContent="{Icon fa-regular fa-clipboard}">
                     <EdgePanel.EndContent>
-                        <StackPanel Orientation="Horizontal" Classes="SmallGap">
+                        <StackPanel Orientation="Horizontal" Classes="Gap-S">
                             <EnhancedButton IconOptions.Fill="{DynamicResource Accent}" Icon="{Icon fa-trash}" Classes="Outline" Command="{Binding ClearStages}">Delete</EnhancedButton>
                             <EnhancedButton IconOptions.Fill="{DynamicResource PrimaryButtonForeground}" Icon="{Icon fa-pen-to-square}" Classes="Emphasized" Command="{Binding ToggleEditor}">Edit</EnhancedButton>
                         </StackPanel>

@@ -29,7 +29,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border Margin="10" Classes="Panel Elevate">
-                                <StackPanel Classes="BigGap">
+                                <StackPanel Classes="Gap-XL">
                                     <a:AdvancedImage CornerRadius="10 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140" Source="{Binding BannerUrl}" />
                                     <Border Height="60" Width="60" Margin="0 -50 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource AppBackground}">
                                         <a:AdvancedImage Source="{Binding LogoUrl}" />

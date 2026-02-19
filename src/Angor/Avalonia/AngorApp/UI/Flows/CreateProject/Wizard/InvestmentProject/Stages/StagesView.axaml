@@ -12,7 +12,7 @@
     </Design.DataContext>
 
     <controls:ScrollableView MaxContentWidth="766">
-        <StackPanel Classes="BigGap">
+        <StackPanel Classes="Gap-XL">
             <controls:ErrorSummary HorizontalAlignment="Stretch" Errors="{Binding Errors}" />
             <DockPanel>
                 <EnhancedButton DockPanel.Dock="Right" IsVisible="{Binding !IsAdvanced}" Classes="Outline" Command="{Binding ToggleEditor}">Advanced Editor</EnhancedButton>

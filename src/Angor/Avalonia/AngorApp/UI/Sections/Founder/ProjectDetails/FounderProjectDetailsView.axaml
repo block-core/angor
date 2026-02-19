@@ -22,7 +22,7 @@
     <controls:PageContainer>
         <ScrollViewer>
             <Loading IsLoading="{Binding Load.IsExecuting^}" LoadingText="Loading Project Details...">
-                <StackPanel Classes="BigGap">
+                <StackPanel Classes="Gap-XL">
                     <Panel DataContext="{Binding Project}">
                         <controls:ProjectCard Banner="{Binding Banner}" Avatar="{Binding Avatar}" ProjectName="{Binding Name}" ShortDescription="{Binding ShortDescription}" />
                         <Badge VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="20" Tag="{Binding Status}">
@@ -49,7 +49,7 @@
                     <ContentControl Content="{Binding ContentViewModel}" />
                     <statistics:ProjectStatisticsView DataContext="{Binding Project}" />
                     <Card Header="More info" DataContext="{Binding Project}">
-                        <StackPanel x:DataType="model:IFullProject" Grid.IsSharedSizeScope="True" Classes="BigGap">
+                        <StackPanel x:DataType="model:IFullProject" Grid.IsSharedSizeScope="True" Classes="Gap-XL">
                             <StackPanel.Styles>
                                 <Style Selector="ContentControl#StartContent">
                                     <Setter Property="TextBlock.FontWeight" Value="Bold"></Setter>

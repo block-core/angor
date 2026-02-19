@@ -23,7 +23,8 @@ namespace AngorApp.UI.Shell
                 sectionsByName["Funds"],
                 sectionsByName["Find Projects"],
                 sectionsByName["Funded"],
-                sectionsByName["My Projects"]
+                sectionsByName["My Projects"],
+                sectionsByName["Funders"],
             ];
 
             SelectedSection = sectionsByName["Home"];
