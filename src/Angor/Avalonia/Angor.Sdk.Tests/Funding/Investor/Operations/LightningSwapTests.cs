@@ -94,6 +94,10 @@ public class CreateLightningSwapTests
             .Setup(x => x.CreateSubmarineSwapAsync(address, amount.Sats, It.IsAny<string>()))
             .ReturnsAsync(Result.Success(expectedSwap));
 
+        _mockBoltzService
+            .Setup(x => x.CalculateInvoiceAmountAsync(It.IsAny<long>()))
+            .ReturnsAsync(amount.Sats);
+
         var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
             walletId, projectId, amount, address);
 
@@ -120,6 +124,10 @@ public class CreateLightningSwapTests
         _mockBoltzService
             .Setup(x => x.CreateSubmarineSwapAsync(address, amount.Sats, It.IsAny<string>()))
             .ReturnsAsync(Result.Failure<BoltzSubmarineSwap>("Boltz API error"));
+
+        _mockBoltzService
+            .Setup(x => x.CalculateInvoiceAmountAsync(It.IsAny<long>()))
+            .ReturnsAsync(amount.Sats);
 
         var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
             walletId, projectId, amount, address);
