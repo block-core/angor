@@ -1,3 +1,5 @@
+using Angor.Sdk.Common;
+
 namespace Angor.Sdk.Wallet.Domain;
 
 /// <summary>

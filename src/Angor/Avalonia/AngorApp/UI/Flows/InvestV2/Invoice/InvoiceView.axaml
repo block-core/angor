@@ -5,8 +5,8 @@
              xmlns:l="clr-namespace:AngorApp.UI.Flows.InvestV2.Invoice"
              xmlns:c="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:conv="clr-namespace:AngorApp.UI.Shared.Controls"
-             xmlns:common="clr-namespace:AngorApp.UI.Shared.Controls.Common"
-             d:DesignWidth="448"
+             xmlns:commands="clr-namespace:Zafiro.Avalonia;assembly=Zafiro.Avalonia"
+             d:DesignWidth="800"
              mc:Ignorable="d"
              x:Class="AngorApp.UI.Flows.InvestV2.Invoice.InvoiceView" x:DataType="l:IInvoiceViewModel">
 
@@ -14,12 +14,18 @@
         <l:InvoiceViewModelSample />
     </Design.DataContext>
 
-    <DockPanel VerticalSpacing="20">
-        <ListBox SelectedIndex="0" DockPanel.Dock="Top" Classes="Horizontal" ItemContainerTheme="{StaticResource SmallSelectorListBoxItem}" ItemsSource="{Binding InvoiceTypes}" SelectedItem="{Binding SelectedInvoiceType}"
-                 DisplayMemberBinding="{Binding Name}" />
-        <Border Classes="ColorPanel Apricot" DockPanel.Dock="Bottom">
-            <DockPanel HorizontalSpacing="10">
-                <Border IsVisible="{Binding !PaymentReceived^}" VerticalAlignment="Center" DockPanel.Dock="Right" Classes="ColorPanel Yellow Rounded SmallPadding">
+    <DockPanel VerticalSpacing="20" Classes="Padded">
+        <ListBox SelectedIndex="0" DockPanel.Dock="Top" Background="Transparent" ItemContainerTheme="{StaticResource SmallSelectorListBoxItem}" ItemsSource="{Binding InvoiceTypes}" SelectedItem="{Binding SelectedInvoiceType}"
+                 DisplayMemberBinding="{Binding PaymentMethod}">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="10" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+        </ListBox>
+        <Border Classes="Pink Rounded" DockPanel.Dock="Bottom">
+            <DockPanel HorizontalSpacing="10" Classes="Padded">
+                <Border IsVisible="{Binding !PaymentReceived^}" VerticalAlignment="Center" DockPanel.Dock="Right" Classes="Yellow Rounded SmallPadding">
                     <EdgePanel>
                         <EdgePanel.Content>
                             <TextBlock>Awaiting payment</TextBlock>
@@ -40,18 +46,24 @@
                 </HeaderedContainer>
             </DockPanel>
         </Border>
-        <HeaderedContainer Classes="Card LightGray" DockPanel.Dock="Bottom" Header="{Binding SelectedInvoiceType.Name}">
+        <HeaderedContainer Classes="LightGray Rounded" DockPanel.Dock="Bottom" Header="{Binding SelectedInvoiceType.Name}">
             <DockPanel>
-                <common:CopyButton DockPanel.Dock="Right" Content="{Binding SelectedInvoiceType.Address}"
-                                   ToolTip.Tip="Copy address to clipboard"
-                                   Padding="4" VerticalAlignment="Center">
-                </common:CopyButton>
-                <TextBlock Classes="Weight-Light Size-XS" Text="{Binding SelectedInvoiceType.Address}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <Button DockPanel.Dock="Right" 
+                        Command="{Binding Source={x:Static commands:Commands.Instance}, Path=CopyParameter}" 
+                        CommandParameter="{Binding SelectedInvoiceType.Address}"
+                        Classes="Transparent" ToolTip.Tip="Copy address to clipboard"
+                        Padding="4" VerticalAlignment="Center">
+                    <ContentControl IconOptions.Size="12" Content="{Icon fa-copy}" />
+                </Button>
+                <c:ProgressRing IsVisible="{Binding IsLoadingInvoice}" Height="16" Width="16" VerticalAlignment="Center" />
+                <TextBlock IsVisible="{Binding !IsLoadingInvoice}" Classes="Weight-Light Size-XS" Text="{Binding SelectedInvoiceType.Address}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             </DockPanel>
         </HeaderedContainer>
-
-        <OverlayBorder Width="300" Height="300" BorderThickness="3" BorderBrush="{DynamicResource Stroke}" CornerRadius="20" >
-            <Image Source="{Binding Path=SelectedInvoiceType.Address, Converter={x:Static conv:AngorConverters.StringToQRCode}}" />
-        </OverlayBorder>
+        
+        <Panel>
+            <c:ProgressRing IsVisible="{Binding IsLoadingInvoice}" Width="100" Height="100" />
+            <Image IsVisible="{Binding !IsLoadingInvoice}" Width="300" Height="300"
+                   Source="{Binding Path=SelectedInvoiceType.Address, Converter={x:Static conv:AngorConverters.StringToQRCode}}" />
+        </Panel>
     </DockPanel>
 </UserControl>

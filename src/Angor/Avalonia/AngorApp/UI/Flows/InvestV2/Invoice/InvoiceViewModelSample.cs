@@ -7,6 +7,11 @@ public partial class InvoiceViewModelSample : ReactiveObject, IInvoiceViewModel
 {
     public InvoiceViewModelSample()
     {
+        InvoiceTypes =
+        [
+            new OnChainInvoiceType { Name = "Bitcoin Address", Address = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh" },
+            CreateSampleLightningInvoice()
+        ];
         SelectedInvoiceType = InvoiceTypes.First();
         CopyAddress = EnhancedCommand.Create(() => { });
     }
@@ -14,14 +19,23 @@ public partial class InvoiceViewModelSample : ReactiveObject, IInvoiceViewModel
     public IAmountUI Amount { get; } = AmountUI.FromBtc(0.5m);
     public IObservable<bool> PaymentReceived { get; } = Observable.Return(true);
 
-    public IEnumerable<IInvoiceType> InvoiceTypes { get; } =
-    [
-        new InvoiceTypeSample() { Name = "Lightning Invoice", Address = "lnbc1pvjluezsp5un3qexampleinvoice0s28uz", },
-        new InvoiceTypeSample() { Name = "Bitcoin Address", Address = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", },
-        new InvoiceTypeSample() { Name = "Liquid Address", Address = "ex1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq", }
-    ];
+    public IEnumerable<IInvoiceType> InvoiceTypes { get; }
+
+    private static LightningInvoiceType CreateSampleLightningInvoice()
+    {
+        var invoice = new LightningInvoiceType
+        {
+            Name = "Lightning Invoice",
+            ReceivingAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+        };
+        invoice.Address = "lnbc1pvjluezsp5un3qexampleinvoice0s28uz";
+        invoice.SwapId = "sample-swap-id";
+        return invoice;
+    }
 
     [Reactive] private IInvoiceType? selectedInvoiceType;
+    
+    public bool IsLoadingInvoice => false;
     
     public IEnhancedCommand CopyAddress { get; }
     

@@ -1,6 +1,6 @@
+using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
-using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using AngorApp.UI.Flows.InvestV2.BackupWallet;
 using AngorApp.UI.Flows.InvestV2.InvestmentResult;

@@ -55,4 +55,14 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
         => mediator.Send(request, cancellationToken);
 
     #endregion
+
+    #region Methods for Lightning Network integration (Boltz submarine swaps)
+
+    public Task<Result<CreateLightningSwapForInvestment.CreateLightningSwapResponse>> CreateLightningSwap(CreateLightningSwapForInvestment.CreateLightningSwapRequest request)
+        => mediator.Send(request);
+
+    public Task<Result<MonitorLightningSwap.MonitorLightningSwapResponse>> MonitorLightningSwap(MonitorLightningSwap.MonitorLightningSwapRequest request)
+        => mediator.Send(request);
+
+    #endregion
 }

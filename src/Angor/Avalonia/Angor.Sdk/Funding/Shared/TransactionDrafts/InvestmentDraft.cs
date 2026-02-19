@@ -1,4 +1,4 @@
-using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Sdk.Common;
 
 namespace Angor.Sdk.Funding.Shared.TransactionDrafts;
 

@@ -31,4 +31,16 @@ public interface IInvestmentAppService
     /// Stores the request to DB, monitors the mempool, updates account info when funds are detected, and saves to DB.
     /// </summary>
     Task<Result<MonitorAddressForFunds.MonitorAddressForFundsResponse>> MonitorAddressForFunds(MonitorAddressForFunds.MonitorAddressForFundsRequest request, CancellationToken cancellationToken = default);
+
+    // Methods for Lightning Network integration (Boltz submarine swaps)
+    /// <summary>
+    /// Creates a Boltz submarine swap for funding an investment via Lightning.
+    /// User pays the Lightning invoice, funds go directly on-chain - no intermediate custody.
+    /// </summary>
+    Task<Result<CreateLightningSwapForInvestment.CreateLightningSwapResponse>> CreateLightningSwap(CreateLightningSwapForInvestment.CreateLightningSwapRequest request);
+
+    /// <summary>
+    /// Monitors a Boltz swap until funds arrive on-chain.
+    /// </summary>
+    Task<Result<MonitorLightningSwap.MonitorLightningSwapResponse>> MonitorLightningSwap(MonitorLightningSwap.MonitorLightningSwapRequest request);
 }

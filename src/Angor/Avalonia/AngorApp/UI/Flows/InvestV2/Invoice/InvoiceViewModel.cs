@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -6,10 +5,8 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
-using Angor.Sdk.Wallet.Domain;
 using AngorApp.UI.Flows.InvestV2.InvestmentResult;
 using AngorApp.UI.Shell;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
@@ -23,9 +20,25 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly BehaviorSubject<bool> paymentReceivedSubject = new(false);
     private ICloseable? closeable;
+    
+    // Fee rate in sats/vbyte - used for both Lightning swap calculation and investment transaction
+    private const int DefaultFeeRateSatsPerVbyte = 2;
+    
+    // Separate CTS for monitoring that can be cancelled when invoice type changes
+    private CancellationTokenSource? monitoringCts;
+    private readonly object monitoringLock = new();
+    
+    // Dependencies stored for lazy loading Lightning invoice
+    private IWallet? wallet;
+    private IInvestmentAppService? investmentAppService;
+    private UIServices? uiServices;
+    private ProjectId? projectId;
+    private IShellViewModel? shell;
+    private string? generatedAddress;
 
     [Reactive] private IEnumerable<IInvoiceType> invoiceTypes = [new InvoiceTypeSample { Name = "Loading...", Address = "" }];
     [Reactive] private IInvoiceType? selectedInvoiceType;
+    [Reactive] private bool isLoadingInvoice;
 
     public InvoiceViewModel(
         IWallet wallet, 
@@ -35,6 +48,13 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         ProjectId projectId,
         IShellViewModel shell)
     {
+        // Store dependencies for lazy loading
+        this.wallet = wallet;
+        this.investmentAppService = investmentAppService;
+        this.uiServices = uiServices;
+        this.projectId = projectId;
+        this.shell = shell;
+        
         Amount = amount;
         PaymentReceived = paymentReceivedSubject.AsObservable();
         
@@ -46,6 +66,15 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         
         // Start initialization asynchronously on the UI thread
         Observable.StartAsync(async ct => await InitializeAsync(wallet, investmentAppService, uiServices, projectId, shell, ct), RxApp.MainThreadScheduler)
+            .Subscribe()
+            .DisposeWith(disposable);
+        
+        // React to invoice type changes - load data if needed and start monitoring
+        this.WhenAnyValue(x => x.SelectedInvoiceType)
+            .Where(x => x != null)
+            .Skip(1) // Skip initial selection (handled in InitializeAsync)
+            .SelectMany(invoiceType => 
+                Observable.FromAsync(ct => OnInvoiceTypeSelectedAsync(invoiceType!, ct)))
             .Subscribe()
             .DisposeWith(disposable);
     }
@@ -71,7 +100,12 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            return desktop.MainWindow?.Clipboard;
+            return TopLevel.GetTopLevel(desktop.MainWindow)?.Clipboard;
+        }
+        
+        if (Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime singleView)
+        {
+            return TopLevel.GetTopLevel(singleView.MainView)?.Clipboard;
         }
         
         return null;
@@ -103,20 +137,178 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             }
 
             var address = addressResult.Value;
+            generatedAddress = address;
 
-            // Update invoice type with wallet name + "Address"
-            InvoiceTypes =
-            [
-                new InvoiceTypeSample
+            // Create the on-chain invoice type
+            var onChainInvoice = new OnChainInvoiceType
+            {
+                Name = $"{wallet.Name} Address",
+                Address = address
+            };
+
+            // Create placeholder Lightning invoice type (will be loaded when selected)
+            var lightningInvoice = new LightningInvoiceType
+            {
+                Name = "Lightning",
+                ReceivingAddress = address
+            };
+            // Address and SwapId are reactive properties, set after construction
+            lightningInvoice.Address = ""; // Will be populated when selected
+            lightningInvoice.SwapId = null; // Will be populated when selected
+
+            // Add both options to InvoiceTypes (Lightning will lazy load when selected)
+            InvoiceTypes = [onChainInvoice, lightningInvoice];
+
+            SelectedInvoiceType = onChainInvoice;
+
+            // Start monitoring for the initially selected invoice type (on-chain)
+            await MonitorAndProcessPaymentAsync(SelectedInvoiceType, wallet.Id, projectId, investmentAppService, uiServices, shell, token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Normal cleanup, don't show error
+        }
+    }
+
+    private async Task OnInvoiceTypeSelectedAsync(IInvoiceType invoiceType, CancellationToken cancellationToken)
+    {
+        if (wallet == null || investmentAppService == null || uiServices == null || projectId == null || shell == null)
+            return;
+            
+        // Link with our disposal token
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
+        var token = linkedCts.Token;
+
+        try
+        {
+            // If this is a Lightning invoice that hasn't been loaded yet, load it
+            if (invoiceType is LightningInvoiceType lightningInvoice && !lightningInvoice.IsLoaded)
+            {
+                IsLoadingInvoice = true;
+                
+                var loadResult = await LoadLightningInvoiceAsync(lightningInvoice, token);
+                
+                IsLoadingInvoice = false;
+                
+                if (loadResult.IsFailure)
                 {
-                    Name = $"{wallet.Name} Address",
-                    Address = address
+                    // Loading failed, switch back to on-chain
+                    await uiServices.NotificationService.Show(
+                        loadResult.Error,
+                        "Lightning Invoice Error");
+                    SelectedInvoiceType = InvoiceTypes.FirstOrDefault(x => x.PaymentMethod == PaymentMethod.OnChain);
+                    return;
                 }
-            ];
-            SelectedInvoiceType = InvoiceTypes.First();
+            }
 
-            // Start monitoring the address for funds
-            var monitorResult = await MonitorAddressForFundsAsync(wallet.Id, address, investmentAppService, uiServices, token);
+            // Start monitoring for the selected invoice type
+            await MonitorAndProcessPaymentAsync(invoiceType, wallet.Id, projectId, investmentAppService, uiServices, shell, token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Normal cleanup
+        }
+    }
+
+    private async Task<Result> LoadLightningInvoiceAsync(LightningInvoiceType lightningInvoice, CancellationToken cancellationToken)
+    {
+        if (wallet == null || investmentAppService == null || projectId == null || generatedAddress == null)
+            return Result.Failure("Dependencies not initialized");
+
+        try
+        {
+            // Create Lightning swap to get invoice
+            // TODO: Lightning invoices expire (~10 min). Consider showing expiry countdown in UI
+            // or auto-regenerating the invoice when it expires.
+            var lightningRequest = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
+                wallet.Id,
+                projectId,
+                new Amount(Amount.Sats),
+                generatedAddress,
+                DefaultFeeRateSatsPerVbyte);
+
+            var lightningResult = await investmentAppService.CreateLightningSwap(lightningRequest);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (lightningResult.IsFailure)
+            {
+                return Result.Failure(lightningResult.Error);
+            }
+
+            var swap = lightningResult.Value.Swap;
+            
+            // Update the Lightning invoice with the loaded data
+            lightningInvoice.Address = swap.Invoice;
+            lightningInvoice.SwapId = swap.Id;
+            
+            // Trigger UI update by re-setting the selected type
+            this.RaisePropertyChanged(nameof(SelectedInvoiceType));
+
+            return Result.Success();
+        }
+        catch (OperationCanceledException)
+        {
+            return Result.Failure("Loading cancelled");
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Failed to load Lightning invoice: {ex.Message}");
+        }
+    }
+
+    private async Task MonitorAndProcessPaymentAsync(
+        IInvoiceType invoiceType,
+        WalletId walletId,
+        ProjectId projectId,
+        IInvestmentAppService investmentAppService,
+        UIServices uiServices,
+        IShellViewModel shell,
+        CancellationToken cancellationToken)
+    {
+        // Cancel any existing monitoring before starting new one
+        CancelCurrentMonitoring();
+        
+        // Create new CTS for this monitoring session, linked to both the passed token and our disposal token
+        CancellationToken token;
+        lock (monitoringLock)
+        {
+            monitoringCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
+            token = monitoringCts.Token;
+        }
+        try
+        {
+            // For Lightning payments, first monitor and claim the swap
+            if (invoiceType.PaymentMethod == PaymentMethod.Lightning && invoiceType is LightningInvoiceType lightningInvoice)
+            {
+                // SwapId should never be null here since we check IsLoaded before monitoring
+                if (string.IsNullOrEmpty(lightningInvoice.SwapId))
+                {
+                    return; // Lightning invoice not loaded yet
+                }
+                
+                // Monitor the swap and claim funds
+                var swapResult = await MonitorLightningSwapAsync(
+                    walletId,
+                    lightningInvoice.SwapId,
+                    investmentAppService,
+                    uiServices,
+                    token);
+                
+                if (swapResult.IsFailure)
+                {
+                    return;
+                }
+            }
+            
+            // Monitor the receiving address for funds (both Lightning and on-chain payments)
+            var receivingAddress = invoiceType.ReceivingAddress ?? invoiceType.Address;
+            var monitorResult = await MonitorAddressForFundsAsync(
+                walletId,
+                receivingAddress,
+                investmentAppService,
+                uiServices,
+                token);
             
             if (monitorResult.IsFailure)
             {
@@ -124,11 +316,66 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             }
 
             // Funds received - now build and submit the investment transaction
-            await BuildAndSubmitInvestmentAsync(wallet.Id, projectId, address, investmentAppService, uiServices, shell, token);
+            await BuildAndSubmitInvestmentAsync(walletId, projectId, receivingAddress, DefaultFeeRateSatsPerVbyte, investmentAppService, uiServices, shell, token);
         }
         catch (OperationCanceledException)
         {
-            // Normal cleanup, don't show error
+            // Normal cancellation when switching invoice types
+        }
+    }
+
+    private void CancelCurrentMonitoring()
+    {
+        lock (monitoringLock)
+        {
+            if (monitoringCts != null)
+            {
+                monitoringCts.Cancel();
+                monitoringCts.Dispose();
+                monitoringCts = null;
+            }
+        }
+    }
+
+    private async Task<Result> MonitorLightningSwapAsync(
+        WalletId walletId,
+        string swapId,
+        IInvestmentAppService investmentAppService,
+        UIServices uiServices,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var request = new MonitorLightningSwap.MonitorLightningSwapRequest(
+                walletId,
+                swapId,
+                TimeSpan.FromMinutes(10));
+
+            var result = await investmentAppService.MonitorLightningSwap(request);
+
+            // Check if cancelled before continuing
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (result.IsFailure)
+            {
+                await uiServices.NotificationService.Show(
+                    result.Error,
+                    "Lightning Payment Monitoring Failed");
+                return Result.Failure(result.Error);
+            }
+
+            return Result.Success();
+        }
+        catch (OperationCanceledException)
+        {
+            return Result.Failure("Monitoring cancelled");
+        }
+        catch (Exception ex)
+        {
+            await uiServices.NotificationService.Show(
+                $"Error monitoring Lightning payment: {ex.Message}",
+                "Lightning Payment Error");
+            return Result.Failure(ex.Message);
         }
     }
 
@@ -179,6 +426,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         WalletId walletId,
         ProjectId projectId,
         string fundingAddress,
+        int feeRateSatsPerVbyte,
         IInvestmentAppService investmentAppService,
         UIServices uiServices,
         IShellViewModel shell,
@@ -192,8 +440,8 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
                 walletId,
                 projectId,
-                new Angor.Sdk.Funding.Projects.Domain.Amount(Amount.Sats),
-                new DomainFeerate(20), // TODO: Make fee rate configurable
+                new Amount(Amount.Sats),
+                new DomainFeerate(feeRateSatsPerVbyte),
                 FundingAddress: fundingAddress);
 
             var buildResult = await investmentAppService.BuildInvestmentDraft(buildRequest);
@@ -213,7 +461,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             // Check if the investment is above the penalty threshold
             var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
                 projectId,
-                new Angor.Sdk.Funding.Projects.Domain.Amount(Amount.Sats));
+                new Amount(Amount.Sats));
 
             var thresholdResult = await investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
 
@@ -304,6 +552,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
 
     public void Dispose()
     {
+        CancelCurrentMonitoring();
         cancellationTokenSource.Cancel();
         cancellationTokenSource.Dispose();
         paymentReceivedSubject.Dispose();

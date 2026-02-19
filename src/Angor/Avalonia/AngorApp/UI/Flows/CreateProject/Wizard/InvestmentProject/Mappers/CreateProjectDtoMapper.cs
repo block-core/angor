@@ -1,7 +1,5 @@
-using System.Linq;
-using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Projects.Dtos;
-using Angor.Shared.Models;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model;
 
 namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Mappers;
