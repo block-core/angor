@@ -21,7 +21,7 @@
     <ItemsControl ItemsSource="{Binding Payouts, RelativeSource={RelativeSource AncestorType=payouts:PayoutsList}}" FontWeight="Bold" Foreground="{DynamicResource Accent}">
         <ItemsControl.ItemTemplate>
             <DataTemplate DataType="model:IPayoutConfig">
-                <Border Classes="Translucid">
+                <Border Classes="ColorPanel Accent">
                     <Grid ColumnDefinitions="* Auto" ColumnSpacing="10">
                         <StackPanel Orientation="Horizontal" Spacing="5" Grid.Column="0">
                             <TextBlock Text="{Binding $parent[payouts:PayoutsList].Frequency}" />

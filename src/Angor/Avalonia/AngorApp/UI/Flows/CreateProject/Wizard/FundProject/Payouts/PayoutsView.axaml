@@ -134,7 +134,7 @@
                 </HeaderedContainer>
 
 
-                <EnhancedButton HorizontalAlignment="Stretch" Classes="Accent" HorizontalContentAlignment="Center" Command="{Binding GeneratePayouts}">Generate Payout Schedule</EnhancedButton>
+                <EnhancedButton HorizontalAlignment="Stretch" Classes="Emphasized" HorizontalContentAlignment="Center" Command="{Binding GeneratePayouts}">Generate Payout Schedule</EnhancedButton>
             </StackPanel>
 
 

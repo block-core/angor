@@ -35,7 +35,7 @@
                         </EdgePanel.StartContent>
                     </EdgePanel>
                 </Border>
-                <Border IsVisible="{Binding PaymentReceived^}" VerticalAlignment="Center" DockPanel.Dock="Right" Classes="Green Rounded SmallPadding">
+                <Border IsVisible="{Binding PaymentReceived^}" VerticalAlignment="Center" DockPanel.Dock="Right" Classes="ColorPanel Green Rounded SmallPadding">
                     <EdgePanel Content="Payment received" StartContent="{Icon fa-check}" />
                 </Border>
                 <HeaderedContainer>

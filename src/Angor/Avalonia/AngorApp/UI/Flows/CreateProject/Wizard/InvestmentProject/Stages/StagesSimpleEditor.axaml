@@ -114,7 +114,7 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </HeaderedContainer>
-            <EnhancedButton HorizontalAlignment="Stretch" Classes="Accent" HorizontalContentAlignment="Center" Command="{Binding GenerateStages}">Generate Stages</EnhancedButton>
+            <EnhancedButton HorizontalAlignment="Stretch" Classes="Emphasized" HorizontalContentAlignment="Center" Command="{Binding GenerateStages}">Generate Stages</EnhancedButton>
         </StackPanel>
 
         <stages:StagesCard IsVisible="{Binding !!NewProject.Stages.Count}" />

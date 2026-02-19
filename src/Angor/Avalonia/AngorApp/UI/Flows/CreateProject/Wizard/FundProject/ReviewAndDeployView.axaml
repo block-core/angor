@@ -20,9 +20,9 @@
             <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
-            <Setter Property="Background" Value="{DynamicResource Translucid}" />
+            <Setter Property="Background" Value="{DynamicResource BrandWash}" />
             <Style Selector="^ /template/ ToggleButton">
-                <Setter Property="Background" Value="{DynamicResource Translucid}" />
+                <Setter Property="Background" Value="{DynamicResource BrandWash}" />
             </Style>
         </ControlTheme>
 

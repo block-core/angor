@@ -21,7 +21,7 @@
                 </PathIcon>
                 <TextBlock Classes="Title Strong" HorizontalAlignment="Center">Welcome</TextBlock>
                 <TextBlock HorizontalAlignment="Center">Create and launch your project to raise funding from the Bitcoin community.</TextBlock>
-                <Border Margin="30 0" Background="{DynamicResource Translucid}" Classes="Panel" HorizontalAlignment="Center">
+                <Border Margin="30 0" Classes="ColorPanel Accent" HorizontalAlignment="Center">
                     <TextBlock>
                         A small fee is required to prevent spam and will be paid when you submit your project for deployment.
                     </TextBlock>

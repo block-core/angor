@@ -12,7 +12,7 @@
     
     <StackPanel Classes="BigGap">
         <Border>
-            <EdgePanel StartContent="Amount to Invest" Classes="LightGray">
+            <EdgePanel StartContent="Amount to Invest" Classes="ColorPanel LightGray">
                 <EdgePanel.EndContent>
                     <TextBlock Classes="Weight-Bold Strong Size-L" Text="{Binding AmountToInvest.DecimalString}"></TextBlock>
                 </EdgePanel.EndContent>

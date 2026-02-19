@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:release="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Release"
+             mc:Ignorable="d"
+             x:Class="AngorApp.UI.Sections.MyProjects.ManageFunds.Release.ReleaseView"
+             x:DataType="release:IReleaseViewModel">
+    
+    <Design.DataContext>
+        <release:ReleaseViewModelSample />
+    </Design.DataContext>
+    
+    <HeaderedContainer Header="The project didn't meet its target" Classes="Card White MediumBigHeader Shadow">
+        <Border Classes="ColorPanel LightGray">
+            <StackPanel Classes="MediumGap">
+                <EdgePanel HorizontalAlignment="Left">
+                    <EdgePanel.StartContent>
+                        <TextBlock Classes="Strong" VerticalAlignment="Center" FontWeight="Bold">Funds Received</TextBlock>
+                    </EdgePanel.StartContent>
+                    <EdgePanel.Content>
+                        <ContentControl Classes="Pill Green" Content="{Binding Project.RaisedAmount.ShortDecimalString}" />
+                    </EdgePanel.Content>
+                </EdgePanel>
+                <Separator />
+                <EdgePanel StartContent="Total amount received from investors" ContentClasses="Weight-Bold Strong" Content="0.414 BTC" />
+                <EnhancedButton Command="{Binding ReleaseAll}" Classes="Emphasized HorizontalStretch" Content="Release Funds Back to Investors" />
+            </StackPanel>
+        </Border>
+    </HeaderedContainer>
+</UserControl>

@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:l="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Claim"
+             xmlns:stage="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Stage"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Stage.ClaimStageView"
+             x:DataType="stage:IClaimStage">
+    
+    <Design.DataContext>
+        <stage:ClaimStageSample />
+    </Design.DataContext>
+    
+    <HeaderedContainer Classes="Card LightGray">
+        <HeaderedContainer.Header>
+            <EdgePanel>
+                <EdgePanel.EndContent>
+                    <ContentControl Classes="Box">
+                        <Interaction.Behaviors>
+                            <BindingTriggerBehavior Value="SpentByFounder" Binding="{Binding FundsAvailability}">
+                                <AddClassAction ClassName="Orange" />
+                                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Spent by founder" />
+                            </BindingTriggerBehavior>
+                            <BindingTriggerBehavior Value="FundsAvailable" Binding="{Binding FundsAvailability}">
+                                <AddClassAction ClassName="Green" />
+                                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Funds Available" />
+                            </BindingTriggerBehavior>
+                        </Interaction.Behaviors>
+                    </ContentControl>
+                </EdgePanel.EndContent>
+                <EdgePanel.StartContent>
+                    <StackPanel Orientation="Horizontal" Classes="Gap-S">
+                        <TextBlock Classes="Size-M Strong" VerticalAlignment="Center" Text="{Binding StageId, StringFormat='Stage {0}', Converter={x:Static MiscConverters.AddOne}}" />
+                        <ContentControl Classes="Pill Green" Content="{Binding ClaimableAmount.DecimalString}" />
+                        <ContentControl Classes="Pill Green" Content="{Binding Transactions.Count, StringFormat='{}{0} utxo'}" />
+                    </StackPanel>
+                </EdgePanel.StartContent>
+            </EdgePanel>
+        </HeaderedContainer.Header>
+        <StackPanel Classes="Gap-M">
+            <Separator />
+            <TextBlock Classes="Size-XS">
+                <TextBlock.Inlines>
+                    <Run>Estimated completion:</Run>
+                    <Run FontWeight="Bold" Foreground="{DynamicResource BodyText}" Text="{Binding ClaimableOn, StringFormat=m}" />
+                </TextBlock.Inlines>
+            </TextBlock>
+            <EnhancedButton Content="{Binding Claim.Text}" Classes="HorizontalStretch" Command="{Binding Claim}">
+                <Interaction.Behaviors>
+                    <BindingTriggerBehavior Binding="{Binding Claim.Name}" Value="Available">
+                        <AddClassAction ClassName="Emphasized" />
+                    </BindingTriggerBehavior>
+                    <BindingTriggerBehavior Binding="{Binding Claim.Name}" Value="NotReady">
+                        <AddClassAction ClassName="Emphasized" />
+                    </BindingTriggerBehavior>
+                    <BindingTriggerBehavior Binding="{Binding Claim.Name}" Value="Spent">
+                        <AddClassAction ClassName="Outline" />
+                        <AddClassAction ClassName="Orange" />
+                    </BindingTriggerBehavior>
+                </Interaction.Behaviors>
+            </EnhancedButton>
+        </StackPanel>
+    </HeaderedContainer>
+
+</UserControl>

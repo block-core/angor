@@ -8,10 +8,11 @@
                     <StackPanel Spacing="10">
                         <EnhancedButton Content="Default" />
                         <EnhancedButton Classes="Primary" Content="Primary" />
-                        <EnhancedButton Classes="Accent" Content="Accent" />
+                        <EnhancedButton Classes="Emphasized" Content="Emphasized" />
                         <EnhancedButton Classes="Secondary" Content="Secondary" />
                         <EnhancedButton Classes="White" Content="White" />
                         <EnhancedButton Classes="Outline" Content="Outline" />
+                        <EnhancedButton Classes="Outline Orange" Content="Outline Orange" />
                         <EnhancedButton Classes="Widget" Content="Widget" />
                         <EnhancedButton Classes="Destructive" Content="Destructive" />
                     </StackPanel>
@@ -22,10 +23,11 @@
                     <StackPanel Spacing="10">
                         <EnhancedButton Content="Default" />
                         <EnhancedButton Classes="Primary" Content="Primary" />
-                        <EnhancedButton Classes="Accent" Content="Accent" />
+                        <EnhancedButton Classes="Emphasized" Content="Emphasized" />
                         <EnhancedButton Classes="Secondary" Content="Secondary" />
                         <EnhancedButton Classes="White" Content="White" />
                         <EnhancedButton Classes="Outline" Content="Outline" />
+                        <EnhancedButton Classes="Outline Orange" Content="Outline Orange" />
                         <EnhancedButton Classes="Widget" Content="Widget" />
                         <EnhancedButton Classes="Destructive" Content="Destructive" />
                     </StackPanel>
@@ -52,7 +54,7 @@
         <Setter Property="Padding" Value="24 12" />
     </Style>
 
-    <Style Selector="EnhancedButton.Accent">
+    <Style Selector="EnhancedButton.Emphasized">
         <Setter Property="Foreground" Value="{DynamicResource AccentButtonForeground}" />
         <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
         <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorder}" />
@@ -79,6 +81,14 @@
         <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    
+    <Style Selector="EnhancedButton.Outline.Orange">
+        <Setter Property="Padding" Value="24 12" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BitcoinOrange}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Foreground" Value="{DynamicResource BitcoinOrange}" />
         <Setter Property="Background" Value="Transparent" />
     </Style>
 

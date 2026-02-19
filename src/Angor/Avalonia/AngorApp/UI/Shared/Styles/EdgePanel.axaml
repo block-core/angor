@@ -7,22 +7,25 @@
             <Setter Property="Template">
                 <ControlTemplate>
                     <StackPanel Background="{TemplateBinding Background}" Spacing="{TemplateBinding Spacing}">
-                        <ContentControl x:Name="StartContent"
+                        <ContentPresenter x:Name="StartContent"
+                                        ClassAssist.ChildClasses="{TemplateBinding StartContentClasses}"
                                         IsVisible="{Binding $self.Content, Converter={x:Static ObjectConverters.IsNotNull}}"
                                         ContentTemplate="{TemplateBinding StartContentTemplate}"
                                         Content="{TemplateBinding StartContent}" />
-                        <ContentControl x:Name="EndContent"
-                                        DockPanel.Dock="Right"
-                                        VerticalAlignment="Center"
-                                        ContentTemplate="{TemplateBinding EndContentTemplate}"
-                                        IsVisible="{Binding $self.Content, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                        Content="{TemplateBinding EndContent}" />
-                        <ContentControl x:Name="MainContent" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                        ContentTemplate="{TemplateBinding ContentTemplate}"
-                                        VerticalAlignment="Center"
-                                        IsVisible="{Binding $self.Content, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                        Content="{TemplateBinding Content}" />
+                        <ContentPresenter x:Name="EndContent"
+                                          ClassAssist.ChildClasses="{TemplateBinding ContentClasses}"
+                                          DockPanel.Dock="Right"
+                                          VerticalAlignment="Center"
+                                          ContentTemplate="{TemplateBinding EndContentTemplate}"
+                                          IsVisible="{Binding $self.Content, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                          Content="{TemplateBinding EndContent}" />
+                        <ContentPresenter x:Name="MainContent" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          ClassAssist.ChildClasses="{TemplateBinding EndContentClasses}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          VerticalAlignment="Center"
+                                          IsVisible="{Binding $self.Content, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                          Content="{TemplateBinding Content}" />
                     </StackPanel>
                 </ControlTemplate>
             </Setter>
@@ -36,7 +39,7 @@
                     <TextBlock TextWrapping="Wrap" Background="Red">Hola</TextBlock>
                 </EdgePanel.StartContent>
                 <EdgePanel.EndContent>
-                    <TextBlock  TextWrapping="Wrap" Background="Green">Tío cómo estás</TextBlock>
+                    <TextBlock TextWrapping="Wrap" Background="Green">Tío cómo estás</TextBlock>
                 </EdgePanel.EndContent>
             </EdgePanel>
             <EdgePanel Theme="{StaticResource StackingEdgePanel}" TextBlock.TextWrapping="Wrap">

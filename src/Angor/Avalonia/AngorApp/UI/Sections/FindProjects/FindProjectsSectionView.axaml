@@ -28,7 +28,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Margin="10" Classes="Panel Elevated Interactive">
+                            <Border Margin="10" Classes="Panel Elevate">
                                 <StackPanel Classes="BigGap">
                                     <a:AdvancedImage CornerRadius="10 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140" Source="{Binding BannerUrl}" />
                                     <Border Height="60" Width="60" Margin="0 -50 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource AppBackground}">
@@ -53,7 +53,10 @@
                                         <InvokeCommandAction Command="{Binding GoToDetails}" />
                                     </TappedEventTrigger>
                                     <DataContextChangedTrigger>
-                                        <InvokeCommandAction Command="{Binding LoadStatistics}" />
+                                        <EnqueueCommandAction Command="{Binding LoadStatistics}"
+                                                              PoolName="ProjectDetails"
+                                                              MaxConcurrency="3"
+                                                              DelayBetweenSeconds="0.5" />
                                     </DataContextChangedTrigger>
                                 </Interaction.Behaviors>
 
