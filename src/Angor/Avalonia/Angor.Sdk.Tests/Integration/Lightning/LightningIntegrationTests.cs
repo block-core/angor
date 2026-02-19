@@ -134,7 +134,7 @@ public class BoltzSwapIntegrationTests : IDisposable
         (_boltzWebSocketClient as IAsyncDisposable)?.DisposeAsync().AsTask().Wait();
     }
 
-    [Fact]
+    [Fact(Skip = "Integration test - requires boltz local server. Run manually.")]
     public async Task FullReverseSwapFlow_CreatePayAndMonitor_Success()
     {
         _output.WriteLine(new string('=', 80));
@@ -259,7 +259,7 @@ public class BoltzSwapIntegrationTests : IDisposable
         _output.WriteLine(new string('=', 80));
     }
 
-    [Fact]
+    [Fact(Skip = "Integration test - requires boltz local server. Run manually.")]
     public async Task CreateReverseSwap_WithValidData_ReturnsSwapDetails()
     {
         _output.WriteLine("Testing Boltz API connectivity...\n");
@@ -287,7 +287,7 @@ public class BoltzSwapIntegrationTests : IDisposable
         }
     }
 
-    [Fact]
+    [Fact(Skip = "Integration test - requires boltz local server. Run manually.")]
     public async Task WebSocket_ConnectAndSubscribe_Works()
     {
         _output.WriteLine("Testing WebSocket connectivity...\n");
