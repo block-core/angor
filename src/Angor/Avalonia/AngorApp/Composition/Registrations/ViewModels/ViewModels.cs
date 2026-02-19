@@ -1,7 +1,6 @@
 using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 using AngorApp.Core.Factories;
 using AngorApp.UI.Sections.Browse;
-using AngorApp.UI.Sections.Browse.Details;
 using AngorApp.UI.Sections.Browse.ProjectLookup;
 using AngorApp.UI.Sections.Founder;
 using AngorApp.UI.Sections.Founder.ProjectDetails;
@@ -19,6 +18,8 @@ using WalletSectionViewModel = AngorApp.UI.Sections.Wallet.Main.WalletSectionVie
 using Angor.Sdk.Funding.Projects.Dtos;
 using AngorApp.UI.Flows.InvestV2;
 
+using AngorApp.UI.Flows.AddWallet;
+using AngorApp.UI.Flows.AddWallet.SeedBackup;
 using AngorApp.UI.Flows.InvestV2.PaymentSelector;
 using AngorApp.UI.Sections.Funds.Accounts;
 using AngorApp.UI.Sections.Funds.Empty;
@@ -42,6 +43,8 @@ public static class ViewModels
                 .AddScoped<Func<ProjectDto, IFounderProjectViewModel>>(provider => dto => ActivatorUtilities.CreateInstance<FounderProjectViewModel>(provider, dto))
                 .AddTransient<IWalletSectionViewModel, WalletSectionViewModel>()
                 .AddTransient<IAccountsViewModel, AccountsViewModel>()
+                .AddTransient<ISeedBackupFileService, SeedBackupFileService>()
+                .AddTransient<IAddWalletFlow, AddWalletFlow>()
                 .AddTransient<IEmptyViewModel, EmptyViewModel>()
                 .AddTransient<IBrowseSectionViewModel, BrowseSectionViewModel>()
                 .AddTransient<IPortfolioSectionViewModel, PortfolioSectionViewModel>()

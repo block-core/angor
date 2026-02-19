@@ -19,7 +19,9 @@
             <ControlTemplate>
                 <Panel>
                     <Border Background="{DynamicResource BodyText}" Opacity="0.2" />
-                    <Border Classes="ColorPanel White" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border Classes="ColorPanel White"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
                         <StackPanel Classes="Gap-XL">
                             <Panel>
                                 <TextBlock VerticalAlignment="Center" Classes="Size-XL Weight-Bold Center" Text="{TemplateBinding Title}" />

@@ -8,7 +8,9 @@
     
     <Design.DataContext>
         <operationResult:OperationResultViewModelSample Text="The operation has finished correctly and your funds are on your way" Title="Operation Succeeded" 
-                                                        Icon="{Icon fa-check}" />
+                                                        Icon="{Icon fa-check}"
+                                                        Feeling="Neutral"
+                                                        />
     </Design.DataContext>
     
     <StackPanel Classes="Gap-XL" Margin="10 10 10 20">
@@ -23,9 +25,14 @@
                     <ChangeAvaloniaPropertyAction TargetProperty="{x:Static IconOptions.FillProperty}" Value="{DynamicResource Error}" />
                     <ChangeAvaloniaPropertyAction TargetProperty="{x:Static IconOptions.BackgroundProperty}" Value="{DynamicResource ErrorSoft}" />
                 </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding Feeling}" Value="Neutral">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static IconOptions.FillProperty}" Value="{DynamicResource BitcoinOrange}" />
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static IconOptions.BackgroundProperty}" Value="{DynamicResource SurfaceOrange}" />
+                </BindingTriggerBehavior>
             </Interaction.Behaviors>
         </ContentControl>
         <TextBlock TextAlignment="Center" Classes="Weight-Bold Size-XXL Strong Wrap" Text="{Binding Title}" />
         <TextBlock Classes="Size-M Center" Text="{Binding Text}" />
+        <ContentControl Content="{Binding AdditionalContent}"></ContentControl>
     </StackPanel>
 </UserControl>

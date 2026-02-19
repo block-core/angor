@@ -55,9 +55,23 @@
                                                   ContentTemplate="{TemplateBinding ContentTemplate}" />
                             </SmartDockPanel>
                         </OverlayBorder>
+                        <ProgressBar x:Name="CommandRunningProgressBar"
+                                     MinWidth="0"
+                                     IsVisible="{TemplateBinding IsCommandRunning}"
+                                     VerticalAlignment="Stretch"
+                                     Foreground="White"
+                                     Opacity="0.2"
+                                     Value="10"
+                                     IsIndeterminate="True" />
                     </Panel>
                 </ControlTemplate>
             </Setter>
+            <Style Selector="^ /template/ ProgressBar#CommandRunningProgressBar:horizontal">
+                <Setter Property="MinWidth" Value="0" />
+            </Style>
+            <Style Selector="^ /template/ ProgressBar#CommandRunningProgressBar:vertical">
+                <Setter Property="MinHeight" Value="0" />
+            </Style>
             <Style Selector="^ /template/ OverlayBorder#MainBorder">
                 <Setter Property="Transitions">
                     <Setter.Value>

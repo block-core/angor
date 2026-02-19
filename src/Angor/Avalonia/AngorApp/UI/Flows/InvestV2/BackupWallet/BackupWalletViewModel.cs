@@ -12,7 +12,7 @@ public class BackupWalletViewModel(UIServices uiServices) : IBackupWalletViewMod
     {
         return
         [
-            new Option("Download Seed", EnhancedCommand.Create(() => DownloadSeed()), new Settings()),
+            new Option("Download Seed", EnhancedCommand.Create(() => DownloadSeed()), new Settings() { Role = OptionRole.Info }),
             new Option("Continue", EnhancedCommand.Create(() =>
             {
                 closeable.Close();
@@ -20,7 +20,7 @@ public class BackupWalletViewModel(UIServices uiServices) : IBackupWalletViewMod
                     new InvestResultViewModel(shell),
                     "Investment Completed",
                     (model, closeable) => model.Options(closeable));
-            }), new Settings())
+            }), new Settings() { Role = OptionRole.Primary, IsDefault = true})
         ];
     }
 

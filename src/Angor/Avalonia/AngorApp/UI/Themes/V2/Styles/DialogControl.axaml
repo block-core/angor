@@ -1,5 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
         xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
         xmlns:dialogs="clr-namespace:Zafiro.Avalonia.Dialogs;assembly=Zafiro.Avalonia.Dialogs">
     <Design.PreviewWith>
@@ -8,15 +9,17 @@
                 <generic:List x:TypeArguments="IOption">
                     <OptionDesign Title="Primary" Role="Primary" />
                     <OptionDesign Title="Secondary" Role="Secondary" />
-                    <!-- <OptionDesign Title="Cancel" Role="Cancel" /> -->
-                    <!-- <OptionDesign Title="Destructive" Role="Destructive" /> -->
+                    <OptionDesign Title="Cancel" Role="Cancel" />
+                    <OptionDesign Title="Destructive" Role="Destructive" />
+                    <OptionDesign Title="Info" Role="Info" />
                 </generic:List>
             </DialogControl.Options>
         </DialogControl>
     </Design.PreviewWith>
 
     <Style Selector="DialogControl">
-        <Setter Property="MinWidth" Value="448" />
+        <Setter Property="Width" Value="448" />
+        <Setter Property="MaxHeight" Value="700" />
         <Setter Property="Template">
             <ControlTemplate>
                 <DockPanel VerticalSpacing="24">
@@ -28,7 +31,10 @@
                         </ItemsControl.ItemContainerTheme>
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <UniformGrid Rows="1" ColumnSpacing="10" RowSpacing="20" />
+                                <UniformGrid Rows="{Binding $parent[ItemsControl].ItemCount, Converter={x:Static controls:AngorConverters.DialogOptionsRows}}"
+                                             Columns="{Binding $parent[ItemsControl].ItemCount, Converter={x:Static controls:AngorConverters.DialogOptionsColumns}}"
+                                             ColumnSpacing="10"
+                                             RowSpacing="10" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
@@ -50,6 +56,10 @@
                                         </BindingTriggerBehavior>
                                         <BindingTriggerBehavior Binding="{Binding Role}" Value="Destructive">
                                             <AddClassAction ClassName="Destructive" />
+                                        </BindingTriggerBehavior>
+                                        <BindingTriggerBehavior Binding="{Binding Role}" Value="Info">
+                                            <AddClassAction ClassName="Filled" />
+                                            <AddClassAction ClassName="Orange" />
                                         </BindingTriggerBehavior>
                                     </Interaction.Behaviors>
                                 </EnhancedButton>

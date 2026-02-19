@@ -1,0 +1,11 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:l="clr-namespace:AngorApp.UI.Flows.AddWallet.SeedBackup"
+             mc:Ignorable="d"
+             x:Class="AngorApp.UI.Flows.AddWallet.SeedBackup.SeedWordsView" x:DataType="l:SeedWordsViewModel">
+    <Border Classes="ColorPanel White">
+        <SelectableTextBlock TextWrapping="Wrap" TextAlignment="Center" Text="{Binding SeedWords}" />
+    </Border>
+</UserControl>
