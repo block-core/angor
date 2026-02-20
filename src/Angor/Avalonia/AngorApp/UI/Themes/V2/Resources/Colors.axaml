@@ -202,7 +202,7 @@
     <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" ResourceKey="Accent" />
 
     <!-- Accent Button (fallback) -->
-    <SolidColorBrush x:Key="AccentButtonForeground" Color="{DynamicResource SurfaceHover}" />
+    <SolidColorBrush x:Key="AccentButtonForeground" Color="White" />
     <SolidColorBrush x:Key="AccentButtonBackground" Color="{DynamicResource Accent}" />
     <SolidColorBrush x:Key="AccentButtonBorder" Color="{DynamicResource Accent}" />
 
