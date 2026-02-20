@@ -1,7 +1,10 @@
+using Angor.Sdk.Funding.Shared;
+
 namespace AngorApp.UI.Sections.Funders.Items
 {
     public interface IFunderItem
     {
+        public ProjectId ProjectId { get; }
         public string Name { get; }
         public IAmountUI Amount { get; set; }
         public DateTimeOffset DateCreated { get; }

@@ -5,5 +5,6 @@ public enum FunderStatus
     None,
     Pending,
     Approved,
-    Rejected
+    Rejected,
+    Invested
 }
