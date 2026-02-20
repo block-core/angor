@@ -4,6 +4,7 @@ namespace AngorApp.UI.Shared.OperationResult
     {
         None,
         Good,
-        Bad
+        Bad,
+        Neutral
     }
 }

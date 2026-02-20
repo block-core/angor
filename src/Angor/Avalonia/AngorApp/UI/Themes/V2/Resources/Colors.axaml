@@ -59,6 +59,7 @@
             <Color x:Key="Brand">#2D5A3D</Color>               <!-- = PrimaryGreenDark -->
             <Color x:Key="Highlight">#2D5A3D</Color>           <!-- = PrimaryGreenDark -->
             <Color x:Key="BitcoinAccent">#F7931A</Color>       <!-- = BitcoinOrange -->
+            <Color x:Key="SurfaceOrange">#fef3c7</Color>
             <Color x:Key="SurfaceHover">#E9E9E9</Color>
             <Color x:Key="SurfaceSelected">White</Color>
             <Color x:Key="CardSurface">White</Color>
@@ -143,6 +144,7 @@
             <Color x:Key="SurfaceLow">#333333</Color>
             <Color x:Key="SurfaceMedium">#2a2a2a</Color>
             <Color x:Key="SurfaceHigh">#0A0A0A</Color>
+            <Color x:Key="SurfaceOrange">#78350f</Color>
             <Color x:Key="DashColorHighlight">#FBBF24</Color>
 
             <!-- Error Colors -->

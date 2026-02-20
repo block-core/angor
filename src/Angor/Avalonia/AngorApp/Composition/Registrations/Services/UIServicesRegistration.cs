@@ -1,8 +1,10 @@
 using System.IO;
 using Angor.Sdk.Common;
 using AngorApp.Core;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.Platform.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Dialogs.Implementations;
@@ -35,10 +37,24 @@ public static class UIServicesRegistration
             .AddSingleton<IWalletContext, WalletContext>()
             .AddSingleton<IValidations, Validations>()
             .AddSingleton<SharedCommands>()
+            .AddSingleton<IStorageProvider>(_ => GetStorageProvider(mainView))
             .AddSingleton<ILauncherService, LauncherService>()
             .AddSingleton<INotificationService, NotificationService>()
             .AddSingleton<IImageValidationService, ImageValidationService>()
             .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileContext.ProfileName, mainView));
+    }
+
+    private static IStorageProvider GetStorageProvider(Control mainView)
+    {
+        var topLevel = TopLevel.GetTopLevel(mainView)
+                       ?? Application.Current?.ApplicationLifetime switch
+                       {
+                           IClassicDesktopStyleApplicationLifetime desktop => desktop.MainWindow,
+                           ISingleViewApplicationLifetime singleView => TopLevel.GetTopLevel(singleView.MainView),
+                           _ => null
+                       };
+
+        return topLevel?.StorageProvider ?? throw new InvalidOperationException("Storage provider is not available.");
     }
 
     private static string CreateSettingsFilePath(IApplicationStorage storage, ProfileContext profileContext)

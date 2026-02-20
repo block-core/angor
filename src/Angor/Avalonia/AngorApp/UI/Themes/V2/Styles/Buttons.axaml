@@ -13,6 +13,7 @@
                         <EnhancedButton Classes="White" Content="White" />
                         <EnhancedButton Classes="Outline" Content="Outline" />
                         <EnhancedButton Classes="Outline Orange" Content="Outline Orange" />
+                        <EnhancedButton Classes="Filled Orange" Content="Filled Orange" />
                         <EnhancedButton Classes="Widget" Content="Widget" />
                         <EnhancedButton Classes="Destructive" Content="Destructive" />
                     </StackPanel>
@@ -90,6 +91,14 @@
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="Foreground" Value="{DynamicResource BitcoinOrange}" />
         <Setter Property="Background" Value="Transparent" />
+    </Style>
+    
+    <Style Selector="EnhancedButton.Filled.Orange">
+        <Setter Property="Padding" Value="24 12" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BitcoinOrange}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{DynamicResource Surface}" />
+        <Setter Property="Background" Value="{DynamicResource BitcoinOrange}" />
     </Style>
 
     <Style Selector="EnhancedButton.Widget">

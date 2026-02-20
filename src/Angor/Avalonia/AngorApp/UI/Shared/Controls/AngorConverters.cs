@@ -308,5 +308,11 @@ namespace AngorApp.UI.Shared.Controls
 
         public static IValueConverter ThicknessWithoutTop { get; } = new FuncValueConverter<Thickness, Thickness>(
             thickness => new Thickness(thickness.Left, 0, thickness.Right, thickness.Bottom));
+
+        public static IValueConverter DialogOptionsRows { get; } = new FuncValueConverter<int, int>(
+            itemCount => itemCount <= 2 ? 1 : 0);
+
+        public static IValueConverter DialogOptionsColumns { get; } = new FuncValueConverter<int, int>(
+            itemCount => itemCount <= 2 ? 0 : 1);
     }
 }

@@ -4,7 +4,8 @@ namespace AngorApp.UI.Shared.OperationResult
     {
         string Title { get; }
         string Text { get; }
-        object Icon { get; }
+        object? Icon { get; }
+        object? AdditionalContent { get; }
         public Feeling Feeling { get; }
     }
 }
