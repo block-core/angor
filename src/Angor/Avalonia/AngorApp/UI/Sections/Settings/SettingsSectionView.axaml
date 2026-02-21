@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:settings="clr-namespace:AngorApp.UI.Sections.Settings"
+             xmlns:ch="clr-namespace:AngorApp.UI.Shared"
              xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="1200"
@@ -178,9 +179,9 @@
                     <StackPanel Classes="Gap-XL">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Text="Select Currency:" VerticalAlignment="Center" />
-                            <ToggleSwitch IsChecked="{Binding IsBitcoinPreferred}" OnContent="Bitcoin (BTC)" OffContent="Satoshis (sats)" />
+                            <ToggleSwitch IsChecked="{Binding IsBitcoinPreferred}" OnContent="{x:Static ch:CurrencyHelper.BitcoinLabel}" OffContent="Satoshis (sats)" />
                         </StackPanel>
-                        <TextBlock Classes="Muted Wrap" Text="Bitcoin-only application - currency display is fixed to BTC or sats." />
+                        <TextBlock Classes="Muted Wrap" Text="{x:Static ch:CurrencyHelper.CurrencyDisplayHint}" />
                     </StackPanel>
                 </Card>
 

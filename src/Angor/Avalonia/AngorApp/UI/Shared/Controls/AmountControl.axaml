@@ -35,7 +35,14 @@
                                 </NumericUpDown.Styles>
                             </NumericUpDown>
                             <Panel Margin="0 2" Opacity="{Binding !!$parent[controls:AmountControl].Value, Converter={x:Static converters:OpacityConverters.BoolToOpacity}}">
-                                <TextBlock Classes="Dimmed SizeSmall" IsVisible="{Binding !$parent[controls:AmountControl].IsBitcoin}" Text="{Binding $parent[controls:AmountControl].Bitcoin, StringFormat='{}&#61; {0} BTC'}" />
+                                <TextBlock Classes="Dimmed SizeSmall" IsVisible="{Binding !$parent[controls:AmountControl].IsBitcoin}">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}&#61; {0} {1}">
+                                            <Binding Path="$parent[controls:AmountControl].Bitcoin" />
+                                            <Binding Path="$parent[controls:AmountControl].Unit" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
                                 <TextBlock Classes="Dimmed SizeSmall" IsVisible="{Binding $parent[controls:AmountControl].IsBitcoin}" Text="{Binding $parent[controls:AmountControl].Satoshis, StringFormat='{}&#61; {0} sats'}" />
                             </Panel>
                             <UniformGrid Rows="1" HorizontalAlignment="Center">

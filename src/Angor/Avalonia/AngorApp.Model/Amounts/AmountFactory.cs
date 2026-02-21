@@ -10,6 +10,8 @@ public class AmountFactory : IAmountFactory
     public AmountFactory(INetworkConfiguration networkConfiguration)
     {
         _networkConfiguration = networkConfiguration;
+        // Set the global default symbol so all AmountUI instances use the correct ticker
+        AmountUI.DefaultSymbol = CurrencySymbol;
     }
     
     public string CurrencySymbol => _networkConfiguration.GetNetwork().CoinTicker;

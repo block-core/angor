@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fund="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.FundProject"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:ch="clr-namespace:AngorApp.UI.Shared"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.UI.Flows.CreateProject.Wizard.FundProject.GoalView" x:DataType="fund:IGoalViewModel">
 
@@ -69,7 +70,7 @@
                     <StackPanel Spacing="10">
                         <HeaderedContainer HeaderPadding="0" ContentPadding="0 12 0 0">
                             <HeaderedContainer.Header>
-                                <TextBlock Classes="FormLabel">Goal (BTC) *</TextBlock>
+                                <TextBlock Classes="FormLabel" Text="{x:Static ch:CurrencyHelper.GoalLabel}" />
                             </HeaderedContainer.Header>
 
                             <NumericUpDown Classes="AmountInput"
@@ -82,9 +83,8 @@
                                 <NumericUpDown.InnerRightContent>
                                     <TextBlock Classes="AmountUnitInline"
                                                VerticalAlignment="Center"
-                                               Margin="0 0 12 0">
-                                        BTC
-                                    </TextBlock>
+                                               Margin="0 0 12 0"
+                                               Text="{x:Static ch:CurrencyHelper.Symbol}" />
                                 </NumericUpDown.InnerRightContent>
                             </NumericUpDown>
                         </HeaderedContainer>
@@ -107,7 +107,7 @@
                             <DataTemplate>
                                 <StackPanel HorizontalAlignment="Center" Classes="Gap-XS">
                                     <TextBlock Classes="Center Bold" Text="{Binding  Btc}" />
-                                    <TextBlock Classes="Center Tiny" Text="BTC" />
+                                    <TextBlock Classes="Center Tiny" Text="{x:Static ch:CurrencyHelper.Symbol}" />
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -135,9 +135,8 @@
                             <NumericUpDown.InnerRightContent>
                                 <TextBlock Classes="AmountUnitInline"
                                            VerticalAlignment="Center"
-                                           Margin="0 0 12 0">
-                                    BTC
-                                </TextBlock>
+                                           Margin="0 0 12 0"
+                                           Text="{x:Static ch:CurrencyHelper.Symbol}" />
                             </NumericUpDown.InnerRightContent>
                         </NumericUpDown>
                         <TextBlock Foreground="#3b82f6" Classes="Weight-Light Size-XS">

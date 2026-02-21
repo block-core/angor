@@ -33,4 +33,5 @@ public interface IDetailsViewModel
     string NostrHex { get; }
     IEnumerable<string> Relays { get; }
     IEnhancedCommand<Result> Invest { get; }
+    IEnhancedCommand ShowProjectInfoJson { get; }
 }
