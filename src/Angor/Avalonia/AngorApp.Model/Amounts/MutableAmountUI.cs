@@ -11,7 +11,7 @@ public partial class MutableAmountUI : ReactiveObject, IAmountUI
 {
     [Reactive] private long sats;
 
-    public string Symbol { get; init; } = "BTC";
+    public string Symbol { get; init; } = AmountUI.DefaultSymbol;
 
     // Explicit interface implementation to satisfy IAmountUI.Sats (read-only)
     long IAmountUI.Sats => Sats;

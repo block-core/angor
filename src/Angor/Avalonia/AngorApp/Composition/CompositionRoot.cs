@@ -10,6 +10,7 @@ using Angor.Shared.Services;
 using AngorApp.Core;
 using AngorApp.Composition.Registrations.Services;
 using AngorApp.Composition.Registrations.ViewModels;
+using AngorApp.Model.Contracts.Amounts;
 using AngorApp.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -64,6 +65,9 @@ public static class CompositionRoot
 
         var serviceProvider = services.BuildServiceProvider();
         serviceProvider.GetRequiredService<INetworkService>().AddSettingsIfNotExist();
+
+        // Ensure AmountFactory is created early so AmountUI.DefaultSymbol is set from network config
+        serviceProvider.GetRequiredService<IAmountFactory>();
 
         return serviceProvider.GetRequiredService<IShellViewModel>();
     }

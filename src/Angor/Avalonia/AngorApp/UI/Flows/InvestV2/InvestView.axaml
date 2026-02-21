@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:l="clr-namespace:AngorApp.UI.Flows.InvestV2"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:ch="clr-namespace:AngorApp.UI.Shared"
              xmlns:c="clr-namespace:AngorApp.UI.Shared.Controls.Common"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="AngorApp.UI.Flows.InvestV2.InvestView"
@@ -35,7 +36,7 @@
                         <EdgePanel StartContent="{Icon fa-bitcoin}" Content="Investment Amount" />
                     </HeaderedContainer.Header>
                     <StackPanel Spacing="20">
-                        <TextBlock Text="Amount (BTC)" FontWeight="SemiBold" />
+                        <TextBlock Text="{x:Static ch:CurrencyHelper.AmountLabel}" FontWeight="SemiBold" />
                         <NumericUpDown Value="{Binding AmountToInvest, Mode=TwoWay, Converter={x:Static controls:AngorConverters.BtcToAmountUI}}"
                                        FormatString="0.########"
                                        Minimum="0.001"
@@ -43,11 +44,11 @@
                                        x:Name="AmountBox"
                                        Watermark="0.00">
                             <NumericUpDown.InnerRightContent>
-                                <TextBlock VerticalAlignment="Center" Classes="Weight-Bold" Foreground="{DynamicResource Labels}" Margin="0 0 12 0">BTC</TextBlock>
+                                <TextBlock VerticalAlignment="Center" Classes="Weight-Bold" Foreground="{DynamicResource Labels}" Margin="0 0 12 0" Text="{x:Static ch:CurrencyHelper.Symbol}" />
                             </NumericUpDown.InnerRightContent>
                         </NumericUpDown>
 
-                        <TextBlock Text="Minimum investment: 0.001 BTC" FontSize="12" Foreground="{DynamicResource TextMuted}" />
+                        <TextBlock Text="{x:Static ch:CurrencyHelper.MinInvestmentHint}" FontSize="12" Foreground="{DynamicResource TextMuted}" />
                         <ListBox ItemsSource="{Binding AmountPresets}"
                                  HorizontalAlignment="Right"
                                  Background="Transparent"
@@ -62,7 +63,7 @@
                                 <DataTemplate>
                                     <StackPanel HorizontalAlignment="Center" Classes="Gap-XS">
                                         <TextBlock Classes="Center Bold" Text="{Binding  Btc}" />
-                                        <TextBlock Classes="Center Tiny" Text="BTC" />
+                                        <TextBlock Classes="Center Tiny" Text="{x:Static ch:CurrencyHelper.Symbol}" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
