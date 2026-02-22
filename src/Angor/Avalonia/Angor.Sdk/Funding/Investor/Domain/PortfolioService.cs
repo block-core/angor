@@ -19,17 +19,17 @@ public class PortfolioService(
 {
     public async Task<Result<InvestmentRecords>> GetByWalletId(string walletId)
     {
-        // We need to pronmpt user permission to access wallet sensitive data
+        // Try to get from local document collection first (no password needed)
+        var localDoc = await documentCollection.FindByIdAsync(walletId);
+        if (localDoc is { IsSuccess: true, Value: not null })
+            return Result.Success(new InvestmentRecords(){ProjectIdentifiers = localDoc.Value.Investments});
+
+        // Local not found — need wallet sensitive data to fetch from relay
         var sensiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
         if (sensiveDataResult.IsFailure)
         {
             return Result.Failure<InvestmentRecords>(sensiveDataResult.Error);
         }
-        
-        // Try to get from local document collection first
-        var localDoc = await documentCollection.FindByIdAsync(walletId);
-        if (localDoc is { IsSuccess: true, Value: not null })
-            return Result.Success(new InvestmentRecords(){ProjectIdentifiers = localDoc.Value.Investments});
     
         var words = sensiveDataResult.Value.ToWalletWords();
         var storageAccountKey = derivationOperations.DeriveNostrStoragePubKeyHex(words);

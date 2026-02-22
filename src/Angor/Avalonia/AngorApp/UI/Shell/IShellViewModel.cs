@@ -10,6 +10,7 @@ namespace AngorApp.UI.Shell
         bool IsDarkThemeEnabled { get; set; }
         IReadOnlyCollection<IWallet> Wallets { get; }
         IWallet? CurrentWallet { get; set; }
+        IAmountUI? TotalInvested { get; }
         void SetSection(string sectionName);
     }
 }

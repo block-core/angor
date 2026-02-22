@@ -151,6 +151,7 @@ public static class BuildInvestmentDraft
                     TransactionFee = new Amount(minerFee + angorFee),
                     MinerFee = new Amount(minerFee),
                     AngorFee = new Amount(angorFee),
+                    InvestedAmount = transactionRequest.Amount,
                     SignedTxHex = signedTxHex,
                     TransactionId = trxId,
                 }));

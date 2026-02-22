@@ -14,4 +14,9 @@ public class InvestmentRecord
     public string? RecoveryTransactionId { get; set; }
     public string? RecoveryReleaseTransactionId { get; set; }
     public string? EndOfProjectTransactionId { get; set; }
+    
+    /// <summary>
+    /// The amount invested in satoshis. Stored at publish time so we can sum totals without hitting the indexer.
+    /// </summary>
+    public long InvestedAmountSats { get; set; }
 }

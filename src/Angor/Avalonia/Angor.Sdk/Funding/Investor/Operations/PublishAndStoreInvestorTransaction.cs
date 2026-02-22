@@ -86,6 +86,7 @@ public static class PublishAndStoreInvestorTransaction
                         investment.InvestmentTransactionHash = draft.TransactionId;
                         investment.InvestmentTransactionHex = draft.SignedTxHex;
                         investment.InvestorPubKey = investmentDraft.InvestorKey;
+                        investment.InvestedAmountSats = investmentDraft.InvestedAmount.Sats;
                     }
                     else 
                     {
@@ -98,7 +99,8 @@ public static class PublishAndStoreInvestorTransaction
                             ProjectIdentifier = projectId,
                             UnfundedReleaseAddress = null, // No penalty path for direct investments
                             RequestEventId = null, // No founder approval request for investments below threshold
-                            RequestEventTime = null
+                            RequestEventTime = null,
+                            InvestedAmountSats = investmentDraft.InvestedAmount.Sats,
                         };
                     }
                     break;

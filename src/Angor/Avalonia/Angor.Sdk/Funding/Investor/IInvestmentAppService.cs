@@ -43,4 +43,9 @@ public interface IInvestmentAppService
     /// Monitors a Boltz swap until funds arrive on-chain.
     /// </summary>
     Task<Result<MonitorLightningSwap.MonitorLightningSwapResponse>> MonitorLightningSwap(MonitorLightningSwap.MonitorLightningSwapRequest request);
+
+    /// <summary>
+    /// Gets the total invested amount (in sats) for a wallet by summing locally stored InvestmentRecord amounts.
+    /// </summary>
+    Task<Result<GetTotalInvested.GetTotalInvestedResponse>> GetTotalInvested(GetTotalInvested.GetTotalInvestedRequest request);
 }
