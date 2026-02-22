@@ -18,7 +18,7 @@ public static class LatestProjects
         {
             // var projects = await projectService.LatestAsync();
             var projects = await projectService.LatestFromNostrAsync();
-            return projects.Map(sequence => new LatestProjectsResponse(sequence.Select(project => project.ToDto())));
+            return projects.Map(sequence => new LatestProjectsResponse(sequence.OrderByDescending(p => p.StartingDate).Select(project => project.ToDto())));
         }
     }
 }
