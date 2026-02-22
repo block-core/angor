@@ -12,7 +12,7 @@
         <Card Theme="{StaticResource WideCard}">
             <Card.Header>
                 <Panel>
-                    <TextBlock IsVisible="{Binding !RefreshBalanceAndFetchHistory.IsExecuting^}" Text="{Binding Balance.DecimalString}" />
+                    <TextBlock IsVisible="{Binding !RefreshBalanceAndFetchHistory.IsExecuting^}" Text="{Binding Balance.ShortDecimalString}" />
                     <ProgressBar HorizontalAlignment="Left" MaxWidth="120" IsIndeterminate="True" IsVisible="{Binding RefreshBalanceAndFetchHistory.IsExecuting^}" />
                 </Panel>
             </Card.Header>
@@ -25,7 +25,7 @@
         <Card Theme="{StaticResource WideCard}" IsVisible="{Binding UnconfirmedBalance.IsPositive}">
             <Card.Header>
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                    <TextBlock Text="{Binding UnconfirmedBalance.DecimalString}" Foreground="{DynamicResource SystemAccentColorDark1}" />
+                    <TextBlock Text="{Binding UnconfirmedBalance.ShortDecimalString}" Foreground="{DynamicResource SystemAccentColorDark1}" />
                     <TextBlock Text="(Unconfirmed)" Foreground="{DynamicResource SystemAccentColorDark1}" Opacity="0.7" />
                 </StackPanel>
             </Card.Header>
@@ -38,7 +38,7 @@
         <Card Theme="{StaticResource WideCard}" IsVisible="{Binding ReservedBalance.IsPositive}">
             <Card.Header>
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                    <TextBlock Text="{Binding ReservedBalance.DecimalString}" Foreground="Orange" />
+                    <TextBlock Text="{Binding ReservedBalance.ShortDecimalString}" Foreground="Orange" />
                     <TextBlock Text="(Reserved for Investment)" Foreground="Orange" Opacity="0.7" />
                 </StackPanel>
             </Card.Header>

@@ -46,7 +46,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <HeaderedContainer Header="{Binding Name}" Classes="Card ApricotBorder Fields" HeaderPadding="20" ContentPadding="20 0 0 20" Content="{Binding Balance^.DecimalString}">
+                            <HeaderedContainer Header="{Binding Name}" Classes="Card ApricotBorder Fields" HeaderPadding="20" ContentPadding="20 0 0 20" Content="{Binding Balance^.ShortDecimalString}">
                             </HeaderedContainer>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

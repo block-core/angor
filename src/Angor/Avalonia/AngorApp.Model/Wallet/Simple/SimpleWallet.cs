@@ -27,7 +27,7 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     [ObservableAsProperty] private IAmountUI reservedBalance = new AmountUI(0);
     private readonly CompositeDisposable disposable = new();
 
-    public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, IDialog dialog, INotificationService notificationService, INetworkConfiguration networkConfiguration)
+    public SimpleWallet(WalletId id, IWalletAppService walletAppService, ISendMoneyFlow sendMoneyFlow, IDialog dialog, INotificationService notificationService, INetworkConfiguration networkConfiguration, AccountBalanceInfo? cachedBalance = null)
     {
         this.walletAppService = walletAppService;
         this.dialog = dialog;
@@ -49,7 +49,10 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
 
         var balanceFromRefresh = RefreshBalance.Successes();
 
-        var balanceUpdates = balanceFromLoad.Merge(balanceFromRefresh)
+        var balanceStream = balanceFromLoad.Merge(balanceFromRefresh);
+
+        // Seed with cached balance from DB so we don't show 0 on startup
+        var balanceUpdates = (cachedBalance != null ? balanceStream.StartWith(cachedBalance) : balanceStream)
             .Publish()
             .RefCount();
 
