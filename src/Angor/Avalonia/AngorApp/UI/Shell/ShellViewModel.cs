@@ -1,5 +1,9 @@
 using System.Linq;
 using System.Reactive.Disposables;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Operations;
+using AngorApp.Model.Amounts;
 using Zafiro.UI.Navigation.Sections;
 
 namespace AngorApp.UI.Shell
@@ -9,13 +13,16 @@ namespace AngorApp.UI.Shell
         private readonly CompositeDisposable disposable = new();
         private readonly Dictionary<string, ISection> sectionsByName;
         private readonly IWalletContext walletContext;
+        private readonly IInvestmentAppService investmentAppService;
         [Reactive] private IWallet? currentWallet;
         [Reactive] private bool isDarkThemeEnabled;
         [Reactive] private ISection selectedSection;
+        [Reactive] private IAmountUI? totalInvested;
 
-        public ShellViewModel(IEnumerable<ISection> sections, UIServices uiServices, IWalletContext walletContext)
+        public ShellViewModel(IEnumerable<ISection> sections, UIServices uiServices, IWalletContext walletContext, IInvestmentAppService investmentAppService)
         {
             this.walletContext = walletContext;
+            this.investmentAppService = investmentAppService;
             sectionsByName = sections.ToDictionary(root => root.Name, root => root);
             SidebarSections =
             [
@@ -42,6 +49,25 @@ namespace AngorApp.UI.Shell
                          .Select(maybe => maybe.GetValueOrDefault())
                          .BindTo(this, x => x.CurrentWallet)
                          .DisposeWith(disposable);
+
+            // Fetch total invested when wallet changes
+            this.WhenAnyValue(x => x.CurrentWallet)
+                .Where(w => w != null)
+                .SelectMany(w => Observable.FromAsync(() => LoadTotalInvested(w!.Id)))
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(amount => TotalInvested = amount)
+                .DisposeWith(disposable);
+        }
+
+        private async Task<IAmountUI?> LoadTotalInvested(WalletId walletId)
+        {
+            var result = await investmentAppService.GetTotalInvested(
+                new GetTotalInvested.GetTotalInvestedRequest(walletId));
+
+            if (result.IsSuccess)
+                return new AmountUI(result.Value.TotalInvestedSats);
+
+            return null;
         }
 
         public void Dispose()

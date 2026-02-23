@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using AngorApp.Model.Amounts;
 using Avalonia;
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Primitives;
@@ -45,7 +46,7 @@ public class AmountControl : TemplatedControl, IModifiable
 
     public AmountControl()
     {
-        this.WhenAnyValue(x => x.IsBitcoin, x => x ? "BTC" : "sats").BindTo(this, x => x.Unit);
+        this.WhenAnyValue(x => x.IsBitcoin, x => x ? AmountUI.DefaultSymbol : "sats").BindTo(this, x => x.Unit);
         this.WhenAnyValue(x => x.Value, x => x.IsBitcoin).Do(x => Sync(x.Item1, IsBitcoin)).Subscribe();
         this.WhenAnyValue(x => x.Bitcoin, x => x.IsBitcoin).Do(x => Sync(x.Item1, true)).Subscribe();
         this.WhenAnyValue(x => x.Satoshis, x => x.IsBitcoin).Do(x => Sync(x.Item1, false)).Subscribe();

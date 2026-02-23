@@ -64,5 +64,8 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     public Task<Result<MonitorLightningSwap.MonitorLightningSwapResponse>> MonitorLightningSwap(MonitorLightningSwap.MonitorLightningSwapRequest request)
         => mediator.Send(request);
 
+    public Task<Result<GetTotalInvested.GetTotalInvestedResponse>> GetTotalInvested(GetTotalInvested.GetTotalInvestedRequest request)
+        => mediator.Send(request);
+
     #endregion
 }

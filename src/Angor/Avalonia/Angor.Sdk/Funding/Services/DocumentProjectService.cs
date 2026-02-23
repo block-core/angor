@@ -112,7 +112,7 @@ public class DocumentProjectService(
 
             var insertResult = await collection.InsertAsync(project => project.Id.Value, response.ToArray()); //TODO log the result?
 
-            return Result.Success(response.Concat(localLookup));
+            return Result.Success(response.Concat(localLookup).OrderByDescending(p => p.StartingDate).AsEnumerable());
         }
         catch (Exception ex)
         {

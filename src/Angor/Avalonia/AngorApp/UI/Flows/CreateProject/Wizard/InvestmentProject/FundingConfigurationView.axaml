@@ -5,6 +5,7 @@
              xmlns:steps="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject"
              xmlns:sys="clr-namespace:System;assembly=System.Runtime"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:ch="clr-namespace:AngorApp.UI.Shared"
              xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
              xmlns:model="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model"
              mc:Ignorable="d" d:DesignWidth="800"
@@ -180,7 +181,7 @@
                     <StackPanel Spacing="10">
                         <HeaderedContainer>
                             <HeaderedContainer.Header>
-                                <TextBlock Classes="FormLabel">Target Amount (BTC) *</TextBlock>
+                                <TextBlock Classes="FormLabel" Text="{x:Static ch:CurrencyHelper.TargetAmountLabel}" />
                             </HeaderedContainer.Header>
 
                             <NumericUpDown Classes="AmountInput"
@@ -193,9 +194,8 @@
                                 <NumericUpDown.InnerRightContent>
                                     <TextBlock Classes="AmountUnitInline"
                                                VerticalAlignment="Center"
-                                               Margin="0 0 12 0">
-                                        BTC
-                                    </TextBlock>
+                                               Margin="0 0 12 0"
+                                               Text="{x:Static ch:CurrencyHelper.Symbol}" />
                                 </NumericUpDown.InnerRightContent>
                             </NumericUpDown>
                         </HeaderedContainer>
@@ -218,7 +218,7 @@
                             <DataTemplate>
                                 <StackPanel HorizontalAlignment="Center" Classes="Gap-XS">
                                     <TextBlock Classes="Center Bold" Text="{Binding  Btc}" />
-                                    <TextBlock Classes="Center Tiny" Text="BTC" />
+                                    <TextBlock Classes="Center Tiny" Text="{x:Static ch:CurrencyHelper.Symbol}" />
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

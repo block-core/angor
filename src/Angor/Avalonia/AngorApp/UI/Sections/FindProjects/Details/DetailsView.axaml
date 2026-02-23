@@ -132,6 +132,12 @@
                             </EdgePanel.Content>
                         </EdgePanel>
                     </HeaderedContainer>
+
+                    <EnhancedButton Command="{Binding ShowProjectInfoJson}"
+                                    Content="Show Project Info (JSON)"
+                                    Icon="{Icon fa-code}"
+                                    HorizontalAlignment="Left"
+                                    Classes="Accent" />
                 </StackPanel>
             </Expander>
 
