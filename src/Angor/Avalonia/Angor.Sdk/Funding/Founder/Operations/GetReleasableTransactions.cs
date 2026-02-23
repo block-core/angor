@@ -41,7 +41,7 @@ public static class GetReleasableTransactions
                 Approved = x.ApprovaleTime,
                 Arrived = x.InvestmentRequestTime,
                 Released = x.ReleaseSignaturesTime,
-                InvestmentEventId = x.SignRecoveryRequestEventId
+                InvestmentEventId = x.SignRecoveryRequestEventId ?? string.Empty
             });
                 
             return Result.Success(new GetReleasableTransactionsResponse(list));

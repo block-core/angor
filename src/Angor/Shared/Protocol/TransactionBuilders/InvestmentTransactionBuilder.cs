@@ -117,7 +117,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
     public Transaction BuildUpfrontUnfundedReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, string investorReleaseKey)
     {
         // the release may be an address or a pubkey, first check if it is an address
-        Script spendingScript = null;
+        Script? spendingScript = null;
         if (BitcoinWitPubKeyAddress.IsValid(investorReleaseKey, _networkConfiguration.GetNetwork(), out Exception _))
         {
             spendingScript = new BitcoinWitPubKeyAddress(investorReleaseKey, _networkConfiguration.GetNetwork()).ScriptPubKey;

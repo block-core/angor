@@ -324,7 +324,7 @@ public class DynamicStagePattern
     /// </summary>
     /// <param name="patternId">The pattern ID to look up</param>
     /// <returns>The matching pattern, or null if not found</returns>
-    public static DynamicStagePattern GetPatternById(byte patternId)
+    public static DynamicStagePattern? GetPatternById(byte patternId)
     {
         return GetStandardPatterns().FirstOrDefault(p => p.PatternId == patternId);
     }

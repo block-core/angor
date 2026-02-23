@@ -97,7 +97,7 @@ public static class PublishAndStoreInvestorTransaction
                             InvestmentTransactionHex = draft.SignedTxHex,
                             InvestorPubKey = investmentDraft.InvestorKey,
                             ProjectIdentifier = projectId,
-                            UnfundedReleaseAddress = null, // No penalty path for direct investments
+                            UnfundedReleaseAddress = string.Empty, // No penalty path for direct investments
                             RequestEventId = null, // No founder approval request for investments below threshold
                             RequestEventTime = null,
                             InvestedAmountSats = investmentDraft.InvestedAmount.Sats,

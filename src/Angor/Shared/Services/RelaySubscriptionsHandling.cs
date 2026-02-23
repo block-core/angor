@@ -69,13 +69,13 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         if (!OkVerificationActions.TryGetValue(okResponse?.EventId ?? string.Empty, out var action)) 
             return;
         
-        action(okResponse);
+        action(okResponse!);
 
-        if (!_communicationFactory.OkEventReceivedOnAllRelays(okResponse.EventId)) 
+        if (!_communicationFactory.OkEventReceivedOnAllRelays(okResponse!.EventId!)) 
             return;
         
         OkVerificationActions.Remove(okResponse.EventId ?? string.Empty, out _);
-        _communicationFactory.ClearOkReceivedOnSubscriptionMonitoring(okResponse.EventId);
+        _communicationFactory.ClearOkReceivedOnSubscriptionMonitoring(okResponse.EventId!);
     }
 
     public bool TryAddEoseAction(string subscriptionName, Action action)
@@ -94,10 +94,10 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     {
         _logger.LogDebug($"EoseStream {_.Subscription} message - {_.AdditionalData}");
 
-        if (!_communicationFactory.EoseEventReceivedOnAllRelays(_.Subscription))
+        if (!_communicationFactory.EoseEventReceivedOnAllRelays(_.Subscription!))
             return;
         
-        if (userEoseActions.Remove(_.Subscription, out var action))
+        if (userEoseActions.Remove(_.Subscription!, out var action))
         {
             _logger.LogDebug($"Removed action on EOSE for subscription - {_.Subscription}");
             try
@@ -111,15 +111,15 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
             }
         }
 
-        _communicationFactory.ClearEoseReceivedOnSubscriptionMonitoring(_.Subscription);
+        _communicationFactory.ClearEoseReceivedOnSubscriptionMonitoring(_.Subscription!);
         
-        if (!relaySubscriptions.ContainsKey(_.Subscription)) 
+        if (!relaySubscriptions.ContainsKey(_.Subscription!)) 
             return;
 
-        if (relaySubscriptionsKeepActive.ContainsKey(_.Subscription))
+        if (relaySubscriptionsKeepActive.ContainsKey(_.Subscription!))
             return;
 
-        CloseSubscription(_.Subscription);
+        CloseSubscription(_.Subscription!);
     }
 
     public void CloseSubscription(string subscriptionKey)

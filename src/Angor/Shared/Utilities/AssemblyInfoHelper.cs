@@ -14,9 +14,9 @@ public static class AssemblyInfoHelper
         {
             var assemblyInfo = new AssemblyInfo
             {
-                Name = assembly.GetName().Name,
+                Name = assembly.GetName().Name ?? string.Empty,
                 Version = assembly.GetName().Version?.ToString() ?? "Version not found",
-                FullName = assembly.FullName,
+                FullName = assembly.FullName ?? string.Empty,
                 Location = assembly.Location,
                 ImageRuntimeVersion = assembly.ImageRuntimeVersion,
                 EntryPoint = assembly.EntryPoint?.ToString() ?? "No entry point",

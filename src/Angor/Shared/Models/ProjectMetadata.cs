@@ -20,15 +20,15 @@ public class ProjectMetadata
     {
         var project = new ProjectMetadata
         {
-            Nip57 = nostrMetadata.Nip57,
-            Lud16 = nostrMetadata.Nip57,
-            Nip05 = nostrMetadata.Nip57,
-            About = nostrMetadata.About,
-            Banner = nostrMetadata.Banner,
-            Picture = nostrMetadata.Picture,
-            Name = nostrMetadata.Name,
-            Website = nostrMetadata.Website,
-            DisplayName = nostrMetadata.DisplayName
+            Nip57 = nostrMetadata.Nip57 ?? string.Empty,
+            Lud16 = nostrMetadata.Nip57 ?? string.Empty,
+            Nip05 = nostrMetadata.Nip57 ?? string.Empty,
+            About = nostrMetadata.About ?? string.Empty,
+            Banner = nostrMetadata.Banner ?? string.Empty,
+            Picture = nostrMetadata.Picture ?? string.Empty,
+            Name = nostrMetadata.Name ?? string.Empty,
+            Website = nostrMetadata.Website ?? string.Empty,
+            DisplayName = nostrMetadata.DisplayName ?? string.Empty
         };
 
         return project;

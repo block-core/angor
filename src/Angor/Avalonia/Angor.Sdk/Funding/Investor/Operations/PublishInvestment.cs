@@ -146,7 +146,7 @@ public static class PublishInvestment
             var createdAt = DateTime.MinValue;
             var eventId = string.Empty;
 
-            TransactionInfo investment = null;
+            TransactionInfo? investment = null;
             var tcs = new TaskCompletionSource<Result<bool>>();
 
 
@@ -166,7 +166,7 @@ public static class PublishInvestment
 
                         var investmentRequest = serializer.Deserialize<SignRecoveryRequest>(decrypted);
                         var trx = networkConfiguration.GetNetwork()
-                            .CreateTransaction(investmentRequest.InvestmentTransactionHex);
+                            .CreateTransaction(investmentRequest!.InvestmentTransactionHex);
 
                         if (trx.GetHash().ToString() == transactionHash)
                             investment = new TransactionInfo() { Transaction = trx };
@@ -221,7 +221,7 @@ public static class PublishInvestment
 
                     var validSignatures =
                         investorTransactionActions.CheckInvestorRecoverySignatures(project.ToProjectInfo(),
-                            investment.Transaction, signatureInfo);
+                            investment.Transaction, signatureInfo!);
 
                     //TODO do we need to store the signatures in the database at this point?
                     
@@ -267,7 +267,7 @@ public static class PublishInvestment
                 if (response.Success)
                     return Result.Success(signedTransaction.Transaction.GetHash().ToString());
                 
-                logger.Error(response.Message);
+                logger.Error(response.Message ?? "Unknown error");
                 
                 return Result.Failure<string>("Failed to publish the transaction to the blockchain");
             }

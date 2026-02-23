@@ -40,7 +40,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
 
         var hashesOfSecrets = secrets.Select(secret => (Blockcore.NBitcoin.Crypto.Hashes.Hash256(secret.ToBytes()), new Script(secret.ToBytes()))).ToList();
 
-        Script execute = null;
+        Script? execute = null;
         List<Script> secretHashes = new List<Script>();
 
         foreach (var scriptWeight in scriptWeights)

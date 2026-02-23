@@ -34,7 +34,7 @@ namespace AngorApp.UI.Shared.Controls
             return offset.ToString("d");
         });
 
-        public static readonly FuncValueConverter<DateTime?, string> HumanizeDateTime = new(offset =>
+        public static readonly FuncValueConverter<DateTime?, string?> HumanizeDateTime = new(offset =>
         {
             if (offset == null)
             {

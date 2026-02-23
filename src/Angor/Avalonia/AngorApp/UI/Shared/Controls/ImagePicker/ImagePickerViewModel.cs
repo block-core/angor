@@ -39,7 +39,7 @@ namespace AngorApp.UI.Shared.Controls.ImagePicker
 
             var validImage = this.WhenAnyValue(model => model.ImageUri)
                 .Throttle(TimeSpan.FromSeconds(1), RxApp.MainThreadScheduler)
-                .Select(uri => Observable.FromAsync(() => uiServices.Validations.IsImage(uri)))
+                .Select(uri => Observable.FromAsync(() => uiServices.Validations.IsImage(uri ?? string.Empty)))
                 .Switch()
                 .ObserveOn(RxApp.MainThreadScheduler);
                 

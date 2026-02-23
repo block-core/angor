@@ -172,7 +172,7 @@ public class WalletAppService(
                 SendAmount = amount.Sats,
                 SendToAddress = address.Value,
                 FeeRate = satsPerVirtualKb,
-                ChangeAddress = accountInfo.GetNextChangeReceiveAddress(),
+                ChangeAddress = accountInfo.GetNextChangeReceiveAddress() ?? string.Empty,
                 SendUtxos = walletOperations.FindOutputsForTransaction(amount.Sats, accountInfo)
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
@@ -192,7 +192,7 @@ public class WalletAppService(
             if (!result.Success)
                 return Result.Failure<TxId>(result.Message);
 
-            return Result.Success(new TxId(result.Data.GetHash().ToString()));
+            return Result.Success(new TxId(result.Data!.GetHash().ToString()));
         }
         catch (Exception ex)
         {

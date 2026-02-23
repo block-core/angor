@@ -207,7 +207,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
         var utxoDataList = new List<UtxoData>();
 
-        foreach (var mempoolTransaction in trx)
+        foreach (var mempoolTransaction in trx!)
         {
             if (mempoolTransaction.Vout.All(v => v.ScriptpubkeyAddress != address))
             {
@@ -301,7 +301,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         {
             Fees = new List<FeeEstimation>
             {
-                new() { FeeRate = feeEstimations.FastestFee * 1100, Confirmations = 1 }, //TODO this is an estimation
+                new() { FeeRate = feeEstimations!.FastestFee * 1100, Confirmations = 1 }, //TODO this is an estimation
                 new() { FeeRate = feeEstimations.HalfHourFee * 1100, Confirmations = 3 },
                 new() { FeeRate = feeEstimations.HourFee * 1100, Confirmations = 6 },
                 new() { FeeRate = feeEstimations.EconomyFee * 1100, Confirmations = 18 }, //TODO this is an estimation
@@ -351,9 +351,9 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
         var spends = await responseSpent.Content.ReadFromJsonAsync<List<Outspent>>(options);
 
-        await PopulateSpentMissingData(spends, trx, client);
+        await PopulateSpentMissingData(spends!, trx!, client);
 
-        return MapToQueryTransaction(trx, spends);
+        return MapToQueryTransaction(trx!, spends);
     }
 
     public async Task<IEnumerable<(int, bool)>> GetIsSpentOutputsOnTransactionAsync(string transactionId)
@@ -436,7 +436,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
                     { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
                     bool found = false;
-                    foreach (var transaction in trx)
+                    foreach (var transaction in trx!)
                     {
                         var vinIndex = 0;
                         foreach (var vin in transaction.Vin)

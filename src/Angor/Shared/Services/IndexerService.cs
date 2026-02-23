@@ -85,7 +85,7 @@ namespace Angor.Shared.Services
             var response = await _httpClient.GetAsync($"{indexer.Url}/api/query/Angor/projects/{projectId}/investments");
             _networkService.CheckAndHandleError(response);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>();
+            return await response.Content.ReadFromJsonAsync<List<ProjectInvestment>>() ?? [];
         }
 
         public async Task<ProjectInvestment?> GetInvestmentAsync(string projectId, string investorPubKey)
@@ -220,7 +220,7 @@ namespace Angor.Shared.Services
         
                 if (!blockResponse.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning($"Failed to fetch genesis block from: {blockUrl}");
+                    _logger!.LogWarning($"Failed to fetch genesis block from: {blockUrl}");
                     return (false, null);
                 }
         
@@ -232,12 +232,12 @@ namespace Angor.Shared.Services
                     return (true, blockHashElement.GetString());
                 }
         
-                _logger.LogWarning("blockHash not found in the block response.");
+                _logger!.LogWarning("blockHash not found in the block response.");
                 return (true, null); // Indexer is online, but no valid block hash
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error during indexer network check: {ex.Message}");
+                _logger!.LogError(ex, $"Error during indexer network check: {ex.Message}");
                 return (false, null);
             }
         }

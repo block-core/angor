@@ -46,7 +46,7 @@ namespace Angor.Shared.Services
                 // no network found ether this is a first
                 // time user visits the site or the network was wiped
 
-                Network network = null;
+                Network? network = null;
 
                 if (setNetwork != null)
                 {

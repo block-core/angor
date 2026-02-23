@@ -6,7 +6,7 @@ namespace AngorApp.UI.Flows.SendWalletMoney.TransactionDraft;
 
 public class TransactionDraftViewModelSample : ITransactionDraftViewModel
 {
-    public ReactiveCommand<Unit, Result<TxId>> Confirm => ReactiveCommand.Create(() => Result.Success(default(TxId)));
+    public ReactiveCommand<Unit, Result<TxId>> Confirm => ReactiveCommand.Create(() => Result.Success(new TxId(string.Empty)));
     public long? Feerate { get; set; }
 
     public IEnumerable<IFeeratePreset> Presets

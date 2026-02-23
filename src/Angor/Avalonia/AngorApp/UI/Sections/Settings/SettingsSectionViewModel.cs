@@ -45,8 +45,10 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private string newRelay = string.Empty;
 
+#pragma warning disable CS0414 // Field is assigned but its value is never used
     // ReSharper disable once NotAccessedField.Local
     private bool restoringNetwork;
+#pragma warning restore CS0414
 
     private string currentNetwork = string.Empty;
 

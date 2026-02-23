@@ -70,7 +70,7 @@ public partial class UIServices : ReactiveObject, IUIServices
 
         this.WhenAnyValue(services => services.IsDarkThemeEnabled)
             .DistinctUntilChanged()
-            .Do(isDarkTheme => Application.Current.RequestedThemeVariant = isDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light)
+            .Do(isDarkTheme => Application.Current!.RequestedThemeVariant = isDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light)
             .Subscribe();
 
         var topLevel = Observable.FromEventPattern<RoutedEventArgs>(h => mainView.Loaded += h, h => mainView.Loaded -= h)

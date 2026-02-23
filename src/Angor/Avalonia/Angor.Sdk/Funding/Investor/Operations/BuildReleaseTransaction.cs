@@ -62,7 +62,7 @@ public static class BuildReleaseTransaction
 
             var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(investment.InvestmentTransactionHex);
 
-            var signatureLookup = await LookupFounderReleaseSignatures(request.WalletId.Value, project.Value, investment.RequestEventId, 
+            var signatureLookup = await LookupFounderReleaseSignatures(request.WalletId.Value, project.Value, investment.RequestEventId!, 
                 investmentTransaction);
             
             if (signatureLookup.IsFailure)
@@ -139,7 +139,7 @@ public static class BuildReleaseTransaction
 
                     var validSignatures =
                         investorTransactionActions.CheckInvestorRecoverySignatures(project.ToProjectInfo(),
-                            investment, signatureInfo);
+                            investment, signatureInfo!);
 
                     tcs.SetResult(validSignatures
                         ? Result.Success<SignatureInfo?>(signatureInfo)

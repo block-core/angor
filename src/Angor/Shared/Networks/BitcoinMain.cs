@@ -139,7 +139,7 @@ namespace Angor.Shared.Networks
 
         public override ScriptTemplate GetTemplateFromScriptPubKey(Script script)
         {
-            return this.standardTemplates.FirstOrDefault(t => t.CheckScriptPubKey(script));
+            return this.standardTemplates.FirstOrDefault(t => t.CheckScriptPubKey(script))!;
         }
 
         public override bool IsStandardScriptPubKey(Network network, Script scriptPubKey)

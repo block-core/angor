@@ -85,9 +85,9 @@ namespace Angor.Shared.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == projectNostrPubKey)
-                    .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
-                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
-                    .Subscribe(_ => { action.Invoke(_.Event.Content); });
+                    .Where(_ => _.Event!.Kind == NostrKind.EncryptedDm)
+                    .Where(_ => _.Event!.Tags!.FindFirstTagValue("subject") == "Re:Investment offer")
+                    .Subscribe(_ => { action.Invoke(_.Event!.Content!); });
 
                 _subscriptionsHanding.TryAddRelaySubscription(projectNostrPubKey, subscription);
 
@@ -117,11 +117,11 @@ namespace Angor.Shared.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
-                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Investment offer")
-                    .Select(_ => _.Event)
+                    .Where(_ => _.Event!.Tags!.FindFirstTagValue("subject") == "Investment offer")
+                    .Select(_ => _.Event!)
                     .Subscribe(nostrEvent =>
                     {
-                        action.Invoke(nostrEvent.Id, nostrEvent.Pubkey, nostrEvent.Content, nostrEvent.CreatedAt.Value);
+                        action.Invoke(nostrEvent.Id!, nostrEvent.Pubkey!, nostrEvent.Content!, nostrEvent.CreatedAt.GetValueOrDefault());
                     });
 
                 _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
@@ -153,11 +153,11 @@ namespace Angor.Shared.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
-                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Investment completed")
-                    .Select(_ => _.Event)
+                    .Where(_ => _.Event!.Tags!.FindFirstTagValue("subject") == "Investment completed")
+                    .Select(_ => _.Event!)
                     .Subscribe(nostrEvent =>
                     {
-                        action.Invoke(nostrEvent.Id, nostrEvent.Pubkey, nostrEvent.Content, nostrEvent.CreatedAt.Value);
+                        action.Invoke(nostrEvent.Id!, nostrEvent.Pubkey!, nostrEvent.Content!, nostrEvent.CreatedAt.GetValueOrDefault());
                     });
 
                 _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
@@ -214,11 +214,11 @@ namespace Angor.Shared.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
-                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Investment cancelled")
-                    .Select(_ => _.Event)
+                    .Where(_ => _.Event!.Tags!.FindFirstTagValue("subject") == "Investment cancelled")
+                    .Select(_ => _.Event!)
                     .Subscribe(nostrEvent =>
                     {
-                        action.Invoke(nostrEvent.Id, nostrEvent.Pubkey, nostrEvent.Content, nostrEvent.CreatedAt.Value);
+                        action.Invoke(nostrEvent.Id!, nostrEvent.Pubkey!, nostrEvent.Content!, nostrEvent.CreatedAt.GetValueOrDefault());
                     });
 
                 _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
@@ -249,11 +249,11 @@ namespace Angor.Shared.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
-                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
-                    .Select(_ => _.Event)
+                    .Where(_ => _.Event!.Tags!.FindFirstTagValue("subject") == "Re:Investment offer")
+                    .Select(_ => _.Event!)
                     .Subscribe(nostrEvent =>
                     {
-                        action.Invoke(nostrEvent.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier), nostrEvent.CreatedAt.Value, nostrEvent.Tags.FindFirstTagValue(NostrEventTag.EventIdentifier));
+                        action.Invoke(nostrEvent.Tags!.FindFirstTagValue(NostrEventTag.ProfileIdentifier)!, nostrEvent.CreatedAt.GetValueOrDefault(), nostrEvent.Tags!.FindFirstTagValue(NostrEventTag.EventIdentifier)!);
                     });
 
                 _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
@@ -291,7 +291,7 @@ namespace Angor.Shared.Services
 
             void HandleEvent(NostrEvent nostrEvent)
             {
-                var subject = nostrEvent.Tags.FindFirstTagValue("subject");
+                var subject = nostrEvent.Tags!.FindFirstTagValue("subject");
                 var messageType = subject switch
                 {
                     "Investment offer" => InvestmentMessageType.Request,
@@ -306,14 +306,14 @@ namespace Angor.Shared.Services
                     // For approvals, we pass the referenced event ID (from e tag) as the id
                     // This allows matching the approval to the original request
                     var eventId = messageType.Value == InvestmentMessageType.Approval
-                        ? nostrEvent.Tags.FindFirstTagValue(NostrEventTag.EventIdentifier) ?? nostrEvent.Id
-                        : nostrEvent.Id;
+                        ? nostrEvent.Tags!.FindFirstTagValue(NostrEventTag.EventIdentifier) ?? nostrEvent.Id!
+                        : nostrEvent.Id!;
                     
                     onMessage.Invoke(
                         messageType.Value,
-                        eventId,
-                        nostrEvent.Pubkey,
-                        nostrEvent.Content,
+                        eventId!,
+                        nostrEvent.Pubkey!,
+                        nostrEvent.Content!,
                         nostrEvent.CreatedAt!.Value);
                 }
             }
@@ -324,7 +324,7 @@ namespace Angor.Shared.Services
                 var incomingSub = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == incomingKey)
                     .Select(_ => _.Event)
-                    .Subscribe(HandleEvent);
+                    .Subscribe(e => { if (e != null) HandleEvent(e); });
 
                 _subscriptionsHanding.TryAddRelaySubscription(incomingKey, incomingSub);
             }
@@ -336,7 +336,7 @@ namespace Angor.Shared.Services
                 var outgoingSub = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == outgoingKey)
                     .Select(_ => _.Event)
-                    .Subscribe(HandleEvent);
+                    .Subscribe(e => { if (e != null) HandleEvent(e); });
 
                 _subscriptionsHanding.TryAddRelaySubscription(outgoingKey, outgoingSub);
             }
@@ -423,9 +423,9 @@ namespace Angor.Shared.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
-                    .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
-                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Release transaction signatures")
-                    .Subscribe(_ => { action.Invoke(_.Event.Content); });
+                    .Where(_ => _.Event!.Kind == NostrKind.EncryptedDm)
+                    .Where(_ => _.Event!.Tags!.FindFirstTagValue("subject") == "Release transaction signatures")
+                    .Subscribe(_ => { action.Invoke(_.Event!.Content!); });
 
                 _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
             }
@@ -452,17 +452,17 @@ namespace Angor.Shared.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
-                    .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
-                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Release transaction signatures")
-                    .Select(_ => _.Event)
+                    .Where(_ => _.Event!.Kind == NostrKind.EncryptedDm)
+                    .Where(_ => _.Event!.Tags!.FindFirstTagValue("subject") == "Release transaction signatures")
+                    .Select(_ => _.Event!)
                     .Subscribe(nostrEvent =>
                     {
                         action.Invoke(new SignServiceLookupItem
                         {
-                            NostrEvent = nostrEvent,
-                            ProfileIdentifier = nostrEvent.Tags.FindFirstTagValue(NostrEventTag.ProfileIdentifier),
-                            EventCreatedAt = nostrEvent.CreatedAt.Value,
-                            EventIdentifier = nostrEvent.Tags.FindFirstTagValue(NostrEventTag.EventIdentifier)
+                            NostrEvent = nostrEvent!,
+                            ProfileIdentifier = nostrEvent.Tags!.FindFirstTagValue(NostrEventTag.ProfileIdentifier) ?? string.Empty,
+                            EventCreatedAt = nostrEvent.CreatedAt.GetValueOrDefault(),
+                            EventIdentifier = nostrEvent.Tags.FindFirstTagValue(NostrEventTag.EventIdentifier) ?? string.Empty
                         });
                     });
 

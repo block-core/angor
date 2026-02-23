@@ -63,14 +63,16 @@ public static class GetInvestments
                     await Task.WhenAll(investmentTask, statsTask);
 
                     var investment = investmentTask.Result.IsSuccess ? investmentTask.Result.Value : null;
-                    var stats = statsTask.Result.IsSuccess ? statsTask.Result.Value : (project.Id.Value, null);
+#pragma warning disable CS8601 // Null reference assignment in tuple is intentional (ProjectStats? is nullable by design)
+                    var stats = statsTask.Result.IsSuccess ? statsTask.Result.Value : (projectId: project.Id.Value, stats: (Angor.Shared.Models.ProjectStats?)null);
+#pragma warning restore CS8601
 
                     var dto = new InvestedProjectDto
                     {
                         Id = project.Id.Value,
                         Name = project.Name,
                         Description = project.ShortDescription,
-                        LogoUri = project.Picture,
+                        LogoUri = project.Picture!,
                         Target = new Amount(project.TargetAmount),
                         FounderStatus = investment == null ? FounderStatus.Requested : FounderStatus.Approved,
                         InvestmentStatus = investment == null ? InvestmentStatus.Invalid : InvestmentStatus.Invested,

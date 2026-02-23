@@ -60,7 +60,7 @@ if (investments.IsFailure)
 
     var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(investment.InvestmentTransactionHex);
   
-    var signatureLookup = await LookupFounderSignatures(request.WalletId.Value, project.Value, investment.RequestEventTime.Value, investment.RequestEventId, 
+    var signatureLookup = await LookupFounderSignatures(request.WalletId.Value, project.Value, investment.RequestEventTime.GetValueOrDefault(), investment.RequestEventId!, 
       investmentTransaction);
 
   if (signatureLookup.IsFailure)
@@ -129,7 +129,7 @@ TransactionFee = new Amount(recoveryTransaction.TransactionFee),
 
                     var validSignatures =
                         investorTransactionActions.CheckInvestorRecoverySignatures(project.ToProjectInfo(),
-                            investment, signatureInfo);
+                            investment, signatureInfo!);
 
                     tcs.SetResult(validSignatures
                         ? Result.Success<SignatureInfo?>(signatureInfo)

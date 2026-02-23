@@ -81,7 +81,7 @@ public static class RequestInvestmentSignatures
                 InvestmentTransactionHex = request.Draft.SignedTxHex,
                 InvestorPubKey = request.Draft.InvestorKey,
                 ProjectIdentifier = request.ProjectId.Value,
-                UnfundedReleaseAddress = null, //TODO: Set this to the actual unfunded release address once implemented
+                UnfundedReleaseAddress = string.Empty, //TODO: Set this to the actual unfunded release address once implemented
                 RequestEventId = sendSignatureResult.Value.eventId,
                 RequestEventTime = sendSignatureResult.Value.createdTime,
             });

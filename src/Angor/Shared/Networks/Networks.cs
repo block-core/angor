@@ -11,11 +11,11 @@ namespace Angor.Shared.Networks
                 return new AngorNetworksSelector(
                     () => new BitcoinMain(),
                     () => new BitcoinTest(), 
-                    () => null,
+                    () => null!,
                     () => new BitcoinTest4(), 
                     () => new BitcoinSignet(),
                     () => new Angornet(),
-                    () => null,
+                    () => null!,
                     () => new LiquidMain());
             }
         }

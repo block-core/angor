@@ -85,7 +85,7 @@ public class PsbtOperations : IPsbtOperations
                 throw new ApplicationException($"The change amount {totalToChange} is below the dust threshold for SegWit transactions.");
             }
 
-            unsignedTx.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(totalToChange.Satoshi), NBitcoin.BitcoinAddress.Create(changeAddress, nbitcoinNetwork).ScriptPubKey));
+            unsignedTx.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(totalToChange.Satoshi), NBitcoin.BitcoinAddress.Create(changeAddress!, nbitcoinNetwork).ScriptPubKey));
         }
 
         var psbt = NBitcoin.PSBT.FromTransaction(unsignedTx, nbitcoinNetwork);
@@ -158,7 +158,7 @@ public class PsbtOperations : IPsbtOperations
             throw new ApplicationException($"The change amount {totalToChange} is below the dust threshold for SegWit transactions.");
         }
 
-        unsignedTx.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(totalToChange), NBitcoin.BitcoinAddress.Create(changeAddress, nbitcoinNetwork).ScriptPubKey));
+        unsignedTx.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(totalToChange), NBitcoin.BitcoinAddress.Create(changeAddress!, nbitcoinNetwork).ScriptPubKey));
 
         var psbt = NBitcoin.PSBT.FromTransaction(unsignedTx, nbitcoinNetwork);
 

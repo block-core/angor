@@ -36,7 +36,7 @@ public static class GetInvestorNsec
             // Convert to nsec format using Nostr.Client library
             var nsec = NostrConverter.ToNsec(privateKeyHex);
 
-            return Result.Success(new GetInvestorNsecResponse(nsec));
+            return Result.Success(new GetInvestorNsecResponse(nsec!));
         }
     }
 }

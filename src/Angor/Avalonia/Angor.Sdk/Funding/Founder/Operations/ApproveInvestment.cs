@@ -55,7 +55,7 @@ public static class ApproveInvestment
 
         private Task<Result> PerformSignatureApproval(SignatureItem signature, WalletWords words, ProjectInfo projectInfo)
         {
-            var investmentTransactionHex = signature.SignRecoveryRequest.InvestmentTransactionHex;
+            var investmentTransactionHex = signature.SignRecoveryRequest!.InvestmentTransactionHex;
             var signatureInvestorNostrPubKey = signature.investorNostrPubKey;
             var signatureEventId = signature.EventId;
             

@@ -142,7 +142,7 @@ public class GetPenalties
                 {
                     var recoveryTransaction = await transactionService.GetTransactionInfoByIdAsync(penaltyProject.RecoveryTransactionId);
 
-                    var totalsats = recoveryTransaction.Outputs
+                    var totalsats = recoveryTransaction!.Outputs
                         .Where(s => Script.FromHex(s.ScriptPubKey).IsScriptType(ScriptType.P2WSH)).Sum(s => s.Balance);
                     penaltyProject.TotalAmountSats = totalsats;
 

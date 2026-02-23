@@ -131,9 +131,9 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     private void ConnectToAllRelaysInTheSettings(INetworkService networkService)
     {
         foreach (var url in networkService.GetRelays()
-                     .Where(url => _nostrMultiWebsocketClient.FindClient(url.Name) == null))
+                     .Where(url => _nostrMultiWebsocketClient!.FindClient(url.Name) == null))
         {
-            var communicator = CreateCommunicator(url.Url, url.Name);
+            var communicator = CreateCommunicator(url.Url!, url.Name!);
             var client = new NostrWebsocketClient(communicator, _clientLogger);
             
             _serviceSubscriptions.Add(client.Streams.EoseStream.Subscribe(x =>

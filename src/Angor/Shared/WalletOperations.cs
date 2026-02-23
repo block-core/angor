@@ -242,7 +242,7 @@ public class WalletOperations : IWalletOperations
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
         // Step 3: Add inputs and recalculate the transaction size
-        foreach (var coin in coins.coins)
+        foreach (var coin in coins.coins!)
         {
             if (clonedTransaction.Inputs.Any(x => x.PrevOut == coin.Outpoint))
                 continue;
@@ -717,7 +717,7 @@ public class WalletOperations : IWalletOperations
             if (feeEstimations == null || (!feeEstimations.Fees?.Any() ?? true))
                 return blocks.Select(_ => new FeeEstimation{Confirmations = _,FeeRate = 10000 / _}); // default to 1 satoshi per byte for 10 blocks and 10 satoshi for 1 block  
 
-            _logger.LogInformation($"fee estimation is {string.Join(", ", feeEstimations.Fees.Select(f => f.Confirmations.ToString() + "-" + f.FeeRate))}");
+            _logger.LogInformation($"fee estimation is {string.Join(", ", feeEstimations.Fees!.Select(f => f.Confirmations.ToString() + "-" + f.FeeRate))}");
 
             return feeEstimations.Fees!;
         }

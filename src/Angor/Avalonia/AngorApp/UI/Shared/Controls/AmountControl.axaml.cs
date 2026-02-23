@@ -89,7 +89,7 @@ public class AmountControl : TemplatedControl, IModifiable
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
-        numericUpDown = e.NameScope.Find<NumericUpDown>("PART_NumericUpDown");
+        numericUpDown = e.NameScope.Find<NumericUpDown>("PART_NumericUpDown")!;
 
         Debug.Assert(numericUpDown != null);
         

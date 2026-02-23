@@ -51,7 +51,7 @@ namespace Angor.Shared.Services
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionName)
                     .Select(_ => _.Event)
-                    .Subscribe(ev => { responseDataAction(_serializer.Deserialize<T>(ev.Content)); });
+                    .Subscribe(ev => { responseDataAction(_serializer.Deserialize<T>(ev!.Content!)!); });
 
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionName, subscription);
             }
@@ -138,7 +138,7 @@ namespace Angor.Shared.Services
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event is not null)
                     .Select(_ => _.Event)
-                    .Subscribe(@event => onResponseAction(@event));
+                    .Subscribe(@event => onResponseAction(@event!));
 
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription, keepActive);
             }
@@ -204,7 +204,7 @@ namespace Angor.Shared.Services
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event is not null)
                     .Select(_ => _.Event as NostrMetadataEvent)
-                    .Subscribe(@event => onResponse(@event.Pubkey, ProjectMetadata.Parse(@event.Metadata)));
+                    .Subscribe(@event => onResponse(@event!.Pubkey!, ProjectMetadata.Parse(@event.Metadata!)));
 
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
             }
@@ -233,13 +233,13 @@ namespace Angor.Shared.Services
             var signed = GetNip3030NostrEvent(content)
                 .Sign(key);
 
-            _subscriptionsHandling.TryAddOKAction(signed.Id, action);
+            _subscriptionsHandling.TryAddOKAction(signed.Id!, action);
 
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
             nostrClient.Send(new NostrEventRequest(signed));
 
-            return Task.FromResult(signed.Id);
+            return Task.FromResult(signed.Id)!;
         }
 
         public Task<string> CreateNostrProfileAsync(NostrMetadata metadata, string hexPrivateKey, Action<NostrOkResponse> action)
@@ -255,13 +255,13 @@ namespace Angor.Shared.Services
                 Content = content
             }.Sign(key);
 
-            _subscriptionsHandling.TryAddOKAction(signed.Id, action);
+            _subscriptionsHandling.TryAddOKAction(signed.Id!, action);
 
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
             nostrClient.Send(new NostrEventRequest(signed));
 
-            return Task.FromResult(signed.Id);
+            return Task.FromResult(signed.Id)!;
         }
 
         public Task<string> DeleteProjectAsync(string eventId, string hexPrivateKey)
@@ -279,7 +279,7 @@ namespace Angor.Shared.Services
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
             nostrClient.Send(deleteEvent);
 
-            return Task.FromResult(deleteEvent.Id);
+            return Task.FromResult(deleteEvent.Id)!;
         }
 
         public string PublishNip65List(string hexPrivateKey, Action<NostrOkResponse> action)
@@ -296,7 +296,7 @@ namespace Angor.Shared.Services
 
             var nostrClient = _communicationFactory.GetOrCreateDiscoveryClients(_networkService);
 
-            _subscriptionsHandling.TryAddOKAction(signed.Id, action);
+            _subscriptionsHandling.TryAddOKAction(signed.Id!, action);
 
             nostrClient.Send(new NostrEventRequest(signed));
 
@@ -370,10 +370,10 @@ namespace Angor.Shared.Services
                     .Subscribe(@event =>
                     {
                         // Extract relay tags ("r" tags contain relay URLs)
-                        var relayTags = @event.Tags
+                        var relayTags = @event!.Tags!
                             .Where(t => t.TagIdentifier == "r")
                             .ToList();
-                        onResponse(@event.Pubkey, relayTags);
+                        onResponse(@event.Pubkey!, relayTags);
                     });
 
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);

@@ -47,7 +47,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         else
         {
             var pattern = projectInfo.DynamicStagePatterns[parameters.PatternIndex];
-            stageReleaseDate = CalculateDynamicStageReleaseDate(parameters.InvestmentStartDate.Value, pattern, stageIndex);
+            stageReleaseDate = CalculateDynamicStageReleaseDate(parameters.InvestmentStartDate.GetValueOrDefault(), pattern, stageIndex);
         }
 
         var recoveryOps = new List<Op>
