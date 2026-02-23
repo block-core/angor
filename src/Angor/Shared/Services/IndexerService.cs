@@ -14,7 +14,9 @@ namespace Angor.Shared.Services
         private readonly INetworkConfiguration _networkConfiguration;
         private readonly HttpClient _httpClient;
         private readonly INetworkService _networkService;
+#pragma warning disable CS0649 // Field is never assigned to (logger not injected in obsolete class)
         private readonly ILogger<IndexerService>? _logger;
+#pragma warning restore CS0649
 
 
         public IndexerService(INetworkConfiguration networkConfiguration, HttpClient httpClient, INetworkService networkService)

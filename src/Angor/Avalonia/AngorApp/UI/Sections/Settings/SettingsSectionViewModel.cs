@@ -258,7 +258,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         var s = networkStorage.GetSettings();
         Reset(Indexers, s.Indexers.Select(CreateIndexer));
         Reset(Relays, s.Relays.Select(CreateRelay));
-        this.walletStore.SaveAll([]);
+        await this.walletStore.SaveAll([]);
         currentNetwork = newNetwork;
         Network = newNetwork;
     }
@@ -340,7 +340,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         var s = networkStorage.GetSettings();
         Reset(Indexers, s.Indexers.Select(CreateIndexer));
         Reset(Relays, s.Relays.Select(CreateRelay));
-        walletStore.SaveAll([]);
+        await walletStore.SaveAll([]);
 
         await uiServices.Dialog.ShowMessage("Data wiped", "All local data has been removed.");
     }

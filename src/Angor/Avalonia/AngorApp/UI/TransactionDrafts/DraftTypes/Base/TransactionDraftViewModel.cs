@@ -7,12 +7,12 @@ public class TransactionDraftViewModel(TransactionDraft dto, UIServices uiServic
 {
     public TransactionDraft Model { get; } = dto;
     
-    public IAmountUI TransactionFee => new AmountUI(dto.TransactionFee.Sats);
+    public IAmountUI TransactionFee => new AmountUI(Model.TransactionFee.Sats);
     
     public IEnhancedCommand ShowTransaction => ReactiveCommand.CreateFromTask(() =>
     {
         // TODO: Deserialize SignedTxHex
-        var longTextViewModel = new LongTextViewModel { Text = dto.SignedTxHex };
+        var longTextViewModel = new LongTextViewModel { Text = Model.SignedTxHex };
         return uiServices.Dialog.Show(longTextViewModel, "Transaction", Observable.Return(true));
     }).Enhance();
 }

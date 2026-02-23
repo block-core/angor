@@ -4,7 +4,7 @@ namespace Angor.Shared.Models;
 
 public class WalletWords
 {
-    public string Words { get; set; }
+    public string Words { get; set; } = string.Empty;
     public string? Passphrase { get; set; }
 
     public string ConvertToString()

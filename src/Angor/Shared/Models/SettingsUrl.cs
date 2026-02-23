@@ -11,8 +11,8 @@ public class SettingsInfo
 
 public class SettingsUrl
 {
-    public string Name { get; set; }
-    public string Url { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
 
     public bool IsPrimary { get; set; }
 
