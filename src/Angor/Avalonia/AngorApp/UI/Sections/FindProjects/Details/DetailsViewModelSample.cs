@@ -1,5 +1,5 @@
 using AngorApp.Model.Contracts.Projects;
-using AngorApp.UI.Sections.Browse.Details;
+using AngorApp.UI.Shared.Samples;
 
 namespace AngorApp.UI.Sections.FindProjects.Details;
 

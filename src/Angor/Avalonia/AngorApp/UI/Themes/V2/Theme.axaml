@@ -7,14 +7,10 @@
     <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
 
     <StyleInclude Source="/UI/Shared/Styles/Styles.axaml" />
-    <StyleInclude Source="/UI/Shared/Controls/Pane.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/AmountControl.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/List.axaml" />
-    <StyleInclude Source="/UI/Shared/Controls/IconLabel.axaml" />
-    <StyleInclude Source="/UI/Shared/Controls/ProjectCard.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/Feerate/FeerateSelector.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/ErrorSummary.axaml" />
-    <StyleInclude Source="/UI/Sections/Wallet/CreateAndImport/Steps/SeedWordsGeneration/SeedWordList.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/PageContainer.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/ScrollableView.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/Badge.axaml" />

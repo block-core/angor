@@ -9,9 +9,9 @@ using Angor.Shared.Services;
 using System.Linq;
 using System.Reactive.Disposables;
 using Angor.Sdk.Common;
+using AngorApp.UI.Flows.AddWallet;
 using AngorApp.UI.Shared.Controls;
 using AngorApp.UI.Shared.Services;
-using AngorApp.UI.Sections.Wallet.CreateAndImport;
 using ReactiveUI;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.CSharpFunctionalExtensions;
@@ -57,7 +57,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private readonly CompositeDisposable disposable = new();
 
-    public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, INetworkService networkService, INetworkConfiguration networkConfiguration, IWalletContext walletContext, WalletImportWizard walletImportWizard, ISensitiveWalletDataProvider sensitiveWalletDataProvider)
+    public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, INetworkService networkService, INetworkConfiguration networkConfiguration, IWalletContext walletContext, IAddWalletFlow addWalletFlow, ISensitiveWalletDataProvider sensitiveWalletDataProvider)
     {
         this.networkStorage = networkStorage;
         this.walletStore = walletStore;
@@ -87,7 +87,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         RefreshIndexers = ReactiveCommand.CreateFromTask(RefreshIndexersAsync).DisposeWith(disposable);
         RefreshRelays = ReactiveCommand.CreateFromTask(RefreshRelaysAsync).DisposeWith(disposable);
         ChangeNetwork = ReactiveCommand.CreateFromTask(ChangeNetworkAsync).DisposeWith(disposable);
-        ImportWallet = ReactiveCommand.CreateFromTask(walletImportWizard.Start).Enhance().DisposeWith(disposable);
+        ImportWallet = ReactiveCommand.CreateFromTask(addWalletFlow.Run).Enhance().DisposeWith(disposable);
 
         var canBackupWallet = walletContext.CurrentWalletChanges
             .Select(maybe => maybe.HasValue)

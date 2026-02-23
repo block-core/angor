@@ -1,5 +1,5 @@
 using Angor.Sdk.Funding.Founder.Dtos;
-using AngorApp.UI.Sections.Browse.Details;
+using AngorApp.UI.Shared.Samples;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Stage;
 using Humanizer;
 

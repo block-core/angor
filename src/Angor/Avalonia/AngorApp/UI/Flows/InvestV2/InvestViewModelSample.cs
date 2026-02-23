@@ -1,5 +1,4 @@
 using System.Windows.Input;
-using AngorApp.UI.Flows.Invest.Amount;
 using AngorApp.UI.Flows.InvestV2.Footer;
 using AngorApp.UI.Flows.InvestV2.Header;
 using AngorApp.UI.Flows.InvestV2.Model;

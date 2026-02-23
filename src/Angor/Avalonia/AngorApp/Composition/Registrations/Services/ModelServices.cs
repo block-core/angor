@@ -2,9 +2,7 @@ using AngorApp.Design;
 using AngorApp.Model.Wallet.Simple;
 using AngorApp.UI.Flows.CreateProject;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject;
-using AngorApp.UI.Flows.Invest;
 using AngorApp.UI.Flows.SendWalletMoney;
-using AngorApp.UI.Sections.Wallet.CreateAndImport;
 using AngorApp.UI.Shared.Controls.Feerate;
 using AngorApp.UI.Shared.Services.Blossom;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,9 +21,7 @@ public static class ModelServices
             .AddSingleton<IImagePicker, ImagePicker>()
             .AddScoped<ICreateProjectFlow, CreateProjectFlow>()
             .AddScoped<ISendMoneyFlow, SendMoneyFlow>()
-            .AddSingleton<InvestFlow>()
-            .AddSingleton<WalletCreationWizard>()
             .AddSingleton<IFeeCalculator, FeeCalculatorDesignTime>()
-            .AddSingleton<WalletImportWizard>();
+            ;
     }
 }
