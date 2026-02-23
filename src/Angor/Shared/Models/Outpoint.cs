@@ -2,7 +2,7 @@ namespace Angor.Shared.Models;
 
 public class Outpoint 
 {
-    public string transactionId { get; set; }
+    public string transactionId { get; set; } = string.Empty;
     public int outputIndex { get; set; }
 
     public Outpoint(){ } //Required for JSON serializer

@@ -40,7 +40,7 @@ namespace AngorApp.UI.Flows.InvestV2
         public string ProjectName { get; }
         public IObservable<bool> IsValid => Observable.Return(true);
 
-        public IAmountUI SelectedAmountPreset { get; set; }
+        public IAmountUI SelectedAmountPreset { get; set; } = null!;
         public string ProjectTitle { get; } = "Angor UX";
         public decimal Progress { get; } = 0.21m;
         public IAmountUI Raised { get; } = AmountUI.FromBtc(0.1234m);

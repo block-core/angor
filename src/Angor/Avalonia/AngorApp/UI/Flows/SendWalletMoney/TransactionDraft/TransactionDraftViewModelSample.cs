@@ -23,6 +23,6 @@ public class TransactionDraftViewModelSample : ITransactionDraftViewModel
     }
 
     public IAmountUI? Fee { get; }
-    public IObservable<bool> IsSending { get; set; }
-    public IObservable<bool> IsCalculating { get; set; }
+    public IObservable<bool> IsSending { get; set; } = null!;
+    public IObservable<bool> IsCalculating { get; set; } = null!;
 }

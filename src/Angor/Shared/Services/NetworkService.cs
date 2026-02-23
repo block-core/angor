@@ -14,7 +14,7 @@ namespace Angor.Shared.Services
         private readonly IHttpClientFactory _clientFactory;
         private readonly ILogger<NetworkService> _logger;
         private readonly INetworkConfiguration _networkConfiguration;
-        public event Action OnStatusChanged;
+        public event Action OnStatusChanged = delegate { };
 
 
         public NetworkService(INetworkStorage networkStorage, IHttpClientFactory clientFactory, ILogger<NetworkService> logger, INetworkConfiguration networkConfiguration)

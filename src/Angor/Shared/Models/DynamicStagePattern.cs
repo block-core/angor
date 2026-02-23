@@ -16,12 +16,12 @@ public class DynamicStagePattern
     /// <summary>
     /// Display name for this subscription/funding pattern.
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// Description of this pattern.
     /// </summary>
-    public string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
 
     /// <summary>
     /// How often stages are released (weekly, monthly, quarterly, etc.).

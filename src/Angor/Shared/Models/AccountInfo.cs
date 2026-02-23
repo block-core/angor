@@ -2,10 +2,10 @@ namespace Angor.Shared.Models;
 
 public class AccountInfo
 {
-    public string walletId { get; init; }
-    public string ExtPubKey { get; init; }
-    public string RootExtPubKey { get; init; }
-    public string Path { get; init; }
+    public string walletId { get; init; } = string.Empty;
+    public string ExtPubKey { get; init; } = string.Empty;
+    public string RootExtPubKey { get; init; } = string.Empty;
+    public string Path { get; init; } = string.Empty;
     public int LastFetchIndex { get; set; }
     public int LastFetchChangeIndex { get; set; }
     public List<AddressInfo> AddressesInfo { get; set; } = new();

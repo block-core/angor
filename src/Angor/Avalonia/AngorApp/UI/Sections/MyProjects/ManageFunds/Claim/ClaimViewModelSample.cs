@@ -40,7 +40,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Claim
         public IEnumerable<IClaimStage> Stages { get; }
 
         public TimeSpan AvailableIn { get; set; } = TimeSpan.FromDays(10);
-        public IEnhancedCommand<Result<IEnumerable<IClaimStage>>> Load { get; set; }
+        public IEnhancedCommand<Result<IEnumerable<IClaimStage>>> Load { get; set; } = null!;
         public FundsAvailability FundsAvailability { get; set; }
     }
 }

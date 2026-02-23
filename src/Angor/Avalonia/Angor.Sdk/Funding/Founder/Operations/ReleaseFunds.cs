@@ -186,8 +186,8 @@ public static class ReleaseFunds
         
         private class Payload
         {
-            public SignatureReleaseItem SignatureReleaseItem { get; set; }
-            public SignRecoveryRequest SignRecoveryRequest { get; set; }
+            public SignatureReleaseItem SignatureReleaseItem { get; set; } = null!;
+            public SignRecoveryRequest SignRecoveryRequest { get; set; } = null!;
             
         }
     }

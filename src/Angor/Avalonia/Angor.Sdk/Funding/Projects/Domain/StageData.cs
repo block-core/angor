@@ -8,5 +8,5 @@ public class StageData
     public bool IsDynamic { get; set; }
     public long TotalAmount => Items.Sum(i => i.Amount);
 
-    public Angor.Shared.Models.Stage Stage;
+    public Angor.Shared.Models.Stage Stage = null!;
 }

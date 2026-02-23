@@ -5,7 +5,7 @@ namespace Angor.Shared.Models
       /// <summary>
       /// Gets or sets the addresses.
       /// </summary>
-      public string Address { get; set; }
+      public string Address { get; set; } = string.Empty;
 
       /// <summary>
       /// Gets or sets the amount.
@@ -20,12 +20,12 @@ namespace Angor.Shared.Models
       /// <summary>
       /// Gets or sets the output type.
       /// </summary>
-      public string OutputType { get; set; }
+      public string OutputType { get; set; } = string.Empty;
 
-      public string ScriptPubKeyAsm { get; set; }
+      public string ScriptPubKeyAsm { get; set; } = string.Empty;
 
-      public string ScriptPubKey { get; set; }
+      public string ScriptPubKey { get; set; } = string.Empty;
 
-      public string SpentInTransaction { get; set; }
+      public string SpentInTransaction { get; set; } = string.Empty;
    }
 }

@@ -57,6 +57,6 @@ namespace AngorApp.UI.Sections.FindProjects
             new("Funded", 2)
         ];
 
-        public IEnhancedCommand<Result<IEnumerable<FindProjectItem>>> LoadProjects { get; set; }
+        public IEnhancedCommand<Result<IEnumerable<FindProjectItem>>> LoadProjects { get; set; } = null!;
     }
 }

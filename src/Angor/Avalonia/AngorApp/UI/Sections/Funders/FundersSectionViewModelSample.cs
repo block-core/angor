@@ -37,6 +37,6 @@ public class FundersSectionViewModelSample : IFundersSectionViewModel
         },
     ];
 
-    public IEnhancedCommand Load { get; }
+    public IEnhancedCommand Load { get; } = null!;
     public IObservable<bool> IsEmpty { get; set; } = Observable.Return(false);
 }

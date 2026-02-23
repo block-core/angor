@@ -5,16 +5,16 @@ namespace Angor.Shared.Models;
 
 public class ProjectMetadata
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     [JsonProperty("display_name")]
-    public string DisplayName { get; set; }
-    public string Website { get; set; }
-    public string About { get; set; }
-    public string Picture { get; set; }
-    public string Nip05 { get; set; }
-    public string Lud16 { get; set; }
-    public string Banner { get; set; }
-    public string Nip57 { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
+    public string Website { get; set; } = string.Empty;
+    public string About { get; set; } = string.Empty;
+    public string Picture { get; set; } = string.Empty;
+    public string Nip05 { get; set; } = string.Empty;
+    public string Lud16 { get; set; } = string.Empty;
+    public string Banner { get; set; } = string.Empty;
+    public string Nip57 { get; set; } = string.Empty;
 
     public static ProjectMetadata Parse(NostrMetadata nostrMetadata)
     {

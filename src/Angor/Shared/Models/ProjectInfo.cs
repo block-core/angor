@@ -110,28 +110,28 @@ public class ProjectInfo
     /// <summary>
     /// The founder's public key used for project identification and transactions.
     /// </summary>
-    public string FounderKey { get; set; }
+    public string FounderKey { get; set; } = string.Empty;
 
     /// <summary>
     /// Recovery key for the founder in case the primary key is compromised.
     /// </summary>
-    public string FounderRecoveryKey { get; set; }
+    public string FounderRecoveryKey { get; set; } = string.Empty;
 
     /// <summary>
     /// Unique identifier for this project.
     /// </summary>
-    public string ProjectIdentifier { get; set; }
+    public string ProjectIdentifier { get; set; } = string.Empty;
 
     /// <summary>
     /// Nostr public key associated with this project for decentralized communication.
     /// </summary>
-    public string NostrPubKey { get; set; }
+    public string NostrPubKey { get; set; } = string.Empty;
 
     /// <summary>
     /// The blockchain network this project operates on (e.g., "Bitcoin", "BitcoinTestnet", "BitcoinRegtest", "angornet", "liquid").
     /// Used to ensure investors connect to the correct network and prevent cross-network transaction errors.
     /// </summary>
-    public string NetworkName { get; set; }
+    public string NetworkName { get; set; } = string.Empty;
 
     /// <summary>
     /// Start date of the funding period.

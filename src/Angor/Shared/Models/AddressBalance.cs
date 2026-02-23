@@ -2,7 +2,7 @@ namespace Angor.Shared.Models;
 
 public class AddressBalance
 {
-    public string address { get; set; }
+    public string address { get; set; } = string.Empty;
     public long balance { get; set; }
     public long totalReceived { get; set; }
     public long totalStake { get; set; }

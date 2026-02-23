@@ -31,12 +31,12 @@ public class FullProjectSample : IFullProject
     public Uri? Avatar { get; } = new ("https://r2.primal.net/cache/c/41/88/c4188ab0115162d3172c16ad2c45ed1dd57b39794907cfd5308a08af5f4269a2.jpg");
     public string ShortDescription { get; } = "VEINTIUNO.LAT is a grassroots initiative uniting Bitcoin circular economies in Latam. Our mission is to strengthen regional adoption through practical, community-driven actions, empowering communities, onboard new merchants and lead individuals towards self-sovereignty. Using open sources tools and standards. Cruzada21 is official launch of VEINTIUNO.LAT.";
     public Uri? Banner { get; } = new Uri("https://r2.primal.net/cache/9/53/03/953038e1ce3bacfdfa9110e0905bd385c1a4ca884b914df2d34245fde957ff46.jpg");
-    public IAmountUI AvailableBalance { get; }
+    public IAmountUI AvailableBalance { get; } = null!;
     public int AvailableTransactions { get; }
-    public IAmountUI SpentAmount { get; }
+    public IAmountUI SpentAmount { get; } = null!;
     public int TotalTransactions { get; }
-    public IAmountUI TotalInvested { get; }
-    public IAmountUI WithdrawableAmount { get; }
+    public IAmountUI TotalInvested { get; } = null!;
+    public IAmountUI WithdrawableAmount { get; } = null!;
     public NextStageDto? NextStage { get; }
     public int SpentTransactions { get; set; }
     public string FounderPubKey { get; } = "some npub key";

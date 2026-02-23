@@ -14,7 +14,7 @@ public class NetworkConfiguration : INetworkConfiguration
     public const int AngorInvestFeePercentage = 1;
     public const short NostrEventIdKeyType = 1;
 
-    Network currentNetwork;
+    Network currentNetwork = null!;
     bool? debugMode;
 
     public void SetNetwork(Network network) => currentNetwork = network;

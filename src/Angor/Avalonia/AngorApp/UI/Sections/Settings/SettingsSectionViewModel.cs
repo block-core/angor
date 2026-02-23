@@ -39,16 +39,16 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private readonly ISensitiveWalletDataProvider sensitiveWalletDataProvider;
 
-    private string network;
+    private string network = string.Empty;
 
-    private string newIndexer;
+    private string newIndexer = string.Empty;
 
-    private string newRelay;
+    private string newRelay = string.Empty;
 
     // ReSharper disable once NotAccessedField.Local
     private bool restoringNetwork;
 
-    private string currentNetwork;
+    private string currentNetwork = string.Empty;
 
     private bool isDebugMode;
 

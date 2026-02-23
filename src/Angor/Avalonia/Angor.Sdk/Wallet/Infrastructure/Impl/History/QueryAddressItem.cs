@@ -5,12 +5,12 @@ public class QueryAddressItem
     /// <summary>
     /// Gets or sets the type.
     /// </summary>
-    public string EntryType { get; set; }
+    public string EntryType { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the transaction hash.
     /// </summary>
-    public string TransactionHash { get; set; }
+    public string TransactionHash { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the amount.

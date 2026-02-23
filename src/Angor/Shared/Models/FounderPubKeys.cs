@@ -7,13 +7,13 @@ public class FounderKeyCollection
 
 public class FounderKeys
 {
-    public string FounderKey { get; set; }
+    public string FounderKey { get; set; } = string.Empty;
 
-    public string FounderRecoveryKey { get; set; }
+    public string FounderRecoveryKey { get; set; } = string.Empty;
 
-    public string ProjectIdentifier { get; set; }
+    public string ProjectIdentifier { get; set; } = string.Empty;
 
-    public string NostrPubKey { get; set; }
+    public string NostrPubKey { get; set; } = string.Empty;
 
     public int Index { get; set; }
 }

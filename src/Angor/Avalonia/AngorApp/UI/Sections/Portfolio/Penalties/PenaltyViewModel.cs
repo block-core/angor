@@ -8,7 +8,7 @@ public class PenaltyViewModel : IPenaltyViewModel
     {
         InvestorPubKey = dto.InvestorPubKey;
         DaysLeftForPenalty = dto.DaysLeftForPenalty;
-        ProjectName = dto.ProjectName;
+        ProjectName = dto.ProjectName ?? string.Empty;
         IsExpired = dto.IsExpired;
         TotalAmount = new AmountUI(dto.TotalAmountSats);
         AmountInRecovery = new AmountUI(dto.AmountInRecovery);

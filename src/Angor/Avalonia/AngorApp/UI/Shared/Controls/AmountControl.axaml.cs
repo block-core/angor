@@ -40,7 +40,7 @@ public class AmountControl : TemplatedControl, IModifiable
     }
 
     private bool syncing;
-    private NumericUpDown numericUpDown;
+    private NumericUpDown numericUpDown = null!;
     private readonly ISubject<Unit> modifySubject = new Subject<Unit>();
     private readonly CompositeDisposable disposable = new();
 

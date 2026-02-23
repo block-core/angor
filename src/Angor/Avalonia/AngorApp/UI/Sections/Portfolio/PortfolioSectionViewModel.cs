@@ -19,8 +19,8 @@ public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSecti
 {
     private readonly CompositeDisposable disposable = new();
     
-    [ObservableAsProperty] private ICollection<IPortfolioProjectViewModel> investedProjects;
-    [ObservableAsProperty] private IInvestorStatsViewModel investorStats;
+    [ObservableAsProperty] private ICollection<IPortfolioProjectViewModel> investedProjects = default!;
+    [ObservableAsProperty] private IInvestorStatsViewModel investorStats = default!;
 
     public PortfolioSectionViewModel(IInvestmentAppService investmentAppService, UIServices uiServices, INavigator navigator, IWalletContext walletContext, SharedCommands sharedCommands)
     {

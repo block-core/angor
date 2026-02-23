@@ -6,7 +6,7 @@ namespace AngorApp.UI.Shell
 {
     public partial class ShellViewModelSample : ReactiveObject, IShellViewModel
     {
-        [Reactive] private ISection selectedSection;
+        [Reactive] private ISection selectedSection = default!;
 
         public ShellViewModelSample()
         {
@@ -53,9 +53,9 @@ namespace AngorApp.UI.Shell
         }
 
         public IEnumerable<ISection> SidebarSections { get; }
-        public ReactiveCommand<Unit, ISection> GoToSettings { get; set; }
+        public ReactiveCommand<Unit, ISection> GoToSettings { get; set; } = null!;
         public bool IsDarkThemeEnabled { get; set; }
-        public IReadOnlyCollection<IWallet> Wallets { get; }
+        public IReadOnlyCollection<IWallet> Wallets { get; } = null!;
         public IWallet? CurrentWallet { get; set; }
         public IAmountUI? TotalInvested { get; }
 

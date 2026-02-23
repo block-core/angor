@@ -10,25 +10,25 @@ namespace Angor.Shared.Models
       /// <summary>
       /// Gets or sets the addresses.
       /// </summary>
-      public string InputAddress { get; set; }
+      public string InputAddress { get; set; } = string.Empty;
       public long InputAmount { get; set; }
 
       /// <summary>
       /// Gets or sets the coinbase id the transaction is the first transaction 'coinbase'.
       /// </summary>
-      public string CoinBase { get; set; }
+      public string CoinBase { get; set; } = string.Empty;
 
       /// <summary>
       /// Gets or sets the transaction id.
       /// </summary>
-      public string InputTransactionId { get; set; }
+      public string InputTransactionId { get; set; } = string.Empty;
 
-      public string ScriptSig { get; set; }
+      public string ScriptSig { get; set; } = string.Empty;
 
-      public string ScriptSigAsm { get; set; }
+      public string ScriptSigAsm { get; set; } = string.Empty;
 
-      public string WitScript { get; set; }
+      public string WitScript { get; set; } = string.Empty;
 
-      public string SequenceLock { get; set; }
+      public string SequenceLock { get; set; } = string.Empty;
    }
 }

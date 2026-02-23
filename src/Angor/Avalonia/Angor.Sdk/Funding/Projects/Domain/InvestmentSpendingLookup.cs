@@ -2,11 +2,11 @@ namespace Angor.Sdk.Funding.Projects.Domain;
 
 public class InvestmentSpendingLookup
 {
-    public string ProjectIdentifier { get; set; }
-    public string TransactionId { get; set; }
-    public string EndOfProjectTransactionId { get; set; }
-    public string RecoveryTransactionId { get; set; }
-    public string RecoveryReleaseTransactionId { get; set; }
-    public string UnfundedReleaseTransactionId { get; set; }
+    public string ProjectIdentifier { get; set; } = string.Empty;
+    public string TransactionId { get; set; } = string.Empty;
+    public string EndOfProjectTransactionId { get; set; } = string.Empty;
+    public string RecoveryTransactionId { get; set; } = string.Empty;
+    public string RecoveryReleaseTransactionId { get; set; } = string.Empty;
+    public string UnfundedReleaseTransactionId { get; set; } = string.Empty;
     public long AmountInRecovery { get; set; }
 }

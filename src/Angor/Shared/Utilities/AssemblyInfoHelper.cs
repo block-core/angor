@@ -32,12 +32,12 @@ public static class AssemblyInfoHelper
 
 public class AssemblyInfo
 {
-    public string Name { get; set; }
-    public string Version { get; set; }
-    public string FullName { get; set; }
-    public string Location { get; set; }
-    public string ImageRuntimeVersion { get; set; }
-    public string EntryPoint { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Version { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string Location { get; set; } = string.Empty;
+    public string ImageRuntimeVersion { get; set; } = string.Empty;
+    public string EntryPoint { get; set; } = string.Empty;
     public List<string> ReferencedAssemblies { get; set; } = new();
 }
 

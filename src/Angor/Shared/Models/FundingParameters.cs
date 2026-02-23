@@ -8,7 +8,7 @@ namespace Angor.Shared.Models;
 
 public class FundingParameters
 {
-    public string InvestorKey { get; set; }
+    public string InvestorKey { get; set; } = string.Empty;
     public long TotalInvestmentAmount { get; set; }
     public DateTime? InvestmentStartDate { get; set; }
     public byte PatternIndex { get; set; }

@@ -16,6 +16,6 @@ namespace AngorApp.UI.Sections.Funds.Accounts
         public IWallet Wallet { get; }
         public IEnhancedCommand Send => Wallet.Send;
         public IEnhancedCommand Receive => EnhancedCommand.Create(() => uiServices.Dialog.ShowOk(new ReceiveViewModel(Wallet), "Receive Bitcoin"));
-        public IEnhancedCommand ShowDetails { get; }
+        public IEnhancedCommand ShowDetails { get; } = null!;
     }
 }

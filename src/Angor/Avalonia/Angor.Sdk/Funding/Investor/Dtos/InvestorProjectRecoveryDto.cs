@@ -16,7 +16,7 @@ public class InvestorProjectRecoveryDto
     public bool IsAboveThreshold { get; set; }
 
     public string? ExplorerLink { get; set; }
-    public string TransactionId { get; set; }
+    public string TransactionId { get; set; } = string.Empty;
     
     public string FounderKey { get; set; } = string.Empty;
 

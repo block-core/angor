@@ -6,18 +6,18 @@ namespace Angor.Sdk.Funding.Investor;
 
 public class InvestedProjectDto
 {
-    public string Id { get; set; }
+    public string Id { get; set; } = string.Empty;
     public FounderStatus FounderStatus { get; set; }
-    public Uri LogoUri { get; set; }
-    public Amount Target { get; set; }
+    public Uri LogoUri { get; set; } = null!;
+    public Amount Target { get; set; } = null!;
     
-    public Amount Investment { get; set; }
-    public string Name { get; set; }
-    public Amount Raised { get; set; }
-    public string Description { get; set; }
-    public Amount InRecovery { get; set; }
+    public Amount Investment { get; set; } = null!;
+    public string Name { get; set; } = string.Empty;
+    public Amount Raised { get; set; } = null!;
+    public string Description { get; set; } = string.Empty;
+    public Amount InRecovery { get; set; } = null!;
     public InvestmentStatus InvestmentStatus { get; set; }
-    public string InvestmentId { get; set; }
+    public string InvestmentId { get; set; } = string.Empty;
 }
 
 public enum FounderStatus

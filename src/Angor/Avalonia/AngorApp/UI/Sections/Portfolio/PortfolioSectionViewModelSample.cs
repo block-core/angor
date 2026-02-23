@@ -27,9 +27,9 @@ public class PortfolioSectionViewModelSample : IPortfolioSectionViewModel
         RecoveredToPenalty = new AmountUI(1024),
     };
 
-    public ICommand GoToPenalties { get; }
-    public IEnhancedCommand<Result<IWallet>> LoadWallet { get; }
-    public IEnhancedCommand<Result<ICollection<IPortfolioProjectViewModel>>> LoadPortfolio { get; }
+    public ICommand GoToPenalties { get; } = null!;
+    public IEnhancedCommand<Result<IWallet>> LoadWallet { get; } = null!;
+    public IEnhancedCommand<Result<ICollection<IPortfolioProjectViewModel>>> LoadPortfolio { get; } = null!;
     public IObservable<bool> IsLoading => Observable.Return(false);
 }
 
@@ -37,8 +37,8 @@ public class InvestorStatsViewModelSample : IInvestorStatsViewModel
 {
     public int FundedProjects { get; set; }
     public int ProjectsInRecovery { get; set; }
-    public IAmountUI TotalInvested { get; set; }
-    public IAmountUI RecoveredToPenalty { get; set; }
+    public IAmountUI TotalInvested { get; set; } = null!;
+    public IAmountUI RecoveredToPenalty { get; set; } = null!;
 }
 
 public interface IInvestorStatsViewModel

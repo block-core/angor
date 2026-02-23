@@ -30,7 +30,7 @@ public class WalletSample : IWallet
         return Result.Success();
     }
 
-    public WalletId Id { get; }
+    public WalletId Id { get; } = null!;
     public DateTimeOffset CreatedOn { get; } = DateTimeOffset.Now;
     public string Name { get; set; } = "Default";
     public IEnhancedCommand Send { get; } = EnhancedCommand.Create(() => { });

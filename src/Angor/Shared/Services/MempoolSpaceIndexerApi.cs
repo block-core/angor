@@ -46,16 +46,16 @@ public class MempoolSpaceIndexerApi : IIndexerService
     }
     public class AddressResponse
     {
-        public string Address { get; set; }
-        public AddressStats ChainStats { get; set; }
-        public AddressStats MempoolStats { get; set; }
+        public string Address { get; set; } = string.Empty;
+        public AddressStats ChainStats { get; set; } = null!;
+        public AddressStats MempoolStats { get; set; } = null!;
     }
 
     public class AddressUtxo
     {
-        public string Txid { get; set; }
+        public string Txid { get; set; } = string.Empty;
         public int Vout { get; set; }
-        public UtxoStatus Status { get; set; }
+        public UtxoStatus Status { get; set; } = null!;
         public long Value { get; set; }
     }
 
@@ -63,7 +63,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     {
         public bool Confirmed { get; set; }
         public int BlockHeight { get; set; }
-        public string BlockHash { get; set; }
+        public string BlockHash { get; set; } = string.Empty;
         public long BlockTime { get; set; }
     }
 
@@ -79,28 +79,28 @@ public class MempoolSpaceIndexerApi : IIndexerService
     public class Vin
     {
         public bool IsCoinbase { get; set; }
-        public PrevOut Prevout { get; set; }
-        public string Scriptsig { get; set; }
-        public string Asm { get; set; }
+        public PrevOut Prevout { get; set; } = null!;
+        public string Scriptsig { get; set; } = string.Empty;
+        public string Asm { get; set; } = string.Empty;
         public long Sequence { get; set; }
-        public string Txid { get; set; }
+        public string Txid { get; set; } = string.Empty;
         public int Vout { get; set; }
-        public List<string> Witness { get; set; }
-        public string InnserRedeemscriptAsm { get; set; }
-        public string InnerWitnessscriptAsm { get; set; }
+        public List<string> Witness { get; set; } = new();
+        public string InnserRedeemscriptAsm { get; set; } = string.Empty;
+        public string InnerWitnessscriptAsm { get; set; } = string.Empty;
     }
     public class PrevOut
     {
         public long Value { get; set; }
-        public string Scriptpubkey { get; set; }
-        public string ScriptpubkeyAddress { get; set; }
-        public string ScriptpubkeyAsm { get; set; }
-        public string ScriptpubkeyType { get; set; }
+        public string Scriptpubkey { get; set; } = string.Empty;
+        public string ScriptpubkeyAddress { get; set; } = string.Empty;
+        public string ScriptpubkeyAsm { get; set; } = string.Empty;
+        public string ScriptpubkeyType { get; set; } = string.Empty;
     }
 
     public class MempoolTransaction
     {
-        public string Txid { get; set; }
+        public string Txid { get; set; } = string.Empty;
 
         public int Version { get; set; }
 
@@ -108,17 +108,17 @@ public class MempoolSpaceIndexerApi : IIndexerService
         public int Size { get; set; }
         public int Weight { get; set; }
         public int Fee { get; set; }
-        public List<Vin> Vin { get; set; }
-        public List<PrevOut> Vout { get; set; }
-        public UtxoStatus Status { get; set; }
+        public List<Vin> Vin { get; set; } = new();
+        public List<PrevOut> Vout { get; set; } = new();
+        public UtxoStatus Status { get; set; } = null!;
     }
 
     private class Outspent
     {
         public bool Spent { get; set; }
-        public string Txid { get; set; }
+        public string Txid { get; set; } = string.Empty;
         public int Vin { get; set; }
-        public UtxoStatus Status { get; set; }
+        public UtxoStatus Status { get; set; } = null!;
     }
     #endregion
 

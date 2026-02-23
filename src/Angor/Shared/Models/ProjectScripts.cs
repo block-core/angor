@@ -4,9 +4,9 @@ namespace Angor.Shared.Models;
 
 public class ProjectScripts
 {
-    public Script Founder { get; set; }
-    public Script Recover { get; set; }
-    public Script EndOfProject { get; set; }
+    public Script Founder { get; set; } = null!;
+    public Script Recover { get; set; } = null!;
+    public Script EndOfProject { get; set; } = null!;
     public List<Script> Seeders { get; set; } = new();
     public List<Script> GetAllScripts()
     {

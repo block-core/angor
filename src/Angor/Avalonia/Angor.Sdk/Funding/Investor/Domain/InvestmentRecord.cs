@@ -2,11 +2,11 @@ namespace Angor.Sdk.Funding.Investor.Domain;
 
 public class InvestmentRecord
 {
-    public string ProjectIdentifier { get; set; }
-    public string InvestmentTransactionHash { get; set; }
+    public string ProjectIdentifier { get; set; } = string.Empty;
+    public string InvestmentTransactionHash { get; set; } = string.Empty;
     public string? InvestmentTransactionHex { get; set; } //TODO this will be removed in the future, we will scan the wallet for the used UTXOs instead
-    public string InvestorPubKey { get; set; }
-    public string UnfundedReleaseAddress { get; set; }
+    public string InvestorPubKey { get; set; } = string.Empty;
+    public string UnfundedReleaseAddress { get; set; } = string.Empty;
     
     public DateTime? RequestEventTime { get; set; }
     public string? RequestEventId { get; set; }

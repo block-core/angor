@@ -5,9 +5,9 @@ public class SignServiceLookupItem
 {
     public DateTime EventCreatedAt { get; set; }
 
-    public string ProfileIdentifier { get; set; }
+    public string ProfileIdentifier { get; set; } = string.Empty;
 
-    public string EventIdentifier { get; set; }
+    public string EventIdentifier { get; set; } = string.Empty;
 
-    public NostrEvent NostrEvent { get; set; }
+    public NostrEvent NostrEvent { get; set; } = null!;
 }

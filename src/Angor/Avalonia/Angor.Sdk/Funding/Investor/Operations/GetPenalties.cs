@@ -172,15 +172,15 @@ public class GetPenalties
 
 public class LookupInvestment
 {
-    public string ProjectIdentifier { get; set; }
-    public string InvestorPubKey { get; set; }
-    public string NostrEventId { get; set; }
-    public string TransactionId { get; set; }
-    public string EndOfProjectTransactionId { get; set; }
-    public string RecoveryTransactionId { get; set; }
+    public string ProjectIdentifier { get; set; } = string.Empty;
+    public string InvestorPubKey { get; set; } = string.Empty;
+    public string NostrEventId { get; set; } = string.Empty;
+    public string TransactionId { get; set; } = string.Empty;
+    public string EndOfProjectTransactionId { get; set; } = string.Empty;
+    public string RecoveryTransactionId { get; set; } = string.Empty;
     public long AmountInRecovery { get; set; }
-    public string RecoveryReleaseTransactionId { get; set; }
-    public string UnfundedReleaseTransactionId { get; set; }
+    public string RecoveryReleaseTransactionId { get; set; } = string.Empty;
+    public string UnfundedReleaseTransactionId { get; set; } = string.Empty;
     public Project? Project { get; set; }
     
     public long TotalAmountSats { get; set; }

@@ -5,12 +5,12 @@ namespace Angor.Shared.Models
       /// <summary>
       /// Gets or sets the Symbol.
       /// </summary>
-      public string Symbol { get; set; }
+      public string Symbol { get; set; } = string.Empty;
 
       /// <summary>
       /// Gets or sets the block hash.
       /// </summary>
-      public string BlockHash { get; set; }
+      public string BlockHash { get; set; } = string.Empty;
 
       /// <summary>
       /// Gets or sets the block index.
@@ -25,7 +25,7 @@ namespace Angor.Shared.Models
       /// <summary>
       /// Gets or sets the transaction id.
       /// </summary>
-      public string TransactionId { get; set; }
+      public string TransactionId { get; set; } = string.Empty;
 
       public int? TransactionIndex { get; set; }
 
@@ -38,7 +38,7 @@ namespace Angor.Shared.Models
 
       public bool IsCoinstake { get; set; }
 
-      public string LockTime { get; set; }
+      public string LockTime { get; set; } = string.Empty;
 
       public bool RBF { get; set; }
 
@@ -57,11 +57,11 @@ namespace Angor.Shared.Models
       /// <summary>
       /// Gets or sets the transaction inputs.
       /// </summary>
-      public IEnumerable<QueryTransactionInput> Inputs { get; set; }
+      public IEnumerable<QueryTransactionInput> Inputs { get; set; } = [];
 
       /// <summary>
       /// Gets or sets the transaction outputs.
       /// </summary>
-      public IEnumerable<QueryTransactionOutput> Outputs { get; set; }
+      public IEnumerable<QueryTransactionOutput> Outputs { get; set; } = [];
    }
 }

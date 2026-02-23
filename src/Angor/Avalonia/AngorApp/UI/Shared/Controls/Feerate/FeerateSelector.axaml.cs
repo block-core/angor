@@ -78,8 +78,8 @@ public interface IFeerateViewModel
 
 public partial class CustomFeeRate : ReactiveObject, IFeerateViewModel
 {
-    [ObservableAsProperty] private IAmountUI fee;
-    [Reactive] private IAmountUI feerate;
+    [ObservableAsProperty] private IAmountUI fee = default!;
+    [Reactive] private IAmountUI feerate = default!;
     [Reactive] private long sats = 10;
 
     public CustomFeeRate(long? amount, IFeeCalculator? feeCalculator)
@@ -109,7 +109,7 @@ public partial class CustomFeeRate : ReactiveObject, IFeerateViewModel
 
 public partial class Preset : ReactiveObject, IFeeratePreset
 {
-    [ObservableAsProperty] private IAmountUI fee;
+    [ObservableAsProperty] private IAmountUI fee = default!;
 
     public Preset(string name, IAmountUI feeRate, IAmountUI? amount, IFeeCalculator? feeCalculator)
     {
@@ -128,7 +128,7 @@ public partial class Preset : ReactiveObject, IFeeratePreset
         }
     }
 
-    public ReactiveCommand<Unit, Result<long>> CalculateCommand { get; }
+    public ReactiveCommand<Unit, Result<long>> CalculateCommand { get; } = null!;
 
     public IAmountUI? Amount { get; }
 

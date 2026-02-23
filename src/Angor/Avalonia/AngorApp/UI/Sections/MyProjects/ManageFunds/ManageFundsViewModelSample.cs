@@ -7,8 +7,8 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds
     public class ManageFundsViewModelSample : IManageFundsViewModel
     {
         public IFullProject Project { get; } = new FullProjectSample();
-        public IObservable<IFullProject> ProjectObs { get; }
-        public IEnhancedCommand<Result<IFullProject>> Load { get; }
+        public IObservable<IFullProject> ProjectObs { get; } = null!;
+        public IEnhancedCommand<Result<IFullProject>> Load { get; } = null!;
         public IObservable<IReleaseViewModel> ReleaseViewModel { get; } = Observable.Return(new ReleaseViewModelSample());
         public IObservable<IClaimViewModel> ClaimViewModel { get; } = Observable.Return(new ClaimViewModelSample());
     }

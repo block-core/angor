@@ -43,7 +43,7 @@ public class ManageInvestorProjectViewModel : ReactiveObject, IManageInvestorPro
             .Map(response => new RecoveryStateViewModel(wallet.Id, response.RecoveryData, sharedCommands, investmentAppService, uiServices));
   }
 
-    public IEnhancedCommand ViewTransaction { get; }
+    public IEnhancedCommand ViewTransaction { get; } = null!;
     public IEnhancedCommand<Result<RecoveryStateViewModel>> Load { get; }
 
     public void Dispose()

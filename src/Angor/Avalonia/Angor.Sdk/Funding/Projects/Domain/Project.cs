@@ -5,19 +5,19 @@ namespace Angor.Sdk.Funding.Projects.Domain;
 
 public class Project
 {
-    public ProjectId Id { get; set; }
-    public string Name { get; set; }
+    public ProjectId Id { get; set; } = null!;
+    public string Name { get; set; } = string.Empty;
     public Uri? Picture { get; set; }
-    public string ShortDescription { get; set; }
+    public string ShortDescription { get; set; } = string.Empty;
     public long TargetAmount { get; set; }
     public DateTime StartingDate { get; set; }
-    public IEnumerable<Stage> Stages { get; set; }
-    public string NostrPubKey { get; set; }
+    public IEnumerable<Stage> Stages { get; set; } = [];
+    public string NostrPubKey { get; set; } = string.Empty;
     public TimeSpan PenaltyDuration { get; set; }
     public long? PenaltyThreshold { get; set; }
     public Uri? InformationUri { get; set; }
-    public string FounderKey { get; set; }
-    public string FounderRecoveryKey { get; set; }
+    public string FounderKey { get; set; } = string.Empty;
+    public string FounderRecoveryKey { get; set; } = string.Empty;
     public DateTime ExpiryDate { get; set; }
     public Uri? Banner { get; set; }
     public DateTime EndDate { get; set; }

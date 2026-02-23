@@ -6,17 +6,17 @@
 /// </summary>
 public class InvestorContext
 {
-    public string InvestorKey { get; set; }
+    public string InvestorKey { get; set; } = string.Empty;
 
-    public string InvestorSecretHash { get; set; }
+    public string InvestorSecretHash { get; set; } = string.Empty;
 
-    public ProjectInfo ProjectInfo { get; set; }
+    public ProjectInfo ProjectInfo { get; set; } = null!;
 
-    public string TransactionHex { get; set; }
+    public string TransactionHex { get; set; } = string.Empty;
 
 
     // todo: does this info need to be in this class?
     // ==============================================
 
-    public string ChangeAddress { get; set; }
+    public string ChangeAddress { get; set; } = string.Empty;
 }

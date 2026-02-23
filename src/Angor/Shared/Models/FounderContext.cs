@@ -5,8 +5,8 @@
 /// </summary>
 public class FounderContext
 {
-    public ProjectInfo ProjectInfo { get; set; }
-    public ProjectSeeders ProjectSeeders { get; set; }
-    public string ChangeAddress { get; set; }
+    public ProjectInfo ProjectInfo { get; set; } = null!;
+    public ProjectSeeders ProjectSeeders { get; set; } = null!;
+    public string ChangeAddress { get; set; } = string.Empty;
     public List<string> InvestmentTrasnactionsHex { get; set; } = new ();
 }

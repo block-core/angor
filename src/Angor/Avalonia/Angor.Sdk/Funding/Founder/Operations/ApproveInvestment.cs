@@ -98,8 +98,8 @@ public static class ApproveInvestment
 
     private class SignatureItem
     {
-        public string investorNostrPubKey { get; set; }
+        public string investorNostrPubKey { get; set; } = string.Empty;
         public SignRecoveryRequest? SignRecoveryRequest { get; set; }
-        public string EventId { get; set; }
+        public string EventId { get; set; } = string.Empty;
     }
 }
