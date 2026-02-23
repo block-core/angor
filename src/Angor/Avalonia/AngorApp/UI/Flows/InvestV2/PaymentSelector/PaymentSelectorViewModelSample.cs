@@ -1,4 +1,4 @@
-using AngorApp.UI.Sections.Wallet;
+using AngorApp.UI.Shared.Samples;
 
 namespace AngorApp.UI.Flows.InvestV2.PaymentSelector;
 

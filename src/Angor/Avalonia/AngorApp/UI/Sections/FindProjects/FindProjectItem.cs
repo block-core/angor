@@ -3,7 +3,6 @@ using System.Reactive.Subjects;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Shared;
-using AngorApp.UI.Sections.Browse.Details;
 using AngorApp.UI.Sections.FindProjects.Details;
 using ReactiveUI;
 using Zafiro.CSharpFunctionalExtensions;

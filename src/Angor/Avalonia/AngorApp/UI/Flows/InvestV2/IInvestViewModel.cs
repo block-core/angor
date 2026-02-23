@@ -1,4 +1,3 @@
-using AngorApp.UI.Flows.Invest.Amount;
 using AngorApp.UI.Flows.InvestV2.Model;
 using Zafiro.UI.Navigation;
 

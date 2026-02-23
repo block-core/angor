@@ -2,7 +2,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Angor.Sdk.Wallet.Application;
 using Angor.Shared;
-using AngorApp.UI.Sections.Wallet.CreateAndImport;
+using AngorApp.UI.Flows.AddWallet;
 using Blockcore.Networks;
 using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;
@@ -14,7 +14,7 @@ namespace AngorApp.UI.Sections.Funds.Accounts
         private readonly CompositeDisposable disposable = new();
         private readonly IWalletContext walletContext;
 
-        public AccountsViewModel(IWalletContext walletContext, WalletImportWizard walletImportWizard, UIServices uiServices, INetworkConfiguration networkConfiguration, IWalletAppService walletAppService)
+        public AccountsViewModel(IWalletContext walletContext, IAddWalletFlow addWalletFlow, UIServices uiServices, INetworkConfiguration networkConfiguration, IWalletAppService walletAppService)
         {
             this.walletContext = walletContext;
             walletContext.WalletChanges
@@ -25,7 +25,7 @@ namespace AngorApp.UI.Sections.Funds.Accounts
                          .DisposeWith(disposable);
 
             AccountGroups = accountGroups;
-            ImportAccount = EnhancedCommand.CreateWithResult(walletImportWizard.Start).DisposeWith(disposable);
+            ImportAccount = EnhancedCommand.Create(async () => await addWalletFlow.Run()).DisposeWith(disposable);
 
             walletContext.WalletChanges
                          .Group(wallet => wallet.NetworkKind)

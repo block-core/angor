@@ -1,4 +1,4 @@
-using AngorApp.UI.Sections.Browse.Details;
+using AngorApp.UI.Shared.Samples;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Claim;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Release;
 
