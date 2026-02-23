@@ -45,7 +45,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
             1,
             changeAddress.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
             Encoders.Hex.EncodeData(new Key().ToBytes()),
-            new NBitcoin.FeeRate(new NBitcoin.Money(Random.Shared.Next())),
+            new NBitcoin.FeeRate(new NBitcoin.Money((long)Random.Shared.Next())),
             _ => { return GetRandomDataWitScript(3); },
             (_, s) => { return GetRandomDataWitScript(3); }
         );
@@ -71,7 +71,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
             1,
             changeAddress.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
             Encoders.Hex.EncodeData(new Key().ToBytes()),
-            new NBitcoin.FeeRate(new NBitcoin.Money(Random.Shared.Next())),
+            new NBitcoin.FeeRate(new NBitcoin.Money((long)Random.Shared.Next())),
             _ => { return expectedWitSigWithFakeSig; },
             (_, s) =>
             {
@@ -93,7 +93,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
         var projectInfo = GivenValidProjectInvestmentInfo();
 
         var secretHash = uint256.Parse("e1449d99d4861ff66a41e316d5605a37d79168a954b4f9cd0bb4656c7cd5dcfc");
-        var investorKey = "03eb7d47c80390672435987b9a7ecaa22730cd9c4537fc8d257417fb058248ed77";
+        //var investorKey = "03eb7d47c80390672435987b9a7ecaa22730cd9c4537fc8d257417fb058248ed77";
         var expectedProjectScripts = new ProjectScripts
         {
             Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey
@@ -116,7 +116,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
             1,
             changeAddress.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
             Encoders.Hex.EncodeData(new Key().ToBytes()),
-            new NBitcoin.FeeRate(new NBitcoin.Money(Random.Shared.Next())),
+            new NBitcoin.FeeRate(new NBitcoin.Money((long)Random.Shared.Next())),
             _ =>
             {
                 Assert.Same(_, expectedProjectScripts);

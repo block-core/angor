@@ -9,11 +9,13 @@ public class FrictionlessSensitiveDataProvider(ISensitiveWalletDataProvider prov
 {
     public Task<Result<(string seed, Maybe<string> passphrase)>> RequestSensitiveData(WalletId walletId)
     {
+#pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
         return walletStore.GetAll()
             .Bind(wallets => wallets.TryFirst().ToResult("Wallet not found")) // Get the first wallet
             .Bind(wallet => walletEncryption.Decrypt(wallet, "DEFAULT")) // Try to decrypt the wallet with the default encryption key ("DEFAULT")
             .Map(data => (data.SeedWords, Maybe<string>.None))  // On success, return its seedwords (assume no passphrase)
             .Compensate(_ => provider.RequestSensitiveData(walletId));  // On failure, delegate to the flow to the inner provider. This is, the default encryption key failed to decrypt the wallet didn't work.
+#pragma warning restore CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
     }
 
     public void SetSensitiveData(WalletId id, (string seed, Maybe<string> passphrase) data)

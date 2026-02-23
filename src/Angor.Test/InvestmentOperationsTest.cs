@@ -160,7 +160,7 @@ namespace Angor.Test
                 projectInvestmentInfo.TargetAmount);
 
             seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
-                    seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
+                    seeder1InvTrx, null!, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
                 .ToHex();
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder1Context.TransactionHex);
@@ -171,7 +171,7 @@ namespace Angor.Test
                 projectInvestmentInfo.TargetAmount);
 
             seeder2Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder2Context.ChangeAddress,
-                    seeder2InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
+                    seeder2InvTrx, null!, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
                 .ToHex();
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder2Context.TransactionHex);
@@ -182,7 +182,7 @@ namespace Angor.Test
                 projectInvestmentInfo.TargetAmount);
 
             seeder3Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder3Context.ChangeAddress,
-                    seeder3InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
+                    seeder3InvTrx, null!, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
                 .ToHex();
 
             founderContext.InvestmentTrasnactionsHex.Add(seeder3Context.TransactionHex);
@@ -193,7 +193,7 @@ namespace Angor.Test
                 projectInvestmentInfo.TargetAmount);
 
             investor1Context.TransactionHex = operations.SignInvestmentTransaction(network,
-                    investor1Context.ChangeAddress, investor1InvTrx, null, new List<UtxoDataWithPath>(),
+                    investor1Context.ChangeAddress, investor1InvTrx, null!, new List<UtxoDataWithPath>(),
                     _expectedFeeEstimation)
                 .ToHex();
 
@@ -205,7 +205,7 @@ namespace Angor.Test
                 projectInvestmentInfo.TargetAmount);
 
             investor2Context.TransactionHex = operations.SignInvestmentTransaction(network,
-                    investor2Context.ChangeAddress, investor2InvTrx, null, new List<UtxoDataWithPath>(),
+                    investor2Context.ChangeAddress, investor2InvTrx, null!, new List<UtxoDataWithPath>(),
                     _expectedFeeEstimation)
                 .ToHex();
 
@@ -263,7 +263,7 @@ namespace Angor.Test
                 projectInvestmentInfo.TargetAmount);
 
             seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
-                    seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
+                    seeder1InvTrx, null!, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
                 .ToHex();
 
             var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, new[] { 2, 3 },
@@ -315,7 +315,7 @@ namespace Angor.Test
                 projectInvestmentInfo.TargetAmount);
 
             seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
-                    seeder1InvTrx, null, new List<UtxoDataWithPath>(),
+                    seeder1InvTrx, null!, new List<UtxoDataWithPath>(),
                     _expectedFeeEstimation)
                 .ToHex();
 
@@ -374,7 +374,7 @@ namespace Angor.Test
                 projectInvestmentInfo.TargetAmount);
 
             seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
-                    seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
+                    seeder1InvTrx, null!, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
                 .ToHex();
 
             var seeder1Expierytrx = operations.RecoverEndOfProjectFunds(network, seeder1Context, new[] { 2, 3 },
@@ -455,7 +455,7 @@ namespace Angor.Test
                     continue;
                 builder.AddCoin(new NBitcoin.Coin(Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork),
                     (uint)i));
-                builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Zero, 0, new NBitcoin.Money(1000),
+                builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Zero, 0, new NBitcoin.Money(1000L),
                     new Script(
                         "4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
             }
@@ -564,7 +564,7 @@ namespace Angor.Test
                         continue;
                     builder.AddCoin(new NBitcoin.Coin(Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork),
                         (uint)i));
-                    builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Zero, 0, new NBitcoin.Money(10000),
+                    builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Zero, 0, new NBitcoin.Money(10000L),
                         new Script(
                             "4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
                 }
@@ -586,7 +586,7 @@ namespace Angor.Test
                 }
 
                 transaction.Inputs.Add(new OutPoint(NBitcoin.uint256.Zero, 0), null, null); //Add fee to the transaction
-                transaction.Outputs.Add(new NBitcoin.Money(9000), new Script(investorChangeKey.ScriptPubKey.ToBytes()));
+                transaction.Outputs.Add(new NBitcoin.Money(9000L), new Script(investorChangeKey.ScriptPubKey.ToBytes()));
 
                 builder.Verify(transaction, out TransactionPolicyError[] errors);
                 Assert.Empty(errors);
@@ -670,7 +670,7 @@ namespace Angor.Test
                         continue;
                     builder.AddCoin(new NBitcoin.Coin(Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork),
                         (uint)i));
-                    builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Zero, 0, new NBitcoin.Money(10000),
+                    builder.AddCoin(new NBitcoin.Coin(NBitcoin.uint256.Zero, 0, new NBitcoin.Money(10000L),
                         new Script(
                             "4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
                 }
@@ -692,7 +692,7 @@ namespace Angor.Test
                 }
 
                 transaction.Inputs.Add(new OutPoint(NBitcoin.uint256.Zero, 0), null, null); //Add fee to the transaction
-                transaction.Outputs.Add(new NBitcoin.Money(9000), new Script(seederChangeKey.ScriptPubKey.ToBytes()));
+                transaction.Outputs.Add(new NBitcoin.Money(9000L), new Script(seederChangeKey.ScriptPubKey.ToBytes()));
 
                 builder.Verify(transaction, out TransactionPolicyError[] errors);
                 Assert.Empty(errors);
@@ -753,7 +753,7 @@ namespace Angor.Test
                 projectInvestmentInfo.TargetAmount);
 
             seeder1Context.TransactionHex = operations.SignInvestmentTransaction(network, seeder1Context.ChangeAddress,
-                    seeder1InvTrx, null, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
+                    seeder1InvTrx, null!, new List<UtxoDataWithPath>(), _expectedFeeEstimation)
                 .ToHex();
 
             var seeder1Expierytrx = operations.RecoverFundsNoPenalty(network, seeder1Context, new[] { 2, 3 },
