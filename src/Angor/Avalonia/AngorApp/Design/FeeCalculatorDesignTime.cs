@@ -6,8 +6,8 @@ namespace AngorApp.Design;
 
 public class FeeCalculatorDesignTime : IFeeCalculator
 {
-    public async Task<Result<long>> GetFee(long feerate, long amount)
+    public Task<Result<long>> GetFee(long feerate, long amount)
     {
-        return Result.Success(feerate * 10);
+        return Task.FromResult(Result.Success(feerate * 10));
     }
 }

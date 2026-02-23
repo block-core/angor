@@ -84,9 +84,9 @@ public sealed class WalletContext : IWalletContext, IDisposable
             .Tap(id => sourceCache.AddOrUpdate(id));
     }
     
-    public async Task<Maybe<IWallet>> TryGet()
+    public Task<Maybe<IWallet>> TryGet()
     {
-        return CurrentWallet;
+        return Task.FromResult(CurrentWallet);
     }
 
     public Task<Result<IWallet>> ImportWallet(string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network, NetworkKind networkKind)

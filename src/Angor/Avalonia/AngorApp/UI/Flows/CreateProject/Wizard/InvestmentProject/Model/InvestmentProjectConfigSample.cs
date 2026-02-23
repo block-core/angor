@@ -67,7 +67,9 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
         public IValidationContext ValidationContext { get; } = new ValidationContext();
 
 
+#pragma warning disable CS0067
         public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
+#pragma warning restore CS0067
         public System.Collections.IEnumerable GetErrors(string? propertyName) => Enumerable.Empty<object>();
         public bool HasErrors => false;
     }

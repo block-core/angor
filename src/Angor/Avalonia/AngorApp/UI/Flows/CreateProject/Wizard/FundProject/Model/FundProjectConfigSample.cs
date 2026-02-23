@@ -36,6 +36,8 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model
         public ReactiveUI.Validation.Contexts.IValidationContext ValidationContext => throw new NotImplementedException();
         public bool HasErrors => false;
         public System.Collections.IEnumerable GetErrors(string? propertyName) => Enumerable.Empty<string>();
+#pragma warning disable CS0067
         public event EventHandler<System.ComponentModel.DataErrorsChangedEventArgs>? ErrorsChanged;
+#pragma warning restore CS0067
     }
 }

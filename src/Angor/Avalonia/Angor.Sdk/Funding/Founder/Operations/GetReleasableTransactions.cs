@@ -118,7 +118,7 @@ public static class GetReleasableTransactions
                         signatureReleaseItem.SignRecoveryRequestEventId = signatureReleaseItem.EventId;
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     signatureReleaseItem.SignRecoveryRequestEventId = null; // should we remove the item instead?
                 }

@@ -10,7 +10,6 @@ using static Angor.Sdk.Funding.Founder.Operations.CreateProjectInfo;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectProfile;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectConstants.CreateProject;
 using Angor.Sdk.Funding.Projects.Dtos;
-using Angor.Sdk.Funding.Projects.Operations;
 
 namespace Angor.Sdk.Funding.Projects;
 

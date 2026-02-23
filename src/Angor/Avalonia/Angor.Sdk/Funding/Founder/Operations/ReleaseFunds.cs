@@ -134,9 +134,9 @@ public static class ReleaseFunds
                         });
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    //TODO log filed requests
+                    //TODO log failed requests
                 }
             }
             

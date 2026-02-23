@@ -45,6 +45,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private string newRelay;
 
+    // ReSharper disable once NotAccessedField.Local
     private bool restoringNetwork;
 
     private string currentNetwork;

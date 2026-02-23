@@ -7,7 +7,7 @@ public class SharedCommands(INetworkStorage networkStorage, ILauncherService lau
 {
     public IEnhancedCommand OpenTransaction(string transactionId)
     {
-        return ReactiveCommand.CreateFromTask(async () =>
+        return ReactiveCommand.CreateFromTask(() =>
         {
             var settings = networkStorage.GetSettings();
             return settings.Explorers.TryFirst(setting => setting.IsPrimary)

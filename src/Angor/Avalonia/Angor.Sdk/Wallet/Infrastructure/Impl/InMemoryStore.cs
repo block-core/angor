@@ -7,14 +7,14 @@ public class InMemoryStore : IStore
 {
     private Dictionary<string, object> dict = new();
 
-    public async Task<Result> Save<T>(string key, T data)
+    public Task<Result> Save<T>(string key, T data)
     {
         dict[key] = data ?? throw new ArgumentNullException(nameof(data));
-        return Result.Success();
+        return Task.FromResult(Result.Success());
     }
 
-    public async Task<Result<T>> Load<T>(string key)
+    public Task<Result<T>> Load<T>(string key)
     {
-        return dict.TryFind(key).ToResult("Key not found").Map(o => (T)o);
+        return Task.FromResult(dict.TryFind(key).ToResult("Key not found").Map(o => (T)o));
     }
 }

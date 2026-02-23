@@ -21,10 +21,12 @@ public class FileStore : IStore
 
     public async Task<Result> Save<T>(string key, T data)
     {
+#pragma warning disable CS1998 // async needed for LINQ query expression type inference
         return from filePath in Result.Try(() => Path.Combine(appDataPath, key))
             from contents in Result.Try(() => JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }))
             select Result.Try(() => File.WriteAllTextAsync(filePath, contents))
                 .Bind(Result.Success);
+#pragma warning restore CS1998
     }
 
     public Task<Result<T>> Load<T>(string key)

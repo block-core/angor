@@ -1,6 +1,5 @@
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Projects.Domain;
-using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Shared.Models;
 using Stage = Angor.Shared.Models.Stage;
 
