@@ -11,6 +11,7 @@ namespace Angor.Sdk.Common.MediatR;
 public class UnhandledExceptionBehavior<TRequest, TResponse>(
     ILogger<UnhandledExceptionBehavior<TRequest, TResponse>> logger)
     : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : notnull
 {
     public async Task<TResponse> Handle(
         TRequest request,

@@ -23,6 +23,7 @@ public static class SpendStageFunds
 
     public record SpendStageFundsResponse(TransactionDraft TransactionDraft);
 
+#pragma warning disable CS9113 // Parameters injected for DI, reserved for future use
     public class SpendStageFundsHandler(
         IFounderTransactionActions founderTransactionActions,
         INetworkConfiguration networkConfiguration,
@@ -36,6 +37,7 @@ public static class SpendStageFunds
         IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
         ILogger<SpendStageFundsHandler> logger
     ) : IRequestHandler<SpendStageFundsRequest, Result<SpendStageFundsResponse>>
+#pragma warning restore CS9113
     {
         public async Task<Result<SpendStageFundsResponse>> Handle(SpendStageFundsRequest request, CancellationToken cancellationToken)
         {

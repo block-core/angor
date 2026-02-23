@@ -10,10 +10,12 @@ using Serilog;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl.History;
 
+#pragma warning disable CS9113 // Logger injected for DI, reserved for future use
 public class TransactionHistory(
     IIndexerService indexerService,
     IWalletAccountBalanceService accountBalanceService,
     ILogger logger) : ITransactionHistory
+#pragma warning restore CS9113
 {
     public async Task<Result<IEnumerable<string>>> GetWalletAddresses(WalletId walletId)
     {

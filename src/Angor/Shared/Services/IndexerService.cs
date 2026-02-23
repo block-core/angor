@@ -14,7 +14,7 @@ namespace Angor.Shared.Services
         private readonly INetworkConfiguration _networkConfiguration;
         private readonly HttpClient _httpClient;
         private readonly INetworkService _networkService;
-        private readonly ILogger<IndexerService> _logger;
+        private readonly ILogger<IndexerService>? _logger;
 
 
         public IndexerService(INetworkConfiguration networkConfiguration, HttpClient httpClient, INetworkService networkService)

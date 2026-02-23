@@ -43,9 +43,9 @@ public static class ApproveInvestment
                 investorNostrPubKey = request.InvestmentRequest.InvestorNostrPubKey,
             };
             
-            var approvalResult = await from walletWords in seedwordsProvider.GetSensitiveData(request.WalletId.Value)
+            var approvalResult = await (from walletWords in seedwordsProvider.GetSensitiveData(request.WalletId.Value)
                 from project in projectService.GetAsync(request.ProjectId)
-                select PerformSignatureApproval(signatureItem, walletWords.ToWalletWords(), project.ToProjectInfo());
+                select PerformSignatureApproval(signatureItem, walletWords.ToWalletWords(), project.ToProjectInfo()));
             
             if (approvalResult.IsFailure)
                 return Result.Failure<ApproveInvestmentResponse>(approvalResult.Error);

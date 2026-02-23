@@ -27,6 +27,7 @@ public static class CreateProjectProfile
     public record CreateProjectProfileResponse(
         string EventId);
 
+#pragma warning disable CS9113 // Parameters injected for DI, reserved for future use
     public class CreateProjectProfileHandler(
                 ISeedwordsProvider seedwordsProvider,
                 IDerivationOperations derivationOperations,
@@ -35,6 +36,7 @@ public static class CreateProjectProfile
                 IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
                 ILogger<CreateProjectProfileHandler> logger) 
         : IRequestHandler<CreateProjectProfileRequest, Result<CreateProjectProfileResponse>>
+#pragma warning restore CS9113
     {
         public async Task<Result<CreateProjectProfileResponse>> Handle(CreateProjectProfileRequest request, CancellationToken cancellationToken)
         {

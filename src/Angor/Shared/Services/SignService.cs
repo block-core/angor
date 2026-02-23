@@ -489,6 +489,6 @@ namespace Angor.Shared.Services
     {
         /// <summary>A list of subjects to filter by, corresponding to the "subject" tag</summary>
         [JsonProperty("#subject")]
-        public string? Subject { get; set; }
+        public new string? Subject { get; set; }
     }
 }
