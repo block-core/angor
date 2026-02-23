@@ -92,31 +92,64 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
 
         private Task<Result> PayFlow(ICloseable closeable)
         {
-            return Pay().Bind(async () =>
+            return Pay().Bind(async isAboveThreshold =>
             {
                 closeable.Close();
-                await uiServices.Dialog.Show(new InvestResultViewModel(shell), "Investment Completed", (model, c) => model.Options(c));
+                var title = isAboveThreshold ? "Investment Submitted" : "Investment Completed";
+                await uiServices.Dialog.Show(new InvestResultViewModel(shell), title, (model, c) => model.Options(c));
                 return Result.Success();
             });
         }
 
-        private async Task<Result> Pay()
+        private async Task<Result<bool>> Pay()
         {
-            var draftResult = investmentAppService.BuildInvestmentDraft(
+            var draftResult = await investmentAppService.BuildInvestmentDraft(
                 new BuildInvestmentDraft.BuildInvestmentDraftRequest(
                     SelectedWallet!.Id,
                     projectId,
                     new Amount(AmountToInvest.Sats),
                     new DomainFeerate(20)));
 
-            var publishResult = await draftResult
-                .Bind(response =>
-                {
-                    var publishAndStoreInvestorTransactionRequest = new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(SelectedWallet.Id.Value, projectId, response.InvestmentDraft);        
-                    return investmentAppService.SubmitTransactionFromDraft(publishAndStoreInvestorTransactionRequest);
-                });
-            
-            return publishResult;
+            if (draftResult.IsFailure)
+                return Result.Failure<bool>(draftResult.Error);
+
+            var investmentDraft = draftResult.Value.InvestmentDraft;
+
+            // Check if the investment is above the penalty threshold
+            var thresholdResult = await investmentAppService.IsInvestmentAbovePenaltyThreshold(
+                new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(projectId, new Amount(AmountToInvest.Sats)));
+
+            if (thresholdResult.IsFailure)
+                return Result.Failure<bool>(thresholdResult.Error);
+
+            var isAboveThreshold = thresholdResult.Value.IsAboveThreshold;
+
+            if (isAboveThreshold)
+            {
+                // Above threshold: Request founder signatures via SubmitInvestment
+                var submitResult = await investmentAppService.SubmitInvestment(
+                    new RequestInvestmentSignatures.RequestFounderSignaturesRequest(
+                        SelectedWallet.Id,
+                        projectId,
+                        investmentDraft));
+
+                if (submitResult.IsFailure)
+                    return Result.Failure<bool>(submitResult.Error);
+            }
+            else
+            {
+                // Below threshold: Directly publish the transaction (no founder approval needed)
+                var publishResult = await investmentAppService.SubmitTransactionFromDraft(
+                    new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
+                        SelectedWallet.Id.Value,
+                        projectId,
+                        investmentDraft));
+
+                if (publishResult.IsFailure)
+                    return Result.Failure<bool>(publishResult.Error);
+            }
+
+            return Result.Success(isAboveThreshold);
         }
     }
 }

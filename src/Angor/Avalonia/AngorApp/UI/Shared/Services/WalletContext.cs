@@ -100,7 +100,7 @@ public sealed class WalletContext : IWalletContext, IDisposable
     
     public Task<Result<IWallet>> ImportWallet(string seedwords, Maybe<string> passphrase)
     {
-        return ImportWallet(seedwords, passphrase, string.Empty, bitcoinNetwork(), NetworkKind.Bitcoin);
+        return ImportWallet(seedwords, passphrase, GetUniqueId(), bitcoinNetwork(), NetworkKind.Bitcoin);
     }
 
     private string GetUniqueId()
