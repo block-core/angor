@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using AngorApp.UI.Sections.MyProjects.Items;
+using AngorApp.UI.Sections.Shared;
+using ProjectStatus = AngorApp.UI.Sections.Shared.ProjectStatus;
 
 namespace AngorApp.UI.Sections.MyProjects;
 
@@ -12,33 +14,33 @@ public class MyProjectsSectionViewModelSample : IMyProjectsSectionViewModel
         [
             new MyProjectItemSample
             {
-                Name = "Zap AI",
-                Description = "AI-powered bot on Nostr. Ask it anything and pay with Lightning.",
-                InvestorsCount = Observable.Return(3),
-                FundingRaised = Observable.Return(new AmountUI(23456000)) ,
-                FundingTarget = new AmountUI(50000000),
-                ProjectTypeLabel = "INVEST",
-                FundingStatus = "Closed",
-                IsFundingOpen = false,
-                BannerUrl = new Uri("https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg"),
-                LogoUrl = new Uri("https://www.nostria.app/assets/icons/icon-512x512-margin.png"),
-                ProjectType = ProjectType.Invest,
-                ProjectStatus = Observable.Return(ProjectStatus.Closed)
+                Project = new ProjectItemSample
+                {
+                    Name = "Zap AI",
+                    Description = "AI-powered bot on Nostr. Ask it anything and pay with Lightning.",
+                    InvestorsCount = Observable.Return(3),
+                    FundingRaised = Observable.Return(new AmountUI(23456000)),
+                    FundingTarget = new AmountUI(50000000),
+                    BannerUrl = new Uri("https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg"),
+                    LogoUrl = new Uri("https://www.nostria.app/assets/icons/icon-512x512-margin.png"),
+                    ProjectType = ProjectType.Invest,
+                    ProjectStatus = Observable.Return(ProjectStatus.Closed),
+                }
             },
             new MyProjectItemSample
             {
-                Name = "Founder Hub",
-                Description = "Launch and manage your fundraising campaigns with ease.",
-                InvestorsCount = Observable.Return(14),
-                FundingRaised = Observable.Return(new AmountUI(120000000)),
-                FundingTarget = new AmountUI(200000000),
-                ProjectTypeLabel = "INVEST",
-                FundingStatus = "Open",
-                IsFundingOpen = true,
-                BannerUrl = new Uri("https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"),
-                LogoUrl = new Uri("https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg"),
-                ProjectType = ProjectType.Invest,
-                ProjectStatus = Observable.Return(ProjectStatus.Open)
+                Project = new ProjectItemSample
+                {
+                    Name = "Founder Hub",
+                    Description = "Launch and manage your fundraising campaigns with ease.",
+                    InvestorsCount = Observable.Return(14),
+                    FundingRaised = Observable.Return(new AmountUI(120000000)),
+                    FundingTarget = new AmountUI(200000000),
+                    BannerUrl = new Uri("https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"),
+                    LogoUrl = new Uri("https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg"),
+                    ProjectType = ProjectType.Invest,
+                    ProjectStatus = Observable.Return(ProjectStatus.Open),
+                }
             }
         ]);
 

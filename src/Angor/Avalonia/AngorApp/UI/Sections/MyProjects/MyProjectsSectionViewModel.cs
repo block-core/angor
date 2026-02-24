@@ -11,6 +11,7 @@ using Zafiro.CSharpFunctionalExtensions;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Shell.Utils;
 using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
+using ProjectStatus = AngorApp.UI.Sections.Shared.ProjectStatus;
 
 namespace AngorApp.UI.Sections.MyProjects;
 
@@ -37,7 +38,7 @@ public partial class MyProjectsSectionViewModel : ReactiveObject, IMyProjectsSec
         this.manageFundsFactory = manageFundsFactory;
         this.navigator = navigator;
 
-        var projectsCollection = RefreshableCollection.Create(DoLoadProjects, item => item.Id).DisposeWith(disposable);
+        var projectsCollection = RefreshableCollection.Create(DoLoadProjects, item => item.Project.Id).DisposeWith(disposable);
 
         LoadProjects = projectsCollection.Refresh;
         LoadProjects.HandleErrorsWith(uiServices.NotificationService, "Failed to load projects").DisposeWith(disposable);
@@ -45,9 +46,9 @@ public partial class MyProjectsSectionViewModel : ReactiveObject, IMyProjectsSec
         var projectChanges = projectsCollection.Changes;
         Projects = projectsCollection.Items;
 
-        ActiveProjectsCount = projectChanges.FilterOnObservable(item => item.ProjectStatus.Select(status => status == ProjectStatus.Open)).Count();
+        ActiveProjectsCount = projectChanges.FilterOnObservable(item => item.Project.ProjectStatus.Select(status => status == ProjectStatus.Open)).Count();
 
-        TotalRaised = projectChanges.TransformOnObservable(item => item.FundingRaised)
+        TotalRaised = projectChanges.TransformOnObservable(item => item.Project.FundingRaised)
                                     .ForAggregation()
                                     .Sum(x => x.Sats)
                                     .Select(sats => new AmountUI(sats));
