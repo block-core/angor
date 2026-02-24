@@ -12,11 +12,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
 {
     public abstract partial class InvestmentProjectConfigBase : ReactiveValidationObject, IInvestmentProjectConfig, IDisposable
     {
-        protected enum ValidationEnvironment
-        {
-            Production,
-            Debug
-        }
+        protected ValidationEnvironment Environment { get; }
 
         private readonly ReadOnlyObservableCollection<IFundingStageConfig> stages;
         protected readonly CompositeDisposable Disposables = new();
@@ -46,6 +42,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
 
         protected InvestmentProjectConfigBase(ValidationEnvironment environment)
         {
+            Environment = environment;
             StagesSource.Connect()
                 .Bind(out stages)
                 .Subscribe()
@@ -157,7 +154,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
 
         public void AddStage()
         {
-            StagesSource.Add(new FundingStageConfig());
+            StagesSource.Add(new FundingStageConfig(Environment));
         }
 
         public IFundingStageConfig CreateAndAddStage(decimal percent = 0, DateTime? releaseDate = null)

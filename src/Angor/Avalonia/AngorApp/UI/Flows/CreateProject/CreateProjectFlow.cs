@@ -76,13 +76,19 @@ namespace AngorApp.UI.Flows.CreateProject
 
         private SlimWizard<string> CreateInvestmentProjectWizard(WalletId walletId, ProjectSeedDto seed)
         {
-            InvestmentProjectConfigBase newProject =
-                uiServices.EnableProductionValidations() ? new InvestmentProjectConfig() : new InvestmentProjectConfigDebug();
+            var isDebug = !uiServices.EnableProductionValidations();
+            var environment = isDebug ? ValidationEnvironment.Debug : ValidationEnvironment.Production;
+            InvestmentProjectConfigBase newProject = isDebug ? new InvestmentProjectConfigDebug() : new InvestmentProjectConfig();
+
+            if (isDebug)
+            {
+                PopulateDebugDefaults(newProject);
+            }
 
             SlimWizard<string> wizard = WizardBuilder
                                         .StartWith(() => new ProjectProfileViewModel(newProject)).NextUnit().WhenValid()
                                         .Then(_ => new ProjectImagesViewModel(newProject, imagePicker)).NextUnit().Always()
-                                        .Then(_ => new FundingConfigurationViewModel(newProject)).NextUnit().WhenValid()
+                                        .Then(_ => new FundingConfigurationViewModel(newProject, environment)).NextUnit().WhenValid()
                                         .Then(_ => new StagesViewModel(newProject)).NextUnit().WhenValid()
                                         .Then(_ => new ReviewAndDeployViewModel(
                                                   newProject,
@@ -123,6 +129,24 @@ namespace AngorApp.UI.Flows.CreateProject
                                         .Build(StepKind.Commit);
 
             return wizard;
+        }
+
+        private static void PopulateDebugDefaults(InvestmentProjectConfigBase project)
+        {
+            var id = Guid.NewGuid().ToString()[..8];
+            project.Name = $"Debug Project {id}";
+            project.Description = $"Auto-populated debug project {id} for testing on testnet. Created at {DateTime.Now:HH:mm:ss}.";
+            project.Website = "https://angor.io";
+            project.TargetAmount = AmountUI.FromBtc(0.01);
+            project.PenaltyDays = 0;
+            project.StartDate = DateTime.Now;
+            project.FundingEndDate = DateTime.Now;
+            project.ExpiryDate = DateTime.Now.AddDays(1);
+
+            // Add stages with dates matching the funding end date for immediate release
+            project.CreateAndAddStage(0.10m, DateTime.Now);
+            project.CreateAndAddStage(0.30m, DateTime.Now);
+            project.CreateAndAddStage(0.60m, DateTime.Now);
         }
 
         private async Task<Result<ProjectSeedDto>> GetProjectSeed(WalletId walletId)

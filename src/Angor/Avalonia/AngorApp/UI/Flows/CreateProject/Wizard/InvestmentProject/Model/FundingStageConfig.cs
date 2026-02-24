@@ -12,11 +12,13 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
         private readonly BehaviorSubject<IObservable<DateTime>> previousDateSource;
         [ObservableAsProperty] private TimeSpan? timeFromPrevious;
 
-        public FundingStageConfig()
+        public FundingStageConfig(ValidationEnvironment environment = ValidationEnvironment.Production)
         {
+            var minDaysAfterPrevious = environment == ValidationEnvironment.Debug ? 0 : 1;
+
             previousDateSource = new BehaviorSubject<IObservable<DateTime>>(Observable.Return(DateTime.MinValue));
             var previousDate = previousDateSource.Switch();
-            var minAllowed = previousDate.Select(d => d.AddDays(1));
+            var minAllowed = previousDate.Select(d => d.AddDays(minDaysAfterPrevious));
 
             timeFromPreviousHelper = this.WhenAnyValue(x => x.ReleaseDate)
                                          .CombineLatest(minAllowed, (relDate, minDate) => new { relDate, minDate })

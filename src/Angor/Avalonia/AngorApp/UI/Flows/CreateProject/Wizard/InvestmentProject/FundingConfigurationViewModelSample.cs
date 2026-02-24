@@ -14,5 +14,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
 
         public IInvestmentProjectConfig NewProject { get; } = new InvestmentProjectConfigSample();
         public long? SelectedPresetSats { get; set; }
+        public int MinPenaltyDays => 30;
+        public int MaxPenaltyDays => 180;
     }
 }
