@@ -71,7 +71,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="items:IMyProjectItem">
-                                        <items:MyProjectCardView ClipToBounds="False" />
+                                        <items:MyProjectItemView ClipToBounds="False" />
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>

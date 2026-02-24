@@ -1,4 +1,4 @@
-namespace AngorApp.UI.Sections.MyProjects
+namespace AngorApp.UI.Sections.Shared
 {
     public enum ProjectStatus
     {

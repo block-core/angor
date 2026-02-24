@@ -1,0 +1,105 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:items="clr-namespace:AngorApp.UI.Sections.MyProjects.Items"
+             xmlns:a="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:shared="clr-namespace:AngorApp.UI.Sections.Shared"
+             mc:Ignorable="d"
+             d:DesignWidth="300"
+             x:Class="AngorApp.UI.Sections.MyProjects.Items.MyProjectItemView"
+             x:DataType="items:IMyProjectItem">
+
+    <Design.DataContext>
+        <items:MyProjectItemSample />
+    </Design.DataContext>
+
+    <Border Classes="Panel Elevate Shadow">
+        <Interaction.Behaviors>
+            <DataContextChangedTrigger>
+                <EnqueueCommandAction Command="{Binding Project.LoadFullProject}"
+                                       PoolName="ProjectDetails"
+                                       MaxConcurrency="3"
+                                       DelayBetweenSeconds="0.5" />
+            </DataContextChangedTrigger>
+        </Interaction.Behaviors>
+        <StackPanel Classes="Gap-L">
+            <Grid>
+                <a:AdvancedImage CornerRadius="10 10 0 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="150" Source="{Binding Project.BannerUrl}" />
+            </Grid>
+            <Border Height="60" Width="60" Margin="0 -50 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource AppBackground}">
+                <a:AdvancedImage Source="{Binding Project.LogoUrl}" />
+            </Border>
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Top" HorizontalAlignment="Left">
+                <ContentControl Classes="Pill">
+                    <Interaction.Behaviors>
+                        <BindingTriggerBehavior Binding="{Binding Project.ProjectType}" Value="{x:Static shared:ProjectType.Invest}">
+                            <AddClassAction ClassName="Green" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="INVEST" />
+                        </BindingTriggerBehavior>
+                        <BindingTriggerBehavior Binding="{Binding Project.ProjectType}" Value="{x:Static shared:ProjectStatus.Closed}">
+                            <AddClassAction ClassName="Red" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="CLOSED" />
+                        </BindingTriggerBehavior>
+                    </Interaction.Behaviors>
+                </ContentControl>
+                <ContentControl Classes="Pill">
+                    <Interaction.Behaviors>
+                        <BindingTriggerBehavior Binding="{Binding Project.ProjectStatus^}" Value="{x:Static shared:ProjectStatus.Open}">
+                            <AddClassAction ClassName="BrightGreen" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="OPEN" />
+                        </BindingTriggerBehavior>
+                        <BindingTriggerBehavior Binding="{Binding Project.ProjectStatus^}" Value="{x:Static shared:ProjectStatus.Closed}">
+                            <AddClassAction ClassName="Red" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="CLOSED" />
+                        </BindingTriggerBehavior>
+                    </Interaction.Behaviors>
+                </ContentControl>
+            </StackPanel>
+
+            <EdgePanel Spacing="0">
+                <EdgePanel.StartContent>
+                    <ContentControl Margin="0 0 8 0" IsVisible="{Binding Project.ErrorMessage^, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}" IconOptions.Fill="{DynamicResource Error}" Foreground="{DynamicResource Error}" Content="{Icon fa-circle-exclamation}">
+                        <ToolTip.Tip>
+                            <HeaderedContainer Header="Load error" Content="{Binding Project.ErrorMessage^}" />
+                        </ToolTip.Tip>
+                    </ContentControl>
+                </EdgePanel.StartContent>
+                <TextBlock Classes="Header" Text="{Binding Project.Name}" />
+            </EdgePanel>
+
+            <TextBlock Classes="Text-Dimmed Wrap" Text="{Binding Project.Description}" MaxLines="2" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="Size-XS" Text="{Binding Project.InvestorsCount^, TargetNullValue='', StringFormat='{}{0} Investors'}" />
+                <TextBlock Grid.Column="1" Classes="Strong" Text="{Binding Project.FundingRaised^.ShortDecimalString, FallbackValue='...'}" />
+            </Grid>
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="Size-XS" Text="Target" />
+                <TextBlock Grid.Column="1" Text="{Binding Project.FundingTarget.ShortDecimalString}" />
+            </Grid>
+            <ProgressBar IsIndeterminate="{Binding Project.LoadFullProject.IsExecuting^}"
+                         Height="8"
+                         Value="{Binding Project.FundingRaised^.Sats, FallbackValue=0}"
+                         Maximum="{Binding Project.FundingTarget.Sats}">
+                <Interaction.Behaviors>
+                    <BindingTriggerBehavior Binding="{Binding Project.ProjectStatus}" Value="{x:Static shared:ProjectStatus.Closed}">
+                        <AddClassAction ClassName="Red" />
+                    </BindingTriggerBehavior>
+                </Interaction.Behaviors>
+            </ProgressBar>
+            <ContentControl Classes="Pill" HorizontalAlignment="Left">
+                <Interaction.Behaviors>
+                    <BindingTriggerBehavior Binding="{Binding Project.ProjectStatus^}" Value="{x:Static shared:ProjectStatus.Open}">
+                        <AddClassAction ClassName="Green" />
+                        <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Funds Available" />
+                    </BindingTriggerBehavior>
+                    <BindingTriggerBehavior Binding="{Binding Project.ProjectStatus^}" Value="{x:Static shared:ProjectStatus.Closed}">
+                        <AddClassAction ClassName="Orange" />
+                        <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Refund funds" />
+                    </BindingTriggerBehavior>
+                </Interaction.Behaviors>
+            </ContentControl>
+            <EnhancedButton HorizontalContentAlignment="Center" Content="Manage Funds" Command="{Binding ManageFunds}" Classes="Outline" HorizontalAlignment="Stretch" />
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -1,8 +1,8 @@
 namespace AngorApp.UI.Sections.MyProjects.Items;
 
-public partial class MyProjectCardView : UserControl
+public partial class MyProjectItemView : UserControl
 {
-    public MyProjectCardView()
+    public MyProjectItemView()
     {
         InitializeComponent();
     }

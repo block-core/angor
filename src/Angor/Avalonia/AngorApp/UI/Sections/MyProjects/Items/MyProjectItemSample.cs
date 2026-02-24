@@ -1,24 +1,21 @@
-using Angor.Sdk.Funding.Projects.Dtos;
-using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
+using AngorApp.UI.Sections.Shared;
+using ProjectStatus = AngorApp.UI.Sections.Shared.ProjectStatus;
 
 namespace AngorApp.UI.Sections.MyProjects.Items;
 
 public class MyProjectItemSample : IMyProjectItem
 {
-    public ProjectId Id { get; set; } = new("test-project-id");
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public IAmountUI FundingTarget { get; set; } = new AmountUI(0);
-    public IObservable<IAmountUI> FundingRaised { get; set; }  = Observable.Return(new AmountUI(0));
-    public IObservable<int> InvestorsCount { get; set; } = Observable.Return(0);
-    public Uri? BannerUrl { get; set; }
-    public Uri? LogoUrl { get; set; }
-    public string ProjectTypeLabel { get; set; } = "INVEST";
-    public string FundingStatus { get; set; } = "Open";
-    public bool IsFundingOpen { get; set; } = true;
+    public IProjectItem Project { get; set; } = new ProjectItemSample()
+    {
+        Name = "Founder Hub",
+        Description = "Launch and manage your fundraising campaigns with ease.",
+        InvestorsCount = Observable.Return(14),
+        FundingRaised = Observable.Return(new AmountUI(120000000)),
+        FundingTarget = new AmountUI(200000000),
+        BannerUrl = new Uri("https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg"),
+        LogoUrl = new Uri("https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg"),
+        ProjectType = ProjectType.Invest,
+        ProjectStatus = Observable.Return(ProjectStatus.Open),
+    };
     public IEnhancedCommand ManageFunds { get; } = EnhancedCommand.Create(() => { });
-    public IEnhancedCommand<Result<IFullProject>> LoadFullProject { get; } = ReactiveCommand.Create(() => Result.Failure<IFullProject>("Design-only command")).Enhance();
-    public ProjectType ProjectType { get; set; }
-    public IObservable<ProjectStatus> ProjectStatus { get; set; } = Observable.Return(global::AngorApp.UI.Sections.MyProjects.ProjectStatus.Open);
-    public IObservable<string> ErrorMessage { get; } = Observable.Never<string>();
 }
