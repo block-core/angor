@@ -1,17 +1,13 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
         xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
         xmlns:dialogs="clr-namespace:Zafiro.Avalonia.Dialogs;assembly=Zafiro.Avalonia.Dialogs">
     <Design.PreviewWith>
-        <DialogControl Content="This is the content of the dialog">
+        <DialogControl Title="HOLA" Content="This is the content">
             <DialogControl.Options>
                 <generic:List x:TypeArguments="IOption">
                     <OptionDesign Title="Primary" Role="Primary" />
                     <OptionDesign Title="Secondary" Role="Secondary" />
-                    <OptionDesign Title="Cancel" Role="Cancel" />
-                    <OptionDesign Title="Destructive" Role="Destructive" />
-                    <OptionDesign Title="Info" Role="Info" />
                 </generic:List>
             </DialogControl.Options>
         </DialogControl>
@@ -22,30 +18,40 @@
         <Setter Property="MaxHeight" Value="700" />
         <Setter Property="Template">
             <ControlTemplate>
-                <DockPanel VerticalSpacing="24">
+                <SmartDockPanel VerticalSpacing="24">
                     <ItemsControl ItemsSource="{TemplateBinding Options}" DockPanel.Dock="Bottom" IsVisible="{TemplateBinding Options, Converter={x:Static Enumerable.NotEmpty}}">
                         <ItemsControl.ItemContainerTheme>
                             <ControlTheme TargetType="ContentPresenter">
                                 <Setter Property="IsVisible" Value="{Binding IsVisible^, DataType=IOption}" />
                             </ControlTheme>
                         </ItemsControl.ItemContainerTheme>
+                        <ItemsControl.Styles>
+                            <Style Selector="ItemsControl UniformGrid.OptionsPanel">
+                                <Setter Property="Columns" Value="1" />
+                            </Style>
+                            <Style Selector="ItemsControl[ItemCount=1] UniformGrid.OptionsPanel">
+                                <Setter Property="Rows" Value="1" />
+                                <Setter Property="Columns" Value="0" />
+                            </Style>
+                            <Style Selector="ItemsControl[ItemCount=2] UniformGrid.OptionsPanel">
+                                <Setter Property="Rows" Value="1" />
+                                <Setter Property="Columns" Value="0" />
+                            </Style>
+                        </ItemsControl.Styles>
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <UniformGrid Rows="{Binding $parent[ItemsControl].ItemCount, Converter={x:Static controls:AngorConverters.DialogOptionsRows}}"
-                                             Columns="{Binding $parent[ItemsControl].ItemCount, Converter={x:Static controls:AngorConverters.DialogOptionsColumns}}"
-                                             ColumnSpacing="10"
-                                             RowSpacing="10" />
+                                <UniformGrid Classes="OptionsPanel" ColumnSpacing="10" RowSpacing="10" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="IOption">
                                 <EnhancedButton Height="52" HorizontalAlignment="Stretch"
-                                                Classes.Emphasized="{Binding Role, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static dialogs:OptionRole.Primary}}"
-                                                Classes.Secondary="{Binding Role, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static dialogs:OptionRole.Secondary}}"
-                                                Classes.Outline="{Binding Role, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static dialogs:OptionRole.Cancel}}"
-                                                Classes.Destructive="{Binding Role, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static dialogs:OptionRole.Destructive}}"
-                                                Classes.Filled="{Binding Role, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static dialogs:OptionRole.Info}}"
-                                                Classes.Orange="{Binding Role, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static dialogs:OptionRole.Info}}"
+                                                Classes.Emphasized="{Binding Role, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dialogs:OptionRole.Primary}}"
+                                                Classes.Secondary="{Binding Role, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dialogs:OptionRole.Secondary}}"
+                                                Classes.Outline="{Binding Role, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dialogs:OptionRole.Cancel}}"
+                                                Classes.Destructive="{Binding Role, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dialogs:OptionRole.Destructive}}"
+                                                Classes.Filled="{Binding Role, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dialogs:OptionRole.Info}}"
+                                                Classes.Orange="{Binding Role, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static dialogs:OptionRole.Info}}"
                                                 IsCancel="{Binding IsCancel}"
                                                 IsDefault="{Binding IsDefault}"
                                                 Role="{Binding Role, Converter={x:Static dialogs:OptionRoleToButtonRoleConverter.Instance}}"
@@ -53,8 +59,20 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <ContentPresenter DockPanel.Dock="Top" Content="{TemplateBinding Content}" />
-                </DockPanel>
+
+                    <ContentPresenter DockPanel.Dock="Top" IsVisible="{TemplateBinding Icon, Converter={x:Static ObjectConverters.IsNotNull}}" Content="{TemplateBinding Icon}" HorizontalAlignment="Center" IconOptions.Size="40" />
+                    
+                    <ContentPresenter DockPanel.Dock="Bottom" Content="{TemplateBinding Footer}" IsVisible="{TemplateBinding HasCustomFooter}" />
+
+                    <TextBlock FontWeight="Bold"
+                               FontSize="20"
+                               HorizontalAlignment="Center"
+                               Text="{TemplateBinding Title}"
+                               DockPanel.Dock="Top"
+                               IsVisible="{TemplateBinding Title, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    
+                    <ContentPresenter IsVisible="{TemplateBinding Content, Converter={x:Static ObjectConverters.IsNotNull}}" DockPanel.Dock="Top" Content="{TemplateBinding Content}" />
+                </SmartDockPanel>
             </ControlTemplate>
         </Setter>
     </Style>

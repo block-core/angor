@@ -1,49 +1,46 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:slim="clr-namespace:Zafiro.UI.Wizards.Slim;assembly=Zafiro.UI">
+        xmlns:slim="clr-namespace:Zafiro.Avalonia.Controls.Wizards.Slim;assembly=Zafiro.Avalonia">
+
+    <Design.PreviewWith>
+        <WizardFooter Width="500" />
+    </Design.PreviewWith>
     
     <Style Selector="EnhancedButton.ReverseIcon ContentPresenter#IconPresenter">
         <Setter Property="DockPanel.Dock" Value="Right" />
     </Style>
-    
+
     <Style Selector="SlimWizardControl ScrollViewer">
         <Setter Property="Padding" Value="0" />
     </Style>
 
-    <!-- <Style Selector="slim|NavigationWizardHost"> -->
-    <!--     <Setter Property="Padding" Value="0"></Setter> -->
-    <!--     <Setter Property="Template"> -->
-    <!--         <ControlTemplate> -->
-    <!--             <DockPanel> -->
-    <!--                 <Border Background="{DynamicResource Surface}" DockPanel.Dock="Bottom" BoxShadow="0 -1 40 -10 Gray" ZIndex="1"> -->
-    <!--                     <Grid Margin="20 " IconOptions.Size="16" Grid.IsSharedSizeScope="True"> -->
-    <!--                         <Grid.ColumnDefinitions> -->
-    <!--                             <ColumnDefinition SharedSizeGroup="Column" /> -->
-    <!--                             <ColumnDefinition /> -->
-    <!--                             <ColumnDefinition SharedSizeGroup="Column" /> -->
-    <!--                         </Grid.ColumnDefinitions> -->
-    <!--                         <EnhancedButton Content="Cancel" -->
-    <!--                                         Icon="{Icon fa-chevron-left}" -->
-    <!--                                         Classes="Secondary" -->
-    <!--                                         x:CompileBindings="False" -->
-    <!--                                         HorizontalAlignment="Left" -->
-    <!--                                         Command="{TemplateBinding Cancel}" -->
-    <!--                                         IsCancel="True" -->
-    <!--                                         IsVisible="{Binding $parent[WizardNavigator].Wizard.CurrentStep.Step.Kind, Converter={x:Static SlimWizardConverters.CancelVisible}}" /> -->
-    <!--                         <EnhancedButton Grid.Column="2" Content="{Binding $parent[WizardNavigator].Wizard.Next.Text, TargetNullValue='Next'}" -->
-    <!--                                         Command="{Binding $parent[WizardNavigator].Wizard.Next}" -->
-    <!--                                         Classes="Primary ReverseIcon" -->
-    <!--                                         IsDefault="True" -->
-    <!--                                         HorizontalAlignment="Right" Icon="{Icon fa-chevron-right}" /> -->
-    <!--                     </Grid> -->
-    <!--                 </Border> -->
-    <!--                 <Border ZIndex="0"> -->
-    <!--                     <SlimWizardControl Wizard="{TemplateBinding Wizard}"  /> -->
-    <!--                 </Border> -->
-    <!--             </DockPanel> -->
-    <!--         </ControlTemplate> -->
-    <!--     </Setter> -->
-    <!-- </Style> -->
+    <Styles.Resources>
+        <ControlTheme x:Key="{x:Type slim:WizardFooter}" TargetType="slim:WizardFooter">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Grid ColumnDefinitions="*, Auto, *">
+                        <EnhancedButton Content="Cancel"
+                                        Classes="White"
+                                        Grid.Column="0"
+                                        HorizontalAlignment="Left"
+                                        Command="{Binding $parent[slim:WizardFooter].Cancel}" />
+                        <ContentPresenter Grid.Column="1" Content="{Binding $parent[slim:WizardFooter].CurrentFooter}" HorizontalAlignment="Center" />
+                        <StackPanel Grid.Column="2"
+                                    Orientation="Horizontal"
+                                    Spacing="8"
+                                    HorizontalAlignment="Right">
+                            <EnhancedButton Content="Back"
+                                            Classes="VisibleWhenEnabled Secondary"
+                                            Command="{Binding $parent[slim:WizardFooter].Wizard.Back}" />
+                            <EnhancedButton Content="{Binding $parent[slim:WizardFooter].Wizard.Next.Text, TargetNullValue='Next'}"
+                                            Classes="Primary"
+                                            Command="{Binding $parent[slim:WizardFooter].Wizard.Next}" />
+                        </StackPanel>
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
 
-    <!-- Add Styles Here -->
+    </Styles.Resources>
+
 </Styles>

@@ -10,8 +10,8 @@ using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages;
 using AngorApp.UI.Flows.CreateProject.Wizard.FundProject;
 using AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model;
 using AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Payouts;
-using AngorApp.UI.Shared.Controls.Common.Success;
 using Serilog;
+using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Controls.Wizards.Slim;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Wizards.Slim;
@@ -48,10 +48,21 @@ namespace AngorApp.UI.Flows.CreateProject
                                                 vm,
                                                 walletId,
                                                 seed))
-                                            .Then(txId => new SuccessViewModel($"Project {txId} created successfully!"), "Success").Next((_, s) => s, "Finish").Always()
-                                            .Build(StepKind.Completion);
+                                            .Build(StepKind.Commit);
 
-            return await rootWizard.Navigate(navigator);
+            var result = await rootWizard.Navigate(navigator);
+
+            if (result.HasValue)
+            {
+                await uiServices.Dialog.ShowMessage(
+                    "Success",
+                    $"Project {result.Value} created successfully!",
+                    "Done",
+                    new Icon("fa-check"),
+                    DialogTone.Success);
+            }
+
+            return result;
         }
 
         private IEnhancedCommand<Result<string>> CreateProjectOfType(
