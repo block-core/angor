@@ -34,7 +34,6 @@ public partial class SummaryViewModel : ReactiveValidationObject, ISummaryViewMo
         return walletContext.ImportWallet(
             options.Seedwords.ToString(),
             options.Passphrase,
-            options.EncryptionKey,
             getNetwork(),
             NetworkKind.Bitcoin);
     }

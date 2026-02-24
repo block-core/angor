@@ -10,69 +10,77 @@ using CSharpFunctionalExtensions;
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
 public class WalletFactory(
-    IWalletStore walletStore, 
-    ISensitiveWalletDataProvider sensitiveWalletDataProvider, 
+    IWalletStore walletStore,
+    ISensitiveWalletDataProvider sensitiveWalletDataProvider,
     IWalletOperations walletOperations,
     IWalletAccountBalanceService accountBalanceService,
-    IDerivationOperations derivationOperations, 
+    IDerivationOperations derivationOperations,
     INetworkConfiguration networkConfiguration,
     IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
     IWalletEncryption walletEncryption)
     : IWalletFactory
 {
-    public async Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
+  public async Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, BitcoinNetwork network)
     {
-        // Derive the wallet ID from the master public key (xpub) hash
         var walletWords = new WalletWords { Words = seedwords, Passphrase = passphrase.GetValueOrDefault() };
         var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
         var walletId = new WalletId(accountInfo.walletId);
-        
+
         var descriptor = WalletDescriptorFactory.Create(seedwords, passphrase, network.ToNBitcoin());
         var wallet = new Domain.Wallet(walletId, descriptor);
-        
+
         sensitiveWalletDataProvider.SetSensitiveData(walletId, (seedwords, passphrase));
 
         var walletData = new WalletData
         {
             DescriptorJson = JsonSerializer.Serialize(descriptor.ToDto()),
             RequiresPassphrase = passphrase.HasValue,
-            SeedWords = seedwords//
+            SeedWords = seedwords
         };
-        
-        var saveResult = await SaveEncryptedWalletToStoreAsync(name, encryptionKey, walletData, walletId);
 
+        var encryptResult = await walletEncryption.EncryptWithStoredKeyAsync(walletData, walletId.Value, name);
+        if (encryptResult.IsFailure)
+            return Result.Failure<Domain.Wallet>(encryptResult.Error);
+
+        // remove existing entry with same ID before saving — safe on retry
+        var allResult = await walletStore.GetAll();
+        if (allResult.IsFailure)
+            return Result.Failure<Domain.Wallet>(allResult.Error);
+
+        var updatedWallets = allResult.Value
+            .Where(w => w.Id != encryptResult.Value.Id)
+            .Append(encryptResult.Value);
+
+        var saveResult = await walletStore.SaveAll(updatedWallets);
         if (saveResult.IsFailure)
             return Result.Failure<Domain.Wallet>(saveResult.Error);
-        
+
         var accountInfoResult = await CreateAccountBalanceInfoAsync(accountInfo, walletId);
-        
         if (accountInfoResult.IsFailure)
             return Result.Failure<Domain.Wallet>(accountInfoResult.Error);
 
         var keysCreated = await CreateFounderKeyCollectionAsync(walletWords, walletId);
 
-        return !keysCreated.IsSuccess 
-            ? Result.Failure<Domain.Wallet>(keysCreated.Error) 
-            : Result.Success(wallet);
+        return keysCreated.IsSuccess
+            ? Result.Success(wallet)
+            : Result.Failure<Domain.Wallet>(keysCreated.Error);
     }
-    
-    private async Task<Result> SaveEncryptedWalletToStoreAsync(string name, string encryptionKey, WalletData walletData,
-        WalletId walletId)
+    private async Task<Result> SaveEncryptedWalletToStoreAsync(string name, string encryptionKey, WalletData walletData, WalletId walletId)
     {
-        var encryptedWallet = await walletEncryption
-            .Encrypt(walletData, encryptionKey, name, walletId.Value);
+        var encryptResult = await walletEncryption.EncryptAsync(walletData, encryptionKey, name, walletId.Value);
+
+        if (encryptResult.IsFailure)
+            return Result.Failure(encryptResult.Error);
 
         return await walletStore.GetAll()
-            .Map(existing => existing.Append(encryptedWallet))
+            .Map(existing => existing.Append(encryptResult.Value))
             .Bind(wallets => walletStore.SaveAll(wallets));
     }
 
-    private Task<Result> CreateAccountBalanceInfoAsync(AccountInfo accountInfo,WalletId walletId)
+    private Task<Result> CreateAccountBalanceInfoAsync(AccountInfo accountInfo, WalletId walletId)
     {
-        // Create initial account balance info
         var accountBalanceInfo = new AccountBalanceInfo();
         accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, []);
-
         return accountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo);
     }
 
@@ -85,7 +93,7 @@ public class WalletFactory(
             WalletId = walletId.Value,
             Keys = founderKeys.Keys
         };
-            
+
         return await derivedProjectKeysCollection.UpsertAsync(x => x.WalletId, derivedKeys);
     }
 }

@@ -12,7 +12,7 @@ public static class Security
     public static IServiceCollection AddSecurityContext(this IServiceCollection services)
     {
         services.AddSingleton<IWalletSecurityContext, WalletSecurityContext>();
-        services.AddSingleton<IWalletEncryption, AesWalletEncryption>();
+        services.AddSingleton<IWalletEncryption, AesGcmWalletEncryption>();
         services.AddSingleton<IPassphraseProvider, PassphraseProviderAdapter>();
         //services.AddSingleton<IEncryptionKeyStore, WindowsWalletEncryptionKeyStore>();
         //services.AddSingleton<IPasswordProvider, LocalPasswordProvider>();

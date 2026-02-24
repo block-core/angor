@@ -38,7 +38,6 @@ public class WalletContextTests
             .Setup(x => x.CreateWallet(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
-                It.IsAny<Maybe<string>>(),
                 It.IsAny<string>(),
                 It.IsAny<BitcoinNetwork>()))
             .ReturnsAsync(Result.Success(newId));
@@ -47,13 +46,13 @@ public class WalletContextTests
 
         await WaitUntil(() => context.Wallets.Count == 1);
 
-        var result = await context.ImportWallet("seed", Maybe<string>.None, "key", BitcoinNetwork.Mainnet, NetworkKind.Bitcoin);
+        var result = await context.ImportWallet("seed", Maybe<string>.None, BitcoinNetwork.Mainnet, NetworkKind.Bitcoin);
+        
 
         result.IsSuccess.Should().BeTrue();
         walletAppService.Verify(x => x.CreateWallet(
             "Bitcoin Wallet 2",
             "seed",
-            Maybe<string>.None,
             "key",
             BitcoinNetwork.Mainnet), Times.Once);
     }

@@ -14,5 +14,5 @@ public interface IWalletContext
     Task<Result> DeleteWallet(WalletId walletId);
     Task<Result<IWallet>> GetOrCreate();
     Task<Maybe<IWallet>> TryGet();
-    Task<Result<IWallet>> ImportWallet(string seedwords, Maybe<string> optionsPassphrase, string optionsEncryptionKey, BitcoinNetwork network, NetworkKind networkKind);
+    Task<Result<IWallet>> ImportWallet(string seedwords, Maybe<string> optionsPassphrase, BitcoinNetwork network, NetworkKind networkKind);
 }

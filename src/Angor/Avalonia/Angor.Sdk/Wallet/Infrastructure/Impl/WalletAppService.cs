@@ -200,9 +200,9 @@ public class WalletAppService(
         }
     }
 
-    public async Task<Result<WalletId>> CreateWallet(string name, string seedWords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
+    public async Task<Result<WalletId>> CreateWallet(string name, string seedWords, Maybe<string> passphrase , BitcoinNetwork network)
     {
-        var wallet = await walletFactory.CreateWallet(name ?? SingleWalletName, seedWords, passphrase, encryptionKey, network);
+        var wallet = await walletFactory.CreateWallet(name ?? SingleWalletName, seedWords, passphrase, network);
 
         if (wallet.IsFailure)
             return Result.Failure<WalletId>(wallet.Error);
@@ -215,7 +215,7 @@ public class WalletAppService(
         return Result.Success(wallet.Value.Id);
     }
     
-    public Task<Result<WalletId>> CreateWallet(string name, string encryptionKey, BitcoinNetwork network)
+    public Task<Result<WalletId>> CreateWallet(string name, BitcoinNetwork network)
     {
         if (string.IsNullOrEmpty(name))
             name = network + " Wallet";
@@ -226,7 +226,7 @@ public class WalletAppService(
         var passphrase = Maybe<string>.None;
         
         //No need to refresh the wallet as we create it from scratch here
-        return walletFactory.CreateWallet(name, seedWords, passphrase, encryptionKey, network)
+        return walletFactory.CreateWallet(name, seedWords, passphrase, network)
             .Map(_ => _.Id);
     }
     

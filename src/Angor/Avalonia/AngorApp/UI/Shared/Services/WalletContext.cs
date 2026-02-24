@@ -79,7 +79,7 @@ public sealed class WalletContext : IWalletContext, IDisposable
 
     public Task<Result<IWallet>> GetOrCreate()
     {
-        return walletAppService.CreateWallet("<default>",  GetUniqueId(), bitcoinNetwork())
+        return walletAppService.CreateWallet("<default>", bitcoinNetwork())
             .Bind(id => walletProvider.Get(id))
             .Tap(id => sourceCache.AddOrUpdate(id));
     }
@@ -89,11 +89,11 @@ public sealed class WalletContext : IWalletContext, IDisposable
         return CurrentWallet;
     }
 
-    public Task<Result<IWallet>> ImportWallet(string seedwords, Maybe<string> optionsPassphrase, string optionsEncryptionKey, BitcoinNetwork network, NetworkKind networkKind)
+    public Task<Result<IWallet>> ImportWallet(string seedwords, Maybe<string> optionsPassphrase , BitcoinNetwork network, NetworkKind networkKind)
     {
         var name = GetNextWalletName(networkKind);
 
-        return walletAppService.CreateWallet(name, seedwords, optionsPassphrase, optionsEncryptionKey, network)
+        return walletAppService.CreateWallet(name, seedwords, optionsPassphrase, network)
                                .Bind(id => walletProvider.Get(id))
                                .Tap(id => sourceCache.AddOrUpdate(id));
     }

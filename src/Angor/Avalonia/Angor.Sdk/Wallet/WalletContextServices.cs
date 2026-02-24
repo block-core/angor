@@ -43,6 +43,8 @@ public static class WalletContextServices
         services.AddSingleton<ITransactionHistory, TransactionHistory>();
         services.TryAddSingleton<IWalletAccountBalanceService, WalletAccountBalanceService>();
         services.AddHttpClient();
+        services.AddSingleton<ISecureStorage, DpapiSecureStorage>();
+        services.AddSingleton<IWalletEncryption, AesGcmWalletEncryption>();
 
         return services;
     }

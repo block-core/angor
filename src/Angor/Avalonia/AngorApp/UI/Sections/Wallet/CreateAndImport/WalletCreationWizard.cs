@@ -19,21 +19,18 @@ public class WalletCreationWizard(UIServices uiServices, IWalletProvider walletP
     {
         SeedWords seedwords = null!;
         Maybe<string> passphrase = null;
-        string encryptionKey = null!;
 
         var wizard = WizardBuilder
             .StartWith(() => new WelcomeViewModel(), "Create New Wallet").Next(_ => Unit.Default).Always()
             .Then(_ => new SeedWordsViewModel(walletAppService, uiServices), "Seed Words").NextResult(model => Result.Success(model.Words.Value!).Tap(x => seedwords = x)).WhenValid<SeedWordsViewModel>()
             .Then(_ => new SeedWordsConfirmationViewModel(seedwords), "Confirm Seed Words").Next(model => model.SeedWords).WhenValid<SeedWordsConfirmationViewModel>()
             .Then(_ => new PassphraseCreateViewModel(), "Passphrase").NextResult(model => Result.Success(model.Passphrase!).Tap(x => passphrase = x)).WhenValid<PassphraseCreateViewModel>()
-            .Then(_ => new EncryptionPasswordViewModel(), "Encryption Key").NextResult(model => Result.Success(model.EncryptionKey!).Tap(x => encryptionKey = x)).WhenValid<EncryptionPasswordViewModel>()
             .Then(_ => new SummaryViewModel(walletAppService,
                 walletProvider, uiServices,
                 walletContext,
                 new WalletImportOptions(
                     seedwords,
-                    passphrase,
-                    encryptionKey), getNetwork)
+                    passphrase), getNetwork)
             {
                 IsRecovery = false
             }, "Summary").NextCommand(model => model.CreateWallet.Enhance("Create Wallet"))

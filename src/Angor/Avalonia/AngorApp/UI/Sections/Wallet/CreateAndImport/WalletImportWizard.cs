@@ -18,19 +18,16 @@ public class WalletImportWizard(UIServices uiServices, IWalletProvider walletPro
     {
         SeedWords seedWords = null!;
         Maybe<string> passphrase = null;
-        string encryptionKey = null!;
 
         var wizard = WizardBuilder
             .StartWith(() => new ImportWelcomeViewModel(), "Wallet Recovery").Next(_ => Unit.Default).Always()
             .Then(_ => new RecoverySeedWordsViewModel(), "Seed Words").NextResult(model => Result.Success(model.SeedWords).Tap(x => seedWords = x)).WhenValid<RecoverySeedWordsViewModel>()
             .Then(_ => new PassphraseCreateViewModel(), "Passphrase").NextResult(model => Result.Success(model.Passphrase!).Tap(x => passphrase = x)).WhenValid<PassphraseCreateViewModel>()
-            .Then(_ => new EncryptionPasswordViewModel(), "Encryption Key").NextResult(model => Result.Success(model.EncryptionKey!).Tap(x => encryptionKey = x)).WhenValid<EncryptionPasswordViewModel>()
             .Then(_ => new SummaryViewModel(walletAppService,
                 walletProvider, uiServices, walletContext,
                 new WalletImportOptions(
                     seedWords,
-                    passphrase,
-                    encryptionKey), getNetwork)
+                    passphrase), getNetwork)
             {
                 IsRecovery = true
             }, "Summary").NextCommand(model => model.CreateWallet.Enhance("Import Wallet"))
