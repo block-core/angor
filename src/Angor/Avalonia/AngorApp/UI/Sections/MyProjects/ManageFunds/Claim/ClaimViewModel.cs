@@ -28,11 +28,6 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Claim
             RefreshableCollection<IClaimStage, int> stagesCollection = new(GetStages, stage => stage.StageId);
             Load = stagesCollection.Refresh;
             Stages = stagesCollection.Items;
-
-            // Auto-load stages when created (covers both initial display and parent refresh recreating this VM)
-            Observable.Return(Unit.Default)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(_ => ((System.Windows.Input.ICommand)Load).Execute(null));
         }
 
         public IEnhancedCommand<Result<IEnumerable<IClaimStage>>> Load { get; }

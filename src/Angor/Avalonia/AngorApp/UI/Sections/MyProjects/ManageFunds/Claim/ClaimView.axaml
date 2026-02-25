@@ -13,6 +13,12 @@
         <claim:ClaimViewModelSample />
     </Design.DataContext>
 
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Load}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
     <Loading ClipToBounds="False" IsLoading="{Binding Load.IsExecuting^}">
         <HeaderedContainer Header="Stages" Classes="Card White MediumBigHeader Shadow">
             <StackPanel Classes="Gap-L">
