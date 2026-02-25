@@ -11,9 +11,14 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
         public IInvestmentProjectConfig NewProject { get; }
         private readonly CompositeDisposable disposable = new();
 
-        public FundingConfigurationViewModel(IInvestmentProjectConfig newProject)
+        public int MinPenaltyDays { get; }
+        public int MaxPenaltyDays { get; }
+
+        public FundingConfigurationViewModel(IInvestmentProjectConfig newProject, ValidationEnvironment environment = ValidationEnvironment.Production)
         {
             NewProject = newProject;
+            MinPenaltyDays = environment == ValidationEnvironment.Debug ? 0 : 30;
+            MaxPenaltyDays = environment == ValidationEnvironment.Debug ? 365 : 180;
 
             if (NewProject.StartDate == null)
             {

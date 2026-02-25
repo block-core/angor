@@ -69,8 +69,10 @@ public static class SpendStageFunds
             
             var addressScript = BitcoinAddress.Create(addressResult.Value, network).ScriptPubKey;
             
+            int stageNumber = selectedStageId + 1;
+
             var signedTransaction = founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo,
-                founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript,
+                founderContext.InvestmentTrasnactionsHex, stageNumber, addressScript,
                 founderKey, request.SelectedFee); 
             
             return Result.Success(new SpendStageFundsResponse(new TransactionDraft

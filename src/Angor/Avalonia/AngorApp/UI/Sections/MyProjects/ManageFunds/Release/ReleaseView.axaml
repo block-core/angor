@@ -23,7 +23,7 @@
                     </EdgePanel.Content>
                 </EdgePanel>
                 <Separator />
-                <EdgePanel StartContent="Total amount received from investors" ContentClasses="Weight-Bold Strong" Content="0.414 BTC" />
+                <EdgePanel StartContent="Total amount received from investors" ContentClasses="Weight-Bold Strong" Content="{Binding Project.RaisedAmount.ShortDecimalString}" />
                 <EnhancedButton Command="{Binding ReleaseAll}" Classes="Emphasized HorizontalStretch" Content="Release Funds Back to Investors" />
             </StackPanel>
         </Border>

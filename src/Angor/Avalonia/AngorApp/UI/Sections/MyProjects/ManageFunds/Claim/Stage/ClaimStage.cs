@@ -1,8 +1,14 @@
+using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
+using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Shared;
+using Angor.Shared.Models;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.ClaimDialog;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Transactions;
 using AngorApp.UI.Shared.OperationResult;
+using AngorApp.UI.TransactionDrafts;
+using AngorApp.UI.TransactionDrafts.DraftTypes;
+using AngorApp.UI.TransactionDrafts.DraftTypes.Base;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Reactive;
 using Option = Zafiro.Avalonia.Dialogs.Option;
@@ -12,6 +18,8 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Stage
     public class ClaimStage : IClaimStage
     {
         private readonly UIServices uiServices;
+        private readonly IFounderAppService founderAppService;
+        private readonly IWalletContext walletContext;
 
         public ClaimStage(
             ProjectId projectId,
@@ -19,10 +27,14 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Stage
             List<IClaimableTransaction> transactions,
             DateTimeOffset claimableOn,
             FundsAvailability fundsAvailability,
-            UIServices uiServices
+            UIServices uiServices,
+            IFounderAppService founderAppService,
+            IWalletContext walletContext
         )
         {
             this.uiServices = uiServices;
+            this.founderAppService = founderAppService;
+            this.walletContext = walletContext;
             ProjectId = projectId;
             StageId = stageId;
             Transactions = transactions;
@@ -110,22 +122,64 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Stage
                 new Zafiro.Avalonia.Dialogs.Settings { IsCancel = true, Role = OptionRole.Secondary });
         }
 
-        private IOption ClaimOption(ClaimDialogViewModel model, ICloseable closeable)
+        private IOption ClaimOption(ClaimDialogViewModel dialogModel, ICloseable closeable)
         {
             IEnhancedCommand claimCommand = EnhancedCommand.Create(
-                () => ClaimFunds().Tap(() => NotifySuccess(closeable)),
-                model.SelectedItems.SelectionCount.Select(i => i > 0));
+                () => ClaimFunds(dialogModel).Tap(() => NotifySuccess(closeable)),
+                dialogModel.SelectedItems.SelectionCount.Select(i => i > 0));
             return new Option(
                 claimCommand.IsExecuting.Select(b => b ? "Claiming..." : "Claim"),
                 claimCommand,
                 new Zafiro.Avalonia.Dialogs.Settings { IsCancel = true });
         }
 
-        private static async Task<Result> ClaimFunds()
+        private async Task<Result> ClaimFunds(ClaimDialogViewModel dialogModel)
         {
-            // TODO:
-            await Task.Delay(4000);
-            return await Task.FromResult(Result.Success());
+            var selectedTransactions = dialogModel.SelectedItems.SelectionModel.SelectedItems
+                .OfType<IClaimableTransaction>()
+                .ToList();
+
+            if (selectedTransactions.Count == 0)
+                return Result.Failure("No transactions selected");
+
+            var spendItems = selectedTransactions
+                .Select(t => new SpendTransactionDto
+                {
+                    InvestorAddress = t.Address,
+                    StageId = t.StageId
+                })
+                .ToList();
+
+            var walletResult = await walletContext.Require();
+            if (walletResult.IsFailure)
+                return Result.Failure(walletResult.Error);
+
+            var wallet = walletResult.Value;
+
+            var draftPreviewer = new TransactionDraftPreviewerViewModel(
+                feerate =>
+                {
+                    var fee = new FeeEstimation { FeeRate = feerate };
+                    return founderAppService.SpendStageFunds(
+                            new SpendStageFunds.SpendStageFundsRequest(
+                                wallet.Id, ProjectId, fee, spendItems))
+                        .Map(ITransactionDraftViewModel (response) =>
+                            new TransactionDraftViewModel(response.TransactionDraft, uiServices));
+                },
+                draftModel =>
+                {
+                    return founderAppService.SubmitTransactionFromDraft(
+                            new PublishFounderTransaction.PublishFounderTransactionRequest(draftModel.Model))
+                        .Map(_ => Guid.Empty);
+                },
+                uiServices);
+
+            var result = await uiServices.Dialog.ShowAndGetResult(
+                draftPreviewer,
+                "Claim Stage Funds",
+                s => s.CommitDraft.Enhance("Claim"));
+
+            return result.HasValue ? Result.Success() : Result.Failure("Cancelled");
         }
 
         private async Task NotifySuccess(ICloseable closeable)

@@ -304,7 +304,7 @@
                         <TextBlock Classes="Muted" Text="High Value" HorizontalAlignment="Right" />
                     </Panel>
 
-                    <Slider x:Name="PenaltyDays" Minimum="30" Maximum="180" Value="{Binding NewProject.PenaltyDays}" Foreground="{DynamicResource Accent}" Background="{DynamicResource Stroke}">
+                    <Slider x:Name="PenaltyDays" Minimum="{Binding MinPenaltyDays}" Maximum="{Binding MaxPenaltyDays}" Value="{Binding NewProject.PenaltyDays}" Foreground="{DynamicResource Accent}" Background="{DynamicResource Stroke}">
                         <Slider.Resources>
                         </Slider.Resources>
                     </Slider>

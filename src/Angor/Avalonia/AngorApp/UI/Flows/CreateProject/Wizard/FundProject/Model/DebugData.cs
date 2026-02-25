@@ -5,7 +5,8 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model
         public static string GetDefaultImageUriString(int width, int height)
         {
 #if DEBUG
-            return $"https://picsum.photos/{width}/{height}";
+            var seed = Guid.NewGuid().ToString("N")[..8];
+            return $"https://picsum.photos/seed/{seed}/{width}/{height}";
 #else
             return "";            
 #endif

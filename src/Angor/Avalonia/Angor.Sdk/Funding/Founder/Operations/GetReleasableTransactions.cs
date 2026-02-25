@@ -40,7 +40,7 @@ public static class GetReleasableTransactions
             {
                 Approved = x.ApprovaleTime,
                 Arrived = x.InvestmentRequestTime,
-                Released = x.ReleaseSignaturesTime,
+                Released = x.ReleaseSignaturesTime == default ? null : x.ReleaseSignaturesTime,
                 InvestmentEventId = x.SignRecoveryRequestEventId
             });
                 

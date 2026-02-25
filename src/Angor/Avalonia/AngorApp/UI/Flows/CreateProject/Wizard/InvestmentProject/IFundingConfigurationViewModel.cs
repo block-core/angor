@@ -7,5 +7,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
         IEnumerable<IAmountUI> AmountPresets { get; }
         IInvestmentProjectConfig NewProject { get; }
         long? SelectedPresetSats { get; set; }
+        int MinPenaltyDays { get; }
+        int MaxPenaltyDays { get; }
     }
 }
