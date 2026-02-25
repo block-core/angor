@@ -16,7 +16,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds
         {
             Load = EnhancedCommand.CreateWithResult(() => projectAppService.GetFullProject(projectId));
             ProjectObs = Load.Successes();
-            ReleaseViewModel = ProjectObs.Select(project => new ReleaseViewModel(project, uiServices));
+            ReleaseViewModel = ProjectObs.Select(project => new ReleaseViewModel(project, uiServices, founderAppService, walletContext));
             ClaimViewModel = ProjectObs.Select(project => new ClaimViewModel(project, founderAppService, uiServices, walletContext));
             
             Load.HandleErrorsWith(uiServices.NotificationService, "Cannot load project");

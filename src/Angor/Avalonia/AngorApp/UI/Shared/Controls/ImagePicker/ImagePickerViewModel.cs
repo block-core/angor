@@ -20,7 +20,7 @@ namespace AngorApp.UI.Shared.Controls.ImagePicker
         private byte[]? selectedFileBytes;
         private string? selectedContentType;
 
-        [Reactive] private string? imageUri = "https://picsum.photos/320/200";
+        [Reactive] private string? imageUri = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/320/200";
         [Reactive] private string? selectedFileName;
         [Reactive] private bool isUploading;
         [Reactive] private string? uploadStatus;

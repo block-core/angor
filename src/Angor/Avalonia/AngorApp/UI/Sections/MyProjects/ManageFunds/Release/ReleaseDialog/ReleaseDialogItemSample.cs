@@ -4,6 +4,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Release.ReleaseDialog
     {
         public IAmountUI Amount { get; } = amount;
         public string Address { get; } = address;
+        public string InvestmentEventId { get; } = string.Empty;
         public bool IsSelected { get; set; } = true;
     }
 }

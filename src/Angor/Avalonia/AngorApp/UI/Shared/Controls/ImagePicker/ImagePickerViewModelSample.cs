@@ -7,7 +7,7 @@ namespace AngorApp.UI.Shared.Controls.ImagePicker
 {
     public class ImagePickerViewModelSample : IImagePickerViewModel
     {
-        public string? ImageUri { get; set; } = "https://picsum.photos/320/200";
+        public string? ImageUri { get; set; } = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/320/200";
         public string? SelectedFileName { get; } = null;
         public bool IsUploading { get; } = false;
         public string? UploadStatus { get; } = null;
