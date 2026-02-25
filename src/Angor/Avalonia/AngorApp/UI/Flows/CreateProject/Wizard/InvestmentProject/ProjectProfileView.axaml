@@ -29,6 +29,11 @@
     <controls:ScrollableView MaxContentWidth="766">
         <StackPanel VerticalAlignment="Center" Spacing="{StaticResource Gap-XL}">
             <TextBlock Classes="Subtitle">Tell us about your project and what you're building.</TextBlock>
+            <EnhancedButton Content="Debug Prefill Data"
+                            Command="{Binding PrefillDebugData}"
+                            IsVisible="{Binding PrefillDebugData, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            Classes="Emphasized"
+                            HorizontalAlignment="Right" />
 
             <HeaderedContainer Classes="Card Neutral Window" Header="What's the project called?">
                 <StackPanel Classes="Gap-S">
