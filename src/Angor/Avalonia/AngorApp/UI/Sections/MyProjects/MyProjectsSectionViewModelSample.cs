@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Reactive.Linq;
+using AngorApp.Model.Funded.Fund.Samples;
+using AngorApp.Model.Funded.Investment.Samples;
 using AngorApp.UI.Sections.MyProjects.Items;
-using AngorApp.UI.Sections.Shared;
-using ProjectStatus = AngorApp.UI.Sections.Shared.ProjectStatus;
 
 namespace AngorApp.UI.Sections.MyProjects;
 
@@ -14,45 +14,29 @@ public class MyProjectsSectionViewModelSample : IMyProjectsSectionViewModel
         [
             new MyProjectItemSample
             {
-                Project = new ProjectItemSample
-                {
-                    Name = "Zap AI",
-                    Description = "AI-powered bot on Nostr. Ask it anything and pay with Lightning.",
-                    InvestorsCount = Observable.Return(3),
-                    FundingRaised = Observable.Return(new AmountUI(23456000)),
-                    FundingTarget = new AmountUI(50000000),
-                    BannerUrl = new Uri("https://images-assets.nasa.gov/image/PIA05062/PIA05062~thumb.jpg"),
-                    LogoUrl = new Uri("https://www.nostria.app/assets/icons/icon-512x512-margin.png"),
-                    ProjectType = ProjectType.Invest,
-                    ProjectStatus = Observable.Return(ProjectStatus.Closed),
-                }
+                Project = new InvestmentProjectSample()
             },
             new MyProjectItemSample
             {
-                Project = new ProjectItemSample
-                {
-                    Name = "Founder Hub",
-                    Description = "Launch and manage your fundraising campaigns with ease.",
-                    InvestorsCount = Observable.Return(14),
-                    FundingRaised = Observable.Return(new AmountUI(120000000)),
-                    FundingTarget = new AmountUI(200000000),
-                    BannerUrl = new Uri("https://theunpluggednetwork.com/wp-content/uploads/2025/03/App-Testimonial-5-600x152.jpg"),
-                    LogoUrl = new Uri("https://images-assets.nasa.gov/image/PIA14417/PIA14417~thumb.jpg"),
-                    ProjectType = ProjectType.Invest,
-                    ProjectStatus = Observable.Return(ProjectStatus.Open),
-                }
+                Project = new FundProjectSample()
             }
         ]);
 
-        ActiveProjectsCount = Observable.Return(2);
+        ActiveProjectsCount = Observable.Return(3);
         TotalRaised = Observable.Return(new AmountUI(232144));
         LoadProjects = ReactiveCommand.Create(() => Result.Success<IEnumerable<IMyProjectItem>>([])).Enhance();
+        RefreshProjectStats = ReactiveCommand.Create(() => Result.Success()).Enhance();
         Create = ReactiveCommand.Create(() => Result.Success(Maybe<string>.None)).Enhance();
+        ProjectStatsLoadTotalCount = Observable.Return(3);
+        ProjectStatsLoadCompletedCount = Observable.Return(3);
     }
 
     public IReadOnlyCollection<IMyProjectItem> Projects { get; }
     public IEnhancedCommand<Result<IEnumerable<IMyProjectItem>>> LoadProjects { get; }
+    public IEnhancedCommand<Result> RefreshProjectStats { get; }
     public IEnhancedCommand<Result<Maybe<string>>> Create { get; }
     public IObservable<int> ActiveProjectsCount { get; }
     public IObservable<IAmountUI> TotalRaised { get; }
+    public IObservable<int> ProjectStatsLoadTotalCount { get; }
+    public IObservable<int> ProjectStatsLoadCompletedCount { get; }
 }

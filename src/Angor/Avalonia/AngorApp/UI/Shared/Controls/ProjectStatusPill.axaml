@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:project="clr-namespace:AngorApp.Model.ProjectsV2;assembly=AngorApp.Model"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:samples="clr-namespace:AngorApp.Model.Funded.Investment.Samples;assembly=AngorApp.Model"
+             x:Class="AngorApp.UI.Shared.Controls.ProjectStatusPill"
+             x:DataType="project:IProject">
+
+    <Design.DataContext>
+        <samples:InvestmentProjectSample />
+    </Design.DataContext>
+
+    <Loading Classes="Pill" IsLoading="{Binding Refresh.IsExecuting^}">
+        <ContentControl Classes="Pill"
+                        Classes.BrightGreen="{Binding ProjectStatus^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static project:ProjectStatus.Open}}"
+                        Classes.Red="{Binding ProjectStatus^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static project:ProjectStatus.Closed}}">
+            <Interaction.Behaviors>
+                <BindingTriggerBehavior Binding="{Binding ProjectStatus^}" Value="{x:Static project:ProjectStatus.Open}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="OPEN" />
+                </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding ProjectStatus^}" Value="{x:Static project:ProjectStatus.Closed}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="CLOSED" />
+                </BindingTriggerBehavior>
+            </Interaction.Behaviors>
+        </ContentControl>
+    </Loading>
+</UserControl>

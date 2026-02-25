@@ -55,6 +55,7 @@
     <StyleInclude Source="Styles/Expander.axaml" />
     <StyleInclude Source="Styles/DialogControl.axaml" />
     <StyleInclude Source="Styles/DialogViewContainer.axaml" />
+    <StyleInclude Source="Styles/SlimDataGrid.axaml" />
     
     <Style Selector=":is(UserControl)">
         <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />

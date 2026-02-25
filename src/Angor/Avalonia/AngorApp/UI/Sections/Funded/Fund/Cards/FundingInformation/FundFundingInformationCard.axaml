@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ctrl="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:manage="clr-namespace:AngorApp.Model.Funded.Fund.Model;assembly=AngorApp.Model"
+             mc:Ignorable="d"
+             d:DesignWidth="800"
+             x:Class="AngorApp.UI.Sections.Funded.Fund.Cards.FundFundingInformationCard"
+             x:DataType="manage:IFundFunded">
+
+    <BalancedWrapGrid MinItemWidth="220">
+        <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder"
+                      HeaderPanelClasses=""
+                      Left="Funding Start Date"
+                      Right="{Icon fa-calendar}"
+                      Content="Awaiting approval" />
+
+        <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder"
+                      HeaderPanelClasses=""
+                      Left="Funding End Date"
+                      Right="{Icon fa-calendar}"
+                      Content="Awaiting approval" />
+
+        <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder"
+                      HeaderPanelClasses=""
+                      Left="Transaction Date"
+                      Right="{Icon fa-clock}"
+                      Content="{Binding Project.TransactionDate, StringFormat=d MMMM yyyy}" />
+
+        <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder"
+                      HeaderPanelClasses=""
+                      Left="Funding Status"
+                      Right="{Icon fa-check}"
+                      Content="{Binding Project.Status}" />
+    </BalancedWrapGrid>
+</UserControl>

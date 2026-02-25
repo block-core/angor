@@ -83,45 +83,45 @@
          ═══════════════════════════════════════════════════════════════════════ -->
 
     <!-- Atomic: Size (FontSize only) -->
-    <Style Selector="TextBlock.Size-XXS">
-        <Setter Property="FontSize" Value="11" />
+    <Style Selector=":is(Control).Size-XXS">
+        <Setter Property="TextElement.FontSize" Value="11" />
     </Style>
-    <Style Selector="TextBlock.Size-XS">
-        <Setter Property="FontSize" Value="12" />
+    <Style Selector=":is(Control).Size-XS">
+        <Setter Property="TextElement.FontSize" Value="12" />
     </Style>
-    <Style Selector="TextBlock.Size-S">
-        <Setter Property="FontSize" Value="14" />
+    <Style Selector=":is(Control).Size-S">
+        <Setter Property="TextElement.FontSize" Value="14" />
     </Style>
-    <Style Selector="TextBlock.Size-M">
-        <Setter Property="FontSize" Value="16" />
+    <Style Selector=":is(Control).Size-M">
+        <Setter Property="TextElement.FontSize" Value="16" />
     </Style>
-    <Style Selector="TextBlock.Size-L">
-        <Setter Property="FontSize" Value="18" />
+    <Style Selector=":is(Control).Size-L">
+        <Setter Property="TextElement.FontSize" Value="18" />
     </Style>
-    <Style Selector="TextBlock.Size-XL">
-        <Setter Property="FontSize" Value="25" />
+    <Style Selector=":is(Control).Size-XL">
+        <Setter Property="TextElement.FontSize" Value="25" />
     </Style>
-    <Style Selector="TextBlock.Size-XXL">
-        <Setter Property="FontSize" Value="32" />
+    <Style Selector=":is(Control).Size-XXL">
+        <Setter Property="TextElement.FontSize" Value="32" />
     </Style>
 
     <!-- Atomic: Weight (FontWeight only) -->
-    <Style Selector="TextBlock.Weight-Light">
-        <Setter Property="FontWeight" Value="SemiLight" />
+    <Style Selector=":is(Control).Weight-Light">
+        <Setter Property="TextElement.FontWeight" Value="SemiLight" />
     </Style>
     <Style Selector="TextBlock.Weight-Bold">
-        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="TextElement.FontWeight" Value="Bold" />
     </Style>
 
     <!-- Atomic: Color (Foreground only) -->
-    <Style Selector="TextBlock.Text-Strong">
-        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+    <Style Selector=":is(Control).Text-Strong">
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource TextStrong}" />
     </Style>
-    <Style Selector="TextBlock.Text-Muted">
-        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+    <Style Selector=":is(Control).Text-Muted">
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource TextMuted}" />
     </Style>
-    <Style Selector="TextBlock.Text-Dimmed">
-        <Setter Property="Foreground" Value="{DynamicResource Dimmed}" />
+    <Style Selector=":is(Control).Text-Dimmed">
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource Dimmed}" />
     </Style>
 
     <!-- ═══════════════════════════════════════════════════════════════════════

@@ -4,6 +4,7 @@ using Angor.Shared.Models;
 using AngorApp.UI.Flows.InvestV2.Footer;
 using AngorApp.UI.Flows.InvestV2.Header;
 using AngorApp.UI.Flows.InvestV2.Model;
+using AngorApp.UI.Shared;
 using AngorApp.UI.Shell;
 using ReactiveUI.Validation.Helpers;
 using Zafiro.Reactive;
@@ -52,7 +53,7 @@ namespace AngorApp.UI.Flows.InvestV2
         }
 
         public string ProjectTitle => fullProject.Name;
-        public decimal Progress => fullProject.RaisedAmount.Btc / fullProject.TargetAmount.Btc;
+        public decimal Progress => fullProject.RaisedAmount.RatioOrZero(fullProject.TargetAmount);
         public IAmountUI Raised => fullProject.RaisedAmount;
 
         public IObservable<IEnumerable<Breakdown>> StageBreakdowns { get; }

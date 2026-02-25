@@ -1,10 +1,10 @@
-using AngorApp.UI.Sections.Shared;
+using AngorApp.Model.ProjectsV2;
 
 namespace AngorApp.UI.Sections.MyProjects.Items
 {
     public interface IMyProjectItem
     {
-        IProjectItem Project { get; }
+        IProject Project { get; }
         IEnhancedCommand ManageFunds { get; }
     }
 }

@@ -1,9 +1,6 @@
 using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 using AngorApp.Core.Factories;
 using AngorApp.UI.Sections.MyProjects;
-using AngorApp.UI.Sections.Portfolio;
-using AngorApp.UI.Sections.Portfolio.Penalties;
-using AngorApp.UI.Sections.Portfolio.Recover;
 using AngorApp.UI.Sections.Settings;
 using AngorApp.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +14,7 @@ using AngorApp.UI.Sections.Funds.Accounts;
 using AngorApp.UI.Sections.Funds.Empty;
 using AngorApp.UI.Sections.FindProjects.Details;
 using AngorApp.UI.Sections.MyProjects.ManageFunds;
+using AngorApp.Model.ProjectsV2;
 
 namespace AngorApp.Composition.Registrations.ViewModels;
 
@@ -26,19 +24,16 @@ public static class ViewModels
     {
         return services
                 .AddScoped<IProjectInvestCommandFactory, ProjectInvestCommandFactory>()
-                .AddScoped<Func<IFullProject, IDetailsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<DetailsViewModel>(provider, project))
+                .AddScoped<Func<IProject, IDetailsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<DetailsViewModel>(provider, project))
                 .AddScoped<Func<ProjectId, IManageFundsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<ManageFundsViewModel>(provider, project))
                 .AddTransient<IAccountsViewModel, AccountsViewModel>()
                 .AddTransient<ISeedBackupFileService, SeedBackupFileService>()
                 .AddTransient<IAddWalletFlow, AddWalletFlow>()
                 .AddTransient<IEmptyViewModel, EmptyViewModel>()
-                .AddTransient<IPortfolioSectionViewModel, PortfolioSectionViewModel>()
                 .AddTransient<IMyProjectsSectionViewModel, MyProjectsSectionViewModel>()
                 .AddTransient<ISettingsSectionViewModel, SettingsSectionViewModel>()
-                .AddScoped<IPenaltiesViewModel, PenaltiesViewModel>()
                 .AddScoped<Func<IFullProject, IInvestViewModel>>(provider => proj => ActivatorUtilities.CreateInstance<InvestViewModel>(provider, proj))
                 .AddScoped<IPaymentSelectorViewModel, PaymentSelectorViewModel>()
-                .AddScoped<IRecoverViewModel, RecoverViewModel>()
                 .AddSingleton<IShellViewModel, ShellViewModel>();
     }
 }

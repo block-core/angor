@@ -289,12 +289,40 @@ namespace AngorApp.UI.Shared.Controls
         }
 
         public static IValueConverter IsEqualTo { get; } = new EqualsConverter();
+        public static IValueConverter IsOneOf { get; } = new OneOfConverter();
 
         private class EqualsConverter : IValueConverter
         {
             public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
             {
                 return object.Equals(value, parameter);
+            }
+
+            public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+            {
+                return AvaloniaProperty.UnsetValue;
+            }
+        }
+
+        private class OneOfConverter : IValueConverter
+        {
+            public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+            {
+                if (value is null || parameter is null)
+                {
+                    return false;
+                }
+
+                string current = value.ToString() ?? string.Empty;
+                string? rawCandidates = parameter.ToString();
+
+                if (string.IsNullOrWhiteSpace(rawCandidates))
+                {
+                    return false;
+                }
+
+                return rawCandidates.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                    .Any(candidate => string.Equals(candidate, current, StringComparison.OrdinalIgnoreCase));
             }
 
             public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

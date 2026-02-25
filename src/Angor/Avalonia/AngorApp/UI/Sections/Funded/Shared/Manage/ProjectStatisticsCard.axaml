@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:cards="clr-namespace:AngorApp.UI.Sections.Funded.Investment.Cards"
+             xmlns:cards1="clr-namespace:AngorApp.UI.Sections.Funded.Fund.Cards"
+             xmlns:manage="clr-namespace:AngorApp.Model.Funded.Shared.Model;assembly=AngorApp.Model"
+             xmlns:model="clr-namespace:AngorApp.Model.Funded.Investment.Model;assembly=AngorApp.Model"
+             xmlns:model1="clr-namespace:AngorApp.Model.Funded.Fund.Model;assembly=AngorApp.Model"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Sections.Funded.Shared.Manage.ProjectStatisticsCard" x:DataType="manage:IFunded">
+
+    <Design.DataContext>
+        <model:InvestmentFundedSample />
+    </Design.DataContext>
+
+    <HeaderedContainer Classes="Card Apricot Shadow">
+        <HeaderedContainer.Header>
+            <EdgePanel ContentClasses="Size-XL BlackText" IconOptions.Fill="{DynamicResource BitcoinOrange}" IconOptions.Size="48" IconOptions.Padding="5" StartContent="{Icon fa-bitcoin}" Content="Project Statistics" />
+        </HeaderedContainer.Header>
+
+        <ContentControl ClipToBounds="False" Content="{Binding}">
+            <ContentControl.DataTemplates>
+                <DataTemplate DataType="model:IInvestmentFunded">
+                    <cards:InvestmentProjectStatisticsCard ClipToBounds="False" />
+                </DataTemplate>
+
+                <DataTemplate DataType="model1:IFundFunded">
+                    <cards1:FundProjectStatisticsCard ClipToBounds="False" />
+                </DataTemplate>
+            </ContentControl.DataTemplates>
+        </ContentControl>
+    </HeaderedContainer>
+</UserControl>

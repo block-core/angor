@@ -152,6 +152,7 @@
         <Setter Property="Border.BorderBrush" Value="{DynamicResource DarkGreen.BorderBrush}" />
         <Setter Property="Border.Background" Value="{DynamicResource DarkGreen.Background}" />
         <Setter Property="TemplatedControl.Foreground" Value="White" />
+        <Setter Property="IconOptions.Fill" Value="White" />
     </Style>
 
     <!-- White -->
@@ -209,7 +210,13 @@
         <Setter Property="Border.Background" Value="{DynamicResource GreenBorder.Background}" />
         <Setter Property="Border.BorderBrush" Value="{DynamicResource GreenBorder.BorderBrush}" />
     </Style>
-    
+
+    <Style Selector=":is(Control).Red">
+        <Setter Property="Border.Background" Value="{DynamicResource ErrorColor}" />
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource ErrorSoft}" />
+        <Setter Property="TextElement.Foreground" Value="White" />
+    </Style>
+
     <Style Selector=":is(Control).SmallPadding">
         <Setter Property="Border.Padding" Value="10,4" />
     </Style>
@@ -327,6 +334,9 @@
                     <Border Classes="ColorPanel GreenBorder">
                         <TextBlock>GreenBorder</TextBlock>
                     </Border>
+                    <Border Classes="ColorPanel Red">
+                        <TextBlock>Red</TextBlock>
+                    </Border>
                 </StackPanel>
                 <ThemeVariantScope RequestedThemeVariant="Dark">
                     <Border Background="Black">
@@ -379,7 +389,11 @@
                             <Border Classes="ColorPanel GreenBorder">
                                 <TextBlock>GreenBorder</TextBlock>
                             </Border>
-                        </StackPanel></Border>
+                            <Border Classes="ColorPanel Red">
+                                <TextBlock>Red</TextBlock>
+                            </Border>
+                        </StackPanel>
+                    </Border>
                 </ThemeVariantScope>
             </WrapPanel>
         </Panel>

@@ -1,5 +1,6 @@
 using AngorApp.UI.Sections.Funders.Chat;
 using Angor.Sdk.Funding.Shared;
+using Nostr.Client.Utils;
 using Zafiro.Avalonia.Dialogs;
 
 namespace AngorApp.UI.Sections.Funders.Items;
@@ -28,7 +29,12 @@ public class FunderItem(UIServices uiServices, Func<Task<Result>>? approveOperat
     public IEnhancedCommand<Result> Reject => EnhancedCommand.CreateWithResult(RejectCore, Observable.Return(Status == FunderStatus.Pending));
 
     public IEnhancedCommand OpenChat =>
-        EnhancedCommand.CreateWithResult(() => uiServices.Dialog.Show(new ChatViewModel(InvestorNpub), _ => []));
+        EnhancedCommand.CreateWithResult(() =>
+        {
+            string? readableNpub = NostrConverter.ToNpub(InvestorNpub) ?? "";
+            var chatTitle = readableNpub.Length <= 15 ? readableNpub : readableNpub[..15] + "...";
+            return uiServices.Dialog.Show(new ChatViewModel(chatTitle), _ => []);
+        });
 
     public FunderStatus Status { get; set; } = FunderStatus.Pending;
     public string InvestorNpub { get; set; } = "sample_npub";

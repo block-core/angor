@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:project="clr-namespace:AngorApp.Model.ProjectsV2;assembly=AngorApp.Model"
+             xmlns:investmentProject="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
+             xmlns:fundProject="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
+             xmlns:samples="clr-namespace:AngorApp.Model.Funded.Investment.Samples;assembly=AngorApp.Model"
+             x:Class="AngorApp.UI.Shared.Controls.ProjectTypePill"
+             x:DataType="project:IProject">
+
+    <Design.DataContext>
+        <samples:InvestmentProjectSample />
+    </Design.DataContext>
+
+    <ContentControl Content="{Binding}">
+        <ContentControl.DataTemplates>
+            <DataTemplate DataType="investmentProject:IInvestmentProject">
+                <Border Classes="Pill Green">
+                    <TextBlock>INVEST</TextBlock>
+                </Border>
+            </DataTemplate>
+            <DataTemplate DataType="fundProject:IFundProject">
+                <Border Classes="Pill Orange">
+                    <TextBlock>FUND</TextBlock>
+                </Border>
+            </DataTemplate>
+        </ContentControl.DataTemplates>
+    </ContentControl>
+</UserControl>

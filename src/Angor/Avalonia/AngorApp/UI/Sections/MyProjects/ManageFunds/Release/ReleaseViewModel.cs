@@ -2,6 +2,7 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Shared;
+using AngorApp.UI.Sections.MyProjects.ManageFunds;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Release.ReleaseDialog;
 using AngorApp.UI.Shared.OperationResult;
 using Zafiro.Avalonia.Dialogs;
@@ -16,7 +17,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Release
         private readonly IFounderAppService founderAppService;
         private readonly IWalletContext walletContext;
 
-        public ReleaseViewModel(IFullProject project, UIServices uiServices, IFounderAppService founderAppService, IWalletContext walletContext)
+        public ReleaseViewModel(IManageFundsProject project, UIServices uiServices, IFounderAppService founderAppService, IWalletContext walletContext)
         {
             this.uiServices = uiServices;
             this.founderAppService = founderAppService;
@@ -25,7 +26,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Release
             ReleaseAll = GetReleaseCommand();
         }
 
-        public IFullProject Project { get; }
+        public IManageFundsProject Project { get; }
 
         public IEnhancedCommand ReleaseAll { get; }
         

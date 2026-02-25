@@ -1,6 +1,4 @@
-using AngorApp.UI.Sections.Funders.Chat;
-
-namespace AngorApp;
+namespace AngorApp.UI.Sections.Funders.Chat;
 
 public class ChatViewModelSample : IChatViewModel
 {

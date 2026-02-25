@@ -13,6 +13,7 @@ global using AngorApp.Model.Contracts.Wallet;
 global using AngorApp.Model.Amounts;
 global using AngorApp.Model.Common;
 global using AngorApp.Model.Projects;
+global using AngorApp.Model.Shared.Services;
 global using AngorApp.Model.Wallet;
 global using AngorApp.Model.Wallet.Password;
 global using AngorApp.UI.Shared.Services;

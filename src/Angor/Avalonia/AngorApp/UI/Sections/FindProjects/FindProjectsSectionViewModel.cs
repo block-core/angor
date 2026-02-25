@@ -1,6 +1,7 @@
 using System.Reactive.Disposables;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Operations;
+using AngorApp.Model.ProjectsV2;
 using AngorApp.UI.Sections.FindProjects.Details;
 using DynamicData;
 using Zafiro.CSharpFunctionalExtensions;
@@ -14,11 +15,11 @@ namespace AngorApp.UI.Sections.FindProjects;
 public class FindProjectsSectionViewModel : IFindProjectsSectionViewModel, IDisposable
 {
     private readonly IProjectAppService projectAppService;
-    private readonly Func<IFullProject, IDetailsViewModel> detailsFactory;
+    private readonly Func<IProject, IDetailsViewModel> detailsFactory;
     private readonly CompositeDisposable disposable = new();
     private readonly INavigator navigator;
 
-    public FindProjectsSectionViewModel(IProjectAppService projectAppService, Func<IFullProject, IDetailsViewModel> detailsFactory, INavigator navigator)
+    public FindProjectsSectionViewModel(IProjectAppService projectAppService, Func<IProject, IDetailsViewModel> detailsFactory, INavigator navigator)
     {
         this.projectAppService = projectAppService;
         this.detailsFactory = detailsFactory;
@@ -26,7 +27,8 @@ public class FindProjectsSectionViewModel : IFindProjectsSectionViewModel, IDisp
         LoadProjects = EnhancedCommand.Create(DoLoadItems).DisposeWith(disposable);
 
         LoadProjects.Successes()
-                    .EditDiff(item => item.Id)
+                    .EditDiff(item => item.Project.Id)
+                    .DisposeMany()
                     .Bind(out var projects)
                     .Subscribe()
                     .DisposeWith(disposable);

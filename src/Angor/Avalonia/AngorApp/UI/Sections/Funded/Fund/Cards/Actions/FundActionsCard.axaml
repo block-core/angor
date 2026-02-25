@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:founder="clr-namespace:Angor.Sdk.Funding.Founder;assembly=Angor.Sdk"
+             xmlns:cards="clr-namespace:AngorApp.UI.Sections.Funded.Fund.Cards"
+             xmlns:model="clr-namespace:AngorApp.Model.Funded.Shared.Model;assembly=AngorApp.Model"
+             mc:Ignorable="d"
+             d:DesignWidth="400"
+             ClipToBounds="False"
+             x:Class="AngorApp.UI.Sections.Funded.Fund.Cards.FundActionsCard"
+             x:DataType="model:IFunded">
+    
+        <StackPanel Classes="Gap-XL">
+            <cards:InvestedCard x:Name="Invested" IsVisible="False" />
+            <cards:PendingFounderSignaturesCard x:Name="WaitingForApproval" IsVisible="False" />
+            <cards:FounderSignaturesReceivedCard x:Name="ApprovalReceived" IsVisible="False" />
+            <cards:InvalidCard x:Name="Invalid" IsVisible="False" />
+
+            <Interaction.Behaviors>
+                <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.Invested}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Visual.IsVisibleProperty}" Value="True" TargetObject="Invested" />
+                </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.PendingFounderSignatures}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Visual.IsVisibleProperty}" Value="True" TargetObject="WaitingForApproval" />
+                </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.FounderSignaturesReceived}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Visual.IsVisibleProperty}" Value="True" TargetObject="ApprovalReceived" />
+                </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.Invalid}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Visual.IsVisibleProperty}" Value="True" TargetObject="Invalid" />
+                </BindingTriggerBehavior>
+            </Interaction.Behaviors>
+        </StackPanel>
+</UserControl>

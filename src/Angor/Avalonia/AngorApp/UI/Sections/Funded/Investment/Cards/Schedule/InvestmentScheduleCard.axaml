@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:p="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AngorApp.UI.Sections.Funded.Investment.Cards.Schedule.InvestmentScheduleCard" x:DataType="p:IInvestmentProject">
+
+    <SlimDataGrid ItemsSource="{Binding Stages^}">
+        <SlimDataGrid.Columns>
+            <Column Header="Stage" Binding="{Binding Id, Converter={x:Static MiscConverters.AddOne}}" />
+            <Column Header="Stage %" Binding="{Binding Ratio, StringFormat=p0}" />
+            <Column Header="Release Date" Binding="{Binding ReleaseDate, StringFormat=m}" />
+            <Column Header="Status" Binding="{Binding Status}" />
+            <Column Header="Amount Per Stage" Binding="{Binding Path=Amount.DecimalString}" />
+        </SlimDataGrid.Columns>
+    </SlimDataGrid>
+
+</UserControl>

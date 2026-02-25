@@ -1,5 +1,6 @@
 using System.Text.Json;
-using AngorApp.Model.Common;
+using Angor.Sdk.Funding.Projects;
+using AngorApp.Model.ProjectsV2;
 using AngorApp.UI.Flows.InvestV2;
 using Nostr.Client.Utils;
 using Zafiro.Avalonia.Dialogs;
@@ -9,49 +10,34 @@ namespace AngorApp.UI.Sections.FindProjects.Details;
 
 public class DetailsViewModel : ReactiveObject, IDetailsViewModel
 {
-    public DetailsViewModel(IFullProject project, Func<IFullProject, IInvestViewModel> investViewModelFactory, INavigator navigator, IDialog dialog)
+    public DetailsViewModel(IProject project, IProjectAppService projectAppService, Func<IFullProject, IInvestViewModel> investViewModelFactory, INavigator navigator, IDialog dialog)
     {
         Project = project;
-        Invest = EnhancedCommand.CreateWithResult(() => navigator.Go(() => investViewModelFactory(project))).AsResult();
-        ShowProjectInfoJson = ReactiveCommand.CreateFromTask(() => dialog.Show(new LongTextViewModel
+        Invest = EnhancedCommand.CreateWithResult(() =>
+            projectAppService.GetFullProject(project.Id)
+                .Bind(fp => navigator.Go(() => investViewModelFactory(fp)).Map(_ => Result.Success()))
+        ).AsResult();
+        ShowProjectInfoJson = ReactiveCommand.CreateFromTask(async () =>
         {
-            Text = SerializeProjectInfo(project),
-        }, "Project Info (JSON)", System.Reactive.Linq.Observable.Return(true))).Enhance();
+            var fullProject = await projectAppService.GetFullProject(project.Id);
+            if (fullProject.IsSuccess)
+            {
+                var json = SerializeProjectInfo(fullProject.Value);
+                await dialog.Show(new LongTextViewModel { Text = json }, "Project Info (JSON)", Observable.Return(true));
+            }
+        }).Enhance();
     }
 
     public IEnhancedCommand<Result> Invest { get; set; }
 
-    public IFullProject Project { get; }
+    public IProject Project { get; }
 
-    public string Name => Project.Name ?? "[Backend: Name is null]";
-    public string ShortDescription => Project.ShortDescription ?? "[Backend: ShortDescription is null]";
-    public IAmountUI TargetAmount => Project.TargetAmount;
-    public IAmountUI TotalRaised => Project.RaisedAmount;
-    public int InvestorsCount => Project.TotalInvestors ?? 0;
-
-    public double FundingProgress
-    {
-        get
-        {
-            if (Project.TargetAmount.Sats == 0)
-                return 0;
-            return (double)Project.RaisedAmount.Sats / Project.TargetAmount.Sats;
-        }
-    }
-
-    // TODO: Backend - Calculate based on FundingStartDate/FundingEndDate
-    public bool IsInsideInvestmentPeriod => true;       // TODO: replace by correct value
-
-    public IAmountUI TargetAmountBtc => Project.TargetAmount;
-
-    // TODO: Backend - These properties need to be added to IFullProject
-    public IAmountUI SubscriptionPrice => AmountUI.FromBtc(0.0002m); // TODO: Backend - Needs IFullProject.SubscriptionPrice
-    public string Frequency => "[TODO: Backend]"; // TODO: Backend - Needs IFullProject.PaymentFrequency
-    public string Installments => "[TODO: Backend]"; // TODO: Backend - Needs IFullProject.InstallmentOptions
+    public bool IsInsideInvestmentPeriod =>
+        DateTimeOffset.UtcNow >= Project.FundingStart && DateTimeOffset.UtcNow <= Project.FundingEnd;
 
     public string FounderKey => Project.FounderPubKey ?? "[Backend: FounderPubKey is null]";
-    public string ProjectId => Project.ProjectId?.Value ?? "[Backend: ProjectId is null]";
-    public string ExplorerUrl => Project.ProjectId?.Value is { } id
+    public string ProjectId => Project.Id.Value ?? "[Backend: ProjectId is null]";
+    public string ExplorerUrl => Project.Id.Value is { } id
         ? $"https://mempool.space/tx/{id}"
         : "[Backend: ProjectId is null]";
 
@@ -59,7 +45,7 @@ public class DetailsViewModel : ReactiveObject, IDetailsViewModel
         ? NostrConverter.ToNpub(hex) ?? "[Error: Invalid hex for npub conversion]"
         : "[Backend: NostrNpubKeyHex is null]";
     public string NostrHex => Project.NostrNpubKeyHex ?? "[Backend: NostrNpubKeyHex is null]";
-    public IEnumerable<string> Relays => new[] { "[TODO: Backend - Needs IFullProject.Relays]" }; // TODO: Backend - Needs relay list from project
+    public IEnumerable<string> Relays => new[] { "[TODO: Backend - Needs IProject.Relays]" };
     public IEnhancedCommand ShowProjectInfoJson { get; }
 
     private static string SerializeProjectInfo(IFullProject project)

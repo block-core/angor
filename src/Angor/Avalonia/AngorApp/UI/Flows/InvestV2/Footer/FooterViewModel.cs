@@ -1,4 +1,3 @@
-using System.Linq;
 using Angor.Sdk.Funding.Investor;
 using Angor.Shared.Models;
 using AngorApp.UI.Flows.InvestV2.Invoice;
@@ -14,7 +13,6 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
     {
         private readonly IFullProject fullProject;
         private readonly IInvestmentAppService investmentAppService;
-        private readonly UIServices uiServices;
         private readonly IObservable<DynamicStagePattern?> selectedPattern;
 
         public FooterViewModel(
@@ -29,7 +27,6 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
         {
             this.fullProject = fullProject;
             this.investmentAppService = investmentAppService;
-            this.uiServices = uiServices;
             this.selectedPattern = selectedPattern;
             AmountToInvest = new ReadOnlyReactiveProperty<IAmountUI>(amountToInvest);
             

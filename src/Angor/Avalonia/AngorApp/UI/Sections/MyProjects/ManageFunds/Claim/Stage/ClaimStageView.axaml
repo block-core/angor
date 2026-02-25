@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:l="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Claim"
              xmlns:stage="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Stage"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Stage.ClaimStageView"
              x:DataType="stage:IClaimStage">
@@ -16,14 +17,14 @@
         <HeaderedContainer.Header>
             <EdgePanel>
                 <EdgePanel.EndContent>
-                    <ContentControl Classes="Box">
+                    <ContentControl Classes="Box"
+                                    Classes.Orange="{Binding FundsAvailability, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static stage:FundsAvailability.SpentByFounder}}"
+                                    Classes.Green="{Binding FundsAvailability, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static stage:FundsAvailability.FundsAvailable}}">
                         <Interaction.Behaviors>
                             <BindingTriggerBehavior Value="SpentByFounder" Binding="{Binding FundsAvailability}">
-                                <AddClassAction ClassName="Orange" />
                                 <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Spent by founder" />
                             </BindingTriggerBehavior>
                             <BindingTriggerBehavior Value="FundsAvailable" Binding="{Binding FundsAvailability}">
-                                <AddClassAction ClassName="Green" />
                                 <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Funds Available" />
                             </BindingTriggerBehavior>
                         </Interaction.Behaviors>
@@ -46,20 +47,12 @@
                     <Run FontWeight="Bold" Foreground="{DynamicResource BodyText}" Text="{Binding ClaimableOn, StringFormat=m}" />
                 </TextBlock.Inlines>
             </TextBlock>
-            <EnhancedButton Content="{Binding Claim.Text}" Classes="HorizontalStretch" Command="{Binding Claim}">
-                <Interaction.Behaviors>
-                    <BindingTriggerBehavior Binding="{Binding Claim.Name}" Value="Available">
-                        <AddClassAction ClassName="Emphasized" />
-                    </BindingTriggerBehavior>
-                    <BindingTriggerBehavior Binding="{Binding Claim.Name}" Value="NotReady">
-                        <AddClassAction ClassName="Emphasized" />
-                    </BindingTriggerBehavior>
-                    <BindingTriggerBehavior Binding="{Binding Claim.Name}" Value="Spent">
-                        <AddClassAction ClassName="Outline" />
-                        <AddClassAction ClassName="Orange" />
-                    </BindingTriggerBehavior>
-                </Interaction.Behaviors>
-            </EnhancedButton>
+            <EnhancedButton Content="{Binding Claim.Text}"
+                            Classes="HorizontalStretch"
+                            Classes.Emphasized="{Binding Claim.Name, Converter={x:Static controls:AngorConverters.IsOneOf}, ConverterParameter='Available|NotReady'}"
+                            Classes.Outline="{Binding Claim.Name, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter=Spent}"
+                            Classes.Orange="{Binding Claim.Name, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter=Spent}"
+                            Command="{Binding Claim}" />
         </StackPanel>
     </HeaderedContainer>
 

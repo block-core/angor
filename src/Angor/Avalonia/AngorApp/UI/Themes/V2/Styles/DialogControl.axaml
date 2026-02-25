@@ -40,29 +40,16 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="IOption">
                                 <EnhancedButton Height="52" HorizontalAlignment="Stretch"
+                                                Classes.Emphasized="{Binding Role, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static dialogs:OptionRole.Primary}}"
+                                                Classes.Secondary="{Binding Role, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static dialogs:OptionRole.Secondary}}"
+                                                Classes.Outline="{Binding Role, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static dialogs:OptionRole.Cancel}}"
+                                                Classes.Destructive="{Binding Role, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static dialogs:OptionRole.Destructive}}"
+                                                Classes.Filled="{Binding Role, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static dialogs:OptionRole.Info}}"
+                                                Classes.Orange="{Binding Role, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static dialogs:OptionRole.Info}}"
                                                 IsCancel="{Binding IsCancel}"
                                                 IsDefault="{Binding IsDefault}"
                                                 Role="{Binding Role, Converter={x:Static dialogs:OptionRoleToButtonRoleConverter.Instance}}"
-                                                Content="{Binding Title^}" Command="{Binding Command}">
-                                    <Interaction.Behaviors>
-                                        <BindingTriggerBehavior Binding="{Binding Role}" Value="Primary">
-                                            <AddClassAction ClassName="Emphasized" />
-                                        </BindingTriggerBehavior>
-                                        <BindingTriggerBehavior Binding="{Binding Role}" Value="Secondary">
-                                            <AddClassAction ClassName="Secondary" />
-                                        </BindingTriggerBehavior>
-                                        <BindingTriggerBehavior Binding="{Binding Role}" Value="Cancel">
-                                            <AddClassAction ClassName="Outline" />
-                                        </BindingTriggerBehavior>
-                                        <BindingTriggerBehavior Binding="{Binding Role}" Value="Destructive">
-                                            <AddClassAction ClassName="Destructive" />
-                                        </BindingTriggerBehavior>
-                                        <BindingTriggerBehavior Binding="{Binding Role}" Value="Info">
-                                            <AddClassAction ClassName="Filled" />
-                                            <AddClassAction ClassName="Orange" />
-                                        </BindingTriggerBehavior>
-                                    </Interaction.Behaviors>
-                                </EnhancedButton>
+                                                Content="{Binding Title^}" Command="{Binding Command}" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
