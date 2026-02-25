@@ -1,6 +1,7 @@
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Founder.Operations;
+using Angor.Shared.Models;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Stage;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Transactions;
 
@@ -27,6 +28,11 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Claim
             RefreshableCollection<IClaimStage, int> stagesCollection = new(GetStages, stage => stage.StageId);
             Load = stagesCollection.Refresh;
             Stages = stagesCollection.Items;
+
+            // Auto-load stages when created (covers both initial display and parent refresh recreating this VM)
+            Observable.Return(Unit.Default)
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(_ => ((System.Windows.Input.ICommand)Load).Execute(null));
         }
 
         public IEnhancedCommand<Result<IEnumerable<IClaimStage>>> Load { get; }
@@ -47,24 +53,44 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Claim
 
         private IEnumerable<IClaimStage> CreateStages(IEnumerable<ClaimableTransactionDto> claimableTransactions)
         {
-            List<IGrouping<int, ClaimableTransactionDto>> groupedTransactions = claimableTransactions
-                .GroupBy(transaction => transaction.StageId)
+            var transactions = claimableTransactions.ToList();
+
+            return Project.ProjectType is Angor.Shared.Models.ProjectType.Fund or Angor.Shared.Models.ProjectType.Subscribe
+                ? CreateDynamicStages(transactions)
+                : CreateInvestmentStages(transactions);
+        }
+
+        private IEnumerable<IClaimStage> CreateInvestmentStages(List<ClaimableTransactionDto> transactions)
+        {
+            var transactionsByStage = transactions
+                .GroupBy(t => t.StageId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            return Project.Stages
+                .OrderBy(s => s.Index)
+                .Select(stage => CreateClaimStage(
+                    stage.Index,
+                    stage.ReleaseDate,
+                    transactionsByStage.GetValueOrDefault(stage.Index, [])))
+                .ToList();
+        }
+
+        private IEnumerable<IClaimStage> CreateDynamicStages(List<ClaimableTransactionDto> transactions)
+        {
+            // For Fund/Subscribe projects, StageId is per-investor-transaction (not a global stage index).
+            // Group by DynamicReleaseDate (normalized to Date) since that defines the actual stage.
+            var groupedByDate = transactions
+                .Where(t => t.DynamicReleaseDate.HasValue)
+                .GroupBy(t => t.DynamicReleaseDate!.Value.Date)
+                .OrderBy(g => g.Key)
                 .ToList();
 
-            List<IStage> projectStages = Project.Stages.ToList();
-
-            IEnumerable<IClaimStage> projectStagesWithTransactions =
-                from projectStage in projectStages
-                join transactionGroup in groupedTransactions
-                    on projectStage.Index equals transactionGroup.Key
-                    into transactionsByStage
-                from transactionGroup in transactionsByStage.DefaultIfEmpty()
-                select CreateClaimStage(
-                    projectStage.Index,
-                    projectStage.ReleaseDate,
-                    transactionGroup?.ToList() ?? []);
-
-            return projectStagesWithTransactions.OrderBy(stage => stage.StageId).ToList();
+            return groupedByDate
+                .Select((group, index) => CreateClaimStage(
+                    index,
+                    group.Key,
+                    group.ToList()))
+                .ToList();
         }
 
         private IClaimStage CreateClaimStage(
@@ -90,7 +116,9 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Claim
                 availableTransactions,
                 claimableOn,
                 fundsAvailability,
-                uiServices);
+                uiServices,
+                founderAppService,
+                walletContext);
         }
 
         private static DateTimeOffset GetClaimableOn(

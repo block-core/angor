@@ -6,6 +6,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Transactions
     {
         IAmountUI Amount { get; }
         string Address { get; }
+        int StageId { get; }
         ClaimStatus ClaimStatus { get; }
         bool IsClaimable => ClaimStatus == ClaimStatus.Unspent;
     }
