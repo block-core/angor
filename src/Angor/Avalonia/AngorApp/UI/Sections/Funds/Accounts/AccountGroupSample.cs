@@ -11,6 +11,6 @@ namespace AngorApp.UI.Sections.Funds.Accounts
             new AccountSample() { Wallet = new WalletSample { Name = "Lightning Wallet", NetworkKind = NetworkKind.Lightning } }
         ];
 
-        public string Name { get; set; } = "Default";
+        public string Name { get; set; } = "Bitcoin Wallet";
     }
 }

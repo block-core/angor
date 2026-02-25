@@ -94,7 +94,7 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
     }
 
     public IObservable<string> ReceiveAddress { get; }
-    public string Name { get; } = "Default";
+    public string Name { get; } = "Bitcoin Wallet";
     public IEnhancedCommand Send { get; }
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; }
     public IEnhancedCommand<Result<IEnumerable<IBroadcastedTransaction>>> RefreshBalanceAndFetchHistory { get; }

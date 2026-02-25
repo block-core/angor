@@ -32,7 +32,7 @@ public class WalletSample : IWallet
 
     public WalletId Id { get; }
     public DateTimeOffset CreatedOn { get; } = DateTimeOffset.Now;
-    public string Name { get; set; } = "Default";
+    public string Name { get; set; } = "Bitcoin Wallet";
     public IEnhancedCommand Send { get; } = EnhancedCommand.Create(() => { });
     public IEnhancedCommand<Result<string>> GetReceiveAddress { get; } = EnhancedCommand.CreateWithResult(() => Result.Success(WalletSampleData.TestNetBitcoinAddress));
     public IEnhancedCommand<Result> GetTestCoins { get; } = EnhancedCommand.CreateWithResult(Result.Success);
