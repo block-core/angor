@@ -45,6 +45,12 @@ public interface IInvestmentAppService
     Task<Result<MonitorLightningSwap.MonitorLightningSwapResponse>> MonitorLightningSwap(MonitorLightningSwap.MonitorLightningSwapRequest request);
 
     /// <summary>
+    /// Creates a Boltz Liquid→BTC swap for funding an investment.
+    /// User pays L-BTC on Liquid, funds arrive on-chain - no intermediate custody.
+    /// </summary>
+    Task<Result<CreateLiquidSwapForInvestment.CreateLiquidSwapResponse>> CreateLiquidSwap(CreateLiquidSwapForInvestment.CreateLiquidSwapRequest request);
+
+    /// <summary>
     /// Gets the total invested amount (in sats) for a wallet by summing locally stored InvestmentRecord amounts.
     /// </summary>
     Task<Result<GetTotalInvested.GetTotalInvestedResponse>> GetTotalInvested(GetTotalInvested.GetTotalInvestedRequest request);

@@ -3,7 +3,8 @@ namespace AngorApp.UI.Flows.InvestV2.Invoice
     public enum PaymentMethod
     {
         OnChain,
-        Lightning
+        Lightning,
+        Liquid
     }
 
     public interface IInvoiceType

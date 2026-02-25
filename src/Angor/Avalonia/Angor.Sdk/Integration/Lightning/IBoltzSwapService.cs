@@ -71,6 +71,33 @@ public interface IBoltzSwapService
     /// <param name="desiredOnChainAmount">The amount you want to receive on-chain (in sats)</param>
     /// <returns>The invoice amount to pay, or failure if amount is out of limits</returns>
     Task<Result<long>> CalculateInvoiceAmountAsync(long desiredOnChainAmount);
+
+    /// <summary>
+    /// Creates a Liquid to BTC reverse submarine swap.
+    /// User pays L-BTC on Liquid, receives BTC on-chain.
+    /// </summary>
+    /// <param name="destinationAddress">The Bitcoin address to receive the swapped funds</param>
+    /// <param name="amountSats">Amount in satoshis to swap</param>
+    /// <param name="claimPublicKey">Public key for claiming the on-chain funds</param>
+    /// <returns>Swap details including the Liquid address to pay</returns>
+    Task<Result<BoltzSubmarineSwap>> CreateLiquidToBtcSwapAsync(
+        string destinationAddress,
+        long amountSats,
+        string claimPublicKey);
+
+    /// <summary>
+    /// Gets the fee information for Liquid to BTC reverse submarine swaps.
+    /// Use this to calculate the correct amount that will result in the desired on-chain amount.
+    /// </summary>
+    /// <returns>Fee information including percentage and miner fees</returns>
+    Task<Result<BoltzSwapFees>> GetLiquidToBtcSwapFeesAsync();
+
+    /// <summary>
+    /// Calculates the Liquid payment amount needed to receive a specific on-chain BTC amount after fees.
+    /// </summary>
+    /// <param name="desiredOnChainAmount">The amount you want to receive on-chain (in sats)</param>
+    /// <returns>The Liquid amount to pay, or failure if amount is out of limits</returns>
+    Task<Result<long>> CalculateLiquidAmountAsync(long desiredOnChainAmount);
 }
 
 

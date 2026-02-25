@@ -156,8 +156,17 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             lightningInvoice.Address = ""; // Will be populated when selected
             lightningInvoice.SwapId = null; // Will be populated when selected
 
-            // Add both options to InvoiceTypes (Lightning will lazy load when selected)
-            InvoiceTypes = [onChainInvoice, lightningInvoice];
+            // Create placeholder Liquid invoice type (will be loaded when selected)
+            var liquidInvoice = new LiquidInvoiceType
+            {
+                Name = "Liquid",
+                ReceivingAddress = address
+            };
+            liquidInvoice.Address = ""; // Will be populated when selected
+            liquidInvoice.SwapId = null; // Will be populated when selected
+
+            // Add all options to InvoiceTypes (Lightning and Liquid will lazy load when selected)
+            InvoiceTypes = [onChainInvoice, lightningInvoice, liquidInvoice];
 
             SelectedInvoiceType = onChainInvoice;
 
@@ -196,6 +205,26 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                     await uiServices.NotificationService.Show(
                         loadResult.Error,
                         "Lightning Invoice Error");
+                    SelectedInvoiceType = InvoiceTypes.FirstOrDefault(x => x.PaymentMethod == PaymentMethod.OnChain);
+                    return;
+                }
+            }
+
+            // If this is a Liquid invoice that hasn't been loaded yet, load it
+            if (invoiceType is LiquidInvoiceType liquidInvoice && !liquidInvoice.IsLoaded)
+            {
+                IsLoadingInvoice = true;
+                
+                var loadResult = await LoadLiquidInvoiceAsync(liquidInvoice, token);
+                
+                IsLoadingInvoice = false;
+                
+                if (loadResult.IsFailure)
+                {
+                    // Loading failed, switch back to on-chain
+                    await uiServices.NotificationService.Show(
+                        loadResult.Error,
+                        "Liquid Invoice Error");
                     SelectedInvoiceType = InvoiceTypes.FirstOrDefault(x => x.PaymentMethod == PaymentMethod.OnChain);
                     return;
                 }
@@ -257,6 +286,53 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         }
     }
 
+    private async Task<Result> LoadLiquidInvoiceAsync(LiquidInvoiceType liquidInvoice, CancellationToken cancellationToken)
+    {
+        if (wallet == null || investmentAppService == null || projectId == null || generatedAddress == null)
+            return Result.Failure("Dependencies not initialized");
+
+        try
+        {
+            // Create Liquid swap to get address
+            var liquidRequest = new CreateLiquidSwapForInvestment.CreateLiquidSwapRequest(
+                wallet.Id,
+                projectId,
+                new Amount(Amount.Sats),
+                generatedAddress,
+                DefaultFeeRateSatsPerVbyte);
+
+            var liquidResult = await investmentAppService.CreateLiquidSwap(liquidRequest);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (liquidResult.IsFailure)
+            {
+                return Result.Failure(liquidResult.Error);
+            }
+
+            var swap = liquidResult.Value.Swap;
+            
+            // Update the Liquid invoice with the loaded data
+            // For Liquid swaps, the Address is the Liquid lockup address to pay
+            liquidInvoice.Address = swap.LockupAddress;
+            liquidInvoice.SwapId = swap.Id;
+            liquidInvoice.ExpectedLiquidAmount = swap.InvoiceAmount;
+            
+            // Trigger UI update by re-setting the selected type
+            this.RaisePropertyChanged(nameof(SelectedInvoiceType));
+
+            return Result.Success();
+        }
+        catch (OperationCanceledException)
+        {
+            return Result.Failure("Loading cancelled");
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Failed to load Liquid invoice: {ex.Message}");
+        }
+    }
+
     private async Task MonitorAndProcessPaymentAsync(
         IInvoiceType invoiceType,
         WalletId walletId,
@@ -288,7 +364,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 }
                 
                 // Monitor the swap and claim funds
-                var swapResult = await MonitorLightningSwapAsync(
+                var swapResult = await MonitorSwapAsync(
                     walletId,
                     lightningInvoice.SwapId,
                     investmentAppService,
@@ -301,7 +377,29 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 }
             }
             
-            // Monitor the receiving address for funds (both Lightning and on-chain payments)
+            // For Liquid payments, monitor and claim the swap (uses same Boltz API)
+            if (invoiceType.PaymentMethod == PaymentMethod.Liquid && invoiceType is LiquidInvoiceType liquidInvoice)
+            {
+                if (string.IsNullOrEmpty(liquidInvoice.SwapId))
+                {
+                    return; // Liquid invoice not loaded yet
+                }
+                
+                // Monitor the swap - uses same MonitorLightningSwap since Boltz handles both
+                var swapResult = await MonitorSwapAsync(
+                    walletId,
+                    liquidInvoice.SwapId,
+                    investmentAppService,
+                    uiServices,
+                    token);
+                
+                if (swapResult.IsFailure)
+                {
+                    return;
+                }
+            }
+            
+            // Monitor the receiving address for funds (Lightning, Liquid, and on-chain payments)
             var receivingAddress = invoiceType.ReceivingAddress ?? invoiceType.Address;
             var monitorResult = await MonitorAddressForFundsAsync(
                 walletId,
@@ -337,7 +435,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         }
     }
 
-    private async Task<Result> MonitorLightningSwapAsync(
+    private static async Task<Result> MonitorSwapAsync(
         WalletId walletId,
         string swapId,
         IInvestmentAppService investmentAppService,

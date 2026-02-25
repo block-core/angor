@@ -60,7 +60,8 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
 
     public Task<Result<CreateLightningSwapForInvestment.CreateLightningSwapResponse>> CreateLightningSwap(CreateLightningSwapForInvestment.CreateLightningSwapRequest request)
         => mediator.Send(request);
-
+    public Task<Result<CreateLiquidSwapForInvestment.CreateLiquidSwapResponse>> CreateLiquidSwap(CreateLiquidSwapForInvestment.CreateLiquidSwapRequest request)
+        => mediator.Send(request);
     public Task<Result<MonitorLightningSwap.MonitorLightningSwapResponse>> MonitorLightningSwap(MonitorLightningSwap.MonitorLightningSwapRequest request)
         => mediator.Send(request);
 
