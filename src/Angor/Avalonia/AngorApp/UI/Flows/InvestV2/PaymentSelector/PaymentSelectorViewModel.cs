@@ -16,14 +16,14 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
     {
         private readonly IShellViewModel shell;
         private readonly IInvestmentAppService investmentAppService;
-        private readonly ProjectId projectId;
+        private readonly IFullProject fullProject;
         private readonly UIServices uiServices;
 
         [Reactive] private IWallet? selectedWallet;
 
-        public PaymentSelectorViewModel(ProjectId projectId, UIServices uiServices, IShellViewModel shell, IInvestmentAppService investmentAppService, IWalletContext walletContext, IAmountUI amountToInvest, IWallet? preSelectedWallet = null)
+        public PaymentSelectorViewModel(IFullProject fullProject, UIServices uiServices, IShellViewModel shell, IInvestmentAppService investmentAppService, IWalletContext walletContext, IAmountUI amountToInvest, IWallet? preSelectedWallet = null)
         {
-            this.projectId = projectId;
+            this.fullProject = fullProject;
             this.uiServices = uiServices;
             this.shell = shell;
             this.investmentAppService = investmentAppService;
@@ -51,7 +51,7 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
             IEnhancedCommand<Unit> command = EnhancedCommand.Create(async () =>
             {
                 closeable.Close();
-                using var invoiceViewModel = new InvoiceViewModel(SelectedWallet!, investmentAppService, uiServices, AmountToInvest, projectId, shell);
+                using var invoiceViewModel = new InvoiceViewModel(SelectedWallet!, investmentAppService, uiServices, AmountToInvest, fullProject, shell);
                 await uiServices.Dialog.Show(
                     invoiceViewModel,
                     "Pay Invoice to Invest",
@@ -96,13 +96,19 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
             {
                 closeable.Close();
                 var title = isAboveThreshold ? "Investment Submitted" : "Investment Completed";
-                await uiServices.Dialog.Show(new InvestResultViewModel(shell), title, (model, c) => model.Options(c));
+                await uiServices.Dialog.Show(new InvestResultViewModel(shell)
+                {
+                    Amount = AmountToInvest,
+                    ProjectName = fullProject.Name
+                }, title, (model, c) => model.Options(c));
                 return Result.Success();
             });
         }
 
         private async Task<Result<bool>> Pay()
         {
+            var projectId = fullProject.ProjectId;
+
             var draftResult = await investmentAppService.BuildInvestmentDraft(
                 new BuildInvestmentDraft.BuildInvestmentDraftRequest(
                     SelectedWallet!.Id,

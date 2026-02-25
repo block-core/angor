@@ -32,7 +32,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     private IWallet? wallet;
     private IInvestmentAppService? investmentAppService;
     private UIServices? uiServices;
-    private ProjectId? projectId;
+    private IFullProject? fullProject;
     private IShellViewModel? shell;
     private string? generatedAddress;
 
@@ -45,14 +45,14 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         IInvestmentAppService investmentAppService, 
         UIServices uiServices, 
         IAmountUI amount,
-        ProjectId projectId,
+        IFullProject fullProject,
         IShellViewModel shell)
     {
         // Store dependencies for lazy loading
         this.wallet = wallet;
         this.investmentAppService = investmentAppService;
         this.uiServices = uiServices;
-        this.projectId = projectId;
+        this.fullProject = fullProject;
         this.shell = shell;
         
         Amount = amount;
@@ -65,7 +65,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         CopyAddress = ReactiveCommand.CreateFromTask(CopyAddressToClipboard, canCopy).Enhance();
         
         // Start initialization asynchronously on the UI thread
-        Observable.StartAsync(async ct => await InitializeAsync(wallet, investmentAppService, uiServices, projectId, shell, ct), RxApp.MainThreadScheduler)
+        Observable.StartAsync(async ct => await InitializeAsync(wallet, investmentAppService, uiServices, fullProject, shell, ct), RxApp.MainThreadScheduler)
             .Subscribe()
             .DisposeWith(disposable);
         
@@ -115,7 +115,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         IWallet wallet,
         IInvestmentAppService investmentAppService,
         UIServices uiServices,
-        ProjectId projectId,
+        IFullProject fullProject,
         IShellViewModel shell,
         CancellationToken cancellationToken)
     {
@@ -162,7 +162,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             SelectedInvoiceType = onChainInvoice;
 
             // Start monitoring for the initially selected invoice type (on-chain)
-            await MonitorAndProcessPaymentAsync(SelectedInvoiceType, wallet.Id, projectId, investmentAppService, uiServices, shell, token);
+            await MonitorAndProcessPaymentAsync(SelectedInvoiceType, wallet.Id, fullProject, investmentAppService, uiServices, shell, token);
         }
         catch (OperationCanceledException)
         {
@@ -172,7 +172,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
 
     private async Task OnInvoiceTypeSelectedAsync(IInvoiceType invoiceType, CancellationToken cancellationToken)
     {
-        if (wallet == null || investmentAppService == null || uiServices == null || projectId == null || shell == null)
+        if (wallet == null || investmentAppService == null || uiServices == null || fullProject == null || shell == null)
             return;
             
         // Link with our disposal token
@@ -202,7 +202,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             }
 
             // Start monitoring for the selected invoice type
-            await MonitorAndProcessPaymentAsync(invoiceType, wallet.Id, projectId, investmentAppService, uiServices, shell, token);
+            await MonitorAndProcessPaymentAsync(invoiceType, wallet.Id, fullProject, investmentAppService, uiServices, shell, token);
         }
         catch (OperationCanceledException)
         {
@@ -212,7 +212,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
 
     private async Task<Result> LoadLightningInvoiceAsync(LightningInvoiceType lightningInvoice, CancellationToken cancellationToken)
     {
-        if (wallet == null || investmentAppService == null || projectId == null || generatedAddress == null)
+        if (wallet == null || investmentAppService == null || fullProject == null || generatedAddress == null)
             return Result.Failure("Dependencies not initialized");
 
         try
@@ -222,7 +222,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             // or auto-regenerating the invoice when it expires.
             var lightningRequest = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
                 wallet.Id,
-                projectId,
+                fullProject.ProjectId,
                 new Amount(Amount.Sats),
                 generatedAddress,
                 DefaultFeeRateSatsPerVbyte);
@@ -260,7 +260,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     private async Task MonitorAndProcessPaymentAsync(
         IInvoiceType invoiceType,
         WalletId walletId,
-        ProjectId projectId,
+        IFullProject fullProject,
         IInvestmentAppService investmentAppService,
         UIServices uiServices,
         IShellViewModel shell,
@@ -316,7 +316,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             }
 
             // Funds received - now build and submit the investment transaction
-            await BuildAndSubmitInvestmentAsync(walletId, projectId, receivingAddress, DefaultFeeRateSatsPerVbyte, investmentAppService, uiServices, shell, token);
+            await BuildAndSubmitInvestmentAsync(walletId, fullProject, receivingAddress, DefaultFeeRateSatsPerVbyte, investmentAppService, uiServices, shell, token);
         }
         catch (OperationCanceledException)
         {
@@ -424,7 +424,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
 
     private async Task BuildAndSubmitInvestmentAsync(
         WalletId walletId,
-        ProjectId projectId,
+        IFullProject fullProject,
         string fundingAddress,
         int feeRateSatsPerVbyte,
         IInvestmentAppService investmentAppService,
@@ -435,6 +435,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
+            var projectId = fullProject.ProjectId;
 
             // Build the investment draft using the funding address
             var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
@@ -498,9 +499,9 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 // Investment submitted, waiting for founder approval
                 paymentReceivedSubject.OnNext(true);
                 
-                // Close the invoice dialog and show investment result dialog
+                // Close the invoice dialog and show the investment result dialog
                 closeable?.Close();
-                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount };
+                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount, ProjectName = fullProject.Name };
                 await uiServices.Dialog.Show(resultViewModel, Observable.Return("Investment Submitted"), (model, c) => model.Options(c));
             }
             else
@@ -515,9 +516,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
 
                 if (publishResult.IsFailure)
                 {
-                    await uiServices.NotificationService.Show(
-                        publishResult.Error,
-                        "Investment Publish Failed");
+                    await uiServices.NotificationService.Show(publishResult.Error, "Investment Publish Failed");
                     return;
                 }
 
@@ -526,7 +525,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 
                 // Close the invoice dialog and show investment result dialog
                 closeable?.Close();
-                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount };
+                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount, ProjectName = fullProject.Name };
                 await uiServices.Dialog.Show(resultViewModel, Observable.Return("Investment Completed"), (model, c) => model.Options(c));
             }
         }

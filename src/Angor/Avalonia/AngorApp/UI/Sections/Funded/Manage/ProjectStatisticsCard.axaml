@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ctrl="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:item="clr-namespace:AngorApp.UI.Sections.Funded.ProjectList.Item"
+             xmlns:manage="clr-namespace:AngorApp.UI.Sections.Funded.Manage"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Sections.Funded.Manage.ProjectStatisticsCard" x:DataType="manage:IFundedProject">
+
+    <Design.DataContext>
+        <item:FundedProjectItemSample />
+    </Design.DataContext>
+
+    <HeaderedContainer Classes="Card Apricot Shadow">
+        <HeaderedContainer.Header>
+            <EdgePanel ContentClasses="Size-XL BlackText" IconOptions.Fill="{DynamicResource BitcoinOrange}" IconOptions.Size="48" IconOptions.Padding="5" StartContent="{Icon fa-bitcoin}" Content="Project Statistics" />
+        </HeaderedContainer.Header>
+        <StackPanel Classes="Gap-M">
+            <BalancedWrapGrid MinItemWidth="160">
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Target Amount" Content="{Binding Project.FundingTarget.DecimalString}" />
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Raised" Content="{Binding Project.FundingRaised^.DecimalString}" />
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Investors" Content="{Binding Project.InvestorsCount^}" />
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Your Investment" Content="{Binding Investment.Amount^.DecimalString}" />
+            </BalancedWrapGrid>
+            <HeaderedContainer Header="Funding Progress" HeaderClasses="Size-S BlackText">
+                <ProgressBar Height="12" Value="{Binding Project.FundingRaised^.Sats}" Maximum="{Binding Project.FundingTarget.Sats}"></ProgressBar>
+            </HeaderedContainer>
+        </StackPanel>
+    </HeaderedContainer>
+</UserControl>

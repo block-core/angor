@@ -18,6 +18,7 @@ public class InvestedProjectDto
     public Amount InRecovery { get; set; }
     public InvestmentStatus InvestmentStatus { get; set; }
     public string InvestmentId { get; set; }
+    public DateTimeOffset? RequestedOn { get; set; }
 }
 
 public enum FounderStatus

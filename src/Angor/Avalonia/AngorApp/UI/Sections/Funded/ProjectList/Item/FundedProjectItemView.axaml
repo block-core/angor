@@ -7,7 +7,7 @@
              xmlns:shared="clr-namespace:AngorApp.UI.Sections.Shared"
              mc:Ignorable="d"
              d:DesignWidth="300"
-             x:Class="AngorApp.UI.Sections.Funded.ProjectList.FundedProjectItemView" x:DataType="item:IFundedProjectItem">
+             x:Class="AngorApp.UI.Sections.Funded.ProjectList.Item.FundedProjectItemView" x:DataType="item:IFundedProjectItem">
     
     <Design.DataContext>
         <item:FundedProjectItemSample />
@@ -16,8 +16,12 @@
     <Border Classes="Panel Elevate Shadow">
         <Interaction.Behaviors>
             <DataContextChangedTrigger>
-                <EnqueueCommandAction Command="{Binding Project.LoadFullProject}"
+                <EnqueueCommandAction Command="{Binding Project.Refresh}"
                                        PoolName="ProjectDetails"
+                                       MaxConcurrency="3"
+                                       DelayBetweenSeconds="0.5" />
+                <EnqueueCommandAction Command="{Binding Investment.Refresh}"
+                                       PoolName="InvestmentDetails"
                                        MaxConcurrency="3"
                                        DelayBetweenSeconds="0.5" />
             </DataContextChangedTrigger>
@@ -33,8 +37,8 @@
                 <ContentControl Classes="Pill">
                     <Interaction.Behaviors>
                         <BindingTriggerBehavior Binding="{Binding Project.ProjectType}" Value="{x:Static shared:ProjectType.Invest}">
-                            <AddClassAction ClassName="Green" />
-                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="INVEST" />
+                            <AddClassAction ClassName="Blue" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Investment" />
                         </BindingTriggerBehavior>
                         <BindingTriggerBehavior Binding="{Binding Project.ProjectType}" Value="{x:Static shared:ProjectStatus.Closed}">
                             <AddClassAction ClassName="Red" />
@@ -45,8 +49,8 @@
                 <ContentControl Classes="Pill">
                     <Interaction.Behaviors>
                         <BindingTriggerBehavior Binding="{Binding Project.ProjectStatus^}" Value="{x:Static shared:ProjectStatus.Open}">
-                            <AddClassAction ClassName="BrightGreen" />
-                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="OPEN" />
+                            <AddClassAction ClassName="Green" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Investment active" />
                         </BindingTriggerBehavior>
                         <BindingTriggerBehavior Binding="{Binding Project.ProjectStatus^}" Value="{x:Static shared:ProjectStatus.Closed}">
                             <AddClassAction ClassName="Red" />
@@ -69,14 +73,14 @@
 
             <TextBlock Classes="Text-Dimmed Wrap" Text="{Binding Project.Description}" MaxLines="2" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
             <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Classes="Size-XS" Text="{Binding Project.InvestorsCount^, TargetNullValue='', StringFormat='{}{0} Investors'}" />
-                <TextBlock Grid.Column="1" Classes="Strong" Text="{Binding Project.FundingRaised^.ShortDecimalString, FallbackValue='...'}" />
+                <TextBlock Classes="Size-XS" Text="Investment" />
+                <TextBlock Grid.Column="1" Classes="Strong" Text="{Binding Investment.Amount^.ShortDecimalString, FallbackValue='...'}" />
             </Grid>
             <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Classes="Size-XS" Text="Target" />
-                <TextBlock Grid.Column="1" Text="{Binding Project.FundingTarget.ShortDecimalString}" />
+                <TextBlock Classes="Size-XS" Text="Date" />
+                <TextBlock Grid.Column="1" Text="{Binding Investment.Date, StringFormat=d}" />
             </Grid>
-            <ProgressBar IsIndeterminate="{Binding Project.LoadFullProject.IsExecuting^}"
+            <ProgressBar IsIndeterminate="{Binding Project.Refresh.IsExecuting^}"
                          Height="8"
                          Value="{Binding Project.FundingRaised^.Sats, FallbackValue=0}"
                          Maximum="{Binding Project.FundingTarget.Sats}">
@@ -86,19 +90,8 @@
                     </BindingTriggerBehavior>
                 </Interaction.Behaviors>
             </ProgressBar>
-            <ContentControl Classes="Pill" HorizontalAlignment="Left">
-                <Interaction.Behaviors>
-                    <BindingTriggerBehavior Binding="{Binding Project.ProjectStatus^}" Value="{x:Static shared:ProjectStatus.Open}">
-                        <AddClassAction ClassName="Green" />
-                        <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Funds Available" />
-                    </BindingTriggerBehavior>
-                    <BindingTriggerBehavior Binding="{Binding Project.ProjectStatus^}" Value="{x:Static shared:ProjectStatus.Closed}">
-                        <AddClassAction ClassName="Orange" />
-                        <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Refund funds" />
-                    </BindingTriggerBehavior>
-                </Interaction.Behaviors>
-            </ContentControl>
-            <EnhancedButton HorizontalContentAlignment="Center" Content="Manage Funds" Command="{Binding Manage}" Classes="Outline" HorizontalAlignment="Stretch" />
+            
+            <EnhancedButton HorizontalContentAlignment="Center" Icon="{Icon fa-regular fa-clipboard}" Content="Manage" Command="{Binding Manage}" Classes="Outline" HorizontalAlignment="Stretch" />
         </StackPanel>
     </Border>
 

@@ -1,10 +1,9 @@
+using AngorApp.UI.Sections.Funded.Manage;
 using AngorApp.UI.Sections.Shared;
 
-namespace AngorApp.UI.Sections.Funded.ProjectList.Item
+namespace AngorApp.UI.Sections.Funded.ProjectList.Item;
+
+public interface IFundedProjectItem : IFundedProject
 {
-    public interface IFundedProjectItem
-    {
-        IProjectItem Project { get; }
-        IEnhancedCommand Manage { get; }
-    }
+    IEnhancedCommand Manage { get; }
 }

@@ -2,15 +2,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:e="clr-namespace:AngorApp.UI.Sections.Funds.Empty"
              xmlns:l="clr-namespace:AngorApp.UI.Sections.Funded"
              xmlns:s="clr-namespace:System.Collections.ObjectModel;assembly=System.Runtime"
              xmlns:g="clr-namespace:System.Collections.Generic;assembly=System.Collections"
              xmlns:item="clr-namespace:AngorApp.UI.Sections.Funded.ProjectList.Item"
              xmlns:projectList="clr-namespace:AngorApp.UI.Sections.Funded.ProjectList"
+             xmlns:empty="clr-namespace:AngorApp.UI.Sections.Funded.Empty"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="750"
              x:Class="AngorApp.UI.Sections.Funded.FundedSectionView" x:DataType="l:IFundedSectionViewModel">
-    
+
     <Design.DataContext>
         <l:FundedSectionViewModelSample>
             <l:FundedSectionViewModelSample.FundedProjects>
@@ -25,29 +26,19 @@
             </l:FundedSectionViewModelSample.FundedProjects>
         </l:FundedSectionViewModelSample>
     </Design.DataContext>
-    
-    <Panel>
-        <e:EmptyView VerticalAlignment="Center" IsVisible="{Binding !!!FundedProjects.Count}" />
-        <Loading x:Name="ProjectsPanel" IsLoading="{Binding LoadProjects.IsExecuting^}" LoadingText="Loading your projects. Please wait.">
-            <ScrollViewer>
-                <HeaderedContainer ClipToBounds="False" Padding="10" Margin="20">
-                    <HeaderedContainer.Header>
-                        <TextBlock Classes="Size-XL Strong">Your Projects</TextBlock>
-                    </HeaderedContainer.Header>
-                    <ItemsControl IsVisible="{Binding !!FundedProjects.Count}" ClipToBounds="False" ItemsSource="{Binding FundedProjects}" VerticalAlignment="Top" HorizontalAlignment="Left">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <BalancedWrapGrid MinItemWidth="320" MaxItemWidth="500" HorizontalSpacing="24" VerticalSpacing="24" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="item:IFundedProjectItem">
-                                <projectList:FundedProjectItemView ClipToBounds="False" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </HeaderedContainer>
-            </ScrollViewer>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Refresh}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <controls:ScrollableView>
+        <Loading IsLoading="{Binding Refresh.IsExecuting^}" LoadingText="Loading. Please wait.">
+            <Panel>
+                <projectList:ProjectListView IsVisible="{Binding !!FundedProjects.Count}" />
+                <empty:EmptyView IsVisible="{Binding !!!FundedProjects.Count}" />
+            </Panel>
         </Loading>
-    </Panel>
+    </controls:ScrollableView>
 </UserControl>

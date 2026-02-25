@@ -13,8 +13,9 @@ public interface IProjectItem
     IObservable<int> InvestorsCount { get; }
     Uri? BannerUrl { get; }
     Uri? LogoUrl { get; }
-    IEnhancedCommand<Result<IFullProject>> LoadFullProject { get; }
+    IEnhancedCommand<Result<IFullProject>> Refresh { get; }
     ProjectType ProjectType { get; }
     IObservable<ProjectStatus> ProjectStatus { get; }
     IObservable<string> ErrorMessage { get; }
+    public IObservable<double> FundingRatio => FundingRaised.Select(raised => FundingTarget.Sats != 0 ?  (double)raised.Sats / FundingTarget.Sats : 0);
 }

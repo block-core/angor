@@ -2,11 +2,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace AngorApp.UI.Sections.Funded.Empty;
+namespace AngorApp.UI.Sections.Funded.Manage;
 
-public partial class EmptyView : UserControl
+public partial class ManageView : UserControl
 {
-    public EmptyView()
+    public ManageView()
     {
         InitializeComponent();
     }

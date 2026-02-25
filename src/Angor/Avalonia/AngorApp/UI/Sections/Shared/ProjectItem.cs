@@ -19,13 +19,13 @@ public partial class ProjectItem : ReactiveObject, IProjectItem, IDisposable
         this.dto = dto;
         this.projectAppService = projectAppService;
 
-        LoadFullProject = EnhancedCommand.CreateWithResult(DoLoadFullProject).DisposeWith(disposable);
-        ErrorMessage = LoadFullProject.Failures().ReplayLastActive();
+        Refresh = EnhancedCommand.CreateWithResult(DoLoadFullProject).DisposeWith(disposable);
+        ErrorMessage = Refresh.Failures().ReplayLastActive();
 
         ProjectType = GetProjectType(dto);
-        ProjectStatus = LoadFullProject.Successes().Select(statisticsDto => statisticsDto.IsFailed() ? Shared.ProjectStatus.Closed : Shared.ProjectStatus.Open);
-        InvestorsCount = LoadFullProject.Successes().Select(statisticsDto => statisticsDto.TotalInvestors ?? 0);
-        FundingRaised = LoadFullProject.Successes().Select(statisticsDto => statisticsDto.RaisedAmount);
+        ProjectStatus = Refresh.Successes().Select(statisticsDto => statisticsDto.IsFailed() ? Shared.ProjectStatus.Closed : Shared.ProjectStatus.Open);
+        InvestorsCount = Refresh.Successes().Select(statisticsDto => statisticsDto.TotalInvestors ?? 0);
+        FundingRaised = Refresh.Successes().Select(statisticsDto => statisticsDto.RaisedAmount);
     }
 
     public IObservable<string> ErrorMessage { get; }
@@ -54,7 +54,7 @@ public partial class ProjectItem : ReactiveObject, IProjectItem, IDisposable
     public IObservable<int> InvestorsCount { get; }
     public Uri? BannerUrl => dto.Banner;
     public Uri? LogoUrl => dto.Avatar;
-    public IEnhancedCommand<Result<IFullProject>> LoadFullProject { get; }
+    public IEnhancedCommand<Result<IFullProject>> Refresh { get; }
     public ProjectType ProjectType { get; }
     public IObservable<ProjectStatus> ProjectStatus { get; }
 

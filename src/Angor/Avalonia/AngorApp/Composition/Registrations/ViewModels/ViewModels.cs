@@ -15,6 +15,8 @@ using AngorApp.UI.Flows.AddWallet.SeedBackup;
 using AngorApp.UI.Flows.InvestV2.PaymentSelector;
 using AngorApp.UI.Sections.Funds.Accounts;
 using AngorApp.UI.Sections.Funds.Empty;
+using AngorApp.UI.Sections.Funded.Manage;
+using AngorApp.UI.Sections.Funded.ProjectList.Item;
 using AngorApp.UI.Sections.FindProjects.Details;
 using AngorApp.UI.Sections.MyProjects.ManageFunds;
 
@@ -28,6 +30,7 @@ public static class ViewModels
                 .AddScoped<IProjectInvestCommandFactory, ProjectInvestCommandFactory>()
                 .AddScoped<Func<IFullProject, IDetailsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<DetailsViewModel>(provider, project))
                 .AddScoped<Func<ProjectId, IManageFundsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<ManageFundsViewModel>(provider, project))
+                .AddScoped<Func<IFundedProject, IManageViewModel>>(provider => project => ActivatorUtilities.CreateInstance<ManageViewModel>(provider, project))
                 .AddTransient<IAccountsViewModel, AccountsViewModel>()
                 .AddTransient<ISeedBackupFileService, SeedBackupFileService>()
                 .AddTransient<IAddWalletFlow, AddWalletFlow>()

@@ -53,15 +53,13 @@ public static class CompositionRoot
             .AddViewModels()
             .AddUIServices(topLevelView, profileContext, applicationStorage);
         
-        services.AddAnnotatedSections(logger);
         services.AddSecurityContext();
         RegisterWalletServices(services, logger, network);
         FundingContextServices.Register(services, logger);
 
         // Integration services
         services.AddSingleton<ISeedwordsProvider, SeedwordsProvider>();
-
-        services.AddSectionsFromAttributes(logger);
+        services.AddAllSectionsFromAttributes(logger);
 
         var serviceProvider = services.BuildServiceProvider();
         serviceProvider.GetRequiredService<INetworkService>().AddSettingsIfNotExist();

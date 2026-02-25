@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:a="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:shared="clr-namespace:AngorApp.UI.Sections.Shared"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="350"
+             x:Class="AngorApp.UI.Sections.Funded.Manage.ProjectInfoCard">
+    
+    <Design.DataContext>
+        <shared:ProjectItemSample />
+    </Design.DataContext>
+    
+    <OverlayBorder Classes="White Shadow" Padding="0" CornerRadius="16" x:DataType="shared:IProjectItem">
+        <StackPanel Grid.Column="0">
+            <a:AdvancedImage CornerRadius="10 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140" Source="{Binding BannerUrl}" />
+            <Panel>
+                <Border Classes="Shadow" Height="60" Width="60" Margin="20 -30 0 0" HorizontalAlignment="Left" CornerRadius="30" />
+                <Border Height="60" Width="60" Margin="20 -30 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource AppBackground}">
+                    <a:AdvancedImage Source="{Binding LogoUrl}" />
+                </Border>
+            </Panel>
+            <StackPanel Margin="20" Classes="Gap-S">
+                <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Classes="Weight-Bold Size-XL Strong" />
+                <TextBlock Text="{Binding Description}" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" TextWrapping="Wrap" Classes="Size-M" />
+            </StackPanel>
+        </StackPanel>
+    </OverlayBorder>
+</UserControl>

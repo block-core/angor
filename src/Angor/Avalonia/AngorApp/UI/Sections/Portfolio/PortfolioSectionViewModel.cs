@@ -13,8 +13,6 @@ using Zafiro.UI.Shell.Utils;
 
 namespace AngorApp.UI.Sections.Portfolio;
 
-[Section("Funded", icon: "fa-arrow-trend-up", sortIndex: 3)]
-[SectionGroup("INVESTOR")]
 public partial class PortfolioSectionViewModel : ReactiveObject, IPortfolioSectionViewModel, IDisposable
 {
     private readonly CompositeDisposable disposable = new();

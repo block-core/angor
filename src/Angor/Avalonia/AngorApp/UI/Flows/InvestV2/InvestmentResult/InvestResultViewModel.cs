@@ -6,7 +6,8 @@ namespace AngorApp.UI.Flows.InvestV2.InvestmentResult;
 
 public class InvestResultViewModel(IShellViewModel shell) : IInvestResultViewModel
 {
-    public IAmountUI Amount { get; set; } = AmountUI.FromBtc(0.2);
+    public IAmountUI Amount { get; init; } = AmountUI.FromBtc(0.2);
+    public string ProjectName { get; init; } = string.Empty;
 
     public IEnumerable<IOption> Options(ICloseable closeable)
     {
