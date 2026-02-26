@@ -8,7 +8,7 @@
              x:Class="AngorApp.UI.Sections.Funders.Chat.ChatView" x:DataType="chat:IChatViewModel">
 
     <Design.DataContext>
-        <angorApp:ChatViewModelSample />
+        <chat:ChatViewModelSample />
     </Design.DataContext>
 
     <DockPanel VerticalSpacing="20">

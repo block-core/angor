@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:manage="clr-namespace:AngorApp.UI.Sections.FundedV2.Common.Model"
+             xmlns:model="clr-namespace:AngorApp.UI.Sections.FundedV2.Investment.Model"
+             xmlns:projectStatisticsCard="clr-namespace:AngorApp.UI.Sections.FundedV2.Investment.Manage.ProjectStatisticsCard"
+             xmlns:model1="clr-namespace:AngorApp.UI.Sections.FundedV2.Fund.Model"
+             xmlns:projectStatisticsCard1="clr-namespace:AngorApp.UI.Sections.FundedV2.Fund.Manage.ProjectStatisticsCard"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Sections.FundedV2.Host.Manage.Parts.ProjectStatisticsCard" x:DataType="manage:IFunded">
+
+    <Design.DataContext>
+        <model:InvestmentFundedSample />
+    </Design.DataContext>
+
+    <HeaderedContainer Classes="Card Apricot Shadow">
+        <HeaderedContainer.Header>
+            <EdgePanel ContentClasses="Size-XL BlackText" IconOptions.Fill="{DynamicResource BitcoinOrange}" IconOptions.Size="48" IconOptions.Padding="5" StartContent="{Icon fa-bitcoin}" Content="Project Statistics" />
+        </HeaderedContainer.Header>
+
+        <ContentControl ClipToBounds="False" Content="{Binding}">
+            <ContentControl.DataTemplates>
+                <DataTemplate DataType="model:IInvestmentFunded">
+                    <projectStatisticsCard:InvestmentProjectStatisticsCard ClipToBounds="False" />
+                </DataTemplate>
+
+                <DataTemplate DataType="model1:IFundFunded">
+                    <projectStatisticsCard1:FundProjectStatisticsCard ClipToBounds="False" />
+                </DataTemplate>
+            </ContentControl.DataTemplates>
+        </ContentControl>
+    </HeaderedContainer>
+</UserControl>

@@ -1,5 +1,6 @@
 using Angor.Sdk.Funding.Founder.Dtos;
 using AngorApp.UI.Shared.Samples;
+using AngorApp.UI.Sections.MyProjects.ManageFunds;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Stage;
 using Humanizer;
 
@@ -35,7 +36,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Claim
             };
         }
 
-        public IFullProject Project { get; } = new FullProjectSample();
+        public IManageFundsProject Project { get; } = ManageFundsProject.From(new FullProjectSample());
 
         public IEnumerable<IClaimStage> Stages { get; }
 

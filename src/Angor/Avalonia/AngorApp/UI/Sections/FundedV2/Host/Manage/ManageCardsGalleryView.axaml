@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:manage="clr-namespace:AngorApp.UI.Sections.FundedV2.Host.Manage"
+             xmlns:parts="clr-namespace:AngorApp.UI.Sections.FundedV2.Host.Manage.Parts"
+             mc:Ignorable="d"
+             x:Class="AngorApp.UI.Sections.FundedV2.Host.Manage.ManageCardsGalleryView"
+             x:DataType="manage:ManageCardsGalleryViewModelSample"
+             d:DesignWidth="1000">
+
+    <Design.DataContext>
+        <manage:ManageCardsGalleryViewModelSample />
+    </Design.DataContext>
+
+    <StackPanel Margin="10" Classes="Gap-XL">
+        <TextBlock Text="Funded V2 Manage Cards Gallery" Classes="Size-XL Weight-Bold" />
+
+        <ItemsControl ItemsSource="{Binding Cases}" Classes="VerticalBigGap">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="manage:ManageCardsGalleryCaseSample">
+                    <HeaderedContainer Header="{Binding Title}" HeaderClasses="Size-L Weight-Bold" Classes="Card Shadow">
+                        <StackPanel Classes="Gap-XL">
+                            <Grid ColumnSpacing="24" ColumnDefinitions="* 400">
+                                <parts:ProjectInfoCard ClipToBounds="False" DataContext="{Binding ViewModel.Funded.Project}" />
+                                <parts:ActionsCard ClipToBounds="False" Grid.Column="1" DataContext="{Binding ViewModel}" />
+                            </Grid>
+                            <parts:ProjectStatisticsCard ClipToBounds="False" DataContext="{Binding ViewModel.Funded}" />
+                        </StackPanel>
+                    </HeaderedContainer>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

@@ -6,12 +6,13 @@
              xmlns:item="clr-namespace:AngorApp.UI.Sections.Funded.ProjectList.Item"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:manage1="clr-namespace:AngorApp.UI.Sections.Funded.Manage"
              mc:Ignorable="d" d:DesignWidth="1200"
              x:Class="AngorApp.UI.Sections.Funded.Manage.ManageView"
              x:DataType="manage:IManageViewModel">
 
     <Design.DataContext>
-        <angorApp:ManageViewModelSample />
+        <manage:ManageViewModelSample />
     </Design.DataContext>
 
     <Interaction.Behaviors>
@@ -23,10 +24,10 @@
     <controls:ScrollableView>
         <StackPanel Classes="Gap-XL" Margin="10">
             <Grid ColumnSpacing="24" ColumnDefinitions="* 400">
-                <manage:ProjectInfoCard ClipToBounds="False" DataContext="{Binding Project.Project}" />
-                <manage:ActionsCard DockPanel.Dock="Right" ClipToBounds="False" Grid.Column="1" />
+                <manage1:ProjectInfoCard ClipToBounds="False" DataContext="{Binding Project.Project}" />
+                <manage1:ActionsCard DockPanel.Dock="Right" ClipToBounds="False" Grid.Column="1" />
             </Grid>
-            <manage:ProjectStatisticsCard ClipToBounds="False" DataContext="{Binding Project}" />
+            <manage1:ProjectStatisticsCard ClipToBounds="False" DataContext="{Binding Project}" />
         </StackPanel>
     </controls:ScrollableView>
 </UserControl>

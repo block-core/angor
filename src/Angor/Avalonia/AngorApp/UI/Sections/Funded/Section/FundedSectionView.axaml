@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:l="clr-namespace:AngorApp.UI.Sections.Funded"
+             xmlns:s="clr-namespace:System.Collections.ObjectModel;assembly=System.Runtime"
+             xmlns:g="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+             xmlns:item="clr-namespace:AngorApp.UI.Sections.Funded.ProjectList.Item"
+             xmlns:projectList="clr-namespace:AngorApp.UI.Sections.Funded.ProjectList"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:section="clr-namespace:AngorApp.UI.Sections.Funded.Section"
+             xmlns:projectList1="clr-namespace:AngorApp.UI.Sections.Funded.ProjectList"
+             xmlns:empty1="clr-namespace:AngorApp.UI.Sections.Funded.ProjectList.Empty"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="750"
+             x:Class="AngorApp.UI.Sections.Funded.Section.FundedSectionView" x:DataType="section:IFundedSectionViewModel">
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Refresh}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <controls:ScrollableView>
+        <Loading IsLoading="{Binding Refresh.IsExecuting^}" LoadingText="Loading. Please wait.">
+            <Panel>
+                <projectList1:ProjectListView IsVisible="{Binding !!FundedItems.Count}" />
+                <empty1:EmptyView VerticalAlignment="Center" IsVisible="{Binding !!!FundedItems.Count}" />
+            </Panel>
+        </Loading>
+    </controls:ScrollableView>
+</UserControl>

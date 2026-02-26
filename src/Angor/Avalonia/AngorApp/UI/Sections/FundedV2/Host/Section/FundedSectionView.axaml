@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:section="clr-namespace:AngorApp.UI.Sections.FundedV2.Host.Section"
+             xmlns:projectList="clr-namespace:AngorApp.UI.Sections.FundedV2.Host.ProjectList"
+             xmlns:empty="clr-namespace:AngorApp.UI.Sections.FundedV2.Host.ProjectList.Empty"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="750"
+             x:Class="AngorApp.UI.Sections.FundedV2.Host.Section.FundedSectionView" x:DataType="section:IFundedSectionViewModel">
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Refresh}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <controls:ScrollableView>
+        <Loading IsLoading="{Binding Refresh.IsExecuting^}" LoadingText="Loading. Please wait.">
+            <Panel>
+                <projectList:ProjectListView IsVisible="{Binding !!FundedItems.Count}" />
+                <empty:EmptyView VerticalAlignment="Center" IsVisible="{Binding !!!FundedItems.Count}" />
+            </Panel>
+        </Loading>
+    </controls:ScrollableView>
+</UserControl>

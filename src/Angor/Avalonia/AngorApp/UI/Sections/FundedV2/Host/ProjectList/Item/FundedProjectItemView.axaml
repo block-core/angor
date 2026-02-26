@@ -1,0 +1,120 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:a="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:manage="clr-namespace:AngorApp.UI.Sections.FundedV2.Common.Model"
+             xmlns:samples="clr-namespace:AngorApp.UI.Sections.FundedV2.Common.Samples"
+             xmlns:model="clr-namespace:AngorApp.UI.Sections.FundedV2.Investment.Model"
+             xmlns:model1="clr-namespace:AngorApp.UI.Sections.FundedV2.Fund.Model"
+             mc:Ignorable="d"
+             d:DesignWidth="500"
+             x:Class="AngorApp.UI.Sections.FundedV2.Host.ProjectList.Item.FundedProjectItemView" x:DataType="manage:IFundedItem">
+
+    <Design.DataContext>
+        <samples:IFundedItemSample />
+    </Design.DataContext>
+    
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <EnqueueCommandAction PoolName="FundedProjects" Command="{Binding Funded.InvestorData.Refresh}" />
+            <EnqueueCommandAction PoolName="FundedProjects" Command="{Binding Funded.Project.Refresh}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <Border Classes="Panel Elevate Shadow">
+        <StackPanel Classes="Gap-L">
+            <Grid>
+                <a:AdvancedImage CornerRadius="10 10 0 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="150" Source="{Binding Funded.Project.BannerUrl}" />
+            </Grid>
+            <Border Height="60" Width="60" Margin="0 -50 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource AppBackground}">
+                <a:AdvancedImage Source="{Binding Funded.Project.LogoUrl}" />
+            </Border>
+            <ContentControl Content="{Binding Funded}">
+                <ContentControl.DataTemplates>
+                    <DataTemplate DataType="model:IInvestmentFunded">
+                        <StackPanel Classes="Gap-M">
+                            <DockPanel>
+                                <TextBlock Text="Investment:" />
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding InvestorData.Amount.DecimalString}" />
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBlock Text="Date:" />
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding InvestorData.InvestedOn, StringFormat=d}" />
+                            </DockPanel>
+                            <ProgressBar Height="8" Value="{Binding Project.Raised^.Sats}" Maximum="{Binding Project.Target.Sats}" />
+                        </StackPanel>
+                    </DataTemplate>
+                    <DataTemplate DataType="model1:IFundFunded">
+                        <StackPanel Classes="Gap-M">
+                            <DockPanel>
+                                <TextBlock Text="Type:" />
+                                <TextBlock HorizontalAlignment="Right" Text="Fund" />
+                            </DockPanel>
+                            <ProgressBar Height="8" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+            <!-- <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Top" HorizontalAlignment="Left"> -->
+            <!--     <ContentControl Content="{Binding Funded.Project}"> -->
+            <!--         <ContentControl.DataTemplates> -->
+            <!--             <DataTemplate DataType="new:IInvestmentProject2"> -->
+            <!--                 <ContentControl Classes="Pill Blue" Content="Investment" /> -->
+            <!--             </DataTemplate> -->
+            <!--             <DataTemplate DataType="new:IFundProject2"> -->
+            <!--                 <ContentControl Classes="Pill Orange" Content="Fund" /> -->
+            <!--             </DataTemplate> -->
+            <!--         </ContentControl.DataTemplates> -->
+            <!--     </ContentControl> -->
+            <!--     <ContentControl Classes="Pill"> -->
+            <!--         ~1~ <Interaction.Behaviors> @1@ -->
+            <!--         ~1~     <BindingTriggerBehavior Binding="{Binding Project.ProjectStatus^}" Value="{x:Static shared:ProjectStatus.Open}"> @1@ -->
+            <!--         ~1~         <AddClassAction ClassName="Green" /> @1@ -->
+            <!--         ~1~         <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="OPEN" /> @1@ -->
+            <!--         ~1~     </BindingTriggerBehavior> @1@ -->
+            <!--         ~1~     <BindingTriggerBehavior Binding="{Binding Project.ProjectStatus^}" Value="{x:Static shared:ProjectStatus.Closed}"> @1@ -->
+            <!--         ~1~         <AddClassAction ClassName="Red" /> @1@ -->
+            <!--         ~1~         <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="CLOSED" /> @1@ -->
+            <!--         ~1~     </BindingTriggerBehavior> @1@ -->
+            <!--         ~1~ </Interaction.Behaviors> @1@ -->
+            <!--     </ContentControl> -->
+            <!-- </StackPanel> -->
+
+            <!-- <EdgePanel Spacing="0"> -->
+            <!--     ~1~ <EdgePanel.StartContent> @1@ -->
+            <!--     ~1~     <ContentControl Margin="0 0 8 0" IsVisible="{Binding Project.ErrorMessage^, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}" IconOptions.Fill="{DynamicResource Error}" Foreground="{DynamicResource Error}" Content="{Icon fa-circle-exclamation}"> @1@ -->
+            <!--     ~1~         <ToolTip.Tip> @1@ -->
+            <!--     ~1~             <HeaderedContainer Header="Load error" Content="{Binding Project.ErrorMessage^}" /> @1@ -->
+            <!--     ~1~         </ToolTip.Tip> @1@ -->
+            <!--     ~1~     </ContentControl> @1@ -->
+            <!--     ~1~ </EdgePanel.StartContent> @1@ -->
+            <!--     <TextBlock Classes="Header" Text="{Binding Funded.Project.Name}" /> -->
+            <!-- </EdgePanel> -->
+
+            <!-- <TextBlock Classes="Text-Dimmed Wrap" Text="{Binding Funded.Project.Description}" MaxLines="2" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" /> -->
+            <!-- <Grid ColumnDefinitions="*,Auto"> -->
+            <!--     <TextBlock Classes="Size-XS" Text="Investment" /> -->
+            <!--     <TextBlock Grid.Column="1" Classes="Strong" Text="{Binding InvestorData.Amount^.ShortDecimalString, FallbackValue='...'}" /> -->
+            <!-- </Grid> -->
+            <!-- <Grid ColumnDefinitions="*,Auto"> -->
+            <!--     <TextBlock Classes="Size-XS" Text="Date" /> -->
+            <!--     <TextBlock Grid.Column="1" Text="{Binding InvestorData.Date, StringFormat=d}" /> -->
+            <!-- </Grid> -->
+            <!-- <ProgressBar IsIndeterminate="{Binding Project.RefreshStats.IsExecuting^}" -->
+            <!--              Height="8" -->
+            <!--              Value="{Binding Project.FundingRaised^.Sats, FallbackValue=0}" -->
+            <!--              Maximum="{Binding Project.FundingTarget.Sats}"> -->
+            <!--     <Interaction.Behaviors> -->
+            <!--         <BindingTriggerBehavior Binding="{Binding Project.ProjectStatus^}" Value="{x:Static shared:ProjectStatus.Closed}"> -->
+            <!--             <AddClassAction ClassName="Red" /> -->
+            <!--         </BindingTriggerBehavior> -->
+            <!--     </Interaction.Behaviors> -->
+            <!-- </ProgressBar> -->
+
+            <EnhancedButton HorizontalContentAlignment="Center" Icon="{Icon fa-regular fa-clipboard}" Content="Manage" Command="{Binding Manage}" Classes="Outline" HorizontalAlignment="Stretch" />
+        </StackPanel>
+    </Border>
+
+
+</UserControl>

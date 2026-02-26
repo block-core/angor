@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:m="clr-namespace:AngorApp.UI.Sections.FundedV2.Host.Manage"
+             xmlns:parts="clr-namespace:AngorApp.UI.Sections.FundedV2.Host.Manage.Parts"
+             mc:Ignorable="d" d:DesignWidth="1200"
+             x:Class="AngorApp.UI.Sections.FundedV2.Host.Manage.ManageView"
+             x:DataType="m:IManageViewModel">
+
+    <Design.DataContext>
+        <m:ManageViewModelSample />
+    </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Funded.Project.Refresh}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <controls:ScrollableView>
+        <StackPanel Classes="Gap-XL" Margin="10">
+            <Grid ColumnSpacing="24" ColumnDefinitions="* 400">
+                <parts:ProjectInfoCard ClipToBounds="False" DataContext="{Binding Funded.Project}" />
+                <parts:ActionsCard DockPanel.Dock="Right" ClipToBounds="False" Grid.Column="1" />
+            </Grid>
+            <parts:ProjectStatisticsCard ClipToBounds="False" DataContext="{Binding Funded}" />
+        </StackPanel>
+    </controls:ScrollableView>
+</UserControl>

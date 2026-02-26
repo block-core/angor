@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ctrl="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:manage="clr-namespace:AngorApp.UI.Sections.FundedV2.Investment.Model"
+             mc:Ignorable="d"
+             d:DesignWidth="800"
+             x:Class="AngorApp.UI.Sections.FundedV2.Investment.Manage.ProjectStatisticsCard.InvestmentProjectStatisticsCard"
+             x:DataType="manage:IInvestmentFunded">
+    
+    <Design.DataContext>
+        <manage:InvestmentFundedSample />
+    </Design.DataContext>
+
+    <StackPanel Classes="Gap-M">
+        <BalancedWrapGrid MinItemWidth="160">
+            <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Target Amount" Right="{Icon fa-bitcoin}" Content="{Binding Project.Target.DecimalString}" />
+            <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Raised" Right="{Icon fa-chart-line}" Content="{Binding Project.Raised^.DecimalString}" />
+            <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Investors" Right="{Icon fa-users}" Content="0" />
+            <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Your Investment" Right="{Icon fa-bitcoin}" Content="{Binding InvestorData.Amount.DecimalString}" />
+        </BalancedWrapGrid>
+        <HeaderedContainer Header="Funding Progress">
+            <ProgressBar Value="{Binding Project.Raised^.Sats}" Maximum="{Binding Project.Target.Sats}" Height="16" />
+        </HeaderedContainer>
+    </StackPanel>
+</UserControl>

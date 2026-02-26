@@ -4,16 +4,17 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:a="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:shared="clr-namespace:AngorApp.UI.Sections.Shared"
+             xmlns:project="clr-namespace:AngorApp.UI.Sections.Shared.Project"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="350"
              x:Class="AngorApp.UI.Sections.Funded.Manage.ProjectInfoCard">
     
     <Design.DataContext>
-        <shared:ProjectItemSample />
+        <project:InvestmentProjectSample />
     </Design.DataContext>
     
-    <OverlayBorder Classes="White Shadow" Padding="0" CornerRadius="16" x:DataType="shared:IProjectItem">
+    <OverlayBorder Classes="White Shadow" Padding="0" CornerRadius="16" x:DataType="project:IProject">
         <StackPanel Grid.Column="0">
-            <a:AdvancedImage CornerRadius="10 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140" Source="{Binding BannerUrl}" />
+            <a:AdvancedImage CornerRadius="10 10 0 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140" Source="{Binding BannerUrl}" />
             <Panel>
                 <Border Classes="Shadow" Height="60" Width="60" Margin="20 -30 0 0" HorizontalAlignment="Left" CornerRadius="30" />
                 <Border Height="60" Width="60" Margin="20 -30 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource AppBackground}">

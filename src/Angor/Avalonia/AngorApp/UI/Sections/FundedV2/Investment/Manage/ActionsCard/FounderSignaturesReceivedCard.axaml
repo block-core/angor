@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:manage="clr-namespace:AngorApp.UI.Sections.FundedV2.Host.Manage"
+             mc:Ignorable="d"
+             d:DesignWidth="400"
+             x:Class="AngorApp.UI.Sections.FundedV2.Investment.Manage.ActionsCard.FounderSignaturesReceivedCard"
+             x:DataType="manage:IManageViewModel">
+
+    <Border Classes="ColorPanel ApricotGradient Shadow">
+        <StackPanel VerticalAlignment="Center" Classes="Gap-XL">
+            <ContentControl IconOptions.Size="64" Content="{Icon fa-edit}" />
+            <TextBlock HorizontalAlignment="Center" Classes="Size-S Weight-Light Center">Transaction agreement signed ensuring you can recover your funds if the project does not succeed.</TextBlock>
+            <BalancedWrapGrid MinItemWidth="200" HorizontalSpacing="10">
+                <EnhancedButton Command="{Binding CancelInvestment}" Classes="Outline HorizontalStretch" Content="Cancel" />
+            </BalancedWrapGrid>
+            <TextBlock HorizontalAlignment="Center" Classes="Size-S Weight-Light Center">By investing, you acknowledge that early withdrawal requires a 90 day waiting period</TextBlock>
+        </StackPanel>
+    </Border>
+</UserControl>

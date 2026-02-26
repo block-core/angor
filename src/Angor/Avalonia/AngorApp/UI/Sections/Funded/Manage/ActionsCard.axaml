@@ -16,7 +16,7 @@
     </Interaction.Behaviors>
 
     <Design.DataContext>
-        <angorApp:ManageViewModelSample Status="FounderSignaturesReceived" />
+        <manage:ManageViewModelSample Status="FounderSignaturesReceived" />
     </Design.DataContext>
 
     <UserControl.Resources>
