@@ -19,8 +19,34 @@
         </TextBlock>
         <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center">
             <Run>Stages:</Run>
-            <Run Foreground="{DynamicResource TextStrong}" FontWeight="Bold" Text="{Binding  StageCount, StringFormat='{}{0} releases'}" />
+            <Run Foreground="{DynamicResource TextStrong}" FontWeight="Bold" Text="{Binding  StageCount^, StringFormat='{}{0} releases'}" />
         </TextBlock>
+
+        <!-- Penalty threshold indicator -->
+        <Border IsVisible="{Binding HasPenaltyThreshold}"
+                Padding="8 4" CornerRadius="4" VerticalAlignment="Center">
+            <Border.Styles>
+                <Style Selector="Border.AboveThreshold">
+                    <Setter Property="Background" Value="#30FF8C00" />
+                </Style>
+                <Style Selector="Border.BelowThreshold">
+                    <Setter Property="Background" Value="{DynamicResource SoftGreen}" />
+                </Style>
+            </Border.Styles>
+            <Panel>
+                <!-- Above threshold: requires founder approval -->
+                <TextBlock IsVisible="{Binding IsAbovePenaltyThreshold^}"
+                           Classes="Size-XS" VerticalAlignment="Center"
+                           Foreground="#FF8C00" FontWeight="SemiBold"
+                           Text="Requires Approval" />
+                <!-- Below threshold: direct publish -->
+                <TextBlock IsVisible="{Binding !IsAbovePenaltyThreshold^}"
+                           Classes="Size-XS" VerticalAlignment="Center"
+                           Foreground="{DynamicResource Brand}" FontWeight="SemiBold"
+                           Text="No Approval Needed" />
+            </Panel>
+        </Border>
+
         <EnhancedButton Command="{Binding Invest}" DockPanel.Dock="Right" Classes="Outline" Icon="{Icon fa-chart-line}" Content="Invest" />
     </StackPanel>
 </UserControl>

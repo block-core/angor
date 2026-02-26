@@ -71,6 +71,45 @@
                     </StackPanel>
                 </HeaderedContainer>
 
+                <!-- Funding Pattern Section (Fund/Subscribe projects only) -->
+                <HeaderedContainer Header="Funding Pattern" Classes="Card Silver Shadow MediumHeader"
+                                   IsVisible="{Binding ShowPatternSelector}">
+                    <StackPanel Spacing="16">
+                        <TextBlock Classes="Text-Muted" TextWrapping="Wrap">Choose a funding pattern for your investment:</TextBlock>
+                        <ListBox ItemsSource="{Binding AvailablePatterns}"
+                                 SelectedItem="{Binding SelectedPattern, Mode=TwoWay}"
+                                 SelectionMode="Single"
+                                 ItemContainerTheme="{StaticResource ButtonizedListBoxItem}"
+                                 Background="Transparent">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="8" />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="12" CornerRadius="8">
+                                        <StackPanel Spacing="4">
+                                            <EdgePanel>
+                                                <EdgePanel.StartContent>
+                                                    <TextBlock Classes="Weight-Bold" Text="{Binding Name}" />
+                                                </EdgePanel.StartContent>
+                                                <EdgePanel.EndContent>
+                                                    <Border Padding="6 2" CornerRadius="4" Background="{DynamicResource SoftGreen}">
+                                                        <TextBlock Classes="Size-XS Weight-Bold" Foreground="{DynamicResource Brand}" Text="{Binding StageCount, StringFormat='{}{0} stages'}" />
+                                                    </Border>
+                                                </EdgePanel.EndContent>
+                                            </EdgePanel>
+                                            <TextBlock Classes="Size-XS Text-Muted" TextWrapping="Wrap" Text="{Binding Description}" />
+                                            <TextBlock Classes="Size-XS Dimmed" Text="{Binding Frequency, StringFormat='Frequency: {0}'}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </HeaderedContainer>
+
                 <!-- Release Schedule Section -->
                 <HeaderedContainer Header="Release Schedule" Classes="Card Silver Shadow MediumHeader">
                     <ScrollViewer>
