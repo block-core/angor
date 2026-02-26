@@ -10,8 +10,6 @@ public class LiteDbGenericDocumentCollection<T>(IAngorDocumentDatabase database)
 {
     private readonly IDocumentCollection<Document<T>> _documentCollection = database.GetCollection<Document<T>>(typeof(T).Name);
 
-    private Func<T, string>? getDocumentIdProperty;
-    
     public async Task<Result<T?>> FindByIdAsync(string id)
     {
         var result = await _documentCollection.FindByIdAsync(id);
@@ -49,25 +47,25 @@ public class LiteDbGenericDocumentCollection<T>(IAngorDocumentDatabase database)
     
     public async Task<Result<int>> InsertAsync(Expression<Func<T,string>> getDocumentId, params T[] entities)
     {
-        getDocumentIdProperty ??= getDocumentId.Compile();
+        var getId = getDocumentId.Compile();
         
         var documents = entities.Select(entity => 
-            new Document<T>(entity, getDocumentIdProperty.Invoke(entity))).ToArray();
+            new Document<T>(entity, getId.Invoke(entity))).ToArray();
         
         return await _documentCollection.InsertAsync(documents);
     }
     
     public async Task<Result<bool>> UpdateAsync(Expression<Func<T,string>> getDocumentId,T entity)
     {
-        getDocumentIdProperty ??= getDocumentId.Compile();
-        var document = new Document<T>(entity, getDocumentIdProperty.Invoke(entity));
+        var getId = getDocumentId.Compile();
+        var document = new Document<T>(entity, getId.Invoke(entity));
         return await _documentCollection.UpdateAsync(document);
     }
 
     public async Task<Result<bool>> UpsertAsync(Expression<Func<T,string>> getDocumentId,T entity)
     {
-        getDocumentIdProperty ??= getDocumentId.Compile();
-        var document = new Document<T>(entity, getDocumentIdProperty.Invoke(entity));
+        var getId = getDocumentId.Compile();
+        var document = new Document<T>(entity, getId.Invoke(entity));
         return await _documentCollection.UpsertAsync(document);
     }
 
