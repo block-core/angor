@@ -80,13 +80,10 @@ namespace AngorApp.UI.Flows.CreateProject
             var environment = isDebug ? ValidationEnvironment.Debug : ValidationEnvironment.Production;
             InvestmentProjectConfigBase newProject = isDebug ? new InvestmentProjectConfigDebug() : new InvestmentProjectConfig();
 
-            if (isDebug)
-            {
-                PopulateDebugDefaults(newProject);
-            }
+            Action? prefillAction = isDebug ? () => PopulateDebugDefaults(newProject) : null;
 
             SlimWizard<string> wizard = WizardBuilder
-                                        .StartWith(() => new ProjectProfileViewModel(newProject)).NextUnit().WhenValid()
+                                        .StartWith(() => new ProjectProfileViewModel(newProject, prefillAction)).NextUnit().WhenValid()
                                         .Then(_ => new ProjectImagesViewModel(newProject, imagePicker)).NextUnit().Always()
                                         .Then(_ => new FundingConfigurationViewModel(newProject, environment)).NextUnit().WhenValid()
                                         .Then(_ => new StagesViewModel(newProject)).NextUnit().WhenValid()

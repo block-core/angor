@@ -26,7 +26,7 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
         var canCancelInvestment = this.WhenAnyValue(x => x.InvestmentStatus).Select(x => x != InvestmentStatus.Invested);
 
         CompleteInvestment = ReactiveCommand.CreateFromTask(() => walletContext.Require().Bind(wallet => 
-    investmentAppService.ConfirmInvestment(new PublishInvestment.PublishInvestmentRequest(projectDto.InvestmentId, wallet.Id, new ProjectId(projectDto.Id)))
+            investmentAppService.ConfirmInvestment(new PublishInvestment.PublishInvestmentRequest(projectDto.InvestmentId, wallet.Id, new ProjectId(projectDto.Id)))
         .Map(_ => Unit.Default)), canCompleteInvestment)
             .Enhance()
             .DisposeWith(disposable);
@@ -52,8 +52,8 @@ public partial class PortfolioProjectViewModel : ReactiveObject, IPortfolioProje
 
         // cancel investment command
         CancelInvestment = ReactiveCommand.CreateFromTask(() => 
-   investmentAppService.CancelInvestmentRequest(new Angor.Sdk.Funding.Investor.Operations.CancelInvestmentRequest.CancelInvestmentRequestRequest(walletContext.CurrentWallet.Value.Id, new ProjectId(projectDto.Id), projectDto.InvestmentId))
-          .Map(_ => Unit.Default), canCancelInvestment)
+                investmentAppService.CancelInvestmentRequest(new Angor.Sdk.Funding.Investor.Operations.CancelInvestmentRequest.CancelInvestmentRequestRequest(walletContext.CurrentWallet.Value.Id, new ProjectId(projectDto.Id), projectDto.InvestmentId))
+            .Map(_ => Unit.Default), canCancelInvestment)
             .Enhance()
             .DisposeWith(disposable);
 

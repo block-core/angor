@@ -55,7 +55,7 @@ public static class NotifyFounderOfCancellation
 
                 var content = serializer.Serialize(notification);
 
-                var (eventTime, eventId) = signService.NotifyInvestmentCancelled(
+                var (eventTime, eventId) = signService.NotifyInvestmentCanceled(
                     content, 
                     investorNostrPrivateKeyHex, 
                     project.NostrPubKey, 

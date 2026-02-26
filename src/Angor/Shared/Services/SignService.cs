@@ -179,7 +179,7 @@ namespace Angor.Shared.Services
             return Task.CompletedTask;
         }
 
-        public (DateTime,string) NotifyInvestmentCancelled(string content, string investorNostrPrivateKey, string founderNostrPubKey, Action<NostrOkResponse> okResponse)
+        public (DateTime,string) NotifyInvestmentCanceled(string content, string investorNostrPrivateKey, string founderNostrPubKey, Action<NostrOkResponse> okResponse)
         {
             var sender = NostrPrivateKey.FromHex(investorNostrPrivateKey);
 
@@ -190,7 +190,7 @@ namespace Angor.Shared.Services
                 Content = content,
                 Tags = new NostrEventTags(
                     NostrEventTag.Profile(founderNostrPubKey),
-                    new NostrEventTag("subject","Investment cancelled"))
+                    new NostrEventTag("subject","Investment canceled"))
             };
 
             var signed = ev.Sign(sender);
@@ -214,7 +214,7 @@ namespace Angor.Shared.Services
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionKey)
-                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Investment cancelled")
+                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Investment canceled")
                     .Select(_ => _.Event)
                     .Subscribe(nostrEvent =>
                     {
@@ -296,7 +296,7 @@ namespace Angor.Shared.Services
                 {
                     "Investment offer" => InvestmentMessageType.Request,
                     "Investment completed" => InvestmentMessageType.Notification,
-                    "Investment cancelled" => InvestmentMessageType.Cancellation,
+                    "Investment canceled" => InvestmentMessageType.Cancellation,
                     "Re:Investment offer" => InvestmentMessageType.Approval,
                     _ => (InvestmentMessageType?)null
                 };

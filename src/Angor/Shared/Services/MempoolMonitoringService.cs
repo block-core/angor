@@ -35,8 +35,8 @@ public class MempoolMonitoringService : IMempoolMonitoringService
         {
             if (cancellationToken.IsCancellationRequested)
             {
-                _logger.LogInformation("Mempool monitoring cancelled for address {Address}", address);
-                throw new OperationCanceledException("Mempool monitoring was cancelled");
+                _logger.LogInformation("Mempool monitoring canceled for address {Address}", address);
+                throw new OperationCanceledException("Mempool monitoring was canceled");
             }
 
             try
