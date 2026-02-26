@@ -92,7 +92,7 @@ public static class BuildPenaltyReleaseTransaction
             var recoveryTransaction = networkConfiguration.GetNetwork().CreateTransaction(recoveryTrxHex);
 
             // Build and sign the penalty release transaction
-            var feeEstimation = new FeeEstimation { FeeRate = request.SelectedFeeRate.SatsPerKilobyte / 1000 };
+            var feeEstimation = new FeeEstimation { FeeRate = request.SelectedFeeRate.SatsPerKilobyte };
 
             var releaseTransactionInfo = investorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(
                 project.Value.ToProjectInfo(),

@@ -175,7 +175,7 @@ public sealed record RecoveryStateViewModel
 
     public bool CanClaimReleasedFunds => dto.HasUnspentItems && dto.HasReleaseSignatures;
     public bool CanRecoverToPenalty => dto.HasUnspentItems && !dto.HasItemsInPenalty;
-    public bool CanReleaseFromPenalty => dto.HasUnspentItems && dto.HasItemsInPenalty;
+    public bool CanReleaseFromPenalty => dto.HasItemsInPenalty;
     public bool CanSpendEndOfProjectOrThreshold => dto.HasUnspentItems && (dto.EndOfProject || !dto.IsAboveThreshold);
     public bool EndOfProject => dto.EndOfProject;
 
