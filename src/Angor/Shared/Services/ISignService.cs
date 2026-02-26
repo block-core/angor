@@ -12,7 +12,7 @@ public enum InvestmentMessageType
     Request,
     /// <summary>Investment completion notification ("Investment completed")</summary>
     Notification,
-    /// <summary>Investment cancellation notification ("Investment cancelled")</summary>
+    /// <summary>Investment cancellation notification ("Investment canceled")</summary>
     Cancellation,
     /// <summary>Founder approval response ("Re:Investment offer")</summary>
     Approval
@@ -41,9 +41,9 @@ public interface ISignService
         Action onAllMessagesReceived);
     
     /// <summary>
-    /// Sends an unencrypted notification to the founder that an investment request has been cancelled.
+    /// Sends an unencrypted notification to the founder that an investment request has been canceled.
     /// </summary>
-    (DateTime eventTime, string eventId) NotifyInvestmentCancelled(string content, string investorNostrPrivateKey,
+    (DateTime eventTime, string eventId) NotifyInvestmentCanceled(string content, string investorNostrPrivateKey,
         string founderNostrPubKey, Action<NostrOkResponse> okResponse);
 
     /// <summary>

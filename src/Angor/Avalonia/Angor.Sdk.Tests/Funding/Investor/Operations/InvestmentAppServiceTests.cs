@@ -1,4 +1,5 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects;
@@ -30,6 +31,7 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
     private readonly Mock<IInvestmentHandshakeService> _mockInvestmentHandshakeService;
     private readonly Mock<ITransactionService> _mockTransactionService;
     private readonly Mock<IProjectInvestmentsService> _mockProjectInvestmentsService;
+    private readonly Mock<IInvestmentAppService> _mockInvestmentAppService;
 
     public InvestmentAppServiceTests(TestNetworkFixture fixture)
     {
@@ -40,6 +42,7 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
         _mockInvestmentHandshakeService = new Mock<IInvestmentHandshakeService>();
         _mockTransactionService = new Mock<ITransactionService>();
         _mockProjectInvestmentsService = new Mock<IProjectInvestmentsService>();
+        _mockInvestmentAppService = new Mock<IInvestmentAppService>();
     }
 
     #region GetInvestmentsHandler Tests
@@ -238,7 +241,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _fixture.NetworkConfiguration,
             _fixture.InvestorTransactionActions,
             _mockProjectInvestmentsService.Object,
-            _mockTransactionService.Object);
+            _mockTransactionService.Object,
+            _mockInvestmentAppService.Object);
         
         var request = new GetRecoveryStatus.GetRecoveryStatusRequest(walletId, projectId);
 
@@ -272,7 +276,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _fixture.NetworkConfiguration,
             _fixture.InvestorTransactionActions,
             _mockProjectInvestmentsService.Object,
-            _mockTransactionService.Object);
+            _mockTransactionService.Object,
+            _mockInvestmentAppService.Object);
         
         var request = new GetRecoveryStatus.GetRecoveryStatusRequest(walletId, project.Id);
 
@@ -307,7 +312,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _fixture.NetworkConfiguration,
             _fixture.InvestorTransactionActions,
             _mockProjectInvestmentsService.Object,
-            _mockTransactionService.Object);
+            _mockTransactionService.Object,
+            _mockInvestmentAppService.Object);
         
         var request = new GetRecoveryStatus.GetRecoveryStatusRequest(walletId, project.Id);
 
@@ -348,7 +354,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _fixture.NetworkConfiguration,
             _fixture.InvestorTransactionActions,
             _mockProjectInvestmentsService.Object,
-            _mockTransactionService.Object);
+            _mockTransactionService.Object,
+            _mockInvestmentAppService.Object);
         
         var request = new GetRecoveryStatus.GetRecoveryStatusRequest(walletId, project.Id);
 
@@ -378,7 +385,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _fixture.NetworkConfiguration,
             _fixture.InvestorTransactionActions,
             _mockProjectInvestmentsService.Object,
-            _mockTransactionService.Object);
+            _mockTransactionService.Object,
+            _mockInvestmentAppService.Object);
         
         var request = new GetRecoveryStatus.GetRecoveryStatusRequest(walletId, projectId);
 

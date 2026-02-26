@@ -188,7 +188,7 @@ public class MempoolMonitoringServiceTests
     }
 
     [Fact]
-    public async Task MonitorAddressForFundsAsync_WhenCancelled_ThrowsOperationCanceledException()
+    public async Task MonitorAddressForFundsAsync_WhenCanceled_ThrowsOperationCanceledException()
     {
         // Arrange
         var address = "bc1qtest123";

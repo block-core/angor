@@ -27,6 +27,9 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     public Task<Result<CheckPenaltyThreshold.CheckPenaltyThresholdResponse>> IsInvestmentAbovePenaltyThreshold(CheckPenaltyThreshold.CheckPenaltyThresholdRequest request)
         => mediator.Send(request);
 
+    public Task<Result<CheckForReleaseSignatures.CheckForReleaseSignaturesResponse>> CheckForReleaseSignatures(CheckForReleaseSignatures.CheckForReleaseSignaturesRequest request)
+        => mediator.Send(request);
+
     public Task<Result<GetInvestorNsec.GetInvestorNsecResponse>> GetInvestorNsec(GetInvestorNsec.GetInvestorNsecRequest request)
         => mediator.Send(request);
 
@@ -38,7 +41,10 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     public Task<Result<BuildRecoveryTransaction.BuildRecoveryTransactionResponse>> BuildRecoveryTransaction(BuildRecoveryTransaction.BuildRecoveryTransactionRequest request)
         => mediator.Send(request);
 
-    public Task<Result<BuildReleaseTransaction.BuildReleaseTransactionResponse>> BuildReleaseTransaction(BuildReleaseTransaction.BuildReleaseTransactionRequest request)
+    public Task<Result<BuildUnfundedReleaseTransaction.BuildUnfundedReleaseTransactionResponse>> BuildUnfundedReleaseTransaction(BuildUnfundedReleaseTransaction.BuildUnfundedReleaseTransactionRequest request)
+        => mediator.Send(request);
+
+    public Task<Result<BuildPenaltyReleaseTransaction.BuildPenaltyReleaseTransactionResponse>> BuildPenaltyReleaseTransaction(BuildPenaltyReleaseTransaction.BuildPenaltyReleaseTransactionRequest request)
         => mediator.Send(request);
 
     public Task<Result<BuildEndOfProjectClaim.BuildEndOfProjectClaimResponse>> BuildEndOfProjectClaim(BuildEndOfProjectClaim.BuildEndOfProjectClaimRequest request)

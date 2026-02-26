@@ -24,7 +24,19 @@
                 </EdgePanel>
                 <Separator />
                 <EdgePanel StartContent="Total amount received from investors" ContentClasses="Weight-Bold Strong" Content="{Binding Project.RaisedAmount.ShortDecimalString}" />
-                <EnhancedButton Command="{Binding ReleaseAll}" Classes="Emphasized HorizontalStretch" Content="Release Funds Back to Investors" />
+                <EnhancedButton Command="{Binding ReleaseAll}" Classes="HorizontalStretch">
+                    <Interaction.Behaviors>
+                        <BindingTriggerBehavior Binding="{Binding HasReleasableTransactions}" Value="True">
+                            <AddClassAction ClassName="Emphasized" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Release Funds Back to Investors" />
+                        </BindingTriggerBehavior>
+                        <BindingTriggerBehavior Binding="{Binding HasReleasableTransactions}" Value="False">
+                            <AddClassAction ClassName="Outline" />
+                            <AddClassAction ClassName="Orange" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="All Funds Released" />
+                        </BindingTriggerBehavior>
+                    </Interaction.Behaviors>
+                </EnhancedButton>
             </StackPanel>
         </Border>
     </HeaderedContainer>

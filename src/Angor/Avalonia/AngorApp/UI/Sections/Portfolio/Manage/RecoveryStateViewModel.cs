@@ -61,6 +61,11 @@ public sealed record RecoveryStateViewModel
 
     private IEnhancedCommand<Maybe<Guid>> CreateBatchCommand(RecoveryStateViewModel recoveryStateViewModel)
     {
+        if (recoveryStateViewModel.CanClaimReleasedFunds)
+        {
+            return ReactiveCommand.CreateFromTask(() => ClaimUnfundedRelease(recoveryStateViewModel)).Enhance("Claim Released Funds");
+        }
+
         if (recoveryStateViewModel.CanSpendEndOfProjectOrThreshold)
         {
             var buttonText = recoveryStateViewModel.IsBelowPenaltyThreshold
@@ -76,7 +81,7 @@ public sealed record RecoveryStateViewModel
 
         if (recoveryStateViewModel.CanReleaseFromPenalty)
         {
-            return ReactiveCommand.CreateFromTask(() => Release(recoveryStateViewModel)).Enhance("Release Funds");
+            return ReactiveCommand.CreateFromTask(() => ReleasePenalty(recoveryStateViewModel)).Enhance("Release Funds");
         }
 
         return ReactiveCommand.Create(() => Maybe<Guid>.None, Observable.Return(false)).Enhance();
@@ -120,23 +125,42 @@ public sealed record RecoveryStateViewModel
         return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
     }
     
-    private Task<Maybe<Guid>> Release(RecoveryStateViewModel recoveryStateViewModel)
+    private Task<Maybe<Guid>> ClaimUnfundedRelease(RecoveryStateViewModel recoveryStateViewModel)
     {
         var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
         fr =>
         {
-            return investmentAppService.BuildReleaseTransaction(new BuildReleaseTransaction.BuildReleaseTransactionRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
+            return investmentAppService.BuildUnfundedReleaseTransaction(new BuildUnfundedReleaseTransaction.BuildUnfundedReleaseTransactionRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
                 .Map(ITransactionDraftViewModel (response) => new TransactionDraftViewModel(response.TransactionDraft, uiServices));
         }, 
         model =>
         {
             return investmentAppService.SubmitTransactionFromDraft(new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model))
-                .Tap(_ => uiServices.Dialog.ShowOk("Success", "Funds claim transaction has been submitted successfully"))
+                .Tap(_ => uiServices.Dialog.ShowOk("Success", "Released funds have been claimed successfully"))
                 .Map(_ => Guid.Empty);
         }, 
         uiServices);
 
-        return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Recover Funds", s => s.CommitDraft.Enhance("Recover Funds"));
+        return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Claim Released Funds", s => s.CommitDraft.Enhance("Claim Released Funds"));
+    }
+    
+    private Task<Maybe<Guid>> ReleasePenalty(RecoveryStateViewModel recoveryStateViewModel)
+    {
+        var transactionDraftPreviewerViewModel = new TransactionDraftPreviewerViewModel(
+        fr =>
+        {
+            return investmentAppService.BuildPenaltyReleaseTransaction(new BuildPenaltyReleaseTransaction.BuildPenaltyReleaseTransactionRequest(recoveryStateViewModel.WalletId, Project.ProjectId, new DomainFeerate(fr)))
+                .Map(ITransactionDraftViewModel (response) => new TransactionDraftViewModel(response.TransactionDraft, uiServices));
+        }, 
+        model =>
+        {
+            return investmentAppService.SubmitTransactionFromDraft(new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(recoveryStateViewModel.WalletId.Value, Project.ProjectId, model.Model))
+                .Tap(_ => uiServices.Dialog.ShowOk("Success", "Penalty release transaction has been submitted successfully"))
+                .Map(_ => Guid.Empty);
+        }, 
+        uiServices);
+
+        return uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Release Funds", s => s.CommitDraft.Enhance("Release Funds"));
     }
 
     public IEnhancedCommand<Maybe<Guid>> BatchAction { get; }
@@ -149,6 +173,7 @@ public sealed record RecoveryStateViewModel
 
     public InvestedProject Project { get; }
 
+    public bool CanClaimReleasedFunds => dto.HasUnspentItems && dto.HasReleaseSignatures;
     public bool CanRecoverToPenalty => dto.HasUnspentItems && !dto.HasItemsInPenalty;
     public bool CanReleaseFromPenalty => dto.HasUnspentItems && dto.HasItemsInPenalty;
     public bool CanSpendEndOfProjectOrThreshold => dto.HasUnspentItems && (dto.EndOfProject || !dto.IsAboveThreshold);

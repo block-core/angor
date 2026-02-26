@@ -6,5 +6,6 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Release
     {
         public IFullProject Project { get; } = new FullProjectSample();
         public IEnhancedCommand ReleaseAll { get; }
+        public bool HasReleasableTransactions => true;
     }
 }

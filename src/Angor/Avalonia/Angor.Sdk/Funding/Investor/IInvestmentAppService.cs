@@ -15,12 +15,19 @@ public interface IInvestmentAppService
     // Methods for Investor - Manage funds
     Task<Result<GetRecoveryStatus.GetRecoveryStatusResponse>> GetRecoveryStatus(GetRecoveryStatus.GetRecoveryStatusRequest request);
     Task<Result<BuildRecoveryTransaction.BuildRecoveryTransactionResponse>> BuildRecoveryTransaction(BuildRecoveryTransaction.BuildRecoveryTransactionRequest request);
-    Task<Result<BuildReleaseTransaction.BuildReleaseTransactionResponse>> BuildReleaseTransaction(BuildReleaseTransaction.BuildReleaseTransactionRequest request);
+    Task<Result<BuildUnfundedReleaseTransaction.BuildUnfundedReleaseTransactionResponse>> BuildUnfundedReleaseTransaction(BuildUnfundedReleaseTransaction.BuildUnfundedReleaseTransactionRequest request);
+    Task<Result<BuildPenaltyReleaseTransaction.BuildPenaltyReleaseTransactionResponse>> BuildPenaltyReleaseTransaction(BuildPenaltyReleaseTransaction.BuildPenaltyReleaseTransactionRequest request);
     Task<Result<BuildEndOfProjectClaim.BuildEndOfProjectClaimResponse>> BuildEndOfProjectClaim(BuildEndOfProjectClaim.BuildEndOfProjectClaimRequest request);
 
     Task<Result<PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionResponse>> SubmitTransactionFromDraft(PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest request);
 
     Task<Result<CheckPenaltyThreshold.CheckPenaltyThresholdResponse>> IsInvestmentAbovePenaltyThreshold(CheckPenaltyThreshold.CheckPenaltyThresholdRequest request);
+
+    /// <summary>
+    /// Checks whether the founder has sent release signatures for the investor's investment in a project.
+    /// This is a lightweight check (no transaction building) so the UI can show release availability.
+    /// </summary>
+    Task<Result<CheckForReleaseSignatures.CheckForReleaseSignaturesResponse>> CheckForReleaseSignatures(CheckForReleaseSignatures.CheckForReleaseSignaturesRequest request);
 
     // Methods for getting investor keys
     Task<Result<GetInvestorNsec.GetInvestorNsecResponse>> GetInvestorNsec(GetInvestorNsec.GetInvestorNsecRequest request);

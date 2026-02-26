@@ -138,6 +138,10 @@ public static class PublishAndStoreInvestorTransaction
                     investment.RecoveryReleaseTransactionId = draft.TransactionId;
                     break;
 
+                case UnfundedReleaseTransactionDraft:
+                    // Unfunded release is detected on-chain, no special storage needed
+                    break;
+
                 default:
                     // Not a transaction type we track, just return success
                     return Result.Success();

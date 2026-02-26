@@ -31,7 +31,8 @@ public static class GetRecoveryStatus
         INetworkConfiguration networkConfiguration,
         IInvestorTransactionActions investorTransactionActions,
         IProjectInvestmentsService projectInvestmentsService,
-        ITransactionService transactionService
+        ITransactionService transactionService,
+        IInvestmentAppService investmentAppService
     ) : IRequestHandler<GetRecoveryStatusRequest, Result<GetRecoveryStatusResponse>>
     {
         public async Task<Result<GetRecoveryStatusResponse>> Handle(GetRecoveryStatusRequest request,
@@ -65,10 +66,22 @@ public static class GetRecoveryStatus
                 return Result.Failure<GetRecoveryStatusResponse>("No investment stages found for this project");
 
             var checkResult = await CheckSpentFund(investmentDetails.Value.Item2.ToList(), investmentDetails.Value.Item1, project.Value);
-                
-            return checkResult.IsSuccess 
-               ? Result.Success(new GetRecoveryStatusResponse(checkResult.Value))
-             : Result.Failure<GetRecoveryStatusResponse>(checkResult.Error);
+
+            if (checkResult.IsFailure)
+                return Result.Failure<GetRecoveryStatusResponse>(checkResult.Error);
+
+            var dto = checkResult.Value;
+
+            // Check if the founder has sent release signatures and the investor still has unspent funds
+            if (dto.HasUnspentItems)
+            {
+                var releaseCheck = await investmentAppService.CheckForReleaseSignatures(
+                    new CheckForReleaseSignatures.CheckForReleaseSignaturesRequest(request.WalletId, request.ProjectId));
+
+                dto.HasReleaseSignatures = releaseCheck.IsSuccess && releaseCheck.Value.HasReleaseSignatures;
+            }
+
+            return Result.Success(new GetRecoveryStatusResponse(dto));
         }
 
 

@@ -37,7 +37,15 @@ public class InvestmentHandshakeService(
     {
         var id = GenerateCompositeId(walletId, projectId, requestEventId);
 
-        return await collection.FindByIdAsync(id);
+        // NOTE: We use FindAsync(c => c.Id == id) instead of FindByIdAsync(id) because
+        // FindByIdAsync queries Document<T>.Id (the wrapper's Id) while FindAsync queries
+        // against InvestmentHandshake.Id (Data.Id). Due to a caching bug in
+        // LiteDbGenericDocumentCollection.UpsertAsync (the getDocumentIdProperty ??= caching
+        // compiles only the first closure, so batch upserts store incorrect wrapper Ids),
+        // the wrapper Id may be wrong. InvestmentHandshake.Id is always set correctly.
+        var res = await collection.FindAsync(c => c.Id == id);
+
+        return res.Map(items => items.FirstOrDefault());
     }
     
 

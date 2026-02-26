@@ -15,6 +15,12 @@ public class InvestorProjectRecoveryDto
     public bool EndOfProject { get; set; }
     public bool IsAboveThreshold { get; set; }
 
+    /// <summary>
+    /// True when the founder has sent release signatures via Nostr,
+    /// meaning the investor can claim their funds back without penalty.
+    /// </summary>
+    public bool HasReleaseSignatures { get; set; }
+
     public string? ExplorerLink { get; set; }
     public string TransactionId { get; set; }
     

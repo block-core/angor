@@ -28,6 +28,8 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Release
         public IFullProject Project { get; }
 
         public IEnhancedCommand ReleaseAll { get; }
+        
+        public bool HasReleasableTransactions => Project.AvailableTransactions > 0;
 
         private IEnhancedCommand<Unit> GetReleaseCommand()
         {
