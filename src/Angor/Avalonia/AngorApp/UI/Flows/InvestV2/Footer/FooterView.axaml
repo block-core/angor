@@ -23,29 +23,22 @@
         </TextBlock>
 
         <!-- Penalty threshold indicator -->
-        <Border IsVisible="{Binding HasPenaltyThreshold}"
-                Padding="8 4" CornerRadius="4" VerticalAlignment="Center">
-            <Border.Styles>
-                <Style Selector="Border.AboveThreshold">
-                    <Setter Property="Background" Value="#30FF8C00" />
-                </Style>
-                <Style Selector="Border.BelowThreshold">
-                    <Setter Property="Background" Value="{DynamicResource SoftGreen}" />
-                </Style>
-            </Border.Styles>
-            <Panel>
-                <!-- Above threshold: requires founder approval -->
-                <TextBlock IsVisible="{Binding IsAbovePenaltyThreshold^}"
-                           Classes="Size-XS" VerticalAlignment="Center"
+        <Panel IsVisible="{Binding HasPenaltyThreshold}" VerticalAlignment="Center">
+            <!-- Above threshold: requires founder approval -->
+            <Border IsVisible="{Binding IsAbovePenaltyThreshold^}"
+                    Padding="8 4" CornerRadius="4" Background="#30FF8C00">
+                <TextBlock Classes="Size-XS" VerticalAlignment="Center"
                            Foreground="#FF8C00" FontWeight="SemiBold"
                            Text="Requires Approval" />
-                <!-- Below threshold: direct publish -->
-                <TextBlock IsVisible="{Binding !IsAbovePenaltyThreshold^}"
-                           Classes="Size-XS" VerticalAlignment="Center"
+            </Border>
+            <!-- Below threshold: direct publish -->
+            <Border IsVisible="{Binding !IsAbovePenaltyThreshold^}"
+                    Padding="8 4" CornerRadius="4" Background="{DynamicResource SoftGreen}">
+                <TextBlock Classes="Size-XS" VerticalAlignment="Center"
                            Foreground="{DynamicResource Brand}" FontWeight="SemiBold"
                            Text="No Approval Needed" />
-            </Panel>
-        </Border>
+            </Border>
+        </Panel>
 
         <EnhancedButton Command="{Binding Invest}" DockPanel.Dock="Right" Classes="Outline" Icon="{Icon fa-chart-line}" Content="Invest" />
     </StackPanel>

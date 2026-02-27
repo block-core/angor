@@ -98,7 +98,8 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
             {
                 closeable.Close();
                 var title = isAboveThreshold ? "Investment Submitted" : "Investment Completed";
-                await uiServices.Dialog.Show(new InvestResultViewModel(shell), title, (model, c) => model.Options(c));
+                var resultViewModel = new InvestResultViewModel(shell) { Amount = AmountToInvest, RequiresApproval = isAboveThreshold };
+                await uiServices.Dialog.Show(resultViewModel, title, (model, c) => model.Options(c));
                 return Result.Success();
             });
         }

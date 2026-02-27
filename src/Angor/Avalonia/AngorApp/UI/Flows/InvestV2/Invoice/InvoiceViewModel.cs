@@ -505,7 +505,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 
                 // Close the invoice dialog and show investment result dialog
                 closeable?.Close();
-                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount };
+                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount, RequiresApproval = true };
                 await uiServices.Dialog.Show(resultViewModel, Observable.Return("Investment Submitted"), (model, c) => model.Options(c));
             }
             else
@@ -531,7 +531,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 
                 // Close the invoice dialog and show investment result dialog
                 closeable?.Close();
-                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount };
+                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount, RequiresApproval = false };
                 await uiServices.Dialog.Show(resultViewModel, Observable.Return("Investment Completed"), (model, c) => model.Options(c));
             }
         }

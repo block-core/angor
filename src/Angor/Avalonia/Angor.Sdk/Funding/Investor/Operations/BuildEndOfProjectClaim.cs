@@ -72,14 +72,17 @@ public static class BuildEndOfProjectClaim
             if (transactionInfo is null)
                 return Result.Failure<BuildEndOfProjectClaimResponse>("Could not find transaction info");
             
-            var stageIndex = transactionInfo.Outputs
-                .Select((x, i) => i < 2 ? -1 // Skip the first two outputs (fee and op_return)
-                    : string.IsNullOrEmpty(x.SpentInTransaction) ? i : -1)
-                .First(x => x > 0);
+            var firstUnspentTaproot = transactionInfo.Outputs
+                .Select((output, index) => (output, index))
+                .FirstOrDefault(x => x.output.OutputType == "v1_p2tr" && string.IsNullOrEmpty(x.output.SpentInTransaction));
 
-            stageIndex -= 2; // Adjust for skipped outputs
+            if (firstUnspentTaproot.output is null)
+                return Result.Failure<BuildEndOfProjectClaimResponse>("No unspent taproot output found in the investment transaction");
 
-            var endOfProjectTransaction = investorTransactionActions.RecoverEndOfProjectFunds(investment.InvestmentTransactionHex, project.Value.ToProjectInfo(), stageIndex,
+            // Stage number is 1-based: output index 2 = stage 1, output index 3 = stage 2, etc.
+            var stageNumber = firstUnspentTaproot.index - 1;
+
+            var endOfProjectTransaction = investorTransactionActions.RecoverEndOfProjectFunds(investment.InvestmentTransactionHex, project.Value.ToProjectInfo(), stageNumber,
                 changeAddress, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), new FeeEstimation(){FeeRate = request.SelectedFeeRate.SatsPerKilobyte});
             
             return Result.Success(new BuildEndOfProjectClaimResponse(new EndOfProjectTransactionDraft()

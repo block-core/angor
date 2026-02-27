@@ -68,9 +68,7 @@ public static class BuildRecoveryTransaction
             if (signatureLookup.Value is null)
                 return Result.Failure<BuildRecoveryTransactionResponse>("No founder signatures found");
 
-
             var unsignedRecoveryTransaction = investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project.Value.ToProjectInfo(), investmentTransaction, signatureLookup.Value, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
-
 
             var transactionInfo = await transactionService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
 

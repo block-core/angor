@@ -32,8 +32,7 @@ public static class CreateProjectDtoMapper
 
             TargetAmount = new Amount(satsValue),
             PenaltyDays = 0,
-
-
+            PenaltyThreshold = fundProject.Threshold?.Sats,
 
             Stages = Enumerable.Empty<CreateProjectStageDto>(),
             SelectedPatterns = CreateDynamicStagePatterns(
@@ -59,18 +58,20 @@ public static class CreateProjectDtoMapper
 
         var standardPatterns = DynamicStagePattern.GetStandardPatterns();
 
-        return installmentCounts.Select(count =>
+        var results = installmentCounts.Where(count => count > 0).Select(count =>
         {
             var matchingStandard = standardPatterns.FirstOrDefault(p => p.Frequency == stageFrequency && p.StageCount == count);
 
-            return new DynamicStagePattern
+            if (matchingStandard == null)
             {
-                Name = matchingStandard?.Name ?? $"{frequency.Value} {count} Installments",
-                StageCount = count,
-                Frequency = stageFrequency,
-                PatternId = matchingStandard?.PatternId ?? 0
+                throw new InvalidOperationException(
+                    $"No standard pattern found for frequency '{stageFrequency}' with {count} stages. " +
+                    $"Available patterns: {string.Join(", ", standardPatterns.Select(p => $"{p.Frequency}/{p.StageCount}"))}");
+            }
 
-            };
+            return matchingStandard;
         }).ToList();
+
+        return results;
     }
 }

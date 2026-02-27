@@ -42,7 +42,7 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
             // Compute penalty threshold status reactively as amount changes
             var penaltyThreshold = fullProject.PenaltyThreshold;
             IsAbovePenaltyThreshold = AmountToInvest
-                .Select(amount => penaltyThreshold == null || amount.Sats > penaltyThreshold.Sats);
+                .Select(amount => penaltyThreshold != null && amount.Sats > penaltyThreshold.Sats);
             
             Invest = ReactiveCommand.CreateFromTask(
                 () => InvestFlow(uiServices, shell, walletContext),
@@ -53,7 +53,8 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
         public IEnhancedCommand Invest { get; }
         public IAmountUI TotalRaised => fullProject.RaisedAmount;
         public IObservable<int> StageCount { get; }
-        public bool HasPenaltyThreshold => fullProject.PenaltyThreshold != null;
+        public bool HasPenaltyThreshold => fullProject.PenaltyThreshold != null
+                                           || fullProject.ProjectType is ProjectType.Fund or ProjectType.Subscribe;
         
         public IObservable<bool> IsAbovePenaltyThreshold { get; }
 
