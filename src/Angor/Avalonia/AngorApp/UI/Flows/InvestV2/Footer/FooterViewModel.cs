@@ -53,7 +53,7 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
             {
                 return await walletContext.GetOrCreate().Map(async wallet =>
                 {
-                    using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell);
+                    using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject, shell);
                     bool result = await uiServices.Dialog.Show(
                         invoiceViewModel,
                         "Select Wallet",
@@ -70,7 +70,7 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
 
             if (HasEnoughBalance(wallet))
             {
-                using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell);
+                using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject, shell);
                 bool show = await uiServices.Dialog.Show(invoiceViewModel, "Select Wallet", (model, closeable) =>
                 {
                     model.SetCloseable(closeable);
@@ -80,7 +80,7 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
             }
 
             return await uiServices.Dialog.ShowAndGetResult(
-                new PaymentSelectorViewModel(fullProject.ProjectId, uiServices, shell, investmentAppService, walletContext, AmountToInvest.Value, wallet),
+                new PaymentSelectorViewModel(fullProject, uiServices, shell, investmentAppService, walletContext, AmountToInvest.Value, wallet),
                 "Select Wallet",
                 (model, closeable) => model.Options(closeable),
                 _ => "");

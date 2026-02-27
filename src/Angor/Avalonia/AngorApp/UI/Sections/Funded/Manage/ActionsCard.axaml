@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:manage="clr-namespace:AngorApp.UI.Sections.Funded.Manage"
+             xmlns:founder="clr-namespace:Angor.Sdk.Funding.Founder;assembly=Angor.Sdk"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             mc:Ignorable="d" d:DesignWidth="400"
+             MinWidth="400"
+             x:Class="AngorApp.UI.Sections.Funded.Manage.ActionsCard" x:DataType="manage:IManageViewModel">
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Project.Investment.Refresh}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <Design.DataContext>
+        <manage:ManageViewModelSample Status="FounderSignaturesReceived" />
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="HyperlinkButtonBackground" Color="Transparent" />
+        <SolidColorBrush x:Key="HyperlinkButtonForeground" Color="White" />
+        <SolidColorBrush x:Key="HyperlinkButtonForegroundPointerOver" Color="White" />
+        <SolidColorBrush x:Key="HyperlinkButtonForegroundPressed" Color="White" />
+
+        <StreamGeometry x:Key="WobblyCheck">M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z</StreamGeometry>
+    </UserControl.Resources>
+    <Loading ClipToBounds="False" LoadingText="Loading investment details..." IsLoading="{Binding Project.Investment.Refresh.IsExecuting^}">
+        <StackPanel Classes="Gap-XL">
+            <Border x:Name="Invested" IsVisible="False" Classes="ColorPanel DarkGreen Shadow">
+                <StackPanel VerticalAlignment="Center" Classes="Gap-XL">
+                    <Viewbox Width="64" Height="64">
+                        <Path Margin="2" Data="{StaticResource WobblyCheck}" StrokeLineCap="Round" StrokeThickness="2" Stroke="White" />
+                    </Viewbox>
+                    <TextBlock HorizontalAlignment="Center" Classes="Size-XL Weight-Bold">Investment Active</TextBlock>
+                    <TextBlock HorizontalAlignment="Center" Classes="Size-M Weight-Light">You are part of this project's success!</TextBlock>
+                    <HyperlinkButton HorizontalAlignment="Center">View Transaction Details</HyperlinkButton>
+                </StackPanel>
+            </Border>
+            <Border x:Name="WaitingForApproval" IsVisible="False" Classes="ColorPanel ApricotGradient Shadow">
+                <StackPanel VerticalAlignment="Center" Classes="Gap-XL">
+                    <ContentControl IconOptions.Size="64" Content="{Icon fa-bitcoin}" />
+                    <TextBlock HorizontalAlignment="Center" Classes="Size-XL Weight-Bold">Waiting for Approval</TextBlock>
+                    <TextBlock HorizontalAlignment="Center" Classes="Size-S Weight-Light">The founder needs to sign a recovery agreement before you can invest. This ensures your funds can be recovered if the project doesn't succeed.</TextBlock>
+                    <BalancedWrapGrid MinItemWidth="200" HorizontalSpacing="10">
+                        <EnhancedButton Command="{Binding CancelApproval}" Classes="Outline HorizontalStretch" Content="Cancel" />
+                        <EnhancedButton Classes="Outline HorizontalStretch" Content="Refresh" />
+                        <EnhancedButton Command="{Binding OpenChat}" Classes="Outline HorizontalStretch" Content="Message" />
+                    </BalancedWrapGrid>
+                </StackPanel>
+            </Border>
+            <Border x:Name="ApprovalReceived" IsVisible="False" DockPanel.Dock="Right" Classes="ColorPanel ApricotGradient Shadow">
+                <StackPanel VerticalAlignment="Center" Classes="Gap-XL">
+                    <ContentControl IconOptions.Size="64" Content="{Icon fa-edit}" />
+                    <TextBlock HorizontalAlignment="Center" Classes="Size-S Weight-Light Center">Transaction agreement signed ensuring you can recover your funds if the project does not succeed.</TextBlock>
+                    <BalancedWrapGrid MinItemWidth="200" HorizontalSpacing="10">
+                        <EnhancedButton Command="{Binding CancelInvestment}" Classes="Outline HorizontalStretch" Content="Cancel" />
+                        <EnhancedButton Command="{Binding ConfirmInvestment}" Icon="{Icon fa-bitcoin}" Classes="Emphasized HorizontalStretch" Content="{Binding Project.Investment.Amount^.DecimalString, StringFormat='Invest {0}'}" />
+                    </BalancedWrapGrid>
+                    <TextBlock HorizontalAlignment="Center" Classes="Size-S Weight-Light Center">By investing, you acknowledge that early withdrawal requires a 90 day waiting period</TextBlock>
+                </StackPanel>
+            </Border>
+            <Border x:Name="Cancelled" IsVisible="False" DockPanel.Dock="Right" Classes="ColorPanel LightGray Shadow">
+                <StackPanel VerticalAlignment="Center" Classes="Gap-XL">
+                    <ContentControl IconOptions.Size="48" Content="{Icon fa-regular fa-clock}" />
+                    <TextBlock HorizontalAlignment="Center" Classes="Size-XL Weight-Bold">Investment Period Closed</TextBlock>
+                    <TextBlock HorizontalAlignment="Center" Classes="Size-S Thin">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}Raised {0} of {1} goal ({2:P} funded)">
+                                <Binding Path="Project.Project.FundingRaised^.DecimalString" />
+                                <Binding Path="Project.Project.FundingTarget.DecimalString" />
+                                <Binding Path="Project.Project.FundingRatio^" StringFormat="p0" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+            <Border x:Name="Invalid" IsVisible="False" Classes="ColorPanel Red Shadow">
+                <TextBlock Classes="Wrap" HorizontalAlignment="Center">INVALID INVESTMENT STATUS</TextBlock>
+            </Border>
+            <Interaction.Behaviors>
+                <BindingTriggerBehavior Binding="{Binding Project.Investment.Status^}" Value="{x:Static founder:InvestmentStatus.Invested}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Visual.IsVisibleProperty}" Value="True" TargetObject="Invested"></ChangeAvaloniaPropertyAction>
+                </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding Project.Investment.Status^}" Value="{x:Static founder:InvestmentStatus.PendingFounderSignatures}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Visual.IsVisibleProperty}" Value="True" TargetObject="WaitingForApproval" />
+                </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding Project.Investment.Status^}" Value="{x:Static founder:InvestmentStatus.FounderSignaturesReceived}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Visual.IsVisibleProperty}" Value="True" TargetObject="ApprovalReceived" />
+                </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding Project.Investment.Status^}" Value="{x:Static founder:InvestmentStatus.Cancelled}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Visual.IsVisibleProperty}" Value="True" TargetObject="Cancelled" />
+                </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding Project.Investment.Status^}" Value="{x:Static founder:InvestmentStatus.Invalid}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Visual.IsVisibleProperty}" Value="True" TargetObject="Invalid" />
+                </BindingTriggerBehavior>
+            </Interaction.Behaviors>
+        </StackPanel>
+    </Loading>
+</UserControl>

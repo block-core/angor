@@ -16,7 +16,9 @@
         <TextBlock TextAlignment="Center" Classes="Size-M">
             <Run>Your investment of</Run>
             <Run Text="{Binding Amount.DecimalString}" />
-            <Run Text="is pending approval by Angor UX. Once approved, you'll confirm to release the funds." />
+            <Run Text="is pending approval by" />
+            <Run Text="{Binding ProjectName}" />
+            <Run Text=". Once approved, you'll confirm to release the funds." />
         </TextBlock>
     </StackPanel>
 

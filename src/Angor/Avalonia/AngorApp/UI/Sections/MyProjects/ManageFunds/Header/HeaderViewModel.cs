@@ -1,9 +1,11 @@
+using AngorApp.UI.Sections.MyProjects.ManageFunds;
+
 namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Header;
 
-public class HeaderViewModel(IFullProject fullProject, IEnhancedCommand<Result<IFullProject>> Refresh) : IHeaderViewModel
+public class HeaderViewModel(IManageFundsProject project, IEnhancedCommand refresh) : IHeaderViewModel
 {
-    public IEnhancedCommand<Result<IFullProject>> Refresh { get; } = Refresh;
-    public string ProjectTitle => fullProject.Name;
-    public decimal Progress => fullProject.RaisedAmount.Btc / fullProject.TargetAmount.Btc;
-    public IAmountUI Raised => fullProject.RaisedAmount;
+    public IEnhancedCommand Refresh { get; } = refresh;
+    public string ProjectTitle => project.Name;
+    public decimal Progress => project.RaisedAmount.Btc / project.TargetAmount.Btc;
+    public IAmountUI Raised => project.RaisedAmount;
 }

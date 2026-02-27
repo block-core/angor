@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:funded="clr-namespace:AngorApp.UI.Sections.Funded"
+             xmlns:section="clr-namespace:AngorApp.UI.Sections.Funded.Section"
+             mc:Ignorable="d"
+             x:Class="AngorApp.UI.Sections.Funded.ProjectList.Empty.EmptyView"
+             x:DataType="section:IFundedSectionViewModel">
+    <StackPanel Classes="Gap-XL" HorizontalAlignment="Center">
+        <PathIcon Height="112" Width="112" Foreground="{DynamicResource Brand}" Data="{StaticResource AngorLogo}" />
+        <TextBlock Classes="Size-XL Weight-Bold Strong Center" Text="FUNDED" />
+        <TextBlock MaxWidth="448" Classes="Text-Dimmed Weight-Light Size-L Center Wrap" Text="You haven't funded any projects yet. Browse the latest to find one." />
+        <EnhancedButton HorizontalAlignment="Center" Icon="{Icon fa-search}" Command="{Binding FindProjects}" Classes="Primary Center" Content="Find Projects" />
+    </StackPanel>
+</UserControl>

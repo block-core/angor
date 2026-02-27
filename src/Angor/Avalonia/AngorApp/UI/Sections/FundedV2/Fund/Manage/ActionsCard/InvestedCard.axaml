@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="400"
+             x:Class="AngorApp.UI.Sections.FundedV2.Fund.Manage.ActionsCard.InvestedCard">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="HyperlinkButtonBackground" Color="Transparent" />
+        <SolidColorBrush x:Key="HyperlinkButtonForeground" Color="White" />
+        <SolidColorBrush x:Key="HyperlinkButtonForegroundPointerOver" Color="White" />
+        <SolidColorBrush x:Key="HyperlinkButtonForegroundPressed" Color="White" />
+    </UserControl.Resources>
+
+    <Border Classes="ColorPanel DarkGreen Shadow">
+        <StackPanel VerticalAlignment="Center" Classes="Gap-XL">
+            <Viewbox Width="64" Height="64">
+                <Path Margin="2"
+                      Data="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                      StrokeLineCap="Round"
+                      StrokeThickness="2"
+                      Stroke="White" />
+            </Viewbox>
+            <TextBlock HorizontalAlignment="Center" Classes="Size-XL Weight-Bold">Funding Active</TextBlock>
+            <TextBlock HorizontalAlignment="Center" Classes="Size-M Weight-Light">You are part of this project's success!</TextBlock>
+            <HyperlinkButton HorizontalAlignment="Center">View Transaction Details</HyperlinkButton>
+        </StackPanel>
+    </Border>
+</UserControl>

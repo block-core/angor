@@ -14,30 +14,58 @@
         <AvaloniaResource Include="../angor-app-icon-dark.png">
             <Link>Assets/angor-app-icon-dark.png</Link>
         </AvaloniaResource>
+        <AvaloniaResource Remove="UI\Sections\Funded\**" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="AsyncImageLoader.Avalonia"/>
-        <PackageReference Include="Avalonia"/>
-        <PackageReference Include="ReactiveUI.Avalonia"/>
-        <PackageReference Include="Avalonia.Themes.Fluent"/>
-        <PackageReference Include="Avalonia.Fonts.Inter"/>
-        <PackageReference Include="AvaloniaUI.DiagnosticsSupport"/>
-        <PackageReference Include="CSharpFunctionalExtensions"/>
-        <PackageReference Include="Humanizer.Core"/>
-        <PackageReference Include="PanAndZoom"/>
-        <PackageReference Include="QRCoder"/>
-        <PackageReference Include="Serilog.Extensions.Logging"/>
-        <PackageReference Include="Serilog.Sinks.Console"/>
-        <PackageReference Include="Serilog.Sinks.File"/>
-        <PackageReference Include="Zafiro.Avalonia.Icons.Svg"/>
-        <PackageReference Include="Zafiro.Avalonia.Generators"/>
-        <PackageReference Include="Zafiro"/>
-        <PackageReference Include="Zafiro.Avalonia.Icons.Projektanker"/>
+        <PackageReference Include="AsyncImageLoader.Avalonia" />
+        <PackageReference Include="Avalonia" />
+        <PackageReference Include="ReactiveUI.Avalonia" />
+        <PackageReference Include="Avalonia.Themes.Fluent" />
+        <PackageReference Include="Avalonia.Fonts.Inter" />
+        <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
+        <PackageReference Include="CSharpFunctionalExtensions" />
+        <PackageReference Include="Humanizer.Core" />
+        <PackageReference Include="PanAndZoom" />
+        <PackageReference Include="QRCoder" />
+        <PackageReference Include="Serilog.Extensions.Logging" />
+        <PackageReference Include="Serilog.Sinks.Console" />
+        <PackageReference Include="Serilog.Sinks.File" />
+        <PackageReference Include="Zafiro.Avalonia.Icons.Svg" />
+        <PackageReference Include="Zafiro.Avalonia.Generators" />
+        <PackageReference Include="Zafiro" />
+        <PackageReference Include="Zafiro.Avalonia.Icons.Projektanker" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="../Angor.Sdk/Angor.Sdk.csproj"/>
-        <ProjectReference Include="../AngorApp.Model/AngorApp.Model.csproj"/>
-        <ProjectReference Include="../Angor.Data.Documents.LiteDb/Angor.Data.Documents.LiteDb.csproj"/>
+        <ProjectReference Include="../Angor.Sdk/Angor.Sdk.csproj" />
+        <ProjectReference Include="../AngorApp.Model/AngorApp.Model.csproj" />
+        <ProjectReference Include="../Angor.Data.Documents.LiteDb/Angor.Data.Documents.LiteDb.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <AvaloniaXaml Remove="UI\Sections\Funded\**" />
+    </ItemGroup>
+    <ItemGroup>
+      <AdditionalFiles Remove="UI\Sections\Funded\**" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Remove="UI\Sections\Funded\**" />
+      <Compile Update="UI\Sections\FundedV2\Manage\Parts\ActionsCard.axaml.cs">
+        <DependentUpon>ActionsCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="UI\Sections\FundedV2\Manage\Parts\ProjectInfoCard.axaml.cs">
+        <DependentUpon>ProjectInfoCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="UI\Sections\FundedV2\Manage\Parts\ProjectStatisticsCard.axaml.cs">
+        <DependentUpon>ProjectStatisticsCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
+    <ItemGroup>
+      <EmbeddedResource Remove="UI\Sections\Funded\**" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Remove="UI\Sections\Funded\**" />
     </ItemGroup>
     <PropertyGroup>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>

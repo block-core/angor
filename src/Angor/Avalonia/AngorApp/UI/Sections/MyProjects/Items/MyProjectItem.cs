@@ -2,6 +2,8 @@ using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using AngorApp.UI.Sections.MyProjects.ManageFunds;
 using AngorApp.UI.Sections.Shared;
+using AngorApp.UI.Sections.Shared.Project;
+using SharedProjectFactory = AngorApp.UI.Sections.Shared.Project.Project;
 using Zafiro.UI.Navigation;
 using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 
@@ -15,11 +17,11 @@ public class MyProjectItem : IMyProjectItem, IDisposable
         Func<ProjectId, IManageFundsViewModel> detailsFactory,
         INavigator navigator)
     {
-        Project = new ProjectItem(dto, projectAppService);
+        Project = SharedProjectFactory.Create(dto, projectAppService);
         ManageFunds = EnhancedCommand.Create(() => navigator.Go(() => detailsFactory(Project.Id)));
     }
 
-    public IProjectItem Project { get; }
+    public IProject Project { get; }
     public IEnhancedCommand ManageFunds { get; }
 
     public void Dispose()

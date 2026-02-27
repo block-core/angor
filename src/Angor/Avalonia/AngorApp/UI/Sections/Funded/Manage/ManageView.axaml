@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:manage="clr-namespace:AngorApp.UI.Sections.Funded.Manage"
+             xmlns:item="clr-namespace:AngorApp.UI.Sections.Funded.ProjectList.Item"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:angorApp="clr-namespace:AngorApp"
+             xmlns:manage1="clr-namespace:AngorApp.UI.Sections.Funded.Manage"
+             mc:Ignorable="d" d:DesignWidth="1200"
+             x:Class="AngorApp.UI.Sections.Funded.Manage.ManageView"
+             x:DataType="manage:IManageViewModel">
+
+    <Design.DataContext>
+        <manage:ManageViewModelSample />
+    </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Project.Project.Refresh}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <controls:ScrollableView>
+        <StackPanel Classes="Gap-XL" Margin="10">
+            <Grid ColumnSpacing="24" ColumnDefinitions="* 400">
+                <manage1:ProjectInfoCard ClipToBounds="False" DataContext="{Binding Project.Project}" />
+                <manage1:ActionsCard DockPanel.Dock="Right" ClipToBounds="False" Grid.Column="1" />
+            </Grid>
+            <manage1:ProjectStatisticsCard ClipToBounds="False" DataContext="{Binding Project}" />
+        </StackPanel>
+    </controls:ScrollableView>
+</UserControl>

@@ -1,6 +1,6 @@
 namespace AngorApp.Model.Contracts.Projects;
 
-public interface IProject
+public interface IOldProject
 {
     public string Id { get; }
     public string Name { get; }

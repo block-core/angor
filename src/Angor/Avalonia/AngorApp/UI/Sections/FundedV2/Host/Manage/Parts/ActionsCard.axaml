@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:manage="clr-namespace:AngorApp.UI.Sections.FundedV2.Host.Manage"
+             xmlns:model="clr-namespace:AngorApp.UI.Sections.FundedV2.Investment.Model"
+             xmlns:actionsCard="clr-namespace:AngorApp.UI.Sections.FundedV2.Investment.Manage.ActionsCard"
+             xmlns:model1="clr-namespace:AngorApp.UI.Sections.FundedV2.Fund.Model"
+             xmlns:actionsCard1="clr-namespace:AngorApp.UI.Sections.FundedV2.Fund.Manage.ActionsCard"
+             mc:Ignorable="d"
+             d:DesignWidth="400"
+             MinWidth="400"
+             x:Class="AngorApp.UI.Sections.FundedV2.Host.Manage.Parts.ActionsCard"
+             x:Name="ActionsCardRoot"
+             x:DataType="manage:IManageViewModel">
+
+    <Design.DataContext>
+        <manage:ManageViewModelSample />
+    </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Funded.InvestorData.Refresh}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <ContentControl Content="{Binding Funded}">
+        <ContentControl.DataTemplates>
+            <DataTemplate DataType="model:IInvestmentFunded">
+                <actionsCard:InvestmentActionsCard DataContext="{Binding DataContext, ElementName=ActionsCardRoot}" />
+            </DataTemplate>
+
+            <DataTemplate DataType="model1:IFundFunded">
+                <actionsCard1:FundActionsCard DataContext="{Binding DataContext, ElementName=ActionsCardRoot}" />
+            </DataTemplate>
+        </ContentControl.DataTemplates>
+    </ContentControl>
+</UserControl>

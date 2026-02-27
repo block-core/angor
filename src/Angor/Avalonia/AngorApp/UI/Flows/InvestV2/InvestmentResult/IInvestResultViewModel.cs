@@ -4,6 +4,7 @@ namespace AngorApp.UI.Flows.InvestV2.InvestmentResult
 {
     public interface IInvestResultViewModel
     {
-        IAmountUI Amount { get; set; }
+        IAmountUI Amount { get; init; }
+        string ProjectName { get; init; }
     }
 }

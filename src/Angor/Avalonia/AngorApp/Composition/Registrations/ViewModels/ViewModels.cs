@@ -28,6 +28,7 @@ public static class ViewModels
                 .AddScoped<IProjectInvestCommandFactory, ProjectInvestCommandFactory>()
                 .AddScoped<Func<IFullProject, IDetailsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<DetailsViewModel>(provider, project))
                 .AddScoped<Func<ProjectId, IManageFundsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<ManageFundsViewModel>(provider, project))
+                //.AddScoped<Func<IFundedProject, IManageViewModel>>(provider => project => ActivatorUtilities.CreateInstance<ManageViewModel>(provider, project))
                 .AddTransient<IAccountsViewModel, AccountsViewModel>()
                 .AddTransient<ISeedBackupFileService, SeedBackupFileService>()
                 .AddTransient<IAddWalletFlow, AddWalletFlow>()

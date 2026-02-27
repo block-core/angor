@@ -2,6 +2,7 @@ using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Shared.Models;
+using AngorApp.UI.Sections.MyProjects.ManageFunds;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Stage;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Claim.Transactions;
 
@@ -14,7 +15,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Claim
         private readonly IWalletContext walletContext;
 
         public ClaimViewModel(
-            IFullProject project,
+            IManageFundsProject project,
             IFounderAppService founderAppService,
             UIServices uiServices,
             IWalletContext walletContext
@@ -32,7 +33,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Claim
 
         public IEnhancedCommand<Result<IEnumerable<IClaimStage>>> Load { get; }
 
-        public IFullProject Project { get; }
+        public IManageFundsProject Project { get; }
         public IEnumerable<IClaimStage> Stages { get; }
 
         private Task<Result<IEnumerable<IClaimStage>>> GetStages()

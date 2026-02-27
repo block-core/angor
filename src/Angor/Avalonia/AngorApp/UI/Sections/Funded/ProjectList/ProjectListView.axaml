@@ -5,79 +5,50 @@
              xmlns:funded="clr-namespace:AngorApp.UI.Sections.Funded"
              xmlns:objectModel="clr-namespace:System.Collections.ObjectModel;assembly=System.Runtime"
              xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
-             xmlns:angorApp="clr-namespace:AngorApp"
-             xmlns:items="clr-namespace:AngorApp.UI.Sections.Funded.ProjectList"
              xmlns:item="clr-namespace:AngorApp.UI.Sections.Funded.ProjectList.Item"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.UI.Sections.Funded.ProjectList.ProjectListView" x:DataType="funded:IFundedSectionViewModel">
+             xmlns:section="clr-namespace:AngorApp.UI.Sections.Funded.Section"
+             xmlns:item1="clr-namespace:AngorApp.UI.Sections.Funded.ProjectList.Item"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
+             x:Class="AngorApp.UI.Sections.Funded.ProjectList.ProjectListView" x:DataType="section:IFundedSectionViewModel">
     
     <Design.DataContext>
-        <funded:FundedSectionViewModelSample>
-            <funded:FundedSectionViewModelSample.FundedProjects>
-                <objectModel:ReadOnlyCollection x:TypeArguments="item:IFundedProjectItem">
-                    <x:Arguments>
-                        <generic:List x:TypeArguments="item:IFundedProjectItem">
-                            <item:FundedProjectItemSample />
-                        </generic:List>
-                    </x:Arguments>
-                </objectModel:ReadOnlyCollection>
-            </funded:FundedSectionViewModelSample.FundedProjects>
-        </funded:FundedSectionViewModelSample>
+        <section:FundedSectionViewModelSample />
     </Design.DataContext>
 
-    
     <DockPanel HorizontalSpacing="20" VerticalSpacing="20">
-            <Border x:Name="Sidebar" Classes="ColorPanel LightGray" Width="300">
-                <StackPanel Classes="Gap-XL" VerticalAlignment="Center">
-                    <StackPanel Classes="Gap-S" HorizontalAlignment="Center">
-                        <PathIcon Height="64" Width="64" Foreground="{DynamicResource Brand}" Data="{StaticResource AngorLogo}" />
-                        <TextBlock Classes="Header Center" Text="PORTFOLIO" />
-                        <TextBlock Classes="Text-Dimmed Center Wrap" Text="Track your investments and portfolio performance." />
-                    </StackPanel>
-
-                    <!-- <BalancedWrapGrid MinItemWidth="180"> -->
-                    <!--     <Border Classes="ColorPanel White"> -->
-                    <!--         <StackPanel Classes="Gap-M"> -->
-                    <!--             <TextBlock Classes="Size-M Weight-Light" Text="{Binding ActiveProjectsCount^, StringFormat='{}{0}'}" /> -->
-                    <!--             <TextBlock Classes="Size-M Weight-Light" Text="Active Projects" /> -->
-                    <!--         </StackPanel> -->
-                    <!--     </Border> -->
-                    <!--     <Border Classes="ColorPanel White"> -->
-                    <!--         <StackPanel Classes="Gap-M"> -->
-                    <!--             <TextBlock Classes="Size-M Weight-Light" Text="{Binding TotalRaised^.DecimalString, FallbackValue='0 BTC'}" /> -->
-                    <!--             <TextBlock Classes="Size-M Weight-Light" Text="Total Raised" /> -->
-                    <!--         </StackPanel> -->
-                    <!--     </Border> -->
-                    <!-- </BalancedWrapGrid> -->
-                    <!-- -->
-                    <!-- <StackPanel Spacing="5"> -->
-                    <!--     <ProgressBar Maximum="{Binding TotalCount^, Source={StaticResource PoolMonitor}}" Value="{Binding CompletedCount^, Source={StaticResource PoolMonitor}}" /> -->
-                    <!-- </StackPanel> -->
-                    <!-- -->
-                    <!-- <EnhancedButton Icon="{Icon fa-plus}" Command="{Binding Create}" Content="Launch a Project" Classes="Primary" HorizontalAlignment="Stretch" /> -->
+        <Border x:Name="Sidebar" Classes="ColorPanel LightGray" Width="300">
+            <StackPanel Classes="Gap-XL" VerticalAlignment="Center">
+                <StackPanel Classes="Gap-S" HorizontalAlignment="Center">
+                    <PathIcon Height="64" Width="64" Foreground="{DynamicResource Brand}" Data="{StaticResource AngorLogo}" />
+                    <TextBlock Classes="Header Center" Text="PORTFOLIO" />
+                    <TextBlock Classes="Text-Dimmed Center Wrap" Text="Track your investments and portfolio performance." />
                 </StackPanel>
-            </Border>
-        <Loading x:Name="ProjectsPanel" IsLoading="{Binding LoadProjects.IsExecuting^}" LoadingText="Loading your projects. Please wait.">
-            <ScrollViewer>
-                <HeaderedContainer ClipToBounds="False" Padding="10" Margin="20">
-                    <HeaderedContainer.Header>
-                        <TextBlock Classes="Size-XL Strong">Your Investments</TextBlock>
-                    </HeaderedContainer.Header>
-                    <ItemsControl ClipToBounds="False" ItemsSource="{Binding FundedProjects}" VerticalAlignment="Top" HorizontalAlignment="Left">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <BalancedWrapGrid MinItemWidth="320" MaxItemWidth="500" HorizontalSpacing="24" VerticalSpacing="24" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="item:IFundedProjectItem">
-                                <items:FundedProjectItemView ClipToBounds="False" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </HeaderedContainer>
-            </ScrollViewer>
-        </Loading>
+
+                <StackPanel Classes="Gap-M">
+                    <TextBlock Classes="Size-S Strong Center" Text="Project Stats" />
+                    <TextBlock Classes="Size-S Strong Center" Text="Investment Details" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        <ScrollViewer>
+            <HeaderedContainer ClipToBounds="False" Padding="10" Margin="20">
+                <HeaderedContainer.Header>
+                    <TextBlock Classes="Size-XL Strong">Your Investments</TextBlock>
+                </HeaderedContainer.Header>
+                <ItemsControl ClipToBounds="False" ItemsSource="{Binding FundedItems}" VerticalAlignment="Top" HorizontalAlignment="Left">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <BalancedWrapGrid MinItemWidth="320" MaxItemWidth="500" HorizontalSpacing="24" VerticalSpacing="24" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <item1:FundedProjectItemView ClipToBounds="False" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </HeaderedContainer>
+        </ScrollViewer>
     </DockPanel>
 
 </UserControl>

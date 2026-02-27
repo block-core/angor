@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ctrl="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:item="clr-namespace:AngorApp.UI.Sections.Funded.ProjectList.Item"
+             xmlns:manage="clr-namespace:AngorApp.UI.Sections.Funded.Manage"
+             xmlns:shared="clr-namespace:AngorApp.UI.Sections.Shared"
+             xmlns:manage1="clr-namespace:AngorApp.UI.Sections.Funded.Manage"
+             xmlns:project="clr-namespace:AngorApp.UI.Sections.Shared.Project"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="AngorApp.UI.Sections.Funded.Manage.ProjectStatisticsCard" x:DataType="manage:IFundedProject"
+             x:Name="Root">
+
+    <Design.DataContext>
+        <item:FundFundedProjectItemSample />
+    </Design.DataContext>
+
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="project:InvestmentProjectStats">
+            <BalancedWrapGrid MinItemWidth="160">
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Target Amount" Content="{ReflectionBinding DataContext.Project.FundingTarget.DecimalString, RelativeSource={RelativeSource AncestorType=manage1:ProjectStatisticsCard}}" />
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Raised" Content="{Binding FundingRaised.DecimalString}" />
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Investors" Content="{Binding InvestorsCount}" />
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Your Investment" Content="{ReflectionBinding DataContext.Investment.Amount^.DecimalString, RelativeSource={RelativeSource AncestorType=manage1:ProjectStatisticsCard}}" />
+            </BalancedWrapGrid>
+        </DataTemplate>
+
+        <DataTemplate DataType="project:FundProjectStats">
+            <BalancedWrapGrid MinItemWidth="160">
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Goal Amount" Content="{ReflectionBinding DataContext.Project.FundingTarget.DecimalString, RelativeSource={RelativeSource AncestorType=manage1:ProjectStatisticsCard}}" />
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Funding" Content="{Binding FundingRaised.DecimalString}" />
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Funders" Content="{Binding InvestorsCount}" />
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Your Funding" Content="{ReflectionBinding DataContext.Investment.Amount^.DecimalString, RelativeSource={RelativeSource AncestorType=manage1:ProjectStatisticsCard}}" />
+            </BalancedWrapGrid>
+        </DataTemplate>
+
+        <DataTemplate DataType="project:SubscriptionProjectStats">
+            <BalancedWrapGrid MinItemWidth="160">
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Goal Amount" Content="{ReflectionBinding DataContext.Project.FundingTarget.DecimalString, RelativeSource={RelativeSource AncestorType=manage1:ProjectStatisticsCard}}" />
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Funding" Content="{Binding FundingRaised.DecimalString}" />
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Subscribers" Content="{Binding InvestorsCount}" />
+                <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Your Subscription" Content="{ReflectionBinding DataContext.Investment.Amount^.DecimalString, RelativeSource={RelativeSource AncestorType=manage1:ProjectStatisticsCard}}" />
+            </BalancedWrapGrid>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <HeaderedContainer Classes="Card Apricot Shadow">
+        <HeaderedContainer.Header>
+            <EdgePanel ContentClasses="Size-XL BlackText" IconOptions.Fill="{DynamicResource BitcoinOrange}" IconOptions.Size="48" IconOptions.Padding="5" StartContent="{Icon fa-bitcoin}" Content="Project Statistics" />
+        </HeaderedContainer.Header>
+        <StackPanel Classes="Gap-M">
+            <ContentControl Content="{Binding Project.Stats^}" />
+            <HeaderedContainer Header="Funding Progress" HeaderClasses="Size-S BlackText">
+                <ProgressBar Height="12" Value="{Binding Project.FundingRaised^.Sats}" Maximum="{Binding Project.FundingTarget.Sats}"></ProgressBar>
+            </HeaderedContainer>
+        </StackPanel>
+    </HeaderedContainer>
+</UserControl>

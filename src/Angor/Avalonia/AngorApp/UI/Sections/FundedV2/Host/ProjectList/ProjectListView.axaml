@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:section1="clr-namespace:AngorApp.UI.Sections.FundedV2.Host.Section"
+             xmlns:item="clr-namespace:AngorApp.UI.Sections.FundedV2.Host.ProjectList.Item"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
+             x:Class="AngorApp.UI.Sections.FundedV2.Host.ProjectList.ProjectListView" x:DataType="section1:IFundedSectionViewModel">
+    
+    <Design.DataContext>
+        <section1:FundedSectionViewModelSample />
+    </Design.DataContext>
+
+    <DockPanel HorizontalSpacing="20" VerticalSpacing="20">
+        <Border x:Name="Sidebar" Classes="ColorPanel LightGray" Width="300">
+            <StackPanel Classes="Gap-XL" VerticalAlignment="Center">
+                <StackPanel Classes="Gap-S" HorizontalAlignment="Center">
+                    <PathIcon Height="64" Width="64" Foreground="{DynamicResource Brand}" Data="{StaticResource AngorLogo}" />
+                    <TextBlock Classes="Header Center" Text="PORTFOLIO" />
+                    <TextBlock Classes="Text-Dimmed Center Wrap" Text="Track your investments and portfolio performance." />
+                </StackPanel>
+
+                <StackPanel Classes="Gap-M">
+                    <TextBlock Classes="Size-S Strong Center" Text="Project Stats" />
+                    <TextBlock Classes="Size-S Strong Center" Text="Investment Details" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        <ScrollViewer>
+            <HeaderedContainer ClipToBounds="False" Padding="10" Margin="20">
+                <HeaderedContainer.Header>
+                    <TextBlock Classes="Size-XL Strong">Your Investments</TextBlock>
+                </HeaderedContainer.Header>
+                <ItemsControl ClipToBounds="False" ItemsSource="{Binding FundedItems}" VerticalAlignment="Top" HorizontalAlignment="Left">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <BalancedWrapGrid MinItemWidth="320" MaxItemWidth="500" HorizontalSpacing="24" VerticalSpacing="24" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <item:FundedProjectItemView ClipToBounds="False" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </HeaderedContainer>
+        </ScrollViewer>
+    </DockPanel>
+
+</UserControl>

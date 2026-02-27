@@ -2,7 +2,7 @@ using Angor.Shared.Models;
 
 namespace AngorApp.Model.Projects;
 
-public class Project : IProject
+public class OldProject : IOldProject
 {
     public string NostrNpubKeyHex { get; set; }
     public string Id { get; set; }
