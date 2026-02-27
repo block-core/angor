@@ -18,17 +18,17 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
         private readonly IInvestmentAppService investmentAppService;
         private readonly ProjectId projectId;
         private readonly UIServices uiServices;
-        private readonly byte? patternIndex;
+        private readonly byte? patternId;
 
         [Reactive] private IWallet? selectedWallet;
 
-        public PaymentSelectorViewModel(ProjectId projectId, UIServices uiServices, IShellViewModel shell, IInvestmentAppService investmentAppService, IWalletContext walletContext, IAmountUI amountToInvest, byte? patternIndex = null, IWallet? preSelectedWallet = null)
+        public PaymentSelectorViewModel(ProjectId projectId, UIServices uiServices, IShellViewModel shell, IInvestmentAppService investmentAppService, IWalletContext walletContext, IAmountUI amountToInvest, byte? patternId = null, IWallet? preSelectedWallet = null)
         {
             this.projectId = projectId;
             this.uiServices = uiServices;
             this.shell = shell;
             this.investmentAppService = investmentAppService;
-            this.patternIndex = patternIndex;
+            this.patternId = patternId;
             AmountToInvest = amountToInvest;
 
             Wallets = walletContext.Wallets;
@@ -53,7 +53,7 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
             IEnhancedCommand<Unit> command = EnhancedCommand.Create(async () =>
             {
                 closeable.Close();
-                using var invoiceViewModel = new InvoiceViewModel(SelectedWallet!, investmentAppService, uiServices, AmountToInvest, projectId, shell, patternIndex);
+                using var invoiceViewModel = new InvoiceViewModel(SelectedWallet!, investmentAppService, uiServices, AmountToInvest, projectId, shell, patternId);
                 await uiServices.Dialog.Show(
                     invoiceViewModel,
                     "Pay Invoice to Invest",
@@ -112,7 +112,7 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
                     projectId,
                     new Amount(AmountToInvest.Sats),
                     new DomainFeerate(20),
-                    PatternIndex: patternIndex));
+                    PatternId: patternId));
 
             if (draftResult.IsFailure)
                 return Result.Failure<bool>(draftResult.Error);

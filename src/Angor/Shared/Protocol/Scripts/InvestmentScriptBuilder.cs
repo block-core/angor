@@ -46,7 +46,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         }
         else
         {
-            var pattern = projectInfo.DynamicStagePatterns[parameters.PatternIndex];
+            var pattern = parameters.FindPattern(projectInfo);
             stageReleaseDate = CalculateDynamicStageReleaseDate(parameters.InvestmentStartDate.Value, pattern, stageIndex);
         }
 

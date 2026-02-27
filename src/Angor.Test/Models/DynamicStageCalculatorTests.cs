@@ -396,7 +396,7 @@ public class DynamicStageCalculatorTests
             InvestorKey = "testkey",
             TotalInvestmentAmount = 100000,
             InvestmentStartDate = DateTime.UtcNow,
-            PatternIndex = 0
+            PatternId = 0
         };
 
         // Act & Assert
@@ -424,7 +424,7 @@ public class DynamicStageCalculatorTests
             InvestorKey = "testkey",
             TotalInvestmentAmount = 100000, // Matches pattern amount
             InvestmentStartDate = DateTime.UtcNow,
-            PatternIndex = 0
+            PatternId = 0
         };
 
         // Act - should not throw
@@ -451,7 +451,7 @@ public class DynamicStageCalculatorTests
             InvestorKey = "testkey",
             TotalInvestmentAmount = 50000, // Does not match pattern amount
             InvestmentStartDate = DateTime.UtcNow,
-            PatternIndex = 0
+            PatternId = 0
         };
 
         // Act & Assert
@@ -479,7 +479,7 @@ public class DynamicStageCalculatorTests
             InvestorKey = "testkey",
             TotalInvestmentAmount = 100000,
             InvestmentStartDate = DateTime.UtcNow,
-            PatternIndex = 0
+            PatternId = 0
         };
 
         // Act - should not throw (Fund doesn't require fixed amount)
@@ -506,7 +506,7 @@ public class DynamicStageCalculatorTests
             InvestorKey = "testkey",
             TotalInvestmentAmount = 100000,
             InvestmentStartDate = DateTime.UtcNow,
-            PatternIndex = 0
+            PatternId = 0
         };
 
         // Act & Assert
@@ -535,7 +535,7 @@ public class DynamicStageCalculatorTests
             InvestorKey = "testkey",
             TotalInvestmentAmount = 100000,
             InvestmentStartDate = DateTime.UtcNow,
-            PatternIndex = 0
+            PatternId = 0
         };
 
         // Act & Assert
@@ -564,7 +564,7 @@ public class DynamicStageCalculatorTests
             InvestorKey = "testkey",
             TotalInvestmentAmount = 100000,
             InvestmentStartDate = DateTime.UtcNow,
-            PatternIndex = 0
+            PatternId = 0
         };
 
         // Act & Assert

@@ -108,7 +108,7 @@ public class CreateInvestmentFromSpecificAddressTests
             projectId,
             new Amount(1000000000), // 10 BTC
             new DomainFeerate(3000),
-            null, // PatternIndex - not needed for Invest projects
+            null, // PatternId - not needed for Invest projects
             null, // InvestmentStartDate - not needed for Invest projects
             fundingAddress.Address); // FundingAddress
 
@@ -142,7 +142,7 @@ public class CreateInvestmentFromSpecificAddressTests
             projectId,
             new Amount(1000000000),
             new DomainFeerate(3000),
-            null, // PatternIndex
+            null, // PatternId
             null, // InvestmentStartDate
             "bc1qinvalidaddress"); // Address not in wallet
 
@@ -154,7 +154,7 @@ public class CreateInvestmentFromSpecificAddressTests
     }
 
     [Fact]
-    public async Task Handle_WithFundProject_RequiresPatternIndex()
+    public async Task Handle_WithFundProject_RequiresPatternId()
     {
         // Arrange
         var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
@@ -172,7 +172,7 @@ public class CreateInvestmentFromSpecificAddressTests
             projectId,
             new Amount(1000000000),
             new DomainFeerate(3000),
-            null, // Missing pattern index
+            null, // Missing PatternId
             null,
             fundingAddress.Address);
 
@@ -181,7 +181,7 @@ public class CreateInvestmentFromSpecificAddressTests
 
         // Assert
         Assert.True(result.IsFailure);
-        Assert.Contains("PatternIndex is required", result.Error);
+        Assert.Contains("PatternId is required", result.Error);
     }
 
     [Fact(Skip = "BUG: AddInputsFromAddressAndSignTransaction has network validation issues. " +

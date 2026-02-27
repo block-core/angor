@@ -183,7 +183,7 @@ public class CreateInvestmentTests
     }
 
     [Fact]
-    public async Task Handle_WithFundProjectWithoutPatternIndex_ReturnsFailure()
+    public async Task Handle_WithFundProjectWithoutPatternId_ReturnsFailure()
     {
         // Arrange
         var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
@@ -201,7 +201,7 @@ public class CreateInvestmentTests
             projectId,
             new Amount(1000000),
             new DomainFeerate(3000),
-            null, // Missing pattern index
+            null, // Missing PatternId
             null);
 
         // Act
@@ -209,11 +209,11 @@ public class CreateInvestmentTests
 
         // Assert
         Assert.True(result.IsFailure);
-        Assert.Contains("PatternIndex is required", result.Error);
+        Assert.Contains("PatternId is required", result.Error);
     }
 
     [Fact]
-    public async Task Handle_WithSubscribeProjectWithoutPatternIndex_ReturnsFailure()
+    public async Task Handle_WithSubscribeProjectWithoutPatternId_ReturnsFailure()
     {
         // Arrange
         var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
@@ -231,7 +231,7 @@ public class CreateInvestmentTests
             projectId,
             new Amount(1000000),
             new DomainFeerate(3000),
-            null, // Missing pattern index
+            null, // Missing PatternId
             null);
 
         // Act
@@ -239,11 +239,11 @@ public class CreateInvestmentTests
 
         // Assert
         Assert.True(result.IsFailure);
-        Assert.Contains("PatternIndex is required", result.Error);
+        Assert.Contains("PatternId is required", result.Error);
     }
 
     [Fact]
-    public async Task Handle_WithInvalidPatternIndex_ReturnsFailure()
+    public async Task Handle_WithInvalidPatternId_ReturnsFailure()
     {
         // Arrange
         var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
