@@ -188,7 +188,7 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
             project.Id,
             new Amount(50000000), // 0.5 BTC investment
             new DomainFeerate(10000), // 10 sat/vB
-            null, // PatternIndex - not needed for Invest projects
+            null, // PatternId - not needed for Invest projects
             null, // InvestmentStartDate - not needed for Invest projects
             fundingAddress.Address); // FundingAddress - use specific address
 

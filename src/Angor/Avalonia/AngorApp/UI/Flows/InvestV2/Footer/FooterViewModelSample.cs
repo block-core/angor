@@ -9,6 +9,8 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
 
         public IEnhancedCommand Invest { get; }
         public IAmountUI TotalRaised { get; }
-        public int StageCount { get; } = 3;
+        public IObservable<int> StageCount { get; } = Observable.Return(3);
+        public bool HasPenaltyThreshold { get; } = true;
+        public IObservable<bool> IsAbovePenaltyThreshold { get; } = Observable.Return(true);
     }
 }

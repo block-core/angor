@@ -218,14 +218,7 @@ public class FounderTransactionActions : IFounderTransactionActions
                     throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
                 }
 
-                if (fundingParameters.PatternIndex >= projectInfo.DynamicStagePatterns.Count)
-                {
-                    _logger.LogWarning($"Investment transaction {investmentTrx.GetHash()} has invalid PatternIndex {fundingParameters.PatternIndex}. Skipping.");
-                    continue;
-                }
-
-                // Get the pattern for this investment
-                var pattern = projectInfo.DynamicStagePatterns[fundingParameters.PatternIndex];
+                var pattern = fundingParameters.FindPattern(projectInfo);
 
                 // Calculate the release date for the specified stage (stageNumber is 1-based, so subtract 1)
                 var stageIndex = stageNumber - 1;

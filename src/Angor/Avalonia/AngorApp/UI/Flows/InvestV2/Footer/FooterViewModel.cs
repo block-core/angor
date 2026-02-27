@@ -1,5 +1,6 @@
 using System.Linq;
 using Angor.Sdk.Funding.Investor;
+using Angor.Shared.Models;
 using AngorApp.UI.Flows.InvestV2.Invoice;
 using AngorApp.UI.Flows.InvestV2.PaymentSelector;
 using AngorApp.UI.Shell;
@@ -14,10 +15,12 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
         private readonly IFullProject fullProject;
         private readonly IInvestmentAppService investmentAppService;
         private readonly UIServices uiServices;
+        private readonly IObservable<DynamicStagePattern?> selectedPattern;
 
         public FooterViewModel(
             IFullProject fullProject,
             IObservable<IAmountUI> amountToInvest,
+            IObservable<DynamicStagePattern?> selectedPattern,
             UIServices uiServices,
             IInvestmentAppService investmentAppService,
             IShellViewModel shell,
@@ -27,7 +30,20 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
             this.fullProject = fullProject;
             this.investmentAppService = investmentAppService;
             this.uiServices = uiServices;
+            this.selectedPattern = selectedPattern;
             AmountToInvest = new ReadOnlyReactiveProperty<IAmountUI>(amountToInvest);
+            
+            // Compute stage count reactively: use pattern's StageCount for Fund/Subscribe, otherwise static stages
+            StageCount = selectedPattern
+                .Select(p => p != null && fullProject.ProjectType is ProjectType.Fund or ProjectType.Subscribe
+                    ? p.StageCount
+                    : fullProject.Stages.Count());
+            
+            // Compute penalty threshold status reactively as amount changes
+            var penaltyThreshold = fullProject.PenaltyThreshold;
+            IsAbovePenaltyThreshold = AmountToInvest
+                .Select(amount => penaltyThreshold != null && amount.Sats > penaltyThreshold.Sats);
+            
             Invest = ReactiveCommand.CreateFromTask(
                 () => InvestFlow(uiServices, shell, walletContext),
                 AmountToInvest.Select(IsValidInvest)).Enhance();
@@ -36,11 +52,27 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
         public IReadOnlyReactiveProperty<IAmountUI> AmountToInvest { get; }
         public IEnhancedCommand Invest { get; }
         public IAmountUI TotalRaised => fullProject.RaisedAmount;
-        public int StageCount => fullProject.Stages.Count();
+        public IObservable<int> StageCount { get; }
+        public bool HasPenaltyThreshold => fullProject.PenaltyThreshold != null
+                                           || fullProject.ProjectType is ProjectType.Fund or ProjectType.Subscribe;
+        
+        public IObservable<bool> IsAbovePenaltyThreshold { get; }
 
         private static bool IsValidInvest(IAmountUI ui)
         {
             return ui.Sats >= 10000;
+        }
+
+        private byte? GetCurrentPatternId()
+        {
+            // Get the latest selected pattern value
+            byte? patternId = null;
+            selectedPattern.Take(1).Subscribe(p =>
+            {
+                if (p != null)
+                    patternId = p.PatternId;
+            });
+            return patternId;
         }
 
         private async Task<Result<Maybe<string>>> InvestFlow(
@@ -49,11 +81,13 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
             IWalletContext walletContext
         )
         {
+            var patternId = GetCurrentPatternId();
+
             if (walletContext.Wallets.Count == 0)
             {
                 return await walletContext.GetOrCreate().Map(async wallet =>
                 {
-                    using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell);
+                    using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell, patternId);
                     bool result = await uiServices.Dialog.Show(
                         invoiceViewModel,
                         "Select Wallet",
@@ -70,7 +104,7 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
 
             if (HasEnoughBalance(wallet))
             {
-                using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell);
+                using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell, patternId);
                 bool show = await uiServices.Dialog.Show(invoiceViewModel, "Select Wallet", (model, closeable) =>
                 {
                     model.SetCloseable(closeable);
@@ -80,7 +114,7 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
             }
 
             return await uiServices.Dialog.ShowAndGetResult(
-                new PaymentSelectorViewModel(fullProject.ProjectId, uiServices, shell, investmentAppService, walletContext, AmountToInvest.Value, wallet),
+                new PaymentSelectorViewModel(fullProject.ProjectId, uiServices, shell, investmentAppService, walletContext, AmountToInvest.Value, patternId, wallet),
                 "Select Wallet",
                 (model, closeable) => model.Options(closeable),
                 _ => "");

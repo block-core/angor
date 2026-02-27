@@ -18,15 +18,17 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
         private readonly IInvestmentAppService investmentAppService;
         private readonly ProjectId projectId;
         private readonly UIServices uiServices;
+        private readonly byte? patternId;
 
         [Reactive] private IWallet? selectedWallet;
 
-        public PaymentSelectorViewModel(ProjectId projectId, UIServices uiServices, IShellViewModel shell, IInvestmentAppService investmentAppService, IWalletContext walletContext, IAmountUI amountToInvest, IWallet? preSelectedWallet = null)
+        public PaymentSelectorViewModel(ProjectId projectId, UIServices uiServices, IShellViewModel shell, IInvestmentAppService investmentAppService, IWalletContext walletContext, IAmountUI amountToInvest, byte? patternId = null, IWallet? preSelectedWallet = null)
         {
             this.projectId = projectId;
             this.uiServices = uiServices;
             this.shell = shell;
             this.investmentAppService = investmentAppService;
+            this.patternId = patternId;
             AmountToInvest = amountToInvest;
 
             Wallets = walletContext.Wallets;
@@ -51,7 +53,7 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
             IEnhancedCommand<Unit> command = EnhancedCommand.Create(async () =>
             {
                 closeable.Close();
-                using var invoiceViewModel = new InvoiceViewModel(SelectedWallet!, investmentAppService, uiServices, AmountToInvest, projectId, shell);
+                using var invoiceViewModel = new InvoiceViewModel(SelectedWallet!, investmentAppService, uiServices, AmountToInvest, projectId, shell, patternId);
                 await uiServices.Dialog.Show(
                     invoiceViewModel,
                     "Pay Invoice to Invest",
@@ -96,7 +98,8 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
             {
                 closeable.Close();
                 var title = isAboveThreshold ? "Investment Submitted" : "Investment Completed";
-                await uiServices.Dialog.Show(new InvestResultViewModel(shell), title, (model, c) => model.Options(c));
+                var resultViewModel = new InvestResultViewModel(shell) { Amount = AmountToInvest, RequiresApproval = isAboveThreshold };
+                await uiServices.Dialog.Show(resultViewModel, title, (model, c) => model.Options(c));
                 return Result.Success();
             });
         }
@@ -108,7 +111,8 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
                     SelectedWallet!.Id,
                     projectId,
                     new Amount(AmountToInvest.Sats),
-                    new DomainFeerate(20)));
+                    new DomainFeerate(20),
+                    PatternId: patternId));
 
             if (draftResult.IsFailure)
                 return Result.Failure<bool>(draftResult.Error);
