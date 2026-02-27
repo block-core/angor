@@ -37,7 +37,9 @@ public static class CreateProjectDtoMapper
             Stages = Enumerable.Empty<CreateProjectStageDto>(),
             SelectedPatterns = CreateDynamicStagePatterns(
                 fundProject.PayoutFrequency,
-                fundProject.SelectedInstallments.SelectedItems
+                fundProject.SelectedInstallments.SelectedItems,
+                fundProject.MonthlyPayoutDate,
+                fundProject.WeeklyPayoutDay
             ),
             PayoutDay = fundProject.MonthlyPayoutDate
         };
@@ -45,7 +47,9 @@ public static class CreateProjectDtoMapper
 
     private static List<DynamicStagePattern>? CreateDynamicStagePatterns(
         PayoutFrequency? frequency,
-        IEnumerable<int> installmentCounts)
+        IEnumerable<int> installmentCounts,
+        int? monthlyPayoutDay,
+        DayOfWeek? weeklyPayoutDay)
     {
         if (!frequency.HasValue || installmentCounts == null || !installmentCounts.Any())
         {
@@ -55,6 +59,11 @@ public static class CreateProjectDtoMapper
         var stageFrequency = frequency.Value == PayoutFrequency.Monthly
             ? StageFrequency.Monthly
             : StageFrequency.Weekly;
+
+        // Determine the payout day and type based on frequency
+        var (payoutDayType, payoutDay) = frequency.Value == PayoutFrequency.Monthly
+            ? (PayoutDayType.SpecificDayOfMonth, monthlyPayoutDay ?? 1)
+            : (PayoutDayType.SpecificDayOfWeek, (int)(weeklyPayoutDay ?? DayOfWeek.Monday));
 
         var standardPatterns = DynamicStagePattern.GetStandardPatterns();
 
@@ -68,6 +77,10 @@ public static class CreateProjectDtoMapper
                     $"No standard pattern found for frequency '{stageFrequency}' with {count} stages. " +
                     $"Available patterns: {string.Join(", ", standardPatterns.Select(p => $"{p.Frequency}/{p.StageCount}"))}");
             }
+
+            // Override the payout day with the user's chosen value
+            matchingStandard.PayoutDayType = payoutDayType;
+            matchingStandard.PayoutDay = payoutDay;
 
             return matchingStandard;
         }).ToList();
