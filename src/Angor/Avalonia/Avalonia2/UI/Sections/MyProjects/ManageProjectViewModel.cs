@@ -105,6 +105,14 @@ public partial class ManageProjectViewModel : ReactiveObject
     // ── Project ID (Vue line 1069) ──
     public string ProjectId { get; } = "angor1qc8jlugwgp90vzkhf336d8exldhwd8z5u4ssaen";
 
+    // ── Private Keys Data (Vue ManageFunds.vue lines 634-818, stubbed) ──
+    public string FounderKey { get; } = "02a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2";
+    public string RecoveryKey { get; } = "03f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2";
+    public string NostrNpub { get; } = "npub1qkx8rft57j4wz2k3l8m9n0p5q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f1g2h3";
+    public string Nip05 { get; } = "angor_project@nostr.angor.io";
+    public string NostrNsec { get; } = "nsec1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1";
+    public string NostrHex { get; } = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
     // ── Next Stage Countdown (Vue lines 1103-1107) ──
     public int CountdownDays { get; } = 9;
     public int CountdownHours { get; } = 13;

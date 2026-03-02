@@ -34,6 +34,22 @@
         <Style Selector="Button.NetworkOption.NetworkOptionActive TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource NetworkOptionActiveText}" />
         </Style>
+
+        <!-- Settings default-toggle checkbox: unchecked state -->
+        <!-- Vue: 24x24, border 2px #e5e7eb / dark #404040, bg white / dark #2a2a2a, border-radius 4px -->
+        <Style Selector="Border.SettingsCheckbox">
+            <Setter Property="Background" Value="{DynamicResource SettingsCheckboxBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SettingsCheckboxBorder}" />
+        </Style>
+        <!-- Vue: active → bg #4B7C5A, border #4B7C5A (same in both themes) -->
+        <Style Selector="Border.SettingsCheckbox.SettingsCheckboxChecked">
+            <Setter Property="Background" Value="#4B7C5A" />
+            <Setter Property="BorderBrush" Value="#4B7C5A" />
+        </Style>
+        <!-- Vue: hover → border-color #4B7C5A -->
+        <Style Selector="Border.SettingsCheckbox:pointerover">
+            <Setter Property="BorderBrush" Value="#4B7C5A" />
+        </Style>
     </UserControl.Styles>
 
     <Panel>
@@ -218,15 +234,18 @@
                                                                Foreground="#EF4444" />
                                                     </Button>
                                                     <!-- Default toggle -->
+                                                    <!-- Vue: settings-toggle-button — 24x24, border-radius 4, click toggles default -->
+                                                    <!-- Active: bg #4B7C5A, border #4B7C5A, white checkmark -->
                                                     <Border DockPanel.Dock="Right"
+                                                            Classes="SettingsCheckbox"
+                                                            Classes.SettingsCheckboxChecked="{Binding IsDefault}"
                                                             Margin="12,0"
                                                             Width="24" Height="24"
                                                             CornerRadius="4"
                                                             BorderThickness="2"
-                                                            BorderBrush="{DynamicResource Stroke}"
-                                                            Background="{DynamicResource CardSurface}"
                                                             VerticalAlignment="Center"
-                                                            Cursor="Hand">
+                                                            Cursor="Hand"
+                                                            PointerPressed="OnToggleDefaultExplorer">
                                                         <Path Data="{StaticResource Checkmark}"
                                                               Stroke="White"
                                                               StrokeThickness="2"
@@ -344,14 +363,15 @@
                                                     </Button>
                                                     <!-- Default toggle -->
                                                     <Border DockPanel.Dock="Right"
+                                                            Classes="SettingsCheckbox"
+                                                            Classes.SettingsCheckboxChecked="{Binding IsDefault}"
                                                             Margin="12,0"
                                                             Width="24" Height="24"
                                                             CornerRadius="4"
                                                             BorderThickness="2"
-                                                            BorderBrush="{DynamicResource Stroke}"
-                                                            Background="{DynamicResource CardSurface}"
                                                             VerticalAlignment="Center"
-                                                            Cursor="Hand">
+                                                            Cursor="Hand"
+                                                            PointerPressed="OnToggleDefaultIndexer">
                                                         <Path Data="{StaticResource Checkmark}"
                                                               Stroke="White"
                                                               StrokeThickness="2"

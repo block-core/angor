@@ -226,7 +226,7 @@
                                         Foreground="#4B7C5A"
                                         FontSize="14" FontWeight="SemiBold">
                                     <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                        <i:Icon Value="fa-solid fa-pen" FontSize="12" />
+                                        <i:Icon Value="fa-solid fa-pen" FontSize="12" Foreground="#4B7C5A" />
                                         <TextBlock Text="Edit" FontSize="14" FontWeight="SemiBold"
                                                    VerticalAlignment="Center" />
                                     </StackPanel>
@@ -241,8 +241,8 @@
                                         BorderThickness="2"
                                         CornerRadius="8"
                                         Foreground="#4B7C5A">
-                                    <i:Icon Value="fa-solid fa-share-nodes"
-                                            FontSize="16" />
+                                    <i:Icon Value="fa-solid fa-share"
+                                            FontSize="16" Foreground="#4B7C5A" />
                                 </Button>
                             </Grid>
                         </StackPanel>

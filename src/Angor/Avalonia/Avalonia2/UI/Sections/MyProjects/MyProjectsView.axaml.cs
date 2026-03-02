@@ -4,7 +4,6 @@ using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using Avalonia2.UI.Shared.Controls;
 using Avalonia2.UI.Shell;
-
 namespace Avalonia2.UI.Sections.MyProjects;
 
 public partial class MyProjectsView : UserControl
@@ -156,6 +155,25 @@ public partial class MyProjectsView : UserControl
                     && card.DataContext is MyProjectItemViewModel project)
                 {
                     vm.OpenManageProject(project);
+                    e.Handled = true;
+                }
+                return;
+
+            case "PART_ShareButton":
+                // Walk up from the button to find the ProjectCard, then get its DataContext
+                var shareElement = btn as Control;
+                while (shareElement != null && shareElement is not ProjectCard)
+                    shareElement = shareElement.Parent as Control;
+
+                if (shareElement is ProjectCard shareCard
+                    && shareCard.DataContext is MyProjectItemViewModel shareProject)
+                {
+                    var shell = this.FindAncestorOfType<ShellView>();
+                    if (shell?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
+                    {
+                        var modal = new ShareModal(shareProject.Name, shareProject.Description);
+                        shellVm.ShowModal(modal);
+                    }
                     e.Handled = true;
                 }
                 return;

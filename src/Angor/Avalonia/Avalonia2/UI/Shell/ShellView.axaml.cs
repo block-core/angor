@@ -185,6 +185,8 @@ public partial class ShellView : UserControl
 
     /// <summary>
     /// Wait for the close transition to finish, then remove the modal from the tree.
+    /// Only hides the overlay/blur if no new modal was opened in the meantime
+    /// (i.e., multi-step modal flows where ShowModal is called right after HideModal).
     /// </summary>
     private async Task CleanupAfterClose(Control closingChild, Panel modalOverlay, Grid shellContent)
     {
@@ -195,10 +197,14 @@ public partial class ShellView : UserControl
         {
             closingChild.Transitions = null;
             modalOverlay.Children.Remove(closingChild);
-            if (_currentModalChild == closingChild)
+
+            // Only tear down the overlay if no replacement modal was opened
+            if (_currentModalChild == closingChild || _currentModalChild == null)
+            {
                 _currentModalChild = null;
-            modalOverlay.IsVisible = false;
-            shellContent.Effect = null;
+                modalOverlay.IsVisible = false;
+                shellContent.Effect = null;
+            }
             _isClosing = false;
         });
     }

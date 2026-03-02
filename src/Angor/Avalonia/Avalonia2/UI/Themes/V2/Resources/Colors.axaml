@@ -471,6 +471,44 @@
             <!-- Vue: action button hover bg: light rgba(75,124,90,0.1) -->
             <SolidColorBrush x:Key="BrandGreenTint" Color="#1A4B7C5A" />
 
+            <!-- ── Share Modal (light) ── -->
+            <!-- Vue: bg-white, project info bg-gray-50, input bg-white border-gray-300 -->
+            <SolidColorBrush x:Key="ShareModalBg" Color="White" />
+            <SolidColorBrush x:Key="ShareModalBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="ShareInfoCardBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="ShareInfoCardBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="ShareInputBg" Color="White" />
+            <SolidColorBrush x:Key="ShareInputBorder" Color="#D1D5DB" />
+            <!-- Vue: social-share-btn light: bg #f9fafb, border #e5e7eb -->
+            <SolidColorBrush x:Key="ShareSocialBtnBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="ShareSocialBtnBorder" Color="#E5E7EB" />
+            <!-- Vue: social-share-btn:hover light: bg #f3f4f6, border #d1d5db -->
+            <SolidColorBrush x:Key="ShareSocialBtnHoverBg" Color="#F3F4F6" />
+            <SolidColorBrush x:Key="ShareSocialBtnHoverBorder" Color="#D1D5DB" />
+            <!-- Vue: email btn light: border-gray-300, hover:bg-gray-50 -->
+            <SolidColorBrush x:Key="ShareEmailBtnBorder" Color="#D1D5DB" />
+            <SolidColorBrush x:Key="ShareEmailBtnHoverBg" Color="#F9FAFB" />
+
+            <!-- ── Private Keys Modals (light) ── -->
+            <!-- Vue: key field input bg-gray-50, border-gray-300, text-gray-900 -->
+            <SolidColorBrush x:Key="KeyFieldInputBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="KeyFieldInputBorder" Color="#D1D5DB" />
+            <SolidColorBrush x:Key="KeyFieldText" Color="#111827" />
+            <!-- Vue: label text-gray-700 -->
+            <SolidColorBrush x:Key="KeyFieldLabel" Color="#374151" />
+            <!-- Vue: copy/eye btn bg-gray-50, border-gray-300, text-gray-600, hover:bg-gray-100 -->
+            <SolidColorBrush x:Key="KeyCopyBtnBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="KeyCopyBtnBorder" Color="#D1D5DB" />
+            <SolidColorBrush x:Key="KeyCopyBtnText" Color="#4B5563" />
+            <SolidColorBrush x:Key="KeyCopyBtnHoverBg" Color="#F3F4F6" />
+            <!-- Vue: red button bg-red-600 hover:bg-red-700 -->
+            <SolidColorBrush x:Key="RedBtnBg" Color="#DC2626" />
+            <SolidColorBrush x:Key="RedBtnHoverBg" Color="#B91C1C" />
+            <!-- Vue: red warning banner bg-red-50, border-red-200, text-red-600 -->
+            <SolidColorBrush x:Key="RedWarningBannerBg" Color="#FEF2F2" />
+            <SolidColorBrush x:Key="RedWarningBannerBorder" Color="#FECACA" />
+            <SolidColorBrush x:Key="RedWarningBannerText" Color="#DC2626" />
+
             <!-- ── Recovery Modals (light) ── -->
             <!-- Vue: modal container bg-white border-gray-200 -->
             <SolidColorBrush x:Key="RecoveryModalBg" Color="White" />
@@ -495,6 +533,22 @@
             <!-- Vue: claim table header border-gray-200, row border-gray-100 -->
             <SolidColorBrush x:Key="RecoveryTableHeaderBorder" Color="#E5E7EB" />
             <SolidColorBrush x:Key="RecoveryTableRowBorder" Color="#F3F4F6" />
+
+            <!-- ── Penalties Modal (light) ── -->
+            <!-- Vue: penalty pill amber bg/text -->
+            <SolidColorBrush x:Key="PenaltyPillBg" Color="#FEF3C7" />
+            <SolidColorBrush x:Key="PenaltyPillText" Color="#92400E" />
+            <SolidColorBrush x:Key="PenaltyPillBorder" Color="#FDE68A" />
+            <!-- Table cell text -->
+            <SolidColorBrush x:Key="PenaltyTableText" Color="#374151" />
+            <SolidColorBrush x:Key="PenaltyTableHeaderText" Color="#374151" />
+            <!-- Amount green accent -->
+            <SolidColorBrush x:Key="PenaltyAmountText" Color="#4B7C5A" />
+
+            <!-- ── Settings Checkbox (light) ── -->
+            <!-- Vue: unchecked bg white, border #e5e7eb -->
+            <SolidColorBrush x:Key="SettingsCheckboxBg" Color="White" />
+            <SolidColorBrush x:Key="SettingsCheckboxBorder" Color="#E5E7EB" />
 
             <!-- ── Pill Colors (light) ── -->
             <!-- Green pill: status "Open", "Active", generic success -->
@@ -961,23 +1015,61 @@
             <!-- Vue: action button hover bg: dark rgba(75,124,90,0.2) -->
             <SolidColorBrush x:Key="BrandGreenTint" Color="#334B7C5A" />
 
+            <!-- ── Share Modal (dark) ── -->
+            <!-- Vue: bg-[#2A2A2A], project info bg-[#1a1a1a], input bg-[#1a1a1a] border-[#404040] -->
+            <SolidColorBrush x:Key="ShareModalBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="ShareModalBorder" Color="#404040" />
+            <SolidColorBrush x:Key="ShareInfoCardBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="ShareInfoCardBorder" Color="#404040" />
+            <SolidColorBrush x:Key="ShareInputBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="ShareInputBorder" Color="#404040" />
+            <!-- Vue: social-share-btn.dark: bg #2a2a2a, border #404040 -->
+            <SolidColorBrush x:Key="ShareSocialBtnBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="ShareSocialBtnBorder" Color="#404040" />
+            <!-- Vue: social-share-btn.dark:hover: bg #333333, border #525252 -->
+            <SolidColorBrush x:Key="ShareSocialBtnHoverBg" Color="#333333" />
+            <SolidColorBrush x:Key="ShareSocialBtnHoverBorder" Color="#525252" />
+            <!-- Vue: email btn dark: border-[#404040], hover:bg-[#2a2a2a] -->
+            <SolidColorBrush x:Key="ShareEmailBtnBorder" Color="#404040" />
+            <SolidColorBrush x:Key="ShareEmailBtnHoverBg" Color="#2A2A2A" />
+
+            <!-- ── Private Keys Modals (dark) ── -->
+            <!-- Vue: key field input bg-[#0A0A0A], border-[#404040], text-gray-300 -->
+            <SolidColorBrush x:Key="KeyFieldInputBg" Color="#0A0A0A" />
+            <SolidColorBrush x:Key="KeyFieldInputBorder" Color="#404040" />
+            <SolidColorBrush x:Key="KeyFieldText" Color="#D1D5DB" />
+            <!-- Vue: label text-gray-300 -->
+            <SolidColorBrush x:Key="KeyFieldLabel" Color="#D1D5DB" />
+            <!-- Vue: copy/eye btn bg-[#0A0A0A], border-[#404040], text-gray-400, hover:bg-[#1a1a1a] -->
+            <SolidColorBrush x:Key="KeyCopyBtnBg" Color="#0A0A0A" />
+            <SolidColorBrush x:Key="KeyCopyBtnBorder" Color="#404040" />
+            <SolidColorBrush x:Key="KeyCopyBtnText" Color="#9CA3AF" />
+            <SolidColorBrush x:Key="KeyCopyBtnHoverBg" Color="#1A1A1A" />
+            <!-- Vue: red button same in dark: bg-red-600 hover:bg-red-700 -->
+            <SolidColorBrush x:Key="RedBtnBg" Color="#DC2626" />
+            <SolidColorBrush x:Key="RedBtnHoverBg" Color="#B91C1C" />
+            <!-- Vue: red warning banner dark: bg-red-900/20, border-red-800, text-red-600 -->
+            <SolidColorBrush x:Key="RedWarningBannerBg" Color="#33991B1B" />
+            <SolidColorBrush x:Key="RedWarningBannerBorder" Color="#991B1B" />
+            <SolidColorBrush x:Key="RedWarningBannerText" Color="#DC2626" />
+
             <!-- ── Recovery Modals (dark) ── -->
             <!-- Vue: modal container bg-[#1a1a1a] border-[#404040] -->
             <SolidColorBrush x:Key="RecoveryModalBg" Color="#1A1A1A" />
             <SolidColorBrush x:Key="RecoveryModalBorder" Color="#404040" />
-            <!-- Vue: info card bg-[#0A0A0A] border-gray-700 -->
+            <!-- Info card: neutral dark bg + gray border (no blue tint) -->
             <SolidColorBrush x:Key="RecoveryInfoCardBg" Color="#0A0A0A" />
-            <SolidColorBrush x:Key="RecoveryInfoCardBorder" Color="#374151" />
-            <!-- Vue: warning box bg-gray-800 border-gray-700 — using pure dark gray, no blue tint -->
+            <SolidColorBrush x:Key="RecoveryInfoCardBorder" Color="#404040" />
+            <!-- Warning box: pure dark gray, no blue tint -->
             <SolidColorBrush x:Key="RecoveryWarningBg" Color="#222222" />
             <SolidColorBrush x:Key="RecoveryWarningBorder" Color="#404040" />
-            <SolidColorBrush x:Key="RecoveryWarningText" Color="#D1D5DB" />
-            <!-- Vue: fee info badge dark — using pure dark gray, no blue tint -->
+            <SolidColorBrush x:Key="RecoveryWarningText" Color="#D0D0D0" />
+            <!-- Fee info badge: neutral gray -->
             <SolidColorBrush x:Key="RecoveryFeeBadgeBg" Color="#222222" />
             <SolidColorBrush x:Key="RecoveryFeeBadgeText" Color="#A0A0A0" />
-            <!-- Vue: fee priority unselected dark border-gray-700 text-gray-300 -->
-            <SolidColorBrush x:Key="RecoveryFeeUnselectedBorder" Color="#374151" />
-            <SolidColorBrush x:Key="RecoveryFeeUnselectedText" Color="#D1D5DB" />
+            <!-- Fee priority unselected: neutral gray border + readable text -->
+            <SolidColorBrush x:Key="RecoveryFeeUnselectedBorder" Color="#404040" />
+            <SolidColorBrush x:Key="RecoveryFeeUnselectedText" Color="#B0B0B0" />
             <!-- Vue: fee priority selected (same both themes) -->
             <SolidColorBrush x:Key="RecoveryFeeSelectedBg" Color="#4B7C5A" />
             <SolidColorBrush x:Key="RecoveryFeeSelectedBorder" Color="#4B7C5A" />
@@ -985,6 +1077,19 @@
             <!-- Vue: claim table header border-[#404040], row border-[#2a2a2a] -->
             <SolidColorBrush x:Key="RecoveryTableHeaderBorder" Color="#404040" />
             <SolidColorBrush x:Key="RecoveryTableRowBorder" Color="#2A2A2A" />
+
+            <!-- ── Penalties Modal (dark) ── -->
+            <SolidColorBrush x:Key="PenaltyPillBg" Color="#33F59E0B" />
+            <SolidColorBrush x:Key="PenaltyPillText" Color="#FBBF24" />
+            <SolidColorBrush x:Key="PenaltyPillBorder" Color="#4DF59E0B" />
+            <SolidColorBrush x:Key="PenaltyTableText" Color="#D0D0D0" />
+            <SolidColorBrush x:Key="PenaltyTableHeaderText" Color="#A0A0A0" />
+            <SolidColorBrush x:Key="PenaltyAmountText" Color="#4B7C5A" />
+
+            <!-- ── Settings Checkbox (dark) ── -->
+            <!-- Vue: unchecked bg #2a2a2a, border #404040 -->
+            <SolidColorBrush x:Key="SettingsCheckboxBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="SettingsCheckboxBorder" Color="#404040" />
 
             <!-- ── Pill Colors (dark — 20% opacity bg, lighter text for readability) ── -->
             <!-- Green pill -->

@@ -66,6 +66,12 @@ public partial class SettingsView : UserControl
             Vm?.RemoveExplorerLink(item);
     }
 
+    private void OnToggleDefaultExplorer(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is Border { DataContext: ExplorerItem item })
+            Vm?.SetDefaultExplorer(item);
+    }
+
     // ── Indexer ──
     private void OnAddIndexer(object? sender, RoutedEventArgs e) =>
         Vm?.AddIndexerLink();
@@ -74,6 +80,12 @@ public partial class SettingsView : UserControl
     {
         if (sender is Button { DataContext: IndexerItem item })
             Vm?.RemoveIndexerLink(item);
+    }
+
+    private void OnToggleDefaultIndexer(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is Border { DataContext: IndexerItem item })
+            Vm?.SetDefaultIndexer(item);
     }
 
     // ── Relays ──

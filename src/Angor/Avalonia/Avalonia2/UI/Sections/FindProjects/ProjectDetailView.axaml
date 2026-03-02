@@ -118,7 +118,7 @@
             </Border>
 
             <!-- RIGHT: Share Button -->
-            <Border DockPanel.Dock="Right"
+            <Border Name="ShareButton" DockPanel.Dock="Right"
                     Classes="FloatingBtn"
                     Background="{DynamicResource FloatingBtnBg}"
                     BorderBrush="{DynamicResource FloatingBtnBorder}"
@@ -709,7 +709,7 @@
                             <StackPanel Spacing="8">
                                 <TextBlock Text="Subscription Price" FontSize="13" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock Text="20,000 Sats" FontSize="20" FontWeight="Bold"
+                                <TextBlock Text="0.0002 BTC" FontSize="20" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                             </StackPanel>
                         </Border>

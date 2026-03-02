@@ -4,6 +4,9 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
+using Avalonia.VisualTree;
+using Avalonia2.UI.Shared.Controls;
+using Avalonia2.UI.Shell;
 
 namespace Avalonia2.UI.Sections.FindProjects;
 
@@ -21,6 +24,7 @@ public partial class ProjectDetailView : UserControl
     private Border? _detailsContainer;
     private Border? _nostrContainer;
     private Border? _progressFill;
+    private Border? _shareBtn;
     private Border? _detailsHeader;
     private StackPanel? _detailsContent;
     private Control? _detailsChevron;
@@ -44,6 +48,7 @@ public partial class ProjectDetailView : UserControl
         _detailsContainer = this.FindControl<Border>("DetailsContainer");
         _nostrContainer = this.FindControl<Border>("NostrContainer");
         _progressFill = this.FindControl<Border>("ProgressFill");
+        _shareBtn = this.FindControl<Border>("ShareButton");
         _detailsHeader = this.FindControl<Border>("DetailsHeader");
         _detailsContent = this.FindControl<StackPanel>("DetailsContent");
         _detailsChevron = this.FindControl<Control>("DetailsChevron");
@@ -65,6 +70,10 @@ public partial class ProjectDetailView : UserControl
         // Nav CTA button — same action as InvestButton
         if (_navCta != null)
             _navCta.PointerPressed += OnInvestPressed;
+
+        // Share button — open share modal via shell
+        if (_shareBtn != null)
+            _shareBtn.PointerPressed += OnSharePressed;
 
         // Scroll detection for nav CTA fade
         if (_scroller != null)
@@ -158,6 +167,20 @@ public partial class ProjectDetailView : UserControl
         if (findProjectsView?.DataContext is FindProjectsViewModel vm)
         {
             vm.OpenInvestPage();
+        }
+    }
+
+    private void OnSharePressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is ProjectItemViewModel project)
+        {
+            var shell = this.FindAncestorOfType<ShellView>();
+            if (shell?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
+            {
+                var modal = new ShareModal(project.ProjectName, project.ShortDescription);
+                shellVm.ShowModal(modal);
+                e.Handled = true;
+            }
         }
     }
 

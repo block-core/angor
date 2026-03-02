@@ -68,7 +68,7 @@
                             <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
                         </Transitions>
                     </Border.Transitions>
-                    <Button Classes="NavBtn" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand">
+                    <Button Name="ViewPrivateKeysButton" Classes="NavBtn" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand">
                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                             <i:Icon Value="fa-solid fa-lock"
                                    FontSize="16"
@@ -122,7 +122,7 @@
                             <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
                         </Transitions>
                     </Border.Transitions>
-                    <Button Classes="NavBtn" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand">
+                    <Button Name="ShareButton" Classes="NavBtn" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand">
                         <i:Icon Value="fa-solid fa-share" FontSize="14" Foreground="{DynamicResource TextStrong}"
                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Button>
@@ -1014,7 +1014,7 @@
                                 </Button.Background>
                                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                                     <!-- Spinner (visible when claiming) -->
-                                    <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="14"
+                                    <i:Icon Value="fa-solid fa-spinner" FontSize="14"
                                             Foreground="White"
                                             IsVisible="{Binding IsClaiming}" />
                                     <TextBlock Name="ConfirmClaimText"
@@ -1322,7 +1322,7 @@
                                     </LinearGradientBrush>
                                 </Button.Background>
                                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                                    <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="14"
+                                    <i:Icon Value="fa-solid fa-spinner" FontSize="14"
                                             Foreground="White"
                                             IsVisible="{Binding IsReleasingFunds}" />
                                     <TextBlock Name="ConfirmReleaseText"
@@ -1522,5 +1522,6 @@
                 </StackPanel>
             </Border>
         </Panel>
+
     </Panel>
 </UserControl>

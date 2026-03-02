@@ -98,8 +98,9 @@
                                                Foreground="White" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
-                            <Button Padding="20,8"
-                                    Background="#F7931A" CornerRadius="8">
+                            <Button Name="PenaltiesButton" Padding="20,8"
+                                    Background="#F7931A" CornerRadius="8"
+                                    Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <i:Icon Value="fa-solid fa-lock"
                                            FontSize="14"

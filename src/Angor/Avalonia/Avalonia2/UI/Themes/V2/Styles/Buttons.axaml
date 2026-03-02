@@ -176,6 +176,15 @@
         <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
     </Style>
 
+    <!-- Disabled state: reduced opacity + no cursor + no hover effects -->
+    <Style Selector="Button:disabled">
+        <Setter Property="Opacity" Value="0.45" />
+        <Setter Property="Cursor" Value="Arrow" />
+    </Style>
+    <Style Selector="Button:disabled /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Opacity" Value="1" />
+    </Style>
+
     <!-- Button.Primary — Vue btn-primary: dark gradient, bold, 12px radius, px-8 py-3 -->
     <Style Selector="Button.Primary">
         <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />

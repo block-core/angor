@@ -1,0 +1,266 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="800"
+             x:Class="Avalonia2.UI.Shared.Controls.ShareModal">
+
+    <!--
+        Share Project Modal — Vue HubProjectDetail.vue lines 579-693
+        Layout: Header (title+close) → Project info card → Share link (input+copy) →
+                Social media grid (2 cols × 3 rows) → Email button
+    -->
+
+    <!-- Local styles for social buttons and email button hover -->
+    <UserControl.Styles>
+        <!-- Social share button default + hover -->
+        <Style Selector="Border.SocialBtn">
+            <Setter Property="Background" Value="{DynamicResource ShareSocialBtnBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ShareSocialBtnBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.SocialBtn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ShareSocialBtnHoverBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ShareSocialBtnHoverBorder}" />
+            <Setter Property="RenderTransform" Value="translate(0px, -1px)" />
+        </Style>
+
+        <!-- Email button default + hover -->
+        <Style Selector="Border.EmailBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ShareEmailBtnBorder}" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Border.EmailBtn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ShareEmailBtnHoverBg}" />
+        </Style>
+
+        <!-- Copy button base -->
+        <Style Selector="Button.CopyBtn">
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- MODAL CARD                                               -->
+        <!-- Vue: rounded-2xl shadow-2xl max-w-md (448px) p-6        -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="420" MaxWidth="448"
+                CornerRadius="16"
+                Background="{DynamicResource ShareModalBg}"
+                BorderBrush="{DynamicResource ShareModalBorder}"
+                BorderThickness="1"
+                BoxShadow="0 8 32 0 #40000000"
+                ClipToBounds="True"
+                Padding="24"
+                RenderTransformOrigin="50%,50%"
+                RenderTransform="scale(1)">
+            <Border.Transitions>
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" />
+                </Transitions>
+            </Border.Transitions>
+
+            <StackPanel Spacing="0">
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- HEADER: "Share Project" + Close X                   -->
+                <!-- Vue: relative mb-6, text-2xl font-bold centered     -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <Panel Margin="0,0,0,24">
+                    <TextBlock Text="Share Project"
+                               FontSize="24" FontWeight="Bold"
+                               Foreground="{DynamicResource TextStrong}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                    <Button Name="CloseButton" HorizontalAlignment="Right"
+                            VerticalAlignment="Top" Background="Transparent"
+                            Padding="4" Cursor="Hand" BorderThickness="0"
+                            CornerRadius="6">
+                        <Viewbox Width="18" Height="18">
+                            <Path Data="{StaticResource XMark}"
+                                  Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
+                                  StrokeLineCap="Round" StrokeJoin="Round"
+                                  Width="24" Height="24" Stretch="Uniform" />
+                        </Viewbox>
+                    </Button>
+                </Panel>
+
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- PROJECT INFO CARD                                   -->
+                <!-- Vue: rounded-xl p-4, 48x48 logo + title + desc     -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <Border Background="{DynamicResource ShareInfoCardBg}"
+                        BorderBrush="{DynamicResource ShareInfoCardBorder}"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="16"
+                        Margin="0,0,0,24">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <!-- Project avatar (48x48 circle) -->
+                        <Border Width="48" Height="48" CornerRadius="24"
+                                ClipToBounds="True"
+                                Background="White">
+                            <Image Name="ProjectAvatar"
+                                   Width="48" Height="48"
+                                   Stretch="UniformToFill" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center" Spacing="2"
+                                    HorizontalAlignment="Left"
+                                    Width="320">
+                            <TextBlock Name="ProjectTitle"
+                                       Text="Project Name"
+                                       FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxLines="1" />
+                            <TextBlock Name="ProjectDescription"
+                                       Text="Project description goes here"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxLines="1" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- SHARE LINK                                          -->
+                <!-- Vue: label + flex row with input + Copy button      -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <StackPanel Spacing="8" Margin="0,0,0,24">
+                    <TextBlock Text="Share Link"
+                               FontSize="13" FontWeight="Medium"
+                               Foreground="{DynamicResource TextMuted}" />
+                    <DockPanel>
+                        <Button Name="CopyButton" DockPanel.Dock="Right"
+                                Classes="CopyBtn"
+                                Margin="8,0,0,0"
+                                Content="Copy">
+                            <Button.Background>
+                                <SolidColorBrush Color="#4B7C5A" />
+                            </Button.Background>
+                        </Button>
+                        <TextBox Name="ShareLinkInput"
+                                 IsReadOnly="True"
+                                 Text="https://angor.io/project/abc123"
+                                 Background="{DynamicResource ShareInputBg}"
+                                 BorderBrush="{DynamicResource ShareInputBorder}"
+                                 CornerRadius="8"
+                                 Padding="12,8"
+                                 FontSize="14"
+                                 Foreground="{DynamicResource TextStrong}" />
+                    </DockPanel>
+                </StackPanel>
+
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- SOCIAL MEDIA GRID                                   -->
+                <!-- Vue: grid-cols-2 gap-3 (12px), 6 social buttons    -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Share on Social Media"
+                               FontSize="13" FontWeight="Medium"
+                               Foreground="{DynamicResource TextMuted}" />
+
+                    <UniformGrid Columns="2" Rows="3">
+                        <!-- Twitter -->
+                        <Border Classes="SocialBtn" Name="BtnTwitter" Margin="0,0,6,12">
+                            <StackPanel Orientation="Horizontal" Spacing="8"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <i:Icon Value="fa-brands fa-twitter" FontSize="16" Foreground="#1DA1F2" />
+                                <TextBlock Text="Twitter" FontSize="14" FontWeight="Medium"
+                                           Foreground="#1DA1F2" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Facebook -->
+                        <Border Classes="SocialBtn" Name="BtnFacebook" Margin="6,0,0,12">
+                            <StackPanel Orientation="Horizontal" Spacing="8"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <i:Icon Value="fa-brands fa-facebook" FontSize="16" Foreground="#1877F2" />
+                                <TextBlock Text="Facebook" FontSize="14" FontWeight="Medium"
+                                           Foreground="#1877F2" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- LinkedIn -->
+                        <Border Classes="SocialBtn" Name="BtnLinkedIn" Margin="0,0,6,12">
+                            <StackPanel Orientation="Horizontal" Spacing="8"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <i:Icon Value="fa-brands fa-linkedin" FontSize="16" Foreground="#0A66C2" />
+                                <TextBlock Text="LinkedIn" FontSize="14" FontWeight="Medium"
+                                           Foreground="#0A66C2" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Telegram -->
+                        <Border Classes="SocialBtn" Name="BtnTelegram" Margin="6,0,0,12">
+                            <StackPanel Orientation="Horizontal" Spacing="8"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <i:Icon Value="fa-brands fa-telegram" FontSize="16" Foreground="#0088CC" />
+                                <TextBlock Text="Telegram" FontSize="14" FontWeight="Medium"
+                                           Foreground="#0088CC" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- WhatsApp -->
+                        <Border Classes="SocialBtn" Name="BtnWhatsApp" Margin="0,0,6,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <i:Icon Value="fa-brands fa-whatsapp" FontSize="16" Foreground="#25D366" />
+                                <TextBlock Text="WhatsApp" FontSize="14" FontWeight="Medium"
+                                           Foreground="#25D366" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Reddit -->
+                        <Border Classes="SocialBtn" Name="BtnReddit" Margin="6,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <i:Icon Value="fa-brands fa-reddit" FontSize="16" Foreground="#FF4500" />
+                                <TextBlock Text="Reddit" FontSize="14" FontWeight="Medium"
+                                           Foreground="#FF4500" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+                </StackPanel>
+
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- SHARE VIA EMAIL                                     -->
+                <!-- Vue: w-full border-2 mt-4                           -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <Border Classes="EmailBtn" Name="BtnEmail" Margin="0,16,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="8"
+                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <i:Icon Value="fa-regular fa-envelope" FontSize="16"
+                                Foreground="{DynamicResource TextStrong}" />
+                        <TextBlock Text="Share via Email" FontSize="14" FontWeight="Medium"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+    </Panel>
+</UserControl>

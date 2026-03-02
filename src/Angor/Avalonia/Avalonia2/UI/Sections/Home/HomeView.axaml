@@ -31,18 +31,16 @@
                 <Border CornerRadius="12" Background="{DynamicResource TiledLogoBrush}" IsHitTestVisible="False" />
                 <!-- Content -->
                 <StackPanel Spacing="0" VerticalAlignment="Center" Margin="48">
-                    <!-- Bitcoin coin logo (80x80) — Vue: w-24 h-24 mb-8, fill=currentColor
-                         Uses circle + FontAwesome ₿ instead of StreamGeometry Path
-                         to avoid anti-aliasing artifacts on complex SVG curves. -->
-                    <Border Width="80" Height="80" CornerRadius="40"
-                            Background="{DynamicResource Brand}"
-                            Margin="0,0,0,32"
-                            HorizontalAlignment="Center">
-                        <i:Icon Value="fa-brands fa-bitcoin" FontSize="48"
-                                Foreground="{DynamicResource Surface}"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center" />
-                    </Border>
+                    <!-- Bitcoin logo (80x80) — Vue: w-24 h-24 mb-8, fill=currentColor
+                         Uses bitcoin.svg path data colored Brand green. -->
+                    <Viewbox Width="80" Height="80"
+                             Margin="0,0,0,32"
+                             HorizontalAlignment="Center">
+                        <Path Fill="{DynamicResource Brand}"
+                              Data="M3.83416 97.05C20.924 28.4706 90.384 -13.2655 158.951 3.83032C227.534 20.9263 269.267 90.3898 252.169 158.965C235.071 227.536 165.612 269.268 97.0246 252.168C28.4654 235.072 -13.2715 165.617 3.83416 97.05ZM116.988 67.6653C113.932 66.9693 110.932 66.2808 108.02 65.5569L108.036 65.4856L88.6662 60.6497L84.9299 75.6497C85.0077 75.6675 95.3352 78.0343 95.131 78.1848C100.819 79.6048 101.847 83.3689 101.675 86.3528L95.1222 112.637C95.5143 112.737 96.0231 112.881 96.5832 113.105C96.1152 112.989 95.6148 112.861 95.0988 112.737L85.9133 149.557C85.2171 151.285 83.4528 153.877 79.4767 152.893C79.6128 153.096 69.2856 150.35 69.2677 150.345L62.2951 166.42L80.5734 170.977C83.9736 171.829 87.3059 172.721 90.5861 173.561L84.7736 196.896L98.8029 200.396L104.56 177.308C108.392 178.348 112.113 179.308 115.753 180.212L110.016 203.192L124.062 206.692L129.874 183.401C153.825 187.933 171.834 186.104 179.415 164.445C185.524 147.005 179.111 136.945 166.51 130.385C175.687 128.269 182.6 122.233 184.445 109.765C186.993 92.7331 174.023 83.5769 156.289 77.469L162.042 54.3977L147.996 50.8977L142.396 73.3616C138.703 72.4416 134.911 71.5731 131.143 70.7131L136.783 48.1018L122.745 44.6018L116.988 67.6653ZM116.837 129.492C126.358 131.868 156.889 136.573 152.353 154.761C148.012 172.2 118.645 162.772 109.124 160.408L116.837 129.492ZM127.358 87.301C135.286 89.277 160.822 92.9651 156.697 109.513C152.737 125.377 128.294 117.317 120.365 115.341L127.358 87.301Z"
+                              Width="256" Height="256"
+                              Stretch="Uniform" />
+                    </Viewbox>
                     <!-- Title — Vue: text-3xl font-bold mb-4 tracking-tight -->
                     <TextBlock Classes="Title Strong"
                                Margin="0,0,0,16"

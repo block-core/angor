@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
+using Avalonia2.UI.Shared.Controls;
 using Avalonia2.UI.Shell;
 using System.Reactive.Linq;
 
@@ -25,6 +27,10 @@ public partial class PortfolioView : UserControl
         // Manage visibility of the portfolio list panel based on ViewModel state
         DataContextChanged += (_, _) => SubscribeToVisibility();
         SubscribeToVisibility();
+
+        // Wire Penalties button to open shell modal
+        var penaltiesBtn = this.FindControl<Button>("PenaltiesButton");
+        if (penaltiesBtn != null) penaltiesBtn.Click += OnPenaltiesClick;
     }
 
     private void SubscribeToVisibility()
@@ -71,5 +77,11 @@ public partial class PortfolioView : UserControl
         {
             vm.OpenInvestmentDetail(investment);
         }
+    }
+
+    private void OnPenaltiesClick(object? sender, RoutedEventArgs e)
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        shellVm?.ShowModal(new PenaltiesModal());
     }
 }

@@ -243,6 +243,32 @@
         <Style Selector="Border.StepLine.StepLineCompleted">
             <Setter Property="Background" Value="{DynamicResource StepLineGreen}" />
         </Style>
+
+        <!-- Duration preset buttons (Step 5) — default + selected state (Rule #9: no BrushTransition) -->
+        <Style Selector="Button.DurPresetBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+        <Style Selector="Button.DurPresetBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SurfaceLow}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+        </Style>
+        <Style Selector="Button.DurPresetBtn.DurPresetSelected">
+            <Setter Property="Background" Value="{DynamicResource Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.DurPresetBtn.DurPresetSelected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.DurPresetBtn.DurPresetSelected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
     </UserControl.Styles>
 
     <!-- ═══════════════════════════════════════════════════════ -->
@@ -950,20 +976,20 @@
                                                              SelectionMode="Single">
                                                         <ListBoxItem Tag="0.5">
                                                             <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                                                <TextBlock Text="50M" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                                                <TextBlock Text="sats" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                                                <TextBlock Text="0.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                                                <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                                             </StackPanel>
                                                         </ListBoxItem>
                                                         <ListBoxItem Tag="1">
                                                             <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                                                <TextBlock Text="100M" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                                                <TextBlock Text="sats" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                                                <TextBlock Text="1" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                                                <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                                             </StackPanel>
                                                         </ListBoxItem>
                                                         <ListBoxItem Tag="2.5">
                                                             <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                                                <TextBlock Text="250M" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                                                <TextBlock Text="sats" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                                                <TextBlock Text="2.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                                                <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                                             </StackPanel>
                                                         </ListBoxItem>
                                                     </ListBox>
@@ -1073,20 +1099,20 @@
                                                              SelectionMode="Single">
                                                         <ListBoxItem Tag="0.5">
                                                             <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                                                <TextBlock Text="50M" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                                                <TextBlock Text="sats" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                                                <TextBlock Text="0.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                                                <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                                             </StackPanel>
                                                         </ListBoxItem>
                                                         <ListBoxItem Tag="1">
                                                             <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                                                <TextBlock Text="100M" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                                                <TextBlock Text="sats" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                                                <TextBlock Text="1" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                                                <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                                             </StackPanel>
                                                         </ListBoxItem>
                                                         <ListBoxItem Tag="2.5">
                                                             <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                                                <TextBlock Text="250M" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                                                <TextBlock Text="sats" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                                                <TextBlock Text="2.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                                                <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                                             </StackPanel>
                                                         </ListBoxItem>
                                                     </ListBox>
@@ -1157,14 +1183,14 @@
                                                 </Border>
                                                 <StackPanel Spacing="16" Margin="24">
                                                     <StackPanel Spacing="8">
-                                                        <TextBlock Text="Price per period (Sats) *" FontSize="14" FontWeight="Bold"
+                                                        <TextBlock Text="Price per period (BTC) *" FontSize="14" FontWeight="Bold"
                                                                    Foreground="{DynamicResource TextStrong}" />
                                                         <Grid ColumnDefinitions="*,Auto">
                                                             <TextBox Text="{Binding SubscriptionPrice, Mode=TwoWay}"
-                                                                     Watermark="0"
+                                                                     Watermark="0.00000000"
                                                                      FontSize="20" FontWeight="Bold"
                                                                      Padding="12,12,16,12" CornerRadius="8" />
-                                                            <TextBlock Grid.Column="1" Text="Sats" FontSize="14" FontWeight="Bold"
+                                                            <TextBlock Grid.Column="1" Text="BTC" FontSize="14" FontWeight="Bold"
                                                                        Foreground="{DynamicResource TextMuted}"
                                                                        VerticalAlignment="Center" Margin="12,0,0,0" />
                                                         </Grid>
@@ -1176,28 +1202,28 @@
                                                     <ListBox Name="SubPricePresets" Classes="Transparent Horizontal"
                                                              ItemContainerTheme="{StaticResource ButtonizedListBoxItem}"
                                                              SelectionMode="Single">
-                                                        <ListBoxItem Tag="1000">
+                                                        <ListBoxItem Tag="0.00001">
                                                             <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                                                <TextBlock Text="1,000" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                                                <TextBlock Text="Sats" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                                                <TextBlock Text="0.00001" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                                                <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                                             </StackPanel>
                                                         </ListBoxItem>
-                                                        <ListBoxItem Tag="5000">
+                                                        <ListBoxItem Tag="0.00005">
                                                             <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                                                <TextBlock Text="5,000" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                                                <TextBlock Text="Sats" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                                                <TextBlock Text="0.00005" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                                                <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                                             </StackPanel>
                                                         </ListBoxItem>
-                                                        <ListBoxItem Tag="10000">
+                                                        <ListBoxItem Tag="0.0001">
                                                             <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                                                <TextBlock Text="10,000" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                                                <TextBlock Text="Sats" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                                                <TextBlock Text="0.0001" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                                                <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                                             </StackPanel>
                                                         </ListBoxItem>
-                                                        <ListBoxItem Tag="50000">
+                                                        <ListBoxItem Tag="0.0005">
                                                             <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                                                <TextBlock Text="50,000" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                                                <TextBlock Text="Sats" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                                                <TextBlock Text="0.0005" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                                                <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                                             </StackPanel>
                                                         </ListBoxItem>
                                                     </ListBox>
@@ -1283,14 +1309,12 @@
                                                         </ItemsControl.ItemsPanel>
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate x:DataType="mp:DurationPresetItem">
-                                                                <Button Margin="0,0,8,8"
+                                                                <Button Classes="DurPresetBtn"
+                                                                        Margin="0,0,8,8"
                                                                         Padding="16,10" CornerRadius="8"
                                                                         BorderThickness="2"
-                                                                        BorderBrush="{DynamicResource Stroke}"
-                                                                        Background="Transparent"
                                                                         HorizontalContentAlignment="Center"
                                                                         FontSize="13" FontWeight="Bold"
-                                                                        Foreground="{DynamicResource TextStrong}"
                                                                         Tag="{Binding}"
                                                                         Click="OnDurationPresetClicked">
                                                                     <TextBlock Text="{Binding Label}" />

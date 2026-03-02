@@ -64,6 +64,10 @@ public partial class CreateProjectView : UserControl
     private IDisposable? _deploySubscription;
     private IDisposable? _stepSubscription;
     private IDisposable? _typeSubscription;
+    private IDisposable? _durationValueSubscription;
+
+    // Track selected duration preset button for CSS class toggling
+    private Button? _selectedDurationPresetBtn;
 
     public CreateProjectView()
     {
@@ -93,6 +97,26 @@ public partial class CreateProjectView : UserControl
                 {
                     if (isVisible)
                         ShowDeployShellModal(vm);
+                });
+
+            // Clear duration preset selection when user manually types a non-matching value,
+            // or when the duration unit changes (items get regenerated)
+            _durationValueSubscription = vm.WhenAnyValue(x => x.DurationValue, x => x.DurationUnit)
+                .Subscribe(tuple =>
+                {
+                    var (val, _) = tuple;
+                    if (_selectedDurationPresetBtn?.Tag is DurationPresetItem preset
+                        && val != preset.Value.ToString())
+                    {
+                        _selectedDurationPresetBtn.Classes.Set("DurPresetSelected", false);
+                        _selectedDurationPresetBtn = null;
+                    }
+                    else if (_selectedDurationPresetBtn != null
+                             && _selectedDurationPresetBtn.Tag is not DurationPresetItem)
+                    {
+                        // Button was recycled / items regenerated — stale reference
+                        _selectedDurationPresetBtn = null;
+                    }
                 });
         }
     }
@@ -127,6 +151,23 @@ public partial class CreateProjectView : UserControl
                     if (isVisible)
                         ShowDeployShellModal(vm);
                 });
+
+            _durationValueSubscription = vm.WhenAnyValue(x => x.DurationValue, x => x.DurationUnit)
+                .Subscribe(tuple =>
+                {
+                    var (val, _) = tuple;
+                    if (_selectedDurationPresetBtn?.Tag is DurationPresetItem preset
+                        && val != preset.Value.ToString())
+                    {
+                        _selectedDurationPresetBtn.Classes.Set("DurPresetSelected", false);
+                        _selectedDurationPresetBtn = null;
+                    }
+                    else if (_selectedDurationPresetBtn != null
+                             && _selectedDurationPresetBtn.Tag is not DurationPresetItem)
+                    {
+                        _selectedDurationPresetBtn = null;
+                    }
+                });
         }
     }
 
@@ -139,6 +180,8 @@ public partial class CreateProjectView : UserControl
         _stepSubscription = null;
         _typeSubscription?.Dispose();
         _typeSubscription = null;
+        _durationValueSubscription?.Dispose();
+        _durationValueSubscription = null;
     }
 
     private void ResolveNamedElements()
@@ -466,11 +509,19 @@ public partial class CreateProjectView : UserControl
     /// <summary>
     /// Handle dynamic duration preset button click (Step 5 Investment).
     /// The button's Tag contains the preset value (int), DataContext is the bound int from DurationPresetItems.
+    /// Toggles DurPresetSelected CSS class on the clicked button.
     /// </summary>
     private void OnDurationPresetClicked(object? sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.Tag is DurationPresetItem preset && Vm != null)
         {
+            // Deselect previous
+            _selectedDurationPresetBtn?.Classes.Set("DurPresetSelected", false);
+
+            // Select new
+            _selectedDurationPresetBtn = btn;
+            btn.Classes.Set("DurPresetSelected", true);
+
             Vm.DurationPreset = preset.Value;
         }
     }
@@ -716,6 +767,10 @@ public partial class CreateProjectView : UserControl
 
         // Clear ListBox selections (Step 5 - Investment)
         if (_investFrequencyPresets != null) _investFrequencyPresets.SelectedIndex = -1;
+
+        // Clear duration preset button selection (Step 5 - Investment)
+        _selectedDurationPresetBtn?.Classes.Set("DurPresetSelected", false);
+        _selectedDurationPresetBtn = null;
 
         // Clear ListBox selections (Step 5 - Fund/Sub)
         if (_monthlyDateGrid != null) _monthlyDateGrid.SelectedIndex = -1;

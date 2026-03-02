@@ -6,6 +6,8 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Avalonia2.UI.Shared.Controls;
+using Avalonia2.UI.Shell;
 
 namespace Avalonia2.UI.Sections.MyProjects;
 
@@ -66,6 +68,14 @@ public partial class ManageProjectView : UserControl
         // ── UTXO item toggle (click on row toggles selection in claim modal) ──
         var claimList = this.FindControl<ItemsControl>("ClaimUtxoList");
         claimList?.AddHandler(PointerPressedEvent, OnClaimUtxoItemPressed, RoutingStrategies.Tunnel);
+
+        // ── Share button ──
+        var shareBtn = this.FindControl<Button>("ShareButton");
+        if (shareBtn != null) shareBtn.Click += OnShareClick;
+
+        // ── View Private Keys button (opens shell modal password step) ──
+        var viewPKBtn = this.FindControl<Button>("ViewPrivateKeysButton");
+        if (viewPKBtn != null) viewPKBtn.Click += OnViewPrivateKeysClick;
     }
 
     // Track the back button handler to prevent accumulation across SetBackAction calls
@@ -295,6 +305,40 @@ public partial class ManageProjectView : UserControl
         Vm.ShowReleaseFundsPasswordModal = false;
         Vm.ShowReleaseFundsSuccessModal = true;
         Vm.FundsReleasedToInvestors = true;
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  SHARE MODAL
+    // ─────────────────────────────────────────────────────────────────
+
+    private void OnShareClick(object? sender, RoutedEventArgs e)
+    {
+        if (Vm?.Project == null) return;
+
+        var shell = this.FindAncestorOfType<ShellView>();
+        if (shell?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
+        {
+            var modal = new ShareModal(Vm.Project.Name, Vm.Project.Description);
+            shellVm.ShowModal(modal);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  VIEW PRIVATE KEYS (shell modal)
+    // ─────────────────────────────────────────────────────────────────
+
+    private void OnViewPrivateKeysClick(object? sender, RoutedEventArgs e)
+    {
+        if (Vm == null) return;
+
+        var shell = this.FindAncestorOfType<ShellView>();
+        if (shell?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
+        {
+            var modal = new PrivateKeysPasswordModal(
+                Vm.ProjectId, Vm.FounderKey, Vm.RecoveryKey,
+                Vm.NostrNpub, Vm.Nip05, Vm.NostrNsec, Vm.NostrHex);
+            shellVm.ShowModal(modal);
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────

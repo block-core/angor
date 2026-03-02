@@ -431,9 +431,9 @@ public partial class CreateProjectViewModel : ReactiveObject
         var baseDate = DateTime.TryParse(StartDate, out var sd) ? sd : DateTime.UtcNow;
         var targetBtc = double.TryParse(TargetAmount, out var t) ? t : 1.0;
 
-        // For subscription, use SubscriptionPrice as sats
-        if (ProjectType == "subscription" && long.TryParse(SubscriptionPrice, out var sats))
-            targetBtc = sats / 100_000_000.0;
+        // For subscription, use SubscriptionPrice as BTC
+        if (ProjectType == "subscription" && double.TryParse(SubscriptionPrice, out var subBtc))
+            targetBtc = subBtc;
 
         var percentPerStage = 100.0 / count;
 

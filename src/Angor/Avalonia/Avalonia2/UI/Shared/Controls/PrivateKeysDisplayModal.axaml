@@ -1,0 +1,325 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="900"
+             x:Class="Avalonia2.UI.Shared.Controls.PrivateKeysDisplayModal">
+
+    <!--
+        Private Keys Display — Vue ManageFunds.vue lines 613-832
+        Shell modal pattern: card content only, no backdrop (shell provides blur + backdrop).
+        max-w-2xl (~672px), scrollable, 7 key fields
+    -->
+
+    <!-- Local styles -->
+    <UserControl.Styles>
+        <!-- Copy/eye action buttons: override FluentTheme chrome -->
+        <Style Selector="Button.KeyActionBtn">
+            <Setter Property="Background" Value="{DynamicResource KeyCopyBtnBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource KeyCopyBtnBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.KeyActionBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource KeyCopyBtnHoverBg}" />
+        </Style>
+        <Style Selector="Button.KeyActionBtn:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource KeyCopyBtnHoverBg}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="560" MaxWidth="672"
+                CornerRadius="16"
+                Background="{DynamicResource RecoveryModalBg}"
+                BorderBrush="{DynamicResource RecoveryModalBorder}"
+                BorderThickness="1"
+                BoxShadow="0 25 50 0 #40000000"
+                ClipToBounds="True">
+            <DockPanel>
+                <!-- Header: lock icon + title + close -->
+                <Border DockPanel.Dock="Top"
+                        Padding="24"
+                        BorderBrush="{DynamicResource ModalHeaderBorder}"
+                        BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="Auto,12,*,Auto">
+                        <i:Icon Grid.Column="0"
+                                Value="fa-solid fa-lock"
+                                FontSize="20"
+                                Foreground="#DC2626"
+                                VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2"
+                                   Text="Project NOSTR Private Keys"
+                                   FontSize="20" FontWeight="Bold"
+                                   Foreground="#DC2626"
+                                   VerticalAlignment="Center" />
+                        <Button Name="CloseButton" Grid.Column="3"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="8"
+                                CornerRadius="8"
+                                Width="36" Height="36"
+                                Cursor="Hand"
+                                VerticalAlignment="Center">
+                            <Viewbox Width="20" Height="20">
+                                <Path Data="{StaticResource XMark}"
+                                      Stroke="{DynamicResource ModalCloseBtn}"
+                                      StrokeThickness="2"
+                                      StrokeLineCap="Round"
+                                      StrokeJoin="Round"
+                                      Width="24" Height="24"
+                                      Stretch="Uniform" />
+                            </Viewbox>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Scrollable body -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              MaxHeight="600">
+                    <StackPanel Margin="24">
+
+                        <!-- ── 1. Project ID ── -->
+                        <StackPanel Margin="0,0,0,24">
+                            <TextBlock Text="Project ID"
+                                       FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource KeyFieldLabel}"
+                                       Margin="0,0,0,8" />
+                            <Grid ColumnDefinitions="*,8,Auto">
+                                <TextBox Name="ProjectIdField" Grid.Column="0"
+                                         IsReadOnly="True"
+                                         FontFamily="Cascadia Mono, Consolas, monospace"
+                                         FontSize="13"
+                                         Padding="16,12"
+                                         CornerRadius="8"
+                                         Background="{DynamicResource KeyFieldInputBg}"
+                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderThickness="1"
+                                         Foreground="{DynamicResource KeyFieldText}"
+                                         VerticalContentAlignment="Center" />
+                                <Button Name="CopyProjectIdBtn" Grid.Column="2"
+                                        Classes="KeyActionBtn">
+                                    <i:Icon Value="fa-solid fa-copy"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource KeyCopyBtnText}" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- ── 2. Founder Key ── -->
+                        <StackPanel Margin="0,0,0,24">
+                            <TextBlock Text="Founder Key"
+                                       FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource KeyFieldLabel}"
+                                       Margin="0,0,0,8" />
+                            <Grid ColumnDefinitions="*,8,Auto">
+                                <TextBox Name="FounderKeyField" Grid.Column="0"
+                                         IsReadOnly="True"
+                                         FontFamily="Cascadia Mono, Consolas, monospace"
+                                         FontSize="13"
+                                         Padding="16,12"
+                                         CornerRadius="8"
+                                         Background="{DynamicResource KeyFieldInputBg}"
+                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderThickness="1"
+                                         Foreground="{DynamicResource KeyFieldText}"
+                                         VerticalContentAlignment="Center" />
+                                <Button Name="CopyFounderKeyBtn" Grid.Column="2"
+                                        Classes="KeyActionBtn">
+                                    <i:Icon Value="fa-solid fa-copy"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource KeyCopyBtnText}" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- ── 3. Recovery Key ── -->
+                        <StackPanel Margin="0,0,0,24">
+                            <TextBlock Text="Recovery Key"
+                                       FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource KeyFieldLabel}"
+                                       Margin="0,0,0,8" />
+                            <Grid ColumnDefinitions="*,8,Auto">
+                                <TextBox Name="RecoveryKeyField" Grid.Column="0"
+                                         IsReadOnly="True"
+                                         FontFamily="Cascadia Mono, Consolas, monospace"
+                                         FontSize="13"
+                                         Padding="16,12"
+                                         CornerRadius="8"
+                                         Background="{DynamicResource KeyFieldInputBg}"
+                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderThickness="1"
+                                         Foreground="{DynamicResource KeyFieldText}"
+                                         VerticalContentAlignment="Center" />
+                                <Button Name="CopyRecoveryKeyBtn" Grid.Column="2"
+                                        Classes="KeyActionBtn">
+                                    <i:Icon Value="fa-solid fa-copy"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource KeyCopyBtnText}" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- ── 4. Nostr Public Key (npub) ── -->
+                        <StackPanel Margin="0,0,0,24">
+                            <TextBlock Text="Nostr Public Key (npub)"
+                                       FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource KeyFieldLabel}"
+                                       Margin="0,0,0,8" />
+                            <Grid ColumnDefinitions="*,8,Auto">
+                                <TextBox Name="NostrNpubField" Grid.Column="0"
+                                         IsReadOnly="True"
+                                         FontFamily="Cascadia Mono, Consolas, monospace"
+                                         FontSize="13"
+                                         Padding="16,12"
+                                         CornerRadius="8"
+                                         Background="{DynamicResource KeyFieldInputBg}"
+                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderThickness="1"
+                                         Foreground="{DynamicResource KeyFieldText}"
+                                         VerticalContentAlignment="Center" />
+                                <Button Name="CopyNostrNpubBtn" Grid.Column="2"
+                                        Classes="KeyActionBtn">
+                                    <i:Icon Value="fa-solid fa-copy"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource KeyCopyBtnText}" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- ── 5. NIP-05 ── -->
+                        <StackPanel Margin="0,0,0,24">
+                            <TextBlock Text="NIP-05"
+                                       FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource KeyFieldLabel}"
+                                       Margin="0,0,0,8" />
+                            <Grid ColumnDefinitions="*,8,Auto">
+                                <TextBox Name="Nip05Field" Grid.Column="0"
+                                         IsReadOnly="True"
+                                         FontFamily="Cascadia Mono, Consolas, monospace"
+                                         FontSize="13"
+                                         Padding="16,12"
+                                         CornerRadius="8"
+                                         Background="{DynamicResource KeyFieldInputBg}"
+                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderThickness="1"
+                                         Foreground="{DynamicResource KeyFieldText}"
+                                         VerticalContentAlignment="Center" />
+                                <Button Name="CopyNip05Btn" Grid.Column="2"
+                                        Classes="KeyActionBtn">
+                                    <i:Icon Value="fa-solid fa-copy"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource KeyCopyBtnText}" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- ── 6. NOSTR private key (nsec) — with eye toggle ── -->
+                        <StackPanel Margin="0,0,0,24">
+                            <TextBlock Text="NOSTR private key (nsec)"
+                                       FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource KeyFieldLabel}"
+                                       Margin="0,0,0,8" />
+                            <Grid ColumnDefinitions="*,8,Auto,8,Auto">
+                                <TextBox Name="NsecTextBox" Grid.Column="0"
+                                         IsReadOnly="True"
+                                         PasswordChar="*"
+                                         FontFamily="Cascadia Mono, Consolas, monospace"
+                                         FontSize="13"
+                                         Padding="16,12"
+                                         CornerRadius="8"
+                                         Background="{DynamicResource KeyFieldInputBg}"
+                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderThickness="1"
+                                         Foreground="{DynamicResource KeyFieldText}"
+                                         VerticalContentAlignment="Center" />
+                                <!-- Eye toggle -->
+                                <Button Name="ToggleNsecBtn" Grid.Column="2"
+                                        Classes="KeyActionBtn">
+                                    <i:Icon Name="NsecEyeIcon"
+                                            Value="fa-solid fa-eye"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource KeyCopyBtnText}" />
+                                </Button>
+                                <!-- Copy -->
+                                <Button Name="CopyNsecBtn" Grid.Column="4"
+                                        Classes="KeyActionBtn">
+                                    <i:Icon Value="fa-solid fa-copy"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource KeyCopyBtnText}" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- ── 7. NOSTR private key (hex) — with eye toggle ── -->
+                        <StackPanel Margin="0,0,0,24">
+                            <TextBlock Text="NOSTR private key (hex)"
+                                       FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource KeyFieldLabel}"
+                                       Margin="0,0,0,8" />
+                            <Grid ColumnDefinitions="*,8,Auto,8,Auto">
+                                <TextBox Name="HexTextBox" Grid.Column="0"
+                                         IsReadOnly="True"
+                                         PasswordChar="*"
+                                         FontFamily="Cascadia Mono, Consolas, monospace"
+                                         FontSize="13"
+                                         Padding="16,12"
+                                         CornerRadius="8"
+                                         Background="{DynamicResource KeyFieldInputBg}"
+                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderThickness="1"
+                                         Foreground="{DynamicResource KeyFieldText}"
+                                         VerticalContentAlignment="Center" />
+                                <!-- Eye toggle -->
+                                <Button Name="ToggleHexBtn" Grid.Column="2"
+                                        Classes="KeyActionBtn">
+                                    <i:Icon Name="HexEyeIcon"
+                                            Value="fa-solid fa-eye"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource KeyCopyBtnText}" />
+                                </Button>
+                                <!-- Copy -->
+                                <Button Name="CopyHexBtn" Grid.Column="4"
+                                        Classes="KeyActionBtn">
+                                    <i:Icon Value="fa-solid fa-copy"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource KeyCopyBtnText}" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- ── Warning Banner ── -->
+                        <!-- Vue: bg-red-50 border border-red-200 / dark: bg-red-900/20 border-red-800 -->
+                        <Border Background="{DynamicResource RedWarningBannerBg}"
+                                BorderBrush="{DynamicResource RedWarningBannerBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="16">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-solid fa-lock"
+                                        FontSize="16"
+                                        Foreground="#DC2626"
+                                        VerticalAlignment="Center" />
+                                <TextBlock Text="Never share your private keys with anyone."
+                                           FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource RedWarningBannerText}"
+                                           VerticalAlignment="Center"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Panel>
+</UserControl>

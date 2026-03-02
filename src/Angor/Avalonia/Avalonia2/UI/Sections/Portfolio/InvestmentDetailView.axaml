@@ -855,14 +855,10 @@
                                                DockPanel.Dock="Left" VerticalAlignment="Center">
                                         <Run Text="{Binding AmountNoun, Mode=OneWay}" /><Run Text=" Status" />
                                     </TextBlock>
-                                    <Viewbox Width="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                        <Path Data="{StaticResource CheckCircle}"
-                                              Stroke="{DynamicResource TextMuted}"
-                                              StrokeThickness="1.5"
-                                              StrokeLineCap="Round"
-                                              StrokeJoin="Round"
-                                              Width="24" Height="24" Stretch="Uniform" />
-                                    </Viewbox>
+                                    <i:Icon Value="fa-regular fa-circle-check"
+                                           FontSize="16"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
                                 </DockPanel>
                                 <!-- Status value — green if Approved, orange if Pending -->
                                 <TextBlock Text="{Binding ApprovalStatus}"
@@ -971,6 +967,7 @@
                                         <TextBlock Grid.Column="0"
                                                    FontSize="14"
                                                    FontWeight="SemiBold"
+                                                   VerticalAlignment="Center"
                                                    Foreground="{DynamicResource TextStrong}">
                                             <Run Text="{Binding StagePrefix, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding StageNumber, Mode=OneWay}" />
                                         </TextBlock>
@@ -979,12 +976,14 @@
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Percentage}"
                                                    FontSize="14"
+                                                   VerticalAlignment="Center"
                                                    Foreground="{DynamicResource TextStrong}" />
 
                                         <!-- Release Date -->
                                         <TextBlock Grid.Column="2"
                                                    Text="{Binding ReleaseDate}"
                                                    FontSize="14"
+                                                   VerticalAlignment="Center"
                                                    Foreground="{DynamicResource TextStrong}" />
 
                                         <!-- Status Badge — per-status colors -->
@@ -1049,6 +1048,7 @@
                                                    FontSize="14"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource StageAmountGreen}"
+                                                   VerticalAlignment="Center"
                                                    HorizontalAlignment="Right">
                                             <Run Text="{Binding Amount, Mode=OneWay}" /><Run Text=" BTC" />
                                         </TextBlock>

@@ -152,17 +152,30 @@ public partial class SettingsViewModel : ReactiveObject
 }
 
 // ── Table item models ──
-public class ExplorerItem
+// These use INotifyPropertyChanged so IsDefault toggling updates the UI.
+public class ExplorerItem : ReactiveObject
 {
     public string Url { get; set; } = "";
-    public bool IsDefault { get; set; }
+
+    private bool _isDefault;
+    public bool IsDefault
+    {
+        get => _isDefault;
+        set => this.RaiseAndSetIfChanged(ref _isDefault, value);
+    }
 }
 
-public class IndexerItem
+public class IndexerItem : ReactiveObject
 {
     public string Url { get; set; } = "";
     public string Status { get; set; } = "Offline";
-    public bool IsDefault { get; set; }
+
+    private bool _isDefault;
+    public bool IsDefault
+    {
+        get => _isDefault;
+        set => this.RaiseAndSetIfChanged(ref _isDefault, value);
+    }
 }
 
 public class RelayItem
