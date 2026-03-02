@@ -253,10 +253,21 @@ public static class GetRecoveryStatus
                                 }
                                 case ProjectScriptTypeEnum.InvestorWithPenalty:
                                 {
-                                    var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
-                                    item.Status = days > 0
-                                        ? $"Penalty, released in {days.ToString("0.0")} days"
-                                        : "Penalty can be released";
+                                    // Check if the recovery transaction's penalty outputs have been spent
+                                    var recoveryTrxInfo = await transactionService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
+                                    if (recoveryTrxInfo != null && recoveryTrxInfo.Outputs.SkipLast(1)
+                                            .Any(o => !string.IsNullOrEmpty(o.SpentInTransaction)))
+                                    {
+                                        item.Status = "Recovered after penalty";
+                                        item.ScriptType = ProjectScriptTypeEnum.Unknown;
+                                    }
+                                    else
+                                    {
+                                        var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                                        item.Status = days > 0
+                                            ? $"Penalty, released in {days.ToString("0.0")} days"
+                                            : "Penalty can be released";
+                                    }
                                     break;
                                 }
                                 case ProjectScriptTypeEnum.EndOfProject:

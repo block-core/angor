@@ -131,7 +131,9 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
             for (int stageIndex = 0; stageIndex < stageCount; stageIndex++)
             {
-                var qouts = trxInfo.Outputs.ElementAt(stageIndex);
+                // Output indices: 0=AngorFee, 1=OP_RETURN, 2+=Taproot stages
+                // So taproot stage N is at output index N+2
+                var qouts = trxInfo.Outputs.First(o => o.Index == stageIndex + 2);
 
                 var releaseDate = DynamicStageCalculator.CalculateDynamicStageReleaseDate(
                         fundingParams.InvestmentStartDate.Value,
@@ -284,7 +286,14 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
             ProjectIdentifier = project.ProjectIdentifier
         };
 
-        for (int stageIndex = 0; stageIndex < project.Stages.Count; stageIndex++)
+        // For Invest projects, use Stages.Count. For Fund/Subscribe (dynamic), determine from taproot outputs.
+        // Transaction structure: index 0 = Angor fee, index 1 = OP_RETURN, index 2+ = stage outputs
+        var stageCount = project.Stages?.Count > 0
+            ? project.Stages.Count
+            : investmentTransaction.Outputs.AsIndexedOutputs()
+                .Count(o => o.TxOut.ScriptPubKey.IsTaprooOutput());
+
+        for (int stageIndex = 0; stageIndex < stageCount; stageIndex++)
         {
             var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
 

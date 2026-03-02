@@ -43,40 +43,42 @@ public static class GetClaimableTransactions
 
         private static ClaimStatus DetermineClaimStatus(StageDataTrx item, StageData stageData)
         {
+            // Check spent status first — a spent stage should always show as spent,
+            // even if its release date is in the future
+            if (item.IsSpent)
+            {
+                // Map ProjectScriptType to ClaimStatus for spent transactions
+                if (item.ProjectScriptType?.ScriptType != null)
+                {
+                    return item.ProjectScriptType.ScriptType switch
+                    {
+                        ProjectScriptTypeEnum.Founder => ClaimStatus.SpentByFounder,
+                        ProjectScriptTypeEnum.InvestorWithPenalty => ClaimStatus.WithdrawByInvestor,
+                        ProjectScriptTypeEnum.InvestorNoPenalty => ClaimStatus.WithdrawByInvestor,
+                        ProjectScriptTypeEnum.EndOfProject => ClaimStatus.WithdrawByInvestor,
+                        ProjectScriptTypeEnum.Unknown => ClaimStatus.Pending,
+                        _ => ClaimStatus.Invalid
+                    };
+                }
+
+                // Fallback to SpentType if ProjectScriptType is not available (backward compatibility)
+                return item.SpentType switch
+                {
+                    "founder" => ClaimStatus.SpentByFounder,
+                    "investor" => ClaimStatus.WithdrawByInvestor,
+                    "pending" => ClaimStatus.Pending,
+                    _ => ClaimStatus.Unspent
+                };
+            }
+
             // Check if stage release date hasn't been reached yet (works for both dynamic and fixed stages)
             if (stageData.StageDate > DateTime.UtcNow)
             {
                 return ClaimStatus.Locked;
             }
 
-            // If not spent, return Unspent
-            if (!item.IsSpent)
-            {
-                return ClaimStatus.Unspent;
-            }
-
-            // Map ProjectScriptType to ClaimStatus for spent transactions
-            if (item.ProjectScriptType?.ScriptType != null)
-            {
-                return item.ProjectScriptType.ScriptType switch
-                {
-                    ProjectScriptTypeEnum.Founder => ClaimStatus.SpentByFounder,
-                    ProjectScriptTypeEnum.InvestorWithPenalty => ClaimStatus.WithdrawByInvestor,
-                    ProjectScriptTypeEnum.InvestorNoPenalty => ClaimStatus.WithdrawByInvestor,
-                    ProjectScriptTypeEnum.EndOfProject => ClaimStatus.WithdrawByInvestor,
-                    ProjectScriptTypeEnum.Unknown => ClaimStatus.Pending,
-                    _ => ClaimStatus.Invalid
-                };
-            }
-
-            // Fallback to SpentType if ProjectScriptType is not available (backward compatibility)
-            return item.SpentType switch
-            {
-                "founder" => ClaimStatus.SpentByFounder,
-                "investor" => ClaimStatus.WithdrawByInvestor,
-                "pending" => ClaimStatus.Pending,
-                _ => ClaimStatus.Unspent
-            };
+            // Not spent and release date has passed
+            return ClaimStatus.Unspent;
         }
     }
 }
