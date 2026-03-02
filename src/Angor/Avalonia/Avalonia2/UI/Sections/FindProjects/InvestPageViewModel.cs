@@ -1,5 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Reactive;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Operations;
+using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Sdk.Funding.Shared;
+using Angor.Sdk.Wallet.Application;
+using Avalonia2.Composition;
 using Avalonia2.UI.Sections.MyProjects.Deploy;
 using Avalonia2.UI.Sections.Portfolio;
 using Avalonia2.UI.Shared;
@@ -62,7 +69,7 @@ public class SubscriptionPlanOption : ReactiveObject
 /// <summary>
 /// ViewModel for the InvestPage flow.
 /// Orchestrates: InvestForm → WalletSelector → Invoice → Success.
-/// All data is stubbed — no SDK dependencies.
+/// Connected to SDK for wallet loading and investment operations.
 ///
 /// Vue ref: InvestPage.vue (2984 lines)
 /// Supports three project types: Invest, Fund, Subscription.
@@ -70,6 +77,9 @@ public class SubscriptionPlanOption : ReactiveObject
 /// </summary>
 public partial class InvestPageViewModel : ReactiveObject
 {
+    private readonly IWalletAppService _walletAppService;
+    private readonly IInvestmentAppService _investmentAppService;
+
     // ── Project Reference ──
     public ProjectItemViewModel Project { get; }
 
@@ -166,19 +176,16 @@ public partial class InvestPageViewModel : ReactiveObject
     public string SuccessDescription => $"Your {Project.ProjectType.ToLower()} of {FormattedAmount} BTC to {Project.ProjectName} has been submitted successfully.";
     public string SuccessButtonText => ProjectTypeTerminology.SuccessButtonText(TypeEnum);
 
-    // ── Stub wallets (reuse from DeployFlowOverlay) ──
-    public ObservableCollection<WalletItem> Wallets { get; } = new()
-    {
-        new() { Name = "Main Wallet", Network = "Mainnet", Balance = "0.04821000 BTC" },
-        new() { Name = "Angor Wallet", Network = "Signet", Balance = "1.25000000 BTC" },
-        new() { Name = "Test Wallet", Network = "Testnet", Balance = "0.50000000 BTC" }
-    };
+    // ── Wallets loaded from SDK ──
+    public ObservableCollection<WalletItem> Wallets { get; } = new();
 
     public string InvoiceString { get; } = Constants.InvoiceString;
 
     public InvestPageViewModel(ProjectItemViewModel project)
     {
         Project = project;
+        _walletAppService = ServiceLocator.WalletApp;
+        _investmentAppService = ServiceLocator.InvestmentApp;
 
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
@@ -232,6 +239,40 @@ public partial class InvestPageViewModel : ReactiveObject
 
         // Initialize stages from project
         RecomputeStages();
+
+        // Load wallets from SDK
+        _ = LoadWalletsAsync();
+    }
+
+    /// <summary>
+    /// Load wallets from SDK for the wallet selector.
+    /// </summary>
+    private async Task LoadWalletsAsync()
+    {
+        try
+        {
+            var metadatasResult = await _walletAppService.GetMetadatas();
+            if (metadatasResult.IsFailure) return;
+
+            Wallets.Clear();
+            foreach (var meta in metadatasResult.Value)
+            {
+                var balanceResult = await _walletAppService.GetBalance(meta.Id);
+                var balanceBtc = balanceResult.IsSuccess ? balanceResult.Value.Sats / 100_000_000.0 : 0;
+
+                Wallets.Add(new WalletItem
+                {
+                    Name = meta.Name,
+                    Network = "Bitcoin",
+                    Balance = $"{balanceBtc:F8} BTC",
+                    WalletId = meta.Id.Value
+                });
+            }
+        }
+        catch
+        {
+            // Wallet loading failed — list stays empty
+        }
     }
 
     // ── Subscription helpers ──
@@ -440,20 +481,93 @@ public partial class InvestPageViewModel : ReactiveObject
         SelectedWallet = wallet;
     }
 
-    /// <summary>Pay with selected wallet → simulate processing → success.
-    /// Vue ref: payWithWallet() → 800ms spinner → "received" → 1500ms → success.</summary>
+    /// <summary>Pay with selected wallet → build draft → check threshold → submit/publish → success.</summary>
     public ReactiveCommand<Unit, Unit> PayWithWalletCommand { get; }
 
     public void PayWithWallet() => PayWithWalletCommand.Execute().Subscribe();
 
     private async Task PayWithWalletAsync()
     {
-        if (SelectedWallet == null) return;
+        if (SelectedWallet == null || string.IsNullOrEmpty(SelectedWallet.WalletId)) return;
         IsProcessing = true;
-        PaymentStatusText = "Processing payment...";
-        await Task.Delay(2500);
-        CurrentScreen = InvestScreen.Success;
-        IsProcessing = false;
+        PaymentStatusText = "Building investment transaction...";
+
+        try
+        {
+            var walletId = new WalletId(SelectedWallet.WalletId);
+            var projectId = new ProjectId(Project.ProjectId);
+            var amountSats = (long)Math.Round(ParseAmount() * 100_000_000);
+
+            // Build investment draft
+            var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
+                walletId,
+                projectId,
+                new Amount(amountSats),
+                new DomainFeerate(20));
+
+            var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
+            if (buildResult.IsFailure)
+            {
+                PaymentStatusText = "Failed to build transaction.";
+                IsProcessing = false;
+                return;
+            }
+
+            var draft = buildResult.Value.InvestmentDraft;
+            PaymentStatusText = "Checking investment threshold...";
+
+            // Check penalty threshold
+            var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
+                projectId,
+                new Amount(amountSats));
+
+            var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
+
+            if (thresholdResult.IsSuccess && thresholdResult.Value.IsAboveThreshold)
+            {
+                // Above threshold: request founder signatures
+                PaymentStatusText = "Requesting founder approval...";
+                var submitRequest = new RequestInvestmentSignatures.RequestFounderSignaturesRequest(
+                    walletId,
+                    projectId,
+                    draft);
+
+                var submitResult = await _investmentAppService.SubmitInvestment(submitRequest);
+                if (submitResult.IsFailure)
+                {
+                    PaymentStatusText = "Failed to submit investment.";
+                    IsProcessing = false;
+                    return;
+                }
+            }
+            else
+            {
+                // Below threshold: publish directly
+                PaymentStatusText = "Publishing transaction...";
+                var publishRequest = new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
+                    walletId.Value,
+                    projectId,
+                    draft);
+
+                var publishResult = await _investmentAppService.SubmitTransactionFromDraft(publishRequest);
+                if (publishResult.IsFailure)
+                {
+                    PaymentStatusText = "Failed to publish transaction.";
+                    IsProcessing = false;
+                    return;
+                }
+            }
+
+            CurrentScreen = InvestScreen.Success;
+        }
+        catch
+        {
+            PaymentStatusText = "An error occurred during payment.";
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
     }
 
     /// <summary>Switch to invoice payment screen.

@@ -1,7 +1,12 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
+using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Projects.Dtos;
+using Angor.Sdk.Funding.Projects.Operations;
 using Avalonia.Media.Imaging;
+using Avalonia2.Composition;
 using Avalonia2.UI.Sections.Portfolio;
 using Avalonia2.UI.Shared;
 using Avalonia2.UI.Shared.Helpers;
@@ -9,9 +14,7 @@ using Avalonia2.UI.Shared.Helpers;
 namespace Avalonia2.UI.Sections.FindProjects;
 
 /// <summary>
-/// Sample project data for the visual layer. The backend team will replace
-/// this with real project data from Nostr via the SDK.
-/// All data below is extracted from the Vue reference at angor.tx1138.com/app.html.
+/// Project data model for the UI. When SDK data is available, mapped from ProjectDto.
 /// </summary>
 public class ProjectItemViewModel : INotifyPropertyChanged
 {
@@ -21,14 +24,11 @@ public class ProjectItemViewModel : INotifyPropertyChanged
 
     public string ProjectName { get; set; } = "";
     public string ShortDescription { get; set; } = "";
-    /// <summary>Full/longer description for the detail page</summary>
     public string Description { get; set; } = "";
     public int InvestorCount { get; set; }
-    /// <summary>"Investors" (invest), "Funders" (fund), or "Subscribers" (subscription)</summary>
     public string InvestorLabel { get; set; } = "Investors";
     public string Raised { get; set; } = "0.00000";
     public string Target { get; set; } = "0.00000";
-    /// <summary>"Target:" (invest), "Goal:" (fund), or "Total Subscribers:" (subscription)</summary>
     public string TargetLabel { get; set; } = "Target:";
     public double Progress { get; set; }
     public string ProjectType { get; set; } = "Invest";
@@ -56,472 +56,162 @@ public class ProjectItemViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Decoded banner bitmap, loaded from <see cref="BannerUrl"/> via ImageCacheService.</summary>
     public Bitmap? BannerBitmap { get; private set; }
-    /// <summary>Decoded avatar bitmap, loaded from <see cref="AvatarUrl"/> via ImageCacheService.</summary>
     public Bitmap? AvatarBitmap { get; private set; }
-    /// <summary>Stubbed project identifier for the detail page</summary>
-    public string ProjectId { get; set; } = "angor1qlcnq2eywn05j205nv5sz6dsdzef2c6wx24h87l";
-    /// <summary>Stubbed founder key for the detail page</summary>
-    public string FounderKey { get; set; } = "023b68543f198be4495e77bdcc68ac205ba4b9c57d3eed0372277e581b85c40f04";
-    /// <summary>Stubbed Nostr npub for the detail page</summary>
-    public string NostrNpub { get; set; } = "npub12l6lg9a9ev6f9szrsrqwu9jfwjz5u5qjckafxeyx46xdsgrqcx9sjpq5xn";
-    /// <summary>Start date string for investment projects</summary>
-    public string StartDate { get; set; } = "07 Nov 2025";
-    /// <summary>End date string for investment projects</summary>
-    public string EndDate { get; set; } = "08 Nov 2025";
-    /// <summary>Expiry date string</summary>
-    public string ExpiryDate { get; set; } = "08 Dec 2025";
-    /// <summary>Penalty days for investment projects</summary>
+    public string ProjectId { get; set; } = "";
+    public string FounderKey { get; set; } = "";
+    public string NostrNpub { get; set; } = "";
+    public string StartDate { get; set; } = "";
+    public string EndDate { get; set; } = "";
+    public string ExpiryDate { get; set; } = "";
     public string PenaltyDays { get; set; } = "30";
-    /// <summary>Payout/funding frequency for fund/subscription projects</summary>
     public string PayoutFrequency { get; set; } = "Monthly";
-    /// <summary>Subscription price per month in sats (subscription projects only)</summary>
     public long SubscriptionPrice { get; set; } = 20000;
 
-    /// <summary>Stages for investment projects (reuse from Portfolio)</summary>
     public ObservableCollection<InvestmentStageViewModel> Stages { get; set; } = new();
 
-    // ── Type-specific terminology helpers (via shared ProjectTypeTerminology) ──
     private Shared.ProjectType TypeEnum => ProjectTypeExtensions.FromDisplayString(ProjectType);
-
     public string OpportunityTitle => ProjectTypeTerminology.OpportunityTitle(TypeEnum);
-
     public string ActionButtonText => ProjectTypeTerminology.ActionButtonText(TypeEnum);
-
     public string InfoSectionTitle => ProjectTypeTerminology.InfoSectionTitle(TypeEnum);
-
     public string InvestorNoun => ProjectTypeTerminology.InvestorNounTotal(TypeEnum);
-
     public string TargetNoun => ProjectTypeTerminology.TargetNoun(TypeEnum);
-
     public string RaisedNoun => ProjectTypeTerminology.RaisedNoun(TypeEnum);
 
-    /// <summary>Whether the project is an investment type (shows stages table)</summary>
     public bool IsInvestmentType => ProjectType == "Invest";
-    /// <summary>Whether the project is a fund type</summary>
     public bool IsFundType => ProjectType == "Fund";
-    /// <summary>Whether the project is a subscription type</summary>
     public bool IsSubscriptionType => ProjectType == "Subscription";
-    /// <summary>Whether status is "Open"</summary>
     public bool IsOpen => Status == "Open";
-    /// <summary>Whether status is "Funded" or similar success state</summary>
     public bool IsFunded => Status == "Funded";
-    /// <summary>Whether status is "Funding Closed"</summary>
     public bool IsFundingClosed => Status == "Funding Closed";
+
+    /// <summary>
+    /// Map an SDK ProjectDto to a UI ProjectItemViewModel.
+    /// </summary>
+    public static ProjectItemViewModel FromDto(ProjectDto dto)
+    {
+        var targetBtc = dto.TargetAmount / 100_000_000.0;
+        var projectType = dto.ProjectType switch
+        {
+            Angor.Shared.Models.ProjectType.Fund => "Fund",
+            Angor.Shared.Models.ProjectType.Subscribe => "Subscription",
+            _ => "Invest"
+        };
+        var investorLabel = dto.ProjectType switch
+        {
+            Angor.Shared.Models.ProjectType.Fund => "Funders",
+            Angor.Shared.Models.ProjectType.Subscribe => "Subscribers",
+            _ => "Investors"
+        };
+        var targetLabel = dto.ProjectType switch
+        {
+            Angor.Shared.Models.ProjectType.Fund => "Goal:",
+            Angor.Shared.Models.ProjectType.Subscribe => "Total Subscribers:",
+            _ => "Target:"
+        };
+
+        var stages = new ObservableCollection<InvestmentStageViewModel>();
+        if (dto.Stages != null)
+        {
+            foreach (var stage in dto.Stages)
+            {
+                stages.Add(new InvestmentStageViewModel
+                {
+                    StageNumber = stage.Index + 1,
+                    Percentage = $"{stage.RatioOfTotal * 100:F0}%",
+                    ReleaseDate = stage.ReleaseDate.ToString("dd MMM yyyy"),
+                    Amount = (stage.Amount / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture),
+                    Status = "Pending"
+                });
+            }
+        }
+
+        var vm = new ProjectItemViewModel
+        {
+            ProjectName = dto.Name ?? "Untitled Project",
+            ShortDescription = dto.ShortDescription ?? "",
+            Description = dto.ShortDescription ?? "",
+            Target = targetBtc.ToString("F5", CultureInfo.InvariantCulture),
+            TargetLabel = targetLabel,
+            ProjectType = projectType,
+            InvestorLabel = investorLabel,
+            Status = "Open",
+            ProjectId = dto.Id?.Value ?? "",
+            FounderKey = dto.FounderPubKey ?? "",
+            NostrNpub = dto.NostrNpubKeyHex ?? "",
+            StartDate = dto.FundingStartDate.ToString("dd MMM yyyy"),
+            EndDate = dto.FundingEndDate.ToString("dd MMM yyyy"),
+            PenaltyDays = dto.PenaltyDuration.Days.ToString(),
+            Stages = stages,
+            BannerUrl = dto.Banner?.ToString(),
+            AvatarUrl = dto.Avatar?.ToString()
+        };
+
+        return vm;
+    }
 }
 
 /// <summary>
-/// FindProjects ViewModel — visual layer only.
-/// Shows a responsive grid of sample project cards (no search bar per Vue reference).
-/// The backend team will wire up real Nostr-based project discovery via SDK.
-/// Data: 24 mainnet projects from the Vue reference JS bundle.
-/// Order: IDs 20-24 first (recent), then IDs 1-18 (established).
+/// FindProjects ViewModel — connected to SDK for project discovery.
+/// Falls back to sample data if SDK call fails.
 /// </summary>
 public partial class FindProjectsViewModel : ReactiveObject
 {
-    private const string BaseUrl = "https://angor.tx1138.com";
+    private readonly IProjectAppService _projectAppService;
 
-    /// <summary>
-    /// When set, the detail view for this project is shown instead of the project grid.
-    /// </summary>
     [Reactive] private ProjectItemViewModel? selectedProject;
-
-    /// <summary>
-    /// When set, the invest page is shown instead of the project detail.
-    /// Third drill-down level: grid → detail → invest.
-    /// </summary>
     [Reactive] private InvestPageViewModel? investPageViewModel;
+    [Reactive] private bool isLoading;
 
-    /// <summary>Navigate to project detail view</summary>
-    public void OpenProjectDetail(ProjectItemViewModel project)
-    {
-        SelectedProject = project;
-    }
+    public void OpenProjectDetail(ProjectItemViewModel project) => SelectedProject = project;
+    public void CloseProjectDetail() => SelectedProject = null;
 
-    /// <summary>Navigate back to project grid from detail view</summary>
-    public void CloseProjectDetail()
-    {
-        SelectedProject = null;
-    }
-
-    /// <summary>Navigate to invest page for the selected project.
-    /// Vue ref: clicking "Invest Now"/"Fund This Project"/"Subscribe Now" on project detail.</summary>
     public void OpenInvestPage()
     {
         if (SelectedProject == null) return;
         InvestPageViewModel = new InvestPageViewModel(SelectedProject);
     }
 
-    /// <summary>Navigate back to project detail from invest page.</summary>
-    public void CloseInvestPage()
+    public void CloseInvestPage() => InvestPageViewModel = null;
+
+    public ObservableCollection<ProjectItemViewModel> Projects { get; } = new();
+
+    public FindProjectsViewModel()
     {
-        InvestPageViewModel = null;
+        _projectAppService = ServiceLocator.ProjectApp;
+
+        // Load projects from SDK
+        _ = LoadProjectsFromSdkAsync();
     }
 
-    public ObservableCollection<ProjectItemViewModel> Projects { get; } = new()
+    /// <summary>
+    /// Load latest projects from the SDK (Nostr relays).
+    /// Falls back to empty list on failure.
+    /// </summary>
+    public async Task LoadProjectsFromSdkAsync()
     {
-        // ── Recent Projects (ids 20-24, prepended via unshift in Vue) ──
-        new()
+        IsLoading = true;
+
+        try
         {
-            ProjectName = "Hope With \u20bfitcoin",
-            ShortDescription = "A humanitarian initiative in Benin feeding vulnerable people, supporting orphanages, a...",
-            InvestorCount = 1,
-            InvestorLabel = "Funders",
-            Raised = "0.50000",
-            Target = "0.20000",
-            TargetLabel = "Goal:",
-            Progress = 100,
-            ProjectType = "Fund",
-            Status = "Open",
-            BannerUrl = BaseUrl + "/projects/hope-with-bitcoin-banner.webp",
-            AvatarUrl = BaseUrl + "/projects/hope-with-bitcoin-logo.webp"
-        },
-        new()
-        {
-            ProjectName = "Alchemist MinersTech (SuriaBit)",
-            ShortDescription = "SuriaBit is Alchemist Miners' sustainable Bitcoin fund deploying miners at Malaysian...",
-            InvestorCount = 0,
-            InvestorLabel = "Investors",
-            Raised = "0.00000",
-            Target = "1.60000",
-            TargetLabel = "Target:",
-            Progress = 0,
-            ProjectType = "Invest",
-            Status = "Open",
-            BannerUrl = BaseUrl + "/projects/alchemist-banner.jpg",
-            AvatarUrl = BaseUrl + "/projects/alchemist-logo.jpg",
-            Description = "SuriaBit is Alchemist Miners' sustainable Bitcoin mining fund deploying miners at Malaysian hydro-powered facilities. The project combines renewable energy sources with cutting-edge mining hardware to deliver consistent returns while maintaining environmental responsibility.",
-            Stages = new ObservableCollection<InvestmentStageViewModel>
+            var result = await _projectAppService.Latest(new LatestProjects.LatestProjectsRequest());
+
+            if (result.IsSuccess)
             {
-                new() { StageNumber = 1, Percentage = "25%", ReleaseDate = "15 Mar 2026", Amount = "0.40000000", Status = "Pending" },
-                new() { StageNumber = 2, Percentage = "25%", ReleaseDate = "15 Jun 2026", Amount = "0.40000000", Status = "Pending" },
-                new() { StageNumber = 3, Percentage = "25%", ReleaseDate = "15 Sep 2026", Amount = "0.40000000", Status = "Pending" },
-                new() { StageNumber = 4, Percentage = "25%", ReleaseDate = "15 Dec 2026", Amount = "0.40000000", Status = "Pending" },
+                Projects.Clear();
+                foreach (var dto in result.Value.Projects)
+                {
+                    Projects.Add(ProjectItemViewModel.FromDto(dto));
+                }
             }
-        },
-        new()
+        }
+        catch
         {
-            ProjectName = "Penlock",
-            ShortDescription = "A printable paper calculator that enables users to split a seed phrase into a secure 2-of-3...",
-            InvestorCount = 1,
-            InvestorLabel = "Funders",
-            Raised = "0.05900",
-            Target = "0.04000",
-            TargetLabel = "Goal:",
-            Progress = 100,
-            ProjectType = "Fund",
-            Status = "Funded",
-            BannerUrl = BaseUrl + "/projects/penlock-banner.jpg",
-            AvatarUrl = BaseUrl + "/projects/penlock-logo.jpg"
-        },
-        new()
+            // SDK call failed - projects list remains empty
+        }
+        finally
         {
-            ProjectName = "Bitasha",
-            ShortDescription = "Bitcoin mining is a probabilistic search of the nonce space with a hope of winning the...",
-            InvestorCount = 1,
-            InvestorLabel = "Funders",
-            Raised = "0.01001",
-            Target = "0.01000",
-            TargetLabel = "Goal:",
-            Progress = 100,
-            ProjectType = "Fund",
-            Status = "Funded",
-            BannerUrl = BaseUrl + "/projects/bitasha-banner.jpeg",
-            AvatarUrl = BaseUrl + "/projects/bitasha-logo.png"
-        },
-        new()
-        {
-            ProjectName = "CryoBrick",
-            ShortDescription = "Secure. Affordable. Inconspicuous. Bitcoin Custody Reimagined. CryoBrick is a self-...",
-            InvestorCount = 1,
-            InvestorLabel = "Investors",
-            Raised = "0.01001",
-            Target = "0.01000",
-            TargetLabel = "Target:",
-            Progress = 100,
-            ProjectType = "Invest",
-            Status = "Funded",
-            BannerUrl = BaseUrl + "/projects/cryobrick-banner.png",
-            AvatarUrl = BaseUrl + "/projects/cryobrick-logo.png"
-        },
-        // ── Established Projects (ids 1-18) ──
-        new()
-        {
-            ProjectName = "Angor UX",
-            ShortDescription = "Creation of Angor's new UX and UI for the desktop app and related screens",
-            InvestorCount = 2,
-            InvestorLabel = "Investors",
-            Raised = "0.21234",
-            Target = "1.00000",
-            TargetLabel = "Target:",
-            Progress = 21,
-            ProjectType = "Invest",
-            Status = "Open",
-            BannerUrl = BaseUrl + "/projects/angor-ux-banner.gif",
-            AvatarUrl = BaseUrl + "/projects/angor-ux-logo.svg",
-            Description = "Creation of Angor's new UX and UI for the desktop app and related screens. This project focuses on delivering a modern, accessible, and visually stunning user experience for the Angor platform.",
-            Stages = new ObservableCollection<InvestmentStageViewModel>
-            {
-                new() { StageNumber = 1, Percentage = "33%", ReleaseDate = "25 May 2026", Amount = "0.33333333", Status = "Pending" },
-                new() { StageNumber = 2, Percentage = "33%", ReleaseDate = "25 Aug 2026", Amount = "0.33333333", Status = "Pending" },
-                new() { StageNumber = 3, Percentage = "34%", ReleaseDate = "25 Nov 2026", Amount = "0.33333334", Status = "Pending" },
-            }
-        },
-        new()
-        {
-            ProjectName = "Zap AI",
-            ShortDescription = "AI-powered analytics and insights for Bitcoin Lightning Network node operators.",
-            InvestorCount = 5,
-            InvestorLabel = "Investors",
-            Raised = "0.45678",
-            Target = "0.75000",
-            TargetLabel = "Target:",
-            Progress = 61,
-            ProjectType = "Invest",
-            Status = "Funding Closed",
-            BannerUrl = BaseUrl + "/projects/zap-ai-banner.png",
-            AvatarUrl = BaseUrl + "/projects/zap-ai-logo.png"
-        },
-        new()
-        {
-            ProjectName = "Nostria - Your Social Network",
-            ShortDescription = "A comprehensive Nostr client with advanced relay management and content discovery features.",
-            InvestorCount = 8,
-            InvestorLabel = "Subscribers",
-            Raised = "0.67000",
-            Target = "1.00000",
-            TargetLabel = "Total Subscribers:",
-            Progress = 67,
-            ProjectType = "Subscription",
-            Status = "Open",
-            BannerUrl = BaseUrl + "/projects/nostria-banner.jpg",
-            AvatarUrl = BaseUrl + "/projects/nostria-logo.png"
-        },
-        new()
-        {
-            ProjectName = "Generasi Merdeka (Sovereign Generation)",
-            ShortDescription = "Empowering Indonesian youth through Bitcoin education and circular economy initiatives.",
-            InvestorCount = 3,
-            InvestorLabel = "Subscribers",
-            Raised = "0.12345",
-            Target = "0.50000",
-            TargetLabel = "Total Subscribers:",
-            Progress = 25,
-            ProjectType = "Subscription",
-            Status = "Funding Closed",
-            BannerUrl = BaseUrl + "/projects/generasi-merdeka-banner.jpg",
-            AvatarUrl = BaseUrl + "/projects/generasi-merdeka-logo.jpg"
-        },
-        new()
-        {
-            ProjectName = "Bitcoin-Basketball Integration Project",
-            ShortDescription = "Bringing Bitcoin payments and rewards to amateur basketball leagues and tournaments.",
-            InvestorCount = 4,
-            InvestorLabel = "Subscribers",
-            Raised = "0.08900",
-            Target = "0.35000",
-            TargetLabel = "Total Subscribers:",
-            Progress = 25,
-            ProjectType = "Subscription",
-            Status = "Open",
-            BannerUrl = BaseUrl + "/projects/bitcoin-basketball-logo.jpg",
-            AvatarUrl = BaseUrl + "/projects/bitcoin-basketball-logo.jpg"
-        },
-        new()
-        {
-            ProjectName = "Code Orange Dev School",
-            ShortDescription = "Bitcoin development bootcamp teaching open-source contribution and protocol development.",
-            InvestorCount = 11,
-            InvestorLabel = "Subscribers",
-            Raised = "1.20000",
-            Target = "1.20000",
-            TargetLabel = "Total Subscribers:",
-            Progress = 100,
-            ProjectType = "Subscription",
-            Status = "Funded",
-            BannerUrl = BaseUrl + "/projects/code-orange-banner.jpg",
-            AvatarUrl = BaseUrl + "/projects/code-orange-logo.jpg"
-        },
-        new()
-        {
-            ProjectName = "Cruzada21 - VEINTIUNO.LAT",
-            ShortDescription = "Community-driven Bitcoin adoption campaign across Latin American countries.",
-            InvestorCount = 7,
-            InvestorLabel = "Funders",
-            Raised = "0.34560",
-            Target = "0.80000",
-            TargetLabel = "Goal:",
-            Progress = 43,
-            ProjectType = "Fund",
-            Status = "Open",
-            BannerUrl = BaseUrl + "/projects/cruzada21-banner.jpg",
-            AvatarUrl = BaseUrl + "/projects/cruzada21-logo.jpg"
-        },
-        new()
-        {
-            ProjectName = "SeedSigner + BIP-353",
-            ShortDescription = "Integrating BIP-353 human-readable payment addresses into the SeedSigner hardware wallet.",
-            InvestorCount = 2,
-            InvestorLabel = "Funders",
-            Raised = "0.05600",
-            Target = "0.15000",
-            TargetLabel = "Goal:",
-            Progress = 37,
-            ProjectType = "Fund",
-            Status = "Funding Closed",
-            BannerUrl = BaseUrl + "/projects/seedsigner-banner.png",
-            AvatarUrl = BaseUrl + "/projects/seedsigner-logo.png"
-        },
-        new()
-        {
-            ProjectName = "ZapTracker",
-            ShortDescription = "Real-time Lightning zap tracking and analytics dashboard for content creators.",
-            InvestorCount = 6,
-            InvestorLabel = "Funders",
-            Raised = "0.23450",
-            Target = "0.50000",
-            TargetLabel = "Goal:",
-            Progress = 47,
-            ProjectType = "Fund",
-            Status = "Open",
-            BannerUrl = BaseUrl + "/projects/zaptracker-banner.png",
-            AvatarUrl = BaseUrl + "/projects/zaptracker-logo.webp"
-        },
-        new()
-        {
-            ProjectName = "Sweepstack",
-            ShortDescription = "Automated UTXO consolidation and privacy-preserving transaction batching tool.",
-            InvestorCount = 4,
-            InvestorLabel = "Funders",
-            Raised = "0.12340",
-            Target = "0.25000",
-            TargetLabel = "Goal:",
-            Progress = 49,
-            ProjectType = "Fund",
-            Status = "Funding Closed",
-            BannerUrl = BaseUrl + "/projects/sweepstack-banner.png",
-            AvatarUrl = BaseUrl + "/projects/sweepstack-logo.png"
-        },
-        new()
-        {
-            ProjectName = "BlindBit",
-            ShortDescription = "Silent payments implementation for enhanced Bitcoin transaction privacy.",
-            InvestorCount = 9,
-            InvestorLabel = "Funders",
-            Raised = "0.45600",
-            Target = "0.60000",
-            TargetLabel = "Goal:",
-            Progress = 76,
-            ProjectType = "Fund",
-            Status = "Open",
-            BannerUrl = BaseUrl + "/projects/blindbit-logo.png",
-            AvatarUrl = BaseUrl + "/projects/blindbit-logo.png"
-        },
-        new()
-        {
-            ProjectName = "git-futz",
-            ShortDescription = "Git-based collaboration tools with Nostr integration for open-source Bitcoin projects.",
-            InvestorCount = 3,
-            InvestorLabel = "Funders",
-            Raised = "0.07800",
-            Target = "0.20000",
-            TargetLabel = "Goal:",
-            Progress = 39,
-            ProjectType = "Fund",
-            Status = "Open",
-            BannerUrl = BaseUrl + "/projects/git-futz-banner.png",
-            AvatarUrl = BaseUrl + "/projects/git-futz-logo.png"
-        },
-        new()
-        {
-            ProjectName = "Receipt.Cash",
-            ShortDescription = "Point-of-sale receipt system with Lightning payment verification and NFC support.",
-            InvestorCount = 5,
-            InvestorLabel = "Investors",
-            Raised = "0.18900",
-            Target = "0.40000",
-            TargetLabel = "Target:",
-            Progress = 47,
-            ProjectType = "Invest",
-            Status = "Funding Closed",
-            BannerUrl = BaseUrl + "/projects/receipt-cash-banner.webp",
-            AvatarUrl = BaseUrl + "/projects/receipt-cash-logo.webp"
-        },
-        new()
-        {
-            ProjectName = "Finding Home Episode 3",
-            ShortDescription = "Documentary series following Bitcoin adoption stories in communities around the world.",
-            InvestorCount = 12,
-            InvestorLabel = "Investors",
-            Raised = "0.67800",
-            Target = "0.90000",
-            TargetLabel = "Target:",
-            Progress = 75,
-            ProjectType = "Invest",
-            Status = "Open",
-            BannerUrl = BaseUrl + "/projects/finding-home-banner.png",
-            AvatarUrl = BaseUrl + "/projects/finding-home-logo.png"
-        },
-        new()
-        {
-            ProjectName = "YakiHonne",
-            ShortDescription = "Nostr-based long-form content publishing platform with Bitcoin monetization.",
-            InvestorCount = 15,
-            InvestorLabel = "Investors",
-            Raised = "1.50000",
-            Target = "1.50000",
-            TargetLabel = "Target:",
-            Progress = 100,
-            ProjectType = "Invest",
-            Status = "Funded",
-            BannerUrl = BaseUrl + "/projects/yakihonne-banner.png",
-            AvatarUrl = BaseUrl + "/projects/yakihonne-logo.png"
-        },
-        new()
-        {
-            ProjectName = "Network Effect",
-            ShortDescription = "Research and data visualization platform for Bitcoin network analysis and metrics.",
-            InvestorCount = 8,
-            InvestorLabel = "Subscribers",
-            Raised = "0.89000",
-            Target = "1.80000",
-            TargetLabel = "Total Subscribers:",
-            Progress = 49,
-            ProjectType = "Subscription",
-            Status = "Open",
-            BannerUrl = BaseUrl + "/projects/network-effect-banner.png",
-            AvatarUrl = BaseUrl + "/projects/network-effect-logo.jpg"
-        },
-        new()
-        {
-            ProjectName = "Nostria (Pre-Seed)",
-            ShortDescription = "Early-stage funding round for the Nostria Nostr client development team.",
-            InvestorCount = 10,
-            InvestorLabel = "Subscribers",
-            Raised = "0.54300",
-            Target = "0.85000",
-            TargetLabel = "Total Subscribers:",
-            Progress = 64,
-            ProjectType = "Subscription",
-            Status = "Funding Closed",
-            BannerUrl = BaseUrl + "/projects/nostria-banner.jpg",
-            AvatarUrl = BaseUrl + "/projects/nostria-logo.png"
-        },
-        new()
-        {
-            ProjectName = "Bloom Fest 25",
-            ShortDescription = "Annual Bitcoin community festival celebrating decentralized technology and culture.",
-            InvestorCount = 6,
-            InvestorLabel = "Investors",
-            Raised = "0.31200",
-            Target = "0.65000",
-            TargetLabel = "Target:",
-            Progress = 48,
-            ProjectType = "Invest",
-            Status = "Open",
-            BannerUrl = BaseUrl + "/projects/bloom-fest-banner.jpg",
-            AvatarUrl = BaseUrl + "/projects/bloom-fest-logo.jpg"
-        },
-    };
+            IsLoading = false;
+        }
+    }
 }

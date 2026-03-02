@@ -13,12 +13,14 @@ public enum DeployScreen
     Success
 }
 
-/// <summary>Stub wallet item for the wallet selector list.</summary>
+/// <summary>Wallet item for the wallet selector list.</summary>
 public partial class WalletItem : ReactiveObject
 {
     public string Name { get; set; } = "";
     public string Network { get; set; } = "Bitcoin";
     public string Balance { get; set; } = "0.00000000 BTC";
+    /// <summary>SDK WalletId for operations</summary>
+    public string WalletId { get; set; } = "";
 
     [Reactive] private bool isSelected;
 }
