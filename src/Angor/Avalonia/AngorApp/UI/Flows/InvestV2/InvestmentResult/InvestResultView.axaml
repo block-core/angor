@@ -12,11 +12,24 @@
                 <ContentControl IconOptions.Fill="{DynamicResource Brand}" Padding="8" Content="{Icon fa-check}" />
             </Border.Child>
         </Border>
-        <TextBlock TextAlignment="Center" Classes="Weight-Bold Size-XXL Strong Wrap">Investment Pending Approval</TextBlock>
-        <TextBlock TextAlignment="Center" Classes="Size-M">
+        <!-- Above threshold: pending founder approval -->
+        <TextBlock TextAlignment="Center" Classes="Weight-Bold Size-XXL Strong Wrap"
+                   IsVisible="{Binding RequiresApproval}">Investment Pending Approval</TextBlock>
+        <TextBlock TextAlignment="Center" Classes="Size-M"
+                   IsVisible="{Binding RequiresApproval}">
             <Run>Your investment of</Run>
             <Run Text="{Binding Amount.DecimalString}" />
-            <Run Text="is pending approval by Angor UX. Once approved, you'll confirm to release the funds." />
+            <Run Text="is pending approval by the founder. Once approved, you'll confirm to release the funds." />
+        </TextBlock>
+
+        <!-- Below threshold: invested directly -->
+        <TextBlock TextAlignment="Center" Classes="Weight-Bold Size-XXL Strong Wrap"
+                   IsVisible="{Binding !RequiresApproval}">Investment Completed</TextBlock>
+        <TextBlock TextAlignment="Center" Classes="Size-M"
+                   IsVisible="{Binding !RequiresApproval}">
+            <Run>Your investment of</Run>
+            <Run Text="{Binding Amount.DecimalString}" />
+            <Run Text="has been successfully submitted to the network." />
         </TextBlock>
     </StackPanel>
 

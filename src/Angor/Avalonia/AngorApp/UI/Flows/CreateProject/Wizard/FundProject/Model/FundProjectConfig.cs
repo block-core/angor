@@ -37,7 +37,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model
 
         public FundProjectConfig()
         {
-            SelectionModel<int> selectionModel = new() { SingleSelect = false };
+            SelectionModel<int> selectionModel = new(AvailableInstallmentCounts) { SingleSelect = false };
             SelectedInstallments = new ReactiveSelection<int, int>(selectionModel, i => i)
                 .DisposeWith(Disposables);
 

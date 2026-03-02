@@ -80,7 +80,7 @@ namespace AngorApp.UI.Flows.CreateProject
             var environment = isDebug ? ValidationEnvironment.Debug : ValidationEnvironment.Production;
             InvestmentProjectConfigBase newProject = isDebug ? new InvestmentProjectConfigDebug() : new InvestmentProjectConfig();
 
-            Action? prefillAction = isDebug ? () => PopulateDebugDefaults(newProject) : null;
+            Action? prefillAction = isDebug ? () => PopulateInvestDebugDefaults(newProject) : null;
 
             SlimWizard<string> wizard = WizardBuilder
                                         .StartWith(() => new ProjectProfileViewModel(newProject, prefillAction)).NextUnit().WhenValid()
@@ -105,30 +105,51 @@ namespace AngorApp.UI.Flows.CreateProject
 
         private SlimWizard<string> CreateFundProjectWizard(WalletId walletId, ProjectSeedDto seed)
         {
+            var isDebug = !uiServices.EnableProductionValidations();
             var newProject = new FundProjectConfig();
 
+            Action? prefillAction = isDebug ? () => PopulateFundDebugDefaults(newProject) : null;
+
             SlimWizard<string> wizard = WizardBuilder
-                                        .StartWith(() => new ProjectProfileViewModel(newProject)).NextUnit().WhenValid()
-                                        .Then(_ => new ProjectImagesViewModel(newProject, imagePicker)).NextUnit().Always()
-                                        .Then(_ => new GoalViewModel(newProject)).NextUnit().WhenValid()
-                                        .Then(_ => new FundPayoutsViewModel(newProject)).NextUnit().WhenValid()
-                                        .Then(_ => new FundReviewAndDeployViewModel(
-                                                  newProject,
-                                                  new ProjectDeploymentOrchestrator(
-                                                      projectAppService,
-                                                      founderAppService,
-                                                      uiServices,
-                                                      logger),
-                                                  walletId,
-                                                  seed,
-                                                  uiServices))
-                                        .NextCommand(review => review.DeployCommand)
-                                        .Build(StepKind.Commit);
+                                         .StartWith(() => new ProjectProfileViewModel(newProject, prefillAction)).NextUnit().WhenValid()
+                                         .Then(_ => new ProjectImagesViewModel(newProject, imagePicker)).NextUnit().Always()
+                                         .Then(_ => new GoalViewModel(newProject)).NextUnit().WhenValid()
+                                         .Then(_ => new FundPayoutsViewModel(newProject)).NextUnit().WhenValid()
+                                         .Then(_ => new FundReviewAndDeployViewModel(
+                                                   newProject,
+                                                   new ProjectDeploymentOrchestrator(
+                                                       projectAppService,
+                                                       founderAppService,
+                                                       uiServices,
+                                                       logger),
+                                                   walletId,
+                                                   seed,
+                                                   uiServices))
+                                         .NextCommand(review => review.DeployCommand)
+                                         .Build(StepKind.Commit);
 
             return wizard;
         }
 
-        private static void PopulateDebugDefaults(InvestmentProjectConfigBase project)
+        private static void PopulateFundDebugDefaults(FundProjectConfig project)
+        {
+            var id = Guid.NewGuid().ToString()[..8];
+            project.Name = $"Debug Fund {id}";
+            project.Description = $"Auto-populated debug fund {id} for testing on testnet. Created at {DateTime.Now:HH:mm:ss}.";
+            project.Website = "https://angor.io";
+
+            project.GoalAmount = AmountUI.FromBtc(0.5m);
+            project.Threshold = AmountUI.FromBtc(0.01m);
+
+            project.PayoutFrequency = PayoutFrequency.Monthly;
+            project.MonthlyPayoutDate = DateTime.Now.Day;
+
+            // Pick a reasonable default installment pattern.
+            project.SelectedInstallments.SelectionModel.Clear();
+            project.SelectedInstallments.SelectionModel.Select(0);
+        }
+
+        private static void PopulateInvestDebugDefaults(InvestmentProjectConfigBase project)
         {
             var id = Guid.NewGuid().ToString()[..8];
             project.Name = $"Debug Project {id}";

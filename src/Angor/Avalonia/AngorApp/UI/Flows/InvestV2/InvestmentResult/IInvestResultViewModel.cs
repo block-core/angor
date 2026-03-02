@@ -5,5 +5,6 @@ namespace AngorApp.UI.Flows.InvestV2.InvestmentResult
     public interface IInvestResultViewModel
     {
         IAmountUI Amount { get; set; }
+        bool RequiresApproval { get; set; }
     }
 }

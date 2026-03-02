@@ -896,7 +896,7 @@ namespace Angor.Test.Protocol
                 projectInfo,
                 Encoders.Hex.EncodeData(investor1Key.PubKey.ToBytes()),
                 investor1Amount,
-                0, // patternIndex
+                0, // patternId
                 investor1StartDate);
 
             var investor1Trx = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investor1Parameters);
@@ -913,7 +913,7 @@ namespace Angor.Test.Protocol
                     projectInfo,
                     Encoders.Hex.EncodeData(investor2Key.PubKey.ToBytes()),
                     investor2Amount,
-                    0, // patternIndex
+                    0, // patternId
                     investor2StartDate);
 
             var investor2Trx = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investor2Parameters);

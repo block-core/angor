@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using Angor.Shared.Models;
 using AngorApp.UI.Flows.InvestV2.Footer;
 using AngorApp.UI.Flows.InvestV2.Header;
 using AngorApp.UI.Flows.InvestV2.Model;
@@ -31,6 +32,37 @@ namespace AngorApp.UI.Flows.InvestV2
             Invest = ReactiveCommand.Create(() => { });
             Cancel = ReactiveCommand.Create(() => { });
             SelectAmount = ReactiveCommand.Create<long>(a => Amount = a);
+
+            // Sample patterns for design-time preview
+            AvailablePatterns = new List<DynamicStagePattern>
+            {
+                new()
+                {
+                    PatternId = 0,
+                    Name = "3-Month Monthly",
+                    Description = "3 monthly payments on the 1st of each month",
+                    Frequency = StageFrequency.Monthly,
+                    StageCount = 3
+                },
+                new()
+                {
+                    PatternId = 1,
+                    Name = "6-Month Monthly",
+                    Description = "6 monthly payments on the 1st of each month",
+                    Frequency = StageFrequency.Monthly,
+                    StageCount = 6
+                },
+                new()
+                {
+                    PatternId = 2,
+                    Name = "12-Week Weekly",
+                    Description = "12 weekly payments every Monday (~3 months)",
+                    Frequency = StageFrequency.Weekly,
+                    StageCount = 12
+                }
+            };
+            SelectedPattern = AvailablePatterns.First();
+            ShowPatternSelector = true;
         }
 
         public decimal? Amount { get; set; }
@@ -54,5 +86,9 @@ namespace AngorApp.UI.Flows.InvestV2
         public IAmountUI AmountToInvest { get; set; } = AmountUI.FromBtc(0.001m);
         public IObservable<object> Footer { get; } = Observable.Return(new FooterViewModelSample());
         public IObservable<object> Header { get; } = Observable.Return(new HeaderViewModelSample());
+        
+        public IEnumerable<DynamicStagePattern> AvailablePatterns { get; }
+        public DynamicStagePattern? SelectedPattern { get; set; }
+        public bool ShowPatternSelector { get; }
     }
 }

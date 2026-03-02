@@ -31,7 +31,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
         if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
         {
             // Use the specified pattern
-            var pattern = projectInfo.DynamicStagePatterns[parameters.PatternIndex];
+            var pattern = parameters.FindPattern(projectInfo);
             var dynamicInfo = DynamicStageInfo.FromPattern(pattern, parameters);
 
             ops.Add(Op.GetPushOp(dynamicInfo.ToBytes()));
@@ -61,7 +61,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
         if (projectInfo.ProjectType == ProjectType.Fund || projectInfo.ProjectType == ProjectType.Subscribe)
         {
             // Use the specified pattern
-            var pattern = projectInfo.DynamicStagePatterns[parameters.PatternIndex];
+            var pattern = parameters.FindPattern(projectInfo);
             var dynamicInfo = DynamicStageInfo.FromPattern(pattern, parameters);
 
             ops.Add(Op.GetPushOp(dynamicInfo.ToBytes()));

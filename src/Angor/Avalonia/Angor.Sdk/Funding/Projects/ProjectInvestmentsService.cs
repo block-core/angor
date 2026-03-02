@@ -113,7 +113,7 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
             var fundingParams = FundingParameters.CreateFromTransaction(project.ToProjectInfo(), trx);
 
-            if (fundingParams.InvestmentStartDate == null || fundingParams.PatternIndex >= project.DynamicStagePatterns.Count)
+            if (fundingParams.InvestmentStartDate == null)
                 continue;
 
             var taprootOutputs = trx.Outputs.AsIndexedOutputs()
@@ -121,7 +121,9 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                 .Select(_ => _.TxOut)
                 .ToArray();
 
-            var pattern = project.DynamicStagePatterns[fundingParams.PatternIndex];
+            var pattern = project.DynamicStagePatterns.FirstOrDefault(p => p.PatternId == fundingParams.PatternId);
+            if (pattern == null)
+                continue;
             var stageCount = taprootOutputs.Length;
 
             // Calculate percentage per stage for this investment (equal split)
@@ -144,7 +146,7 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                 var stageDataTrx = stageDataResult.Value;
                 stageDataTrx.InvestorPublicKey = investment.InvestorPublicKey;
                 stageDataTrx.DynamicReleaseDate = releaseDate;
-                stageDataTrx.PatternIndex = fundingParams.PatternIndex;
+                stageDataTrx.PatternId = fundingParams.PatternId;
                 stageDataTrx.InvestmentStartDate = fundingParams.InvestmentStartDate;
                 stageDataTrx.StageIndex = stageIndex;
                 stageDataTrx.AmountPercentage = percentagePerStage;

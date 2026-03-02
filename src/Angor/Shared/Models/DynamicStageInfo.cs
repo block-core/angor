@@ -75,7 +75,7 @@ public class DynamicStageInfo
         return new DynamicStageInfo
         {
             InvestmentStartDaysSinceEpoch = DynamicStageHelper.ToDaysSinceEpoch(fundingParameters.InvestmentStartDate.Value),
-            PatternId = fundingParameters.PatternIndex,
+            PatternId = fundingParameters.PatternId,
             StageCount = fundingParameters.StageCountOverride > 0 ? (byte)fundingParameters.StageCountOverride : (byte)0
         };
     }

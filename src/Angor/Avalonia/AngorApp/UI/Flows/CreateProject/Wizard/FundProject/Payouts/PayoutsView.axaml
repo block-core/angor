@@ -66,6 +66,7 @@
 
                     <ListBox ItemsSource="{Binding AvailableInstallmentCounts}"
                              Selection="{Binding FundProject.SelectedInstallments.SelectionModel}"
+                             SelectionMode="Multiple,Toggle"
                              ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                              Background="Transparent">
                         <ListBox.ItemsPanel>

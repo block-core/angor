@@ -35,6 +35,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     private ProjectId? projectId;
     private IShellViewModel? shell;
     private string? generatedAddress;
+    private byte? patternId;
 
     [Reactive] private IEnumerable<IInvoiceType> invoiceTypes = [new InvoiceTypeSample { Name = "Loading...", Address = "" }];
     [Reactive] private IInvoiceType? selectedInvoiceType;
@@ -46,7 +47,8 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         UIServices uiServices, 
         IAmountUI amount,
         ProjectId projectId,
-        IShellViewModel shell)
+        IShellViewModel shell,
+        byte? patternId = null)
     {
         // Store dependencies for lazy loading
         this.wallet = wallet;
@@ -54,6 +56,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         this.uiServices = uiServices;
         this.projectId = projectId;
         this.shell = shell;
+        this.patternId = patternId;
         
         Amount = amount;
         PaymentReceived = paymentReceivedSubject.AsObservable();
@@ -437,11 +440,13 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             cancellationToken.ThrowIfCancellationRequested();
 
             // Build the investment draft using the funding address
+            // patternId is set from the constructor (non-null for Fund/Subscribe projects)
             var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
                 walletId,
                 projectId,
                 new Amount(Amount.Sats),
                 new DomainFeerate(feeRateSatsPerVbyte),
+                PatternId: this.patternId,
                 FundingAddress: fundingAddress);
 
             var buildResult = await investmentAppService.BuildInvestmentDraft(buildRequest);
@@ -500,7 +505,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 
                 // Close the invoice dialog and show investment result dialog
                 closeable?.Close();
-                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount };
+                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount, RequiresApproval = true };
                 await uiServices.Dialog.Show(resultViewModel, Observable.Return("Investment Submitted"), (model, c) => model.Options(c));
             }
             else
@@ -526,7 +531,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 
                 // Close the invoice dialog and show investment result dialog
                 closeable?.Close();
-                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount };
+                var resultViewModel = new InvestResultViewModel(shell) { Amount = Amount, RequiresApproval = false };
                 await uiServices.Dialog.Show(resultViewModel, Observable.Return("Investment Completed"), (model, c) => model.Options(c));
             }
         }

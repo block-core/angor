@@ -22,7 +22,7 @@ public static class BuildInvestmentDraft
             ProjectId ProjectId,
             Amount Amount,
             DomainFeerate FeeRate,
-            byte? PatternIndex = null, // Required for Fund/Subscribe
+            byte? PatternId = null, // Required for Fund/Subscribe
             DateTime? InvestmentStartDate = null, // Required for Fund/Subscribe, defaults to now
             string? FundingAddress = null) // Optional: If provided, only use UTXOs from this specific address
         : IRequest<Result<BuildInvestmentDraftResponse>>;
@@ -74,7 +74,7 @@ public static class BuildInvestmentDraft
                             projectInfo,
                             investorKey,
                             transactionRequest.Amount.Sats,
-                            transactionRequest.PatternIndex,
+                            transactionRequest.PatternId,
                             transactionRequest.InvestmentStartDate);
 
                 if (fundingParametersResult.IsFailure)
@@ -167,7 +167,7 @@ public static class BuildInvestmentDraft
                     ProjectInfo projectInfo,
                     string investorKey,
                     long investmentAmount,
-                    byte? patternIndex,
+                    byte? patternId,
                     DateTime? investmentStartDate)
         {
             try
@@ -176,9 +176,9 @@ public static class BuildInvestmentDraft
                 {
                     ProjectType.Invest => Result.Success(FundingParameters.CreateForInvest(projectInfo, investorKey, investmentAmount)),
 
-                    ProjectType.Fund => CreateFundParameters(projectInfo, investorKey, investmentAmount, patternIndex, investmentStartDate),
+                    ProjectType.Fund => CreateFundParameters(projectInfo, investorKey, investmentAmount, patternId, investmentStartDate),
 
-                    ProjectType.Subscribe => CreateSubscribeParameters(projectInfo, investorKey, investmentAmount, patternIndex, investmentStartDate),
+                    ProjectType.Subscribe => CreateSubscribeParameters(projectInfo, investorKey, investmentAmount, patternId, investmentStartDate),
 
                     _ => Result.Failure<FundingParameters>($"Unknown project type: {projectInfo.ProjectType}")
                 };
@@ -193,12 +193,12 @@ public static class BuildInvestmentDraft
                     ProjectInfo projectInfo,
                     string investorKey,
                     long investmentAmount,
-                    byte? patternIndex,
+                    byte? patternId,
                     DateTime? investmentStartDate)
         {
-            if (!patternIndex.HasValue)
+            if (!patternId.HasValue)
             {
-                return Result.Failure<FundingParameters>("PatternIndex is required for Fund projects. Please select a funding pattern.");
+                return Result.Failure<FundingParameters>("PatternId is required for Fund projects. Please select a funding pattern.");
             }
 
             if (projectInfo.DynamicStagePatterns == null || !projectInfo.DynamicStagePatterns.Any())
@@ -206,9 +206,10 @@ public static class BuildInvestmentDraft
                 return Result.Failure<FundingParameters>("Project does not have any funding patterns configured.");
             }
 
-            if (patternIndex.Value >= projectInfo.DynamicStagePatterns.Count)
+            var matchingPattern = projectInfo.DynamicStagePatterns.FirstOrDefault(p => p.PatternId == patternId.Value);
+            if (matchingPattern == null)
             {
-                return Result.Failure<FundingParameters>($"Invalid pattern index {patternIndex.Value}. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
+                return Result.Failure<FundingParameters>($"No pattern found with PatternId {patternId.Value}. Available patterns: {string.Join(", ", projectInfo.DynamicStagePatterns.Select(p => p.PatternId.ToString()))}.");
             }
 
             var effectiveStartDate = investmentStartDate ?? DateTime.UtcNow;
@@ -217,7 +218,7 @@ public static class BuildInvestmentDraft
                                             projectInfo,
                                             investorKey,
                                             investmentAmount,
-                                            patternIndex.Value,
+                                            patternId.Value,
                                             effectiveStartDate));
         }
 
@@ -225,13 +226,13 @@ public static class BuildInvestmentDraft
                     ProjectInfo projectInfo,
                     string investorKey,
                     long investmentAmount,
-                    byte? patternIndex,
+                    byte? patternId,
                     DateTime? investmentStartDate)
         {
-            if (!patternIndex.HasValue)
+            if (!patternId.HasValue)
             {
                 return Result.Failure<FundingParameters>(
-                "PatternIndex is required for Subscribe projects. Please select a subscription pattern.");
+                "PatternId is required for Subscribe projects. Please select a subscription pattern.");
             }
 
             if (projectInfo.DynamicStagePatterns == null || !projectInfo.DynamicStagePatterns.Any())
@@ -240,10 +241,11 @@ public static class BuildInvestmentDraft
              "Project does not have any subscription patterns configured.");
             }
 
-            if (patternIndex.Value >= projectInfo.DynamicStagePatterns.Count)
+            var matchingPattern = projectInfo.DynamicStagePatterns.FirstOrDefault(p => p.PatternId == patternId.Value);
+            if (matchingPattern == null)
             {
                 return Result.Failure<FundingParameters>(
-                   $"Invalid pattern index {patternIndex.Value}. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
+                   $"No pattern found with PatternId {patternId.Value}. Available patterns: {string.Join(", ", projectInfo.DynamicStagePatterns.Select(p => p.PatternId.ToString()))}.");
             }
 
             var effectiveStartDate = investmentStartDate ?? DateTime.UtcNow;
@@ -252,7 +254,7 @@ public static class BuildInvestmentDraft
                                             projectInfo,
                                             investorKey,
                                             investmentAmount,
-                                            patternIndex.Value,
+                                            patternId.Value,
                                             effectiveStartDate));
         }
 

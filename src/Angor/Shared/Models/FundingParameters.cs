@@ -11,12 +11,23 @@ public class FundingParameters
     public string InvestorKey { get; set; }
     public long TotalInvestmentAmount { get; set; }
     public DateTime? InvestmentStartDate { get; set; }
-    public byte PatternIndex { get; set; }
+    public byte PatternId { get; set; }
     public int? StageCountOverride { get; set; }
     public Blockcore.NBitcoin.uint256? HashOfSecret { get; set; }
     public DateTime? ExpiryDateOverride { get; set; }
 
     public FundingParameters() { }
+
+    /// <summary>
+    /// Finds a DynamicStagePattern by PatternId from the project's patterns list.
+    /// </summary>
+    public DynamicStagePattern FindPattern(ProjectInfo projectInfo)
+    {
+        var pattern = projectInfo.DynamicStagePatterns?.FirstOrDefault(p => p.PatternId == PatternId);
+        if (pattern == null)
+            throw new InvalidOperationException($"No pattern found with PatternId {PatternId}. Available patterns: {string.Join(", ", projectInfo.DynamicStagePatterns?.Select(p => p.PatternId.ToString()) ?? [])}");
+        return pattern;
+    }
 
     public static FundingParameters CreateForInvest(
         ProjectInfo projectInfo,
@@ -28,7 +39,7 @@ public class FundingParameters
         {
             InvestorKey = investorKey,
             TotalInvestmentAmount = totalInvestmentAmount,
-            PatternIndex = 0,
+            PatternId = 0,
             HashOfSecret = HashOfSecret,
             ExpiryDateOverride = PenaltyThresholdHelper.GetExpiryDateOverride(projectInfo, totalInvestmentAmount)
         };
@@ -38,15 +49,21 @@ public class FundingParameters
         ProjectInfo projectInfo,
         string investorKey,
         long totalInvestmentAmount,
-        byte patternIndex,
+        byte patternId,
         DateTime investmentStartDate)
     {
+        // Normalize to midnight UTC to ensure consistency with OP_RETURN round-trip.
+        // DynamicStageInfo encodes only days-since-epoch, so the time component is lost.
+        // Without normalization, scripts built at creation would use a different start date
+        // than scripts rebuilt from the transaction during spending, causing witness mismatch.
+        var normalizedStartDate = investmentStartDate.Date;
+
         return new FundingParameters
         {
             InvestorKey = investorKey,
             TotalInvestmentAmount = totalInvestmentAmount,
-            InvestmentStartDate = investmentStartDate,
-            PatternIndex = patternIndex,
+            InvestmentStartDate = normalizedStartDate,
+            PatternId = patternId,
             ExpiryDateOverride = PenaltyThresholdHelper.GetExpiryDateOverride(projectInfo, totalInvestmentAmount)
         };
     }
@@ -55,15 +72,18 @@ public class FundingParameters
            ProjectInfo projectInfo,
            string investorKey,
            long totalInvestmentAmount,
-           byte patternIndex,
+           byte patternId,
            DateTime investmentStartDate)
     {
+        // Normalize to midnight UTC (same reason as CreateForFund above)
+        var normalizedStartDate = investmentStartDate.Date;
+
         return new FundingParameters
         {
             InvestorKey = investorKey,
             TotalInvestmentAmount = totalInvestmentAmount,
-            InvestmentStartDate = investmentStartDate,
-            PatternIndex = patternIndex,
+            InvestmentStartDate = normalizedStartDate,
+            PatternId = patternId,
             ExpiryDateOverride = projectInfo.StartDate
         };
     }
@@ -144,7 +164,7 @@ public class FundingParameters
             InvestorKey = investorKey,
             TotalInvestmentAmount = totalInvestmentAmount,
             InvestmentStartDate = dynamicInfo?.GetInvestmentStartDate(),
-            PatternIndex = dynamicInfo?.PatternId ?? 0,
+            PatternId = dynamicInfo?.PatternId ?? 0,
             StageCountOverride = dynamicInfo?.StageCount > 0 ? dynamicInfo.StageCount : (int?)null,
             HashOfSecret = secretHash,
             ExpiryDateOverride = expiryDateOverride
@@ -201,10 +221,7 @@ public class FundingParameters
         if (projectInfo.DynamicStagePatterns == null || !projectInfo.DynamicStagePatterns.Any())
             throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
 
-        if (PatternIndex >= projectInfo.DynamicStagePatterns.Count)
-            throw new ArgumentOutOfRangeException(nameof(PatternIndex), $"Pattern index {PatternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
-
-        var pattern = projectInfo.DynamicStagePatterns[PatternIndex];
+        var pattern = FindPattern(projectInfo);
 
         // Validate pattern properties
         ValidatePattern(pattern);
@@ -232,10 +249,7 @@ public class FundingParameters
         if (projectInfo.DynamicStagePatterns == null || !projectInfo.DynamicStagePatterns.Any())
             throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
 
-        if (PatternIndex >= projectInfo.DynamicStagePatterns.Count)
-            throw new ArgumentOutOfRangeException(nameof(PatternIndex), $"Pattern index {PatternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
-
-        var pattern = projectInfo.DynamicStagePatterns[PatternIndex];
+        var pattern = FindPattern(projectInfo);
 
         // Validate pattern properties
         ValidatePattern(pattern);

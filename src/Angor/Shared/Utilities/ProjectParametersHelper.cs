@@ -27,13 +27,7 @@ public static class ProjectParametersHelper
             throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
         }
 
-        if (parameters.PatternIndex >= projectInfo.DynamicStagePatterns.Count)
-        {
-            throw new ArgumentOutOfRangeException(nameof(parameters.PatternIndex),
-             $"Pattern index {parameters.PatternIndex} is out of range. Project has {projectInfo.DynamicStagePatterns.Count} patterns.");
-        }
-
-        var pattern = projectInfo.DynamicStagePatterns[parameters.PatternIndex];
+        var pattern = parameters.FindPattern(projectInfo);
         return pattern.StageCount;
     }
 

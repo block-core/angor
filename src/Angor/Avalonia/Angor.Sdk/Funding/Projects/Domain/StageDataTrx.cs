@@ -15,7 +15,7 @@ public class StageDataTrx
     public string InvestorPublicKey;
     public ProjectScriptType ProjectScriptType;
     public DateTime? DynamicReleaseDate { get; set; }
-    public byte? PatternIndex { get; set; }
+    public byte? PatternId { get; set; }
     public DateTime? InvestmentStartDate { get; set; }
     public decimal? AmountPercentage { get; set; }
 }
