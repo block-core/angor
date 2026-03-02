@@ -1,8 +1,14 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Reactive.Linq;
+using System.Globalization;
 using System.Runtime.CompilerServices;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Operations;
+using Angor.Sdk.Funding.Shared;
+using Angor.Sdk.Wallet.Application;
 using Avalonia.Media.Imaging;
+using Avalonia2.Composition;
 using Avalonia2.UI.Sections.FindProjects;
 using Avalonia2.UI.Shared;
 using Avalonia2.UI.Shared.Helpers;
@@ -211,6 +217,12 @@ public class InvestmentViewModel : INotifyPropertyChanged
 
     /// <summary>Cross-reference to SharedSignature.Id for approval flow</summary>
     public int SignatureId { get; set; }
+    /// <summary>SDK project identifier for operations</summary>
+    public string ProjectIdentifier { get; set; } = "";
+    /// <summary>SDK wallet ID used for this investment</summary>
+    public string InvestmentWalletId { get; set; } = "";
+    /// <summary>Transaction ID/hash of the investment</summary>
+    public string InvestmentTransactionId { get; set; } = "";
     public ObservableCollection<InvestmentStageViewModel> Stages { get; set; } = new();
 
     // ── Recovery / Penalty State (Vue: penaltyState in InvestmentDetail.vue) ──
@@ -393,53 +405,308 @@ public class InvestmentViewModel : INotifyPropertyChanged
 }
 
 /// <summary>
-/// Portfolio/Funded ViewModel — visual layer only.
-/// Vue reference shows two-column layout:
-/// - Left: Portfolio summary with Angor logo, stats, Refresh/Penalties buttons
-/// - Right: Your Investments with investment cards
-/// Data from Vue reference JS bundle.
+/// Portfolio/Funded ViewModel — connected to SDK for investment discovery and management.
+/// Uses IInvestmentAppService for loading investments and performing recovery/release operations.
 /// </summary>
 public partial class PortfolioViewModel : ReactiveObject
 {
-    /// <summary>
-    /// When true, shows the empty state ("You haven't funded any projects yet.")
-    /// When false, shows the portfolio with investments.
-    /// Default false (showing populated state as demo).
-    /// Toggle by setting HasInvestments = false.
-    /// </summary>
-    [Reactive] private bool hasInvestments = true;
+    private readonly IInvestmentAppService _investmentAppService;
+    private readonly IWalletAppService _walletAppService;
 
-    /// <summary>
-    /// When set, the detail view for this investment is shown instead of the portfolio list.
-    /// </summary>
+    [Reactive] private bool hasInvestments;
     [Reactive] private InvestmentViewModel? selectedInvestment;
+    [Reactive] private bool isLoading;
+
+    // ── Left panel stats ──
+    public int FundedProjects { get; private set; }
+    public string TotalInvested { get; private set; } = "0.0000";
+    public string RecoveredToPenalty { get; private set; } = "0.0000";
+    public int ProjectsInRecovery { get; private set; }
+    public string TotalAvailable { get; private set; } = "0.0000";
+
+    // ── Right panel investments ──
+    public ObservableCollection<InvestmentViewModel> Investments { get; } = new();
 
     public PortfolioViewModel()
     {
-        // Listen for signature status changes to update investment steps.
-        // Vue: when a founder approves/rejects, the investor's InvestmentDetail
-        // reacts because it reads from the shared signatures array.
+        _investmentAppService = ServiceLocator.InvestmentApp;
+        _walletAppService = ServiceLocator.WalletApp;
+
+        // Listen for signature status changes to update investment steps
         SharedViewModels.Signatures.SignatureStatusChanged += OnSignatureStatusChanged;
 
-        // Load sample data if prototype toggle says populated
-        if (SharedViewModels.Prototype.ShowPopulatedApp)
-            LoadSampleInvestments();
+        // Load investments from SDK
+        _ = LoadInvestmentsFromSdkAsync();
+    }
 
-        // React to prototype toggle changes (populated ↔ empty)
-        SharedViewModels.Prototype.WhenAnyValue(x => x.ShowPopulatedApp)
-            .Skip(1) // skip initial value (already handled above)
-            .Subscribe(showPopulated =>
+    /// <summary>
+    /// Load investments from SDK for all wallets.
+    /// </summary>
+    public async Task LoadInvestmentsFromSdkAsync()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var metadatasResult = await _walletAppService.GetMetadatas();
+            if (metadatasResult.IsFailure)
             {
-                if (showPopulated)
-                    LoadSampleInvestments();
-                else
-                    ClearToEmpty();
-            });
+                ClearToEmpty();
+                return;
+            }
+
+            var metadatas = metadatasResult.Value.ToList();
+            if (metadatas.Count == 0)
+            {
+                ClearToEmpty();
+                return;
+            }
+
+            Investments.Clear();
+            double totalInvested = 0;
+            double totalInRecovery = 0;
+            int recoveryCount = 0;
+
+            foreach (var meta in metadatas)
+            {
+                var investmentsResult = await _investmentAppService.GetInvestments(
+                    new GetInvestments.GetInvestmentsRequest(meta.Id));
+
+                if (investmentsResult.IsFailure) continue;
+
+                foreach (var dto in investmentsResult.Value.Projects)
+                {
+                    var investedBtc = dto.Investment.Sats / 100_000_000.0;
+                    var raisedBtc = dto.Raised.Sats / 100_000_000.0;
+                    var targetBtc = dto.Target.Sats / 100_000_000.0;
+                    var inRecoveryBtc = dto.InRecovery.Sats / 100_000_000.0;
+
+                    totalInvested += investedBtc;
+                    if (dto.InRecovery.Sats > 0)
+                    {
+                        totalInRecovery += inRecoveryBtc;
+                        recoveryCount++;
+                    }
+
+                    var (statusText, statusClass, step) = MapInvestmentStatus(dto.InvestmentStatus, dto.FounderStatus);
+
+                    var vm = new InvestmentViewModel
+                    {
+                        ProjectName = dto.Name ?? "Unknown Project",
+                        ShortDescription = dto.Description ?? "",
+                        TotalInvested = investedBtc.ToString("F8", CultureInfo.InvariantCulture),
+                        FundingAmount = $"{investedBtc:F4} BTC",
+                        FundingDate = DateTime.Now.ToString("M/dd/yyyy"),
+                        TypeLabel = "Investment",
+                        StatusText = statusText,
+                        StatusClass = statusClass,
+                        StatusPill1 = "Funding",
+                        StatusPill2 = statusText,
+                        TargetAmount = targetBtc.ToString("F4", CultureInfo.InvariantCulture),
+                        TotalRaised = raisedBtc.ToString("F4", CultureInfo.InvariantCulture),
+                        Progress = targetBtc > 0 ? Math.Min(100, raisedBtc / targetBtc * 100) : 0,
+                        Status = statusClass == "active" ? "Active" : "Pending",
+                        ProjectType = "invest",
+                        Step = step,
+                        ApprovalStatus = dto.FounderStatus == Angor.Sdk.Funding.Investor.FounderStatus.Approved ? "Approved" : "Pending",
+                        AvatarUrl = dto.LogoUri?.ToString(),
+                        ProjectIdentifier = dto.Id ?? "",
+                        InvestmentWalletId = meta.Id.Value,
+                        InvestmentTransactionId = dto.InvestmentId ?? ""
+                    };
+
+                    Investments.Add(vm);
+                }
+            }
+
+            FundedProjects = Investments.Count;
+            TotalInvested = totalInvested.ToString("F4", CultureInfo.InvariantCulture);
+            RecoveredToPenalty = totalInRecovery.ToString("F4", CultureInfo.InvariantCulture);
+            ProjectsInRecovery = recoveryCount;
+            HasInvestments = Investments.Count > 0;
+
+            this.RaisePropertyChanged(nameof(FundedProjects));
+            this.RaisePropertyChanged(nameof(TotalInvested));
+            this.RaisePropertyChanged(nameof(RecoveredToPenalty));
+            this.RaisePropertyChanged(nameof(ProjectsInRecovery));
+            this.RaisePropertyChanged(nameof(TotalAvailable));
+        }
+        catch
+        {
+            ClearToEmpty();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Map SDK InvestmentStatus/FounderStatus to UI status text, class, and step.
+    /// </summary>
+    private static (string statusText, string statusClass, int step) MapInvestmentStatus(
+        Angor.Sdk.Funding.Founder.InvestmentStatus investmentStatus,
+        Angor.Sdk.Funding.Investor.FounderStatus founderStatus)
+    {
+        return investmentStatus switch
+        {
+            Angor.Sdk.Funding.Founder.InvestmentStatus.PendingFounderSignatures =>
+                ("Awaiting Approval", "waiting", 1),
+            Angor.Sdk.Funding.Founder.InvestmentStatus.FounderSignaturesReceived =>
+                ("Transaction signed", "signed", 2),
+            Angor.Sdk.Funding.Founder.InvestmentStatus.Invested =>
+                ("Investment Active", "active", 3),
+            Angor.Sdk.Funding.Founder.InvestmentStatus.Cancelled =>
+                ("Cancelled", "recovered", 3),
+            _ => ("Unknown", "waiting", 1)
+        };
+    }
+
+    /// <summary>
+    /// Load recovery status for a specific investment from SDK.
+    /// </summary>
+    public async Task LoadRecoveryStatusAsync(InvestmentViewModel investment)
+    {
+        if (string.IsNullOrEmpty(investment.ProjectIdentifier) ||
+            string.IsNullOrEmpty(investment.InvestmentWalletId)) return;
+
+        try
+        {
+            var request = new GetRecoveryStatus.GetRecoveryStatusRequest(
+                new WalletId(investment.InvestmentWalletId),
+                new ProjectId(investment.ProjectIdentifier));
+
+            var result = await _investmentAppService.GetRecoveryStatus(request);
+            if (result.IsFailure) return;
+
+            var recovery = result.Value.RecoveryData;
+
+            // Update stages from recovery data
+            investment.Stages.Clear();
+            foreach (var item in recovery.Items)
+            {
+                investment.Stages.Add(new InvestmentStageViewModel
+                {
+                    StageNumber = item.StageIndex + 1,
+                    Amount = (item.Amount / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture),
+                    Status = item.IsSpent ? "Released" : (recovery.HasItemsInPenalty ? "Pending" : "Not Spent")
+                });
+            }
+
+            // Update penalty state
+            if (recovery.HasItemsInPenalty)
+                investment.PenaltyState = "pending";
+            else if (recovery.HasUnspentItems)
+                investment.PenaltyState = "canRelease";
+            else
+                investment.PenaltyState = "none";
+        }
+        catch
+        {
+            // Recovery status load failed
+        }
+    }
+
+    /// <summary>
+    /// Build and submit a recovery transaction for an investment.
+    /// </summary>
+    public async Task<bool> RecoverFundsAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
+    {
+        if (string.IsNullOrEmpty(investment.ProjectIdentifier) ||
+            string.IsNullOrEmpty(investment.InvestmentWalletId)) return false;
+
+        try
+        {
+            var walletId = new WalletId(investment.InvestmentWalletId);
+            var projectId = new ProjectId(investment.ProjectIdentifier);
+
+            var buildResult = await _investmentAppService.BuildRecoveryTransaction(
+                new BuildRecoveryTransaction.BuildRecoveryTransactionRequest(
+                    walletId, projectId, new DomainFeerate(feeRateSatsPerVByte)));
+
+            if (buildResult.IsFailure) return false;
+
+            var publishResult = await _investmentAppService.SubmitTransactionFromDraft(
+                new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
+                    walletId.Value, projectId, buildResult.Value.TransactionDraft));
+
+            if (publishResult.IsSuccess)
+            {
+                investment.PenaltyState = "pending";
+                return true;
+            }
+        }
+        catch { }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Build and submit a release transaction (claim penalties after penalty period).
+    /// </summary>
+    public async Task<bool> ReleaseFundsAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
+    {
+        if (string.IsNullOrEmpty(investment.ProjectIdentifier) ||
+            string.IsNullOrEmpty(investment.InvestmentWalletId)) return false;
+
+        try
+        {
+            var walletId = new WalletId(investment.InvestmentWalletId);
+            var projectId = new ProjectId(investment.ProjectIdentifier);
+
+            var buildResult = await _investmentAppService.BuildReleaseTransaction(
+                new BuildReleaseTransaction.BuildReleaseTransactionRequest(
+                    walletId, projectId, new DomainFeerate(feeRateSatsPerVByte)));
+
+            if (buildResult.IsFailure) return false;
+
+            var publishResult = await _investmentAppService.SubmitTransactionFromDraft(
+                new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
+                    walletId.Value, projectId, buildResult.Value.TransactionDraft));
+
+            if (publishResult.IsSuccess)
+            {
+                investment.PenaltyState = "released";
+                return true;
+            }
+        }
+        catch { }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Build and submit an end-of-project claim transaction.
+    /// </summary>
+    public async Task<bool> ClaimEndOfProjectAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
+    {
+        if (string.IsNullOrEmpty(investment.ProjectIdentifier) ||
+            string.IsNullOrEmpty(investment.InvestmentWalletId)) return false;
+
+        try
+        {
+            var walletId = new WalletId(investment.InvestmentWalletId);
+            var projectId = new ProjectId(investment.ProjectIdentifier);
+
+            var buildResult = await _investmentAppService.BuildEndOfProjectClaim(
+                new BuildEndOfProjectClaim.BuildEndOfProjectClaimRequest(
+                    walletId, projectId, new DomainFeerate(feeRateSatsPerVByte)));
+
+            if (buildResult.IsFailure) return false;
+
+            var publishResult = await _investmentAppService.SubmitTransactionFromDraft(
+                new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
+                    walletId.Value, projectId, buildResult.Value.TransactionDraft));
+
+            return publishResult.IsSuccess;
+        }
+        catch { }
+
+        return false;
     }
 
     /// <summary>
     /// When a signature is approved, advance the matching investment from Step 1 → Step 2.
-    /// Vue: currentStep computed in InvestmentDetail.vue (line 1026-1043).
     /// </summary>
     private void OnSignatureStatusChanged(SharedSignature sig)
     {
@@ -463,253 +730,45 @@ public partial class PortfolioViewModel : ReactiveObject
         }
     }
 
-    // ── Left panel stats (reflect all sample investments) ──
-    public int FundedProjects { get; } = 4;
-    public string TotalInvested { get; } = "2.3500";
-    public string RecoveredToPenalty { get; } = "0.2500";
-    public int ProjectsInRecovery { get; } = 1;
-
-    /// <summary>Total available to claim across all projects</summary>
-    public string TotalAvailable { get; } = "0.08544254";
-
-    // ── Right panel investments ──
-    public ObservableCollection<InvestmentViewModel> Investments { get; } = new();
-
-    /// <summary>
-    /// Populate with sample investments for visual testing of the populated state.
-    /// Called when ShowPopulatedApp toggle is enabled.
-    /// </summary>
-    public void LoadSampleInvestments()
-    {
-        Investments.Clear();
-
-        // ── Card 1: Investment type, signed status, payment plan ──
-        Investments.Add(new InvestmentViewModel
-        {
-            ProjectName = "Hope With \u20bfitcoin",
-            ShortDescription = "A humanitarian initiative in Benin feeding vulnerable people, supporting orphanages.",
-            FundingAmount = "0.5 BTC",
-            FundingDate = "2/25/2026",
-            TypeLabel = "Investment",
-            StatusText = "Transaction signed",
-            StatusClass = "signed",
-            StatusPill1 = "Funding",
-            StatusPill2 = "Transaction signed",
-            HasPaymentPlan = true,
-            PaymentSegmentsCompleted = 0,
-            PaymentSegmentsTotal = 3,
-            BannerUrl = "https://angor.tx1138.com/projects/hope-with-bitcoin-banner.webp",
-            AvatarUrl = "https://angor.tx1138.com/projects/hope-with-bitcoin-logo.webp",
-            TotalInvested = "0.50000000",
-            AvailableToClaim = "0.00000000",
-            Spent = "0.00000000",
-            Progress = 0,
-            Status = "Active",
-            ProjectType = "invest",
-            Step = 3,
-            TargetAmount = "21.0000",
-            TotalRaised = "4.5000",
-            TotalInvestors = 12,
-            StartDate = "Feb 25, 2026",
-            EndDate = "Nov 25, 2026",
-            TransactionDate = "Feb 25, 2026",
-            ApprovalStatus = "Approved",
-            Stages = new ObservableCollection<InvestmentStageViewModel>
-            {
-                new()
-                {
-                    StageNumber = 1,
-                    Percentage = "33%",
-                    ReleaseDate = "25 May 2026",
-                    Amount = "0.16666667",
-                    Status = "Pending"
-                },
-                new()
-                {
-                    StageNumber = 2,
-                    Percentage = "33%",
-                    ReleaseDate = "25 Aug 2026",
-                    Amount = "0.16666667",
-                    Status = "Pending"
-                },
-                new()
-                {
-                    StageNumber = 3,
-                    Percentage = "34%",
-                    ReleaseDate = "25 Nov 2026",
-                    Amount = "0.16666666",
-                    Status = "Pending"
-                },
-            }
-        });
-
-        // ── Card 2: Funding type, active status, payment plan with 2/3 paid ──
-        Investments.Add(new InvestmentViewModel
-        {
-            ProjectName = "Bitcoin Education Africa",
-            ShortDescription = "Bringing Bitcoin literacy to schools across sub-Saharan Africa through workshops.",
-            FundingAmount = "1.0 BTC",
-            FundingDate = "1/10/2026",
-            TypeLabel = "Funding",
-            StatusText = "Investment Active",
-            StatusClass = "active",
-            StatusPill1 = "Funding",
-            StatusPill2 = "Investment Active",
-            HasPaymentPlan = true,
-            PaymentSegmentsCompleted = 2,
-            PaymentSegmentsTotal = 3,
-            BannerUrl = "https://angor.tx1138.com/projects/generasi-merdeka-banner.jpg",
-            AvatarUrl = "https://angor.tx1138.com/projects/generasi-merdeka-logo.jpg",
-            TotalInvested = "1.00000000",
-            AvailableToClaim = "0.05000000",
-            Spent = "0.66666667",
-            Progress = 67,
-            Status = "Active",
-            ProjectType = "fund",
-            Step = 3,
-            TargetAmount = "10.0000",
-            TotalRaised = "7.2000",
-            TotalInvestors = 24,
-            StartDate = "Jan 10, 2026",
-            EndDate = "Oct 10, 2026",
-            TransactionDate = "Jan 10, 2026",
-            ApprovalStatus = "Approved",
-            Stages = new ObservableCollection<InvestmentStageViewModel>
-            {
-                new() { StageNumber = 1, StagePrefix = "Payment", Percentage = "33%", ReleaseDate = "10 Apr 2026", Amount = "0.33333333", Status = "Released" },
-                new() { StageNumber = 2, StagePrefix = "Payment", Percentage = "33%", ReleaseDate = "10 Jul 2026", Amount = "0.33333333", Status = "Released" },
-                new() { StageNumber = 3, StagePrefix = "Payment", Percentage = "34%", ReleaseDate = "10 Oct 2026", Amount = "0.33333334", Status = "Pending" },
-            }
-        });
-
-        // ── Card 3: Subscription type, waiting status, no payment plan (progress bar) ──
-        Investments.Add(new InvestmentViewModel
-        {
-            ProjectName = "Nostr Relay Infrastructure",
-            ShortDescription = "Decentralized relay infrastructure for censorship-resistant communication.",
-            FundingAmount = "0.6 BTC",
-            FundingDate = "2/01/2026",
-            TypeLabel = "Subscription",
-            StatusText = "Awaiting Approval",
-            StatusClass = "waiting",
-            StatusPill1 = "Subscription",
-            StatusPill2 = "Awaiting Approval",
-            HasPaymentPlan = false,
-            PaymentSegmentsCompleted = 0,
-            PaymentSegmentsTotal = 3,
-            BannerUrl = "https://angor.tx1138.com/projects/nostria-banner.jpg",
-            AvatarUrl = "https://angor.tx1138.com/projects/nostria-logo.png",
-            TotalInvested = "0.60000000",
-            AvailableToClaim = "0.00000000",
-            Spent = "0.00000000",
-            Progress = 35,
-            Status = "Pending",
-            ProjectType = "subscription",
-            Step = 1,
-            TargetAmount = "5.0000",
-            TotalRaised = "1.7500",
-            TotalInvestors = 8,
-            StartDate = "Feb 01, 2026",
-            EndDate = "Aug 01, 2026",
-            TransactionDate = "Feb 01, 2026",
-            ApprovalStatus = "Pending",
-            Stages = new ObservableCollection<InvestmentStageViewModel>
-            {
-                new() { StageNumber = 1, StagePrefix = "Payment", Percentage = "50%", ReleaseDate = "01 May 2026", Amount = "0.30000000", Status = "Pending" },
-                new() { StageNumber = 2, StagePrefix = "Payment", Percentage = "50%", ReleaseDate = "01 Aug 2026", Amount = "0.30000000", Status = "Pending" },
-            }
-        });
-
-        // ── Card 4: Investment type, recovered status, no payment plan ──
-        Investments.Add(new InvestmentViewModel
-        {
-            ProjectName = "Lightning Mesh Network",
-            ShortDescription = "Building resilient Lightning Network routing across emerging markets.",
-            FundingAmount = "0.25 BTC",
-            FundingDate = "11/15/2025",
-            TypeLabel = "Investment",
-            StatusText = "Funds recovered",
-            StatusClass = "recovered",
-            StatusPill1 = "Funding",
-            StatusPill2 = "Funds recovered",
-            HasPaymentPlan = false,
-            PaymentSegmentsCompleted = 0,
-            PaymentSegmentsTotal = 3,
-            BannerUrl = "https://angor.tx1138.com/projects/network-effect-banner.png",
-            AvatarUrl = "https://angor.tx1138.com/projects/network-effect-logo.jpg",
-            TotalInvested = "0.25000000",
-            AvailableToClaim = "0.03544254",
-            Spent = "0.21455746",
-            Progress = 86,
-            Status = "Recovered",
-            ProjectType = "invest",
-            Step = 3,
-            TargetAmount = "3.0000",
-            TotalRaised = "2.8000",
-            TotalInvestors = 15,
-            StartDate = "Nov 15, 2025",
-            EndDate = "May 15, 2026",
-            TransactionDate = "Nov 15, 2025",
-            ApprovalStatus = "Approved",
-            Stages = new ObservableCollection<InvestmentStageViewModel>
-            {
-                new() { StageNumber = 1, Percentage = "33%", ReleaseDate = "15 Jan 2026", Amount = "0.08333333", Status = "Released" },
-                new() { StageNumber = 2, Percentage = "33%", ReleaseDate = "15 Mar 2026", Amount = "0.08333333", Status = "Released" },
-                new() { StageNumber = 3, Percentage = "34%", ReleaseDate = "15 May 2026", Amount = "0.08333334", Status = "Not Spent" },
-            }
-        });
-
-        HasInvestments = true;
-    }
-
-    /// <summary>
-    /// Clear all investments to show the empty state.
-    /// Called when ShowPopulatedApp toggle is disabled.
-    /// </summary>
+    /// <summary>Clear all investments to show the empty state.</summary>
     public void ClearToEmpty()
     {
         SelectedInvestment = null;
         Investments.Clear();
         HasInvestments = false;
+        FundedProjects = 0;
+        TotalInvested = "0.0000";
+        RecoveredToPenalty = "0.0000";
+        ProjectsInRecovery = 0;
+        TotalAvailable = "0.0000";
+        this.RaisePropertyChanged(nameof(FundedProjects));
+        this.RaisePropertyChanged(nameof(TotalInvested));
+        this.RaisePropertyChanged(nameof(RecoveredToPenalty));
+        this.RaisePropertyChanged(nameof(ProjectsInRecovery));
+        this.RaisePropertyChanged(nameof(TotalAvailable));
     }
 
     /// <summary>Navigate to investment detail view</summary>
     public void OpenInvestmentDetail(InvestmentViewModel investment)
     {
         SelectedInvestment = investment;
+        // Load recovery status when detail is opened
+        _ = LoadRecoveryStatusAsync(investment);
     }
 
     /// <summary>Navigate back to portfolio list from investment detail</summary>
-    public void CloseInvestmentDetail()
-    {
-        SelectedInvestment = null;
-    }
-
-    /// <summary>
-    /// Remove all dynamically-added investments (those created via the invest flow,
-    /// identified by SignatureId != 0) and reload sample data. Called by Settings → Reset Data.
-    /// </summary>
-    public void ResetToSampleData()
-    {
-        SelectedInvestment = null;
-        Investments.Clear();
-        LoadSampleInvestments();
-    }
+    public void CloseInvestmentDetail() => SelectedInvestment = null;
 
     /// <summary>
     /// Create an InvestmentViewModel from a ProjectItemViewModel and an investment amount,
     /// then add it to the Investments collection. Called after a successful invest flow.
-    /// This enables the funded project to appear in the "Funded" section.
     /// </summary>
     public void AddInvestmentFromProject(ProjectItemViewModel project, string investmentAmount)
     {
-        // Map ProjectType casing: ProjectItemViewModel uses "Invest"/"Fund"/"Subscription",
-        // InvestmentViewModel uses lowercase "invest"/"fund"/"subscription"
         var projectType = project.ProjectType.ToLowerInvariant();
         var typeEnum = ProjectTypeExtensions.FromLowerString(projectType);
         var typeLabel = ProjectTypeTerminology.AmountNoun(typeEnum);
 
-        // Build stages from the project's stage data
         var stages = new ObservableCollection<InvestmentStageViewModel>();
         var stagePrefix = ProjectTypeTerminology.StageLabel(typeEnum);
         if (project.Stages.Count > 0)
@@ -727,26 +786,9 @@ public partial class PortfolioViewModel : ReactiveObject
                 });
             }
         }
-        else
-        {
-            // Default 3-stage schedule
-            for (var i = 1; i <= 3; i++)
-            {
-                stages.Add(new InvestmentStageViewModel
-                {
-                    StageNumber = i,
-                    StagePrefix = stagePrefix,
-                    Percentage = i < 3 ? "33%" : "34%",
-                    ReleaseDate = DateTime.Now.AddMonths(i * 3).ToString("dd MMM yyyy"),
-                    Amount = "0.00000000",
-                    Status = "Pending"
-                });
-            }
-        }
 
-        // Vue threshold: investments < 0.01 BTC are auto-approved (App.vue line 8756)
         var amountValue = double.TryParse(investmentAmount, System.Globalization.NumberStyles.Float,
-            System.Globalization.CultureInfo.InvariantCulture, out var parsedAmt) ? parsedAmt : 0;
+            CultureInfo.InvariantCulture, out var parsedAmt) ? parsedAmt : 0;
         var isAutoApproved = amountValue < Constants.AutoApprovalThreshold;
 
         var investment = new InvestmentViewModel
@@ -779,20 +821,16 @@ public partial class PortfolioViewModel : ReactiveObject
             EndDate = project.EndDate,
             TransactionDate = DateTime.Now.ToString("MMM dd, yyyy"),
             ApprovalStatus = isAutoApproved ? "Approved" : "Pending",
+            ProjectIdentifier = project.ProjectId,
             Stages = stages
         };
 
-        // Create a signature in the shared store
-        // Vue: handleInvestment() creates both investment + signature (App.vue line 8806)
         var sig = SharedViewModels.Signatures.AddSignature(
-            project.ProjectName, // Using project name as ID (no real IDs in stub layer)
+            project.ProjectName,
             project.ProjectName,
             investmentAmount);
 
-        // Store the signature ID on the investment for cross-reference
         investment.SignatureId = sig.Id;
-
-        // Insert at the top of the list so it's immediately visible
         Investments.Insert(0, investment);
         HasInvestments = true;
     }
