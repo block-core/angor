@@ -16,7 +16,7 @@
 
     <!-- Utility classes -->
     <Style Selector=":is(Control).Shadow">
-        <Setter Property="Border.BoxShadow" Value="{DynamicResource DefaultShadow}" />
+        <Setter Property="Border.BoxShadow" Value="{DynamicResource ItemShadow}" />
         <Setter Property="ClipToBounds" Value="False" />
     </Style>
     
@@ -29,12 +29,12 @@
                 <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
             </Transitions>
         </Setter>
-        <Setter Property="BoxShadow" Value="{DynamicResource DefaultShadow}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
     </Style>
     
     <Style Selector="Border:pointerover.Elevate">
         <Setter Property="RenderTransform" Value="translate(0px, -4px)" />
-        <Setter Property="BoxShadow" Value="{DynamicResource DefaultShadowHover}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadowHover}" />
     </Style>
     
     <Style Selector="controls|HeaderedContainer.Elevate">
@@ -51,7 +51,7 @@
     
     <Style Selector="controls|HeaderedContainer:pointerover.Elevate">
         <Setter Property="RenderTransform" Value="translate(0px, -2px)" />
-        <Setter Property="BoxShadow" Value="{DynamicResource DefaultShadow}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
     </Style>
 
     <!-- Slight scale-up on hover (Find Projects, Launch a Project) - transform on template root for correct center -->

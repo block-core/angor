@@ -68,7 +68,7 @@
         <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackground}" />
         <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBorder}" />
         <Setter Property="Padding" Value="24,16" />
-        <Setter Property="BoxShadow" Value="{DynamicResource DefaultShadow}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
     </Style>
 
     <Style Selector="controls|IconButton.Emphasized">

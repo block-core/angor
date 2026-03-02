@@ -77,7 +77,7 @@
                                 CornerRadius="8"
                                 BorderThickness="2"
                                 Background="Transparent"
-                                BorderBrush="{DynamicResource CreateWalletOutlinedBorder}"
+                                BorderBrush="{DynamicResource StrokeSubtle}"
                                 Foreground="{DynamicResource CreateWalletOutlinedFg}"
                                 FontWeight="SemiBold"
                                 Cursor="Hand">
@@ -208,7 +208,7 @@
                                 CornerRadius="8"
                                 BorderThickness="2"
                                 Background="Transparent"
-                                BorderBrush="{DynamicResource CreateWalletOutlinedBorder}"
+                                BorderBrush="{DynamicResource StrokeSubtle}"
                                 Foreground="{DynamicResource CreateWalletOutlinedFg}"
                                 FontWeight="SemiBold"
                                 Cursor="Hand">
@@ -296,7 +296,7 @@
                                 CornerRadius="8"
                                 BorderThickness="2"
                                 Background="Transparent"
-                                BorderBrush="{DynamicResource CreateWalletDisabledBorder}"
+                                BorderBrush="{DynamicResource StrokeSubtle}"
                                 Foreground="{DynamicResource CreateWalletDisabledFg}"
                                 FontWeight="SemiBold"
                                 IsEnabled="False"
@@ -311,7 +311,7 @@
                                 CornerRadius="8"
                                 BorderThickness="2"
                                 Background="Transparent"
-                                BorderBrush="{DynamicResource CreateWalletOutlinedBorder}"
+                                BorderBrush="{DynamicResource StrokeSubtle}"
                                 Foreground="{DynamicResource CreateWalletOutlinedFg}"
                                 FontWeight="SemiBold"
                                 Cursor="Hand">

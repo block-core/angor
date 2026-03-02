@@ -112,7 +112,7 @@
                     <!-- Copyable address field -->
                     <!-- Vue: p-3 rounded-lg, monospace text + copy button -->
                     <Border Background="{DynamicResource ModalInputBg}"
-                            BorderBrush="{DynamicResource ModalInputBorder}"
+                            BorderBrush="{DynamicResource StrokeSubtle}"
                             BorderThickness="1"
                             CornerRadius="8"
                             Padding="12,10">

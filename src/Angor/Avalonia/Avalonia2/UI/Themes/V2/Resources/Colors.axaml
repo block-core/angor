@@ -81,6 +81,9 @@
             <SolidColorBrush x:Key="WarningBoxBorder" Color="#FDBA74" />
             <SolidColorBrush x:Key="WarningBoxText" Color="#9A3412" />
 
+            <!-- Shared subtle border: Vue gray-300 #D1D5DB — used across modal inputs, cancel buttons, wallet switcher, key fields -->
+            <SolidColorBrush x:Key="StrokeSubtle" Color="#D1D5DB" />
+
             <!-- Shadows — matched to Vue CSS exactly -->
             <!-- SectionShadow: tight glow for selected nav item — must fit in 2-4px margin -->
             <BoxShadows x:Key="SectionShadow">0 1 6 0 #30000000</BoxShadows>
@@ -89,11 +92,8 @@
             <!-- Vue card hover: box-shadow: 0 8px 24px rgba(0,0,0,0.15) = #26000000 -->
             <BoxShadows x:Key="ItemShadowHover">0 8 24 0 #26000000</BoxShadows>
             <BoxShadows x:Key="ShadowNone">0 0 0 0 Transparent</BoxShadows>
-            <BoxShadows x:Key="DefaultShadow">0 2 8 0 #1A000000</BoxShadows>
-            <BoxShadows x:Key="DefaultShadowHover">0 8 24 0 #26000000</BoxShadows>
             <!-- Vue content-card: box-shadow: 0 6px 18px rgba(0,0,0,0.15) = #26000000 -->
             <BoxShadows x:Key="ItemShadowBig">0 6 18 0 #26000000</BoxShadows>
-            <BoxShadows x:Key="ContentPanelShadow">0 6 18 0 #26000000</BoxShadows>
 
             <!-- Button Brushes (matching Vue: linear-gradient(135deg, #0a0a0a, #1a1a1a), border #0a0a0a) -->
             <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FAFAFA" />
@@ -200,11 +200,8 @@
             <!-- Vue: next-stage-card inner: bg rgba(255,255,255,0.7), border 2px solid rgba(75,124,90,0.3) -->
             <SolidColorBrush x:Key="NextStageInnerBackground" Color="#B3FFFFFF" />
             <SolidColorBrush x:Key="NextStageInnerBorder" Color="#4D4B7C5A" />
-            <!-- Vue: next-stage-value/label color: #4B7C5A -->
-            <SolidColorBrush x:Key="NextStageValue" Color="#4B7C5A" />
-            <SolidColorBrush x:Key="NextStageLabel" Color="#4B7C5A" />
-            <!-- Vue: next-stage title: #4B7C5A -->
-            <SolidColorBrush x:Key="NextStageTitle" Color="#4B7C5A" />
+            <!-- Vue: next-stage-value/label/title color: #4B7C5A (shared brand green text token) -->
+            <SolidColorBrush x:Key="BrandGreenText" Color="#4B7C5A" />
 
             <!-- ── ManageProject: Transaction stat cards (light) ── -->
             <!-- Vue: bg #f9fafb, border 1px solid #e5e7eb -->
@@ -224,8 +221,7 @@
             <SolidColorBrush x:Key="StageCardNumber" Color="#1A1A1A" />
             <SolidColorBrush x:Key="StageCardLabel" Color="#666666" />
             <SolidColorBrush x:Key="StageCardValue" Color="#333333" />
-            <!-- Vue: stage-pill bg rgba(75,124,90,0.1), border rgba(75,124,90,0.3), color #4B7C5A -->
-            <SolidColorBrush x:Key="StagePillBg" Color="#1A4B7C5A" />
+            <!-- Vue: stage-pill border rgba(75,124,90,0.3), color #4B7C5A -->
             <SolidColorBrush x:Key="StagePillBorder" Color="#4D4B7C5A" />
             <SolidColorBrush x:Key="StagePillText" Color="#4B7C5A" />
 
@@ -243,8 +239,7 @@
             <!-- Vue: project-id-label #6b7280, project-id-value #1a1a1a -->
             <SolidColorBrush x:Key="ProjectIdLabel" Color="#6B7280" />
             <SolidColorBrush x:Key="ProjectIdValue" Color="#1A1A1A" />
-            <!-- Vue: edit/view project button: border #d1d5db, color #4B7C5A -->
-            <SolidColorBrush x:Key="ProjectActionBtnBorder" Color="#D1D5DB" />
+            <!-- Vue: edit/view project button: color #4B7C5A (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="ProjectActionBtnText" Color="#4B7C5A" />
             <!-- Vue: stats-card-title #92400e -->
             <SolidColorBrush x:Key="StatsCardTitle" Color="#92400E" />
@@ -339,9 +334,8 @@
             <SolidColorBrush x:Key="ModalBackdrop" Color="#80000000" />
 
             <!-- ── Wallet Switcher Header Button (light) ── -->
-            <!-- Vue: .wallet-selector-header — bg white, border gray-300, color #808080, hover bg gray-50 -->
+            <!-- Vue: .wallet-selector-header — bg white, color #808080, hover bg gray-50 (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="WalletSwitcherBg" Color="White" />
-            <SolidColorBrush x:Key="WalletSwitcherBorder" Color="#D1D5DB" />
             <SolidColorBrush x:Key="WalletSwitcherFg" Color="#808080" />
             <SolidColorBrush x:Key="WalletSwitcherHoverBg" Color="#F9FAFB" />
 
@@ -356,8 +350,7 @@
             <!-- Vue: Generate success — green circle bg-green-100 -->
             <SolidColorBrush x:Key="CreateWalletGreenCircleBg" Color="#DCFCE7" />
             <SolidColorBrush x:Key="CreateWalletGreenIcon" Color="#16A34A" />
-            <!-- Vue: Import/Generate outlined button — border-gray-300, text-gray-600 -->
-            <SolidColorBrush x:Key="CreateWalletOutlinedBorder" Color="#D1D5DB" />
+            <!-- Vue: Import/Generate outlined button — text-gray-600 (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="CreateWalletOutlinedFg" Color="#4B5563" />
             <SolidColorBrush x:Key="CreateWalletOutlinedHoverBg" Color="#F3F4F6" />
             <!-- Vue: Seed phrase display area — bg-gray-50, border-gray-200 -->
@@ -367,8 +360,7 @@
             <!-- Vue: Textarea — bg-gray-50, border-gray-200 -->
             <SolidColorBrush x:Key="CreateWalletInputBg" Color="#F9FAFB" />
             <SolidColorBrush x:Key="CreateWalletInputBorder" Color="#E5E7EB" />
-            <!-- Vue: Continue button disabled — border-gray-300, text-gray-400 -->
-            <SolidColorBrush x:Key="CreateWalletDisabledBorder" Color="#D1D5DB" />
+            <!-- Vue: Continue button disabled — text-gray-400 (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="CreateWalletDisabledFg" Color="#9CA3AF" />
 
             <!-- ── Wallet Detail / UTXO Management Modal (light) ── -->
@@ -447,17 +439,13 @@
             <!-- Vue: .settings-toggle-button border:#e5e7eb, bg:white -->
             <SolidColorBrush x:Key="ToggleCheckBg" Color="White" />
             <SolidColorBrush x:Key="ToggleCheckBorder" Color="#E5E7EB" />
-            <!-- Vue: success modal icon circle: light rgba(75,124,90,0.1), bg white -->
-            <SolidColorBrush x:Key="SuccessIconCircleBg" Color="#1A4B7C5A" />
             <SolidColorBrush x:Key="SuccessModalBg" Color="White" />
-            <!-- Vue: modal cancel btn: light border-gray-300, text-gray-700 -->
-            <SolidColorBrush x:Key="ModalCancelBtnBorder" Color="#D1D5DB" />
+            <!-- Vue: modal cancel btn: light text-gray-700 (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="ModalCancelBtnText" Color="#374151" />
             <!-- Vue: modal description: light text-gray-600 -->
             <SolidColorBrush x:Key="ModalDescriptionText" Color="#4B5563" />
-            <!-- Vue: modal password input: light bg:white, border:#d1d5db -->
+            <!-- Vue: modal password input: light bg:white (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="ModalInputBg" Color="White" />
-            <SolidColorBrush x:Key="ModalInputBorder" Color="#D1D5DB" />
             <!-- Vue: UTXO txid text: light text-gray-500/#6B7280 -->
             <SolidColorBrush x:Key="UtxoTxidText" Color="#6B7280" />
             <!-- Vue: release UTXO item: green border, bg green-50, opacity 0.75 -->
@@ -468,9 +456,6 @@
             <!-- Vue: modal header border: light border-gray-200 -->
             <SolidColorBrush x:Key="ModalHeaderBorder" Color="#E5E7EB" />
 
-            <!-- Vue: action button hover bg: light rgba(75,124,90,0.1) -->
-            <SolidColorBrush x:Key="BrandGreenTint" Color="#1A4B7C5A" />
-
             <!-- ── Share Modal (light) ── -->
             <!-- Vue: bg-white, project info bg-gray-50, input bg-white border-gray-300 -->
             <SolidColorBrush x:Key="ShareModalBg" Color="White" />
@@ -478,29 +463,25 @@
             <SolidColorBrush x:Key="ShareInfoCardBg" Color="#F9FAFB" />
             <SolidColorBrush x:Key="ShareInfoCardBorder" Color="#E5E7EB" />
             <SolidColorBrush x:Key="ShareInputBg" Color="White" />
-            <SolidColorBrush x:Key="ShareInputBorder" Color="#D1D5DB" />
             <!-- Vue: social-share-btn light: bg #f9fafb, border #e5e7eb -->
             <SolidColorBrush x:Key="ShareSocialBtnBg" Color="#F9FAFB" />
             <SolidColorBrush x:Key="ShareSocialBtnBorder" Color="#E5E7EB" />
             <!-- Vue: social-share-btn:hover light: bg #f3f4f6, border #d1d5db -->
             <SolidColorBrush x:Key="ShareSocialBtnHoverBg" Color="#F3F4F6" />
             <SolidColorBrush x:Key="ShareSocialBtnHoverBorder" Color="#D1D5DB" />
-            <!-- Vue: email btn light: border-gray-300, hover:bg-gray-50 -->
-            <SolidColorBrush x:Key="ShareEmailBtnBorder" Color="#D1D5DB" />
+            <!-- Vue: email btn light: hover:bg-gray-50 (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="ShareEmailBtnHoverBg" Color="#F9FAFB" />
             <!-- Vue: "Copied!" button feedback green — same in both themes -->
             <SolidColorBrush x:Key="CopiedBtnBg" Color="#16a34a" />
 
             <!-- ── Private Keys Modals (light) ── -->
-            <!-- Vue: key field input bg-gray-50, border-gray-300, text-gray-900 -->
+            <!-- Vue: key field input bg-gray-50, text-gray-900 (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="KeyFieldInputBg" Color="#F9FAFB" />
-            <SolidColorBrush x:Key="KeyFieldInputBorder" Color="#D1D5DB" />
             <SolidColorBrush x:Key="KeyFieldText" Color="#111827" />
             <!-- Vue: label text-gray-700 -->
             <SolidColorBrush x:Key="KeyFieldLabel" Color="#374151" />
-            <!-- Vue: copy/eye btn bg-gray-50, border-gray-300, text-gray-600, hover:bg-gray-100 -->
+            <!-- Vue: copy/eye btn bg-gray-50, text-gray-600, hover:bg-gray-100 (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="KeyCopyBtnBg" Color="#F9FAFB" />
-            <SolidColorBrush x:Key="KeyCopyBtnBorder" Color="#D1D5DB" />
             <SolidColorBrush x:Key="KeyCopyBtnText" Color="#4B5563" />
             <SolidColorBrush x:Key="KeyCopyBtnHoverBg" Color="#F3F4F6" />
             <!-- Vue: red button bg-red-600 hover:bg-red-700 -->
@@ -525,8 +506,7 @@
             <!-- Vue: fee info badge bg-blue-50 text-blue-700 -->
             <SolidColorBrush x:Key="RecoveryFeeBadgeBg" Color="#EFF6FF" />
             <SolidColorBrush x:Key="RecoveryFeeBadgeText" Color="#1D4ED8" />
-            <!-- Vue: fee priority unselected border-gray-300 text-gray-700 -->
-            <SolidColorBrush x:Key="RecoveryFeeUnselectedBorder" Color="#D1D5DB" />
+            <!-- Vue: fee priority unselected text-gray-700 (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="RecoveryFeeUnselectedText" Color="#374151" />
             <!-- Vue: fee priority selected border/bg #4B7C5A text white (same both themes) -->
             <SolidColorBrush x:Key="RecoveryFeeSelectedBg" Color="#4B7C5A" />
@@ -622,11 +602,16 @@
             <SolidColorBrush x:Key="ErrorSoft" Color="#667f1d1d" />
             <SolidColorBrush x:Key="ErrorHard" Color="#80991b1b" />
             <SolidColorBrush x:Key="ErrorForeground" Color="#80991b1b" />
+            <SolidColorBrush x:Key="ErrorText" Color="#EF4444" />
+            <SolidColorBrush x:Key="SuccessText" Color="#4ADE80" />
 
             <!-- Warning/Fee Box Colors (dark mode: warm rust/brown) -->
             <SolidColorBrush x:Key="WarningBoxBackground" Color="#2A1A14" />
             <SolidColorBrush x:Key="WarningBoxBorder" Color="#7C3A2A" />
             <SolidColorBrush x:Key="WarningBoxText" Color="#D97050" />
+
+            <!-- Shared subtle border: Vue dark #404040 — used across modal inputs, cancel buttons, wallet switcher, key fields -->
+            <SolidColorBrush x:Key="StrokeSubtle" Color="#404040" />
 
             <!-- Decorative Brushes -->
             <LinearGradientBrush x:Key="BitcoinWash" StartPoint="0%,0%" EndPoint="100%,100%">
@@ -671,9 +656,6 @@
             <BoxShadows x:Key="ItemShadowHover">0 8 24 0 #66000000</BoxShadows>
             <!-- Vue dark content-card: bigger panel shadow -->
             <BoxShadows x:Key="ItemShadowBig">0 6 18 0 #66000000</BoxShadows>
-            <BoxShadows x:Key="ContentPanelShadow">0 6 18 0 #66000000</BoxShadows>
-            <BoxShadows x:Key="DefaultShadow">0 2 8 0 #4D000000</BoxShadows>
-            <BoxShadows x:Key="DefaultShadowHover">0 8 24 0 #66000000</BoxShadows>
             <BoxShadows x:Key="ShadowNone">0 0 0 0 Transparent</BoxShadows>
 
             <!-- Button Brushes (matching Storybook: linear-gradient(135deg, #2a2a2a, #1a1a1a)) -->
@@ -756,10 +738,8 @@
             <!-- Vue dark: next-stage-card inner: bg rgba(42,42,42,0.7), border 2px solid rgba(75,124,90,0.3) -->
             <SolidColorBrush x:Key="NextStageInnerBackground" Color="#B32A2A2A" />
             <SolidColorBrush x:Key="NextStageInnerBorder" Color="#4D4B7C5A" />
-            <!-- Vue dark: next-stage-value/label: #5FAF78 -->
-            <SolidColorBrush x:Key="NextStageValue" Color="#5FAF78" />
-            <SolidColorBrush x:Key="NextStageLabel" Color="#5FAF78" />
-            <SolidColorBrush x:Key="NextStageTitle" Color="#5FAF78" />
+            <!-- Vue dark: next-stage-value/label/title: #5FAF78 -->
+            <SolidColorBrush x:Key="BrandGreenText" Color="#5FAF78" />
 
             <!-- ── ManageProject: Transaction stat cards (dark) ── -->
             <!-- Vue dark: bg #0A0A0A, border 1px solid #404040 -->
@@ -778,8 +758,7 @@
             <SolidColorBrush x:Key="StageCardNumber" Color="#FAFAFA" />
             <SolidColorBrush x:Key="StageCardLabel" Color="#A0A0A0" />
             <SolidColorBrush x:Key="StageCardValue" Color="#FAFAFA" />
-            <!-- Vue dark: stage-pill bg rgba(75,124,90,0.2), border rgba(75,124,90,0.4), color #5FAF78 -->
-            <SolidColorBrush x:Key="StagePillBg" Color="#334B7C5A" />
+            <!-- Vue dark: stage-pill border rgba(75,124,90,0.4), color #5FAF78 -->
             <SolidColorBrush x:Key="StagePillBorder" Color="#664B7C5A" />
             <SolidColorBrush x:Key="StagePillText" Color="#5FAF78" />
 
@@ -797,8 +776,7 @@
             <!-- Vue dark: project-id-label #9ca3af, project-id-value #fafafa -->
             <SolidColorBrush x:Key="ProjectIdLabel" Color="#9CA3AF" />
             <SolidColorBrush x:Key="ProjectIdValue" Color="#FAFAFA" />
-            <!-- Vue dark: edit/view project button: border #404040, color #4B7C5A -->
-            <SolidColorBrush x:Key="ProjectActionBtnBorder" Color="#404040" />
+            <!-- Vue dark: edit/view project button: color #4B7C5A (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="ProjectActionBtnText" Color="#4B7C5A" />
             <!-- Vue dark: stats-card-title #fdba74 -->
             <SolidColorBrush x:Key="StatsCardTitle" Color="#FDBA74" />
@@ -889,9 +867,8 @@
             <SolidColorBrush x:Key="ModalBackdrop" Color="#80000000" />
 
             <!-- ── Wallet Switcher Header Button (dark) ── -->
-            <!-- Vue: .ultra-modern .wallet-selector-header — bg #1a1a1a, border #404040, color #808080, hover bg #2a2a2a -->
+            <!-- Vue: .ultra-modern .wallet-selector-header — bg #1a1a1a, color #808080, hover bg #2a2a2a (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="WalletSwitcherBg" Color="#1A1A1A" />
-            <SolidColorBrush x:Key="WalletSwitcherBorder" Color="#404040" />
             <SolidColorBrush x:Key="WalletSwitcherFg" Color="#808080" />
             <SolidColorBrush x:Key="WalletSwitcherHoverBg" Color="#2A2A2A" />
 
@@ -905,8 +882,7 @@
             <!-- Vue: .dark-mode success — bg-green-900 -->
             <SolidColorBrush x:Key="CreateWalletGreenCircleBg" Color="#14532D" />
             <SolidColorBrush x:Key="CreateWalletGreenIcon" Color="#16A34A" />
-            <!-- Vue: .dark-mode outlined button — border-[#404040], text-gray-300 -->
-            <SolidColorBrush x:Key="CreateWalletOutlinedBorder" Color="#404040" />
+            <!-- Vue: .dark-mode outlined button — text-gray-300 (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="CreateWalletOutlinedFg" Color="#D1D5DB" />
             <SolidColorBrush x:Key="CreateWalletOutlinedHoverBg" Color="#2A2A2A" />
             <!-- Vue: .dark-mode seed display — bg-[#1a1a1a], border-[#333] -->
@@ -916,8 +892,7 @@
             <!-- Vue: .dark-mode textarea — bg-[#111], border-[#333] -->
             <SolidColorBrush x:Key="CreateWalletInputBg" Color="#111111" />
             <SolidColorBrush x:Key="CreateWalletInputBorder" Color="#333333" />
-            <!-- Vue: .dark-mode disabled — border-[#404040], text-gray-500 -->
-            <SolidColorBrush x:Key="CreateWalletDisabledBorder" Color="#404040" />
+            <!-- Vue: .dark-mode disabled — text-gray-500 (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="CreateWalletDisabledFg" Color="#6B7280" />
 
             <!-- ── Wallet Detail / UTXO Management Modal (dark) ── -->
@@ -993,17 +968,13 @@
             <!-- Vue dark: .settings-toggle-button bg:#1a1a1a, border:#404040 -->
             <SolidColorBrush x:Key="ToggleCheckBg" Color="#1A1A1A" />
             <SolidColorBrush x:Key="ToggleCheckBorder" Color="#404040" />
-            <!-- Vue dark: success icon circle bg:rgba(75,124,90,0.2), modal bg:#2A2A2A -->
-            <SolidColorBrush x:Key="SuccessIconCircleBg" Color="#334B7C5A" />
             <SolidColorBrush x:Key="SuccessModalBg" Color="#2A2A2A" />
-            <!-- Vue dark: modal cancel btn border:#404040, text:#D1D5DB -->
-            <SolidColorBrush x:Key="ModalCancelBtnBorder" Color="#404040" />
+            <!-- Vue dark: modal cancel btn text:#D1D5DB (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="ModalCancelBtnText" Color="#D1D5DB" />
             <!-- Vue dark: modal description text:#D1D5DB -->
             <SolidColorBrush x:Key="ModalDescriptionText" Color="#D1D5DB" />
-            <!-- Vue dark: modal password input bg:#0A0A0A, border:#404040 -->
+            <!-- Vue dark: modal password input bg:#0A0A0A (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="ModalInputBg" Color="#0A0A0A" />
-            <SolidColorBrush x:Key="ModalInputBorder" Color="#404040" />
             <!-- Vue dark: UTXO txid text:#9CA3AF -->
             <SolidColorBrush x:Key="UtxoTxidText" Color="#9CA3AF" />
             <!-- Vue dark: release UTXO item bg:#0A0A0A, border:#4B7C5A -->
@@ -1014,9 +985,6 @@
             <!-- Vue dark: modal header border:#404040 -->
             <SolidColorBrush x:Key="ModalHeaderBorder" Color="#404040" />
 
-            <!-- Vue: action button hover bg: dark rgba(75,124,90,0.2) -->
-            <SolidColorBrush x:Key="BrandGreenTint" Color="#334B7C5A" />
-
             <!-- ── Share Modal (dark) ── -->
             <!-- Vue: bg-[#2A2A2A], project info bg-[#1a1a1a], input bg-[#1a1a1a] border-[#404040] -->
             <SolidColorBrush x:Key="ShareModalBg" Color="#2A2A2A" />
@@ -1024,29 +992,25 @@
             <SolidColorBrush x:Key="ShareInfoCardBg" Color="#1A1A1A" />
             <SolidColorBrush x:Key="ShareInfoCardBorder" Color="#404040" />
             <SolidColorBrush x:Key="ShareInputBg" Color="#1A1A1A" />
-            <SolidColorBrush x:Key="ShareInputBorder" Color="#404040" />
             <!-- Vue: social-share-btn.dark: bg #2a2a2a, border #404040 -->
             <SolidColorBrush x:Key="ShareSocialBtnBg" Color="#2A2A2A" />
             <SolidColorBrush x:Key="ShareSocialBtnBorder" Color="#404040" />
             <!-- Vue: social-share-btn.dark:hover: bg #333333, border #525252 -->
             <SolidColorBrush x:Key="ShareSocialBtnHoverBg" Color="#333333" />
             <SolidColorBrush x:Key="ShareSocialBtnHoverBorder" Color="#525252" />
-            <!-- Vue: email btn dark: border-[#404040], hover:bg-[#2a2a2a] -->
-            <SolidColorBrush x:Key="ShareEmailBtnBorder" Color="#404040" />
+            <!-- Vue: email btn dark: hover:bg-[#2a2a2a] (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="ShareEmailBtnHoverBg" Color="#2A2A2A" />
             <!-- Vue: "Copied!" button feedback green — same in both themes -->
             <SolidColorBrush x:Key="CopiedBtnBg" Color="#16a34a" />
 
             <!-- ── Private Keys Modals (dark) ── -->
-            <!-- Vue: key field input bg-[#0A0A0A], border-[#404040], text-gray-300 -->
+            <!-- Vue: key field input bg-[#0A0A0A], text-gray-300 (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="KeyFieldInputBg" Color="#0A0A0A" />
-            <SolidColorBrush x:Key="KeyFieldInputBorder" Color="#404040" />
             <SolidColorBrush x:Key="KeyFieldText" Color="#D1D5DB" />
             <!-- Vue: label text-gray-300 -->
             <SolidColorBrush x:Key="KeyFieldLabel" Color="#D1D5DB" />
-            <!-- Vue: copy/eye btn bg-[#0A0A0A], border-[#404040], text-gray-400, hover:bg-[#1a1a1a] -->
+            <!-- Vue: copy/eye btn bg-[#0A0A0A], text-gray-400, hover:bg-[#1a1a1a] (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="KeyCopyBtnBg" Color="#0A0A0A" />
-            <SolidColorBrush x:Key="KeyCopyBtnBorder" Color="#404040" />
             <SolidColorBrush x:Key="KeyCopyBtnText" Color="#9CA3AF" />
             <SolidColorBrush x:Key="KeyCopyBtnHoverBg" Color="#1A1A1A" />
             <!-- Vue: red button same in dark: bg-red-600 hover:bg-red-700 -->
@@ -1071,8 +1035,7 @@
             <!-- Fee info badge: neutral gray -->
             <SolidColorBrush x:Key="RecoveryFeeBadgeBg" Color="#222222" />
             <SolidColorBrush x:Key="RecoveryFeeBadgeText" Color="#A0A0A0" />
-            <!-- Fee priority unselected: neutral gray border + readable text -->
-            <SolidColorBrush x:Key="RecoveryFeeUnselectedBorder" Color="#404040" />
+            <!-- Fee priority unselected: readable text (border consolidated to StrokeSubtle) -->
             <SolidColorBrush x:Key="RecoveryFeeUnselectedText" Color="#B0B0B0" />
             <!-- Vue: fee priority selected (same both themes) -->
             <SolidColorBrush x:Key="RecoveryFeeSelectedBg" Color="#4B7C5A" />

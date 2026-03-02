@@ -20,7 +20,7 @@
         <!-- Fee priority button selection — Rule #9: NO BrushTransition on toggled elements -->
         <Style Selector="Border.FeeBtn">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="{DynamicResource RecoveryFeeUnselectedBorder}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StrokeSubtle}" />
         </Style>
         <Style Selector="Border.FeeBtn.FeeSelected">
             <Setter Property="Background" Value="{DynamicResource RecoveryFeeSelectedBg}" />

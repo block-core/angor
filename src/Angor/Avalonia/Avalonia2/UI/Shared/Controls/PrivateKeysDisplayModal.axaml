@@ -17,7 +17,7 @@
         <!-- Copy/eye action buttons: override FluentTheme chrome -->
         <Style Selector="Button.KeyActionBtn">
             <Setter Property="Background" Value="{DynamicResource KeyCopyBtnBg}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource KeyCopyBtnBorder}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StrokeSubtle}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Width" Value="44" />
@@ -102,7 +102,7 @@
                                          Padding="16,12"
                                          CornerRadius="8"
                                          Background="{DynamicResource KeyFieldInputBg}"
-                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderBrush="{DynamicResource StrokeSubtle}"
                                          BorderThickness="1"
                                          Foreground="{DynamicResource KeyFieldText}"
                                          VerticalContentAlignment="Center" />
@@ -129,7 +129,7 @@
                                          Padding="16,12"
                                          CornerRadius="8"
                                          Background="{DynamicResource KeyFieldInputBg}"
-                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderBrush="{DynamicResource StrokeSubtle}"
                                          BorderThickness="1"
                                          Foreground="{DynamicResource KeyFieldText}"
                                          VerticalContentAlignment="Center" />
@@ -156,7 +156,7 @@
                                          Padding="16,12"
                                          CornerRadius="8"
                                          Background="{DynamicResource KeyFieldInputBg}"
-                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderBrush="{DynamicResource StrokeSubtle}"
                                          BorderThickness="1"
                                          Foreground="{DynamicResource KeyFieldText}"
                                          VerticalContentAlignment="Center" />
@@ -183,7 +183,7 @@
                                          Padding="16,12"
                                          CornerRadius="8"
                                          Background="{DynamicResource KeyFieldInputBg}"
-                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderBrush="{DynamicResource StrokeSubtle}"
                                          BorderThickness="1"
                                          Foreground="{DynamicResource KeyFieldText}"
                                          VerticalContentAlignment="Center" />
@@ -210,7 +210,7 @@
                                          Padding="16,12"
                                          CornerRadius="8"
                                          Background="{DynamicResource KeyFieldInputBg}"
-                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderBrush="{DynamicResource StrokeSubtle}"
                                          BorderThickness="1"
                                          Foreground="{DynamicResource KeyFieldText}"
                                          VerticalContentAlignment="Center" />
@@ -238,7 +238,7 @@
                                          Padding="16,12"
                                          CornerRadius="8"
                                          Background="{DynamicResource KeyFieldInputBg}"
-                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderBrush="{DynamicResource StrokeSubtle}"
                                          BorderThickness="1"
                                          Foreground="{DynamicResource KeyFieldText}"
                                          VerticalContentAlignment="Center" />
@@ -275,7 +275,7 @@
                                          Padding="16,12"
                                          CornerRadius="8"
                                          Background="{DynamicResource KeyFieldInputBg}"
-                                         BorderBrush="{DynamicResource KeyFieldInputBorder}"
+                                         BorderBrush="{DynamicResource StrokeSubtle}"
                                          BorderThickness="1"
                                          Foreground="{DynamicResource KeyFieldText}"
                                          VerticalContentAlignment="Center" />

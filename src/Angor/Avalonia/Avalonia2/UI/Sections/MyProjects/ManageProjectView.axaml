@@ -251,7 +251,7 @@
                                 <!-- Edit Project button -->
                                 <!-- Vue: .edit-project-button — pad 6 12, rounded 6, border #d1d5db, color #4B7C5A, font 13px -->
                                 <Button Background="Transparent"
-                                        BorderBrush="{DynamicResource ProjectActionBtnBorder}"
+                                        BorderBrush="{DynamicResource StrokeSubtle}"
                                         BorderThickness="1"
                                         CornerRadius="6"
                                         Padding="12,6">
@@ -268,7 +268,7 @@
 
                                 <!-- See Live Project button -->
                                 <Button Background="Transparent"
-                                        BorderBrush="{DynamicResource ProjectActionBtnBorder}"
+                                        BorderBrush="{DynamicResource StrokeSubtle}"
                                         BorderThickness="1"
                                         CornerRadius="6"
                                         Padding="12,6">
@@ -422,7 +422,7 @@
                                 <!-- Vue: .next-stage-title — color #4B7C5A/#5FAF78 -->
                                 <TextBlock Text="Next Stage"
                                            FontSize="20" FontWeight="Bold"
-                                           Foreground="{DynamicResource NextStageTitle}" />
+                                           Foreground="{DynamicResource BrandGreenText}" />
 
                                 <!-- 3-col countdown grid -->
                                 <!-- Vue: .next-stage-grid — repeat(3,1fr), gap 16 -->
@@ -440,12 +440,12 @@
                                             <!-- Vue: .next-stage-value — 32px, 700, #4B7C5A/#5FAF78 -->
                                             <TextBlock Text="{Binding CountdownDays}"
                                                        FontSize="32" FontWeight="Bold"
-                                                       Foreground="{DynamicResource NextStageValue}"
+                                                       Foreground="{DynamicResource BrandGreenText}"
                                                        HorizontalAlignment="Center" />
                                             <!-- Vue: .next-stage-label — 14px, 500 -->
                                             <TextBlock Text="days"
                                                        FontSize="14" FontWeight="Medium"
-                                                       Foreground="{DynamicResource NextStageLabel}"
+                                                       Foreground="{DynamicResource BrandGreenText}"
                                                        HorizontalAlignment="Center" />
                                         </StackPanel>
                                     </Border>
@@ -462,11 +462,11 @@
                                                     VerticalAlignment="Center" Spacing="8">
                                             <TextBlock Text="{Binding CountdownHours}"
                                                        FontSize="32" FontWeight="Bold"
-                                                       Foreground="{DynamicResource NextStageValue}"
+                                                       Foreground="{DynamicResource BrandGreenText}"
                                                        HorizontalAlignment="Center" />
                                             <TextBlock Text="hours"
                                                        FontSize="14" FontWeight="Medium"
-                                                       Foreground="{DynamicResource NextStageLabel}"
+                                                       Foreground="{DynamicResource BrandGreenText}"
                                                        HorizontalAlignment="Center" />
                                         </StackPanel>
                                     </Border>
@@ -483,11 +483,11 @@
                                                     VerticalAlignment="Center" Spacing="8">
                                             <TextBlock Text="{Binding CountdownMins}"
                                                        FontSize="32" FontWeight="Bold"
-                                                       Foreground="{DynamicResource NextStageValue}"
+                                                       Foreground="{DynamicResource BrandGreenText}"
                                                        HorizontalAlignment="Center" />
                                             <TextBlock Text="mins"
                                                        FontSize="14" FontWeight="Medium"
-                                                       Foreground="{DynamicResource NextStageLabel}"
+                                                       Foreground="{DynamicResource BrandGreenText}"
                                                        HorizontalAlignment="Center" />
                                         </StackPanel>
                                     </Border>
@@ -642,7 +642,7 @@
                                                                         VerticalAlignment="Center">
                                                                 <!-- BTC pill -->
                                                                 <!-- Vue: .stage-pill — pad 4 12, rounded 16, font 12px 600 -->
-                                                                <Border Background="{DynamicResource StagePillBg}"
+                                                                <Border Background="{DynamicResource PillGreenBg}"
                                                                         BorderBrush="{DynamicResource StagePillBorder}"
                                                                         BorderThickness="1"
                                                                         CornerRadius="16"
@@ -653,7 +653,7 @@
                                                                 </Border>
 
                                                                 <!-- UTXO count pill -->
-                                                                <Border Background="{DynamicResource StagePillBg}"
+                                                                <Border Background="{DynamicResource PillGreenBg}"
                                                                         BorderBrush="{DynamicResource StagePillBorder}"
                                                                         BorderThickness="1"
                                                                         CornerRadius="16"
@@ -903,7 +903,7 @@
                                     Padding="24,12"
                                     CornerRadius="8"
                                     Background="Transparent"
-                                    BorderBrush="{DynamicResource ModalCancelBtnBorder}"
+                                    BorderBrush="{DynamicResource StrokeSubtle}"
                                     BorderThickness="2"
                                     Foreground="{DynamicResource ModalCancelBtnText}"
                                     FontSize="16" FontWeight="SemiBold">
@@ -987,7 +987,7 @@
                                  Padding="16,12"
                                  CornerRadius="8"
                                  Background="{DynamicResource ModalInputBg}"
-                                 BorderBrush="{DynamicResource ModalInputBorder}"
+                                 BorderBrush="{DynamicResource StrokeSubtle}"
                                  BorderThickness="1"
                                  FontSize="14"
                                  Foreground="{DynamicResource TextStrong}" />
@@ -1000,7 +1000,7 @@
                                     Padding="24,12"
                                     CornerRadius="8"
                                     Background="Transparent"
-                                    BorderBrush="{DynamicResource ModalCancelBtnBorder}"
+                                    BorderBrush="{DynamicResource StrokeSubtle}"
                                     BorderThickness="2"
                                     Foreground="{DynamicResource ModalCancelBtnText}"
                                     FontSize="16" FontWeight="SemiBold">
@@ -1106,7 +1106,7 @@
                                 Padding="24,12"
                                 CornerRadius="8"
                                 Background="Transparent"
-                                BorderBrush="{DynamicResource ModalCancelBtnBorder}"
+                                BorderBrush="{DynamicResource StrokeSubtle}"
                                 BorderThickness="2"
                                 Foreground="{DynamicResource ModalCancelBtnText}"
                                 FontSize="16" FontWeight="SemiBold">
@@ -1216,7 +1216,7 @@
                                     Padding="24,12"
                                     CornerRadius="8"
                                     Background="Transparent"
-                                    BorderBrush="{DynamicResource ModalCancelBtnBorder}"
+                                    BorderBrush="{DynamicResource StrokeSubtle}"
                                     BorderThickness="2"
                                     Foreground="{DynamicResource ModalCancelBtnText}"
                                     FontSize="16" FontWeight="SemiBold">
@@ -1297,7 +1297,7 @@
                                  Padding="16,12"
                                  CornerRadius="8"
                                  Background="{DynamicResource ModalInputBg}"
-                                 BorderBrush="{DynamicResource ModalInputBorder}"
+                                 BorderBrush="{DynamicResource StrokeSubtle}"
                                  BorderThickness="1"
                                  FontSize="14"
                                  Foreground="{DynamicResource TextStrong}" />
@@ -1309,7 +1309,7 @@
                                     Padding="24,12"
                                     CornerRadius="8"
                                     Background="Transparent"
-                                    BorderBrush="{DynamicResource ModalCancelBtnBorder}"
+                                    BorderBrush="{DynamicResource StrokeSubtle}"
                                     BorderThickness="2"
                                     Foreground="{DynamicResource ModalCancelBtnText}"
                                     FontSize="16" FontWeight="SemiBold">

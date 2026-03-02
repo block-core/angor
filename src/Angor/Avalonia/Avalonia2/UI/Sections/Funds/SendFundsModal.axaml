@@ -18,7 +18,7 @@
         <!-- Fee tab: unselected (Rule #9 — CSS class toggling, no BrushTransition) -->
         <Style Selector="Button.FeeBtn">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="{DynamicResource RecoveryFeeUnselectedBorder}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StrokeSubtle}" />
         </Style>
         <Style Selector="Button.FeeBtn TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource RecoveryFeeUnselectedText}" />
@@ -126,7 +126,7 @@
                             <TextBox Name="AddressInput"
                                      Watermark="Enter Bitcoin address"
                                      Background="{DynamicResource ModalInputBg}"
-                                     BorderBrush="{DynamicResource ModalInputBorder}"
+                                     BorderBrush="{DynamicResource StrokeSubtle}"
                                      CornerRadius="8"
                                      Padding="12,10"
                                      FontSize="14"
@@ -140,7 +140,7 @@
                             <TextBox Name="AmountInput"
                                      Watermark="0.00000000"
                                      Background="{DynamicResource ModalInputBg}"
-                                     BorderBrush="{DynamicResource ModalInputBorder}"
+                                     BorderBrush="{DynamicResource StrokeSubtle}"
                                      CornerRadius="8"
                                      Padding="12,10"
                                      FontSize="14"
@@ -233,7 +233,7 @@
                                     HorizontalContentAlignment="Center"
                                     Padding="14,12" CornerRadius="8"
                                     Background="Transparent"
-                                    BorderBrush="{DynamicResource ModalCancelBtnBorder}"
+                                    BorderBrush="{DynamicResource StrokeSubtle}"
                                     BorderThickness="1"
                                     Foreground="{DynamicResource ModalCancelBtnText}"
                                     FontWeight="SemiBold" FontSize="14"

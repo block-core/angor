@@ -42,7 +42,7 @@
                          Height matches Widget buttons (42px), CornerRadius 10 -->
                     <Button Name="WalletSwitcherButton"
                             Background="{DynamicResource WalletSwitcherBg}"
-                            BorderBrush="{DynamicResource WalletSwitcherBorder}"
+                            BorderBrush="{DynamicResource StrokeSubtle}"
                             BorderThickness="1" CornerRadius="10"
                             Height="42"
                             Padding="36,0,40,0"
