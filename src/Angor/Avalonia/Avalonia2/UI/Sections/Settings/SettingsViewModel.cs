@@ -1,45 +1,38 @@
 using System.Collections.ObjectModel;
+using Angor.Shared;
+using Angor.Shared.Models;
+using Angor.Shared.Services;
+using Avalonia2.Composition;
 using Avalonia2.UI.Shell;
 
 namespace Avalonia2.UI.Sections.Settings;
 
 /// <summary>
-/// Settings ViewModel — visual layer only.
-/// Vue Settings has 8 sections: Network, Theme (mobile-only, we include it for desktop),
-/// Explorer, Indexer, Nostr Relays, Currency Display, Seed Backup, Danger Zone.
-/// The backend team will wire up real settings persistence via SDK.
+/// Settings ViewModel — connected to Angor.SDK services.
+/// Manages network selection, explorer/indexer/relay configuration,
+/// theme, currency display, and data wipe operations.
 /// </summary>
 public partial class SettingsViewModel : ReactiveObject
 {
-    [Reactive] private string networkType = "Mainnet";
+    private readonly INetworkService _networkService;
+    private readonly INetworkConfiguration _networkConfig;
+    private readonly INetworkStorage _networkStorage;
+
+    [Reactive] private string networkType;
     [Reactive] private bool isNetworkModalOpen;
     [Reactive] private string? selectedNetworkToSwitch;
     [Reactive] private bool networkChangeConfirmed;
 
-    // Explorer — table-based list (Vue: explorerLinks)
-    public ObservableCollection<ExplorerItem> ExplorerLinks { get; } = new()
-    {
-        new ExplorerItem { Url = "https://test.explorer.angor.io", IsDefault = true },
-        new ExplorerItem { Url = "https://signet.angor.online", IsDefault = false },
-        new ExplorerItem { Url = "https://signet2.angor.online", IsDefault = false },
-    };
+    // Explorer — table-based list
+    public ObservableCollection<ExplorerItem> ExplorerLinks { get; } = new();
     [Reactive] private string newExplorerUrl = "";
 
-    // Indexer — table-based list with status (Vue: indexerLinks)
-    public ObservableCollection<IndexerItem> IndexerLinks { get; } = new()
-    {
-        new IndexerItem { Url = "https://test.indexer.angor.io", Status = "Offline", IsDefault = false },
-        new IndexerItem { Url = "https://signet.angor.online", Status = "Online", IsDefault = true },
-        new IndexerItem { Url = "https://signet2.angor.online", Status = "Offline", IsDefault = false },
-    };
+    // Indexer — table-based list with status
+    public ObservableCollection<IndexerItem> IndexerLinks { get; } = new();
     [Reactive] private string newIndexerUrl = "";
 
-    // Nostr Relays — table-based list with name+status (Vue: nostrRelays)
-    public ObservableCollection<RelayItem> NostrRelays { get; } = new()
-    {
-        new RelayItem { Url = "wss://relay.angor.io", Name = "strfry default", Status = "Online" },
-        new RelayItem { Url = "wss://relay2.angor.io", Name = "strfry2 default", Status = "Online" },
-    };
+    // Nostr Relays — table-based list with name+status
+    public ObservableCollection<RelayItem> NostrRelays { get; } = new();
     [Reactive] private string newRelayUrl = "";
 
     // Currency Display
@@ -74,6 +67,92 @@ public partial class SettingsViewModel : ReactiveObject
         }
     }
 
+    public SettingsViewModel()
+    {
+        _networkService = ServiceLocator.NetworkService;
+        _networkConfig = ServiceLocator.NetworkConfig;
+        _networkStorage = ServiceLocator.NetworkStorage;
+
+        // Ensure default settings exist
+        _networkService.AddSettingsIfNotExist();
+
+        // Load current network
+        networkType = _networkStorage.GetNetwork() ?? "Angornet";
+
+        // Load settings from SDK storage
+        LoadSettingsFromSdk();
+    }
+
+    /// <summary>
+    /// Load explorer, indexer, and relay settings from SDK storage.
+    /// </summary>
+    private void LoadSettingsFromSdk()
+    {
+        var settings = _networkStorage.GetSettings();
+
+        ExplorerLinks.Clear();
+        foreach (var explorer in settings.Explorers)
+        {
+            ExplorerLinks.Add(new ExplorerItem
+            {
+                Url = explorer.Url,
+                IsDefault = explorer.IsPrimary
+            });
+        }
+
+        IndexerLinks.Clear();
+        foreach (var indexer in settings.Indexers)
+        {
+            IndexerLinks.Add(new IndexerItem
+            {
+                Url = indexer.Url,
+                Status = indexer.Status == UrlStatus.Online ? "Online" : "Offline",
+                IsDefault = indexer.IsPrimary
+            });
+        }
+
+        NostrRelays.Clear();
+        foreach (var relay in settings.Relays)
+        {
+            NostrRelays.Add(new RelayItem
+            {
+                Url = relay.Url,
+                Name = relay.Name ?? "Relay",
+                Status = relay.Status == UrlStatus.Online ? "Online" : "Offline"
+            });
+        }
+    }
+
+    /// <summary>
+    /// Persist current UI settings back to SDK storage.
+    /// </summary>
+    private void SaveSettingsToSdk()
+    {
+        var current = _networkStorage.GetSettings();
+
+        current.Explorers = ExplorerLinks.Select(e => new SettingsUrl
+        {
+            Url = e.Url,
+            IsPrimary = e.IsDefault
+        }).ToList();
+
+        current.Indexers = IndexerLinks.Select(i => new SettingsUrl
+        {
+            Url = i.Url,
+            IsPrimary = i.IsDefault,
+            Status = i.Status == "Online" ? UrlStatus.Online : UrlStatus.Offline
+        }).ToList();
+
+        current.Relays = NostrRelays.Select(r => new SettingsUrl
+        {
+            Url = r.Url,
+            Name = r.Name,
+            Status = r.Status == "Online" ? UrlStatus.Online : UrlStatus.Offline
+        }).ToList();
+
+        _networkStorage.SetSettings(current);
+    }
+
     // Network modal
     public void OpenNetworkModal()
     {
@@ -90,8 +169,23 @@ public partial class SettingsViewModel : ReactiveObject
     {
         if (!NetworkChangeConfirmed || string.IsNullOrEmpty(SelectedNetworkToSwitch)) return;
         if (SelectedNetworkToSwitch == NetworkType) return;
-        NetworkType = SelectedNetworkToSwitch;
+
+        var newNetwork = SelectedNetworkToSwitch;
+
+        // Persist new network to SDK storage
+        _networkStorage.SetNetwork(newNetwork);
+
+        // Clear settings for the new network
+        _networkStorage.SetSettings(new SettingsInfo());
+
+        // Re-initialize defaults for the new network
+        _networkService.AddSettingsIfNotExist();
+
+        NetworkType = newNetwork;
         IsNetworkModalOpen = false;
+
+        // Reload settings from SDK for the new network
+        LoadSettingsFromSdk();
     }
 
     // Explorer list management
@@ -101,15 +195,21 @@ public partial class SettingsViewModel : ReactiveObject
         {
             ExplorerLinks.Add(new ExplorerItem { Url = NewExplorerUrl.Trim(), IsDefault = false });
             NewExplorerUrl = "";
+            SaveSettingsToSdk();
         }
     }
 
     public void SetDefaultExplorer(ExplorerItem item)
     {
         foreach (var link in ExplorerLinks) link.IsDefault = link == item;
+        SaveSettingsToSdk();
     }
 
-    public void RemoveExplorerLink(ExplorerItem item) => ExplorerLinks.Remove(item);
+    public void RemoveExplorerLink(ExplorerItem item)
+    {
+        ExplorerLinks.Remove(item);
+        SaveSettingsToSdk();
+    }
 
     // Indexer list management
     public void AddIndexerLink()
@@ -118,15 +218,21 @@ public partial class SettingsViewModel : ReactiveObject
         {
             IndexerLinks.Add(new IndexerItem { Url = NewIndexerUrl.Trim(), Status = "Offline", IsDefault = false });
             NewIndexerUrl = "";
+            SaveSettingsToSdk();
         }
     }
 
     public void SetDefaultIndexer(IndexerItem item)
     {
         foreach (var link in IndexerLinks) link.IsDefault = link == item;
+        SaveSettingsToSdk();
     }
 
-    public void RemoveIndexerLink(IndexerItem item) => IndexerLinks.Remove(item);
+    public void RemoveIndexerLink(IndexerItem item)
+    {
+        IndexerLinks.Remove(item);
+        SaveSettingsToSdk();
+    }
 
     // Relay list management
     public void AddRelayLink()
@@ -135,24 +241,49 @@ public partial class SettingsViewModel : ReactiveObject
         {
             NostrRelays.Add(new RelayItem { Url = NewRelayUrl.Trim(), Name = "Custom", Status = "Online" });
             NewRelayUrl = "";
+            SaveSettingsToSdk();
         }
     }
 
-    public void RemoveRelayLink(RelayItem item) => NostrRelays.Remove(item);
+    public void RemoveRelayLink(RelayItem item)
+    {
+        NostrRelays.Remove(item);
+        SaveSettingsToSdk();
+    }
+
+    /// <summary>
+    /// Refresh indexer statuses by calling the SDK's CheckServices.
+    /// </summary>
+    public async Task RefreshIndexerStatusAsync()
+    {
+        await _networkService.CheckServices(true);
+        LoadSettingsFromSdk();
+    }
+
+    /// <summary>
+    /// Refresh relay statuses by calling the SDK's CheckServices.
+    /// </summary>
+    public async Task RefreshRelayStatusAsync()
+    {
+        await _networkService.CheckServices(true);
+        LoadSettingsFromSdk();
+    }
 
     // Wipe data
     public void OpenWipeDataModal() => IsWipeDataModalOpen = true;
     public void CloseWipeDataModal() => IsWipeDataModalOpen = false;
+
     public void ConfirmWipeData()
     {
-        // Visual-only: just close the modal. Backend will wire real wipe logic.
+        // Clear all settings and reinitialize defaults
+        _networkStorage.SetSettings(new SettingsInfo());
+        _networkService.AddSettingsIfNotExist();
+        LoadSettingsFromSdk();
         IsWipeDataModalOpen = false;
     }
-
 }
 
 // ── Table item models ──
-// These use INotifyPropertyChanged so IsDefault toggling updates the UI.
 public class ExplorerItem : ReactiveObject
 {
     public string Url { get; set; } = "";
