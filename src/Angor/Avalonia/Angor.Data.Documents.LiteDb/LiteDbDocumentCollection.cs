@@ -43,17 +43,17 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
                 document.UpdatedAt = DateTime.UtcNow;
             }
 
-            var result = _collection.Insert(documents);
+            var result = _collection.Upsert(documents);
 
             if (result != documents.Length)
             {
-                _logger.LogWarning("Expected to insert {expected} documents but only inserted {actual}", 
+                _logger.LogWarning("Attempted to upsert {expected} documents but only {actual} were newly inserted (the rest were updated)", 
                     documents.Length, result);
                 
                 return Result.Success(result);
             }
             
-            _logger.LogDebug("Inserted {total} document {Type}",result, typeof(T).Name);
+            _logger.LogDebug("Inserted {total} new document(s) of type {Type}",result, typeof(T).Name);
             
             return await Task.FromResult(Result.Success(result));
         }
