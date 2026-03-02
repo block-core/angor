@@ -269,7 +269,7 @@ public class CreateInvestmentTests
 
         // Assert
         Assert.True(result.IsFailure);
-        Assert.Contains("Invalid pattern index", result.Error);
+        Assert.Contains("No pattern found with PatternId 99", result.Error);
     }
 
     [Fact]

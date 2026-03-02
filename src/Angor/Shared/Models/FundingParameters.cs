@@ -52,11 +52,17 @@ public class FundingParameters
         byte patternId,
         DateTime investmentStartDate)
     {
+        // Normalize to midnight UTC to ensure consistency with OP_RETURN round-trip.
+        // DynamicStageInfo encodes only days-since-epoch, so the time component is lost.
+        // Without normalization, scripts built at creation would use a different start date
+        // than scripts rebuilt from the transaction during spending, causing witness mismatch.
+        var normalizedStartDate = investmentStartDate.Date;
+
         return new FundingParameters
         {
             InvestorKey = investorKey,
             TotalInvestmentAmount = totalInvestmentAmount,
-            InvestmentStartDate = investmentStartDate,
+            InvestmentStartDate = normalizedStartDate,
             PatternId = patternId,
             ExpiryDateOverride = PenaltyThresholdHelper.GetExpiryDateOverride(projectInfo, totalInvestmentAmount)
         };
@@ -69,11 +75,14 @@ public class FundingParameters
            byte patternId,
            DateTime investmentStartDate)
     {
+        // Normalize to midnight UTC (same reason as CreateForFund above)
+        var normalizedStartDate = investmentStartDate.Date;
+
         return new FundingParameters
         {
             InvestorKey = investorKey,
             TotalInvestmentAmount = totalInvestmentAmount,
-            InvestmentStartDate = investmentStartDate,
+            InvestmentStartDate = normalizedStartDate,
             PatternId = patternId,
             ExpiryDateOverride = projectInfo.StartDate
         };

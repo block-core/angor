@@ -2,16 +2,20 @@ using Angor.Shared.Models;
 using Angor.Shared.Utilities;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Angor.Shared.Protocol.Scripts;
 
 public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 {
     private readonly ISeederScriptTreeBuilder _seederScriptTreeBuilder;
+    private readonly ILogger<InvestmentScriptBuilder> _logger;
 
-    public InvestmentScriptBuilder(ISeederScriptTreeBuilder seederScriptTreeBuilder)
+    public InvestmentScriptBuilder(ISeederScriptTreeBuilder seederScriptTreeBuilder, ILogger<InvestmentScriptBuilder>? logger = null)
     {
         _seederScriptTreeBuilder = seederScriptTreeBuilder;
+        _logger = logger ?? NullLogger<InvestmentScriptBuilder>.Instance;
     }
 
     public Script GetInvestorPenaltyTransactionScript(string investorKey, int punishmentLockDays)
@@ -48,7 +52,22 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
         {
             var pattern = parameters.FindPattern(projectInfo);
             stageReleaseDate = CalculateDynamicStageReleaseDate(parameters.InvestmentStartDate.Value, pattern, stageIndex);
+            _logger.LogDebug("BuildProjectScriptsForStage: stageIndex={StageIndex}, InvestmentStartDate={StartDate:O}, PatternId={PatternId}, " +
+                "PayoutDayType={PayoutDayType}, PayoutDay={PayoutDay}, Frequency={Frequency}, StageCount={StageCount}, " +
+                "calculatedReleaseDate={ReleaseDate:O}",
+                stageIndex, parameters.InvestmentStartDate.Value, parameters.PatternId,
+                pattern.PayoutDayType, pattern.PayoutDay, pattern.Frequency, pattern.StageCount,
+                stageReleaseDate);
         }
+
+        var effectiveExpiryDate = parameters.ExpiryDateOverride ?? projectInfo.ExpiryDate;
+
+        _logger.LogDebug("BuildProjectScriptsForStage: stageIndex={StageIndex}, founderKey={FounderKey}, " +
+            "investorKey={InvestorKey}, releaseDate={ReleaseDate:O}, expiryDate={ExpiryDate:O}, " +
+            "expiryDateOverride={ExpiryOverride}, projectExpiryDate={ProjectExpiry:O}",
+            stageIndex, projectInfo.FounderKey, parameters.InvestorKey,
+            stageReleaseDate, effectiveExpiryDate,
+            parameters.ExpiryDateOverride?.ToString("O") ?? "null", projectInfo.ExpiryDate);
 
         var recoveryOps = new List<Op>
         {
@@ -74,8 +93,6 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
                 projectInfo.ProjectSeeders.Threshold,
                 projectInfo.ProjectSeeders.SecretHashes).ToList()
             : new List<Script>();
-
-        var effectiveExpiryDate = parameters.ExpiryDateOverride ?? projectInfo.ExpiryDate;
 
         return new()
         {
