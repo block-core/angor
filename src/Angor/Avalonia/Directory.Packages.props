@@ -21,10 +21,10 @@
     <PackageVersion Include="Humanizer.Core" Version="2.14.1" />
     <PackageVersion Include="LiteDB" Version="5.0.21" />
     <PackageVersion Include="MediatR" Version="12.5.0" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
     <PackageVersion Include="PanAndZoom" Version="11.3.6" />
     <PackageVersion Include="QRCoder" Version="1.6.0" />
     <PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.5.1">
@@ -42,6 +42,12 @@
     <PackageVersion Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.6.2" />
     <PackageVersion Include="Svg.Controls.Skia.Avalonia" Version="11.3.9.2" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />
+    <PackageVersion Include="Zafiro" Version="46.0.0" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="50.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia.Generators" Version="50.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia.Icons.Svg" Version="50.0.1" />
+    <PackageVersion Include="Zafiro.Avalonia.Icons.Projektanker" Version="50.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageVersion Include="Avalonia.Labs.Panels" Version="11.3.1" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />

@@ -1,4 +1,7 @@
 <Solution>
   <Project Path="Avalonia2.Desktop/Avalonia2.Desktop.csproj" />
   <Project Path="Avalonia2/Avalonia2.csproj" />
+  <Project Path="Angor.Sdk/Angor.Sdk.csproj" />
+  <Project Path="Angor.Data.Documents/Angor.Data.Documents.csproj" />
+  <Project Path="Angor.Data.Documents.LiteDb/Angor.Data.Documents.LiteDb.csproj" />
 </Solution>
