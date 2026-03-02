@@ -1,0 +1,257 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mp="clr-namespace:Avalonia2.UI.Sections.MyProjects"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="680" d:DesignHeight="600"
+             x:Class="Avalonia2.UI.Sections.MyProjects.Steps.CreateProjectStep1View"
+             x:DataType="mp:CreateProjectViewModel">
+
+    <!-- ═══ TYPE CARD STYLES (moved from parent CreateProjectView) ═══ -->
+    <!-- Vue: transition-all on project-type-card — smooth border/background changes -->
+    <UserControl.Styles>
+        <Style Selector="Border.TypeCard">
+            <Setter Property="Background" Value="{DynamicResource TypeCardDefaultBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        </Style>
+
+        <!-- ═══ TYPE CARD: Icon Background ═══ -->
+        <Style Selector="Border.TypeCardIconBg">
+            <Setter Property="Background" Value="{DynamicResource TypeCardIconDefaultBg}" />
+        </Style>
+
+        <!-- ═══ TYPE CARD: Title Text ═══ -->
+        <Style Selector="TextBlock.TypeCardTitle">
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+
+        <!-- ═══ TYPE CARD: Default icon colors ═══ -->
+        <Style Selector="i|Icon.TypeCardIconFill.IconInvest">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+        <!-- Subscription icon is a PNG Border with OpacityMask — use Background for tinting -->
+        <Style Selector="Border.TypeCardIconStroke.IconSub">
+            <Setter Property="Background" Value="#9E9E9E" />
+        </Style>
+        <Style Selector="i|Icon.TypeCardIconFill.IconFund">
+            <Setter Property="Foreground" Value="#F7931A" />
+        </Style>
+
+        <!-- ═══ TYPE CARD: Radio circle ═══ -->
+        <Style Selector="Border.TypeCardRadio">
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        </Style>
+
+        <!-- ═══ TYPE CARD: INVEST — Hover (unselected) ═══ -->
+        <Style Selector="Border.TypeCard.TypeCardInvest:pointerover">
+            <Setter Property="BorderBrush" Value="#804B7C5A" />
+        </Style>
+        <!-- ═══ TYPE CARD: FUND — Hover (unselected) ═══ -->
+        <Style Selector="Border.TypeCard.TypeCardFund:pointerover">
+            <Setter Property="BorderBrush" Value="#80F7931A" />
+        </Style>
+        <!-- ═══ TYPE CARD: SUB — Hover (unselected) ═══ -->
+        <Style Selector="Border.TypeCard.TypeCardSub:pointerover">
+            <Setter Property="BorderBrush" Value="#809E9E9E" />
+        </Style>
+
+        <!-- ═══ TYPE CARD: INVEST — Selected ═══ -->
+        <Style Selector="Border.TypeCard.TypeCardInvest.TypeCardSelected">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+            <Setter Property="Background" Value="{DynamicResource TypeCardInvestSelectedBg}" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardInvest.TypeCardSelected:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardInvest.TypeCardSelected Border.TypeCardIconBg">
+            <Setter Property="Background" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardInvest.TypeCardSelected i|Icon.TypeCardIconFill">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardInvest.TypeCardSelected TextBlock.TypeCardTitle">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardInvest.TypeCardSelected Border.TypeCardRadio">
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+
+        <!-- ═══ TYPE CARD: FUND — Selected ═══ -->
+        <Style Selector="Border.TypeCard.TypeCardFund.TypeCardSelected">
+            <Setter Property="BorderBrush" Value="#F7931A" />
+            <Setter Property="Background" Value="{DynamicResource TypeCardFundSelectedBg}" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardFund.TypeCardSelected:pointerover">
+            <Setter Property="BorderBrush" Value="#F7931A" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardFund.TypeCardSelected Border.TypeCardIconBg">
+            <Setter Property="Background" Value="#F7931A" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardFund.TypeCardSelected i|Icon.TypeCardIconFill">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardFund.TypeCardSelected TextBlock.TypeCardTitle">
+            <Setter Property="Foreground" Value="#F7931A" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardFund.TypeCardSelected Border.TypeCardRadio">
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+
+        <!-- ═══ TYPE CARD: SUBSCRIPTION — Selected ═══ -->
+        <Style Selector="Border.TypeCard.TypeCardSub.TypeCardSelected">
+            <Setter Property="BorderBrush" Value="#9E9E9E" />
+            <Setter Property="Background" Value="{DynamicResource TypeCardSubSelectedBg}" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardSub.TypeCardSelected:pointerover">
+            <Setter Property="BorderBrush" Value="#9E9E9E" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardSub.TypeCardSelected Border.TypeCardIconBg">
+            <Setter Property="Background" Value="#9E9E9E" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardSub.TypeCardSelected Border.TypeCardIconStroke">
+            <Setter Property="Background" Value="White" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardSub.TypeCardSelected TextBlock.TypeCardTitle">
+            <Setter Property="Foreground" Value="#9E9E9E" />
+        </Style>
+        <Style Selector="Border.TypeCard.TypeCardSub.TypeCardSelected Border.TypeCardRadio">
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+    </UserControl.Styles>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- STEP 1: PROJECT TYPE SELECTION           -->
+    <!-- Reference: ListBox with ListBoxItem cards -->
+    <!-- ═══════════════════════════════════════ -->
+    <StackPanel Spacing="16">
+        <!-- Subtitle only — no bold heading (matches reference) -->
+        <TextBlock Text="Choose the type of project you want to launch."
+                   FontSize="14" Foreground="{DynamicResource TextMuted}" />
+
+        <!-- Investment card — Border (not Button) to prevent hover chrome -->
+        <!-- Vue: rounded-xl (12px), border-2, gradient bg from-[#0A0A0A] to-[#1a1a1a] (dark) -->
+        <!-- Styles handle bg/border via TypeCardInvest + TypeCardSelected classes -->
+        <Border Name="TypeInvestCard" Classes="TypeCard TypeCardInvest" CornerRadius="12"
+                BorderThickness="2"
+                Cursor="Hand" MinHeight="140">
+            <Grid ColumnDefinitions="Auto,*,Auto" Margin="20,24">
+                <!-- Icon square -->
+                <Border Grid.Column="0" Name="IconBgInvest" Classes="TypeCardIconBg"
+                        Width="48" Height="48" CornerRadius="10"
+                        VerticalAlignment="Center">
+                    <i:Icon Name="IconPathInvest" Classes="TypeCardIconFill IconInvest"
+                           Value="fa-solid fa-arrow-trend-up"
+                           FontSize="22" />
+                </Border>
+                <!-- Title + description -->
+                <StackPanel Grid.Column="1" Spacing="6" Margin="20,0,20,0"
+                            VerticalAlignment="Center">
+                    <TextBlock Name="TitleInvest" Classes="TypeCardTitle"
+                               Text="I am looking for Investors" FontSize="16" FontWeight="Bold" />
+                    <TextBlock Text="Investors can fund during a funding period and then once the goal is met funds start being released in stages."
+                               FontSize="14" Foreground="{DynamicResource TextMuted}"
+                               TextWrapping="Wrap" LineHeight="20" />
+                </StackPanel>
+                <!-- Radio circle -->
+                <Border Grid.Column="2" Name="RadioInvest" Classes="TypeCardRadio"
+                        Width="24" Height="24" CornerRadius="12"
+                        BorderThickness="2"
+                        Background="Transparent"
+                        VerticalAlignment="Center">
+                    <!-- Check icon: shown when selected via code-behind IsVisible -->
+                    <Viewbox Name="RadioCheckInvest" Width="24" Height="24" IsVisible="False">
+                        <Panel Width="512" Height="512">
+                            <Ellipse Width="400" Height="400" Fill="White"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Path Data="{StaticResource CheckCircleSolid}"
+                                  Fill="{DynamicResource PrimaryGreenBrush}" Width="512" Height="512" Stretch="Uniform" />
+                        </Panel>
+                    </Viewbox>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Fund card — Border (not Button) to prevent hover chrome -->
+        <!-- Vue: rounded-xl (12px), border-2, gradient bg -->
+        <Border Name="TypeFundCard" Classes="TypeCard TypeCardFund" CornerRadius="12"
+                BorderThickness="2"
+                Cursor="Hand" MinHeight="140">
+            <Grid ColumnDefinitions="Auto,*,Auto" Margin="20,24">
+                <!-- Icon square -->
+                <Border Grid.Column="0" Name="IconBgFund" Classes="TypeCardIconBg"
+                        Width="48" Height="48" CornerRadius="10"
+                        VerticalAlignment="Center">
+                    <i:Icon Name="IconPathFund" Classes="TypeCardIconFill IconFund"
+                           Value="fa-brands fa-bitcoin"
+                           FontSize="22" />
+                </Border>
+                <!-- Title + description -->
+                <StackPanel Grid.Column="1" Spacing="6" Margin="20,0,20,0"
+                            VerticalAlignment="Center">
+                    <TextBlock Name="TitleFund" Classes="TypeCardTitle"
+                               Text="I am looking for supporters" FontSize="16" FontWeight="Bold" />
+                    <TextBlock Text="Supporters can fund you at anytime during the project timeline."
+                               FontSize="14" Foreground="{DynamicResource TextMuted}"
+                               TextWrapping="Wrap" LineHeight="20" />
+                </StackPanel>
+                <!-- Radio circle -->
+                <Border Grid.Column="2" Name="RadioFund" Classes="TypeCardRadio"
+                        Width="24" Height="24" CornerRadius="12"
+                        BorderThickness="2"
+                        Background="Transparent"
+                        VerticalAlignment="Center">
+                    <Viewbox Name="RadioCheckFund" Width="24" Height="24" IsVisible="False">
+                        <Panel Width="512" Height="512">
+                            <Ellipse Width="400" Height="400" Fill="White"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Path Data="{StaticResource CheckCircleSolid}"
+                                  Fill="#F7931A" Width="512" Height="512" Stretch="Uniform" />
+                        </Panel>
+                    </Viewbox>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Subscription card — Border (not Button) to prevent hover chrome -->
+        <!-- Vue: rounded-xl (12px), border-2, gradient bg -->
+        <Border Name="TypeSubscriptionCard" Classes="TypeCard TypeCardSub" CornerRadius="12"
+                BorderThickness="2"
+                Cursor="Hand" MinHeight="140">
+            <Grid ColumnDefinitions="Auto,*,Auto" Margin="20,24">
+                <!-- Icon square -->
+                <Border Grid.Column="0" Name="IconBgSubscription" Classes="TypeCardIconBg"
+                        Width="48" Height="48" CornerRadius="10"
+                        VerticalAlignment="Center">
+                    <i:Icon Name="IconBorderSubscription" Classes="TypeCardIconStroke IconSub"
+                            Value="fa-solid fa-arrows-rotate" FontSize="20"
+                            HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <!-- Title + description -->
+                <StackPanel Grid.Column="1" Spacing="6" Margin="20,0,20,0"
+                            VerticalAlignment="Center">
+                    <TextBlock Name="TitleSubscription" Classes="TypeCardTitle"
+                               Text="I am looking for paid subscribers" FontSize="16" FontWeight="Bold" />
+                    <TextBlock Text="Subscribers pay for 3, 6, or 12 months up front and funds are released on the day of your choice"
+                               FontSize="14" Foreground="{DynamicResource TextMuted}"
+                               TextWrapping="Wrap" LineHeight="20" />
+                </StackPanel>
+                <!-- Radio circle -->
+                <Border Grid.Column="2" Name="RadioSubscription" Classes="TypeCardRadio"
+                        Width="24" Height="24" CornerRadius="12"
+                        BorderThickness="2"
+                        Background="Transparent"
+                        VerticalAlignment="Center">
+                    <Viewbox Name="RadioCheckSub" Width="24" Height="24" IsVisible="False">
+                        <Panel Width="512" Height="512">
+                            <Ellipse Width="400" Height="400" Fill="White"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Path Data="{StaticResource CheckCircleSolid}"
+                                  Fill="#9E9E9E" Width="512" Height="512" Stretch="Uniform" />
+                        </Panel>
+                    </Viewbox>
+                </Border>
+            </Grid>
+        </Border>
+    </StackPanel>
+</UserControl>

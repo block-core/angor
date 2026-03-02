@@ -1,0 +1,323 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mp="clr-namespace:Avalonia2.UI.Sections.MyProjects"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="680" d:DesignHeight="800"
+             x:Class="Avalonia2.UI.Sections.MyProjects.Steps.CreateProjectStep4View"
+             x:DataType="mp:CreateProjectViewModel">
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- STEP 4: FUNDING CONFIGURATION            -->
+    <!-- ═══════════════════════════════════════ -->
+    <StackPanel Spacing="24">
+
+        <!-- ─── INVESTMENT TYPE: Step 4 ─── -->
+        <Panel IsVisible="{Binding IsInvestment}">
+            <StackPanel Spacing="24">
+                <TextBlock Text="Configure your funding target, window, and project nature."
+                           FontSize="14" Foreground="{DynamicResource TextMuted}" />
+
+                <!-- Card 1: Set your target funding amount (Bitcoin accent) -->
+                <Border CornerRadius="12" BorderBrush="{DynamicResource BitcoinAccent}" BorderThickness="1"
+                        Background="{DynamicResource BitcoinWash}" ClipToBounds="True">
+                    <StackPanel>
+                        <!-- Header with Bitcoin icon -->
+                        <Border Padding="24" CornerRadius="11,11,0,0">
+                            <Border.Background>
+                                <SolidColorBrush Color="#F7931A" Opacity="0.08" />
+                            </Border.Background>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-brands fa-bitcoin"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource BitcoinAccent}" />
+                                <TextBlock Text="Set your target funding amount"
+                                           FontSize="16" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <StackPanel Spacing="16" Margin="24">
+                            <!-- Target Amount field -->
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Target Amount (BTC) *" FontSize="14" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}" />
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBox Text="{Binding TargetAmount, Mode=TwoWay}"
+                                             Watermark="0.00000000"
+                                             FontSize="20" FontWeight="Bold"
+                                             Padding="12,12,16,12" CornerRadius="8" />
+                                    <TextBlock Grid.Column="1" Text="BTC" FontSize="14" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               VerticalAlignment="Center" Margin="12,0,0,0" />
+                                </Grid>
+                                <TextBlock Text="The minimum amount your project needs to raise"
+                                           FontSize="12" Foreground="{DynamicResource BitcoinAccent}" />
+                            </StackPanel>
+
+                            <!-- Quick-select amount presets — ListBox with ButtonizedListBoxItem -->
+                            <ListBox Name="InvestAmountPresets" Classes="Transparent Horizontal"
+                                     ItemContainerTheme="{StaticResource ButtonizedListBoxItem}"
+                                     SelectionMode="Single">
+                                <ListBoxItem Tag="0.5">
+                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="0.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                    </StackPanel>
+                                </ListBoxItem>
+                                <ListBoxItem Tag="1">
+                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="1" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                    </StackPanel>
+                                </ListBoxItem>
+                                <ListBoxItem Tag="2.5">
+                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="2.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                    </StackPanel>
+                                </ListBoxItem>
+                            </ListBox>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 2: Fundraising Window (dates) -->
+                <Border CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                        Background="{DynamicResource Surface}" ClipToBounds="True">
+                    <StackPanel>
+                        <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="Fundraising Window" FontSize="16" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}" VerticalAlignment="Center" />
+                                <Border Background="{DynamicResource BitcoinAccent}" CornerRadius="6" Padding="8,3">
+                                    <TextBlock Text="Help" FontSize="11" FontWeight="Bold" Foreground="White" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                        <Grid ColumnDefinitions="*,24,*" Margin="24">
+                            <!-- Start Date -->
+                            <StackPanel Grid.Column="0" Spacing="8">
+                                <TextBlock Text="Start Date" FontSize="14" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}" />
+                                <CalendarDatePicker Name="InvestStartDatePicker"
+                                                    SelectedDate="{Binding InvestStartDate, Mode=TwoWay}"
+                                                    Watermark="dd/mm/yyyy"
+                                                    HorizontalAlignment="Stretch" />
+                                <TextBlock Text="When the fundraising campaign begins"
+                                           FontSize="12" Foreground="{DynamicResource TextMuted}" />
+                            </StackPanel>
+
+                            <!-- End Date -->
+                            <StackPanel Grid.Column="2" Spacing="8">
+                                <TextBlock Text="End Date *" FontSize="14" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}" />
+                                <CalendarDatePicker Name="InvestEndDatePicker"
+                                                    SelectedDate="{Binding InvestEndDate, Mode=TwoWay}"
+                                                    Watermark="dd/mm/yyyy"
+                                                    HorizontalAlignment="Stretch" />
+                                <TextBlock Text="Must be before first stage (chosen on next screen)"
+                                           FontSize="12" Foreground="{DynamicResource TextMuted}" />
+
+                                <!-- Duration presets — ListBox with ButtonizedAccentListBoxItem -->
+                                <ListBox Name="DurationPresets" Classes="Transparent Horizontal"
+                                         ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
+                                         SelectionMode="Single" Margin="0,4,0,0">
+                                    <ListBoxItem Tag="1" Content="1 Month" FontSize="12" FontWeight="Bold" />
+                                    <ListBoxItem Tag="2" Content="2 Months" FontSize="12" FontWeight="Bold" />
+                                    <ListBoxItem Tag="3" Content="3 Months" FontSize="12" FontWeight="Bold" />
+                                </ListBox>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 3: Project Nature (Penalty) — hidden in Vue prototype (v-if="false") -->
+                <!-- Penalty days kept in ViewModel for Step 6 review display -->
+            </StackPanel>
+        </Panel>
+
+        <!-- ─── FUND TYPE: Step 4 ─── -->
+        <Panel IsVisible="{Binding IsFund}">
+            <StackPanel Spacing="24">
+                <TextBlock Text="Configure your funding goal and project nature."
+                           FontSize="14" Foreground="{DynamicResource TextMuted}" />
+
+                <!-- Card 1: Goal (Bitcoin accent) -->
+                <Border CornerRadius="12" BorderBrush="{DynamicResource BitcoinAccent}" BorderThickness="1"
+                        Background="{DynamicResource BitcoinWash}" ClipToBounds="True">
+                    <StackPanel>
+                        <!-- Header with Bitcoin icon -->
+                        <Border Padding="24" CornerRadius="11,11,0,0">
+                            <Border.Background>
+                                <SolidColorBrush Color="#F7931A" Opacity="0.08" />
+                            </Border.Background>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-brands fa-bitcoin"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource BitcoinAccent}" />
+                                <TextBlock Text="Goal" FontSize="16" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <StackPanel Spacing="16" Margin="24">
+                            <!-- Goal Amount field -->
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Goal (BTC) *" FontSize="14" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}" />
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBox Text="{Binding TargetAmount, Mode=TwoWay}"
+                                             Watermark="0.00000000"
+                                             FontSize="20" FontWeight="Bold"
+                                             Padding="12,12,16,12" CornerRadius="8" />
+                                    <TextBlock Grid.Column="1" Text="BTC" FontSize="14" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               VerticalAlignment="Center" Margin="12,0,0,0" />
+                                </Grid>
+                                <TextBlock Text="The amount you want to get funded"
+                                           FontSize="12" Foreground="{DynamicResource BitcoinAccent}" />
+                            </StackPanel>
+
+                            <!-- Quick-select amount presets — ListBox with ButtonizedListBoxItem -->
+                            <ListBox Name="FundAmountPresets" Classes="Transparent Horizontal"
+                                     ItemContainerTheme="{StaticResource ButtonizedListBoxItem}"
+                                     SelectionMode="Single">
+                                <ListBoxItem Tag="0.5">
+                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="0.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                    </StackPanel>
+                                </ListBoxItem>
+                                <ListBoxItem Tag="1">
+                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="1" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                    </StackPanel>
+                                </ListBoxItem>
+                                <ListBoxItem Tag="2.5">
+                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="2.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                    </StackPanel>
+                                </ListBoxItem>
+                            </ListBox>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 2: Threshold for Approval (blue accent) -->
+                <Border CornerRadius="12" BorderBrush="#3B82F6" BorderThickness="1"
+                        Background="{DynamicResource BlueWash}" ClipToBounds="True">
+                    <StackPanel>
+                        <Border Padding="24" CornerRadius="11,11,0,0">
+                            <Border.Background>
+                                <SolidColorBrush Color="#3B82F6" Opacity="0.08" />
+                            </Border.Background>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-solid fa-shield"
+                                       FontSize="20"
+                                       Foreground="#3B82F6" />
+                                <TextBlock Text="Threshold for Approval" FontSize="16" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <StackPanel Spacing="12" Margin="24">
+                            <TextBlock Text="Threshold" FontSize="14" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Text="{Binding ApprovalThreshold, Mode=TwoWay}"
+                                         Watermark="0.001"
+                                         FontSize="20" FontWeight="Bold"
+                                         Padding="12,12,16,12" CornerRadius="8" />
+                                <TextBlock Grid.Column="1" Text="BTC" FontSize="14" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           VerticalAlignment="Center" Margin="12,0,0,0" />
+                            </Grid>
+                            <TextBlock FontSize="12" Foreground="#3B82F6" TextWrapping="Wrap">
+                                <Run Text="Supporters who contribute over " />
+                                <Run Text="{Binding ApprovalThreshold, Mode=OneWay}" FontWeight="SemiBold" />
+                                <Run Text=" BTC will require approval by you" />
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Panel>
+
+        <!-- ─── SUBSCRIPTION TYPE: Step 4 ─── -->
+        <Panel IsVisible="{Binding IsSubscription}">
+            <StackPanel Spacing="24">
+                <TextBlock Text="Set your subscription pricing."
+                           FontSize="14" Foreground="{DynamicResource TextMuted}" />
+
+                <!-- Card 1: Subscription Price (Bitcoin accent) -->
+                <Border CornerRadius="12" BorderBrush="{DynamicResource BitcoinAccent}" BorderThickness="1"
+                        Background="{DynamicResource BitcoinWash}" ClipToBounds="True">
+                    <StackPanel>
+                        <Border Padding="24" CornerRadius="11,11,0,0">
+                            <Border.Background>
+                                <SolidColorBrush Color="#F7931A" Opacity="0.08" />
+                            </Border.Background>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-brands fa-bitcoin"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource BitcoinAccent}" />
+                                <TextBlock Text="Subscription Price" FontSize="16" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <StackPanel Spacing="16" Margin="24">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Price per period (BTC) *" FontSize="14" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}" />
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBox Text="{Binding SubscriptionPrice, Mode=TwoWay}"
+                                             Watermark="0.00000000"
+                                             FontSize="20" FontWeight="Bold"
+                                             Padding="12,12,16,12" CornerRadius="8" />
+                                    <TextBlock Grid.Column="1" Text="BTC" FontSize="14" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               VerticalAlignment="Center" Margin="12,0,0,0" />
+                                </Grid>
+                                <TextBlock Text="Amount charged per subscription period"
+                                           FontSize="12" Foreground="{DynamicResource BitcoinAccent}" />
+                            </StackPanel>
+
+                            <!-- Quick-select price presets — ListBox with ButtonizedListBoxItem -->
+                            <ListBox Name="SubPricePresets" Classes="Transparent Horizontal"
+                                     ItemContainerTheme="{StaticResource ButtonizedListBoxItem}"
+                                     SelectionMode="Single">
+                                <ListBoxItem Tag="0.00001">
+                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="0.00001" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                    </StackPanel>
+                                </ListBoxItem>
+                                <ListBoxItem Tag="0.00005">
+                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="0.00005" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                    </StackPanel>
+                                </ListBoxItem>
+                                <ListBoxItem Tag="0.0001">
+                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="0.0001" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                    </StackPanel>
+                                </ListBoxItem>
+                                <ListBoxItem Tag="0.0005">
+                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="0.0005" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
+                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                    </StackPanel>
+                                </ListBoxItem>
+                            </ListBox>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Panel>
+
+    </StackPanel>
+</UserControl>
