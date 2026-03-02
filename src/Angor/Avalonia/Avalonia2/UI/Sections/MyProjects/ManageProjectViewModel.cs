@@ -1,6 +1,12 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Shared;
+using Avalonia2.Composition;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
 
@@ -89,52 +95,48 @@ public class ManageStageViewModel
 
 /// <summary>
 /// ViewModel for the Manage Project detail screen (founder's view).
-/// Vue ref: ManageFunds.vue — visual-only, all data hardcoded.
+/// Connected to SDK for claimable transactions and fund release operations.
 /// </summary>
 public partial class ManageProjectViewModel : ReactiveObject
 {
+    private readonly IFounderAppService _founderAppService;
+
     /// <summary>The project being managed (from MyProjectsView).</summary>
     public MyProjectItemViewModel Project { get; }
 
-    // ── Project Statistics (Vue lines 1072-1075) ──
-    public string TotalInvestment { get; } = "0.0217701";
-    public string AvailableBalance { get; } = "0.00544254";
-    public string Withdrawable { get; } = "0";
-    public int TotalStages { get; } = 4;
+    // ── Project Statistics ──
+    public string TotalInvestment { get; private set; } = "0.0000";
+    public string AvailableBalance { get; private set; } = "0.0000";
+    public string Withdrawable { get; private set; } = "0";
+    public int TotalStages { get; private set; }
 
-    // ── Project ID (Vue line 1069) ──
-    public string ProjectId { get; } = "angor1qc8jlugwgp90vzkhf336d8exldhwd8z5u4ssaen";
+    // ── Project ID ──
+    public string ProjectId => Project.ProjectIdentifier;
 
-    // ── Private Keys Data (Vue ManageFunds.vue lines 634-818, stubbed) ──
-    public string FounderKey { get; } = "02a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2";
-    public string RecoveryKey { get; } = "03f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2";
-    public string NostrNpub { get; } = "npub1qkx8rft57j4wz2k3l8m9n0p5q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f1g2h3";
-    public string Nip05 { get; } = "angor_project@nostr.angor.io";
-    public string NostrNsec { get; } = "nsec1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1";
-    public string NostrHex { get; } = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    // ── Private Keys Data (placeholder — SDK doesn't expose these directly) ──
+    public string FounderKey { get; } = "";
+    public string RecoveryKey { get; } = "";
+    public string NostrNpub { get; } = "";
+    public string Nip05 { get; } = "";
+    public string NostrNsec { get; } = "";
+    public string NostrHex { get; } = "";
 
-    // ── Next Stage Countdown (Vue lines 1103-1107) ──
-    public int CountdownDays { get; } = 9;
-    public int CountdownHours { get; } = 13;
-    public int CountdownMins { get; } = 38;
+    // ── Next Stage Countdown ──
+    public int CountdownDays { get; private set; }
+    public int CountdownHours { get; private set; }
+    public int CountdownMins { get; private set; }
 
-    // ── Transaction Statistics (computed from stages: total=5, spent=3, available=2) ──
-    public int TransactionTotal { get; } = 5;
-    public int TransactionSpent { get; } = 3;
-    public int TransactionAvailable { get; } = 2;
+    // ── Transaction Statistics ──
+    public int TransactionTotal { get; private set; }
+    public int TransactionSpent { get; private set; }
+    public int TransactionAvailable { get; private set; }
 
-    // ── Stages (Vue lines 1149-1229, default project) ──
-    public ObservableCollection<ManageStageViewModel> Stages { get; }
+    // ── Stages ──
+    public ObservableCollection<ManageStageViewModel> Stages { get; } = new();
 
     // ── Modal State ──
-
-    /// <summary>True when the project didn't meet its target — shows "Release Funds" flow instead of "Claim".</summary>
     [Reactive] public partial bool ProjectDidntMeetTarget { get; set; }
-
-    /// <summary>True when funds have been released back to investors.</summary>
     [Reactive] public partial bool FundsReleasedToInvestors { get; set; }
-
-    /// <summary>Index of the stage currently selected for claim/spent/release modals.</summary>
     [Reactive] public partial int SelectedStageIndex { get; set; }
 
     // ── Claim Flow Modals ──
@@ -157,7 +159,6 @@ public partial class ManageProjectViewModel : ReactiveObject
     [Reactive] public partial string ClaimedAmount { get; set; }
     [Reactive] public partial string ReleasedAmount { get; set; }
 
-    /// <summary>Returns the currently selected stage, or null.</summary>
     public ManageStageViewModel? SelectedStage =>
         SelectedStageIndex >= 0 && SelectedStageIndex < Stages.Count
             ? Stages[SelectedStageIndex]
@@ -165,75 +166,149 @@ public partial class ManageProjectViewModel : ReactiveObject
 
     public ManageProjectViewModel(MyProjectItemViewModel project)
     {
+        _founderAppService = ServiceLocator.FounderApp;
         Project = project;
         WalletPassword = "";
         ClaimedAmount = "0";
         ReleasedAmount = "0";
 
-        Stages = new ObservableCollection<ManageStageViewModel>
+        // Load claimable transactions from SDK
+        _ = LoadClaimableTransactionsAsync();
+    }
+
+    /// <summary>
+    /// Load claimable transactions from SDK.
+    /// </summary>
+    public async Task LoadClaimableTransactionsAsync()
+    {
+        if (string.IsNullOrEmpty(Project.ProjectIdentifier) ||
+            string.IsNullOrEmpty(Project.OwnerWalletId)) return;
+
+        try
         {
-            new()
+            var walletId = new WalletId(Project.OwnerWalletId);
+            var projectId = new ProjectId(Project.ProjectIdentifier);
+
+            var result = await _founderAppService.GetClaimableTransactions(
+                new GetClaimableTransactions.GetClaimableTransactionsRequest(walletId, projectId));
+
+            if (result.IsFailure) return;
+
+            Stages.Clear();
+            var transactions = result.Value.Transactions.ToList();
+            double totalAmount = 0;
+            double availableAmount = 0;
+            int spentCount = 0;
+            int availableCount = 0;
+
+            // Group by stage
+            var stageGroups = transactions.GroupBy(t => t.StageNumber).OrderBy(g => g.Key);
+            foreach (var group in stageGroups)
             {
-                Number = 1,
-                AmountLeft = "0",
-                UtxoCount = 0,
-                CompletionDate = "27 October 2025",
-                Available = false,
-                CanClaim = false,
-                SpentTransactionCount = 1,
-                UnspentTransactionCount = 0,
-                SpentTransactions = new ObservableCollection<UtxoTransactionViewModel>
+                var stageTransactions = group.ToList();
+                var stageAmount = stageTransactions.Sum(t => t.Amount.Sats / 100_000_000.0);
+                totalAmount += stageAmount;
+
+                var claimable = stageTransactions.Where(t => t.ClaimStatus == Angor.Sdk.Funding.Founder.Dtos.ClaimStatus.Unspent).ToList();
+                var spent = stageTransactions.Where(t => t.ClaimStatus == Angor.Sdk.Funding.Founder.Dtos.ClaimStatus.SpentByFounder).ToList();
+
+                availableAmount += claimable.Sum(t => t.Amount.Sats / 100_000_000.0);
+                availableCount += claimable.Count;
+                spentCount += spent.Count;
+
+                var stage = new ManageStageViewModel
                 {
-                    new() { TxId = "a1b2c3d4e5f6...7890abcd", Amount = "0.00544254", IsSpent = true }
-                }
-            },
-            new()
-            {
-                Number = 2,
-                AmountLeft = "0",
-                UtxoCount = 0,
-                CompletionDate = "10 November 2025",
-                Available = false,
-                CanClaim = false,
-                SpentTransactionCount = 2,
-                UnspentTransactionCount = 0,
-                SpentTransactions = new ObservableCollection<UtxoTransactionViewModel>
+                    Number = group.Key,
+                    AmountLeft = claimable.Sum(t => t.Amount.Sats / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture),
+                    UtxoCount = stageTransactions.Count,
+                    CompletionDate = stageTransactions.FirstOrDefault()?.DynamicReleaseDate?.ToString("dd MMMM yyyy") ?? "",
+                    Available = claimable.Count > 0,
+                    CanClaim = claimable.Count > 0,
+                    SpentTransactionCount = spent.Count,
+                    UnspentTransactionCount = claimable.Count,
+                };
+
+                foreach (var tx in claimable)
                 {
-                    new() { TxId = "f8e7d6c5b4a3...2109fedc", Amount = "0.00326553", IsSpent = true },
-                    new() { TxId = "1a2b3c4d5e6f...7089abef", Amount = "0.00217701", IsSpent = true }
+                    stage.AvailableTransactions.Add(new UtxoTransactionViewModel
+                    {
+                        TxId = tx.InvestorAddress,
+                        Amount = (tx.Amount.Sats / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture),
+                        IsSpent = false
+                    });
                 }
-            },
-            new()
-            {
-                Number = 3,
-                AmountLeft = "0.00450000",
-                UtxoCount = 1,
-                CompletionDate = "24 November 2025",
-                Available = true,
-                CanClaim = true,
-                SpentTransactionCount = 0,
-                UnspentTransactionCount = 1,
-                AvailableTransactions = new ObservableCollection<UtxoTransactionViewModel>
+
+                foreach (var tx in spent)
                 {
-                    new() { TxId = "9f8e7d6c5b4a...3210dcba", Amount = "0.00450000", IsSpent = false }
+                    stage.SpentTransactions.Add(new UtxoTransactionViewModel
+                    {
+                        TxId = tx.InvestorAddress,
+                        Amount = (tx.Amount.Sats / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture),
+                        IsSpent = true
+                    });
                 }
-            },
-            new()
-            {
-                Number = 4,
-                AmountLeft = "0.00544254",
-                UtxoCount = 1,
-                CompletionDate = "08 December 2025",
-                Available = true,
-                CanClaim = false,
-                DaysUntilAvailable = 9,
-                SpentTransactionCount = 0,
-                UnspentTransactionCount = 1,
-                AvailableTransactions = new ObservableCollection<UtxoTransactionViewModel>
-                {
-                    new() { TxId = "b3c4d5e6f7a8...9012efgh", Amount = "0.00544254", IsSpent = false }
-                }
+
+                Stages.Add(stage);
             }
-        };
+
+            TotalInvestment = totalAmount.ToString("F8", CultureInfo.InvariantCulture);
+            AvailableBalance = availableAmount.ToString("F8", CultureInfo.InvariantCulture);
+            TotalStages = Stages.Count;
+            TransactionTotal = transactions.Count;
+            TransactionSpent = spentCount;
+            TransactionAvailable = availableCount;
+
+            this.RaisePropertyChanged(nameof(TotalInvestment));
+            this.RaisePropertyChanged(nameof(AvailableBalance));
+            this.RaisePropertyChanged(nameof(TotalStages));
+            this.RaisePropertyChanged(nameof(TransactionTotal));
+            this.RaisePropertyChanged(nameof(TransactionSpent));
+            this.RaisePropertyChanged(nameof(TransactionAvailable));
+        }
+        catch
+        {
+            // SDK call failed
+        }
+    }
+
+    /// <summary>
+    /// Release funds back to investors for releasable transactions.
+    /// </summary>
+    public async Task<bool> ReleaseFundsToInvestorsAsync()
+    {
+        if (string.IsNullOrEmpty(Project.ProjectIdentifier) ||
+            string.IsNullOrEmpty(Project.OwnerWalletId)) return false;
+
+        try
+        {
+            var walletId = new WalletId(Project.OwnerWalletId);
+            var projectId = new ProjectId(Project.ProjectIdentifier);
+
+            // Get releasable transactions
+            var releasableResult = await _founderAppService.GetReleasableTransactions(
+                new GetReleasableTransactions.GetReleasableTransactionsRequest(walletId, projectId));
+
+            if (releasableResult.IsFailure) return false;
+
+            var eventIds = releasableResult.Value.Transactions
+                .Where(t => t.Released == null)
+                .Select(t => t.InvestmentEventId)
+                .ToList();
+
+            if (eventIds.Count == 0) return false;
+
+            var releaseResult = await _founderAppService.ReleaseFunds(
+                new ReleaseFunds.ReleaseFundsRequest(walletId, projectId, eventIds));
+
+            if (releaseResult.IsSuccess)
+            {
+                FundsReleasedToInvestors = true;
+                await LoadClaimableTransactionsAsync();
+                return true;
+            }
+        }
+        catch { }
+
+        return false;
     }
 }

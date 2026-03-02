@@ -1,5 +1,11 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Wallet.Application;
+using Avalonia2.Composition;
 using Avalonia2.UI.Shared;
 using ReactiveUI;
 
@@ -21,6 +27,10 @@ public class MyProjectItemViewModel
     public string? BannerUrl { get; set; }
     public string? LogoUrl { get; set; }
     public string StartDate { get; set; } = "";
+    /// <summary>SDK project identifier for operations</summary>
+    public string ProjectIdentifier { get; set; } = "";
+    /// <summary>SDK wallet ID that owns this project</summary>
+    public string OwnerWalletId { get; set; } = "";
 
     private Shared.ProjectType TypeEnum => ProjectTypeExtensions.FromLowerString(ProjectType);
 
@@ -35,58 +45,104 @@ public class MyProjectItemViewModel
 }
 
 /// <summary>
-/// My Projects ViewModel — manages the empty state, create wizard toggle,
-/// and list of deployed projects. Visual layer only.
+/// My Projects ViewModel — connected to SDK for founder project discovery and management.
+/// Uses IProjectAppService.GetFounderProjects() to load projects owned by the user.
 /// </summary>
 public partial class MyProjectsViewModel : ReactiveObject
 {
+    private readonly IProjectAppService _projectAppService;
+    private readonly IWalletAppService _walletAppService;
+
     [Reactive] private bool showCreateWizard;
-
-    /// <summary>
-    /// When set, the Manage Project detail screen is shown for this project.
-    /// Navigation: project list → manage project detail.
-    /// </summary>
     [Reactive] private ManageProjectViewModel? selectedManageProject;
+    [Reactive] private bool isLoading;
 
-    public MyProjectsViewModel()
-    {
-    }
-
-    /// <summary>
-    /// True when the user has deployed at least one project.
-    /// </summary>
     public bool HasProjects => Projects.Count > 0;
 
-    /// <summary>
-    /// Sum of all raised amounts, formatted for display.
-    /// </summary>
     public string TotalRaised
     {
         get
         {
             var total = Projects.Sum(p =>
             {
-                if (double.TryParse(p.Raised, System.Globalization.NumberStyles.Any,
-                    System.Globalization.CultureInfo.InvariantCulture, out var v))
+                if (double.TryParse(p.Raised, NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
                     return v;
                 return 0;
             });
-            return total.ToString("F5");
+            return total.ToString("F5", CultureInfo.InvariantCulture);
         }
     }
 
-    /// <summary>
-    /// List of deployed projects (populated after wizard completion).
-    /// </summary>
     public ObservableCollection<MyProjectItemViewModel> Projects { get; } = new();
 
-    /// <summary>
-    /// Open the create project wizard.
-    /// </summary>
-    public void LaunchCreateWizard()
+    public MyProjectsViewModel()
     {
-        ShowCreateWizard = true;
+        _projectAppService = ServiceLocator.ProjectApp;
+        _walletAppService = ServiceLocator.WalletApp;
+
+        // Load founder projects from SDK
+        _ = LoadFounderProjectsAsync();
     }
+
+    /// <summary>
+    /// Load founder's own projects from SDK for all wallets.
+    /// </summary>
+    public async Task LoadFounderProjectsAsync()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var metadatasResult = await _walletAppService.GetMetadatas();
+            if (metadatasResult.IsFailure) return;
+
+            Projects.Clear();
+
+            foreach (var meta in metadatasResult.Value)
+            {
+                var projectsResult = await _projectAppService.GetFounderProjects(meta.Id);
+                if (projectsResult.IsFailure) continue;
+
+                foreach (var dto in projectsResult.Value.Projects)
+                {
+                    var targetBtc = dto.TargetAmount / 100_000_000.0;
+                    var projectType = dto.ProjectType switch
+                    {
+                        Angor.Shared.Models.ProjectType.Fund => "fund",
+                        Angor.Shared.Models.ProjectType.Subscribe => "subscription",
+                        _ => "investment"
+                    };
+
+                    Projects.Add(new MyProjectItemViewModel
+                    {
+                        Name = dto.Name ?? "Untitled Project",
+                        Description = dto.ShortDescription ?? "",
+                        ProjectType = projectType,
+                        TargetAmount = targetBtc.ToString("F5", CultureInfo.InvariantCulture),
+                        Status = "Open",
+                        StartDate = dto.FundingStartDate.ToString("yyyy-MM-dd"),
+                        BannerUrl = dto.Banner?.ToString(),
+                        LogoUrl = dto.Avatar?.ToString(),
+                        ProjectIdentifier = dto.Id?.Value ?? "",
+                        OwnerWalletId = meta.Id.Value
+                    });
+                }
+            }
+
+            this.RaisePropertyChanged(nameof(HasProjects));
+            this.RaisePropertyChanged(nameof(TotalRaised));
+        }
+        catch
+        {
+            // SDK call failed
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public void LaunchCreateWizard() => ShowCreateWizard = true;
 
     /// <summary>
     /// Called after a project is successfully deployed.
@@ -109,17 +165,8 @@ public partial class MyProjectsViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(TotalRaised));
     }
 
-    /// <summary>
-    /// Close the wizard and return to the project list / empty state.
-    /// </summary>
-    public void CloseCreateWizard()
-    {
-        ShowCreateWizard = false;
-    }
+    public void CloseCreateWizard() => ShowCreateWizard = false;
 
-    /// <summary>
-    /// Clear all projects (used when toggling to empty state in prototype settings).
-    /// </summary>
     public void ClearProjects()
     {
         Projects.Clear();
@@ -127,71 +174,10 @@ public partial class MyProjectsViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(TotalRaised));
     }
 
-    /// <summary>
-    /// Open the Manage Project detail screen for a specific project.
-    /// Vue ref: clicking "Manage Project" on a ProjectCard navigates to ManageFunds.vue.
-    /// </summary>
     public void OpenManageProject(MyProjectItemViewModel project)
     {
         SelectedManageProject = new ManageProjectViewModel(project);
     }
 
-    /// <summary>
-    /// Close the Manage Project detail screen and return to the project list.
-    /// </summary>
-    public void CloseManageProject()
-    {
-        SelectedManageProject = null;
-    }
-
-    /// <summary>
-    /// Populate with sample projects for visual testing of the populated state.
-    /// Called from code-behind when needed for development preview.
-    /// </summary>
-    public void LoadSampleProjects()
-    {
-        Projects.Clear();
-        Projects.Add(new MyProjectItemViewModel
-        {
-            Name = "Hope With Bitcoin",
-            Description = "Supporting communities through Bitcoin adoption and financial literacy programs across developing nations.",
-            ProjectType = "fund",
-            TargetAmount = "2.00000",
-            Status = "Open",
-            InvestorCount = 12,
-            Raised = "0.50000",
-            Progress = 25,
-            StartDate = "2025-03-01",
-            BannerUrl = "https://angor.tx1138.com/projects/hope-with-bitcoin-banner.webp",
-            LogoUrl = "https://angor.tx1138.com/projects/hope-with-bitcoin-logo.webp",
-        });
-        Projects.Add(new MyProjectItemViewModel
-        {
-            Name = "Zap AI",
-            Description = "AI-powered tools for the Bitcoin ecosystem with advanced analytics and lightning-fast predictions.",
-            ProjectType = "investment",
-            TargetAmount = "0.75000",
-            Status = "Open",
-            InvestorCount = 5,
-            Raised = "0.45678",
-            Progress = 61,
-            StartDate = "2025-01-15",
-            BannerUrl = "https://angor.tx1138.com/projects/zap-ai-banner.png",
-            LogoUrl = "https://angor.tx1138.com/projects/zap-ai-logo.png",
-        });
-        Projects.Add(new MyProjectItemViewModel
-        {
-            Name = "Bitcoin Education Hub",
-            Description = "A comprehensive online learning platform dedicated to Bitcoin technology and development.",
-            ProjectType = "subscription",
-            TargetAmount = "1.50000",
-            Status = "Open",
-            InvestorCount = 30,
-            Raised = "1.20000",
-            Progress = 80,
-            StartDate = "2024-11-10",
-        });
-        this.RaisePropertyChanged(nameof(HasProjects));
-        this.RaisePropertyChanged(nameof(TotalRaised));
-    }
+    public void CloseManageProject() => SelectedManageProject = null;
 }

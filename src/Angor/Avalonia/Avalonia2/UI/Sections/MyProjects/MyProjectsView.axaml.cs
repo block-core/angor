@@ -16,24 +16,7 @@ public partial class MyProjectsView : UserControl
         var vm = new MyProjectsViewModel();
         DataContext = vm;
 
-        // Load sample projects only if prototype toggle says populated
-        if (SharedViewModels.Prototype.ShowPopulatedApp)
-            vm.LoadSampleProjects();
-
         _subscriptions = new CompositeDisposable();
-
-        // React to prototype toggle changes (populated <-> empty)
-        SharedViewModels.Prototype.WhenAnyValue(x => x.ShowPopulatedApp)
-            .Skip(1) // skip initial value (already handled above)
-            .Subscribe(showPopulated =>
-            {
-                if (showPopulated)
-                    vm.LoadSampleProjects();
-                else
-                    vm.ClearProjects();
-                UpdateListVisibility(vm);
-            })
-            .DisposeWith(_subscriptions);
 
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
 

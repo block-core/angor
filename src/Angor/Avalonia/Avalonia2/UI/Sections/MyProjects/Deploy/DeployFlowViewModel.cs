@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Reactive;
+using Angor.Sdk.Wallet.Application;
+using Avalonia2.Composition;
 using Avalonia2.UI.Shared;
 using ReactiveUI;
 
@@ -28,10 +30,12 @@ public partial class WalletItem : ReactiveObject
 /// <summary>
 /// ViewModel for the deploy flow overlay.
 /// Orchestrates: Wallet Selector → Pay Fee → Success.
-/// All data is stubbed — no SDK dependencies.
+/// Connected to SDK for wallet loading.
 /// </summary>
 public partial class DeployFlowViewModel : ReactiveObject
 {
+    private readonly IWalletAppService _walletAppService;
+
     // ── State ──
     [Reactive] private DeployScreen currentScreen;
     [Reactive] private bool isVisible;
@@ -48,7 +52,6 @@ public partial class DeployFlowViewModel : ReactiveObject
         ? $"Pay with {SelectedWallet.Name}"
         : "Choose Wallet";
 
-    // ── Stub data ──
     public string DeployFee { get; } = "0.0001 BTC";
     public string InvoiceString { get; } = Constants.InvoiceString;
 
@@ -57,15 +60,12 @@ public partial class DeployFlowViewModel : ReactiveObject
     /// <summary>Callback when deploy flow completes successfully.</summary>
     public Action? OnDeployCompleted { get; set; }
 
-    public ObservableCollection<WalletItem> Wallets { get; } =
-    [
-        new() { Name = "Main Wallet", Network = "Mainnet", Balance = "0.04821000 BTC" },
-        new() { Name = "Angor Wallet", Network = "Signet", Balance = "1.25000000 BTC" },
-        new() { Name = "Test Wallet", Network = "Testnet", Balance = "0.50000000 BTC" }
-    ];
+    // ── Wallets loaded from SDK ──
+    public ObservableCollection<WalletItem> Wallets { get; } = new();
 
     public DeployFlowViewModel()
     {
+        _walletAppService = ServiceLocator.WalletApp;
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
         PayViaInvoiceCommand = ReactiveCommand.CreateFromTask(PayViaInvoiceAsync);
@@ -98,6 +98,38 @@ public partial class DeployFlowViewModel : ReactiveObject
         IsDeploying = false;
         DeployStatusText = "Waiting for payment...";
         IsVisible = true;
+
+        // Load wallets from SDK
+        _ = LoadWalletsAsync();
+    }
+
+    /// <summary>Load wallets from SDK for the wallet selector.</summary>
+    private async Task LoadWalletsAsync()
+    {
+        try
+        {
+            var metadatasResult = await _walletAppService.GetMetadatas();
+            if (metadatasResult.IsFailure) return;
+
+            Wallets.Clear();
+            foreach (var meta in metadatasResult.Value)
+            {
+                var balanceResult = await _walletAppService.GetBalance(meta.Id);
+                var balanceBtc = balanceResult.IsSuccess ? balanceResult.Value.Sats / 100_000_000.0 : 0;
+
+                Wallets.Add(new WalletItem
+                {
+                    Name = meta.Name,
+                    Network = "Bitcoin",
+                    Balance = $"{balanceBtc:F8} BTC",
+                    WalletId = meta.Id.Value
+                });
+            }
+        }
+        catch
+        {
+            // Wallet loading failed
+        }
     }
 
     /// <summary>Close the overlay without completing.
