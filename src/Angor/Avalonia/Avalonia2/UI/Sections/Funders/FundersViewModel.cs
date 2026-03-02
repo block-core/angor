@@ -1,5 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Shared;
+using Angor.Sdk.Wallet.Application;
+using Avalonia2.Composition;
 using Avalonia2.UI.Shell;
 using Avalonia2.UI.Shared;
 
@@ -24,6 +31,18 @@ public partial class SignatureRequestViewModel : ReactiveObject
     public string Npub { get; set; } = "npub1aunjpz36t2vwtqxyph2jc30c4feng4gv5yhhw6yckgzxa0rn52tq7tsnm7";
     /// <summary>Whether the chat has messages</summary>
     public bool HasMessages { get; set; }
+    /// <summary>SDK event ID for the investment request</summary>
+    public string EventId { get; set; } = "";
+    /// <summary>SDK project identifier</summary>
+    public string ProjectIdentifier { get; set; } = "";
+    /// <summary>SDK wallet ID for the founder</summary>
+    public string FounderWalletId { get; set; } = "";
+    /// <summary>Investment transaction hex for approval</summary>
+    public string InvestmentTransactionHex { get; set; } = "";
+    /// <summary>Investor Nostr public key</summary>
+    public string InvestorNostrPubKey { get; set; } = "";
+    /// <summary>Investment amount in sats</summary>
+    public long AmountSats { get; set; }
 
     // Status visibility helpers for XAML — reactive via [ObservableAsProperty] would be ideal
     // but since Status changes infrequently and these are re-read on each filter update,
@@ -48,141 +67,144 @@ public partial class SignatureRequestViewModel : ReactiveObject
 }
 
 /// <summary>
-/// Funders ViewModel — founder's view of incoming signature/funding requests.
-/// Reads from SharedViewModels.Signatures (shared store) so signatures created
-/// during the invest flow appear here. Also includes hardcoded sample data.
-/// Vue reference: App.vue desktop Funders page (lines 3152-3335).
+/// Funders ViewModel — connected to SDK for loading investment requests and approval.
+/// Uses IFounderAppService.GetProjectInvestments() to load pending signatures
+/// and ApproveInvestment() to approve them.
 /// </summary>
 public partial class FundersViewModel : ReactiveObject, IDisposable
 {
-    [Reactive] private bool hasFunders = true;
+    private readonly IFounderAppService _founderAppService;
+    private readonly IProjectAppService _projectAppService;
+    private readonly IWalletAppService _walletAppService;
 
-    /// <summary>
-    /// Current filter tab: waiting, approved, rejected.
-    /// Vue: funderFilter reactive variable.
-    /// </summary>
+    [Reactive] private bool hasFunders;
     [Reactive] private string currentFilter = SignatureStatus.Waiting.ToLowerString();
+    [Reactive] private bool isLoading;
 
-    /// <summary>
-    /// Tracks which signature cards are expanded (showing npub).
-    /// </summary>
     public ObservableCollection<int> ExpandedSignatureIds { get; } = new();
 
-    // Cached list of all VMs — invalidated on collection/toggle changes, avoids repeated allocation.
     private List<SignatureRequestViewModel>? _cachedAllViewModels;
 
-    // ── Signature counts (Vue: signatureCounts) ──
     public int WaitingCount => GetAllViewModels().Count(s => s.Status == SignatureStatus.Waiting.ToLowerString());
     public int ApprovedCount => GetAllViewModels().Count(s => s.Status == SignatureStatus.Approved.ToLowerString());
     public int RejectedCount => GetAllViewModels().Count(s => s.Status == SignatureStatus.Rejected.ToLowerString());
     public bool HasRejected => RejectedCount > 0;
 
-    // ── Sample signatures (always present as demo data) ──
-    private readonly List<SignatureRequestViewModel> _sampleSignatures = new()
-    {
-        new SignatureRequestViewModel
-        {
-            Id = 1,
-            ProjectTitle = "Hope With \u20bfitcoin",
-            Amount = "0.5000",
-            Currency = "BTC",
-            Date = "Feb 25, 2026",
-            Time = "14:30",
-            Status = SignatureStatus.Waiting.ToLowerString(),
-            Npub = "npub1q8s7k4x9z2m3n4p5r6t7u8v9w0x1y2z3a4b5c6d7e8f",
-            HasMessages = true
-        },
-        new SignatureRequestViewModel
-        {
-            Id = 2,
-            ProjectTitle = "Hope With \u20bfitcoin",
-            Amount = "0.7500",
-            Currency = "BTC",
-            Date = "Feb 20, 2026",
-            Time = "09:15",
-            Status = SignatureStatus.Waiting.ToLowerString(),
-            Npub = "npub1m2d9f3a5b6c7d8e9f0g1h2i3j4k5l6m7n8o9p0q1r",
-            HasMessages = false
-        },
-        new SignatureRequestViewModel
-        {
-            Id = 3,
-            ProjectTitle = "Bitcoin Education Hub",
-            Amount = "1.2500",
-            Currency = "BTC",
-            Date = "Feb 18, 2026",
-            Time = "11:45",
-            Status = SignatureStatus.Approved.ToLowerString(),
-            Npub = "npub1x7r2c5b4d6e8f0a1b3c5d7e9f1g3h5i7j9k1l3m5",
-            HasMessages = true
-        },
-        new SignatureRequestViewModel
-        {
-            Id = 4,
-            ProjectTitle = "Hope With \u20bfitcoin",
-            Amount = "0.2500",
-            Currency = "BTC",
-            Date = "Feb 15, 2026",
-            Time = "16:20",
-            Status = SignatureStatus.Rejected.ToLowerString(),
-            Npub = "npub1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u",
-            HasMessages = false
-        }
-    };
+    // SDK-loaded investment requests
+    private readonly List<SignatureRequestViewModel> _sdkSignatures = new();
 
-    /// <summary>
-    /// Filtered signatures based on current filter tab.
-    /// </summary>
     [Reactive] private ObservableCollection<SignatureRequestViewModel> filteredSignatures = new();
 
     private readonly CompositeDisposable _disposables = new();
-
-    // Track the CollectionChanged handler so we can unsubscribe
     private readonly NotifyCollectionChangedEventHandler _collectionChangedHandler;
 
     public FundersViewModel()
     {
-        // React to filter changes — WhenAnyValue emits the initial value immediately,
-        // so this also handles the first call to UpdateFilteredSignatures().
+        _founderAppService = ServiceLocator.FounderApp;
+        _projectAppService = ServiceLocator.ProjectApp;
+        _walletAppService = ServiceLocator.WalletApp;
+
         this.WhenAnyValue(x => x.CurrentFilter)
             .Subscribe(_ => UpdateFilteredSignatures())
             .DisposeWith(_disposables);
 
-        // Re-filter when the shared store changes (new investments)
+        // Re-filter when the shared store changes (new investments from UI flow)
         _collectionChangedHandler = (_, _) =>
         {
-            _cachedAllViewModels = null; // invalidate cache
+            _cachedAllViewModels = null;
             UpdateFilteredSignatures();
         };
         SharedViewModels.Signatures.AllSignatures.CollectionChanged += _collectionChangedHandler;
 
-        // React to prototype toggle (show populated vs empty).
-        // Skip(1) to avoid double-processing — the initial filter subscription above
-        // already called UpdateFilteredSignatures with the current toggle state.
-        SharedViewModels.Prototype.WhenAnyValue(x => x.ShowPopulatedApp)
-            .Skip(1)
-            .Subscribe(_ =>
-            {
-                _cachedAllViewModels = null; // invalidate cache
-                UpdateFilteredSignatures();
-            })
-            .DisposeWith(_disposables);
+        // Load investment requests from SDK
+        _ = LoadInvestmentRequestsAsync();
     }
 
     /// <summary>
-    /// Get all signature view models: sample data + shared store entries.
-    /// When ShowPopulatedApp is false, only include shared store entries (user-created).
-    /// Results are cached and invalidated when the collection or toggle changes.
+    /// Load investment requests from SDK for all founder projects.
     /// </summary>
+    public async Task LoadInvestmentRequestsAsync()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var metadatasResult = await _walletAppService.GetMetadatas();
+            if (metadatasResult.IsFailure) return;
+
+            _sdkSignatures.Clear();
+            int idCounter = 10000; // high ID to avoid collision with shared store IDs
+
+            foreach (var meta in metadatasResult.Value)
+            {
+                // Get founder's projects
+                var projectsResult = await _projectAppService.GetFounderProjects(meta.Id);
+                if (projectsResult.IsFailure) continue;
+
+                foreach (var project in projectsResult.Value.Projects)
+                {
+                    if (project.Id == null) continue;
+
+                    // Get investment requests for this project
+                    var investmentsResult = await _founderAppService.GetProjectInvestments(
+                        new GetProjectInvestments.GetProjectInvestmentsRequest(meta.Id, project.Id));
+
+                    if (investmentsResult.IsFailure) continue;
+
+                    foreach (var investment in investmentsResult.Value.Investments)
+                    {
+                        var status = investment.Status switch
+                        {
+                            InvestmentStatus.PendingFounderSignatures => SignatureStatus.Waiting.ToLowerString(),
+                            InvestmentStatus.FounderSignaturesReceived or InvestmentStatus.Invested =>
+                                SignatureStatus.Approved.ToLowerString(),
+                            InvestmentStatus.Cancelled => SignatureStatus.Rejected.ToLowerString(),
+                            _ => SignatureStatus.Waiting.ToLowerString()
+                        };
+
+                        var amountBtc = investment.Amount / 100_000_000.0;
+
+                        _sdkSignatures.Add(new SignatureRequestViewModel
+                        {
+                            Id = idCounter++,
+                            ProjectTitle = project.Name ?? "Unknown Project",
+                            Amount = amountBtc.ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
+                            Currency = "BTC",
+                            Date = investment.CreatedOn.ToString("MMM dd, yyyy"),
+                            Time = investment.CreatedOn.ToString("HH:mm"),
+                            Status = status,
+                            Npub = investment.InvestorNostrPubKey ?? "",
+                            EventId = investment.EventId ?? "",
+                            ProjectIdentifier = project.Id.Value,
+                            FounderWalletId = meta.Id.Value,
+                            InvestmentTransactionHex = investment.InvestmentTransactionHex ?? "",
+                            InvestorNostrPubKey = investment.InvestorNostrPubKey ?? "",
+                            AmountSats = investment.Amount
+                        });
+                    }
+                }
+            }
+
+            _cachedAllViewModels = null;
+            UpdateFilteredSignatures();
+        }
+        catch
+        {
+            // SDK call failed
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
     private List<SignatureRequestViewModel> GetAllViewModels()
     {
         if (_cachedAllViewModels != null) return _cachedAllViewModels;
 
         var all = new List<SignatureRequestViewModel>();
-        if (SharedViewModels.Prototype.ShowPopulatedApp)
-        {
-            all.AddRange(_sampleSignatures);
-        }
+        all.AddRange(_sdkSignatures);
+        // Include shared store entries (from UI-only invest flow)
         foreach (var shared in SharedViewModels.Signatures.AllSignatures)
         {
             all.Add(SignatureRequestViewModel.FromShared(shared));
@@ -196,9 +218,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
         var all = GetAllViewModels();
         var filtered = all.Where(s => s.Status == CurrentFilter).ToList();
 
-        // Replace entire collection — fires single CollectionChanged(Reset) instead of N+1 events
         FilteredSignatures = new ObservableCollection<SignatureRequestViewModel>(filtered);
-
         HasFunders = all.Count > 0;
 
         this.RaisePropertyChanged(nameof(WaitingCount));
@@ -207,30 +227,64 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
         this.RaisePropertyChanged(nameof(HasRejected));
     }
 
+    /// <summary>
+    /// Approve a signature request. If it's an SDK investment, call IFounderAppService.ApproveInvestment().
+    /// </summary>
     public void ApproveSignature(int id)
     {
-        // Check sample signatures first
-        var sampleSig = _sampleSignatures.FirstOrDefault(s => s.Id == id);
-        if (sampleSig != null)
+        var sdkSig = _sdkSignatures.FirstOrDefault(s => s.Id == id);
+        if (sdkSig != null)
         {
-            sampleSig.Status = SignatureStatus.Approved.ToLowerString();
-            _cachedAllViewModels = null;
-            UpdateFilteredSignatures();
+            _ = ApproveSignatureAsync(sdkSig);
             return;
         }
 
-        // Otherwise delegate to shared store (which fires SignatureStatusChanged event)
+        // Fallback to shared store
         SharedViewModels.Signatures.Approve(id);
         _cachedAllViewModels = null;
         UpdateFilteredSignatures();
     }
 
+    private async Task ApproveSignatureAsync(SignatureRequestViewModel sig)
+    {
+        if (string.IsNullOrEmpty(sig.EventId) || string.IsNullOrEmpty(sig.ProjectIdentifier) ||
+            string.IsNullOrEmpty(sig.FounderWalletId)) return;
+
+        try
+        {
+            var walletId = new WalletId(sig.FounderWalletId);
+            var projectId = new ProjectId(sig.ProjectIdentifier);
+
+            var investment = new Angor.Sdk.Funding.Founder.Domain.Investment(
+                sig.EventId,
+                DateTime.UtcNow,
+                sig.InvestmentTransactionHex,
+                sig.InvestorNostrPubKey,
+                sig.AmountSats,
+                InvestmentStatus.PendingFounderSignatures);
+
+            var result = await _founderAppService.ApproveInvestment(
+                new ApproveInvestment.ApproveInvestmentRequest(walletId, projectId, investment));
+
+            if (result.IsSuccess)
+            {
+                sig.Status = SignatureStatus.Approved.ToLowerString();
+                _cachedAllViewModels = null;
+                UpdateFilteredSignatures();
+            }
+        }
+        catch
+        {
+            // Approval failed
+        }
+    }
+
     public void RejectSignature(int id)
     {
-        var sampleSig = _sampleSignatures.FirstOrDefault(s => s.Id == id);
-        if (sampleSig != null)
+        var sdkSig = _sdkSignatures.FirstOrDefault(s => s.Id == id);
+        if (sdkSig != null)
         {
-            sampleSig.Status = SignatureStatus.Rejected.ToLowerString();
+            sdkSig.Status = SignatureStatus.Rejected.ToLowerString();
             _cachedAllViewModels = null;
             UpdateFilteredSignatures();
             return;
@@ -243,10 +297,10 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
 
     public void ApproveAll()
     {
-        // Approve sample signatures
-        foreach (var sig in _sampleSignatures.Where(s => s.Status == SignatureStatus.Waiting.ToLowerString()).ToList())
+        // Approve SDK signatures
+        foreach (var sig in _sdkSignatures.Where(s => s.Status == SignatureStatus.Waiting.ToLowerString()).ToList())
         {
-            sig.Status = SignatureStatus.Approved.ToLowerString();
+            _ = ApproveSignatureAsync(sig);
         }
         // Approve shared store signatures
         SharedViewModels.Signatures.ApproveAll();
@@ -264,10 +318,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
 
     public bool IsExpanded(int id) => ExpandedSignatureIds.Contains(id);
 
-    public void SetFilter(string filter)
-    {
-        CurrentFilter = filter;
-    }
+    public void SetFilter(string filter) => CurrentFilter = filter;
 
     public void Dispose()
     {
