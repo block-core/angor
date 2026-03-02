@@ -288,7 +288,7 @@
                                                    Margin="20,0,0,-32">
                                                 <Border CornerRadius="32" Width="64" Height="64"
                                                         Background="{DynamicResource Surface}"
-                                                        BoxShadow="0 4 12 0 #26000000"
+                                                        BoxShadow="{DynamicResource FloatingBtnShadow}"
                                                         ClipToBounds="True">
                                                     <Image Stretch="UniformToFill"
                                                            Source="{Binding AvatarBitmap}" />

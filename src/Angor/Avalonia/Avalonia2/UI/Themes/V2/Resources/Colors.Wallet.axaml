@@ -1,0 +1,88 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             LIGHT THEME — Wallet
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Default">
+
+            <!-- ── Wallet Switcher Header Button (light) ── -->
+            <!-- Vue: .wallet-selector-header — bg white, color #808080, hover bg gray-50 (border consolidated to StrokeSubtle) -->
+            <SolidColorBrush x:Key="WalletSwitcherBg" Color="White" />
+            <SolidColorBrush x:Key="WalletSwitcherFg" Color="#808080" />
+            <SolidColorBrush x:Key="WalletSwitcherHoverBg" Color="#F9FAFB" />
+
+            <!-- ── Create Wallet Modal (light) ── -->
+            <!-- Vue: Generate Wallet backup step — amber warning circle bg-amber-100 -->
+            <SolidColorBrush x:Key="CreateWalletAmberCircleBg" Color="#FEF3C7" />
+            <!-- Vue: amber-600 icon color -->
+            <SolidColorBrush x:Key="CreateWalletAmberIcon" Color="#D97706" />
+            <!-- Vue: Download Seed button — bg-amber-500 -->
+            <SolidColorBrush x:Key="CreateWalletAmberBtnBg" Color="#F59E0B" />
+            <!-- Vue: Generate success — green circle bg-green-100 -->
+            <SolidColorBrush x:Key="CreateWalletGreenCircleBg" Color="#DCFCE7" />
+            <SolidColorBrush x:Key="CreateWalletGreenIcon" Color="#16A34A" />
+            <!-- Vue: Import/Generate outlined button — text-gray-600 (border consolidated to StrokeSubtle) -->
+            <SolidColorBrush x:Key="CreateWalletOutlinedFg" Color="#4B5563" />
+            <!-- Vue: Seed phrase display area — bg-gray-50, border-gray-200 -->
+            <SolidColorBrush x:Key="CreateWalletSeedBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="CreateWalletSeedBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="CreateWalletSeedText" Color="#374151" />
+            <!-- Vue: Textarea — bg-gray-50, border-gray-200 -->
+            <SolidColorBrush x:Key="CreateWalletInputBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="CreateWalletInputBorder" Color="#E5E7EB" />
+            <!-- Vue: Continue button disabled — text-gray-400 (border consolidated to StrokeSubtle) -->
+            <SolidColorBrush x:Key="CreateWalletDisabledFg" Color="#9CA3AF" />
+
+            <!-- ── Wallet Detail / UTXO Management Modal (light) ── -->
+            <!-- Vue: UTXO card unselected: bg-gray-50 border-gray-200 -->
+            <SolidColorBrush x:Key="UtxoCardUnselectedBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="UtxoCardUnselectedBorder" Color="#E5E7EB" />
+            <!-- Vue: UTXO card selected: bg-green-50 border-[#4B7C5A] -->
+            <SolidColorBrush x:Key="UtxoCardSelectedBg" Color="#F0FDF4" />
+            <!-- Vue: UTXO section icon container: bg-gray-100 -->
+            <SolidColorBrush x:Key="UtxoSectionIconBg" Color="#F3F4F6" />
+            <!-- Vue: UTXO checkbox unselected: bg:white, border:#e5e7eb -->
+            <SolidColorBrush x:Key="UtxoCheckboxBg" Color="White" />
+            <SolidColorBrush x:Key="UtxoCheckboxBorder" Color="#E5E7EB" />
+
+        </ResourceDictionary>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             DARK THEME — Wallet
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Dark">
+
+            <!-- ── Wallet Switcher Header Button (dark) ── -->
+            <SolidColorBrush x:Key="WalletSwitcherBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="WalletSwitcherFg" Color="#808080" />
+            <SolidColorBrush x:Key="WalletSwitcherHoverBg" Color="#2A2A2A" />
+
+            <!-- ── Create Wallet Modal (dark) ── -->
+            <SolidColorBrush x:Key="CreateWalletAmberCircleBg" Color="#78350F" />
+            <SolidColorBrush x:Key="CreateWalletAmberIcon" Color="#D97706" />
+            <SolidColorBrush x:Key="CreateWalletAmberBtnBg" Color="#92400E" />
+            <SolidColorBrush x:Key="CreateWalletGreenCircleBg" Color="#14532D" />
+            <SolidColorBrush x:Key="CreateWalletGreenIcon" Color="#16A34A" />
+            <SolidColorBrush x:Key="CreateWalletOutlinedFg" Color="#D1D5DB" />
+            <SolidColorBrush x:Key="CreateWalletSeedBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="CreateWalletSeedBorder" Color="#333333" />
+            <SolidColorBrush x:Key="CreateWalletSeedText" Color="#D1D5DB" />
+            <SolidColorBrush x:Key="CreateWalletInputBg" Color="#111111" />
+            <SolidColorBrush x:Key="CreateWalletInputBorder" Color="#333333" />
+            <SolidColorBrush x:Key="CreateWalletDisabledFg" Color="#6B7280" />
+
+            <!-- ── Wallet Detail / UTXO Management Modal (dark) ── -->
+            <SolidColorBrush x:Key="UtxoCardUnselectedBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="UtxoCardUnselectedBorder" Color="#404040" />
+            <SolidColorBrush x:Key="UtxoCardSelectedBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="UtxoSectionIconBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="UtxoCheckboxBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="UtxoCheckboxBorder" Color="#404040" />
+
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+</ResourceDictionary>

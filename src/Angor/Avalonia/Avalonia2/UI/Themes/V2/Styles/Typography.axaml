@@ -162,30 +162,4 @@
         <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
     </Style>
 
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         TEXT STYLES - Legacy/Aliases (for backward compatibility)
-         Consider migrating to atomic classes over time.
-         ═══════════════════════════════════════════════════════════════════════ -->
-
-    <!-- Bold: Weight-Bold only -->
-    <Style Selector="TextBlock.Bold">
-        <Setter Property="FontWeight" Value="Bold" />
-    </Style>
-
-    <!-- Tiny: Size-XS only (prefer Size-XS) -->
-    <Style Selector="TextBlock.Tiny">
-        <Setter Property="FontSize" Value="11" />
-    </Style>
-
-    <!-- Thin: Weight very light (matches Vue font-weight: 100) -->
-    <Style Selector="TextBlock.Thin">
-        <Setter Property="FontWeight" Value="Thin" />
-    </Style>
-
-    <!-- Big: Size-L + Weight-Bold (prefer Size-L Weight-Bold) -->
-    <Style Selector="TextBlock.Big">
-        <Setter Property="FontSize" Value="18" />
-        <Setter Property="FontWeight" Value="Bold" />
-    </Style>
-
 </Styles>

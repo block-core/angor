@@ -72,16 +72,8 @@
                             <TextBlock Text="Recovery" FontSize="24" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </StackPanel>
-                        <Button Name="CloseRecoveryModal" Classes="ModalBtn"
-                                HorizontalAlignment="Right" VerticalAlignment="Center"
-                                Cursor="Hand" Padding="8">
-                            <Viewbox Width="20" Height="20">
-                                <Path Data="{StaticResource XMark}"
-                                      Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                                      StrokeLineCap="Round" StrokeJoin="Round"
-                                      Width="24" Height="24" Stretch="Uniform" />
-                            </Viewbox>
-                        </Button>
+                        <Button Name="CloseRecoveryModal" Classes="ModalBtn ModalCloseBtn"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
                     </Panel>
                 </Border>
 
@@ -342,16 +334,8 @@
                             <TextBlock Text="Penalties Details" FontSize="24" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </StackPanel>
-                        <Button Name="CloseClaimModal" Classes="ModalBtn"
-                                HorizontalAlignment="Right" VerticalAlignment="Center"
-                                Cursor="Hand" Padding="8">
-                            <Viewbox Width="20" Height="20">
-                                <Path Data="{StaticResource XMark}"
-                                      Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                                      StrokeLineCap="Round" StrokeJoin="Round"
-                                      Width="24" Height="24" Stretch="Uniform" />
-                            </Viewbox>
-                        </Button>
+                        <Button Name="CloseClaimModal" Classes="ModalBtn ModalCloseBtn"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
                     </Panel>
                 </Border>
 
@@ -489,16 +473,8 @@
                             <TextBlock Text="Release Recovery Confirmation" FontSize="24" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </StackPanel>
-                        <Button Name="CloseReleaseModal" Classes="ModalBtn"
-                                HorizontalAlignment="Right" VerticalAlignment="Center"
-                                Cursor="Hand" Padding="8">
-                            <Viewbox Width="20" Height="20">
-                                <Path Data="{StaticResource XMark}"
-                                      Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                                      StrokeLineCap="Round" StrokeJoin="Round"
-                                      Width="24" Height="24" Stretch="Uniform" />
-                            </Viewbox>
-                        </Button>
+                        <Button Name="CloseReleaseModal" Classes="ModalBtn ModalCloseBtn"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
                     </Panel>
                 </Border>
 

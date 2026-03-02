@@ -54,18 +54,4 @@
         <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
     </Style>
 
-    <!-- Slight scale-up on hover (Find Projects, Launch a Project) - transform on template root for correct center -->
-    <Style Selector="controls|IconButton.GrowOnHover /template/ Border#MainBorder">
-        <Setter Property="RenderTransformOrigin" Value="50%,50%" />
-        <Setter Property="RenderTransform" Value="scale(1)" />
-        <Setter Property="Transitions">
-            <Transitions>
-                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.08" />
-            </Transitions>
-        </Setter>
-    </Style>
-    <Style Selector="controls|IconButton.GrowOnHover:pointerover /template/ Border#MainBorder">
-        <Setter Property="RenderTransform" Value="scale(1.05)" />
-    </Style>
-
 </Styles>

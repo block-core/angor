@@ -41,25 +41,10 @@
                                    FontSize="22" FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    VerticalAlignment="Center" />
-                        <!-- Close button — Path + Viewbox + XMark pattern -->
-                        <Button Name="CloseButton" Grid.Column="3"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Padding="8"
-                                CornerRadius="8"
+                        <!-- Close button — ModalCloseBtn style with explicit 36x36 sizing -->
+                        <Button Name="CloseButton" Classes="ModalCloseBtn" Grid.Column="3"
                                 Width="36" Height="36"
-                                Cursor="Hand"
-                                VerticalAlignment="Center">
-                            <Viewbox Width="20" Height="20">
-                                <Path Data="{StaticResource XMark}"
-                                      Stroke="{DynamicResource ModalCloseBtn}"
-                                      StrokeThickness="2"
-                                      StrokeLineCap="Round"
-                                      StrokeJoin="Round"
-                                      Width="24" Height="24"
-                                      Stretch="Uniform" />
-                            </Viewbox>
-                        </Button>
+                                VerticalAlignment="Center" />
                     </Grid>
                 </Border>
 

@@ -75,17 +75,8 @@
                                        FontSize="18" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
-                            <Button Name="CloseForm" HorizontalAlignment="Right"
-                                    VerticalAlignment="Center" Background="Transparent"
-                                    Padding="4" Cursor="Hand" BorderThickness="0"
-                                    CornerRadius="6">
-                                <Viewbox Width="18" Height="18">
-                                    <Path Data="{StaticResource XMark}"
-                                          Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                                          StrokeLineCap="Round" StrokeJoin="Round"
-                                          Width="24" Height="24" Stretch="Uniform" />
-                                </Viewbox>
-                            </Button>
+                            <Button Name="CloseForm" Classes="ModalCloseBtnSmall"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
                         </Panel>
                     </Border>
 

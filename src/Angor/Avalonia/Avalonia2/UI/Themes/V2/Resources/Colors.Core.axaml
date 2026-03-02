@@ -1,0 +1,399 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.PreviewWith>
+        <Border BoxShadow="{DynamicResource ItemShadowBig}" />
+    </Design.PreviewWith>
+    
+    <!-- ═════════════════════════════════════════════════════════════════════
+         BRAND COLORS - Official Angor Design System
+         Reference: angor.tx1138.com/storybook/?path=/docs/brand-colors
+         ═════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Primary Colors -->
+    <Color x:Key="PrimaryGreen">#4B7C5A</Color>
+    <Color x:Key="PrimaryGreenHover">#3D6448</Color>
+    <Color x:Key="PrimaryGreenDark">#2D5A3D</Color>
+    <Color x:Key="PrimaryBlack">#1A1A1A</Color>
+
+    <!-- Secondary Colors -->
+    <Color x:Key="Success">#22C55E</Color>
+    <Color x:Key="Error">#EF4444</Color>
+    <Color x:Key="Warning">#F59E0B</Color>
+
+    <!-- Bitcoin -->
+    <Color x:Key="BitcoinOrange">#F7931A</Color>
+
+    <!-- Legacy aliases (for backward compatibility) -->
+    <Color x:Key="Accent">#2D5A3D</Color>
+    <Color x:Key="Dimmed">#9ca3af</Color>
+
+    <ResourceDictionary.ThemeDictionaries>
+        
+        <!-- ═══════════════════════════════════════════════════════════════════════
+             LIGHT THEME — Core semantic tokens
+             ═══════════════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Default">
+            
+            <!-- Background Colors (from Storybook) -->
+            <Color x:Key="Border">#E5E7EB</Color>
+
+            <!-- Text Colors (from Storybook) -->
+            <Color x:Key="BodyText">#1A1A1A</Color>
+            <Color x:Key="Labels">#6B7280</Color>
+
+            <!-- Legacy/Extended Colors -->
+            <Color x:Key="AppBackground">#faf9f6</Color>
+            <Color x:Key="Surface">White</Color>
+            <Color x:Key="Stroke">#19000000</Color>
+            <Color x:Key="TextMuted">#6B7280</Color>           <!-- = Labels -->
+            <Color x:Key="TextStrong">#0A0A0A</Color>          <!-- ≈ PrimaryBlackHover -->
+            <Color x:Key="Brand">#2D5A3D</Color>               <!-- = PrimaryGreenDark -->
+            <Color x:Key="Highlight">#2D5A3D</Color>           <!-- = PrimaryGreenDark -->
+            <Color x:Key="BitcoinAccent">#F7931A</Color>       <!-- = BitcoinOrange -->
+            <Color x:Key="SurfaceHover">#E9E9E9</Color>
+            <Color x:Key="NavItemHover">#E9E9E9</Color>
+            <Color x:Key="SurfaceSelected">White</Color>
+            <Color x:Key="CardSurface">White</Color>
+            <Color x:Key="SurfaceLow">#E5E7EB</Color>       <!-- = Border -->
+            <Color x:Key="SurfaceMedium">#f5f5f5</Color>
+            <Color x:Key="SurfaceHigh">#FAF9F6</Color>
+            <!-- Vue: empty state icon bg — bg-gray-100 (#F3F4F6) in light -->
+            <Color x:Key="SurfaceElevated">#F3F4F6</Color>
+
+            <!-- Error Colors -->
+            <StaticResource x:Key="SystemControlErrorTextForegroundBrush" ResourceKey="Error" />
+            <SolidColorBrush x:Key="ErrorSoft" Color="#fee2e2" />
+            <SolidColorBrush x:Key="ErrorHard" Color="#fecaca" />
+            <SolidColorBrush x:Key="ErrorForeground" Color="#dc2626" />
+            <SolidColorBrush x:Key="ErrorText" Color="#b91c1c" />
+            <SolidColorBrush x:Key="SuccessText" Color="#15803d" />
+
+            <!-- Warning/Fee Box Colors (light mode: warm cream/amber) -->
+            <SolidColorBrush x:Key="WarningBoxBackground" Color="#FFF7ED" />
+            <SolidColorBrush x:Key="WarningBoxBorder" Color="#FDBA74" />
+            <SolidColorBrush x:Key="WarningBoxText" Color="#9A3412" />
+
+            <!-- Shared subtle border: Vue gray-300 #D1D5DB — used across modal inputs, cancel buttons, wallet switcher, key fields -->
+            <SolidColorBrush x:Key="StrokeSubtle" Color="#D1D5DB" />
+
+            <!-- Shadows — matched to Vue CSS exactly -->
+            <!-- SectionShadow: tight glow for selected nav item — must fit in 2-4px margin -->
+            <BoxShadows x:Key="SectionShadow">0 1 6 0 #30000000</BoxShadows>
+            <!-- Vue card: box-shadow: 0 2px 8px rgba(0,0,0,0.1) = #1A000000 -->
+            <BoxShadows x:Key="ItemShadow">0 2 8 0 #1A000000</BoxShadows>
+            <!-- Vue card hover: box-shadow: 0 8px 24px rgba(0,0,0,0.15) = #26000000 -->
+            <BoxShadows x:Key="ItemShadowHover">0 8 24 0 #26000000</BoxShadows>
+            <BoxShadows x:Key="ShadowNone">0 0 0 0 Transparent</BoxShadows>
+            <!-- Vue content-card: box-shadow: 0 6px 18px rgba(0,0,0,0.15) = #26000000 -->
+            <BoxShadows x:Key="ItemShadowBig">0 6 18 0 #26000000</BoxShadows>
+            <!-- Vue floating buttons & avatars: box-shadow: 0 4px 12px rgba(0,0,0,0.15) -->
+            <BoxShadows x:Key="FloatingBtnShadow">0 4 12 0 #26000000</BoxShadows>
+
+            <!-- Button Brushes (matching Vue: linear-gradient(135deg, #0a0a0a, #1a1a1a), border #0a0a0a) -->
+            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="#FAFAFA" />
+            <LinearGradientBrush x:Key="PrimaryButtonBackground" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#0A0A0A" Offset="0" />
+                <GradientStop Color="#1A1A1A" Offset="1" />
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="PrimaryButtonBorder" Color="#0A0A0A" />
+            <!-- Vue btn-primary light: box-shadow 0 4px 16px #0006 — strong visible drop shadow -->
+            <BoxShadows x:Key="PrimaryButtonShadow">0 4 16 0 #00000099</BoxShadows>
+            <BoxShadows x:Key="PrimaryButtonShadowHover">0 8 24 0 #000000B3</BoxShadows>
+
+            <SolidColorBrush x:Key="SecondaryButtonForeground" Color="{StaticResource TextStrong}" />
+            <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{DynamicResource SurfaceHover}" />
+            <SolidColorBrush x:Key="SecondaryButtonBorder" Color="{StaticResource TextStrong}" />
+
+            <!-- Decorative Brushes -->
+            <!-- Tiled logo background pattern (higher opacity on dark background, matching web: opacity .08) -->
+            <VisualBrush x:Key="TiledLogoBrush" Opacity="0.08" DestinationRect="0,0,80,86" Stretch="Uniform" TileMode="Tile">
+                <VisualBrush.Visual>
+                    <Svg Path="/Assets/logo.svg" />
+                </VisualBrush.Visual>
+            </VisualBrush>
+
+            <LinearGradientBrush x:Key="BitcoinWash" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStops>
+                    <GradientStop Offset="0" Color="#fff7ed" />
+                    <GradientStop Offset="1" Color="#fef3c7" />
+                </GradientStops>
+            </LinearGradientBrush>
+            
+            <LinearGradientBrush x:Key="BlueWash" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStops>
+                    <GradientStop Offset="0" Color="#eff6ff" />
+                    <GradientStop Offset="1" Color="#e0e7ff" />
+                </GradientStops>
+            </LinearGradientBrush>
+
+            <!-- Nav group header divider: transparent → gray-300 → transparent (matches Vue bg-gradient-to-r via-gray-300) -->
+            <LinearGradientBrush x:Key="NavGroupDivider" StartPoint="0%,50%" EndPoint="100%,50%">
+                <GradientStop Color="Transparent" Offset="0" />
+                <GradientStop Color="#D1D5DB" Offset="0.5" />
+                <GradientStop Color="Transparent" Offset="1" />
+            </LinearGradientBrush>
+
+            <!-- Modal backdrop: light mode, 50% black (Vue: bg-black bg-opacity-50) -->
+            <SolidColorBrush x:Key="ModalBackdrop" Color="#80000000" />
+
+            <!-- ── Pill Colors (light) ── -->
+            <!-- Green pill: status "Open", "Active", generic success -->
+            <SolidColorBrush x:Key="PillGreenBorder" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="PillGreenBg" Color="#1A4B7C5A" />
+            <SolidColorBrush x:Key="PillGreenText" Color="#4B7C5A" />
+            <!-- BrightGreen pill: "Successfully Funded", status-open -->
+            <SolidColorBrush x:Key="PillBrightGreenBorder" Color="#22C55E" />
+            <SolidColorBrush x:Key="PillBrightGreenBg" Color="#1A22C55E" />
+            <SolidColorBrush x:Key="PillBrightGreenText" Color="#22C55E" />
+            <!-- Red pill: errors, "Funding Closed" -->
+            <SolidColorBrush x:Key="PillRedBorder" Color="#EF4444" />
+            <SolidColorBrush x:Key="PillRedBg" Color="#1AEF4444" />
+            <SolidColorBrush x:Key="PillRedText" Color="#EF4444" />
+            <!-- Orange pill: Bitcoin/generic accent -->
+            <SolidColorBrush x:Key="PillOrangeBorder" Color="#F7931A" />
+            <SolidColorBrush x:Key="PillOrangeBg" Color="#1AF7931A" />
+            <SolidColorBrush x:Key="PillOrangeText" Color="#F7931A" />
+            <!-- Blue pill: type "invest" -->
+            <SolidColorBrush x:Key="PillBlueBorder" Color="#3B82F6" />
+            <SolidColorBrush x:Key="PillBlueBg" Color="#1A3B82F6" />
+            <SolidColorBrush x:Key="PillBlueText" Color="#3B82F6" />
+            <!-- Amber pill: type "fund" -->
+            <SolidColorBrush x:Key="PillAmberBorder" Color="#F59E0B" />
+            <SolidColorBrush x:Key="PillAmberBg" Color="#1AF59E0B" />
+            <SolidColorBrush x:Key="PillAmberText" Color="#F59E0B" />
+            <!-- Pink pill: type "subscription" -->
+            <SolidColorBrush x:Key="PillPinkBorder" Color="#EC4899" />
+            <SolidColorBrush x:Key="PillPinkBg" Color="#1AEC4899" />
+            <SolidColorBrush x:Key="PillPinkText" Color="#EC4899" />
+
+        </ResourceDictionary>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════
+             DARK THEME — Core semantic tokens
+             ═══════════════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Dark">
+            
+            <!-- Background Colors (from Storybook) -->
+            <Color x:Key="Border">#404040</Color>
+
+            <!-- Text Colors (from Storybook) -->
+            <Color x:Key="BodyText">#FAFAFA</Color>
+            <Color x:Key="Labels">#888888</Color>
+
+            <!-- Legacy/Extended Colors -->
+            <Color x:Key="AppBackground">#0A0A0A</Color>       <!-- = CardBackground (Dark) -->
+            <Color x:Key="Surface">#B31A1A1A</Color>
+            <Color x:Key="Stroke">#19FFFFFF</Color>
+            <Color x:Key="TextMuted">#A0A0A0</Color>
+            <Color x:Key="TextStrong">#FAFAFA</Color>          <!-- = BodyText (Dark) -->
+            <Color x:Key="Brand">#5FAF78</Color>
+            <Color x:Key="Highlight">#E5E8E1</Color>
+            <Color x:Key="BitcoinAccent">#F7931A</Color>       <!-- = BitcoinOrange -->
+            <Color x:Key="SurfaceHover">#3A3A3A</Color>
+            <Color x:Key="NavItemHover">#0F0F0F</Color>
+            <Color x:Key="SurfaceSelected">#202020</Color>
+            <Color x:Key="CardSurface">#2A2A2A</Color>
+            <Color x:Key="SurfaceLow">#333333</Color>
+            <Color x:Key="SurfaceMedium">#2a2a2a</Color>
+            <Color x:Key="SurfaceHigh">#0A0A0A</Color>
+            <!-- Vue: empty state icon bg — bg-black (#000000) in dark -->
+            <Color x:Key="SurfaceElevated">#000000</Color>
+
+            <!-- Error Colors -->
+            <StaticResource x:Key="SystemControlErrorTextForegroundBrush" ResourceKey="Error" />
+            <SolidColorBrush x:Key="ErrorSoft" Color="#667f1d1d" />
+            <SolidColorBrush x:Key="ErrorHard" Color="#80991b1b" />
+            <SolidColorBrush x:Key="ErrorForeground" Color="#80991b1b" />
+            <SolidColorBrush x:Key="ErrorText" Color="#EF4444" />
+            <SolidColorBrush x:Key="SuccessText" Color="#4ADE80" />
+
+            <!-- Warning/Fee Box Colors (dark mode: warm rust/brown) -->
+            <SolidColorBrush x:Key="WarningBoxBackground" Color="#2A1A14" />
+            <SolidColorBrush x:Key="WarningBoxBorder" Color="#7C3A2A" />
+            <SolidColorBrush x:Key="WarningBoxText" Color="#D97050" />
+
+            <!-- Shared subtle border: Vue dark #404040 — used across modal inputs, cancel buttons, wallet switcher, key fields -->
+            <SolidColorBrush x:Key="StrokeSubtle" Color="#404040" />
+
+            <!-- Decorative Brushes -->
+            <LinearGradientBrush x:Key="BitcoinWash" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStops>
+                    <GradientStop Offset="0" Color="#0EF7931A" />
+                    <GradientStop Offset="1" Color="#1AF7931A" />
+                </GradientStops>
+            </LinearGradientBrush>
+            
+            <LinearGradientBrush x:Key="BlueWash" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStops>
+                    <GradientStop Offset="0" Color="#1A2A3A" />
+                    <GradientStop Offset="1" Color="#2A1A3A" />
+                </GradientStops>
+            </LinearGradientBrush>
+            
+            <!-- Tiled logo background pattern (higher opacity on dark background, matching web: opacity .08) -->
+            <VisualBrush x:Key="TiledLogoBrush" Opacity="0.08" DestinationRect="0,0,80,86" Stretch="Uniform" TileMode="Tile">
+                <VisualBrush.Visual>
+                    <Svg Path="/Assets/logo.svg" />
+                </VisualBrush.Visual>
+            </VisualBrush>
+
+            <!-- Shadows — matched to Vue CSS dark mode -->
+            <!-- Vue dark nav: subtle glow -->
+            <BoxShadows x:Key="SectionShadow">0 2 8 0 #4D000000</BoxShadows>
+            <!-- Vue dark card: box-shadow: 0 2px 8px rgba(0,0,0,0.3) = #4D000000 -->
+            <BoxShadows x:Key="ItemShadow">0 2 8 0 #4D000000</BoxShadows>
+            <!-- Vue dark card hover: box-shadow: 0 8px 24px rgba(0,0,0,0.4) = #66000000 -->
+            <BoxShadows x:Key="ItemShadowHover">0 8 24 0 #66000000</BoxShadows>
+            <!-- Vue dark content-card: bigger panel shadow -->
+            <BoxShadows x:Key="ItemShadowBig">0 6 18 0 #66000000</BoxShadows>
+            <BoxShadows x:Key="ShadowNone">0 0 0 0 Transparent</BoxShadows>
+            <!-- Vue dark floating buttons & avatars: box-shadow: 0 4px 12px rgba(0,0,0,0.3) -->
+            <BoxShadows x:Key="FloatingBtnShadow">0 4 12 0 #4D000000</BoxShadows>
+
+            <!-- Button Brushes (matching Storybook: linear-gradient(135deg, #2a2a2a, #1a1a1a)) -->
+            <SolidColorBrush x:Key="PrimaryButtonForeground" Color="{StaticResource TextStrong}" />
+            <LinearGradientBrush x:Key="PrimaryButtonBackground" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStops>
+                    <GradientStop Offset="0" Color="#2A2A2A" />
+                    <GradientStop Offset="1" Color="#1A1A1A" />
+                </GradientStops>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="PrimaryButtonBorder" Color="#3A3A3A" />
+            <!-- Vue btn-primary dark: box-shadow 0 4px 16px #0006 -->
+            <BoxShadows x:Key="PrimaryButtonShadow">0 4 16 0 #000000AA</BoxShadows>
+            <BoxShadows x:Key="PrimaryButtonShadowHover">0 8 24 0 #000000CC</BoxShadows>
+
+            <SolidColorBrush x:Key="AccentButtonForeground" Color="{DynamicResource SurfaceHover}" />
+            <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource Accent}" />
+            <SolidColorBrush x:Key="AccentButtonBorder" Color="{StaticResource Stroke}" />
+
+            <SolidColorBrush x:Key="SecondaryButtonForeground" Color="{StaticResource TextStrong}" />
+            <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{StaticResource Surface}" />
+            <SolidColorBrush x:Key="SecondaryButtonBorder" Color="{StaticResource Stroke}" />
+
+            <!-- Nav group header divider: transparent → gray-600 → transparent (matches Vue bg-gradient-to-r via-gray-600) -->
+            <LinearGradientBrush x:Key="NavGroupDivider" StartPoint="0%,50%" EndPoint="100%,50%">
+                <GradientStop Color="Transparent" Offset="0" />
+                <GradientStop Color="#4B5563" Offset="0.5" />
+                <GradientStop Color="Transparent" Offset="1" />
+            </LinearGradientBrush>
+
+            <!-- Modal backdrop: dark mode uses standard black at 50% -->
+            <SolidColorBrush x:Key="ModalBackdrop" Color="#80000000" />
+
+            <!-- ── Pill Colors (dark — 20% opacity bg, lighter text for readability) ── -->
+            <!-- Green pill -->
+            <SolidColorBrush x:Key="PillGreenBorder" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="PillGreenBg" Color="#334B7C5A" />
+            <SolidColorBrush x:Key="PillGreenText" Color="#4B7C5A" />
+            <!-- BrightGreen pill -->
+            <SolidColorBrush x:Key="PillBrightGreenBorder" Color="#22C55E" />
+            <SolidColorBrush x:Key="PillBrightGreenBg" Color="#3322C55E" />
+            <SolidColorBrush x:Key="PillBrightGreenText" Color="#22C55E" />
+            <!-- Red pill -->
+            <SolidColorBrush x:Key="PillRedBorder" Color="#EF4444" />
+            <SolidColorBrush x:Key="PillRedBg" Color="#33EF4444" />
+            <SolidColorBrush x:Key="PillRedText" Color="#FCA5A5" />
+            <!-- Orange pill -->
+            <SolidColorBrush x:Key="PillOrangeBorder" Color="#F7931A" />
+            <SolidColorBrush x:Key="PillOrangeBg" Color="#33F7931A" />
+            <SolidColorBrush x:Key="PillOrangeText" Color="#F7931A" />
+            <!-- Blue pill -->
+            <SolidColorBrush x:Key="PillBlueBorder" Color="#60A5FA" />
+            <SolidColorBrush x:Key="PillBlueBg" Color="#333B82F6" />
+            <SolidColorBrush x:Key="PillBlueText" Color="#60A5FA" />
+            <!-- Amber pill -->
+            <SolidColorBrush x:Key="PillAmberBorder" Color="#FBBF24" />
+            <SolidColorBrush x:Key="PillAmberBg" Color="#33F59E0B" />
+            <SolidColorBrush x:Key="PillAmberText" Color="#FBBF24" />
+            <!-- Pink pill -->
+            <SolidColorBrush x:Key="PillPinkBorder" Color="#F472B6" />
+            <SolidColorBrush x:Key="PillPinkBg" Color="#33EC4899" />
+            <SolidColorBrush x:Key="PillPinkText" Color="#F472B6" />
+
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         SHARED RESOURCES (theme-independent)
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- ── Stepper Colors (same in both themes) ── -->
+    <SolidColorBrush x:Key="StepCompletedGreen" Color="#2D5A3D" />
+    <SolidColorBrush x:Key="StepCurrentGreen" Color="#4B7C5A" />
+    <SolidColorBrush x:Key="StepInactiveGray" Color="#888888" />
+    <SolidColorBrush x:Key="StepLineGreen" Color="#2D5A3D" />
+
+    <!-- ── Brand Green (#4B7C5A) general-purpose brushes (same in both themes per AGENTS.md) ── -->
+    <SolidColorBrush x:Key="PrimaryGreenBrush" Color="{StaticResource PrimaryGreen}" />
+    <SolidColorBrush x:Key="PrimaryGreenBrush12" Color="#4B7C5A" Opacity="0.12" />
+    <SolidColorBrush x:Key="PrimaryGreenBrush08" Color="#4B7C5A" Opacity="0.08" />
+    <SolidColorBrush x:Key="PrimaryGreenBrush04" Color="#4B7C5A" Opacity="0.04" />
+
+    <!--
+        App-wide crosshatch texture replicating the web CSS:
+          repeating-linear-gradient(45deg, transparent 2px, rgba(255,255,255,.02) 4px)
+          repeating-linear-gradient(-45deg, transparent 2px, rgba(0,0,0,.01) 4px)
+        Applied as a full-span non-interactive overlay over the entire ShellView.
+    -->
+    <DrawingBrush x:Key="AppTextureBrush" TileMode="Tile" DestinationRect="0,0,4,4" Stretch="None">
+        <DrawingBrush.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing>
+                    <GeometryDrawing.Pen>
+                        <Pen Brush="#05FFFFFF" Thickness="1" />
+                    </GeometryDrawing.Pen>
+                    <GeometryDrawing.Geometry>
+                        <GeometryGroup>
+                            <LineGeometry StartPoint="0,2" EndPoint="2,0" />
+                            <LineGeometry StartPoint="2,4" EndPoint="4,2" />
+                        </GeometryGroup>
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing>
+                    <GeometryDrawing.Pen>
+                        <Pen Brush="#03000000" Thickness="1" />
+                    </GeometryDrawing.Pen>
+                    <GeometryDrawing.Geometry>
+                        <GeometryGroup>
+                            <LineGeometry StartPoint="2,0" EndPoint="4,2" />
+                            <LineGeometry StartPoint="0,2" EndPoint="2,4" />
+                        </GeometryGroup>
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    
+    <!-- CheckBox overrides -->
+    <StaticResource x:Key="CheckBoxCheckBackgroundFillChecked" ResourceKey="Accent" />
+    <StaticResource x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" ResourceKey="Accent" />
+    <StaticResource x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" ResourceKey="Accent" />
+    <Thickness x:Key="CheckBoxBorderThemeThickness">2</Thickness>
+    <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUnchecked" ResourceKey="Stroke" />
+    <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" ResourceKey="Accent" />
+
+    <!-- Accent Button (fallback) -->
+    <SolidColorBrush x:Key="AccentButtonForeground" Color="{DynamicResource SurfaceHover}" />
+    <SolidColorBrush x:Key="AccentButtonBackground" Color="{DynamicResource Accent}" />
+    <SolidColorBrush x:Key="AccentButtonBorder" Color="{DynamicResource Accent}" />
+
+    <!-- Brand Wash - subtle green brand tint -->
+    <LinearGradientBrush x:Key="BrandWash" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#192D5A3D" Offset="0" />
+        <GradientStop Color="#102D5A3D" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Green gradient for small action buttons (Vue: linear-gradient(135deg, #4b7c5a, #3d6448)) -->
+    <LinearGradientBrush x:Key="GreenGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#4B7C5A" Offset="0" />
+        <GradientStop Color="#3D6448" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- TextBox overrides -->
+    <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="BitcoinOrange" />
+    <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="SurfaceHover" />
+    <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
+
+</ResourceDictionary>

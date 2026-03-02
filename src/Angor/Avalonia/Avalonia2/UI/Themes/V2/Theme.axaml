@@ -9,11 +9,8 @@
     <StyleInclude Source="Controls/EnhancedButton.axaml" />
 
     <StyleInclude Source="/UI/Shared/Styles/Styles.axaml" />
-    <StyleInclude Source="/UI/Shared/Controls/Pane.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/List.axaml" />
-    <StyleInclude Source="/UI/Shared/Controls/IconLabel.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/ProjectCard.axaml" />
-    <StyleInclude Source="/UI/Shared/Controls/PageContainer.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/ScrollableView.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/Badge.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/EmptyState.axaml" />
@@ -28,7 +25,6 @@
     
     <StyleInclude Source="Styles/ToggleButtons.axaml" />
     <StyleInclude Source="Controls/ListBox.axaml" />
-    <StyleInclude Source="Controls/Wizard.axaml" />
     <StyleInclude Source="Controls/CalendarPicker.axaml" />
     <StyleInclude Source="Controls/NumericUpDown.axaml" />
     
@@ -46,7 +42,6 @@
     <StyleInclude Source="Styles/ColorVariants.axaml" />
     <StyleInclude Source="Styles/Pills.axaml" />
     <StyleInclude Source="Styles/Boxes.axaml" />
-    <StyleInclude Source="Controls/Frame.axaml" />
     <StyleInclude Source="Styles/CheckBox.axaml" />
     <StyleInclude Source="Styles/ComboBox.axaml" />
     <StyleInclude Source="Styles/ProgressBar.axaml" />
@@ -76,7 +71,16 @@
     <Styles.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceInclude Source="Resources/Colors.axaml" />
+                <!-- Colors split into domain files — Core MUST be first (brand colors, semantic tokens, shared resources) -->
+                <ResourceInclude Source="Resources/Colors.Core.axaml" />
+                <ResourceInclude Source="Resources/Colors.Stats.axaml" />
+                <ResourceInclude Source="Resources/Colors.Badges.axaml" />
+                <ResourceInclude Source="Resources/Colors.ManageProject.axaml" />
+                <ResourceInclude Source="Resources/Colors.CreateProject.axaml" />
+                <ResourceInclude Source="Resources/Colors.Deploy.axaml" />
+                <ResourceInclude Source="Resources/Colors.Wallet.axaml" />
+                <ResourceInclude Source="Resources/Colors.Settings.axaml" />
+                <ResourceInclude Source="Resources/Colors.Modals.axaml" />
                 <ResourceInclude Source="Resources/Tokens.axaml" />
                 <ResourceInclude Source="Resources/Icons.axaml" />
                 <ResourceInclude Source="Controls/ErrorSummary.axaml" />

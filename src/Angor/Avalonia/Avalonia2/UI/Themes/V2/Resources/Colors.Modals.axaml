@@ -1,0 +1,165 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             LIGHT THEME — Modals (Claim/Release, Share, PrivateKeys, Recovery, Penalties)
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Default">
+
+            <!-- ── Claim/Release Modal Resources (light) ── -->
+            <!-- Vue: .available-transaction-item bg:#f0fdf4, border:#86efac -->
+            <SolidColorBrush x:Key="UtxoItemBg" Color="#F0FDF4" />
+            <SolidColorBrush x:Key="UtxoItemBorder" Color="#86EFAC" />
+            <!-- Vue: .spent-transaction-item bg:#f9fafb, border:#e0e7ff -->
+            <SolidColorBrush x:Key="SpentItemBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="SpentItemBorder" Color="#E0E7FF" />
+            <!-- Vue: .settings-toggle-button border:#e5e7eb, bg:white -->
+            <SolidColorBrush x:Key="ToggleCheckBg" Color="White" />
+            <SolidColorBrush x:Key="ToggleCheckBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="SuccessModalBg" Color="White" />
+            <!-- Vue: modal cancel btn: light text-gray-700 (border consolidated to StrokeSubtle) -->
+            <SolidColorBrush x:Key="ModalCancelBtnText" Color="#374151" />
+            <!-- Vue: modal description: light text-gray-600 -->
+            <SolidColorBrush x:Key="ModalDescriptionText" Color="#4B5563" />
+            <!-- Vue: modal password input: light bg:white (border consolidated to StrokeSubtle) -->
+            <SolidColorBrush x:Key="ModalInputBg" Color="White" />
+            <!-- Vue: UTXO txid text: light text-gray-500/#6B7280 -->
+            <SolidColorBrush x:Key="UtxoTxidText" Color="#6B7280" />
+            <!-- Vue: release UTXO item: green border, bg green-50, opacity 0.75 -->
+            <SolidColorBrush x:Key="ReleaseUtxoItemBg" Color="#F0FDF4" />
+            <SolidColorBrush x:Key="ReleaseUtxoItemBorder" Color="#4B7C5A" />
+            <!-- Vue: modal close X button: light text-gray-400 -->
+            <SolidColorBrush x:Key="ModalCloseBtn" Color="#9CA3AF" />
+            <!-- Vue: modal header border: light border-gray-200 -->
+            <SolidColorBrush x:Key="ModalHeaderBorder" Color="#E5E7EB" />
+
+            <!-- ── Share Modal (light) ── -->
+            <SolidColorBrush x:Key="ShareModalBg" Color="White" />
+            <SolidColorBrush x:Key="ShareModalBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="ShareInfoCardBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="ShareInfoCardBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="ShareInputBg" Color="White" />
+            <SolidColorBrush x:Key="ShareSocialBtnBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="ShareSocialBtnBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="ShareSocialBtnHoverBg" Color="#F3F4F6" />
+            <SolidColorBrush x:Key="ShareSocialBtnHoverBorder" Color="#D1D5DB" />
+            <SolidColorBrush x:Key="ShareEmailBtnHoverBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="CopiedBtnBg" Color="#16a34a" />
+
+            <!-- ── Private Keys Modals (light) ── -->
+            <SolidColorBrush x:Key="KeyFieldInputBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="KeyFieldText" Color="#111827" />
+            <SolidColorBrush x:Key="KeyFieldLabel" Color="#374151" />
+            <SolidColorBrush x:Key="KeyCopyBtnBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="KeyCopyBtnText" Color="#4B5563" />
+            <SolidColorBrush x:Key="KeyCopyBtnHoverBg" Color="#F3F4F6" />
+            <SolidColorBrush x:Key="RedBtnBg" Color="#DC2626" />
+            <SolidColorBrush x:Key="RedWarningBannerBg" Color="#FEF2F2" />
+            <SolidColorBrush x:Key="RedWarningBannerBorder" Color="#FECACA" />
+            <SolidColorBrush x:Key="RedWarningBannerText" Color="#DC2626" />
+
+            <!-- ── Recovery Modals (light) ── -->
+            <SolidColorBrush x:Key="RecoveryModalBg" Color="White" />
+            <SolidColorBrush x:Key="RecoveryModalBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="RecoveryInfoCardBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="RecoveryInfoCardBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="RecoveryWarningBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="RecoveryWarningBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="RecoveryWarningText" Color="#374151" />
+            <SolidColorBrush x:Key="RecoveryFeeBadgeBg" Color="#EFF6FF" />
+            <SolidColorBrush x:Key="RecoveryFeeBadgeText" Color="#1D4ED8" />
+            <SolidColorBrush x:Key="RecoveryFeeUnselectedText" Color="#374151" />
+            <SolidColorBrush x:Key="RecoveryFeeSelectedBg" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="RecoveryFeeSelectedBorder" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="RecoveryFeeSelectedText" Color="White" />
+            <SolidColorBrush x:Key="RecoveryTableHeaderBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="RecoveryTableRowBorder" Color="#F3F4F6" />
+
+            <!-- ── Penalties Modal (light) ── -->
+            <SolidColorBrush x:Key="PenaltyPillBg" Color="#FEF3C7" />
+            <SolidColorBrush x:Key="PenaltyPillText" Color="#92400E" />
+            <SolidColorBrush x:Key="PenaltyPillBorder" Color="#FDE68A" />
+            <SolidColorBrush x:Key="PenaltyTableText" Color="#374151" />
+            <SolidColorBrush x:Key="PenaltyTableHeaderText" Color="#374151" />
+            <SolidColorBrush x:Key="PenaltyAmountText" Color="#4B7C5A" />
+
+        </ResourceDictionary>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             DARK THEME — Modals
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Dark">
+
+            <!-- ── Claim/Release Modal Resources (dark) ── -->
+            <SolidColorBrush x:Key="UtxoItemBg" Color="#1A4B7C5A" />
+            <SolidColorBrush x:Key="UtxoItemBorder" Color="#4D4B7C5A" />
+            <SolidColorBrush x:Key="SpentItemBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="SpentItemBorder" Color="#404040" />
+            <SolidColorBrush x:Key="ToggleCheckBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="ToggleCheckBorder" Color="#404040" />
+            <SolidColorBrush x:Key="SuccessModalBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="ModalCancelBtnText" Color="#D1D5DB" />
+            <SolidColorBrush x:Key="ModalDescriptionText" Color="#D1D5DB" />
+            <SolidColorBrush x:Key="ModalInputBg" Color="#0A0A0A" />
+            <SolidColorBrush x:Key="UtxoTxidText" Color="#9CA3AF" />
+            <SolidColorBrush x:Key="ReleaseUtxoItemBg" Color="#0A0A0A" />
+            <SolidColorBrush x:Key="ReleaseUtxoItemBorder" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="ModalCloseBtn" Color="#9CA3AF" />
+            <SolidColorBrush x:Key="ModalHeaderBorder" Color="#404040" />
+
+            <!-- ── Share Modal (dark) ── -->
+            <SolidColorBrush x:Key="ShareModalBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="ShareModalBorder" Color="#404040" />
+            <SolidColorBrush x:Key="ShareInfoCardBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="ShareInfoCardBorder" Color="#404040" />
+            <SolidColorBrush x:Key="ShareInputBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="ShareSocialBtnBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="ShareSocialBtnBorder" Color="#404040" />
+            <SolidColorBrush x:Key="ShareSocialBtnHoverBg" Color="#333333" />
+            <SolidColorBrush x:Key="ShareSocialBtnHoverBorder" Color="#525252" />
+            <SolidColorBrush x:Key="ShareEmailBtnHoverBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="CopiedBtnBg" Color="#16a34a" />
+
+            <!-- ── Private Keys Modals (dark) ── -->
+            <SolidColorBrush x:Key="KeyFieldInputBg" Color="#0A0A0A" />
+            <SolidColorBrush x:Key="KeyFieldText" Color="#D1D5DB" />
+            <SolidColorBrush x:Key="KeyFieldLabel" Color="#D1D5DB" />
+            <SolidColorBrush x:Key="KeyCopyBtnBg" Color="#0A0A0A" />
+            <SolidColorBrush x:Key="KeyCopyBtnText" Color="#9CA3AF" />
+            <SolidColorBrush x:Key="KeyCopyBtnHoverBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="RedBtnBg" Color="#DC2626" />
+            <SolidColorBrush x:Key="RedWarningBannerBg" Color="#33991B1B" />
+            <SolidColorBrush x:Key="RedWarningBannerBorder" Color="#991B1B" />
+            <SolidColorBrush x:Key="RedWarningBannerText" Color="#DC2626" />
+
+            <!-- ── Recovery Modals (dark) ── -->
+            <SolidColorBrush x:Key="RecoveryModalBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="RecoveryModalBorder" Color="#404040" />
+            <SolidColorBrush x:Key="RecoveryInfoCardBg" Color="#0A0A0A" />
+            <SolidColorBrush x:Key="RecoveryInfoCardBorder" Color="#404040" />
+            <SolidColorBrush x:Key="RecoveryWarningBg" Color="#222222" />
+            <SolidColorBrush x:Key="RecoveryWarningBorder" Color="#404040" />
+            <SolidColorBrush x:Key="RecoveryWarningText" Color="#D0D0D0" />
+            <SolidColorBrush x:Key="RecoveryFeeBadgeBg" Color="#222222" />
+            <SolidColorBrush x:Key="RecoveryFeeBadgeText" Color="#A0A0A0" />
+            <SolidColorBrush x:Key="RecoveryFeeUnselectedText" Color="#B0B0B0" />
+            <SolidColorBrush x:Key="RecoveryFeeSelectedBg" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="RecoveryFeeSelectedBorder" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="RecoveryFeeSelectedText" Color="White" />
+            <SolidColorBrush x:Key="RecoveryTableHeaderBorder" Color="#404040" />
+            <SolidColorBrush x:Key="RecoveryTableRowBorder" Color="#2A2A2A" />
+
+            <!-- ── Penalties Modal (dark) ── -->
+            <SolidColorBrush x:Key="PenaltyPillBg" Color="#33F59E0B" />
+            <SolidColorBrush x:Key="PenaltyPillText" Color="#FBBF24" />
+            <SolidColorBrush x:Key="PenaltyPillBorder" Color="#4DF59E0B" />
+            <SolidColorBrush x:Key="PenaltyTableText" Color="#D0D0D0" />
+            <SolidColorBrush x:Key="PenaltyTableHeaderText" Color="#A0A0A0" />
+            <SolidColorBrush x:Key="PenaltyAmountText" Color="#4B7C5A" />
+
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+</ResourceDictionary>
