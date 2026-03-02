@@ -1,13 +1,14 @@
 using System.Collections.ObjectModel;
-using System.Reactive.Linq;
+using System.Globalization;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Application;
+using Avalonia2.Composition;
 using Avalonia2.UI.Shell;
-using ReactiveUI;
 
 namespace Avalonia2.UI.Sections.Funds;
 
 /// <summary>
 /// Individual wallet item within a seed group.
-/// Data from Vue reference JS bundle.
 /// </summary>
 public class WalletItemViewModel
 {
@@ -17,11 +18,12 @@ public class WalletItemViewModel
     public string Label { get; set; } = "";
     /// <summary>bitcoin, lightning, liquid</summary>
     public string IconType { get; set; } = "bitcoin";
+    /// <summary>SDK WalletId for operations</summary>
+    public string WalletId { get; set; } = "";
 }
 
 /// <summary>
 /// Seed group (account) containing multiple wallets.
-/// Vue reference: "Angor Account" and "Imported Account".
 /// </summary>
 public class SeedGroupViewModel
 {
@@ -31,16 +33,14 @@ public class SeedGroupViewModel
 }
 
 /// <summary>
-/// Funds ViewModel — visual layer only.
-/// Populated with Vue reference wallet data (2 seed groups, 5 wallets total).
-/// The backend team will wire up real wallet data from the SDK.
-///
-/// Follows the canonical empty state toggle pattern:
-///   - HasWallets is [Reactive] and toggled by ShowPopulatedApp
-///   - LoadSampleData() / ClearToEmpty() mirror PortfolioViewModel
+/// Funds ViewModel — connected to Angor.SDK wallet services.
+/// Uses IWalletAppService for wallet creation, balance, and address operations.
 /// </summary>
 public partial class FundsViewModel : ReactiveObject
 {
+    private readonly IWalletAppService _walletAppService;
+    private readonly IWalletAccountBalanceService _balanceService;
+
     /// <summary>True when wallets exist and populated state should show.</summary>
     [Reactive] private bool hasWallets;
 
@@ -56,103 +56,157 @@ public partial class FundsViewModel : ReactiveObject
     /// <summary>Liquid balance for stat card</summary>
     public string LiquidBalance { get; private set; } = "0.0000";
 
+    [Reactive] private bool isLoading;
+
     public ObservableCollection<SeedGroupViewModel> SeedGroups { get; } = new();
 
     public FundsViewModel()
     {
-        // Load sample data if prototype toggle says populated
-        if (SharedViewModels.Prototype.ShowPopulatedApp)
-            LoadSampleData();
+        _walletAppService = ServiceLocator.WalletApp;
+        _balanceService = ServiceLocator.BalanceService;
 
-        // React to prototype toggle changes (populated ↔ empty)
-        SharedViewModels.Prototype.WhenAnyValue(x => x.ShowPopulatedApp)
-            .Skip(1) // skip initial value (already handled above)
-            .Subscribe(showPopulated =>
-            {
-                if (showPopulated)
-                    LoadSampleData();
-                else
-                    ClearToEmpty();
-            });
+        // Load wallets from SDK on construction
+        _ = LoadWalletsFromSdkAsync();
     }
 
     /// <summary>
-    /// Populate with sample wallet data for visual testing of the populated state.
-    /// Called when ShowPopulatedApp toggle is enabled or at construction.
-    /// Vue reference: 2 seed groups, 5 wallets total.
+    /// Load wallet data from the SDK.
+    /// Retrieves all wallet metadatas and their balances.
     /// </summary>
-    public void LoadSampleData()
+    public async Task LoadWalletsFromSdkAsync()
     {
-        SeedGroups.Clear();
+        IsLoading = true;
 
-        SeedGroups.Add(new SeedGroupViewModel
+        try
         {
-            GroupName = "Angor Account",
-            GroupBalance = "4.2344",
-            Wallets = new ObservableCollection<WalletItemViewModel>
+            var metadatasResult = await _walletAppService.GetMetadatas();
+            if (metadatasResult.IsFailure)
             {
-                new()
-                {
-                    Name = "Bitcoin Wallet",
-                    Balance = "2.54320000 BTC",
-                    WalletType = "On-Chain",
-                    Label = "Investments",
-                    IconType = "bitcoin"
-                },
-                new()
-                {
-                    Name = "Lightning Wallet",
-                    Balance = "0.12340000 BTC",
-                    WalletType = "Lightning",
-                    Label = "Projects",
-                    IconType = "lightning"
-                },
-                new()
-                {
-                    Name = "Liquid Wallet",
-                    Balance = "1.56780000 BTC",
-                    WalletType = "Liquid",
-                    Label = "Trading",
-                    IconType = "liquid"
-                },
+                ClearToEmpty();
+                return;
             }
-        });
 
-        SeedGroups.Add(new SeedGroupViewModel
+            var metadatas = metadatasResult.Value.ToList();
+            if (metadatas.Count == 0)
+            {
+                ClearToEmpty();
+                return;
+            }
+
+            SeedGroups.Clear();
+            double totalBal = 0;
+            double btcBal = 0;
+
+            var group = new SeedGroupViewModel
+            {
+                GroupName = "Wallets",
+                Wallets = new ObservableCollection<WalletItemViewModel>()
+            };
+
+            foreach (var meta in metadatas)
+            {
+                var walletId = meta.Id;
+                var balanceResult = await _walletAppService.GetBalance(walletId);
+                double balanceValue = 0;
+
+                if (balanceResult.IsSuccess)
+                {
+                    // Balance is in satoshis, convert to BTC
+                    balanceValue = balanceResult.Value.Sats / 100_000_000.0;
+                }
+
+                totalBal += balanceValue;
+                btcBal += balanceValue;
+
+                group.Wallets.Add(new WalletItemViewModel
+                {
+                    Name = meta.Name,
+                    Balance = $"{balanceValue:F8} BTC",
+                    WalletType = "On-Chain",
+                    Label = "",
+                    IconType = "bitcoin",
+                    WalletId = walletId.Value
+                });
+            }
+
+            group.GroupBalance = totalBal.ToString("F4", CultureInfo.InvariantCulture);
+            SeedGroups.Add(group);
+
+            TotalBalance = totalBal.ToString("F4", CultureInfo.InvariantCulture);
+            BitcoinBalance = btcBal.ToString("F4", CultureInfo.InvariantCulture);
+            HasWallets = true;
+
+            this.RaisePropertyChanged(nameof(TotalBalance));
+            this.RaisePropertyChanged(nameof(BitcoinBalance));
+        }
+        catch
         {
-            GroupName = "Imported Account",
-            GroupBalance = "1.0443",
-            Wallets = new ObservableCollection<WalletItemViewModel>
-            {
-                new()
-                {
-                    Name = "Bitcoin Wallet 2",
-                    Balance = "0.98760000 BTC",
-                    WalletType = "On-Chain",
-                    Label = "Savings",
-                    IconType = "bitcoin"
-                },
-                new()
-                {
-                    Name = "Lightning Wallet 2",
-                    Balance = "0.05670000 BTC",
-                    WalletType = "Lightning",
-                    Label = "Daily",
-                    IconType = "lightning"
-                },
-            }
-        });
+            ClearToEmpty();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
 
-        TotalBalance = "5.2787";
-        TotalInvested = "0.0218";
-        BitcoinBalance = "3.5308";
-        LiquidBalance = "1.5678";
-        HasWallets = true;
+    /// <summary>
+    /// Create a new wallet using the SDK.
+    /// Generates random seed words, creates wallet with encryption key.
+    /// </summary>
+    public async Task<(bool Success, string? SeedWords)> CreateWalletAsync(string walletName, string encryptionKey)
+    {
+        var seedWords = _walletAppService.GenerateRandomSeedwords();
+
+        var result = await _walletAppService.CreateWallet(
+            walletName,
+            seedWords,
+            CSharpFunctionalExtensions.Maybe<string>.None,
+            encryptionKey,
+            Angor.Sdk.Wallet.Domain.BitcoinNetwork.Testnet);
+
+        if (result.IsSuccess)
+        {
+            // Refresh wallet list
+            await LoadWalletsFromSdkAsync();
+            return (true, seedWords);
+        }
+
+        return (false, null);
+    }
+
+    /// <summary>
+    /// Get a receive address for the specified wallet.
+    /// </summary>
+    public async Task<string?> GetReceiveAddressAsync(string walletId)
+    {
+        var result = await _walletAppService.GetNextReceiveAddress(new WalletId(walletId));
+        return result.IsSuccess ? result.Value.Value : null;
+    }
+
+    /// <summary>
+    /// Refresh balance for a specific wallet.
+    /// </summary>
+    public async Task RefreshBalanceAsync(string walletId)
+    {
+        await _balanceService.RefreshAccountBalanceInfoAsync(new WalletId(walletId));
+        await LoadWalletsFromSdkAsync();
+    }
+
+    /// <summary>
+    /// Get test coins for a wallet (testnet/signet only).
+    /// </summary>
+    public async Task<bool> GetTestCoinsAsync(string walletId)
+    {
+        var result = await _walletAppService.GetTestCoins(new WalletId(walletId));
+        if (result.IsSuccess)
+        {
+            await LoadWalletsFromSdkAsync();
+        }
+        return result.IsSuccess;
     }
 
     /// <summary>
     /// Clear all wallet data and show empty state.
-    /// Called when ShowPopulatedApp toggle is disabled.
     /// </summary>
     public void ClearToEmpty()
     {
@@ -162,12 +216,15 @@ public partial class FundsViewModel : ReactiveObject
         BitcoinBalance = "0.0000";
         LiquidBalance = "0.0000";
         HasWallets = false;
+        this.RaisePropertyChanged(nameof(TotalBalance));
+        this.RaisePropertyChanged(nameof(TotalInvested));
+        this.RaisePropertyChanged(nameof(BitcoinBalance));
+        this.RaisePropertyChanged(nameof(LiquidBalance));
     }
 
     /// <summary>
     /// Add a new wallet group (called from the create wallet modal).
-    /// Creates a seed group with a single Bitcoin wallet.
-    /// Vue: finishGenerateWallet() / submitSeedImport() adds a new group.
+    /// This is the UI-only fallback; prefer CreateWalletAsync for SDK integration.
     /// </summary>
     public void AddWalletGroup(string groupName, string walletType)
     {
@@ -179,7 +236,7 @@ public partial class FundsViewModel : ReactiveObject
             {
                 new()
                 {
-                    Name = $"Bitcoin Wallet",
+                    Name = "Bitcoin Wallet",
                     Balance = "0.00000000 BTC",
                     WalletType = "On-Chain",
                     Label = "",
