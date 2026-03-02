@@ -43,12 +43,12 @@
         </Style>
         <!-- Vue: active → bg #4B7C5A, border #4B7C5A (same in both themes) -->
         <Style Selector="Border.SettingsCheckbox.SettingsCheckboxChecked">
-            <Setter Property="Background" Value="#4B7C5A" />
-            <Setter Property="BorderBrush" Value="#4B7C5A" />
+            <Setter Property="Background" Value="{DynamicResource PrimaryGreenBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <!-- Vue: hover → border-color #4B7C5A -->
         <Style Selector="Border.SettingsCheckbox:pointerover">
-            <Setter Property="BorderBrush" Value="#4B7C5A" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
     </UserControl.Styles>
 
@@ -73,7 +73,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <i:Icon Value="fa-solid fa-globe"
                                        FontSize="20"
-                                       Foreground="#4B7C5A" />
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
                                 <TextBlock Text="Network"
                                            FontSize="18"
                                            FontWeight="Bold"
@@ -128,7 +128,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <i:Icon Value="fa-solid fa-palette"
                                        FontSize="20"
-                                       Foreground="#4B7C5A" />
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
                                 <TextBlock Text="Theme"
                                            FontSize="18"
                                            FontWeight="Bold"
@@ -179,7 +179,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <i:Icon Value="fa-solid fa-link"
                                        FontSize="20"
-                                       Foreground="#4B7C5A" />
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
                                 <TextBlock Text="Explorer"
                                            FontSize="18"
                                            FontWeight="Bold"
@@ -194,7 +194,7 @@
                                     <Button DockPanel.Dock="Right"
                                             Margin="12,0,0,0"
                                             Padding="20,14"
-                                            Background="#4B7C5A"
+                                            Background="{DynamicResource PrimaryGreenBrush}"
                                             Foreground="White"
                                             BorderThickness="0"
                                             CornerRadius="8"
@@ -306,7 +306,7 @@
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                 <i:Icon Value="fa-solid fa-server"
                                        FontSize="20"
-                                       Foreground="#4B7C5A" />
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
                                 <TextBlock Text="Indexer"
                                                FontSize="18"
                                                FontWeight="Bold"
@@ -322,7 +322,7 @@
                                     <Button DockPanel.Dock="Right"
                                             Margin="12,0,0,0"
                                             Padding="20,14"
-                                            Background="#4B7C5A"
+                                            Background="{DynamicResource PrimaryGreenBrush}"
                                             Foreground="White"
                                             BorderThickness="0"
                                             CornerRadius="8"
@@ -426,7 +426,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <i:Icon Value="fa-solid fa-signal"
                                        FontSize="20"
-                                       Foreground="#4B7C5A" />
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
                                 <TextBlock Text="Nostr Relays"
                                            FontSize="18"
                                            FontWeight="Bold"
@@ -441,7 +441,7 @@
                                     <Button DockPanel.Dock="Right"
                                             Margin="12,0,0,0"
                                             Padding="20,14"
-                                            Background="#4B7C5A"
+                                            Background="{DynamicResource PrimaryGreenBrush}"
                                             Foreground="White"
                                             BorderThickness="0"
                                             CornerRadius="8"
@@ -540,7 +540,7 @@
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <i:Icon Value="fa-solid fa-dollar-sign"
                                            FontSize="20"
-                                           Foreground="#4B7C5A" />
+                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
                                     <TextBlock Text="Currency Display"
                                                FontSize="18"
                                                FontWeight="Bold"
@@ -590,7 +590,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <i:Icon Value="fa-solid fa-key"
                                        FontSize="20"
-                                       Foreground="#4B7C5A" />
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
                                 <TextBlock Text="Backup Account"
                                            FontSize="18"
                                            FontWeight="Bold"

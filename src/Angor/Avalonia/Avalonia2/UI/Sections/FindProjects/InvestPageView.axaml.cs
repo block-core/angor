@@ -13,6 +13,8 @@ namespace Avalonia2.UI.Sections.FindProjects;
 public partial class InvestPageView : UserControl
 {
     private IDisposable? _screenSubscription;
+    private Border? _selectedQuickAmountBorder;
+    private Border? _selectedSubPlanBorder;
 
     public InvestPageView()
     {
@@ -47,11 +49,23 @@ public partial class InvestPageView : UserControl
                     }
                 });
 
-            // If subscription, apply initial plan selection styling after layout
+            // If subscription, apply initial plan selection styling after layout.
+            // This one-time walk finds the initially-selected plan's border.
             if (vm.IsSubscription)
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                    UpdateSubscriptionPlanSelection(), Avalonia.Threading.DispatcherPriority.Loaded);
+                {
+                    // Find the SubPlanBorder whose DataContext has IsSelected == true
+                    foreach (var border in this.GetVisualDescendants().OfType<Border>())
+                    {
+                        if (border.Name == "SubPlanBorder" &&
+                            border.DataContext is SubscriptionPlanOption { IsSelected: true })
+                        {
+                            UpdateSubscriptionPlanSelection(border);
+                            break;
+                        }
+                    }
+                }, Avalonia.Threading.DispatcherPriority.Loaded);
             }
         }
     }
@@ -147,7 +161,7 @@ public partial class InvestPageView : UserControl
                 if (found.DataContext is QuickAmountOption option)
                 {
                     Vm?.SelectQuickAmount(option.Amount);
-                    UpdateQuickAmountSelection();
+                    UpdateQuickAmountSelection(found);
                     e.Handled = true;
                 }
                 break;
@@ -156,7 +170,7 @@ public partial class InvestPageView : UserControl
                 if (found.DataContext is SubscriptionPlanOption plan)
                 {
                     Vm?.SelectSubscriptionPlan(plan.PatternId);
-                    UpdateSubscriptionPlanSelection();
+                    UpdateSubscriptionPlanSelection(found);
                     e.Handled = true;
                 }
                 break;
@@ -190,41 +204,24 @@ public partial class InvestPageView : UserControl
     }
 
     /// <summary>Update quick amount borders via CSS class toggling.
-    /// The "QuickAmountBtn" base style sets DynamicResource bg/border for unselected state.
-    /// The "QuickAmountSelected" modifier class overrides with brand green + white text.
-    /// BrushTransition provides smooth 150ms animation on bg, border, and text foreground.
-    /// No ClearValue() — eliminates flash.</summary>
-    private void UpdateQuickAmountSelection()
+    /// Tracks previously-selected border to avoid full tree walk.</summary>
+    private void UpdateQuickAmountSelection(Border newSelected)
     {
-        var quickBorders = this.GetVisualDescendants()
-            .OfType<Border>()
-            .Where(b => b.Name == "QuickAmountBorder");
-
-        foreach (var border in quickBorders)
-        {
-            var isSelected = border.DataContext is QuickAmountOption opt
-                             && Vm?.SelectedQuickAmount != null
-                             && Math.Abs(opt.Amount - Vm.SelectedQuickAmount.Value) < 0.0000001;
-            border.Classes.Set("QuickAmountSelected", isSelected);
-        }
+        // Deselect previous
+        _selectedQuickAmountBorder?.Classes.Set("QuickAmountSelected", false);
+        // Select new
+        newSelected.Classes.Set("QuickAmountSelected", true);
+        _selectedQuickAmountBorder = newSelected;
     }
 
     /// <summary>Update subscription plan borders via CSS class toggling.
-    /// The "SubPlanBtn" base style sets DynamicResource bg/border for unselected state.
-    /// The "SubPlanSelected" modifier class overrides with selected-state DynamicResource values.
-    /// BrushTransition on the Border provides smooth 200ms animation.
-    /// No FindResource() or ClearValue() — eliminates flash and wrong-theme bugs.</summary>
-    private void UpdateSubscriptionPlanSelection()
+    /// Tracks previously-selected border to avoid full tree walk.</summary>
+    private void UpdateSubscriptionPlanSelection(Border newSelected)
     {
-        var planBorders = this.GetVisualDescendants()
-            .OfType<Border>()
-            .Where(b => b.Name == "SubPlanBorder");
-
-        foreach (var border in planBorders)
-        {
-            var isSelected = border.DataContext is SubscriptionPlanOption plan
-                             && plan.PatternId == Vm?.SelectedSubscriptionPattern;
-            border.Classes.Set("SubPlanSelected", isSelected);
-        }
+        // Deselect previous
+        _selectedSubPlanBorder?.Classes.Set("SubPlanSelected", false);
+        // Select new
+        newSelected.Classes.Set("SubPlanSelected", true);
+        _selectedSubPlanBorder = newSelected;
     }
 }

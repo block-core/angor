@@ -30,9 +30,9 @@
         <Setter Property="Border.Padding" Value="16 10" />
     </Style>
     <Style Selector=":is(Control).Box.Green">
-        <Setter Property="Border.BorderBrush" Value="#4b7c5a" />
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         <Setter Property="Border.Background" Value="#1a4b7c5a" />
-        <Setter Property="TextElement.Foreground" Value="#4b7c5a" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource PrimaryGreenBrush}" />
     </Style>
     <Style Selector=":is(Control).Box.BrightGreen">
         <Setter Property="Border.BorderBrush" Value="#22c55e" />

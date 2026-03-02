@@ -120,7 +120,7 @@
                                 Cursor="Hand" BorderThickness="0">
                             <Button.Background>
                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                    <GradientStop Color="#4B7C5A" Offset="0" />
+                                    <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                     <GradientStop Color="#3d6448" Offset="1" />
                                 </LinearGradientBrush>
                             </Button.Background>
@@ -162,11 +162,11 @@
                                 HorizontalContentAlignment="Center"
                                 CornerRadius="8" Padding="12,14"
                                 Background="Transparent"
-                                BorderBrush="#4B7C5A" BorderThickness="2"
+                                BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="2"
                                 Cursor="Hand">
                             <TextBlock Text="Or pay an invoice instead"
                                        FontSize="14" FontWeight="SemiBold"
-                                       Foreground="#4B7C5A" />
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
                         </Button>
                     </StackPanel>
                 </Border>
@@ -218,7 +218,7 @@
                                                          IsVisible="{Binding IsSelected}"
                                                          VerticalAlignment="Center">
                                                     <Path Data="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                          Fill="#4B7C5A"
+                                                          Fill="{DynamicResource PrimaryGreenBrush}"
                                                           Width="20" Height="20" Stretch="Uniform" />
                                                 </Viewbox>
                                             </StackPanel>
@@ -280,7 +280,7 @@
                     <Grid.ColumnSpacing>8</Grid.ColumnSpacing>
                     <!-- Lightning (selected) -->
                     <Border Grid.Column="0" CornerRadius="12" Padding="12,8"
-                            BorderThickness="2" BorderBrush="#4B7C5A"
+                            BorderThickness="2" BorderBrush="{DynamicResource PrimaryGreenBrush}"
                             Background="{DynamicResource DeployTabSelectedBg}">
                         <TextBlock Text="Lightning" FontSize="13" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextStrong}"
@@ -463,7 +463,7 @@
                             Cursor="Hand" BorderThickness="0">
                         <Button.Background>
                             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                                <GradientStop Color="#4B7C5A" Offset="0" />
+                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                 <GradientStop Color="#3d6a4d" Offset="1" />
                             </LinearGradientBrush>
                         </Button.Background>

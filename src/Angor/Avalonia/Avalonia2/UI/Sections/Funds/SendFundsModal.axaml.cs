@@ -107,36 +107,8 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
 
     private void SelectFee(string selectedName)
     {
-        // Reset all to unselected
-        var unselectedBorder = this.FindResource("RecoveryFeeUnselectedBorder") as Avalonia.Media.IBrush;
-        var unselectedText = this.FindResource("RecoveryFeeUnselectedText") as Avalonia.Media.IBrush;
-        var selectedBg = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4B7C5A"));
-        var whiteBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Colors.White);
-        var transparentBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Colors.Transparent);
-
         foreach (var btn in new[] { BtnFeeLow, BtnFeeMedium, BtnFeeHigh })
-        {
-            if (btn.Name == selectedName)
-            {
-                btn.Background = selectedBg;
-                btn.BorderBrush = selectedBg;
-                btn.Foreground = whiteBrush;
-                // Update child text colors
-                foreach (var tb in btn.GetVisualDescendants().OfType<TextBlock>())
-                    tb.Foreground = whiteBrush;
-            }
-            else
-            {
-                btn.Background = transparentBrush;
-                btn.BorderBrush = unselectedBorder;
-                btn.Foreground = unselectedText;
-                foreach (var tb in btn.GetVisualDescendants().OfType<TextBlock>())
-                {
-                    // Restore muted for the time text, normal for label
-                    tb.ClearValue(TextBlock.ForegroundProperty);
-                }
-            }
-        }
+            btn.Classes.Set("FeeSelected", btn.Name == selectedName);
     }
 
     private void ShowStep(string step)

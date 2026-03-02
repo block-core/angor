@@ -190,22 +190,9 @@ public partial class ManageProjectView : UserControl
 
         if (container is Border itemBorder)
         {
-            // Find the checkbox Border named UtxoCheckbox inside
+            // Find the checkbox Border named UtxoCheckbox inside and toggle CSS class
             var checkbox = FindDescendantByName<Border>(itemBorder, "UtxoCheckbox");
-            if (checkbox != null)
-            {
-                if (selected)
-                {
-                    checkbox.Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4B7C5A"));
-                    checkbox.BorderBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4B7C5A"));
-                }
-                else
-                {
-                    // Restore DynamicResource bindings by clearing explicit values
-                    checkbox.ClearValue(Border.BackgroundProperty);
-                    checkbox.ClearValue(Border.BorderBrushProperty);
-                }
-            }
+            checkbox?.Classes.Set("UtxoChecked", selected);
         }
     }
 

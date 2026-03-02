@@ -57,6 +57,11 @@
             <Setter Property="FontSize" Value="14" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
+        </Style>
+        <!-- Copy button "Copied!" feedback state -->
+        <Style Selector="Button.CopyBtn.CopiedState">
+            <Setter Property="Background" Value="{DynamicResource CopiedBtnBg}" />
         </Style>
     </UserControl.Styles>
 
@@ -157,10 +162,8 @@
                         <Button Name="CopyButton" DockPanel.Dock="Right"
                                 Classes="CopyBtn"
                                 Margin="8,0,0,0"
-                                Content="Copy">
-                            <Button.Background>
-                                <SolidColorBrush Color="#4B7C5A" />
-                            </Button.Background>
+                                Content="Copy"
+                                Background="{DynamicResource PrimaryGreenBrush}">
                         </Button>
                         <TextBox Name="ShareLinkInput"
                                  IsReadOnly="True"

@@ -211,7 +211,7 @@
                                                             Orientation="Horizontal" Spacing="12">
                                                     <i:Icon Value="fa-solid fa-lock"
                                                            FontSize="20"
-                                                           Foreground="#4B7C5A" />
+                                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
                                                     <TextBlock Text="{Binding GroupName}"
                                                                FontSize="18"
                                                                FontWeight="Bold"
@@ -263,7 +263,7 @@
                                                     FontWeight="SemiBold">
                                                 <Button.Background>
                                                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                                        <GradientStop Color="#4B7C5A" Offset="0" />
+                                                        <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                                         <GradientStop Color="#3D6448" Offset="1" />
                                                     </LinearGradientBrush>
                                                 </Button.Background>

@@ -1,6 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.VisualTree;
-using Avalonia2.UI.Sections.MyProjects.Deploy;
 
 namespace Avalonia2.UI.Shared.Helpers;
 
@@ -13,20 +11,15 @@ public static class WalletSelectionHelper
 {
     /// <summary>
     /// Update wallet card visual states via CSS class toggling.
-    /// The "WalletCard" base style sets DynamicResource bg/border for unselected state.
-    /// The "WalletSelected" modifier class overrides with selected-state DynamicResource values.
+    /// Deselects the previous border and selects the new one — no tree walk.
     /// </summary>
-    /// <param name="root">The visual root to search for WalletBorder elements.</param>
-    public static void UpdateWalletSelection(Control root)
+    /// <param name="previousSelected">Previously selected border (may be null on first selection).</param>
+    /// <param name="newSelected">Newly selected wallet border.</param>
+    /// <returns>The newly selected border (caller should store this as their _selectedWalletBorder).</returns>
+    public static Border UpdateWalletSelection(Border? previousSelected, Border newSelected)
     {
-        var walletBorders = root.GetVisualDescendants()
-            .OfType<Border>()
-            .Where(b => b.Name == "WalletBorder");
-
-        foreach (var border in walletBorders)
-        {
-            var isSelected = border.DataContext is WalletItem w && w.IsSelected;
-            border.Classes.Set("WalletSelected", isSelected);
-        }
+        previousSelected?.Classes.Set("WalletSelected", false);
+        newSelected.Classes.Set("WalletSelected", true);
+        return newSelected;
     }
 }

@@ -42,7 +42,7 @@ public partial class InvestStageRow : ReactiveObject
 }
 
 /// <summary>Subscription plan option (e.g. "3 Months", "6 Months").</summary>
-public class SubscriptionPlanOption
+public class SubscriptionPlanOption : ReactiveObject
 {
     public string PatternId { get; set; } = "";
     public string Label { get; set; } = "";
@@ -50,7 +50,13 @@ public class SubscriptionPlanOption
     public long TotalSats { get; set; }
     public string PriceText { get; set; } = "";
     public string Description { get; set; } = "";
-    public bool IsSelected { get; set; }
+
+    private bool _isSelected;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => this.RaiseAndSetIfChanged(ref _isSelected, value);
+    }
 }
 
 /// <summary>

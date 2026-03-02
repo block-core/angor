@@ -27,7 +27,7 @@
         </Style>
         <Style Selector="Border.UtxoCard.UtxoSelected">
             <Setter Property="Background" Value="{DynamicResource UtxoCardSelectedBg}" />
-            <Setter Property="BorderBrush" Value="#4B7C5A" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
 
         <!-- UTXO checkbox styles — Rule #9: CSS class toggle, NO BrushTransition -->
@@ -37,8 +37,8 @@
             <Setter Property="BorderThickness" Value="2" />
         </Style>
         <Style Selector="Border.UtxoCheckbox.UtxoChecked">
-            <Setter Property="Background" Value="#4B7C5A" />
-            <Setter Property="BorderBrush" Value="#4B7C5A" />
+            <Setter Property="Background" Value="{DynamicResource PrimaryGreenBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
 
         <!-- Text color helper classes for code-behind created elements -->
@@ -154,7 +154,7 @@
                                         Cursor="Hand">
                                     <Button.Background>
                                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                            <GradientStop Color="#4B7C5A" Offset="0" />
+                                            <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                             <GradientStop Color="#3D6448" Offset="1" />
                                         </LinearGradientBrush>
                                     </Button.Background>
@@ -170,14 +170,14 @@
                                 <Button Name="BtnHeaderReceive"
                                         Padding="16,8" CornerRadius="8"
                                         Background="Transparent"
-                                        BorderBrush="#4B7C5A"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                         BorderThickness="2"
-                                        Foreground="#4B7C5A"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}"
                                         FontWeight="SemiBold" FontSize="14"
                                         Cursor="Hand">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <i:Icon Value="fa-solid fa-arrow-down"
-                                               FontSize="14" Foreground="#4B7C5A"
+                                               FontSize="14" Foreground="{DynamicResource PrimaryGreenBrush}"
                                                VerticalAlignment="Center" />
                                         <TextBlock Text="Receive" VerticalAlignment="Center" />
                                     </StackPanel>

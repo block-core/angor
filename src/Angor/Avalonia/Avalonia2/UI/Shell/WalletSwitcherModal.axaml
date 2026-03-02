@@ -130,7 +130,7 @@
                                                 <!-- Vue: svg w-5 h-5, fill currentColor, checkmark path -->
                                                 <i:Icon Value="fa-solid fa-check"
                                                        FontSize="16"
-                                                       Foreground="#4B7C5A"
+                                                       Foreground="{DynamicResource PrimaryGreenBrush}"
                                                        IsVisible="{Binding IsSelected}"
                                                        VerticalAlignment="Center" />
                                             </StackPanel>

@@ -45,14 +45,6 @@
             <Setter Property="BorderBrush" Value="Transparent" />
             
             <Setter Property="CornerRadius" Value="10" />
-            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="Transitions">
-                    <Transitions>
-                        <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
-                        <BrushTransition Property="Background" Duration="0:0:0.2" />
-                    </Transitions>
-                </Setter>
-            </Style>
 
             <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
@@ -73,14 +65,6 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
             <Setter Property="CornerRadius" Value="10" />
-            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="Transitions">
-                    <Transitions>
-                        <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
-                        <BrushTransition Property="Background" Duration="0:0:0.2" />
-                    </Transitions>
-                </Setter>
-            </Style>
 
             <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
@@ -101,14 +85,6 @@
             <Setter Property="BorderThickness" Value="2" />
             
             <Setter Property="CornerRadius" Value="10" />
-            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="Transitions">
-                    <Transitions>
-                        <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
-                        <BrushTransition Property="Background" Duration="0:0:0.2" />
-                    </Transitions>
-                </Setter>
-            </Style>
 
             <Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource Surface}" />

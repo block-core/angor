@@ -205,10 +205,10 @@
                                         Height="40"
                                         Padding="8,0"
                                         Background="Transparent"
-                                        BorderBrush="#4B7C5A"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                         BorderThickness="2"
                                         CornerRadius="8"
-                                        Foreground="#4B7C5A"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}"
                                         FontSize="14" FontWeight="SemiBold"
                                         Content="Manage" />
                                 <!-- Edit button — inner elements inherit Foreground from Button -->
@@ -220,13 +220,13 @@
                                         Height="40"
                                         Padding="8,0"
                                         Background="Transparent"
-                                        BorderBrush="#4B7C5A"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                         BorderThickness="2"
                                         CornerRadius="8"
-                                        Foreground="#4B7C5A"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}"
                                         FontSize="14" FontWeight="SemiBold">
                                     <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                        <i:Icon Value="fa-solid fa-pen" FontSize="12" Foreground="#4B7C5A" />
+                                        <i:Icon Value="fa-solid fa-pen" FontSize="12" Foreground="{DynamicResource PrimaryGreenBrush}" />
                                         <TextBlock Text="Edit" FontSize="14" FontWeight="SemiBold"
                                                    VerticalAlignment="Center" />
                                     </StackPanel>
@@ -237,12 +237,12 @@
                                         Width="40" Height="40"
                                         Padding="0"
                                         Background="Transparent"
-                                        BorderBrush="#4B7C5A"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                         BorderThickness="2"
                                         CornerRadius="8"
-                                        Foreground="#4B7C5A">
+                                        Foreground="{DynamicResource PrimaryGreenBrush}">
                                     <i:Icon Value="fa-solid fa-share"
-                                            FontSize="16" Foreground="#4B7C5A" />
+                                            FontSize="16" Foreground="{DynamicResource PrimaryGreenBrush}" />
                                 </Button>
                             </Grid>
                         </StackPanel>

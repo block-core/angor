@@ -1,7 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.VisualTree;
 
 namespace Avalonia2.UI.Shell;
 
@@ -13,6 +12,8 @@ namespace Avalonia2.UI.Shell;
 /// </summary>
 public partial class WalletSwitcherModal : UserControl, IBackdropCloseable
 {
+    private Border? _selectedWalletBorder;
+
     public WalletSwitcherModal()
     {
         InitializeComponent();
@@ -63,30 +64,15 @@ public partial class WalletSwitcherModal : UserControl, IBackdropCloseable
             // Select the wallet
             Vm?.SelectSwitcherWallet(wallet);
 
-            // Update visual states via CSS class toggling (Rule #9 compliant)
-            UpdateWalletSelection();
+            // Update visual states: deselect previous, select new (no tree walk)
+            _selectedWalletBorder?.Classes.Set("WalletSelected", false);
+            found.Classes.Set("WalletSelected", true);
+            _selectedWalletBorder = found;
 
             // Vue behavior: selecting a wallet immediately closes the modal
             Vm?.HideModal();
 
             e.Handled = true;
-        }
-    }
-
-    /// <summary>
-    /// Update wallet card visual states via CSS class toggling.
-    /// Same pattern as WalletSelectionHelper but for WalletSwitcherItem.
-    /// </summary>
-    private void UpdateWalletSelection()
-    {
-        var walletBorders = this.GetVisualDescendants()
-            .OfType<Border>()
-            .Where(b => b.Name == "WalletBorder");
-
-        foreach (var border in walletBorders)
-        {
-            var isSelected = border.DataContext is WalletSwitcherItem w && w.IsSelected;
-            border.Classes.Set("WalletSelected", isSelected);
         }
     }
 }

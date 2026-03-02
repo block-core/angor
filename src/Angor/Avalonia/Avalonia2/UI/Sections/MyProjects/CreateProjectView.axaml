@@ -41,7 +41,7 @@
 
         <!-- ═══ TYPE CARD: Default icon colors ═══ -->
         <Style Selector="i|Icon.TypeCardIconFill.IconInvest">
-            <Setter Property="Foreground" Value="#4B7C5A" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <!-- Subscription icon is a PNG Border with OpacityMask — use Background for tinting -->
         <Style Selector="Border.TypeCardIconStroke.IconSub">
@@ -71,20 +71,20 @@
 
         <!-- ═══ TYPE CARD: INVEST — Selected ═══ -->
         <Style Selector="Border.TypeCard.TypeCardInvest.TypeCardSelected">
-            <Setter Property="BorderBrush" Value="#4B7C5A" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
             <Setter Property="Background" Value="{DynamicResource TypeCardInvestSelectedBg}" />
         </Style>
         <Style Selector="Border.TypeCard.TypeCardInvest.TypeCardSelected:pointerover">
-            <Setter Property="BorderBrush" Value="#4B7C5A" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <Style Selector="Border.TypeCard.TypeCardInvest.TypeCardSelected Border.TypeCardIconBg">
-            <Setter Property="Background" Value="#4B7C5A" />
+            <Setter Property="Background" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <Style Selector="Border.TypeCard.TypeCardInvest.TypeCardSelected i|Icon.TypeCardIconFill">
             <Setter Property="Foreground" Value="White" />
         </Style>
         <Style Selector="Border.TypeCard.TypeCardInvest.TypeCardSelected TextBlock.TypeCardTitle">
-            <Setter Property="Foreground" Value="#4B7C5A" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <Style Selector="Border.TypeCard.TypeCardInvest.TypeCardSelected Border.TypeCardRadio">
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -139,11 +139,11 @@
             <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
         </Style>
         <Style Selector="Border.InstallmentOption:pointerover">
-            <Setter Property="BorderBrush" Value="#4B7C5A" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <!-- Selected: green border + subtle green bg -->
         <Style Selector="Border.InstallmentOption.InstallmentSelected">
-            <Setter Property="BorderBrush" Value="#4B7C5A" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
             <Setter Property="Background" Value="{DynamicResource TypeCardInvestSelectedBg}" />
         </Style>
         <!-- Checkbox active: green fill + green border -->
@@ -152,8 +152,8 @@
             <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
         </Style>
         <Style Selector="Border.CheckboxIndicator.CheckboxActive">
-            <Setter Property="Background" Value="#4B7C5A" />
-            <Setter Property="BorderBrush" Value="#4B7C5A" />
+            <Setter Property="Background" Value="{DynamicResource PrimaryGreenBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <!-- Installment selected text: green when active -->
         <!-- Vue: text-[#5FAF78] (dark) / text-[#4B7C5A] (light) -->
@@ -171,11 +171,11 @@
             <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
         </Style>
         <Style Selector="Border.PayoutFreqOption:pointerover">
-            <Setter Property="BorderBrush" Value="#4B7C5A" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <!-- Selected row: green border + subtle green bg -->
         <Style Selector="Border.PayoutFreqOption.PayoutFreqSelected">
-            <Setter Property="BorderBrush" Value="#4B7C5A" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
             <Setter Property="Background" Value="{DynamicResource TypeCardInvestSelectedBg}" />
         </Style>
         <!-- Radio outer ring: 20x20 rounded-full, border-2 -->
@@ -183,7 +183,7 @@
             <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
         </Style>
         <Style Selector="Border.RadioOuter.RadioSelected">
-            <Setter Property="BorderBrush" Value="#4B7C5A" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <!-- Payout frequency selected text: green when active -->
         <Style Selector="TextBlock.PayoutFreqText">
@@ -497,13 +497,11 @@
                             <StackPanel Spacing="20" HorizontalAlignment="Center">
                                 <!-- Lightning bolt icon in green circle -->
                                 <Border Width="64" Height="64" CornerRadius="32"
-                                        HorizontalAlignment="Center">
-                                    <Border.Background>
-                                        <SolidColorBrush Color="#4B7C5A" Opacity="0.12" />
-                                    </Border.Background>
+                                        HorizontalAlignment="Center"
+                                        Background="{DynamicResource PrimaryGreenBrush12}">
                                     <i:Icon Value="fa-solid fa-bolt"
                                            FontSize="28"
-                                           Foreground="#4B7C5A" />
+                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
                                 </Border>
 
                                 <TextBlock Text="Welcome" FontSize="24" FontWeight="Bold"
@@ -532,7 +530,7 @@
                                             Content="Start">
                                         <Button.Background>
                                             <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                                <GradientStop Color="#4B7C5A" Offset="0" />
+                                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                                 <GradientStop Color="#3D6448" Offset="1" />
                                             </LinearGradientBrush>
                                         </Button.Background>
@@ -560,13 +558,11 @@
                             <StackPanel Spacing="20" HorizontalAlignment="Center">
                                 <!-- Clipboard/checkmark icon in green circle -->
                                 <Border Width="64" Height="64" CornerRadius="32"
-                                        HorizontalAlignment="Center">
-                                    <Border.Background>
-                                        <SolidColorBrush Color="#4B7C5A" Opacity="0.12" />
-                                    </Border.Background>
+                                        HorizontalAlignment="Center"
+                                        Background="{DynamicResource PrimaryGreenBrush12}">
                                     <i:Icon Value="fa-solid fa-clipboard-check"
                                            FontSize="28"
-                                           Foreground="#4B7C5A" />
+                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
                                 </Border>
 
                                 <!-- Title — bound to type-specific text -->
@@ -598,7 +594,7 @@
                                             Content="Ok, Let's Go">
                                         <Button.Background>
                                             <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                                <GradientStop Color="#4B7C5A" Offset="0" />
+                                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                                 <GradientStop Color="#3D6448" Offset="1" />
                                             </LinearGradientBrush>
                                         </Button.Background>
@@ -663,7 +659,7 @@
                                                     <Ellipse Width="400" Height="400" Fill="White"
                                                              HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                     <Path Data="{StaticResource CheckCircleSolid}"
-                                                          Fill="#4B7C5A" Width="512" Height="512" Stretch="Uniform" />
+                                                          Fill="{DynamicResource PrimaryGreenBrush}" Width="512" Height="512" Stretch="Uniform" />
                                                 </Panel>
                                             </Viewbox>
                                         </Border>
@@ -1432,7 +1428,7 @@
                                                                     Background="Transparent"
                                                                     VerticalAlignment="Center">
                                                                 <Ellipse Name="RadioDotMonthly" Width="12" Height="12"
-                                                                         Fill="#4B7C5A" IsVisible="False"
+                                                                         Fill="{DynamicResource PrimaryGreenBrush}" IsVisible="False"
                                                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                             </Border>
                                                         </Grid>
@@ -1454,7 +1450,7 @@
                                                                     Background="Transparent"
                                                                     VerticalAlignment="Center">
                                                                 <Ellipse Name="RadioDotWeekly" Width="12" Height="12"
-                                                                         Fill="#4B7C5A" IsVisible="False"
+                                                                         Fill="{DynamicResource PrimaryGreenBrush}" IsVisible="False"
                                                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                             </Border>
                                                         </Grid>
@@ -1636,10 +1632,8 @@
                                         IsVisible="{Binding HasStages}">
                                     <StackPanel>
                                         <!-- Card header: icon + title + count + Delete button -->
-                                        <Border Padding="20,16" CornerRadius="11,11,0,0">
-                                            <Border.Background>
-                                                <SolidColorBrush Color="#4B7C5A" Opacity="0.08" />
-                                            </Border.Background>
+                                        <Border Padding="20,16" CornerRadius="11,11,0,0"
+                                                Background="{DynamicResource PrimaryGreenBrush08}">
                                             <DockPanel>
                                                 <Button Name="DeleteStagesButton" DockPanel.Dock="Right"
                                                         Background="Transparent"
@@ -1677,10 +1671,8 @@
                                                     <DataTemplate x:DataType="mp:ProjectStageViewModel">
                                                         <Border Padding="14,10" Margin="0,0,0,4"
                                                                 CornerRadius="10"
-                                                                BorderBrush="{DynamicResource Accent}" BorderThickness="1">
-                                                            <Border.Background>
-                                                                <SolidColorBrush Color="#4B7C5A" Opacity="0.04" />
-                                                            </Border.Background>
+                                                                BorderBrush="{DynamicResource Accent}" BorderThickness="1"
+                                                                Background="{DynamicResource PrimaryGreenBrush04}">
                                                             <DockPanel>
                                                                 <TextBlock FontSize="14" Foreground="{DynamicResource Accent}"
                                                                            FontWeight="SemiBold" DockPanel.Dock="Left">
@@ -1710,10 +1702,8 @@
                                 <Border CornerRadius="12" BorderBrush="{DynamicResource Accent}" BorderThickness="1"
                                         Background="{DynamicResource BrandWash}" ClipToBounds="True">
                                     <StackPanel>
-                                        <Border Padding="24" CornerRadius="11,11,0,0">
-                                            <Border.Background>
-                                                <SolidColorBrush Color="#4B7C5A" Opacity="0.08" />
-                                            </Border.Background>
+                                        <Border Padding="24" CornerRadius="11,11,0,0"
+                                                Background="{DynamicResource PrimaryGreenBrush08}">
                                             <StackPanel Orientation="Horizontal" Spacing="12">
                                                 <Border Width="36" Height="36" CornerRadius="8"
                                                         Background="{DynamicResource Accent}">
@@ -1834,10 +1824,8 @@
                                 <Border CornerRadius="12" BorderBrush="{DynamicResource Accent}" BorderThickness="1"
                                         Background="{DynamicResource BrandWash}" ClipToBounds="True">
                                     <StackPanel>
-                                        <Border Padding="24" CornerRadius="11,11,0,0">
-                                            <Border.Background>
-                                                <SolidColorBrush Color="#4B7C5A" Opacity="0.08" />
-                                            </Border.Background>
+                                        <Border Padding="24" CornerRadius="11,11,0,0"
+                                                Background="{DynamicResource PrimaryGreenBrush08}">
                                             <DockPanel>
                                                 <StackPanel Orientation="Horizontal" Spacing="12" DockPanel.Dock="Left">
                                                     <Border Width="36" Height="36" CornerRadius="8"
@@ -1863,10 +1851,8 @@
                                                     <DataTemplate x:DataType="mp:ProjectStageViewModel">
                                                         <Border Padding="14,10" Margin="0,0,0,4"
                                                                 CornerRadius="10"
-                                                                BorderBrush="{DynamicResource Accent}" BorderThickness="1">
-                                                            <Border.Background>
-                                                                <SolidColorBrush Color="#4B7C5A" Opacity="0.04" />
-                                                            </Border.Background>
+                                                                BorderBrush="{DynamicResource Accent}" BorderThickness="1"
+                                                                Background="{DynamicResource PrimaryGreenBrush04}">
                                                             <DockPanel>
                                                                 <TextBlock FontSize="14" Foreground="{DynamicResource Accent}"
                                                                            FontWeight="SemiBold" DockPanel.Dock="Left">
@@ -1895,10 +1881,8 @@
                                     <StackPanel Spacing="16" HorizontalAlignment="Center">
                                         <!-- Angor logo circle — matches Vue deploy card -->
                                         <Border Width="64" Height="64" CornerRadius="32"
-                                                HorizontalAlignment="Center">
-                                            <Border.Background>
-                                                <SolidColorBrush Color="#4B7C5A" Opacity="0.12" />
-                                            </Border.Background>
+                                                HorizontalAlignment="Center"
+                                                Background="{DynamicResource PrimaryGreenBrush12}">
                                             <Viewbox Width="32" Height="32">
                                                 <Svg Path="/Assets/logo.svg" />
                                             </Viewbox>

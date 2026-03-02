@@ -13,6 +13,8 @@ namespace Avalonia2.UI.Sections.MyProjects.Deploy;
 /// </summary>
 public partial class DeployFlowOverlay : UserControl, IBackdropCloseable
 {
+    private Border? _selectedWalletBorder;
+
     /// <summary>
     /// Callback invoked when the user completes the deploy flow (success → "Go to My Projects").
     /// The parent (CreateProjectView) sets this to handle post-deploy navigation.
@@ -126,7 +128,7 @@ public partial class DeployFlowOverlay : UserControl, IBackdropCloseable
         if (walletBorder?.DataContext is WalletItem wallet)
         {
             Vm?.SelectWallet(wallet);
-            WalletSelectionHelper.UpdateWalletSelection(this);
+            _selectedWalletBorder = WalletSelectionHelper.UpdateWalletSelection(_selectedWalletBorder, walletBorder);
             e.Handled = true;
         }
     }

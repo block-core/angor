@@ -375,7 +375,7 @@
                                                                VerticalAlignment="Center" />
                                                     <TextBlock HorizontalAlignment="Right"
                                                                FontSize="13"
-                                                               Foreground="#4B7C5A"
+                                                               Foreground="{DynamicResource PrimaryGreenBrush}"
                                                                FontWeight="Bold"
                                                                VerticalAlignment="Center">
                                                         <Run Text="{Binding PaymentSegmentsCompleted, Mode=OneWay}" /><Run Text="/" /><Run Text="{Binding PaymentSegmentsTotal, Mode=OneWay}" />
@@ -392,7 +392,7 @@
                                                                 IsVisible="{Binding IsSegment1Complete}">
                                                             <Border.Background>
                                                                 <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                                                    <GradientStop Color="#4B7C5A" Offset="0" />
+                                                                    <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                                                     <GradientStop Color="#3D6448" Offset="1" />
                                                                 </LinearGradientBrush>
                                                             </Border.Background>
@@ -406,7 +406,7 @@
                                                                 IsVisible="{Binding IsSegment2Complete}">
                                                             <Border.Background>
                                                                 <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                                                    <GradientStop Color="#4B7C5A" Offset="0" />
+                                                                    <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                                                     <GradientStop Color="#3D6448" Offset="1" />
                                                                 </LinearGradientBrush>
                                                             </Border.Background>
@@ -420,7 +420,7 @@
                                                                 IsVisible="{Binding IsSegment3Complete}">
                                                             <Border.Background>
                                                                 <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                                                    <GradientStop Color="#4B7C5A" Offset="0" />
+                                                                    <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                                                     <GradientStop Color="#3D6448" Offset="1" />
                                                                 </LinearGradientBrush>
                                                             </Border.Background>
@@ -440,7 +440,7 @@
                                                         RenderTransformOrigin="0,0.5">
                                                     <Border.Background>
                                                         <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                                            <GradientStop Color="#4B7C5A" Offset="0" />
+                                                            <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                                             <GradientStop Color="#3D6448" Offset="1" />
                                                         </LinearGradientBrush>
                                                     </Border.Background>
@@ -457,18 +457,18 @@
                                                     Name="ManageButton"
                                                     Tag="{Binding}"
                                                     Background="Transparent"
-                                                    BorderBrush="#4B7C5A"
+                                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                                     BorderThickness="2"
                                                     CornerRadius="8">
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                                     <i:Icon Value="fa-solid fa-file-lines"
                                                            FontSize="14"
-                                                           Foreground="#4B7C5A"
+                                                           Foreground="{DynamicResource PrimaryGreenBrush}"
                                                            VerticalAlignment="Center" />
                                                     <TextBlock Text="Manage"
                                                                FontSize="14"
                                                                FontWeight="SemiBold"
-                                                               Foreground="#4B7C5A" />
+                                                               Foreground="{DynamicResource PrimaryGreenBrush}" />
                                                 </StackPanel>
                                             </Button>
                                         </StackPanel>

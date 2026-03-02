@@ -14,6 +14,31 @@
         Step 2 "success": Green checkmark → "Transaction Sent!" → summary → Done
     -->
 
+    <UserControl.Styles>
+        <!-- Fee tab: unselected (Rule #9 — CSS class toggling, no BrushTransition) -->
+        <Style Selector="Button.FeeBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource RecoveryFeeUnselectedBorder}" />
+        </Style>
+        <Style Selector="Button.FeeBtn TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource RecoveryFeeUnselectedText}" />
+        </Style>
+        <Style Selector="Button.FeeBtn TextBlock.FeeTime">
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+        <!-- Fee tab: selected -->
+        <Style Selector="Button.FeeBtn.FeeSelected">
+            <Setter Property="Background" Value="{DynamicResource RecoveryFeeSelectedBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource RecoveryFeeSelectedBorder}" />
+        </Style>
+        <Style Selector="Button.FeeBtn.FeeSelected TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource RecoveryFeeSelectedText}" />
+        </Style>
+        <Style Selector="Button.FeeBtn.FeeSelected TextBlock.FeeTime">
+            <Setter Property="Foreground" Value="#FFFFFFB3" />
+        </Style>
+    </UserControl.Styles>
+
     <Panel>
         <!-- ════════════════════════════════════════════════════════ -->
         <!-- MODAL CARD                                               -->
@@ -126,26 +151,26 @@
                                 <Button Name="BtnPct25" Content="25%"
                                         Padding="10,4" CornerRadius="6" FontSize="12"
                                         Background="Transparent"
-                                        BorderBrush="#4B7C5A" BorderThickness="1"
-                                        Foreground="#4B7C5A" FontWeight="SemiBold"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="1"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}" FontWeight="SemiBold"
                                         Cursor="Hand" />
                                 <Button Name="BtnPct50" Content="50%"
                                         Padding="10,4" CornerRadius="6" FontSize="12"
                                         Background="Transparent"
-                                        BorderBrush="#4B7C5A" BorderThickness="1"
-                                        Foreground="#4B7C5A" FontWeight="SemiBold"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="1"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}" FontWeight="SemiBold"
                                         Cursor="Hand" />
                                 <Button Name="BtnPct75" Content="75%"
                                         Padding="10,4" CornerRadius="6" FontSize="12"
                                         Background="Transparent"
-                                        BorderBrush="#4B7C5A" BorderThickness="1"
-                                        Foreground="#4B7C5A" FontWeight="SemiBold"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="1"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}" FontWeight="SemiBold"
                                         Cursor="Hand" />
                                 <Button Name="BtnPct100" Content="100%"
                                         Padding="10,4" CornerRadius="6" FontSize="12"
                                         Background="Transparent"
-                                        BorderBrush="#4B7C5A" BorderThickness="1"
-                                        Foreground="#4B7C5A" FontWeight="SemiBold"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="1"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}" FontWeight="SemiBold"
                                         Cursor="Hand" />
                             </StackPanel>
                         </StackPanel>
@@ -157,23 +182,21 @@
                                        Foreground="{DynamicResource TextMuted}" />
                             <UniformGrid Columns="3" Rows="1">
                                 <Button Name="BtnFeeLow"
+                                        Classes="FeeBtn"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Center"
                                         Padding="8,10" CornerRadius="8"
                                         Margin="0,0,4,0"
-                                        Background="Transparent"
-                                        BorderBrush="{DynamicResource RecoveryFeeUnselectedBorder}"
                                         BorderThickness="1"
-                                        Foreground="{DynamicResource RecoveryFeeUnselectedText}"
                                         FontSize="13" FontWeight="SemiBold"
                                         Cursor="Hand">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
                                         <TextBlock Text="Low" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="13" />
-                                        <TextBlock Text="~30 min" HorizontalAlignment="Center" FontSize="11"
-                                                   Foreground="{DynamicResource TextMuted}" />
+                                        <TextBlock Classes="FeeTime" Text="~30 min" HorizontalAlignment="Center" FontSize="11" />
                                     </StackPanel>
                                 </Button>
                                 <Button Name="BtnFeeMedium"
+                                        Classes="FeeBtn FeeSelected"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Center"
                                         Padding="8,10" CornerRadius="8"
@@ -181,37 +204,23 @@
                                         BorderThickness="1"
                                         FontSize="13" FontWeight="SemiBold"
                                         Cursor="Hand">
-                                    <Button.Background>
-                                        <SolidColorBrush Color="#4B7C5A" />
-                                    </Button.Background>
-                                    <Button.BorderBrush>
-                                        <SolidColorBrush Color="#4B7C5A" />
-                                    </Button.BorderBrush>
-                                    <Button.Foreground>
-                                        <SolidColorBrush Color="White" />
-                                    </Button.Foreground>
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="Medium" HorizontalAlignment="Center"
-                                                   FontWeight="SemiBold" FontSize="13" Foreground="White" />
-                                        <TextBlock Text="~15 min" HorizontalAlignment="Center" FontSize="11"
-                                                   Foreground="#FFFFFFB3" />
+                                        <TextBlock Text="Medium" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="13" />
+                                        <TextBlock Classes="FeeTime" Text="~15 min" HorizontalAlignment="Center" FontSize="11" />
                                     </StackPanel>
                                 </Button>
                                 <Button Name="BtnFeeHigh"
+                                        Classes="FeeBtn"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Center"
                                         Padding="8,10" CornerRadius="8"
                                         Margin="4,0,0,0"
-                                        Background="Transparent"
-                                        BorderBrush="{DynamicResource RecoveryFeeUnselectedBorder}"
                                         BorderThickness="1"
-                                        Foreground="{DynamicResource RecoveryFeeUnselectedText}"
                                         FontSize="13" FontWeight="SemiBold"
                                         Cursor="Hand">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
                                         <TextBlock Text="High" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="13" />
-                                        <TextBlock Text="~5 min" HorizontalAlignment="Center" FontSize="11"
-                                                   Foreground="{DynamicResource TextMuted}" />
+                                        <TextBlock Classes="FeeTime" Text="~5 min" HorizontalAlignment="Center" FontSize="11" />
                                     </StackPanel>
                                 </Button>
                             </UniformGrid>
@@ -240,7 +249,7 @@
                                     Cursor="Hand">
                                 <Button.Background>
                                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                        <GradientStop Color="#4B7C5A" Offset="0" />
+                                        <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                         <GradientStop Color="#3D6448" Offset="1" />
                                     </LinearGradientBrush>
                                 </Button.Background>
@@ -323,7 +332,7 @@
                                         <TextBlock Text="a1b2c3d4e5f6...7890abcd"
                                                    FontSize="13"
                                                    FontFamily="Cascadia Mono, Consolas, monospace"
-                                                   Foreground="#4B7C5A"
+                                                    Foreground="{DynamicResource PrimaryGreenBrush}"
                                                    VerticalAlignment="Center" />
                                     </DockPanel>
                                 </Border>
@@ -342,7 +351,7 @@
                             Margin="0,4,0,0">
                         <Button.Background>
                             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#4B7C5A" Offset="0" />
+                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                 <GradientStop Color="#3D6448" Offset="1" />
                             </LinearGradientBrush>
                         </Button.Background>

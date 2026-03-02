@@ -265,7 +265,7 @@
                         IsEnabled="{Binding CanSubmit}">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                            <GradientStop Color="#4B7C5A" Offset="0" />
+                            <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                             <GradientStop Color="#3d6448" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>

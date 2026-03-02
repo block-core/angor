@@ -178,9 +178,15 @@ public class IndexerItem : ReactiveObject
     }
 }
 
-public class RelayItem
+public class RelayItem : ReactiveObject
 {
     public string Url { get; set; } = "";
     public string Name { get; set; } = "";
-    public string Status { get; set; } = "Online";
+
+    private string _status = "Online";
+    public string Status
+    {
+        get => _status;
+        set => this.RaiseAndSetIfChanged(ref _status, value);
+    }
 }

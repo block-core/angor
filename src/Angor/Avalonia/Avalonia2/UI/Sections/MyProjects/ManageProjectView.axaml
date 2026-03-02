@@ -32,6 +32,15 @@
         <Style Selector="Button.NavBtn:pressed /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
         </Style>
+        <!-- UTXO checkbox: default (unchecked) + selected states via CSS class toggle -->
+        <Style Selector="Border.UtxoCheck">
+            <Setter Property="Background" Value="{DynamicResource ToggleCheckBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ToggleCheckBorder}" />
+        </Style>
+        <Style Selector="Border.UtxoCheck.UtxoChecked">
+            <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBackground}" />
+        </Style>
     </UserControl.Styles>
 
     <Panel>
@@ -677,13 +686,13 @@
                                                             <!-- Vue: .fund-available-button — pad 8 16, rounded 6, color #4B7C5A, border 1px #4B7C5A -->
                                                             <Border IsVisible="{Binding HasUnspentTransactions}"
                                                                     Background="Transparent"
-                                                                    BorderBrush="#4B7C5A"
+                                                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                                                     BorderThickness="1"
                                                                     CornerRadius="6"
                                                                     Padding="16,8">
                                                                 <TextBlock Text="Funds Available"
                                                                            FontSize="13" FontWeight="SemiBold"
-                                                                           Foreground="#4B7C5A" />
+                                                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
                                                             </Border>
                                                         </StackPanel>
                                                     </Grid>
@@ -724,7 +733,7 @@
                                                             Foreground="White">
                                                         <Button.Background>
                                                             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                                                <GradientStop Color="#4B7C5A" Offset="0" />
+                                                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                                                 <GradientStop Color="#3D6448" Offset="1" />
                                                             </LinearGradientBrush>
                                                         </Button.Background>
@@ -864,8 +873,7 @@
                                                         BorderThickness="2"
                                                         VerticalAlignment="Center"
                                                         HorizontalAlignment="Center"
-                                                        Background="{DynamicResource ToggleCheckBg}"
-                                                        BorderBrush="{DynamicResource ToggleCheckBorder}"
+                                                        Classes="UtxoCheck"
                                                         Name="UtxoCheckbox">
                                                     <!-- Checkmark visible when selected -->
                                                     <Viewbox Width="14" Height="14"
@@ -912,7 +920,7 @@
                                     FontSize="16" FontWeight="SemiBold">
                                 <Button.Background>
                                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                        <GradientStop Color="#4B7C5A" Offset="0" />
+                                        <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                         <GradientStop Color="#3D6448" Offset="1" />
                                     </LinearGradientBrush>
                                 </Button.Background>
@@ -1008,7 +1016,7 @@
                                     FontSize="16" FontWeight="SemiBold">
                                 <Button.Background>
                                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                        <GradientStop Color="#4B7C5A" Offset="0" />
+                                        <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                         <GradientStop Color="#3D6448" Offset="1" />
                                     </LinearGradientBrush>
                                 </Button.Background>
@@ -1085,7 +1093,7 @@
                                 FontSize="16" FontWeight="SemiBold">
                             <Button.Background>
                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                    <GradientStop Color="#4B7C5A" Offset="0" />
+                                    <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                     <GradientStop Color="#3D6448" Offset="1" />
                                 </LinearGradientBrush>
                             </Button.Background>
@@ -1181,8 +1189,8 @@
                                                         CornerRadius="4"
                                                         BorderThickness="2"
                                                         VerticalAlignment="Center"
-                                                        Background="#4B7C5A"
-                                                        BorderBrush="#4B7C5A">
+                                                        Background="{DynamicResource PrimaryGreenBrush}"
+                                                        BorderBrush="{DynamicResource PrimaryGreenBrush}">
                                                     <Viewbox Width="14" Height="14"
                                                              HorizontalAlignment="Center"
                                                              VerticalAlignment="Center">
@@ -1224,7 +1232,7 @@
                                     FontSize="16" FontWeight="SemiBold">
                                 <Button.Background>
                                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                        <GradientStop Color="#4B7C5A" Offset="0" />
+                                        <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                         <GradientStop Color="#3D6448" Offset="1" />
                                     </LinearGradientBrush>
                                 </Button.Background>
@@ -1317,7 +1325,7 @@
                                     FontSize="16" FontWeight="SemiBold">
                                 <Button.Background>
                                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                        <GradientStop Color="#4B7C5A" Offset="0" />
+                                        <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                         <GradientStop Color="#3D6448" Offset="1" />
                                     </LinearGradientBrush>
                                 </Button.Background>
@@ -1358,7 +1366,7 @@
                             HorizontalAlignment="Center">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#4B7C5A" Offset="0" />
+                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                 <GradientStop Color="#3D6448" Offset="1" />
                             </LinearGradientBrush>
                         </Border.Background>
@@ -1402,7 +1410,7 @@
                             Margin="0,8,0,0">
                         <Button.Background>
                             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#4B7C5A" Offset="0" />
+                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                 <GradientStop Color="#3D6448" Offset="1" />
                             </LinearGradientBrush>
                         </Button.Background>
@@ -1512,7 +1520,7 @@
                                 FontSize="16" FontWeight="SemiBold">
                             <Button.Background>
                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                    <GradientStop Color="#4B7C5A" Offset="0" />
+                                    <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                     <GradientStop Color="#3D6448" Offset="1" />
                                 </LinearGradientBrush>
                             </Button.Background>

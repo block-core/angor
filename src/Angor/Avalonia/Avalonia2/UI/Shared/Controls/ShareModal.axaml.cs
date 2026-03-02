@@ -86,15 +86,15 @@ public partial class ShareModal : UserControl, IBackdropCloseable
         var copyBtn = this.FindControl<Button>("CopyButton");
         if (copyBtn == null) return;
 
-        // Change button text + color to "Copied!" for 2 seconds
+        // Change button text + color to "Copied!" for 2 seconds via CSS class
         copyBtn.Content = "Copied!";
-        copyBtn.Background = new SolidColorBrush(Color.Parse("#16a34a")); // green-600
+        copyBtn.Classes.Set("CopiedState", true);
 
         await Task.Delay(2000);
 
         // Restore original
         copyBtn.Content = "Copy";
-        copyBtn.Background = new SolidColorBrush(Color.Parse("#4B7C5A"));
+        copyBtn.Classes.Set("CopiedState", false);
     }
 
     /// <summary>

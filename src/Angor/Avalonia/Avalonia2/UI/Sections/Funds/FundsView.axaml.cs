@@ -27,12 +27,9 @@ public partial class FundsView : UserControl
     {
         base.OnAttachedToLogicalTree(e);
 
-        // Force re-evaluation of bindings by touching the DataContext
-        if (DataContext is FundsViewModel vm)
-        {
-            DataContext = null;
-            DataContext = vm;
-        }
+        // Force layout invalidation so bindings re-evaluate when the cached view re-enters.
+        // Previous approach used DataContext = null / DataContext = vm which breaks DynamicResource bindings.
+        InvalidateVisual();
     }
 
     private void OnButtonClick(object? sender, RoutedEventArgs e)
@@ -152,14 +149,6 @@ public partial class FundsView : UserControl
                 if (child is TextBlock tb && tb.Text == "Add Wallet")
                     return true;
             }
-        }
-
-        // Also check the visual descendants for the text
-        var descendants = btn.GetVisualDescendants().OfType<TextBlock>();
-        foreach (var tb in descendants)
-        {
-            if (tb.Text == "Add Wallet")
-                return true;
         }
 
         return false;

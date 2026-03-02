@@ -104,7 +104,7 @@
                                     ToolTip.Tip="Send">
                                 <Button.Background>
                                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                        <GradientStop Color="#4B7C5A" Offset="0" />
+                                        <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                         <GradientStop Color="#3D6448" Offset="1" />
                                     </LinearGradientBrush>
                                 </Button.Background>
@@ -118,13 +118,13 @@
                                     Padding="0"
                                     CornerRadius="6"
                                     Background="Transparent"
-                                    BorderBrush="#4B7C5A"
+                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                     BorderThickness="2"
                                     Cursor="Hand"
                                     ToolTip.Tip="Receive">
                                 <i:Icon Value="fa-solid fa-arrow-down"
                                        FontSize="14"
-                                       Foreground="#4B7C5A" />
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
                             </Button>
                             <!-- UTXO / Details button — 32x32 OUTLINED green -->
                             <Button Name="BtnUtxo"
@@ -132,13 +132,13 @@
                                     Padding="0"
                                     CornerRadius="6"
                                     Background="Transparent"
-                                    BorderBrush="#4B7C5A"
+                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                     BorderThickness="2"
                                     Cursor="Hand"
                                     ToolTip.Tip="UTXOs">
                                 <i:Icon Value="fa-solid fa-coins"
                                        FontSize="14"
-                                       Foreground="#4B7C5A" />
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
                             </Button>
                         </StackPanel>
                     </Grid>

@@ -196,10 +196,8 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
         var all = GetAllViewModels();
         var filtered = all.Where(s => s.Status == CurrentFilter).ToList();
 
-        // In-place update: clear and re-add instead of replacing the entire collection
-        FilteredSignatures.Clear();
-        foreach (var item in filtered)
-            FilteredSignatures.Add(item);
+        // Replace entire collection — fires single CollectionChanged(Reset) instead of N+1 events
+        FilteredSignatures = new ObservableCollection<SignatureRequestViewModel>(filtered);
 
         HasFunders = all.Count > 0;
 

@@ -191,7 +191,7 @@
                                 <StackPanel Spacing="4">
                                     <TextBlock Text="Amount to Recover" FontSize="13"
                                                Foreground="{DynamicResource TextMuted}" />
-                                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="#4B7C5A">
+                                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryGreenBrush}">
                                         <Run Text="{Binding AmountToRecover, Mode=OneWay}" /><Run Text=" BTC" />
                                     </TextBlock>
                                 </StackPanel>
@@ -407,7 +407,7 @@
                         <Grid ColumnDefinitions="*,*,Auto">
                             <!-- Amount in penalty -->
                             <TextBlock Grid.Column="0" FontSize="14" FontWeight="SemiBold"
-                                       Foreground="#4B7C5A" VerticalAlignment="Center">
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center">
                                 <Run Text="{Binding PenaltyAmount, Mode=OneWay}" /><Run Text=" BTC" />
                             </TextBlock>
                             <!-- Days remaining -->
@@ -485,7 +485,7 @@
                     <Panel>
                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                             <i:Icon Value="fa-solid fa-circle-check" FontSize="20"
-                                    Foreground="#4B7C5A" />
+                                    Foreground="{DynamicResource PrimaryGreenBrush}" />
                             <TextBlock Text="Release Recovery Confirmation" FontSize="24" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </StackPanel>
@@ -569,7 +569,7 @@
                                 BorderThickness="1">
                             <DockPanel>
                                 <i:Icon Value="fa-solid fa-circle-info" FontSize="18"
-                                        Foreground="#4B7C5A" VerticalAlignment="Top"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Top"
                                         Margin="0,2,12,0" DockPanel.Dock="Left" />
                                 <TextBlock Text="The penalty period has ended and your funds are now available for release. Please confirm the details below to release your recovered funds."
                                            FontSize="14" TextWrapping="Wrap"
@@ -585,7 +585,7 @@
                             <StackPanel Spacing="4">
                                 <TextBlock Text="Amount to Release" FontSize="13"
                                            Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock FontSize="20" FontWeight="Bold" Foreground="#4B7C5A">
+                                <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryGreenBrush}">
                                     <Run Text="{Binding AmountToRecover, Mode=OneWay}" /><Run Text=" BTC" />
                                 </TextBlock>
                             </StackPanel>
@@ -696,7 +696,7 @@
                         HorizontalAlignment="Center" Margin="0,0,0,24">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                            <GradientStop Color="#4B7C5A" Offset="0" />
+                            <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                             <GradientStop Color="#3D6448" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>

@@ -117,14 +117,14 @@
                                 <Panel Width="512" Height="512">
                                     <Ellipse Width="400" Height="400" Fill="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     <Path Data="{StaticResource CheckCircleSolid}"
-                                          Fill="#4B7C5A"
+                                          Fill="{DynamicResource PrimaryGreenBrush}"
                                           Width="512" Height="512" Stretch="Uniform" />
                                 </Panel>
                             </Viewbox>
                             <TextBlock Text="Agreement Signed"
                                        FontSize="14"
                                        FontWeight="SemiBold"
-                                       Foreground="#4B7C5A"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
@@ -135,7 +135,7 @@
                                 Background="{DynamicResource SurfaceLow}"
                                 IsVisible="{Binding IsStep1}" />
                         <Border Width="2" Height="24" CornerRadius="1"
-                                Background="#4B7C5A"
+                                Background="{DynamicResource PrimaryGreenBrush}"
                                 IsVisible="{Binding IsStepAtLeast2}" />
                     </Panel>
 
@@ -154,13 +154,13 @@
                                     <Panel Width="512" Height="512">
                                         <Ellipse Width="400" Height="400" Fill="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         <Path Data="{StaticResource CheckCircleSolid}"
-                                              Fill="#4B7C5A"
+                                              Fill="{DynamicResource PrimaryGreenBrush}"
                                               Width="512" Height="512" Stretch="Uniform" />
                                     </Panel>
                                 </Viewbox>
                                 <TextBlock FontSize="14"
                                            FontWeight="SemiBold"
-                                           Foreground="#4B7C5A"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}"
                                            VerticalAlignment="Center">
                                     <Run Text="Preview " /><Run Text="{Binding AmountNoun, Mode=OneWay}" />
                                 </TextBlock>
@@ -202,7 +202,7 @@
                                 Background="{DynamicResource SurfaceLow}"
                                 IsVisible="{Binding !IsStepAtLeast3}" />
                         <Border Width="2" Height="24" CornerRadius="1"
-                                Background="#4B7C5A"
+                                Background="{DynamicResource PrimaryGreenBrush}"
                                 IsVisible="{Binding IsStepAtLeast3}" />
                     </Panel>
 
@@ -221,14 +221,14 @@
                                     <Panel Width="512" Height="512">
                                         <Ellipse Width="400" Height="400" Fill="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         <Path Data="{StaticResource CheckCircleSolid}"
-                                              Fill="#4B7C5A"
+                                              Fill="{DynamicResource PrimaryGreenBrush}"
                                               Width="512" Height="512" Stretch="Uniform" />
                                     </Panel>
                                 </Viewbox>
                                 <TextBlock Text="Funds Transferred"
                                            FontSize="14"
                                            FontWeight="SemiBold"
-                                           Foreground="#4B7C5A"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>
@@ -454,7 +454,7 @@
                                         HorizontalAlignment="Stretch">
                                     <Border.Background>
                                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                            <GradientStop Color="#4B7C5A" Offset="0" />
+                                            <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                             <GradientStop Color="#3d6448" Offset="1" />
                                         </LinearGradientBrush>
                                     </Border.Background>
@@ -514,13 +514,13 @@
                     <Border CornerRadius="16"
                             ClipToBounds="True"
                             MinHeight="280"
-                            BorderBrush="#4B7C5A"
+                            BorderBrush="{DynamicResource PrimaryGreenBrush}"
                             BorderThickness="1"
                             BoxShadow="0 4 12 0 #334B7C5A"
                             IsVisible="{Binding IsStep3}">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#4B7C5A" Offset="0" />
+                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                 <GradientStop Color="#3d6448" Offset="1" />
                             </LinearGradientBrush>
                         </Border.Background>

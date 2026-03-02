@@ -17,6 +17,8 @@ namespace Avalonia2.UI.Sections.FindProjects;
 /// </summary>
 public partial class InvestModalsView : UserControl, IBackdropCloseable
 {
+    private Border? _selectedWalletBorder;
+
     /// <summary>
     /// Callback invoked when the user completes the flow (success → "View My Investments").
     /// The parent (InvestPageView) sets this to navigate back to the project list.
@@ -119,7 +121,7 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
                 if (found.DataContext is WalletItem wallet)
                 {
                     Vm?.SelectWallet(wallet);
-                    WalletSelectionHelper.UpdateWalletSelection(this);
+                    _selectedWalletBorder = WalletSelectionHelper.UpdateWalletSelection(_selectedWalletBorder, found);
                     e.Handled = true;
                 }
                 break;

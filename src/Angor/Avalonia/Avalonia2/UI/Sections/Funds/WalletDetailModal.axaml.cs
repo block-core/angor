@@ -176,7 +176,7 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
             Text = truncated,
             FontSize = 14,
             FontFamily = new FontFamily("Cascadia Mono, Consolas, monospace"),
-            Foreground = new SolidColorBrush(Color.Parse("#4B7C5A")),
+            Foreground = this.FindResource("PillGreenText") as IBrush ?? new SolidColorBrush(Color.Parse("#4B7C5A")),
             VerticalAlignment = VerticalAlignment.Center,
             Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
         });

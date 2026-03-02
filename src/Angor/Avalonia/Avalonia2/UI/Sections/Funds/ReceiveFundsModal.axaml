@@ -129,7 +129,7 @@
                                        Text="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
                                        FontSize="13"
                                        FontFamily="Cascadia Mono, Consolas, monospace"
-                                       Foreground="#4B7C5A"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}"
                                        TextTrimming="CharacterEllipsis"
                                        VerticalAlignment="Center" />
                         </DockPanel>
@@ -145,7 +145,7 @@
                             Cursor="Hand">
                         <Button.Background>
                             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#4B7C5A" Offset="0" />
+                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
                                 <GradientStop Color="#3D6448" Offset="1" />
                             </LinearGradientBrush>
                         </Button.Background>

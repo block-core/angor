@@ -31,7 +31,7 @@
         </Style>
         <!-- Active tab: green bottom border -->
         <Style Selector="Border.FilterTab.FilterTabActive">
-            <Setter Property="BorderBrush" Value="#4B7C5A" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <!-- Inactive tab text: muted -->
         <Style Selector="Border.FilterTab TextBlock.TabLabel">
@@ -280,7 +280,7 @@
                                                     IsVisible="{Binding IsWaiting}"
                                                     Height="44" Padding="16,0"
                                                     CornerRadius="8"
-                                                    Background="#4B7C5A"
+                                                    Background="{DynamicResource PrimaryGreenBrush}"
                                                     Foreground="White">
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                                     <Viewbox Width="16" Height="16" VerticalAlignment="Center">
@@ -310,7 +310,7 @@
                                                             VerticalAlignment="Center">
                                                     <Viewbox Width="16" Height="16" VerticalAlignment="Center">
                                                         <Path Data="{StaticResource Checkmark}"
-                                                              Stroke="#4B7C5A"
+                                                              Stroke="{DynamicResource PrimaryGreenBrush}"
                                                               StrokeThickness="2"
                                                               StrokeLineCap="Round"
                                                               StrokeJoin="Round"
@@ -319,7 +319,7 @@
                                                     <TextBlock Text="Approved"
                                                                FontSize="14"
                                                                FontWeight="SemiBold"
-                                                               Foreground="#4B7C5A"
+                                                               Foreground="{DynamicResource PrimaryGreenBrush}"
                                                                VerticalAlignment="Center" />
                                                 </StackPanel>
                                             </Border>
@@ -382,17 +382,17 @@
                                                     Height="44" Padding="16,0"
                                                     CornerRadius="8"
                                                     Background="Transparent"
-                                                    BorderBrush="#4B7C5A"
+                                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                                     BorderThickness="2">
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                                     <i:Icon Value="fa-solid fa-comment"
                                                            FontSize="16"
-                                                           Foreground="#4B7C5A"
+                                                           Foreground="{DynamicResource PrimaryGreenBrush}"
                                                            VerticalAlignment="Center" />
                                                     <TextBlock Text="Has messages"
                                                                FontSize="14"
                                                                FontWeight="SemiBold"
-                                                               Foreground="#4B7C5A"
+                                                               Foreground="{DynamicResource PrimaryGreenBrush}"
                                                                VerticalAlignment="Center"
                                                                IsVisible="{Binding HasMessages}" />
                                                 </StackPanel>
@@ -406,13 +406,13 @@
                                                     Padding="0"
                                                     CornerRadius="8"
                                                     Background="Transparent"
-                                                    BorderBrush="#4B7C5A"
+                                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                                     BorderThickness="2"
                                                     HorizontalContentAlignment="Center"
                                                     VerticalContentAlignment="Center">
                                                 <Viewbox Width="16" Height="16">
                                                     <Path Data="{StaticResource ChevronDown}"
-                                                          Stroke="#4B7C5A"
+                                                          Stroke="{DynamicResource PrimaryGreenBrush}"
                                                           StrokeThickness="2"
                                                           StrokeLineCap="Round"
                                                           StrokeJoin="Round"
