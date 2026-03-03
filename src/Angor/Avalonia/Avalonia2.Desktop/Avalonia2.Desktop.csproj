@@ -28,6 +28,18 @@
         <AssemblyTitle>Angor</AssemblyTitle>
     </PropertyGroup>
     
+    <!-- Platform icon files for packaging (macOS .icns, Linux .png) -->
+    <ItemGroup>
+        <None Include="AppIcon.icns" Pack="false" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="icon.png" Pack="false" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <!-- Exclude icons/ working directory from build -->
+    <ItemGroup>
+        <None Remove="icons/**" />
+        <Content Remove="icons/**" />
+    </ItemGroup>
+
     <ItemGroup>
         <PackageReference Include="Avalonia.Desktop" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
