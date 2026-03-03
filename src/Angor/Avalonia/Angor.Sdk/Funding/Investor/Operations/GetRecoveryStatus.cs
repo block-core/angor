@@ -13,6 +13,7 @@ using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Angor.Sdk.Funding.Projects;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
 
@@ -32,7 +33,8 @@ public static class GetRecoveryStatus
         IInvestorTransactionActions investorTransactionActions,
         IProjectInvestmentsService projectInvestmentsService,
         ITransactionService transactionService,
-        IInvestmentAppService investmentAppService
+        IInvestmentAppService investmentAppService,
+        ILogger<GetRecoveryStatusHandler> logger
     ) : IRequestHandler<GetRecoveryStatusRequest, Result<GetRecoveryStatusResponse>>
     {
         public async Task<Result<GetRecoveryStatusResponse>> Handle(GetRecoveryStatusRequest request,
@@ -200,6 +202,9 @@ public static class GetRecoveryStatus
             
             var output = transactionInfo.Outputs.ElementAt(item.StageIndex + 2);
 
+            logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: SpentInTransaction={SpentTxId}, UnfundedReleaseTxId={UnfundedTxId}, RecoveryTxId={RecoveryTxId}", 
+                item.StageIndex, output.SpentInTransaction ?? "null", lookup.Value.UnfundedReleaseTransactionId ?? "null", lookup.Value.RecoveryTransactionId ?? "null");
+
             if (!string.IsNullOrEmpty(output.SpentInTransaction))
             {
                 item.IsSpent = true;
@@ -208,11 +213,13 @@ public static class GetRecoveryStatus
                 {
                     item.Status = "Project Unfunded, Spent back to investor";
                     item.ScriptType = ProjectScriptTypeEnum.InvestorNoPenalty;
+                    logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: Matched UnfundedReleaseTransactionId, status='Project Unfunded, Spent back to investor'", item.StageIndex);
                 }
                 else
                 {
                     if (output.SpentInTransaction == lookup.Value.RecoveryTransactionId)
                     {
+                        logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: Matched RecoveryTransactionId", item.StageIndex);
                         if (!string.IsNullOrEmpty(lookup.Value.RecoveryReleaseTransactionId))
                         {
                             item.Status = "Recovered after penalty";
@@ -226,9 +233,11 @@ public static class GetRecoveryStatus
                                 ? $"Penalty, released in {days.ToString("0.0")} days"
                                 : "Penalty can be released";
                         }
+                        logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: status='{Status}'", item.StageIndex, item.Status);
                     }
                     else
                     {
+                        logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: No lookup match, falling through to DiscoverUsedScript", item.StageIndex);
                         // try to resolve the destination
                         var spentInTransaction =
                             await transactionService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
@@ -237,12 +246,16 @@ public static class GetRecoveryStatus
                             input.InputTransactionId == transactionInfo.TransactionId &&
                             input.InputIndex == item.StageIndex + 2);
 
+                        logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: spentInTransaction found={Found}, input found={InputFound}", 
+                            item.StageIndex, spentInTransaction != null, input != null);
+
                         if (input != null && investmentTransaction != null)
                         {
                             var script = investorTransactionActions.DiscoverUsedScript(projectInfo,
                                 investmentTransaction, item.StageIndex, input.WitScript);
 
                             item.ScriptType = script.ScriptType;
+                            logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: DiscoverUsedScript returned {ScriptType}", item.StageIndex, script.ScriptType);
 
                             switch (script.ScriptType)
                             {
@@ -253,20 +266,46 @@ public static class GetRecoveryStatus
                                 }
                                 case ProjectScriptTypeEnum.InvestorWithPenalty:
                                 {
-                                    // Check if the recovery transaction's penalty outputs have been spent
-                                    var recoveryTrxInfo = await transactionService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
-                                    if (recoveryTrxInfo != null && recoveryTrxInfo.Outputs.SkipLast(1)
-                                            .Any(o => !string.IsNullOrEmpty(o.SpentInTransaction)))
+                                    // Both recovery and unfunded release use the same Recover script path.
+                                    // Check spending transaction outputs to distinguish:
+                                    // - P2WPKH outputs = unfunded release (direct to investor)
+                                    // - P2WSH outputs = recovery with penalty
+                                    
+                                    // Log spending tx output types
+                                    if (spentInTransaction != null)
                                     {
-                                        item.Status = "Recovered after penalty";
-                                        item.ScriptType = ProjectScriptTypeEnum.Unknown;
+                                        foreach (var spentOutput in spentInTransaction.Outputs)
+                                        {
+                                            logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: SpentTx output idx={OutputIdx}, OutputType={OutputType}, Address={Address}", 
+                                                item.StageIndex, spentOutput.Index, spentOutput.OutputType ?? "null", spentOutput.Address ?? "null");
+                                        }
+                                    }
+                                    
+                                    if (spentInTransaction != null && spentInTransaction.Outputs
+                                            .Any(o => o.OutputType == "witness_v0_keyhash" || o.OutputType == "v0_p2wpkh"))
+                                    {
+                                        item.Status = "Project Unfunded, Spent back to investor";
+                                        item.ScriptType = ProjectScriptTypeEnum.InvestorNoPenalty;
+                                        logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: Detected unfunded release via output type, status='Project Unfunded, Spent back to investor'", item.StageIndex);
                                     }
                                     else
                                     {
-                                        var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
-                                        item.Status = days > 0
-                                            ? $"Penalty, released in {days.ToString("0.0")} days"
-                                            : "Penalty can be released";
+                                        // Check if the recovery transaction's penalty outputs have been spent
+                                        var recoveryTrxInfo = spentInTransaction;
+                                        if (recoveryTrxInfo != null && recoveryTrxInfo.Outputs.SkipLast(1)
+                                                .Any(o => !string.IsNullOrEmpty(o.SpentInTransaction)))
+                                        {
+                                            item.Status = "Recovered after penalty";
+                                            item.ScriptType = ProjectScriptTypeEnum.Unknown;
+                                        }
+                                        else
+                                        {
+                                            var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                                            item.Status = days > 0
+                                                ? $"Penalty, released in {days.ToString("0.0")} days"
+                                                : "Penalty can be released";
+                                        }
+                                        logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: Penalty path, status='{Status}'", item.StageIndex, item.Status);
                                     }
                                     break;
                                 }
@@ -277,11 +316,14 @@ public static class GetRecoveryStatus
                                     break;
                                 }
                                 case ProjectScriptTypeEnum.Unknown:
+                                    logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: ScriptType is Unknown", item.StageIndex);
                                     break;
                                 default:
                                     return Result.Failure(
                                         $"Unknown script type {item.ScriptType} on stage {item.StageIndex}");
                             }
+                            
+                            logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: Final status='{Status}', scriptType={ScriptType}", item.StageIndex, item.Status, item.ScriptType);
                         }
                     }
                 }
@@ -289,6 +331,7 @@ public static class GetRecoveryStatus
             else
             {
                 item.Status = string.Empty;
+                logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: Not spent, status=''", item.StageIndex);
             }
             
             return Result.Success();
