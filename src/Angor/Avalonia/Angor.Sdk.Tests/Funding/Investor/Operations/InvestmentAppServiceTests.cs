@@ -242,7 +242,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _fixture.InvestorTransactionActions,
             _mockProjectInvestmentsService.Object,
             _mockTransactionService.Object,
-            _mockInvestmentAppService.Object);
+            _mockInvestmentAppService.Object,
+            NullLogger<GetRecoveryStatus.GetRecoveryStatusHandler>.Instance);
         
         var request = new GetRecoveryStatus.GetRecoveryStatusRequest(walletId, projectId);
 
@@ -277,7 +278,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _fixture.InvestorTransactionActions,
             _mockProjectInvestmentsService.Object,
             _mockTransactionService.Object,
-            _mockInvestmentAppService.Object);
+            _mockInvestmentAppService.Object,
+            NullLogger<GetRecoveryStatus.GetRecoveryStatusHandler>.Instance);
         
         var request = new GetRecoveryStatus.GetRecoveryStatusRequest(walletId, project.Id);
 
@@ -313,7 +315,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _fixture.InvestorTransactionActions,
             _mockProjectInvestmentsService.Object,
             _mockTransactionService.Object,
-            _mockInvestmentAppService.Object);
+            _mockInvestmentAppService.Object,
+            NullLogger<GetRecoveryStatus.GetRecoveryStatusHandler>.Instance);
         
         var request = new GetRecoveryStatus.GetRecoveryStatusRequest(walletId, project.Id);
 
@@ -355,7 +358,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _fixture.InvestorTransactionActions,
             _mockProjectInvestmentsService.Object,
             _mockTransactionService.Object,
-            _mockInvestmentAppService.Object);
+            _mockInvestmentAppService.Object,
+            NullLogger<GetRecoveryStatus.GetRecoveryStatusHandler>.Instance);
         
         var request = new GetRecoveryStatus.GetRecoveryStatusRequest(walletId, project.Id);
 
@@ -386,7 +390,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _fixture.InvestorTransactionActions,
             _mockProjectInvestmentsService.Object,
             _mockTransactionService.Object,
-            _mockInvestmentAppService.Object);
+            _mockInvestmentAppService.Object,
+            NullLogger<GetRecoveryStatus.GetRecoveryStatusHandler>.Instance);
         
         var request = new GetRecoveryStatus.GetRecoveryStatusRequest(walletId, projectId);
 

@@ -12,6 +12,7 @@ using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
@@ -41,7 +42,8 @@ public class ProjectInvestmentsServiceTests : IClassFixture<TestNetworkFixture>
             _fixture.NetworkConfiguration,
             _mockAngorIndexerService.Object,
             _fixture.InvestorTransactionActions,
-            _mockTransactionService.Object);
+            _mockTransactionService.Object,
+            NullLogger<ProjectInvestmentsService>.Instance);
     }
 
     #region ScanFullInvestments Tests
