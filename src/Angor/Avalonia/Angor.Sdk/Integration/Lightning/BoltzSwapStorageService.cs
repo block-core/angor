@@ -96,6 +96,26 @@ public class BoltzSwapDocument
     public string? LockupTransactionHex { get; set; }
     
     /// <summary>
+    /// Whether this is a chain swap (Liquid→BTC)
+    /// </summary>
+    public bool IsChainSwap { get; set; }
+
+    /// <summary>
+    /// Lockup-side (Liquid) swap tree (serialized JSON) for chain swaps
+    /// </summary>
+    public string LockupSwapTree { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Boltz's server public key on the lockup (Liquid) side for chain swaps
+    /// </summary>
+    public string LockupServerPublicKey { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Boltz's BTC lockup address (claim side) for chain swaps
+    /// </summary>
+    public string ClaimLockupAddress { get; set; } = string.Empty;
+
+    /// <summary>
     /// The claim transaction ID (once claimed)
     /// </summary>
     public string? ClaimTransactionId { get; set; }
@@ -129,7 +149,11 @@ public class BoltzSwapDocument
             ClaimPublicKey = ClaimPublicKey,
             Preimage = Preimage,
             PreimageHash = PreimageHash,
-            Status = Enum.TryParse<SwapState>(Status, true, out var state) ? state : SwapState.Created
+            Status = Enum.TryParse<SwapState>(Status, true, out var state) ? state : SwapState.Created,
+            IsChainSwap = IsChainSwap,
+            LockupSwapTree = LockupSwapTree,
+            LockupServerPublicKey = LockupServerPublicKey,
+            ClaimLockupAddress = ClaimLockupAddress
         };
     }
     
@@ -155,6 +179,10 @@ public class BoltzSwapDocument
             Preimage = swap.Preimage,
             PreimageHash = swap.PreimageHash,
             Status = swap.Status.ToString(),
+            IsChainSwap = swap.IsChainSwap,
+            LockupSwapTree = swap.LockupSwapTree,
+            LockupServerPublicKey = swap.LockupServerPublicKey,
+            ClaimLockupAddress = swap.ClaimLockupAddress,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -301,14 +329,20 @@ public class BoltzSwapStorageService(
     {
         try
         {
-            // Get swaps that are confirmed but not yet claimed
-            var result = await collection.FindAsync(d => 
-                d.WalletId == walletId && 
+            // Get swaps that are confirmed but not yet claimed (includes chain swap states)
+            var result = await collection.FindAsync(d =>
+                d.WalletId == walletId &&
                 d.ClaimTransactionId == null &&
-                (d.Status == "TransactionConfirmed" || 
+                (d.Status == "TransactionConfirmed" ||
                  d.Status == "TransactionMempool" ||
+                 d.Status == "TransactionServerMempool" ||
+                 d.Status == "TransactionServerConfirmed" ||
+                 d.Status == "TransactionClaimPending" ||
                  d.Status == "transaction.confirmed" ||
-                 d.Status == "transaction.mempool"));
+                 d.Status == "transaction.mempool" ||
+                 d.Status == "transaction.server.mempool" ||
+                 d.Status == "transaction.server.confirmed" ||
+                 d.Status == "transaction.claim.pending"));
             
             if (result.IsFailure)
             {

@@ -132,6 +132,29 @@ public class BoltzSubmarineSwap
     /// Swap status
     /// </summary>
     public SwapState Status { get; set; } = SwapState.Created;
+
+    /// <summary>
+    /// Whether this is a chain swap (Liquid→BTC) rather than a reverse swap (Lightning→BTC)
+    /// </summary>
+    public bool IsChainSwap { get; set; } = false;
+
+    /// <summary>
+    /// Lockup-side (Liquid) swap tree for chain swaps (serialized JSON).
+    /// Needed for cooperative signing of Boltz's L-BTC claim transaction.
+    /// </summary>
+    public string LockupSwapTree { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Boltz's server public key on the lockup (Liquid) side for chain swaps.
+    /// Needed for MuSig2 session when co-signing Boltz's L-BTC claim.
+    /// </summary>
+    public string LockupServerPublicKey { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Boltz's BTC lockup address (claim side) for chain swaps.
+    /// This is where Boltz locks BTC for the user to claim.
+    /// </summary>
+    public string ClaimLockupAddress { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -262,7 +285,16 @@ public enum SwapState
     TransactionRefunded,
     
     /// <summary>Swap failed</summary>
-    SwapExpired
+    SwapExpired,
+
+    /// <summary>Boltz locked BTC on-chain (chain swap: transaction.server.mempool)</summary>
+    TransactionServerMempool,
+
+    /// <summary>Boltz's BTC lockup confirmed (chain swap: transaction.server.confirmed)</summary>
+    TransactionServerConfirmed,
+
+    /// <summary>Chain swap claim in progress (transaction.claim.pending)</summary>
+    TransactionClaimPending
 }
 
 
@@ -281,10 +313,70 @@ public static class SwapStateExtensions
             or SwapState.TransactionRefunded;
 
     public static bool IsPending(this SwapState state) =>
-        state is SwapState.Created 
-            or SwapState.InvoiceSet 
-            or SwapState.InvoicePaid 
-            or SwapState.TransactionMempool 
-            or SwapState.TransactionConfirmed;
+        state is SwapState.Created
+            or SwapState.InvoiceSet
+            or SwapState.InvoicePaid
+            or SwapState.TransactionMempool
+            or SwapState.TransactionConfirmed
+            or SwapState.TransactionServerMempool
+            or SwapState.TransactionServerConfirmed
+            or SwapState.TransactionClaimPending;
+}
+
+/// <summary>
+/// Response from GET /swap/chain/{id}/claim - Boltz's details for cooperative chain claim
+/// </summary>
+public class ChainClaimDetails
+{
+    /// <summary>Boltz's public nonce for MuSig2</summary>
+    public string PubNonce { get; set; } = string.Empty;
+
+    /// <summary>Boltz's public key</summary>
+    public string PublicKey { get; set; } = string.Empty;
+
+    /// <summary>Transaction hash that Boltz wants the user to co-sign (L-BTC claim tx)</summary>
+    public string TransactionHash { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Request for POST /swap/chain/{id}/claim - user sends cooperative claim data
+/// </summary>
+public class ChainClaimRequest
+{
+    /// <summary>The swap preimage</summary>
+    public string Preimage { get; set; } = string.Empty;
+
+    /// <summary>User's partial signature for Boltz's L-BTC claim transaction</summary>
+    public ChainClaimSignature Signature { get; set; } = new();
+
+    /// <summary>User's BTC claim transaction details for Boltz to co-sign</summary>
+    public ChainClaimToSign ToSign { get; set; } = new();
+}
+
+/// <summary>
+/// User's partial signature data for Boltz's L-BTC claim
+/// </summary>
+public class ChainClaimSignature
+{
+    /// <summary>User's public nonce for L-BTC claim MuSig2 session</summary>
+    public string PubNonce { get; set; } = string.Empty;
+
+    /// <summary>User's partial signature for L-BTC claim transaction</summary>
+    public string PartialSignature { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// User's BTC claim transaction data for Boltz to co-sign
+/// </summary>
+public class ChainClaimToSign
+{
+    /// <summary>User's public nonce for BTC claim MuSig2 session</summary>
+    public string PubNonce { get; set; } = string.Empty;
+
+    /// <summary>The unsigned BTC claim transaction hex</summary>
+    public string Transaction { get; set; } = string.Empty;
+
+    /// <summary>Index of the input being signed</summary>
+    public int Index { get; set; }
 }
 

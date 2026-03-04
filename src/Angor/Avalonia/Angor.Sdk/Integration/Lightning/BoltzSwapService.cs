@@ -20,6 +20,7 @@ public class BoltzSwapService : IBoltzSwapService
     private readonly INetworkConfiguration _networkConfiguration;
     private readonly ILogger<BoltzSwapService> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly JsonSerializerOptions _deserializeOptions;
     private readonly string _apiPrefix;
 
     public BoltzSwapService(
@@ -37,10 +38,19 @@ public class BoltzSwapService : IBoltzSwapService
         _httpClient.Timeout = TimeSpan.FromSeconds(_configuration.TimeoutSeconds);
         _apiPrefix = _configuration.ApiPrefix;
 
+        // Options for serializing requests (uses camelCase)
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+        };
+        
+        // Options for deserializing responses (no naming policy, relies on JsonPropertyName attributes)
+        _deserializeOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
         };
@@ -130,11 +140,41 @@ public class BoltzSwapService : IBoltzSwapService
                 return Result.Failure<BoltzSubmarineSwap>($"Failed to create swap: {error}");
             }
 
-            var swapResponse = await response.Content.ReadFromJsonAsync<CreateReverseSwapV2Response>(_jsonOptions);
+            // Log the raw response for debugging
+            var rawResponse = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Lightning reverse swap raw response: {Response}", rawResponse);
+
+            // Diagnostic: Parse with JsonDocument to see all properties
+            try
+            {
+                using var doc = JsonDocument.Parse(rawResponse);
+                var root = doc.RootElement;
+                var propertyNames = string.Join(", ", root.EnumerateObject().Select(p => $"{p.Name}={p.Value.ValueKind}"));
+                _logger.LogInformation("Response properties: {Properties}", propertyNames);
+                
+                if (root.TryGetProperty("invoice", out var invoiceProp))
+                {
+                    _logger.LogInformation("Found 'invoice' property with value length: {Length}", invoiceProp.GetString()?.Length ?? 0);
+                }
+                else
+                {
+                    _logger.LogWarning("'invoice' property not found in response!");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse response diagnostically");
+            }
+
+            var swapResponse = JsonSerializer.Deserialize<CreateReverseSwapV2Response>(rawResponse, _deserializeOptions);
             if (swapResponse == null)
             {
+                _logger.LogError("Failed to deserialize Lightning swap response. Raw: {Response}", rawResponse);
                 return Result.Failure<BoltzSubmarineSwap>("Failed to deserialize swap response");
             }
+            
+            _logger.LogInformation("Deserialized swap - Id: {Id}, Invoice length: {InvoiceLen}, LockupAddress: {LockupAddress}", 
+                swapResponse.Id, swapResponse.Invoice?.Length ?? 0, swapResponse.LockupAddress);
 
             var swap = new BoltzSubmarineSwap
             {
@@ -270,7 +310,7 @@ public class BoltzSwapService : IBoltzSwapService
                 return Result.Failure<BoltzSubmarineSwap>($"Failed to get swap details: {error}");
             }
 
-            var swapResponse = await response.Content.ReadFromJsonAsync<CreateReverseSwapV2Response>(_jsonOptions);
+            var swapResponse = await response.Content.ReadFromJsonAsync<CreateReverseSwapV2Response>(_deserializeOptions);
             if (swapResponse == null)
             {
                 return Result.Failure<BoltzSubmarineSwap>("Failed to deserialize swap details response");
@@ -490,6 +530,9 @@ public class BoltzSwapService : IBoltzSwapService
             "transaction.confirmed" => SwapState.TransactionConfirmed,
             "transaction.claimed" => SwapState.TransactionClaimed,
             "transaction.refunded" => SwapState.TransactionRefunded,
+            "transaction.server.mempool" => SwapState.TransactionServerMempool,
+            "transaction.server.confirmed" => SwapState.TransactionServerConfirmed,
+            "transaction.claim.pending" => SwapState.TransactionClaimPending,
             "swap.expired" => SwapState.SwapExpired,
             _ => SwapState.Created
         };
@@ -883,32 +926,38 @@ public class BoltzSwapService : IBoltzSwapService
 
     #endregion
 
-    #region Liquid Swap Methods
+    #region Liquid (Chain) Swap Methods
 
     /// <summary>
-    /// Creates a Liquid to BTC reverse submarine swap.
+    /// Creates a Liquid to BTC chain swap.
     /// User pays L-BTC on Liquid, receives BTC on-chain.
+    /// Uses POST /swap/chain endpoint.
     /// </summary>
     public async Task<Result<BoltzSubmarineSwap>> CreateLiquidToBtcSwapAsync(
         string onchainAddress,
         long amountSats,
-        string claimPublicKey)
+        string claimPublicKey,
+        string refundPublicKey)
     {
         try
         {
             _logger.LogInformation(
-                "Creating Liquid→BTC reverse swap: {Amount} sats to address {Address}",
+                "Creating Liquid→BTC chain swap: {Amount} sats to address {Address}",
                 amountSats, onchainAddress);
 
             var normalizedClaimPubKey = claimPublicKey.Trim().ToLowerInvariant();
+            var normalizedRefundPubKey = refundPublicKey.Trim().ToLowerInvariant();
 
             if (normalizedClaimPubKey.Length != 66 && normalizedClaimPubKey.Length != 64)
             {
-                _logger.LogError(
-                    "Invalid claim public key length: {Length} chars (expected 66 or 64). Key: {Key}",
-                    normalizedClaimPubKey.Length, normalizedClaimPubKey);
                 return Result.Failure<BoltzSubmarineSwap>(
                     $"Invalid claim public key: expected 66 or 64 hex chars, got {normalizedClaimPubKey.Length}");
+            }
+
+            if (normalizedRefundPubKey.Length != 66 && normalizedRefundPubKey.Length != 64)
+            {
+                return Result.Failure<BoltzSubmarineSwap>(
+                    $"Invalid refund public key: expected 66 or 64 hex chars, got {normalizedRefundPubKey.Length}");
             }
 
             // Generate preimage and hash
@@ -917,127 +966,145 @@ public class BoltzSwapService : IBoltzSwapService
 
             _logger.LogDebug("Generated preimage hash: {Hash}", preimageHash);
 
-            // Liquid→BTC swap: from L-BTC to BTC
-            var request = new CreateLiquidToBtcSwapRequest
+            // Chain swap: from L-BTC to BTC
+            var request = new CreateChainSwapRequest
             {
-                From = "L-BTC",        // From Liquid BTC
-                To = "BTC",            // To on-chain BTC
+                From = "L-BTC",
+                To = "BTC",
                 ClaimPublicKey = normalizedClaimPubKey,
+                RefundPublicKey = normalizedRefundPubKey,
                 PreimageHash = preimageHash,
-                InvoiceAmount = amountSats,
-                Address = onchainAddress
+                UserLockAmount = amountSats
             };
 
             var requestJson = JsonSerializer.Serialize(request, _jsonOptions);
             _logger.LogInformation(
-                "Sending Liquid→BTC swap request - PreimageHash: {PreimageHash}, Amount: {Amount}, Address: {Address}",
+                "Sending Liquid→BTC chain swap request - PreimageHash: {PreimageHash}, Amount: {Amount}, Address: {Address}",
                 preimageHash, amountSats, onchainAddress);
             _logger.LogDebug("Request JSON: {Json}", requestJson);
 
             var content = new StringContent(requestJson, System.Text.Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync($"{_apiPrefix}swap/reverse", content);
+            var response = await _httpClient.PostAsync($"{_apiPrefix}swap/chain", content);
 
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Failed to create Liquid→BTC swap: {StatusCode} - {Error}", response.StatusCode, error);
+                _logger.LogError("Failed to create Liquid→BTC chain swap: {StatusCode} - {Error}", response.StatusCode, error);
                 return Result.Failure<BoltzSubmarineSwap>($"Failed to create swap: {error}");
             }
 
-            var swapResponse = await response.Content.ReadFromJsonAsync<CreateReverseSwapV2Response>(_jsonOptions);
+            var rawResponse = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Liquid→BTC chain swap raw response: {Response}", rawResponse);
+
+            var swapResponse = JsonSerializer.Deserialize<CreateChainSwapResponse>(rawResponse, _deserializeOptions);
             if (swapResponse == null)
             {
+                _logger.LogError("Failed to deserialize chain swap response. Raw: {Response}", rawResponse);
                 return Result.Failure<BoltzSubmarineSwap>("Failed to deserialize swap response");
             }
 
             var swap = new BoltzSubmarineSwap
             {
                 Id = swapResponse.Id,
-                Invoice = string.Empty, // No Lightning invoice for Liquid swaps
+                Invoice = string.Empty, // No Lightning invoice for chain swaps
                 Address = onchainAddress,
-                LockupAddress = swapResponse.LockupAddress, // This is the Liquid address to pay
-                ExpectedAmount = swapResponse.OnchainAmount,
+                // LockupAddress = the Liquid address where user sends L-BTC
+                LockupAddress = swapResponse.LockupDetails.LockupAddress,
+                // ExpectedAmount = the BTC amount Boltz will lock for the user to claim
+                ExpectedAmount = swapResponse.ClaimDetails.Amount,
                 InvoiceAmount = amountSats,
-                TimeoutBlockHeight = swapResponse.TimeoutBlockHeight,
+                TimeoutBlockHeight = swapResponse.LockupDetails.TimeoutBlockHeight,
                 RedeemScript = string.Empty,
-                SwapTree = swapResponse.SwapTree != null 
-                    ? JsonSerializer.Serialize(swapResponse.SwapTree, _jsonOptions) 
+                // SwapTree for the claim side (BTC) - needed for claiming
+                SwapTree = swapResponse.ClaimDetails.SwapTree != null
+                    ? JsonSerializer.Serialize(swapResponse.ClaimDetails.SwapTree, _jsonOptions)
                     : string.Empty,
-                RefundPublicKey = swapResponse.RefundPublicKey ?? string.Empty,
+                // Boltz's server public key for the claim side (needed for MuSig2 claim)
+                RefundPublicKey = swapResponse.ClaimDetails.ServerPublicKey ?? string.Empty,
                 ClaimPublicKey = normalizedClaimPubKey,
-                BlindingKey = swapResponse.BlindingKey, // Important for Liquid confidential transactions
+                // BlindingKey from the lockup side (Liquid) for confidential transactions
+                BlindingKey = swapResponse.LockupDetails.BlindingKey,
                 Preimage = preimage,
                 PreimageHash = preimageHash,
-                Status = SwapState.Created
+                Status = SwapState.Created,
+                // Chain swap specific fields
+                IsChainSwap = true,
+                LockupSwapTree = swapResponse.LockupDetails.SwapTree != null
+                    ? JsonSerializer.Serialize(swapResponse.LockupDetails.SwapTree, _jsonOptions)
+                    : string.Empty,
+                LockupServerPublicKey = swapResponse.LockupDetails.ServerPublicKey ?? string.Empty,
+                ClaimLockupAddress = swapResponse.ClaimDetails.LockupAddress
             };
 
             _logger.LogInformation(
-                "Liquid→BTC swap created: ID={SwapId}, LiquidAddress={LiquidAddress}, OnchainAmount={OnchainAmount}",
-                swap.Id, swap.LockupAddress, swap.ExpectedAmount);
+                "Liquid→BTC chain swap created: ID={SwapId}, LiquidLockupAddress={LiquidAddress}, " +
+                "UserLockAmount={UserLockAmount}, ServerLockAmount={ServerLockAmount}",
+                swap.Id, swap.LockupAddress, amountSats, swap.ExpectedAmount);
 
             return Result.Success(swap);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating Liquid→BTC swap");
+            _logger.LogError(ex, "Error creating Liquid→BTC chain swap");
             return Result.Failure<BoltzSubmarineSwap>($"Error creating swap: {ex.Message}");
         }
     }
 
     /// <summary>
-    /// Gets the fee information for Liquid to BTC reverse submarine swaps.
+    /// Gets the fee information for Liquid to BTC chain swaps.
+    /// Uses GET /swap/chain endpoint.
     /// </summary>
     public async Task<Result<BoltzSwapFees>> GetLiquidToBtcSwapFeesAsync()
     {
         try
         {
-            _logger.LogDebug("Fetching Liquid→BTC swap fee information from Boltz");
+            _logger.LogDebug("Fetching Liquid→BTC chain swap fee information from Boltz");
 
-            var response = await _httpClient.GetAsync($"{_apiPrefix}swap/reverse");
+            var response = await _httpClient.GetAsync($"{_apiPrefix}swap/chain");
 
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Failed to get Liquid→BTC swap fees: {StatusCode} - {Error}", response.StatusCode, error);
+                _logger.LogError("Failed to get Liquid→BTC chain swap fees: {StatusCode} - {Error}", response.StatusCode, error);
                 return Result.Failure<BoltzSwapFees>($"Failed to get swap fees: {error}");
             }
 
-            var feesResponse = await response.Content.ReadFromJsonAsync<ReverseSwapInfoResponse>(_jsonOptions);
+            var feesResponse = await response.Content.ReadFromJsonAsync<ChainSwapInfoResponse>(_deserializeOptions);
             if (feesResponse == null)
             {
                 return Result.Failure<BoltzSwapFees>("Failed to deserialize fees response");
             }
 
-            // Navigate nested structure: response.L-BTC.BTC contains the L-BTC→BTC fee info
-            // Access via the dictionary since "L-BTC" contains a hyphen
-            PairInfo? liquidBtcInfo = null;
-            if (feesResponse.LBTC?.BTC != null)
-            {
-                liquidBtcInfo = feesResponse.LBTC.BTC;
-            }
-
+            // Navigate: response["L-BTC"]["BTC"] for L-BTC→BTC chain swap fees
+            var liquidBtcInfo = feesResponse.LBTC?.BTC;
             if (liquidBtcInfo == null)
             {
                 return Result.Failure<BoltzSwapFees>("Invalid fees response: missing L-BTC/BTC pair info");
             }
 
+            // For chain swaps, the server miner fee is deducted from the swap amount.
+            // User also pays user.lockup (on L-BTC) and user.claim (on BTC) separately as tx fees.
             var fees = new BoltzSwapFees
             {
                 Percentage = liquidBtcInfo.Fees.Percentage,
-                MinerFees = liquidBtcInfo.Fees.MinerFees.Claim,
+                MinerFees = liquidBtcInfo.Fees.MinerFees.Server,
                 MinAmount = liquidBtcInfo.Limits.Minimal,
                 MaxAmount = liquidBtcInfo.Limits.Maximal
             };
 
             _logger.LogDebug(
-                "Liquid→BTC swap fees: {Percentage}% + {MinerFees} sats, limits: {Min}-{Max}",
-                fees.Percentage, fees.MinerFees, fees.MinAmount, fees.MaxAmount);
+                "Liquid→BTC chain swap fees: {Percentage}% + {ServerMinerFees} sats (server), " +
+                "user claim: {UserClaim} sats, user lockup: {UserLockup} sats, limits: {Min}-{Max}",
+                fees.Percentage, fees.MinerFees,
+                liquidBtcInfo.Fees.MinerFees.User.Claim,
+                liquidBtcInfo.Fees.MinerFees.User.Lockup,
+                fees.MinAmount, fees.MaxAmount);
 
             return Result.Success(fees);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting Liquid→BTC swap fees");
+            _logger.LogError(ex, "Error getting Liquid→BTC chain swap fees");
             return Result.Failure<BoltzSwapFees>($"Error getting swap fees: {ex.Message}");
         }
     }
@@ -1056,7 +1123,6 @@ public class BoltzSwapService : IBoltzSwapService
         var fees = feesResult.Value;
         var liquidAmount = fees.CalculateInvoiceAmount(desiredOnChainAmount);
 
-        // Validate against limits
         if (liquidAmount < fees.MinAmount)
         {
             return Result.Failure<long>($"Liquid amount {liquidAmount} sats is below minimum {fees.MinAmount} sats");
@@ -1074,9 +1140,158 @@ public class BoltzSwapService : IBoltzSwapService
     }
 
     /// <summary>
-    /// Request for Liquid→BTC swap
+    /// Gets Boltz's chain claim details (nonce, tx hash) for cooperative signing.
+    /// GET /swap/chain/{id}/claim
     /// </summary>
-    private class CreateLiquidToBtcSwapRequest
+    public async Task<Result<ChainClaimDetails>> GetChainClaimDetailsAsync(string swapId)
+    {
+        try
+        {
+            _logger.LogInformation("Getting chain claim details for swap {SwapId}", swapId);
+
+            var response = await _httpClient.GetAsync($"{_apiPrefix}swap/chain/{swapId}/claim");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to get chain claim details: {StatusCode} - {Error}", response.StatusCode, error);
+                return Result.Failure<ChainClaimDetails>($"Failed to get chain claim details: {error}");
+            }
+
+            var rawResponse = await response.Content.ReadAsStringAsync();
+            _logger.LogDebug("Chain claim details response: {Response}", rawResponse);
+
+            var details = JsonSerializer.Deserialize<ChainClaimDetailsResponse>(rawResponse, _deserializeOptions);
+            if (details == null)
+            {
+                return Result.Failure<ChainClaimDetails>("Failed to deserialize chain claim details");
+            }
+
+            return Result.Success(new ChainClaimDetails
+            {
+                PubNonce = details.PubNonce ?? string.Empty,
+                PublicKey = details.PublicKey ?? string.Empty,
+                TransactionHash = details.TransactionHash ?? string.Empty
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting chain claim details for swap {SwapId}", swapId);
+            return Result.Failure<ChainClaimDetails>($"Error getting chain claim details: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Posts cooperative chain claim data to Boltz.
+    /// POST /swap/chain/{id}/claim
+    /// </summary>
+    public async Task<Result<BoltzClaimResponse>> PostChainClaimAsync(string swapId, ChainClaimRequest request)
+    {
+        try
+        {
+            _logger.LogInformation("Posting chain claim for swap {SwapId}", swapId);
+
+            var apiRequest = new ChainClaimApiRequest
+            {
+                Preimage = request.Preimage,
+                Signature = new ChainClaimSignatureDto
+                {
+                    PubNonce = request.Signature.PubNonce,
+                    PartialSignature = request.Signature.PartialSignature
+                },
+                ToSign = new ChainClaimToSignDto
+                {
+                    PubNonce = request.ToSign.PubNonce,
+                    Transaction = request.ToSign.Transaction,
+                    Index = request.ToSign.Index
+                }
+            };
+
+            var requestJson = JsonSerializer.Serialize(apiRequest, _jsonOptions);
+            _logger.LogDebug("Chain claim request JSON: {Json}", requestJson);
+
+            var content = new StringContent(requestJson, System.Text.Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync($"{_apiPrefix}swap/chain/{swapId}/claim", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to post chain claim: {StatusCode} - {Error}", response.StatusCode, error);
+                return Result.Failure<BoltzClaimResponse>($"Failed to post chain claim: {error}");
+            }
+
+            var rawResponse = await response.Content.ReadAsStringAsync();
+            _logger.LogDebug("Chain claim response: {Response}", rawResponse);
+
+            var claimResponse = JsonSerializer.Deserialize<ClaimResponse>(rawResponse, _deserializeOptions);
+            if (claimResponse == null)
+            {
+                return Result.Failure<BoltzClaimResponse>("Failed to deserialize chain claim response");
+            }
+
+            return Result.Success(new BoltzClaimResponse
+            {
+                PubNonce = claimResponse.PubNonce,
+                PartialSignature = claimResponse.PartialSignature
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error posting chain claim for swap {SwapId}", swapId);
+            return Result.Failure<BoltzClaimResponse>($"Error posting chain claim: {ex.Message}");
+        }
+    }
+
+    // DTOs for chain claim API
+    private class ChainClaimDetailsResponse
+    {
+        [JsonPropertyName("pubNonce")]
+        public string? PubNonce { get; set; }
+
+        [JsonPropertyName("publicKey")]
+        public string? PublicKey { get; set; }
+
+        [JsonPropertyName("transactionHash")]
+        public string? TransactionHash { get; set; }
+    }
+
+    private class ChainClaimApiRequest
+    {
+        [JsonPropertyName("preimage")]
+        public string Preimage { get; set; } = string.Empty;
+
+        [JsonPropertyName("signature")]
+        public ChainClaimSignatureDto Signature { get; set; } = new();
+
+        [JsonPropertyName("toSign")]
+        public ChainClaimToSignDto ToSign { get; set; } = new();
+    }
+
+    private class ChainClaimSignatureDto
+    {
+        [JsonPropertyName("pubNonce")]
+        public string PubNonce { get; set; } = string.Empty;
+
+        [JsonPropertyName("partialSignature")]
+        public string PartialSignature { get; set; } = string.Empty;
+    }
+
+    private class ChainClaimToSignDto
+    {
+        [JsonPropertyName("pubNonce")]
+        public string PubNonce { get; set; } = string.Empty;
+
+        [JsonPropertyName("transaction")]
+        public string Transaction { get; set; } = string.Empty;
+
+        [JsonPropertyName("index")]
+        public int Index { get; set; }
+    }
+
+    /// <summary>
+    /// Request for Liquid→BTC chain swap (POST /swap/chain)
+    /// </summary>
+    private class CreateChainSwapRequest
     {
         [JsonPropertyName("from")]
         public string From { get; set; } = "L-BTC";
@@ -1087,15 +1302,132 @@ public class BoltzSwapService : IBoltzSwapService
         [JsonPropertyName("claimPublicKey")]
         public string ClaimPublicKey { get; set; } = string.Empty;
 
+        [JsonPropertyName("refundPublicKey")]
+        public string RefundPublicKey { get; set; } = string.Empty;
+
         [JsonPropertyName("preimageHash")]
         public string PreimageHash { get; set; } = string.Empty;
 
-        [JsonPropertyName("invoiceAmount")]
-        public long InvoiceAmount { get; set; }
+        [JsonPropertyName("userLockAmount")]
+        public long UserLockAmount { get; set; }
+    }
 
-        [JsonPropertyName("address")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? Address { get; set; }
+    /// <summary>
+    /// Boltz API v2 response for chain swap.
+    /// Contains nested claimDetails (BTC side) and lockupDetails (L-BTC side).
+    /// </summary>
+    private class CreateChainSwapResponse
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; } = string.Empty;
+
+        [JsonPropertyName("claimDetails")]
+        public ChainSwapSideDetails ClaimDetails { get; set; } = new();
+
+        [JsonPropertyName("lockupDetails")]
+        public ChainSwapSideDetails LockupDetails { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Details for one side of a chain swap (either claim or lockup).
+    /// </summary>
+    private class ChainSwapSideDetails
+    {
+        [JsonPropertyName("swapTree")]
+        public SwapTreeResponse? SwapTree { get; set; }
+
+        [JsonPropertyName("lockupAddress")]
+        public string LockupAddress { get; set; } = string.Empty;
+
+        [JsonPropertyName("serverPublicKey")]
+        public string? ServerPublicKey { get; set; }
+
+        [JsonPropertyName("timeoutBlockHeight")]
+        public long TimeoutBlockHeight { get; set; }
+
+        [JsonPropertyName("amount")]
+        public long Amount { get; set; }
+
+        [JsonPropertyName("blindingKey")]
+        public string? BlindingKey { get; set; }
+
+        [JsonPropertyName("bip21")]
+        public string? Bip21 { get; set; }
+    }
+
+    /// <summary>
+    /// Chain swap fee info response (GET /swap/chain)
+    /// </summary>
+    private class ChainSwapInfoResponse
+    {
+        [JsonPropertyName("BTC")]
+        public ChainSwapPairGroup? BTC { get; set; }
+
+        [JsonPropertyName("L-BTC")]
+        public ChainSwapPairGroup? LBTC { get; set; }
+    }
+
+    private class ChainSwapPairGroup
+    {
+        [JsonPropertyName("BTC")]
+        public ChainSwapPairInfo? BTC { get; set; }
+
+        [JsonPropertyName("L-BTC")]
+        public ChainSwapPairInfo? LBTC { get; set; }
+    }
+
+    private class ChainSwapPairInfo
+    {
+        [JsonPropertyName("hash")]
+        public string Hash { get; set; } = string.Empty;
+
+        [JsonPropertyName("rate")]
+        public decimal Rate { get; set; }
+
+        [JsonPropertyName("limits")]
+        public ChainSwapLimits Limits { get; set; } = new();
+
+        [JsonPropertyName("fees")]
+        public ChainSwapFeesInfo Fees { get; set; } = new();
+    }
+
+    private class ChainSwapLimits
+    {
+        [JsonPropertyName("minimal")]
+        public long Minimal { get; set; }
+
+        [JsonPropertyName("maximal")]
+        public long Maximal { get; set; }
+
+        [JsonPropertyName("maximalZeroConf")]
+        public long MaximalZeroConf { get; set; }
+    }
+
+    private class ChainSwapFeesInfo
+    {
+        [JsonPropertyName("percentage")]
+        public decimal Percentage { get; set; }
+
+        [JsonPropertyName("minerFees")]
+        public ChainSwapMinerFees MinerFees { get; set; } = new();
+    }
+
+    private class ChainSwapMinerFees
+    {
+        [JsonPropertyName("server")]
+        public long Server { get; set; }
+
+        [JsonPropertyName("user")]
+        public ChainSwapUserMinerFees User { get; set; } = new();
+    }
+
+    private class ChainSwapUserMinerFees
+    {
+        [JsonPropertyName("claim")]
+        public long Claim { get; set; }
+
+        [JsonPropertyName("lockup")]
+        public long Lockup { get; set; }
     }
 
     #endregion

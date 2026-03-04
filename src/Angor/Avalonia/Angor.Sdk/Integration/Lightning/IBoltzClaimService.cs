@@ -25,6 +25,23 @@ public interface IBoltzClaimService
         string lockupTransactionHex,
         int lockupOutputIndex = 0,
         long feeRate = 2);
+
+    /// <summary>
+    /// Claims funds from a Liquid→BTC chain swap using bidirectional cooperative signing.
+    /// Creates two MuSig2 sessions: one for the user's BTC claim, one for Boltz's L-BTC claim.
+    /// </summary>
+    /// <param name="swap">The chain swap data including both claim and lockup side details</param>
+    /// <param name="claimPrivateKeyHex">The private key hex for signing</param>
+    /// <param name="serverLockupTransactionHex">Boltz's BTC lockup transaction hex (from WebSocket)</param>
+    /// <param name="lockupOutputIndex">The output index in the server lockup transaction (usually 0)</param>
+    /// <param name="feeRate">Fee rate in sat/vbyte for the BTC claim transaction</param>
+    /// <returns>The claim transaction ID and hex if successful</returns>
+    Task<Result<BoltzClaimResult>> ClaimChainSwapAsync(
+        BoltzSubmarineSwap swap,
+        string claimPrivateKeyHex,
+        string serverLockupTransactionHex,
+        int lockupOutputIndex = 0,
+        long feeRate = 2);
 }
 
 /// <summary>

@@ -14,20 +14,19 @@ namespace Angor.Sdk.Integration.Lightning;
 ///
 /// Key handling:
 /// - Boltz v2 API uses compressed public keys (33 bytes, 02/03 prefix)
-/// - Keys are used with their actual parity for KeyAgg (BIP-327 uses compressed keys)
+/// - Keys are used with their actual parity for KeyAgg by default (BIP-327 uses compressed keys)
+/// - Optional normalizeToEvenY mode: normalizes both keys to even-Y (02 prefix) for
+///   interop with protocols that exchange x-only keys (e.g., chain swaps)
 /// - Keys are sorted by compressed bytes for deterministic ordering (Boltz convention)
 /// - Taproot tweak is applied for key-path spending of swap outputs
-/// - Per BIP-327, individual key negation is NOT applied; only aggregate-level negation
-///
-/// BIP-327 uses 33-byte compressed individual public keys (with 02/03 prefix)
-/// for all hashing operations.
+/// - Per BIP-327, individual key negation is NOT applied by default; only aggregate-level negation
 /// </summary>
 public class BoltzMusig2
 {
     private readonly ILogger _logger;
     private readonly ECPrivKey _privateKey;
-    private readonly ECPubKey _ourPublicKey;       // Actual public key (may have odd Y)
-    private readonly ECPubKey _boltzPublicKey;      // Boltz's key as provided (compressed)
+    private readonly ECPubKey _ourPublicKey;       // Our public key (may be normalized to even-Y)
+    private readonly ECPubKey _boltzPublicKey;      // Boltz's key (may be normalized to even-Y)
     private readonly ECPubKey _aggregatedPubKey;    // Q = KeyAgg result (before tweak)
 
     // Store the key order and L hash used during aggregation for consistency
@@ -46,16 +45,30 @@ public class BoltzMusig2
     private ECPubKey? _aggR1;
     private ECPubKey? _aggR2;
 
+    // Individual key parity normalization (only when normalizeToEvenY=true)
+    // When our private key produces an odd-Y public key, we normalize to even-Y (02 prefix).
+    // The private key scalar must then be negated during signing to compensate.
+    private readonly bool _keyNeedsNegation;
+
     // Taproot tweak state
     private bool _hasTaprootTweak;
     private Scalar _tweakScalar;            // t = TaggedHash("TapTweak", Q || merkleRoot)
     private ECPubKey? _tweakedAggPubKey;    // P = g*Q + t*G (the output key)
     private int _gaccSign = 1;              // +1 or -1 accumulated negation from tweak
 
+    /// <summary>
+    /// Creates a new MuSig2 session.
+    /// </summary>
+    /// <param name="privateKeyBytes">Our private key (32 bytes)</param>
+    /// <param name="boltzPublicKeyBytes">Boltz's public key (33-byte compressed or 32-byte x-only)</param>
+    /// <param name="logger">Logger instance</param>
+    /// <param name="normalizeToEvenY">When true, normalizes both keys to even-Y (02 prefix).
+    /// Use for chain swaps where keys are exchanged as x-only. Default false for reverse swaps.</param>
     public BoltzMusig2(
         byte[] privateKeyBytes,
         byte[] boltzPublicKeyBytes,
-        ILogger logger)
+        ILogger logger,
+        bool normalizeToEvenY = false)
     {
         _logger = logger;
 
@@ -66,13 +79,26 @@ public class BoltzMusig2
         }
         _privateKey = privKey;
 
-        // Get our actual public key - use it as-is with its natural parity.
-        // BIP-327 uses compressed keys (33 bytes) for all operations. 
-        // Individual key negation is NOT done - only aggregate-level negation matters.
-        _ourPublicKey = _privateKey.CreatePubKey();
+        // Get our public key
+        var naturalPubKey = _privateKey.CreatePubKey();
 
-        // Parse Boltz public key - use as-is (compressed, with its actual 02/03 prefix)
-        _boltzPublicKey = ParseKey(boltzPublicKeyBytes);
+        if (normalizeToEvenY)
+        {
+            // Normalize both keys to even-Y (02 prefix) for protocols that exchange
+            // keys as x-only (32 bytes). Both sides lift x-only to even-Y for KeyAgg.
+            var naturalCompressed = naturalPubKey.ToBytes();
+            _keyNeedsNegation = naturalCompressed[0] == 0x03;
+            _ourPublicKey = _keyNeedsNegation ? NormalizeToEvenY(naturalPubKey) : naturalPubKey;
+            _boltzPublicKey = NormalizeToEvenY(ParseKey(boltzPublicKeyBytes));
+        }
+        else
+        {
+            // Use keys with their actual parity (default for reverse swaps).
+            // BIP-327 uses 33-byte compressed keys for all operations.
+            _keyNeedsNegation = false;
+            _ourPublicKey = naturalPubKey;
+            _boltzPublicKey = ParseKey(boltzPublicKeyBytes);
+        }
 
         // Aggregate the public keys using BIP-327 KeyAgg with sorted compressed keys
         (_aggregatedPubKey, _orderedCompressedKeys, _keyAggLHash) =
@@ -461,10 +487,17 @@ public class BoltzMusig2
             _logger.LogDebug("Negated k (R has odd Y)");
         }
 
-        // Private key d' (BIP-327: raw scalar, NO individual key negation)
+        // Private key d'
+        // If we normalized our public key from odd-Y to even-Y to match Boltz's x-only
+        // key lifting, we must negate d' so that d'·G matches the even-Y key used in KeyAgg.
         var xBytes = new byte[32];
         _privateKey.WriteToSpan(xBytes);
         var dPrime = new Scalar(xBytes, out _);
+        if (_keyNeedsNegation)
+        {
+            dPrime = dPrime.Negate();
+            _logger.LogDebug("Negated d' for individual key parity normalization (odd-Y → even-Y)");
+        }
 
         // BIP-327: d = g * gacc * d'
         // g = 1 if has_even_y(Q_final) else -1

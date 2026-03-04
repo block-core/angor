@@ -93,7 +93,7 @@ public class CreateLiquidSwapTests
         };
 
         _mockBoltzService
-            .Setup(x => x.CreateLiquidToBtcSwapAsync(address, It.IsAny<long>(), It.IsAny<string>()))
+            .Setup(x => x.CreateLiquidToBtcSwapAsync(address, It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(Result.Success(expectedSwap));
 
         _mockBoltzService
@@ -136,7 +136,7 @@ public class CreateLiquidSwapTests
             .ReturnsAsync(101000L);
 
         _mockBoltzService
-            .Setup(x => x.CreateLiquidToBtcSwapAsync(address, It.IsAny<long>(), It.IsAny<string>()))
+            .Setup(x => x.CreateLiquidToBtcSwapAsync(address, It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(Result.Failure<BoltzSubmarineSwap>("Boltz API error"));
 
         var request = new CreateLiquidSwapForInvestment.CreateLiquidSwapRequest(

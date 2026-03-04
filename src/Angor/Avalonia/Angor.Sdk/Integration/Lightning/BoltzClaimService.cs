@@ -97,6 +97,240 @@ public class BoltzClaimService : IBoltzClaimService
         }
     }
 
+    /// <inheritdoc />
+    public async Task<Result<BoltzClaimResult>> ClaimChainSwapAsync(
+        BoltzSubmarineSwap swap,
+        string claimPrivateKeyHex,
+        string serverLockupTransactionHex,
+        int lockupOutputIndex = 0,
+        long feeRate = 2)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Claiming chain swap {SwapId}. ClaimLockupAddress: {ClaimLockupAddress}, DestAddress: {DestAddress}",
+                swap.Id, swap.ClaimLockupAddress, swap.Address);
+
+            if (string.IsNullOrEmpty(swap.Preimage))
+                return Result.Failure<BoltzClaimResult>("Swap preimage is missing - cannot claim without it");
+
+            if (string.IsNullOrEmpty(swap.SwapTree))
+                return Result.Failure<BoltzClaimResult>("Claim-side swap tree is missing");
+
+            if (string.IsNullOrEmpty(swap.LockupSwapTree))
+                return Result.Failure<BoltzClaimResult>("Lockup-side swap tree is missing");
+
+            if (string.IsNullOrEmpty(swap.RefundPublicKey))
+                return Result.Failure<BoltzClaimResult>("Claim-side server public key is missing");
+
+            if (string.IsNullOrEmpty(swap.LockupServerPublicKey))
+                return Result.Failure<BoltzClaimResult>("Lockup-side server public key is missing");
+
+            var preimageBytes = Convert.FromHexString(swap.Preimage);
+            var preimageHex = Convert.ToHexString(preimageBytes).ToLowerInvariant();
+            var claimPrivateKeyBytes = Convert.FromHexString(claimPrivateKeyHex);
+            var network = GetNBitcoinNetwork();
+
+            // STEP 1: Get Boltz's chain claim details (nonce + tx hash for L-BTC claim)
+            _logger.LogInformation("Step 1: Getting chain claim details from Boltz...");
+            var chainClaimDetailsResult = await _boltzSwapService.GetChainClaimDetailsAsync(swap.Id);
+            if (chainClaimDetailsResult.IsFailure)
+                return Result.Failure<BoltzClaimResult>($"Failed to get chain claim details: {chainClaimDetailsResult.Error}");
+
+            var chainClaimDetails = chainClaimDetailsResult.Value;
+            _logger.LogInformation("Got chain claim details - PubNonce: {Nonce}, TxHash: {TxHash}, PublicKey: {PubKey}",
+                chainClaimDetails.PubNonce, chainClaimDetails.TransactionHash, chainClaimDetails.PublicKey);
+
+            // Diagnostic: compare GET response's publicKey with stored LockupServerPublicKey
+            if (!string.IsNullOrEmpty(chainClaimDetails.PublicKey) &&
+                !string.Equals(chainClaimDetails.PublicKey, swap.LockupServerPublicKey, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning(
+                    "Lockup server public key mismatch! GET response: {ResponseKey}, Stored: {StoredKey}",
+                    chainClaimDetails.PublicKey, swap.LockupServerPublicKey);
+            }
+
+            // STEP 2: Set up L-BTC claim MuSig2 session and sign Boltz's tx hash
+            _logger.LogInformation("Step 2: Setting up L-BTC claim MuSig2 session...");
+
+            var lockupBoltzKeyBytes = Convert.FromHexString(swap.LockupServerPublicKey);
+            var lockupMusig = new BoltzMusig2(claimPrivateKeyBytes, lockupBoltzKeyBytes, _logger, normalizeToEvenY: true);
+
+            // Parse lockup-side swap tree and apply tweak
+            var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var lockupSwapTree = JsonSerializer.Deserialize<SwapTreeDto>(swap.LockupSwapTree, jsonOptions);
+            if (lockupSwapTree?.ClaimLeaf?.Output == null || lockupSwapTree?.RefundLeaf?.Output == null)
+                return Result.Failure<BoltzClaimResult>("Invalid lockup swap tree - missing claim or refund leaf");
+
+            var lockupMerkleRoot = ComputeSwapTreeMerkleRoot(lockupSwapTree.ClaimLeaf.Output, lockupSwapTree.RefundLeaf.Output);
+            lockupMusig.SetTaprootTweak(lockupMerkleRoot);
+
+            // Generate nonce for L-BTC session
+            var lockupPubNonce = lockupMusig.GenerateNonce();
+            var lockupPubNonceHex = Convert.ToHexString(lockupPubNonce).ToLowerInvariant();
+
+            // Aggregate nonces with Boltz's nonce
+            var boltzLockupNonceBytes = Convert.FromHexString(chainClaimDetails.PubNonce);
+            lockupMusig.AggregateNonces(boltzLockupNonceBytes);
+
+            // Sign the transaction hash that Boltz provided (for their L-BTC claim)
+            var serverTxHashBytes = Convert.FromHexString(chainClaimDetails.TransactionHash);
+            lockupMusig.InitializeSession(serverTxHashBytes);
+            var lockupPartialSig = lockupMusig.SignPartial();
+            var lockupPartialSigHex = Convert.ToHexString(lockupPartialSig).ToLowerInvariant();
+
+            _logger.LogInformation("L-BTC claim partial signature generated");
+
+            // STEP 3: Build BTC claim transaction and set up BTC claim MuSig2 session
+            _logger.LogInformation("Step 3: Building BTC claim transaction...");
+
+            var serverLockupTx = NBitcoin.Transaction.Parse(serverLockupTransactionHex, network);
+
+            // Find the lockup output matching ClaimLockupAddress
+            NBitcoin.TxOut? lockupOutput = null;
+            int foundOutputIndex = lockupOutputIndex;
+
+            for (int i = 0; i < serverLockupTx.Outputs.Count; i++)
+            {
+                var output = serverLockupTx.Outputs[i];
+                var outputAddress = output.ScriptPubKey.GetDestinationAddress(network)?.ToString();
+                if (outputAddress == swap.ClaimLockupAddress)
+                {
+                    foundOutputIndex = i;
+                    lockupOutput = output;
+                    _logger.LogInformation("Found server lockup output at index {Index}, amount: {Amount} sats",
+                        i, output.Value.Satoshi);
+                    break;
+                }
+            }
+
+            if (lockupOutput == null)
+            {
+                lockupOutput = serverLockupTx.Outputs[lockupOutputIndex];
+                _logger.LogWarning("Could not match ClaimLockupAddress, using output index {Index}", lockupOutputIndex);
+            }
+
+            var lockupOutpoint = new NBitcoin.OutPoint(serverLockupTx.GetHash(), foundOutputIndex);
+
+            // Set up BTC claim MuSig2 session
+            var claimBoltzKeyBytes = Convert.FromHexString(swap.RefundPublicKey);
+            var claimMusig = new BoltzMusig2(claimPrivateKeyBytes, claimBoltzKeyBytes, _logger, normalizeToEvenY: true);
+
+            // Parse claim-side swap tree and apply tweak
+            var claimSwapTree = JsonSerializer.Deserialize<SwapTreeDto>(swap.SwapTree, jsonOptions);
+            if (claimSwapTree?.ClaimLeaf?.Output == null || claimSwapTree?.RefundLeaf?.Output == null)
+                return Result.Failure<BoltzClaimResult>("Invalid claim swap tree - missing claim or refund leaf");
+
+            var claimMerkleRoot = ComputeSwapTreeMerkleRoot(claimSwapTree.ClaimLeaf.Output, claimSwapTree.RefundLeaf.Output);
+            claimMusig.SetTaprootTweak(claimMerkleRoot);
+
+            // Build the BTC claim transaction
+            var destAddress = NBitcoin.BitcoinAddress.Create(swap.Address, network);
+            var estimatedVbytes = 110;
+            var fee = feeRate * estimatedVbytes;
+            var outputAmount = lockupOutput.Value.Satoshi - fee;
+
+            if (outputAmount <= 546)
+                return Result.Failure<BoltzClaimResult>("Output amount after fee is below dust threshold");
+
+            var claimTx = NBitcoin.Transaction.Create(network);
+            claimTx.Version = 2;
+            claimTx.Inputs.Add(new NBitcoin.TxIn(lockupOutpoint));
+            claimTx.Inputs[0].Sequence = 0xFFFFFFFD;
+            claimTx.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(outputAmount), destAddress.ScriptPubKey));
+
+            // Generate nonce for BTC claim session
+            var claimPubNonce = claimMusig.GenerateNonce();
+            var claimPubNonceHex = Convert.ToHexString(claimPubNonce).ToLowerInvariant();
+
+            var claimTxHex = claimTx.ToHex();
+
+            // STEP 4: POST cooperative claim to Boltz
+            _logger.LogInformation("Step 4: Posting cooperative chain claim to Boltz...");
+
+            var chainClaimRequest = new Models.ChainClaimRequest
+            {
+                Preimage = preimageHex,
+                Signature = new Models.ChainClaimSignature
+                {
+                    PubNonce = lockupPubNonceHex,
+                    PartialSignature = lockupPartialSigHex
+                },
+                ToSign = new Models.ChainClaimToSign
+                {
+                    PubNonce = claimPubNonceHex,
+                    Transaction = claimTxHex,
+                    Index = 0
+                }
+            };
+
+            var postResult = await _boltzSwapService.PostChainClaimAsync(swap.Id, chainClaimRequest);
+            if (postResult.IsFailure)
+                return Result.Failure<BoltzClaimResult>($"Chain claim API failed: {postResult.Error}");
+
+            var boltzClaimResponse = postResult.Value;
+            _logger.LogInformation("Received Boltz's partial signature for BTC claim");
+
+            // STEP 5: Aggregate BTC claim signatures and finalize
+            _logger.LogInformation("Step 5: Aggregating BTC claim signatures...");
+
+            var boltzClaimNonceBytes = Convert.FromHexString(boltzClaimResponse.PubNonce);
+            claimMusig.AggregateNonces(boltzClaimNonceBytes);
+
+            var prevOuts = new NBitcoin.TxOut[] { lockupOutput };
+            var sighash = claimTx.GetSignatureHashTaproot(prevOuts,
+                new NBitcoin.TaprootExecutionData(0) { SigHash = NBitcoin.TaprootSigHash.Default });
+
+            claimMusig.InitializeSession(sighash.ToBytes());
+            var ourClaimPartialSig = claimMusig.SignPartial();
+
+            var boltzClaimPartialSig = Convert.FromHexString(boltzClaimResponse.PartialSignature);
+            var aggregatedSig = claimMusig.AggregatePartials(boltzClaimPartialSig, ourClaimPartialSig);
+
+            // Verify the aggregated signature
+            var outputPubKeyForVerify = new NBitcoin.TaprootPubKey(claimMusig.GetOutputPubKeyXOnly());
+            var schnorrSig = new NBitcoin.Crypto.SchnorrSignature(aggregatedSig);
+            if (!outputPubKeyForVerify.VerifySignature(sighash, schnorrSig))
+            {
+                _logger.LogError("Chain swap BTC claim Schnorr signature verification FAILED!");
+                return Result.Failure<BoltzClaimResult>("Aggregated Schnorr signature failed verification");
+            }
+            _logger.LogInformation("BTC claim Schnorr signature verification PASSED");
+
+            // STEP 6: Set witness and broadcast
+            claimTx.Inputs[0].WitScript = new NBitcoin.WitScript(new[] { aggregatedSig });
+
+            var signedTxHex = claimTx.ToHex();
+            var claimTxId = claimTx.GetHash().ToString();
+
+            _logger.LogInformation("Built cooperative chain claim transaction: {TxId}", claimTxId);
+
+            var broadcastResult = await _boltzSwapService.BroadcastTransactionAsync(signedTxHex);
+
+            if (broadcastResult.IsFailure)
+            {
+                _logger.LogWarning("Boltz broadcast failed: {Error}. Trying indexer...", broadcastResult.Error);
+                var indexerError = await _indexerService.PublishTransactionAsync(signedTxHex);
+
+                if (!string.IsNullOrEmpty(indexerError))
+                {
+                    return Result.Failure<BoltzClaimResult>(
+                        $"Failed to broadcast: Boltz: {broadcastResult.Error}, Indexer: {indexerError}");
+                }
+            }
+
+            _logger.LogInformation("Successfully claimed chain swap {SwapId} via cooperative MuSig2. TxId: {TxId}",
+                swap.Id, claimTxId);
+
+            return Result.Success(new BoltzClaimResult(claimTxId, signedTxHex));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error claiming chain swap {SwapId}", swap.Id);
+            return Result.Failure<BoltzClaimResult>($"Error claiming chain swap: {ex.Message}");
+        }
+    }
+
     /// <summary>
     /// Cooperative MuSig2 claim - the preferred method for claiming Boltz swaps.
     /// </summary>

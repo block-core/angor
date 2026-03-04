@@ -85,6 +85,96 @@ public class BoltzWebSocketClient : IBoltzWebSocketClient, IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Monitors a chain swap via WebSocket until Boltz locks BTC (server lockup).
+    /// Returns when TransactionServerMempool/TransactionServerConfirmed is reached,
+    /// or on any terminal state.
+    /// </summary>
+    public async Task<Result<BoltzSwapStatus>> MonitorChainSwapAsync(
+        string swapId,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        var effectiveTimeout = timeout ?? TimeSpan.FromMinutes(30);
+        using var timeoutCts = new CancellationTokenSource(effectiveTimeout);
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+            cancellationToken, timeoutCts.Token);
+
+        try
+        {
+            _webSocket = new ClientWebSocket();
+            await _webSocket.ConnectAsync(new Uri(_webSocketUrl), linkedCts.Token);
+
+            _logger.LogInformation("Connected to Boltz WebSocket at {Url} for chain swap monitoring", _webSocketUrl);
+
+            // Subscribe to swap updates
+            await SubscribeToSwap(swapId, linkedCts.Token);
+
+            // Listen for updates with chain-swap-specific terminal conditions
+            return await ReceiveUpdatesUntilChainSwapReady(swapId, linkedCts.Token);
+        }
+        catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested)
+        {
+            return Result.Failure<BoltzSwapStatus>(
+                "Timeout waiting for chain swap server lockup. Ensure L-BTC has been sent to the lockup address.");
+        }
+        catch (OperationCanceledException)
+        {
+            return Result.Failure<BoltzSwapStatus>("Monitoring was cancelled");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "WebSocket error monitoring chain swap {SwapId}", swapId);
+            return Result.Failure<BoltzSwapStatus>($"WebSocket error: {ex.Message}");
+        }
+    }
+
+    private async Task<Result<BoltzSwapStatus>> ReceiveUpdatesUntilChainSwapReady(
+        string swapId,
+        CancellationToken cancellationToken)
+    {
+        var buffer = new byte[4096];
+        var messageBuilder = new StringBuilder();
+
+        while (!cancellationToken.IsCancellationRequested &&
+               _webSocket?.State == WebSocketState.Open)
+        {
+            var result = await _webSocket.ReceiveAsync(
+                new ArraySegment<byte>(buffer), cancellationToken);
+
+            if (result.MessageType == WebSocketMessageType.Close)
+            {
+                _logger.LogWarning("WebSocket closed by server");
+                return Result.Failure<BoltzSwapStatus>("WebSocket connection closed");
+            }
+
+            messageBuilder.Append(Encoding.UTF8.GetString(buffer, 0, result.Count));
+
+            if (result.EndOfMessage)
+            {
+                var message = messageBuilder.ToString();
+                messageBuilder.Clear();
+
+                var status = ProcessMessage(swapId, message);
+
+                if (status != null)
+                {
+                    _logger.LogInformation("Chain swap {SwapId} status: {Status}", swapId, status.Status);
+
+                    // For chain swaps, return when server lockup is detected or terminal state
+                    if (status.Status.IsComplete() || status.Status.IsFailed() ||
+                        status.Status == SwapState.TransactionServerMempool ||
+                        status.Status == SwapState.TransactionServerConfirmed)
+                    {
+                        return Result.Success(status);
+                    }
+                }
+            }
+        }
+
+        return Result.Failure<BoltzSwapStatus>("WebSocket connection ended unexpectedly");
+    }
+
     private async Task SubscribeToSwap(string swapId, CancellationToken cancellationToken)
     {
         var subscribeMessage = new
@@ -250,6 +340,9 @@ public class BoltzWebSocketClient : IBoltzWebSocketClient, IAsyncDisposable
         "transaction.confirmed" => SwapState.TransactionConfirmed,
         "transaction.claimed" => SwapState.TransactionClaimed,
         "transaction.refunded" => SwapState.TransactionRefunded,
+        "transaction.server.mempool" => SwapState.TransactionServerMempool,
+        "transaction.server.confirmed" => SwapState.TransactionServerConfirmed,
+        "transaction.claim.pending" => SwapState.TransactionClaimPending,
         "swap.expired" => SwapState.SwapExpired,
         _ => SwapState.Created
     };

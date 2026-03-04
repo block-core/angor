@@ -109,13 +109,27 @@ public static class ClaimLightningSwap
                         "Lockup transaction hex not available. Please provide it or fetch from a block explorer.");
                 }
 
-                // Step 5: Claim the swap using the Boltz claim service
-                var claimResult = await boltzClaimService.ClaimSwapAsync(
-                    swap,
-                    privateKeyResult.Value,
-                    lockupTxHex,
-                    request.LockupOutputIndex,
-                    request.FeeRate);
+                // Step 5: Claim the swap using the appropriate method
+                Result<BoltzClaimResult> claimResult;
+                if (swap.IsChainSwap)
+                {
+                    logger.LogInformation("Routing to chain swap claim for swap {SwapId}", swap.Id);
+                    claimResult = await boltzClaimService.ClaimChainSwapAsync(
+                        swap,
+                        privateKeyResult.Value,
+                        lockupTxHex,
+                        request.LockupOutputIndex,
+                        request.FeeRate);
+                }
+                else
+                {
+                    claimResult = await boltzClaimService.ClaimSwapAsync(
+                        swap,
+                        privateKeyResult.Value,
+                        lockupTxHex,
+                        request.LockupOutputIndex,
+                        request.FeeRate);
+                }
 
                 if (claimResult.IsFailure)
                 {

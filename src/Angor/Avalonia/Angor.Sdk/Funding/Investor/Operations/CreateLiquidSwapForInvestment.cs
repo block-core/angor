@@ -85,21 +85,22 @@ public static class CreateLiquidSwapForInvestment
                     "Liquid amount calculated: {LiquidAmount} sats (onChainNeeded: {OnChain} + boltzFees: {BoltzFees})",
                     liquidAmount, totalOnChainNeeded, boltzFees);
 
-                // Step 3: Generate claim public key from wallet and project
-                var claimPubKeyResult = await GenerateClaimPublicKey(request.WalletId, request.ProjectId);
-                if (claimPubKeyResult.IsFailure)
+                // Step 3: Generate public key from wallet and project (used for both claim and refund)
+                var pubKeyResult = await GeneratePublicKey(request.WalletId, request.ProjectId);
+                if (pubKeyResult.IsFailure)
                 {
-                    logger.LogError("Failed to generate claim public key: {Error}", claimPubKeyResult.Error);
-                    return Result.Failure<CreateLiquidSwapResponse>(claimPubKeyResult.Error);
+                    logger.LogError("Failed to generate public key: {Error}", pubKeyResult.Error);
+                    return Result.Failure<CreateLiquidSwapResponse>(pubKeyResult.Error);
                 }
 
-                var claimPubKey = claimPubKeyResult.Value;
+                var pubKey = pubKeyResult.Value;
 
-                // Step 4: Create the Liquid→BTC swap
+                // Step 4: Create the Liquid→BTC chain swap (same key for claim and refund)
                 var swapResult = await boltzSwapService.CreateLiquidToBtcSwapAsync(
                     request.ReceivingAddress,
                     liquidAmount,
-                    claimPubKey);
+                    pubKey,
+                    pubKey);
 
                 if (swapResult.IsFailure)
                 {
@@ -135,7 +136,7 @@ public static class CreateLiquidSwapForInvestment
             }
         }
 
-        private async Task<Result<string>> GenerateClaimPublicKey(WalletId walletId, ProjectId projectId)
+        private async Task<Result<string>> GeneratePublicKey(WalletId walletId, ProjectId projectId)
         {
             var projectResult = await projectService.GetAsync(projectId);
             if (projectResult.IsFailure)
@@ -153,14 +154,14 @@ public static class CreateLiquidSwapForInvestment
 
             var walletWords = sensitiveDataResult.Value.ToWalletWords();
 
-            var compressedPubKey = derivationOperations.DeriveInvestorKey(walletWords, project.FounderKey);
-            var claimPubKey = compressedPubKey.Trim().ToLowerInvariant();
+            var pubKey = derivationOperations.DeriveInvestorKey(walletWords, project.FounderKey)
+                .Trim().ToLowerInvariant();
 
             logger.LogInformation(
-                "Generated claim public key (compressed format): {Key} ({Len} chars)",
-                claimPubKey, claimPubKey.Length);
+                "Generated public key: {Key} ({Len} chars)",
+                pubKey, pubKey.Length);
 
-            return Result.Success(claimPubKey);
+            return Result.Success(pubKey);
         }
     }
 }
