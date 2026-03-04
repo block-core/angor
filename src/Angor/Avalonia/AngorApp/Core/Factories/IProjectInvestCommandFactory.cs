@@ -1,6 +1,9 @@
+using Angor.Sdk.Funding.Shared;
+using Angor.Shared.Models;
+
 namespace AngorApp.Core.Factories;
 
 public interface IProjectInvestCommandFactory
 {
-    IEnhancedCommand<Result<Unit>> Create(FullProject project, bool isInsideInvestmentPeriod);
+    IEnhancedCommand<Result> Create(ProjectId projectId, DateTimeOffset fundingStart, DateTimeOffset fundingEnd, ProjectType projectType);
 }

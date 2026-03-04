@@ -12,12 +12,7 @@ namespace AngorApp.Model.ProjectsV2
         string FounderPubKey { get; }
         string NostrNpubKeyHex { get; }
         Uri? InformationUri { get; }
-        DateTimeOffset FundingStart { get; }
-        DateTimeOffset FundingEnd { get; }
+        IEnhancedCommand<Result> Invest { get; }
         IEnhancedCommand Refresh { get; }
-        IObservable<ProjectStatus> ProjectStatus { get; }
-        IAmountUI FundingTarget { get; }
-        IObservable<IAmountUI> FundingRaised { get; }
-        IObservable<int> SupporterCount { get; }
     }
 }

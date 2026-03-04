@@ -1,22 +1,18 @@
 using System.Text.Json;
 using Angor.Sdk.Funding.Projects;
 using AngorApp.Model.ProjectsV2;
-using AngorApp.UI.Flows.InvestV2;
+using AngorApp.Model.ProjectsV2.FundProject;
+using AngorApp.Model.ProjectsV2.InvestmentProject;
 using Nostr.Client.Utils;
 using Zafiro.Avalonia.Dialogs;
-using Zafiro.UI.Navigation;
 
 namespace AngorApp.UI.Sections.FindProjects.Details;
 
 public class DetailsViewModel : ReactiveObject, IDetailsViewModel
 {
-    public DetailsViewModel(IProject project, IProjectAppService projectAppService, Func<IFullProject, IInvestViewModel> investViewModelFactory, INavigator navigator, IDialog dialog)
+    public DetailsViewModel(IProject project, IProjectAppService projectAppService, IDialog dialog)
     {
         Project = project;
-        Invest = EnhancedCommand.CreateWithResult(() =>
-            projectAppService.GetFullProject(project.Id)
-                .Bind(fp => navigator.Go(() => investViewModelFactory(fp)).Map(_ => Result.Success()))
-        ).AsResult();
         ShowProjectInfoJson = ReactiveCommand.CreateFromTask(async () =>
         {
             var fullProject = await projectAppService.GetFullProject(project.Id);
@@ -28,12 +24,14 @@ public class DetailsViewModel : ReactiveObject, IDetailsViewModel
         }).Enhance();
     }
 
-    public IEnhancedCommand<Result> Invest { get; set; }
+    public IEnhancedCommand<Result> Invest => Project.Invest;
 
     public IProject Project { get; }
 
     public bool IsInsideInvestmentPeriod =>
-        DateTimeOffset.UtcNow >= Project.FundingStart && DateTimeOffset.UtcNow <= Project.FundingEnd;
+        Project is not IInvestmentProject investmentProject ||
+        (DateTimeOffset.UtcNow >= investmentProject.FundingStart &&
+         DateTimeOffset.UtcNow <= investmentProject.FundingEnd);
 
     public string FounderKey => Project.FounderPubKey ?? "[Backend: FounderPubKey is null]";
     public string ProjectId => Project.Id.Value ?? "[Backend: ProjectId is null]";

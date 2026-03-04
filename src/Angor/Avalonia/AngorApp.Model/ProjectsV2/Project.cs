@@ -6,7 +6,7 @@ namespace AngorApp.Model.ProjectsV2
 {
     public abstract class Project : IProject
     {
-        protected Project(ProjectDto seed)
+        protected Project(ProjectDto seed, IEnhancedCommand<Result> invest)
         {
             Name = seed.Name;
             Description = seed.ShortDescription;
@@ -16,8 +16,7 @@ namespace AngorApp.Model.ProjectsV2
             FounderPubKey = seed.FounderPubKey;
             NostrNpubKeyHex = seed.NostrNpubKeyHex;
             InformationUri = seed.InformationUri;
-            FundingStart = seed.FundingStartDate;
-            FundingEnd = seed.FundingEndDate;
+            Invest = invest;
         }
 
         public string Name { get; }
@@ -28,20 +27,18 @@ namespace AngorApp.Model.ProjectsV2
         public string FounderPubKey { get; }
         public string NostrNpubKeyHex { get; }
         public Uri? InformationUri { get; }
-        public DateTimeOffset FundingStart { get; }
-        public DateTimeOffset FundingEnd { get; }
+        public IEnhancedCommand<Result> Invest { get; }
         public abstract IEnhancedCommand Refresh { get; }
-        public abstract IObservable<ProjectStatus> ProjectStatus { get; }
         public abstract IAmountUI FundingTarget { get; }
         public abstract IObservable<IAmountUI> FundingRaised { get; }
         public abstract IObservable<int> SupporterCount { get; }
 
-        public static IProject Create(ProjectDto seed, IProjectAppService projectAppService)
+        public static IProject Create(ProjectDto seed, IProjectAppService projectAppService, IEnhancedCommand<Result> invest)
         {
             return seed.ProjectType switch
             {
-                Angor.Shared.Models.ProjectType.Invest => new InvestmentProject.InvestmentProject(seed, projectAppService),
-                Angor.Shared.Models.ProjectType.Fund => new FundProject.FundProject(seed, projectAppService),
+                Angor.Shared.Models.ProjectType.Invest => new InvestmentProject.InvestmentProject(seed, projectAppService, invest),
+                Angor.Shared.Models.ProjectType.Fund => new FundProject.FundProject(seed, projectAppService, invest),
                 _ => throw new ArgumentOutOfRangeException(nameof(seed.ProjectType), "Unsupported project type")
             };
         }

@@ -2,6 +2,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Angor.Sdk.Funding.Projects;
+using AngorApp.Core.Factories;
 using AngorApp.Model.Common;
 using AngorApp.Model.ProjectsV2.FundProject;
 using AngorApp.Model.ProjectsV2.InvestmentProject;
@@ -15,7 +16,6 @@ using Zafiro.Reactive;
 using Zafiro.UI.Navigation;
 using Zafiro.UI.Shell.Utils;
 using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
-using ProjectStatus = AngorApp.Model.ProjectsV2.ProjectStatus;
 
 namespace AngorApp.UI.Sections.MyProjects;
 
@@ -25,6 +25,7 @@ public partial class MyProjectsSectionViewModel : ReactiveObject, IMyProjectsSec
 {
     private readonly CompositeDisposable disposable = new();
     private readonly IProjectAppService projectAppService;
+    private readonly IProjectInvestCommandFactory projectInvestCommandFactory;
     private readonly IWalletContext walletContext;
     private readonly Func<ProjectId, IManageFundsViewModel> manageFundsFactory;
     private readonly INavigator navigator;
@@ -34,12 +35,14 @@ public partial class MyProjectsSectionViewModel : ReactiveObject, IMyProjectsSec
     public MyProjectsSectionViewModel(
         UIServices uiServices,
         IProjectAppService projectAppService,
+        IProjectInvestCommandFactory projectInvestCommandFactory,
         ICreateProjectFlow createProjectFlow,
         IWalletContext walletContext,
         Func<ProjectId, IManageFundsViewModel> manageFundsFactory,
         INavigator navigator)
     {
         this.projectAppService = projectAppService;
+        this.projectInvestCommandFactory = projectInvestCommandFactory;
         this.walletContext = walletContext;
         this.manageFundsFactory = manageFundsFactory;
         this.navigator = navigator;
@@ -59,7 +62,7 @@ public partial class MyProjectsSectionViewModel : ReactiveObject, IMyProjectsSec
         var projectChanges = projectsCollection.Changes;
         Projects = projectsCollection.Items;
 
-        ActiveProjectsCount = projectChanges.FilterOnObservable(item => item.Project.ProjectStatus.Select(status => status == ProjectStatus.Open)).Count();
+        ActiveProjectsCount = projectChanges.FilterOnObservable(IsActive).Count();
 
         TotalRaised = projectChanges.TransformOnObservable(item =>
                                     {
@@ -82,13 +85,26 @@ public partial class MyProjectsSectionViewModel : ReactiveObject, IMyProjectsSec
         ProjectStatsLoadCompletedCount = projectStatsLoadCompletedCount;
     }
 
+    private static IObservable<bool> IsActive(IMyProjectItem item)
+    {
+        if (item.Project is IFundProject)
+        {
+            return Observable.Return(true);
+        } else if (item.Project is IInvestmentProject investmentProject)
+        {
+            return investmentProject.IsFundingOpen;
+        }
+        
+        return Observable.Return(false);
+    }
+
     private async Task<Result<IEnumerable<IMyProjectItem>>> DoLoadProjects()
     {
         // await Task.Delay(5000);
         return await walletContext
             .Require()
             .Bind(wallet => projectAppService.GetFounderProjects(wallet.Id))
-            .Map(response => response.Projects.Select(dto => (IMyProjectItem)new MyProjectItem(dto, projectAppService, manageFundsFactory, navigator)));
+            .Map(response => response.Projects.Select(dto => (IMyProjectItem)new MyProjectItem(dto, projectAppService, projectInvestCommandFactory, manageFundsFactory, navigator)));
     }
 
     private async Task<Result> DoRefreshProjectStats()

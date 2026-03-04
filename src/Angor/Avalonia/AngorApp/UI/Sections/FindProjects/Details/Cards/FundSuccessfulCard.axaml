@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fund="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
+             xmlns:samples="clr-namespace:AngorApp.Model.Funded.Fund.Samples;assembly=AngorApp.Model"
+             mc:Ignorable="d"
+             x:Class="AngorApp.UI.Sections.FindProjects.Details.Cards.FundSuccessfulCard"
+             ClipToBounds="False" d:DesignHeight="300"
+             x:DataType="fund:IFundProject">
+
+    <Design.DataContext>
+        <samples:FundProjectSample />
+    </Design.DataContext>
+    
+    <Border Classes="ColorPanel DarkGreen Shadow">
+        <StackPanel VerticalAlignment="Center" Classes="Gap-XL">
+            <Border Background="#3F808080" Width="64" Height="64" Classes="Circle" IconOptions.Fill="{DynamicResource Surface}">
+                <Border.Child>
+                    <ContentControl IconOptions.Size="24" Content="{Icon fa-regular fa-circle-check}"></ContentControl>
+                </Border.Child>
+            </Border>
+            <TextBlock Classes="Size-XL Weight-Bold Center">Project Successfully Funded!</TextBlock>
+            <TextBlock Classes="Size-M Weight-Light Wrap Center">
+                <TextBlock.Inlines>
+                    <Run>Reached goal of </Run>
+                    <Run Text="{Binding Goal.DecimalString}" />
+                    <Run> (100% of target)</Run>
+                </TextBlock.Inlines>
+            </TextBlock>
+        </StackPanel>
+    </Border>
+</UserControl>

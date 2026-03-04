@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:inv="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
+             xmlns:samples="clr-namespace:AngorApp.Model.Funded.Investment.Samples;assembly=AngorApp.Model"
+             mc:Ignorable="d"
+             x:Class="AngorApp.UI.Sections.FindProjects.Details.Cards.InvestmentFailedCard"
+             ClipToBounds="False"
+             x:DataType="inv:IInvestmentProject">
+    
+    <Design.DataContext>
+        <samples:InvestmentProjectSample />
+    </Design.DataContext>
+
+    <Border Classes="ColorPanel White Shadow">
+        <StackPanel VerticalAlignment="Center" Classes="Gap-XL">
+            <Border Background="#3F808080" Width="64" Height="64" Classes="Circle" IconOptions.Fill="{DynamicResource Dimmed}">
+                <Border.Child>
+                    <ContentControl IconOptions.Size="24" Content="{Icon fa-regular fa-clock}"></ContentControl>
+                </Border.Child>
+            </Border>
+            <TextBlock Classes="Size-XL Weight-Bold Strong Center">Investment Period Closed</TextBlock>
+            <TextBlock Classes="Size-M Weight-Light Wrap Center">
+                <TextBlock.Inlines>
+                    <Run>Raised</Run>
+                    <Run Text="{Binding Raised^.DecimalString}"></Run>
+                    <Run>of</Run>
+                    <Run Text="{Binding Target.DecimalString}"></Run>
+                    <Run>goal</Run>
+                    <Run Text="{Binding InvestmentProgress^, StringFormat='({0:p0} funded)'}"></Run>
+                </TextBlock.Inlines>
+            </TextBlock>
+        </StackPanel>
+    </Border>
+</UserControl>

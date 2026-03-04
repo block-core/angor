@@ -1,6 +1,7 @@
 using System.Reactive.Disposables;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Operations;
+using AngorApp.Core.Factories;
 using AngorApp.Model.ProjectsV2;
 using AngorApp.UI.Sections.FindProjects.Details;
 using DynamicData;
@@ -15,13 +16,19 @@ namespace AngorApp.UI.Sections.FindProjects;
 public class FindProjectsSectionViewModel : IFindProjectsSectionViewModel, IDisposable
 {
     private readonly IProjectAppService projectAppService;
+    private readonly IProjectInvestCommandFactory projectInvestCommandFactory;
     private readonly Func<IProject, IDetailsViewModel> detailsFactory;
     private readonly CompositeDisposable disposable = new();
     private readonly INavigator navigator;
 
-    public FindProjectsSectionViewModel(IProjectAppService projectAppService, Func<IProject, IDetailsViewModel> detailsFactory, INavigator navigator)
+    public FindProjectsSectionViewModel(
+        IProjectAppService projectAppService,
+        IProjectInvestCommandFactory projectInvestCommandFactory,
+        Func<IProject, IDetailsViewModel> detailsFactory,
+        INavigator navigator)
     {
         this.projectAppService = projectAppService;
+        this.projectInvestCommandFactory = projectInvestCommandFactory;
         this.detailsFactory = detailsFactory;
         this.navigator = navigator;
         LoadProjects = EnhancedCommand.Create(DoLoadItems).DisposeWith(disposable);
@@ -43,7 +50,7 @@ public class FindProjectsSectionViewModel : IFindProjectsSectionViewModel, IDisp
         return projectAppService
                .Latest(new LatestProjects.LatestProjectsRequest())
                .Map(response => response.Projects.Select(dto =>
-                                                             new FindProjectItem(dto, projectAppService, detailsFactory, navigator)));
+                                                             new FindProjectItem(dto, projectAppService, projectInvestCommandFactory, detailsFactory, navigator)));
     }
 
     public IEnumerable<IFindProjectItem> Projects { get; }

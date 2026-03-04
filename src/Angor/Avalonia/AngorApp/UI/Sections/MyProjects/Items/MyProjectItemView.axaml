@@ -39,19 +39,19 @@
             </EdgePanel>
 
             <TextBlock Classes="Text-Dimmed Wrap" Text="{Binding Project.Description}" MaxLines="2" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Classes="Size-XS" Text="{Binding Project.SupporterCount^, TargetNullValue='', StringFormat='{}{0} Supporters'}" />
-                <TextBlock Grid.Column="1" Classes="Strong" Text="{Binding Project.FundingRaised^.ShortDecimalString, FallbackValue='...'}" />
-            </Grid>
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Classes="Size-XS" Text="Target" />
-                <TextBlock Grid.Column="1" Text="{Binding Project.FundingTarget.ShortDecimalString}" />
-            </Grid>
-            <ProgressBar IsIndeterminate="{Binding Project.Refresh.IsExecuting^}"
-                         Classes.Red="{Binding Project.ProjectStatus^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static project:ProjectStatus.Closed}}"
-                         Height="8"
-                         Value="{Binding Project.FundingRaised^.Sats, FallbackValue=0}"
-                         Maximum="{Binding Project.FundingTarget.Sats}" />
+            <!-- <Grid ColumnDefinitions="*,Auto"> -->
+            <!--     <TextBlock Classes="Size-XS" Text="{Binding Project.SupporterCount^, TargetNullValue='', StringFormat='{}{0} Supporters'}" /> -->
+            <!--     <TextBlock Grid.Column="1" Classes="Strong" Text="{Binding Project.FundingRaised^.ShortDecimalString, FallbackValue='...'}" /> -->
+            <!-- </Grid> -->
+            <!-- <Grid ColumnDefinitions="*,Auto"> -->
+            <!--     <TextBlock Classes="Size-XS" Text="Target" /> -->
+            <!--     <TextBlock Grid.Column="1" Text="{Binding Project.FundingTarget.ShortDecimalString}" /> -->
+            <!-- </Grid> -->
+            <!-- <ProgressBar IsIndeterminate="{Binding Project.Refresh.IsExecuting^}" -->
+            <!--              Classes.Red="{Binding Project.ProjectStatus^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static project:ProjectStatus.Closed}}" -->
+            <!--              Height="8" -->
+            <!--              Value="{Binding Project.FundingRaised^.Sats, FallbackValue=0}" -->
+            <!--              Maximum="{Binding Project.FundingTarget.Sats}" /> -->
             <EnhancedButton HorizontalContentAlignment="Center" Icon="{Icon fa-regular fa-clipboard}" Content="Manage Funds" Command="{Binding ManageFunds}" Classes="Outline" HorizontalAlignment="Stretch" />
         </StackPanel>
     </Border>

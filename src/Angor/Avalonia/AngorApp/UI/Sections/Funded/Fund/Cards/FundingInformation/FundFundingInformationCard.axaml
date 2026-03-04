@@ -30,8 +30,8 @@
 
         <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder"
                       HeaderPanelClasses=""
-                      Left="Funding Status"
+                      Left="Funding Model"
                       Right="{Icon fa-check}"
-                      Content="{Binding Project.Status}" />
+                      Content="Continuous" />
     </BalancedWrapGrid>
 </UserControl>
