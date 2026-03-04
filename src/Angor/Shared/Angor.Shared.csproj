@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Nullable>enable</Nullable>
@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CSharpFunctionalExtensions" Version="3.6.0" />
     <PackageReference Include="Blockcore.Core" Version="1.1.41" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.5" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.5" />
@@ -26,4 +27,5 @@
   <ItemGroup>
     <PackageReference Update="Microsoft.SourceLink.GitHub" Version="8.0.0" />
   </ItemGroup>
+
 </Project>
