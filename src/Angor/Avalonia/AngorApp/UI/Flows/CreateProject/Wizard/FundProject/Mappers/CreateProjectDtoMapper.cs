@@ -81,6 +81,7 @@ public static class CreateProjectDtoMapper
             // Override the payout day with the user's chosen value
             matchingStandard.PayoutDayType = payoutDayType;
             matchingStandard.PayoutDay = payoutDay;
+            matchingStandard.Description = matchingStandard.GenerateDescription();
 
             return matchingStandard;
         }).ToList();

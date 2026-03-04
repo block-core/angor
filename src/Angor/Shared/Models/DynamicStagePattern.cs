@@ -63,6 +63,83 @@ public class DynamicStagePattern
     public bool HasFixedAmount => Amount.HasValue && Amount.Value > 0;
 
     /// <summary>
+    /// Gets a dynamically generated description based on the pattern's actual properties.
+    /// Always reflects the current PayoutDay, Frequency, and StageCount values,
+    /// regardless of what is stored in the <see cref="Description"/> field.
+    /// </summary>
+    public string DisplayDescription => GenerateDescription();
+
+    /// <summary>
+    /// Generates a human-readable description of this pattern based on its actual properties.
+    /// Use this instead of the stored <see cref="Description"/> to ensure the text reflects
+    /// the actual configured payout day and frequency.
+    /// </summary>
+    public string GenerateDescription()
+    {
+        return PayoutDayType switch
+        {
+            PayoutDayType.SpecificDayOfMonth => GenerateMonthlyDescription(),
+            PayoutDayType.SpecificDayOfWeek => GenerateWeeklyDescription(),
+            PayoutDayType.FromStartDate => GenerateFromStartDateDescription(),
+            _ => $"{StageCount} {Frequency.ToString().ToLower()} payments"
+        };
+    }
+
+    private string GenerateMonthlyDescription()
+    {
+        string frequencyText = Frequency switch
+        {
+            StageFrequency.Monthly => "monthly",
+            StageFrequency.BiMonthly => "bi-monthly",
+            StageFrequency.Quarterly => "quarterly",
+            _ => Frequency.ToString().ToLower()
+        };
+        string dayPhrase = Frequency == StageFrequency.Monthly
+            ? $"on the {GetOrdinal(PayoutDay)} of each month"
+            : $"on the {GetOrdinal(PayoutDay)} of the payment month";
+        return $"{StageCount} {frequencyText} payments {dayPhrase}";
+    }
+
+    private string GenerateWeeklyDescription()
+    {
+        string dayName = ((DayOfWeek)PayoutDay).ToString();
+        string frequencyText = Frequency switch
+        {
+            StageFrequency.Weekly => "weekly",
+            StageFrequency.Biweekly => "biweekly",
+            _ => Frequency.ToString().ToLower()
+        };
+        return $"{StageCount} {frequencyText} payments every {dayName}";
+    }
+
+    private string GenerateFromStartDateDescription()
+    {
+        string frequencyText = Frequency switch
+        {
+            StageFrequency.Weekly => "every week",
+            StageFrequency.Biweekly => "every 2 weeks",
+            StageFrequency.Monthly => "monthly",
+            StageFrequency.BiMonthly => "every 2 months",
+            StageFrequency.Quarterly => "quarterly",
+            _ => Frequency.ToString().ToLower()
+        };
+        return $"{StageCount} payments {frequencyText} from start date";
+    }
+
+    private static string GetOrdinal(int number)
+    {
+        if (number >= 11 && number <= 13)
+            return $"{number}th";
+        return (number % 10) switch
+        {
+            1 => $"{number}st",
+            2 => $"{number}nd",
+            3 => $"{number}rd",
+            _ => $"{number}th"
+        };
+    }
+
+    /// <summary>
     /// Gets a collection of standard predefined patterns for Fund and Subscribe projects.
     /// Includes various monthly, biweekly, weekly, and quarterly options.
     /// </summary>
