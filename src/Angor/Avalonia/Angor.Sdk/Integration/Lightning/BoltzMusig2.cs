@@ -1,5 +1,4 @@
 using System.Security.Cryptography;
-using NBitcoin;
 using NBitcoin.Secp256k1;
 using Microsoft.Extensions.Logging;
 using CryptoSHA256 = System.Security.Cryptography.SHA256;
