@@ -19,7 +19,6 @@
         <PackageReference Include="Serilog" />
         <PackageReference Include="Serilog.Extensions.Logging" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" />
-        <PackageReference Include="Zafiro" />
     </ItemGroup>
     
     <ItemGroup>

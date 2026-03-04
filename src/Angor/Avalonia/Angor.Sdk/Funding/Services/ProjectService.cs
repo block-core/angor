@@ -7,7 +7,6 @@ using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.DependencyInjection;
-using Zafiro.CSharpFunctionalExtensions;
 using Stage = Angor.Sdk.Funding.Projects.Domain.Stage;
 
 namespace Angor.Sdk.Funding.Services;
@@ -125,12 +124,12 @@ public class ProjectService(
         return ids
             .Select(id => Result.Try(() => angorIndexerService.GetProjectByIdAsync(id.Value).AsMaybe()))
             .CombineInOrder()
-            .Map(maybes => maybes.Values());
+            .Map(maybes => maybes.Where(m => m.HasValue).Select(m => m.Value));
     }
 
     public Task<Result<Project>> GetAsync(ProjectId id)
     {
-        return GetSingle(id).ToResult($"Project not found: {id.Value}");
+       throw new NotImplementedException();
     }
 
     public Task<Result<Maybe<Project>>> TryGetAsync(ProjectId projectId)
