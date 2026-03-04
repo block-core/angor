@@ -1,3 +1,4 @@
+<<<<<<<< HEAD:src/Angor/Shared/Integration/Lightning/Models/BoltzConfiguration.cs
 namespace Angor.Shared.Integration.Lightning.Models
 {
     /// <summary>
@@ -33,3 +34,6 @@ namespace Angor.Shared.Integration.Lightning.Models
     }
 }
 
+========
+// Moved to Angor.Shared.Integration.Lightning.Models — see LightningGlobalUsings.cs
+>>>>>>>> 2f47cc51 (Refactor Boltz integration: move models and services to Angor.Shared.Integration.Lightning namespace):src/Angor/Avalonia/Angor.Sdk/Integration/Lightning/Models/BoltzConfiguration.cs

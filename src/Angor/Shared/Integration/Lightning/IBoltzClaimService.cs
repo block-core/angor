@@ -1,3 +1,4 @@
+<<<<<<<< HEAD:src/Angor/Shared/Integration/Lightning/IBoltzClaimService.cs
 using Angor.Shared.Integration.Lightning.Models;
 using CSharpFunctionalExtensions;
 
@@ -26,3 +27,6 @@ public record BoltzClaimResult(
     string ClaimTransactionId,
     string ClaimTransactionHex);
 
+========
+// Moved to Angor.Shared.Integration.Lightning — see LightningGlobalUsings.cs
+>>>>>>>> 2f47cc51 (Refactor Boltz integration: move models and services to Angor.Shared.Integration.Lightning namespace):src/Angor/Avalonia/Angor.Sdk/Integration/Lightning/IBoltzClaimService.cs

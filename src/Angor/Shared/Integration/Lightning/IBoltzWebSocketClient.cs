@@ -1,3 +1,4 @@
+<<<<<<<< HEAD:src/Angor/Shared/Integration/Lightning/IBoltzWebSocketClient.cs
 using Angor.Shared.Integration.Lightning.Models;
 using CSharpFunctionalExtensions;
 
@@ -17,4 +18,7 @@ public interface IBoltzWebSocketClient
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default);
 }
+========
+// Moved to Angor.Shared.Integration.Lightning — see LightningGlobalUsings.cs
+>>>>>>>> 2f47cc51 (Refactor Boltz integration: move models and services to Angor.Shared.Integration.Lightning namespace):src/Angor/Avalonia/Angor.Sdk/Integration/Lightning/IBoltzWebSocketClient.cs
 
