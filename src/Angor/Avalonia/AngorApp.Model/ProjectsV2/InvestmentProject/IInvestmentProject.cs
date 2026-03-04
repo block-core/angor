@@ -6,6 +6,10 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
     {
         public IAmountUI Target { get; }
         public IObservable<IAmountUI> Raised { get; }
+        public IObservable<IAmountUI> TotalInvestment { get; }
+        public IObservable<IAmountUI> AvailableBalance { get; }
+        public IObservable<IAmountUI> Withdrawable { get; }
+        public IObservable<int> TotalStages { get; }
         public IObservable<IReadOnlyCollection<IStage>> Stages { get; }
         public IObservable<int> InvestorCount { get; }
         public DateTimeOffset FundingStart { get; }

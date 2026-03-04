@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fundProject="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
+             xmlns:claim="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Fund.Claim"
+             xmlns:stage="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim.Stage"
+             mc:Ignorable="d"
+             d:DesignWidth="900"
+             x:Class="AngorApp.UI.Sections.MyProjects.ManageFunds.Fund.Claim.ClaimView"
+             x:DataType="claim:IClaimViewModel">
+
+    <Design.DataContext>
+        <claim:ClaimViewModelSample />
+    </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Load}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <Loading ClipToBounds="False" IsLoading="{Binding Load.IsExecuting^}">
+        <HeaderedContainer Header="Payments" Classes="Card White MediumBigHeader Shadow">
+            <StackPanel Classes="Gap-L">
+                <TextBlock Classes="Size-M">
+                    Review each payment date and claim available UTXOs into your Angor wallet.
+                </TextBlock>
+                <ItemsControl Classes="Vertical" ItemsSource="{Binding Stages}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <stage:ClaimStageView />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </HeaderedContainer>
+    </Loading>
+</UserControl>

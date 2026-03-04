@@ -6,7 +6,7 @@
              mc:Ignorable="d"
              d:DesignWidth="400"
              ClipToBounds="False"
-             x:Class="AngorApp.UI.Sections.Funded.Fund.Cards.PendingFounderSignaturesCard"
+             x:Class="AngorApp.UI.Sections.Funded.Fund.Cards.Actions.PendingFounderSignaturesCard"
              x:DataType="model:IFunded">
 
     <Border Classes="ColorPanel ApricotGradient Shadow">

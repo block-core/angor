@@ -1,4 +1,4 @@
-namespace AngorApp.UI.Sections.Funded.Fund.Cards;
+namespace AngorApp.UI.Sections.Funded.Fund.Cards.Actions;
 
 public partial class InvestedCard : UserControl
 {

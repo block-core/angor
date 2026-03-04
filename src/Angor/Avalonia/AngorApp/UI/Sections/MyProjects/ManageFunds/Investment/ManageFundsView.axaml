@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ctrl="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:common="clr-namespace:AngorApp.UI.Shared.Controls.Common"
+             xmlns:l="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds"
+             xmlns:r="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Release"
+             xmlns:c="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Claim"
+             xmlns:investment="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Investment"
+             xmlns:claim="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim"
+             xmlns:release="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Release"
+             mc:Ignorable="d" d:DesignWidth="1200"
+             x:Class="AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.ManageFundsView" x:DataType="investment:IManageFundsViewModel">
+
+    <Design.DataContext>
+        <investment:ManageFundsViewModelSample />
+    </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Project.Refresh}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <UserControl.Styles>
+        <Style Selector="BalancedWrapGrid">
+            <Setter Property="HorizontalSpacing" Value="24" />
+            <Setter Property="VerticalSpacing" Value="24" />
+        </Style>
+    </UserControl.Styles>
+
+    <ctrl:ScrollableView>
+        <StackPanel Classes="Gap-XL">
+            <Loading IsLoading="{Binding Project.Refresh.IsExecuting^}" ClipToBounds="False">
+                <StackPanel Classes="Gap-XL">
+                    <Border Classes="ColorPanel White Shadow">
+                        <DockPanel>
+                            <common:CopyButton DockPanel.Dock="Right" VerticalAlignment="Center" />
+                            <HeaderedContainer Header="Project ID" Content="{Binding Project.Id.Value}" />
+                        </DockPanel>
+                    </Border>
+                    <HeaderedContainer x:Name="ProjectStatistics" Classes="Card Apricot Shadow" ClipToBounds="False">
+                        <HeaderedContainer.Header>
+                            <EdgePanel ContentClasses="Size-XL BlackText" IconOptions.Fill="{DynamicResource BitcoinOrange}" IconOptions.Size="48" IconOptions.Padding="5" StartContent="{Icon fa-bitcoin}"
+                                       Content="Project Statistics" />
+                        </HeaderedContainer.Header>
+                        <BalancedWrapGrid MinItemWidth="160">
+                            <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Investment" Content="{Binding Project.TotalInvestment^.ShortDecimalString}" />
+                            <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Available Balance" Content="{Binding Project.AvailableBalance^.ShortDecimalString}" />
+                            <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Withdrawable" Content="{Binding Project.Withdrawable^.ShortDecimalString}" />
+                            <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Total Stages" Content="{Binding Project.TotalStages^}" />
+                        </BalancedWrapGrid>
+                    </HeaderedContainer>
+                </StackPanel>
+            </Loading>
+            <claim:ClaimView IsVisible="{Binding !Project.IsFundingFailed}" ClipToBounds="False" DataContext="{Binding ClaimViewModel^}" />
+            <release:ReleaseView IsVisible="{Binding Project.IsFundingFailed^}" DataContext="{Binding ReleaseViewModel^}" ClipToBounds="False" />
+        </StackPanel>
+    </ctrl:ScrollableView>
+</UserControl>

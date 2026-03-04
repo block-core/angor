@@ -13,6 +13,7 @@ namespace AngorApp.Model.ProjectsV2
         string NostrNpubKeyHex { get; }
         Uri? InformationUri { get; }
         IEnhancedCommand<Result> Invest { get; }
+        IEnhancedCommand ManageFunds { get; }
         IEnhancedCommand Refresh { get; }
     }
 }

@@ -5,17 +5,18 @@
              xmlns:founder="clr-namespace:Angor.Sdk.Funding.Founder;assembly=Angor.Sdk"
              xmlns:cards="clr-namespace:AngorApp.UI.Sections.Funded.Fund.Cards"
              xmlns:model="clr-namespace:AngorApp.Model.Funded.Shared.Model;assembly=AngorApp.Model"
+             xmlns:actions="clr-namespace:AngorApp.UI.Sections.Funded.Fund.Cards.Actions"
              mc:Ignorable="d"
              d:DesignWidth="400"
              ClipToBounds="False"
-             x:Class="AngorApp.UI.Sections.Funded.Fund.Cards.FundActionsCard"
+             x:Class="AngorApp.UI.Sections.Funded.Fund.Cards.Actions.FundActionsCard"
              x:DataType="model:IFunded">
     
         <StackPanel Classes="Gap-XL">
-            <cards:InvestedCard x:Name="Invested" IsVisible="False" />
-            <cards:PendingFounderSignaturesCard x:Name="WaitingForApproval" IsVisible="False" />
-            <cards:FounderSignaturesReceivedCard x:Name="ApprovalReceived" IsVisible="False" />
-            <cards:InvalidCard x:Name="Invalid" IsVisible="False" />
+            <actions:InvestedCard x:Name="Invested" IsVisible="False" />
+            <actions:PendingFounderSignaturesCard x:Name="WaitingForApproval" IsVisible="False" />
+            <actions:FounderSignaturesReceivedCard x:Name="ApprovalReceived" IsVisible="False" />
+            <actions:InvalidCard x:Name="Invalid" IsVisible="False" />
 
             <Interaction.Behaviors>
                 <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.Invested}">

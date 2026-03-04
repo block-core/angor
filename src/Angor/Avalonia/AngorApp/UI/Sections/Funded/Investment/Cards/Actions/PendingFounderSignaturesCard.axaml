@@ -5,7 +5,7 @@
              xmlns:model="clr-namespace:AngorApp.Model.Funded.Shared.Model;assembly=AngorApp.Model"
              mc:Ignorable="d"
              d:DesignWidth="400"
-             x:Class="AngorApp.UI.Sections.Funded.Investment.Cards.PendingFounderSignaturesCard"
+             x:Class="AngorApp.UI.Sections.Funded.Investment.Cards.Actions.PendingFounderSignaturesCard"
              ClipToBounds="False"
              x:DataType="model:IFunded">
 
