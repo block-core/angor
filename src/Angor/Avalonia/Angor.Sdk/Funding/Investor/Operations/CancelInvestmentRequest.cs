@@ -1,5 +1,4 @@
 using Angor.Sdk.Common;
-using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
@@ -26,6 +25,7 @@ public static class CancelInvestmentRequest
 
     public class CancelInvestmentRequestHandler(
         IPortfolioService portfolioService,
+        IAngorIndexerService angorIndexerService,
         INetworkConfiguration networkConfiguration,
         IWalletAccountBalanceService walletAccountBalanceService,
         IMediator mediator) : IRequestHandler<CancelInvestmentRequestRequest, Result<CancelInvestmentRequestResponse>>
@@ -39,6 +39,11 @@ public static class CancelInvestmentRequest
 
             if (record == null)
                 return Result.Failure<CancelInvestmentRequestResponse>("Investment record not found.");
+
+            // Check if this specific transaction is already published on-chain; if so, cancellation is not allowed
+            var publishedInvestment = await angorIndexerService.GetInvestmentAsync(request.ProjectId.Value, record.InvestorPubKey);
+            if (publishedInvestment != null && publishedInvestment.TransactionId == record.InvestmentTransactionHash)
+                return Result.Failure<CancelInvestmentRequestResponse>("Cannot cancel investment: the transaction has already been published to the blockchain.");
 
             // Release reserved UTXOs before removing the investment record
             if (!string.IsNullOrEmpty(record.InvestmentTransactionHex))

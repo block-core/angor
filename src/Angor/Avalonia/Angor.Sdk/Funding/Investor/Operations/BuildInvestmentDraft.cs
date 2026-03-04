@@ -1,4 +1,5 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
@@ -36,6 +37,7 @@ public static class BuildInvestmentDraft
             IWalletOperations walletOperations,
             IDerivationOperations derivationOperations,
             IWalletAccountBalanceService walletAccountBalanceService,
+            IPortfolioService portfolioService,
             ILogger<BuildInvestmentDraftHandler> logger)
         : IRequestHandler<BuildInvestmentDraftRequest, Result<BuildInvestmentDraftResponse>>
     {
@@ -65,6 +67,24 @@ public static class BuildInvestmentDraft
 
                 // Derive investor key
                 var investorKey = derivationOperations.DeriveInvestorKey(walletWords, project.FounderKey);
+
+                // Check if the investor has already invested in this project
+                var portfolioResult = await portfolioService.GetByWalletId(transactionRequest.WalletId.Value);
+                if (portfolioResult.IsFailure)
+                {
+                    logger.LogWarning("Could not check existing investments for wallet {WalletId}: {Error}. Proceeding with investment.", transactionRequest.WalletId, portfolioResult.Error);
+                }
+                else
+                {
+                    var existingInvestment = portfolioResult.Value?.ProjectIdentifiers
+                        .FirstOrDefault(i => i.ProjectIdentifier == transactionRequest.ProjectId.Value);
+
+                    if (existingInvestment != null)
+                    {
+                        logger.LogWarning("Investor has already invested in project {ProjectId}", transactionRequest.ProjectId);
+                        return Result.Failure<BuildInvestmentDraftResponse>("You have already invested in this project.");
+                    }
+                }
 
                 // Convert Project to ProjectInfo
                 var projectInfo = project.ToProjectInfo();
