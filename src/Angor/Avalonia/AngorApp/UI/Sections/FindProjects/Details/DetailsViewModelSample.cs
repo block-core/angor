@@ -1,3 +1,4 @@
+using AngorApp.Model.Funded.Fund.Samples;
 using AngorApp.Model.Funded.Investment.Samples;
 using AngorApp.Model.ProjectsV2;
 
@@ -7,7 +8,7 @@ public class DetailsViewModelSample : IDetailsViewModel
 {
     public DetailsViewModelSample()
     {
-        Project = new InvestmentProjectSample();
+        Project = new FundProjectSample();
     }
 
     public IProject Project { get; }

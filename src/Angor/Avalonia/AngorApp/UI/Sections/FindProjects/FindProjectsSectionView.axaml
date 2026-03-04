@@ -68,7 +68,7 @@
                                             <DataTemplate DataType="investmentProject:IInvestmentProject">
                                                 <Grid>
                                                     <TextBlock Text="Target" />
-                                                    <TextBlock Classes="Strong" HorizontalAlignment="Right" Text="{Binding FundingTarget.DecimalString}" MaxLines="2" TextWrapping="Wrap" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
+                                                    <TextBlock Classes="Strong" HorizontalAlignment="Right" Text="{Binding Target.DecimalString}" MaxLines="2" TextWrapping="Wrap" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
                                                 </Grid>
                                             </DataTemplate>
                                             <DataTemplate DataType="fundProject:IFundProject">
@@ -80,9 +80,7 @@
                                         </ContentControl.DataTemplates>
                                     </ContentControl>
                                     
-                                   
-                                    <ProgressBar IsIndeterminate="{Binding Project.Refresh.IsExecuting^}" Foreground="{DynamicResource ProgressBrush}" Background="{DynamicResource AppBackground}" Height="8"
-                                                 Value="{Binding Project.FundingRaised^.Sats, FallbackValue=0}" Maximum="{Binding Project.FundingTarget.Sats}" />
+                                   <controls:ProjectProgress DataContext="{Binding Project}" />
                                 </StackPanel>
 
                                 <Interaction.Behaviors>

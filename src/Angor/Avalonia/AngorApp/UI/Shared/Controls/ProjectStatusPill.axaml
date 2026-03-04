@@ -3,6 +3,8 @@
              xmlns:project="clr-namespace:AngorApp.Model.ProjectsV2;assembly=AngorApp.Model"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:samples="clr-namespace:AngorApp.Model.Funded.Investment.Samples;assembly=AngorApp.Model"
+             xmlns:fundProject="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
+             xmlns:investmentProject="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
              x:Class="AngorApp.UI.Shared.Controls.ProjectStatusPill"
              x:DataType="project:IProject">
 
@@ -10,18 +12,25 @@
         <samples:InvestmentProjectSample />
     </Design.DataContext>
 
-    <Loading Classes="Pill" IsLoading="{Binding Refresh.IsExecuting^}">
-        <ContentControl Classes="Pill"
-                        Classes.BrightGreen="{Binding ProjectStatus^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static project:ProjectStatus.Open}}"
-                        Classes.Red="{Binding ProjectStatus^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static project:ProjectStatus.Closed}}">
-            <Interaction.Behaviors>
-                <BindingTriggerBehavior Binding="{Binding ProjectStatus^}" Value="{x:Static project:ProjectStatus.Open}">
-                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="OPEN" />
-                </BindingTriggerBehavior>
-                <BindingTriggerBehavior Binding="{Binding ProjectStatus^}" Value="{x:Static project:ProjectStatus.Closed}">
-                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="CLOSED" />
-                </BindingTriggerBehavior>
-            </Interaction.Behaviors>
-        </ContentControl>
-    </Loading>
+    <ContentControl Content="{Binding}">
+        <ContentControl.DataTemplates>
+            <DataTemplate DataType="fundProject:IFundProject" />
+            <DataTemplate DataType="investmentProject:IInvestmentProject">
+                <Loading Classes="Pill" IsLoading="{Binding Refresh.IsExecuting^}">
+                    <ContentControl Classes="Pill"
+                                    Classes.BrightGreen="{Binding IsFundingOpen^}"
+                                    Classes.Red="{Binding !IsFundingOpen^}">
+                        <Interaction.Behaviors>
+                            <BindingTriggerBehavior Binding="{Binding IsFundingOpen^}" Value="True">
+                                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="OPEN" />
+                            </BindingTriggerBehavior>
+                            <BindingTriggerBehavior Binding="{Binding IsFundingOpen^}" Value="False">
+                                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="CLOSED" />
+                            </BindingTriggerBehavior>
+                        </Interaction.Behaviors>
+                    </ContentControl>
+                </Loading>
+            </DataTemplate>
+        </ContentControl.DataTemplates>
+    </ContentControl>
 </UserControl>

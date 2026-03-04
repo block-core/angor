@@ -6,6 +6,7 @@
              xmlns:a="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:c="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:cm="clr-namespace:AngorApp.UI.Shared.Controls.Common"
+             xmlns:cards="clr-namespace:AngorApp.UI.Sections.FindProjects.Details.Cards"
              xmlns:inv="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
              xmlns:fund="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
              mc:Ignorable="d"
@@ -25,7 +26,7 @@
                 <!-- Left Column: Header & Description -->
                 <OverlayBorder Classes="White Shadow" Padding="0" CornerRadius="16">
                     <StackPanel Grid.Column="0">
-                        <a:AdvancedImage CornerRadius="10 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140" Source="{Binding Project.BannerUrl}" />
+                        <a:AdvancedImage CornerRadius="10 10 0 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140" Source="{Binding Project.BannerUrl}" />
                         <Panel>
                             <Border Classes="Shadow" Height="60" Width="60" Margin="20 -30 0 0" HorizontalAlignment="Left" CornerRadius="30" />
                             <Border Height="60" Width="60" Margin="20 -30 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource AppBackground}">
@@ -40,30 +41,39 @@
                 </OverlayBorder>
 
                 <!-- Right Column: Investment Opportunity -->
-                <Border Grid.Column="1" Classes="ColorPanel DarkGreen Shadow" IsVisible="{Binding IsInsideInvestmentPeriod}">
-                    <StackPanel Classes="Gap-XL" VerticalAlignment="Center">
-                        <Border Height="64" Width="64" Classes="Circle" Background="#2BFCFFFF" >
-                            <ContentControl IconOptions.Size="32" IconOptions.Fill="White" Content="{Icon fa-bitcoin}" />
-                        </Border>
-                        <TextBlock Text="Investment Opportunity" FontSize="22" Classes="Size-L Weight-Bold Center" />
+                <ContentControl Grid.Column="1" ClipToBounds="False" Content="{Binding Project}">
+                    <ContentControl.DataTemplates>
+                        <DataTemplate DataType="inv:IInvestmentProject">
+                            <Panel Classes="Gap-XL">
+                                <cards:InvestmentOpenCard>
+                                    <cards:InvestmentOpenCard.IsVisible>
+                                        <Binding Path="IsFundingOpen^" />
+                                    </cards:InvestmentOpenCard.IsVisible>
+                                </cards:InvestmentOpenCard>
 
-                        <TextBlock Text="Join this project and be part of its journey to success" LineSpacing="5" Classes="Wrap Center Weight-Light" Margin="0 0" />
+                                <cards:InvestmentFailedCard>
+                                    <cards:InvestmentFailedCard.IsVisible>
+                                        <Binding Path="IsFundingFailed^" />
+                                    </cards:InvestmentFailedCard.IsVisible>
+                                </cards:InvestmentFailedCard>
 
-                        <EnhancedButton Content="Invest Now" Icon="{Icon fa-brands fa-bitcoin}"
-                                        Command="{Binding Invest}"
-                                        Classes="White"
-                                        HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Center"
-                                        FontSize="18"
-                                        Padding="24 14 "
-                                        FontWeight="Bold">
-                        </EnhancedButton>
-                    </StackPanel>
-                </Border>
+                                <cards:InvestmentSuccessfulCard>
+                                    <cards:InvestmentSuccessfulCard.IsVisible>
+                                        <Binding Path="IsFundingSuccessful^" />
+                                    </cards:InvestmentSuccessfulCard.IsVisible>
+                                </cards:InvestmentSuccessfulCard>
+                            </Panel>
+                        </DataTemplate>
+
+                        <DataTemplate DataType="fund:IFundProject">
+                            <cards:FundOpenCard />
+                        </DataTemplate>
+                    </ContentControl.DataTemplates>
+                </ContentControl>
             </Grid>
 
             <!-- Project Statistics (dispatched by project type) -->
-            <HeaderedContainer Classes="Card ApricotGradient Shadow BigHeader BigIcon">
+            <HeaderedContainer Classes="Card ApricotGradient Shadow BigHeader">
                 <HeaderedContainer.Header>
                     <EdgePanel StartContent="{Icon fa-bitcoin}" Content="Project Statistics " />
                 </HeaderedContainer.Header>
@@ -72,30 +82,30 @@
                         <DataTemplate DataType="inv:IInvestmentProject">
                             <StackPanel Spacing="15">
                                 <UniformGrid Columns="3" Margin="0 10" ColumnSpacing="16">
-                                    <c:NewCard ContainerClasses="Card ApricotBorder" Left="Target Amount" Content="{Binding Target.DecimalString}" Right="{Icon fa-bitcoin}" />
-                                    <c:NewCard ContainerClasses="Card ApricotBorder" Left="Total Raised" Content="{Binding Raised^.DecimalString}" Right="{Icon fa-clock}" />
+                                    <c:NewCard ContainerClasses="Card ApricotBorder" Left="Target Amount" Content="{Binding Target.DecimalString}" Right="{Icon fa-bitcoin}" LeftClasses="BrownText" ContentClasses="Size-XL" />
+                                    <c:NewCard ContainerClasses="Card ApricotBorder" Left="Total Raised" Content="{Binding Raised^.DecimalString}" Right="{Icon fa-clock}" LeftClasses="BrownText" ContentClasses="Size-XL" />
                                     <c:NewCard ContainerClasses="Card ApricotBorder" Left="Total Investors" Content="{Binding InvestorCount^}" Right="{Icon fa-clipboard}" LeftClasses="BrownText" ContentClasses="Size-XL" />
                                 </UniformGrid>
                                 <StackPanel Classes="Gap-M">
                                     <Grid ColumnDefinitions="*, Auto" Margin="0 0 0 5">
                                         <TextBlock Text="Funding Progress" Foreground="#4a4a4a" Classes="Size-S Weight-Bold" />
                                     </Grid>
-                                    <ProgressBar Grid.Row="1" Maximum="{Binding Target.Sats}" Value="{Binding Raised^.Sats, FallbackValue=0}" Height="12" />
+                                    <c:ProjectProgress />
                                 </StackPanel>
                             </StackPanel>
                         </DataTemplate>
                         <DataTemplate DataType="fund:IFundProject">
                             <StackPanel Spacing="15">
                                 <UniformGrid Columns="3" Margin="0 10" ColumnSpacing="16">
-                                    <c:NewCard ContainerClasses="Card ApricotBorder" Left="Goal Amount" Content="{Binding Goal.DecimalString}" Right="{Icon fa-bitcoin}" />
-                                    <c:NewCard ContainerClasses="Card ApricotBorder" Left="Total Funded" Content="{Binding Funded^.DecimalString}" Right="{Icon fa-clock}" />
-                                    <c:NewCard ContainerClasses="Card ApricotBorder" Left="Total Funders" Content="{ReflectionBinding Payments^.Count, FallbackValue=0}" Right="{Icon fa-clipboard}" LeftClasses="BrownText" ContentClasses="Size-XL" />
+                                    <c:NewCard ContainerClasses="Card ApricotBorder" Left="Goal Amount" Content="{Binding Goal.DecimalString}" Right="{Icon fa-bitcoin}" LeftClasses="BrownText" ContentClasses="Size-XL" />
+                                    <c:NewCard ContainerClasses="Card ApricotBorder" Left="Total Funded" Content="{Binding Funded^.DecimalString}" Right="{Icon fa-clock}" LeftClasses="BrownText" ContentClasses="Size-XL" />
+                                    <c:NewCard ContainerClasses="Card ApricotBorder" Left="Total Funders" Content="{ReflectionBinding FunderCount^, FallbackValue=0}" Right="{Icon fa-clipboard}" LeftClasses="BrownText" ContentClasses="Size-XL" />
                                 </UniformGrid>
                                 <StackPanel Classes="Gap-M">
                                     <Grid ColumnDefinitions="*, Auto" Margin="0 0 0 5">
                                         <TextBlock Text="Funding Progress" Foreground="#4a4a4a" Classes="Size-S Weight-Bold" />
                                     </Grid>
-                                    <ProgressBar Grid.Row="1" Maximum="{Binding Goal.Sats}" Value="{Binding Funded^.Sats, FallbackValue=0}" Height="12" />
+                                    <c:ProjectProgress />
                                 </StackPanel>
                             </StackPanel>
                         </DataTemplate>
@@ -104,38 +114,25 @@
             </HeaderedContainer>
 
             <!-- Funding Information (dispatched by project type) -->
-            <HeaderedContainer Classes="Card White Shadow BigHeader">
-                <HeaderedContainer.Header>
-                    <ContentControl Content="{Binding Project}">
-                        <ContentControl.DataTemplates>
-                            <DataTemplate DataType="inv:IInvestmentProject">
+            <ContentControl Content="{Binding Project}" IsVisible="{Binding $self.Content, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Type inv:IInvestmentProject}}">
+                <ContentControl.DataTemplates>
+                    <DataTemplate DataType="inv:IInvestmentProject">
+                        <HeaderedContainer Classes="Card White Shadow BigHeader">
+                            <HeaderedContainer.Header>
                                 <EdgePanel StartContent="{Icon fa-bitcoin}">Investment Information</EdgePanel>
-                            </DataTemplate>
-                            <DataTemplate DataType="fund:IFundProject">
-                                <EdgePanel StartContent="{Icon fa-bitcoin}">Funding Information</EdgePanel>
-                            </DataTemplate>
-                        </ContentControl.DataTemplates>
-                    </ContentControl>
-                </HeaderedContainer.Header>
-                <ContentControl ClipToBounds="False" Content="{Binding Project}">
-                    <ContentControl.DataTemplates>
-                        <DataTemplate DataType="inv:IInvestmentProject">
+                            </HeaderedContainer.Header>
                             <UniformGrid Columns="3" Margin="0 10" ColumnSpacing="16" RowSpacing="16">
                                 <c:NewCard ContainerClasses="Card ApricotBorder ThickBorder" Center="Funding Start" Content="{Binding FundingStart, StringFormat=m}" Right="{Icon fa-calendar}" HeaderPanelClasses="" />
                                 <c:NewCard ContainerClasses="Card ApricotBorder ThickBorder" Center="Funding End" Content="{Binding FundingEnd, StringFormat=m}" Right="{Icon fa-calendar}" HeaderPanelClasses="" />
                                 <c:NewCard ContainerClasses="Card ApricotBorder ThickBorder" Center="Stages" Content="{Binding Stages^.Count, FallbackValue=...}" Right="{Icon fa-layer-group}" HeaderPanelClasses="" />
                             </UniformGrid>
-                        </DataTemplate>
-                        <DataTemplate DataType="fund:IFundProject">
-                            <UniformGrid Columns="3" Margin="0 10" ColumnSpacing="16" RowSpacing="16">
-                                <c:NewCard ContainerClasses="Card ApricotBorder ThickBorder" Center="Funding Start" Content="{Binding FundingStart, StringFormat=m}" Right="{Icon fa-calendar}" HeaderPanelClasses="" />
-                                <c:NewCard ContainerClasses="Card ApricotBorder ThickBorder" Center="Funding End" Content="{Binding FundingEnd, StringFormat=m}" Right="{Icon fa-calendar}" HeaderPanelClasses="" />
-                                <c:NewCard ContainerClasses="Card ApricotBorder ThickBorder" Center="Status" Content="{Binding Status}" Right="{Icon fa-circle-info}" HeaderPanelClasses="" />
-                            </UniformGrid>
-                        </DataTemplate>
-                    </ContentControl.DataTemplates>
-                </ContentControl>
-            </HeaderedContainer>
+                        </HeaderedContainer>
+                    </DataTemplate>
+                    <DataTemplate DataType="fund:IFundProject">
+                        <!-- TODO: NOTHING FOR NOW -->
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
 
             <!-- Expandable: Project Details -->
             <Expander IsExpanded="False">

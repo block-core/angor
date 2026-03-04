@@ -1,30 +1,24 @@
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
-using Angor.Shared.Models;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.Reactive;
 
 namespace AngorApp.Model.ProjectsV2.FundProject
 {
     public class FundProject : Project, IFundProject
     {
-        public FundProject(ProjectDto seed, IProjectAppService projectAppService) : base(seed)
+        public FundProject(ProjectDto seed, IProjectAppService projectAppService, IEnhancedCommand<Result> invest) : base(seed, invest)
         {
             var refresh = EnhancedCommand.CreateWithResult(() => projectAppService.GetProjectStatistics(seed.Id));
-            Funded = refresh.Successes().Select(dto => new AmountUI(dto.TotalInvested));
-            FunderCount = refresh.Successes().Select(dto => dto.TotalInvestors ?? 0);
+            var projectStatistics = refresh.Successes();
+
+            Funded = projectStatistics.Select(ToFundedAmount);
+            FunderCount = projectStatistics.Select(ToFunderCount);
             Goal = new AmountUI(seed.TargetAmount);
             Refresh = refresh;
-            Payments = refresh.Successes()
-                .Select(dto => Payment.MapFrom(dto.DynamicStages ?? []))
+            Payments = projectStatistics
+                .Select(ToPayments)
                 .StartWith([]);
-            DynamicStagePatterns = seed.DynamicStagePatterns?.AsReadOnly() ?? new List<DynamicStagePattern>().AsReadOnly();
-
-            ProjectStatus = refresh.Successes().Select(dto =>
-            {
-                var fundingFinished = DateTime.UtcNow.Date >= seed.FundingEndDate.Date;
-                var reachedTarget = dto.TotalInvested >= seed.TargetAmount;
-                return fundingFinished && !reachedTarget ? ProjectsV2.ProjectStatus.Closed : ProjectsV2.ProjectStatus.Open;
-            }).StartWith(DateTime.UtcNow.Date >= seed.FundingEndDate.Date ? ProjectsV2.ProjectStatus.Closed : ProjectsV2.ProjectStatus.Open);
         }
 
         public IAmountUI Goal { get; }
@@ -35,9 +29,21 @@ namespace AngorApp.Model.ProjectsV2.FundProject
         public override IAmountUI FundingTarget => Goal;
         public override IObservable<IAmountUI> FundingRaised => Funded;
         public DateTimeOffset TransactionDate { get; set; }
-        public FundingStatus Status { get; set; }
-        public IReadOnlyList<DynamicStagePattern> DynamicStagePatterns { get; }
         public override IEnhancedCommand Refresh { get; }
-        public override IObservable<ProjectStatus> ProjectStatus { get; }
+
+        private static IAmountUI ToFundedAmount(ProjectStatisticsDto statistics)
+        {
+            return new AmountUI(statistics.TotalInvested);
+        }
+
+        private static int ToFunderCount(ProjectStatisticsDto statistics)
+        {
+            return statistics.TotalInvestors ?? 0;
+        }
+
+        private static IReadOnlyCollection<IPayment> ToPayments(ProjectStatisticsDto statistics)
+        {
+            return Payment.MapFrom(statistics.DynamicStages ?? []);
+        }
     }
 }

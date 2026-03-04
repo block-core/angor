@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fund="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
+             mc:Ignorable="d"
+             x:Class="AngorApp.UI.Sections.FindProjects.Details.Cards.FundOpenCard"
+             ClipToBounds="False"
+             x:DataType="fund:IFundProject">
+
+    <Border Classes="ColorPanel DarkGreen Shadow">
+        <StackPanel Classes="Gap-XL" VerticalAlignment="Center">
+            <Border Height="64" Width="64" Classes="Circle" Background="#2BFCFFFF" >
+                <ContentControl IconOptions.Size="32" IconOptions.Fill="White" Content="{Icon fa-bitcoin}" />
+            </Border>
+            <TextBlock Text="Fund this project" FontSize="22" Classes="Size-L Weight-Bold Center" />
+
+            <TextBlock Text="Join this project and be part of its journey to success" LineSpacing="5" Classes="Wrap Center Weight-Light" Margin="0 0" />
+
+            <EnhancedButton Content="Fund" Icon="{Icon fa-brands fa-bitcoin}"
+                            Command="{Binding Invest}"
+                            Classes="White"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            FontSize="18"
+                            Padding="24 14 "
+                            FontWeight="Bold">
+            </EnhancedButton>
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -3,6 +3,7 @@ using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Operations;
 using Angor.Sdk.Funding.Shared;
+using AngorApp.Core.Factories;
 using AngorApp.Model.Funded.Fund.Model;
 using AngorApp.Model.Funded.Investment.Model;
 using AngorApp.Model.Funded.Shared.Model;
@@ -25,6 +26,7 @@ namespace AngorApp.UI.Sections.Funded.Shared.Section
         private readonly IProjectAppService projectAppService;
         private readonly IWalletContext walletContext;
         private readonly INavigator navigator;
+        private readonly IProjectInvestCommandFactory projectInvestCommandFactory;
         private readonly INotificationService notificationService;
         private readonly ITransactionDraftPreviewer draftPreviewer;
 
@@ -34,6 +36,7 @@ namespace AngorApp.UI.Sections.Funded.Shared.Section
             IProjectAppService projectAppService,
             IWalletContext walletContext,
             INavigator navigator,
+            IProjectInvestCommandFactory projectInvestCommandFactory,
             INotificationService notificationService,
             ITransactionDraftPreviewer draftPreviewer
         )
@@ -42,6 +45,7 @@ namespace AngorApp.UI.Sections.Funded.Shared.Section
             this.projectAppService = projectAppService;
             this.walletContext = walletContext;
             this.navigator = navigator;
+            this.projectInvestCommandFactory = projectInvestCommandFactory;
             this.notificationService = notificationService;
             this.draftPreviewer = draftPreviewer;
             FindProjects = EnhancedCommand.Create(() => shell.SetSection("Find Projects"));
@@ -78,7 +82,10 @@ namespace AngorApp.UI.Sections.Funded.Shared.Section
                    .Get(new GetProject.GetProjectRequest(new ProjectId(dto.Id)))
                    .Map(IFundedItem (response) =>
                    {
-                       var project = Project.Create(response.Project, projectAppService);
+                       var project = Project.Create(
+                           response.Project,
+                           projectAppService,
+                           projectInvestCommandFactory.Create(response.Project.Id, response.Project.FundingStartDate, response.Project.FundingEndDate, response.Project.ProjectType));
                        IFunded funded = project switch
                        {
                            IInvestmentProject investmentProject => new InvestmentFunded(investmentProject, new InvestmentInvestorData(dto, investmentAppService, walletContext), notificationService, draftPreviewer, investmentAppService, walletContext),

@@ -158,8 +158,8 @@ namespace AngorApp.UI.Flows.CreateProject
             project.TargetAmount = AmountUI.FromBtc(0.01);
             project.PenaltyDays = 0;
             project.StartDate = DateTime.Now;
-            project.FundingEndDate = DateTime.Now;
-            project.ExpiryDate = DateTime.Now.AddDays(1);
+            project.FundingEndDate = DateTime.Now.AddDays(30);
+            project.ExpiryDate = DateTime.Now.AddDays(31);
 
             // Add stages with dates matching the funding end date for immediate release
             project.CreateAndAddStage(0.10m, DateTime.Now);
