@@ -1,4 +1,5 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Investor.Operations;
@@ -217,6 +218,138 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
                 ids.Any(id => id.Value == projectId1) && 
                 ids.Any(id => id.Value == projectId2))), 
             Times.Once);
+    }
+
+    [Fact]
+    public async Task GetInvestmentsHandler_WhenRequestEventIdSetAndNoHandshakeFound_ReturnsPendingFounderSignatures()
+    {
+        // Arrange: signature request was sent (RequestEventId set), founder hasn't responded yet (no Handshake)
+        var walletId = new WalletId(Guid.NewGuid().ToString());
+        var project = TestDataBuilder.CreateProject().Build();
+        var requestEventId = "nostr-event-id-abc";
+
+        var records = new InvestmentRecords
+        {
+            ProjectIdentifiers = new List<InvestmentRecord>
+            {
+                new InvestmentRecord
+                {
+                    ProjectIdentifier = project.Id.Value,
+                    InvestorPubKey = "investor-pub-key",
+                    RequestEventId = requestEventId,
+                    RequestEventTime = DateTime.UtcNow.AddMinutes(-5),
+                    InvestmentTransactionHash = "txhash123"
+                }
+            }
+        };
+
+        _mockPortfolioService
+            .Setup(x => x.GetByWalletId(walletId.Value))
+            .ReturnsAsync(Result.Success(records));
+
+        _mockProjectService
+            .Setup(x => x.GetAllAsync(It.IsAny<ProjectId[]>()))
+            .ReturnsAsync(Result.Success<IEnumerable<Project>>(new[] { project }));
+
+        // No on-chain investment
+        _mockAngorIndexerService
+            .Setup(x => x.GetInvestmentAsync(project.Id.Value, "investor-pub-key"))
+            .ReturnsAsync((ProjectInvestment?)null);
+
+        _mockAngorIndexerService
+            .Setup(x => x.GetProjectStatsAsync(project.Id.Value))
+            .ReturnsAsync((project.Id.Value, (ProjectStats?)null));
+
+        // Handshake sync succeeds but returns no handshake (founder hasn't responded)
+        _mockInvestmentHandshakeService
+            .Setup(x => x.SyncHandshakesFromNostrAsync(walletId, project.Id, project.NostrPubKey))
+            .ReturnsAsync(Result.Success(Enumerable.Empty<InvestmentHandshake>()));
+
+        _mockInvestmentHandshakeService
+            .Setup(x => x.GetHandshakeByRequestEventIdAsync(walletId, project.Id, requestEventId))
+            .ReturnsAsync(Result.Success<InvestmentHandshake?>(null));
+
+        var handler = new GetInvestments.GetInvestmentsHandler(
+            _mockAngorIndexerService.Object,
+            _mockPortfolioService.Object,
+            _mockProjectService.Object,
+            _mockInvestmentHandshakeService.Object,
+            _fixture.NetworkConfiguration,
+            new NullLogger<GetInvestments.GetInvestmentsHandler>());
+
+        var request = new GetInvestments.GetInvestmentsRequest(walletId);
+
+        // Act
+        var result = await handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var dto = result.Value.Projects.Single();
+        dto.InvestmentStatus.Should().Be(InvestmentStatus.PendingFounderSignatures);
+    }
+
+    [Fact]
+    public async Task GetInvestmentsHandler_WhenNoRequestEventIdAndNoHandshake_ReturnsInvalid()
+    {
+        // Arrange: no signature request was ever sent (no RequestEventId), no Handshake
+        var walletId = new WalletId(Guid.NewGuid().ToString());
+        var project = TestDataBuilder.CreateProject().Build();
+
+        var records = new InvestmentRecords
+        {
+            ProjectIdentifiers = new List<InvestmentRecord>
+            {
+                new InvestmentRecord
+                {
+                    ProjectIdentifier = project.Id.Value,
+                    InvestorPubKey = "investor-pub-key",
+                    RequestEventId = null,
+                    InvestmentTransactionHash = null!
+                }
+            }
+        };
+
+        _mockPortfolioService
+            .Setup(x => x.GetByWalletId(walletId.Value))
+            .ReturnsAsync(Result.Success(records));
+
+        _mockProjectService
+            .Setup(x => x.GetAllAsync(It.IsAny<ProjectId[]>()))
+            .ReturnsAsync(Result.Success<IEnumerable<Project>>(new[] { project }));
+
+        _mockAngorIndexerService
+            .Setup(x => x.GetInvestmentAsync(project.Id.Value, "investor-pub-key"))
+            .ReturnsAsync((ProjectInvestment?)null);
+
+        _mockAngorIndexerService
+            .Setup(x => x.GetProjectStatsAsync(project.Id.Value))
+            .ReturnsAsync((project.Id.Value, (ProjectStats?)null));
+
+        _mockInvestmentHandshakeService
+            .Setup(x => x.SyncHandshakesFromNostrAsync(walletId, project.Id, project.NostrPubKey))
+            .ReturnsAsync(Result.Success(Enumerable.Empty<InvestmentHandshake>()));
+
+        _mockInvestmentHandshakeService
+            .Setup(x => x.GetHandshakesAsync(walletId, project.Id))
+            .ReturnsAsync(Result.Success(Enumerable.Empty<InvestmentHandshake>()));
+
+        var handler = new GetInvestments.GetInvestmentsHandler(
+            _mockAngorIndexerService.Object,
+            _mockPortfolioService.Object,
+            _mockProjectService.Object,
+            _mockInvestmentHandshakeService.Object,
+            _fixture.NetworkConfiguration,
+            new NullLogger<GetInvestments.GetInvestmentsHandler>());
+
+        var request = new GetInvestments.GetInvestmentsRequest(walletId);
+
+        // Act
+        var result = await handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var dto = result.Value.Projects.Single();
+        dto.InvestmentStatus.Should().Be(InvestmentStatus.Invalid);
     }
 
     #endregion
