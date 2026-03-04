@@ -66,7 +66,7 @@ public class CreateLightningSwapTests
             .ReturnsAsync(Result.Success(("word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12", Maybe<string>.None)));
 
         _mockDerivationOperations
-            .Setup(x => x.DeriveInvestorKey(It.IsAny<WalletWords>(), It.IsAny<string>()))
+            .Setup(x => x.DeriveInvestorKey(It.IsAny<WalletWords>(), It.IsAny<string>(), It.IsAny<int>()))
             .Returns("02refundpubkey123456789");
     }
 

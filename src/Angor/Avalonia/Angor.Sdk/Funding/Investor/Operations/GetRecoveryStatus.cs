@@ -20,7 +20,7 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 
 public static class GetRecoveryStatus
 {
-    public record GetRecoveryStatusRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<GetRecoveryStatusResponse>>;
+    public record GetRecoveryStatusRequest(WalletId WalletId, ProjectId ProjectId, string? InvestmentTransactionHash = null) : IRequest<Result<GetRecoveryStatusResponse>>;
 
     public record GetRecoveryStatusResponse(InvestorProjectRecoveryDto RecoveryData);
 
@@ -52,7 +52,9 @@ public static class GetRecoveryStatus
                 return Result.Failure<GetRecoveryStatusResponse>("No investments found for this wallet");
             
             var investmentRecord = investments.Value.ProjectIdentifiers
-                .FirstOrDefault(x => x.ProjectIdentifier == request.ProjectId.Value);
+                .FirstOrDefault(x => 
+                    x.ProjectIdentifier == request.ProjectId.Value &&
+                    (request.InvestmentTransactionHash == null || x.InvestmentTransactionHash == request.InvestmentTransactionHash));
             
             if (investmentRecord == null)
                 return Result.Failure<GetRecoveryStatusResponse>("No investments found for this project");
@@ -76,7 +78,7 @@ public static class GetRecoveryStatus
             if (dto.HasUnspentItems)
             {
                 var releaseCheck = await investmentAppService.CheckForReleaseSignatures(
-                    new CheckForReleaseSignatures.CheckForReleaseSignaturesRequest(request.WalletId, request.ProjectId));
+                    new CheckForReleaseSignatures.CheckForReleaseSignaturesRequest(request.WalletId, request.ProjectId, request.InvestmentTransactionHash));
 
                 dto.HasReleaseSignatures = releaseCheck.IsSuccess && releaseCheck.Value.HasReleaseSignatures;
             }

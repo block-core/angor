@@ -61,7 +61,7 @@ public class PortfolioService(
         
         var investments = investmentsResult.Value ?? new InvestmentRecords();
         var existingInvestment = investments.ProjectIdentifiers
-            .FirstOrDefault(i => i.ProjectIdentifier == investmentRecord.ProjectIdentifier);
+            .FirstOrDefault(i => i.InvestorPubKey == investmentRecord.InvestorPubKey);
         if (existingInvestment != null)
             investments.ProjectIdentifiers.Remove(existingInvestment);
         
@@ -90,7 +90,7 @@ public class PortfolioService(
             return Result.Failure(investmentsResult.Error);
 
         var investments = investmentsResult.Value ?? new InvestmentRecords();
-        var existingInvestment = investments.ProjectIdentifiers.FirstOrDefault(i => i.ProjectIdentifier == investment.ProjectIdentifier);
+        var existingInvestment = investments.ProjectIdentifiers.FirstOrDefault(i => i.InvestorPubKey == investment.InvestorPubKey);
 
         if (existingInvestment == null)
             return Result.Success(); // Nothing to remove

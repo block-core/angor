@@ -124,8 +124,9 @@ public abstract class FundedBase : IFunded, IDisposable
             {
                 var recoveryState = await InvestorData.Recovery.FirstAsync();
                 var projectId = Project.Id;
+                var investmentId = InvestorData.InvestmentId;
 
-                var (createDraft, commitDraft, title, successMessage) = ResolveRecoveryAction(recoveryState, wallet.Id, projectId, appService);
+                var (createDraft, commitDraft, title, successMessage) = ResolveRecoveryAction(recoveryState, wallet.Id, projectId, investmentId, appService);
 
                 if (createDraft == null)
                     return Result.Failure("No recovery action available");
@@ -136,7 +137,7 @@ public abstract class FundedBase : IFunded, IDisposable
     }
 
     private static (Func<long, Task<Result<TransactionDraft>>>? CreateDraft, Func<TransactionDraft, Task<Result<Guid>>>? CommitDraft, string? Title, string? SuccessMessage)
-        ResolveRecoveryAction(RecoveryState r, WalletId walletId, ProjectId projectId, IInvestmentAppService appService)
+        ResolveRecoveryAction(RecoveryState r, WalletId walletId, ProjectId projectId, string? investmentId, IInvestmentAppService appService)
     {
         Func<TransactionDraft, Task<Result<Guid>>> makeCommit() =>
             draft => appService
@@ -146,7 +147,7 @@ public abstract class FundedBase : IFunded, IDisposable
         if (r.HasUnspentItems && r.HasReleaseSignatures)
         {
             return (
-                fr => appService.BuildUnfundedReleaseTransaction(new BuildUnfundedReleaseTransaction.BuildUnfundedReleaseTransactionRequest(walletId, projectId, new DomainFeerate(fr)))
+                fr => appService.BuildUnfundedReleaseTransaction(new BuildUnfundedReleaseTransaction.BuildUnfundedReleaseTransactionRequest(walletId, projectId, new DomainFeerate(fr), investmentId))
                     .Map(resp => (TransactionDraft)resp.TransactionDraft),
                 makeCommit(),
                 "Claim Released Funds",
@@ -157,7 +158,7 @@ public abstract class FundedBase : IFunded, IDisposable
         {
             var title = r.IsAboveThreshold ? "Claim Funds" : "Claim Funds (Below Threshold)";
             return (
-                fr => appService.BuildEndOfProjectClaim(new BuildEndOfProjectClaim.BuildEndOfProjectClaimRequest(walletId, projectId, new DomainFeerate(fr)))
+                fr => appService.BuildEndOfProjectClaim(new BuildEndOfProjectClaim.BuildEndOfProjectClaimRequest(walletId, projectId, new DomainFeerate(fr), investmentId))
                     .Map(resp => (TransactionDraft)resp.TransactionDraft),
                 makeCommit(),
                 title,
@@ -167,7 +168,7 @@ public abstract class FundedBase : IFunded, IDisposable
         if (r.HasUnspentItems && !r.HasItemsInPenalty)
         {
             return (
-                fr => appService.BuildRecoveryTransaction(new BuildRecoveryTransaction.BuildRecoveryTransactionRequest(walletId, projectId, new DomainFeerate(fr)))
+                fr => appService.BuildRecoveryTransaction(new BuildRecoveryTransaction.BuildRecoveryTransactionRequest(walletId, projectId, new DomainFeerate(fr), investmentId))
                     .Map(resp => (TransactionDraft)resp.TransactionDraft),
                 makeCommit(),
                 "Recover Funds",
@@ -177,7 +178,7 @@ public abstract class FundedBase : IFunded, IDisposable
         if (r.HasItemsInPenalty)
         {
             return (
-                fr => appService.BuildPenaltyReleaseTransaction(new BuildPenaltyReleaseTransaction.BuildPenaltyReleaseTransactionRequest(walletId, projectId, new DomainFeerate(fr)))
+                fr => appService.BuildPenaltyReleaseTransaction(new BuildPenaltyReleaseTransaction.BuildPenaltyReleaseTransactionRequest(walletId, projectId, new DomainFeerate(fr), investmentId))
                     .Map(resp => (TransactionDraft)resp.TransactionDraft),
                 makeCommit(),
                 "Release Funds",

@@ -56,7 +56,7 @@ namespace AngorApp.Model.Funded.Fund.Model
                     var dto = await investmentAppService
                         .GetInvestments(new GetInvestments.GetInvestmentsRequest(wallet.Id))
                         .Bind(response => response.Projects
-                            .TryFirst(project => project.Id == ProjectId)
+                            .TryFirst(project => project.Id == ProjectId && (string.IsNullOrEmpty(InvestmentId) || project.InvestmentId == InvestmentId))
                             .ToResult($"Investment not found: {ProjectId}"));
 
                     if (dto.IsFailure)
@@ -67,7 +67,7 @@ namespace AngorApp.Model.Funded.Fund.Model
                     if (dto.Value.InvestmentStatus == InvestmentStatus.Invested)
                     {
                         var recoveryResult = await investmentAppService.GetRecoveryStatus(
-                            new GetRecoveryStatus.GetRecoveryStatusRequest(wallet.Id, new ProjectId(ProjectId)));
+                            new GetRecoveryStatus.GetRecoveryStatusRequest(wallet.Id, new ProjectId(ProjectId), InvestmentId));
 
                         if (recoveryResult.IsSuccess)
                         {

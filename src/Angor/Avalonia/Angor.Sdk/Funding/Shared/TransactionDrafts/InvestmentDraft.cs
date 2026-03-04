@@ -11,4 +11,9 @@ public record InvestmentDraft(string InvestorKey) : TransactionDraft
     /// The investment amount in satoshis (excluding fees).
     /// </summary>
     public Amount InvestedAmount { get; set; } = new Amount(0);
+
+    /// <summary>
+    /// The index used to derive the investor key, allowing the same investor to invest multiple times in the same project.
+    /// </summary>
+    public int InvestmentIndex { get; set; } = 0;
 }

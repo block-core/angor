@@ -1,4 +1,5 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
@@ -107,6 +108,10 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
         _mockProjectService = new Mock<IProjectService>();
         _mockSeedwordsProvider = new Mock<ISeedwordsProvider>();
         _mockWalletAccountBalanceService = new Mock<IWalletAccountBalanceService>();
+        var mockPortfolioService = new Mock<IPortfolioService>();
+        mockPortfolioService
+            .Setup(x => x.GetByWalletId(It.IsAny<string>()))
+            .ReturnsAsync(Result.Success(new InvestmentRecords()));
 
         // Create the handler - now using BuildInvestmentDraft.BuildInvestmentDraftHandler
         _sut = new BuildInvestmentDraft.BuildInvestmentDraftHandler(
@@ -116,6 +121,7 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
             _walletOperations,
             _derivationOperations,
             _mockWalletAccountBalanceService.Object,
+            mockPortfolioService.Object,
             new NullLogger<BuildInvestmentDraft.BuildInvestmentDraftHandler>());
     }
 

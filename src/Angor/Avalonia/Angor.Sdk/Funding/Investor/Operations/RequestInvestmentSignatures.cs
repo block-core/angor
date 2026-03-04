@@ -84,6 +84,7 @@ public static class RequestInvestmentSignatures
                 UnfundedReleaseAddress = sendSignatureResult.Value.releaseAddress,
                 RequestEventId = sendSignatureResult.Value.eventId,
                 RequestEventTime = sendSignatureResult.Value.createdTime,
+                InvestmentIndex = request.Draft.InvestmentIndex,
             });
 
             // Reserve UTXOs used in this investment transaction

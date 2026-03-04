@@ -21,7 +21,7 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 
 public static class BuildRecoveryTransaction
 {
-    public record BuildRecoveryTransactionRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<BuildRecoveryTransactionResponse>>;
+    public record BuildRecoveryTransactionRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate, string? InvestmentTransactionHash = null) : IRequest<Result<BuildRecoveryTransactionResponse>>;
 
     public record BuildRecoveryTransactionResponse(RecoveryTransactionDraft TransactionDraft);
 
@@ -52,11 +52,13 @@ public static class BuildRecoveryTransaction
             if (investments.IsFailure)
                 return Result.Failure<BuildRecoveryTransactionResponse>(investments.Error);
 
-            var investment = investments.Value.ProjectIdentifiers.FirstOrDefault(p => p.ProjectIdentifier == request.ProjectId.Value);
+            var investment = investments.Value.ProjectIdentifiers.FirstOrDefault(p => 
+                p.ProjectIdentifier == request.ProjectId.Value &&
+                (request.InvestmentTransactionHash == null || p.InvestmentTransactionHash == request.InvestmentTransactionHash));
             if (investment is null)
                 return Result.Failure<BuildRecoveryTransactionResponse>("No investment found for this project");
 
-            var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey);
+            var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey, investment.InvestmentIndex);
 
             var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(investment.InvestmentTransactionHex);
 

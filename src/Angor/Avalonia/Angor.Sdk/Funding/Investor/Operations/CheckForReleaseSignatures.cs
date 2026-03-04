@@ -14,7 +14,7 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 
 public static class CheckForReleaseSignatures
 {
-    public record CheckForReleaseSignaturesRequest(WalletId WalletId, ProjectId ProjectId) : IRequest<Result<CheckForReleaseSignaturesResponse>>;
+    public record CheckForReleaseSignaturesRequest(WalletId WalletId, ProjectId ProjectId, string? InvestmentTransactionHash = null) : IRequest<Result<CheckForReleaseSignaturesResponse>>;
 
     public record CheckForReleaseSignaturesResponse(bool HasReleaseSignatures);
 
@@ -37,7 +37,9 @@ public static class CheckForReleaseSignatures
                 return Result.Failure<CheckForReleaseSignaturesResponse>(investments.Error);
 
             var investment = investments.Value.ProjectIdentifiers
-                .FirstOrDefault(p => p.ProjectIdentifier == request.ProjectId.Value);
+                .FirstOrDefault(p => 
+                    p.ProjectIdentifier == request.ProjectId.Value &&
+                    (request.InvestmentTransactionHash == null || p.InvestmentTransactionHash == request.InvestmentTransactionHash));
             if (investment is null)
                 return Result.Failure<CheckForReleaseSignaturesResponse>("No investment found for this project");
 
