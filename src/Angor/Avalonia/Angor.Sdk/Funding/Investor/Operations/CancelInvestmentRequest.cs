@@ -35,7 +35,7 @@ public static class CancelInvestmentRequest
             var investmentRecords = await portfolioService.GetByWalletId(request.WalletId.Value);
 
             var record = investmentRecords.Value.ProjectIdentifiers
-                .FirstOrDefault(r => r.ProjectIdentifier == request.ProjectId.Value && r.InvestmentTransactionHash == request.InvestmentId);
+                .FirstOrDefault(r => r.ProjectIdentifier == request.ProjectId.Value);
 
             if (record == null)
                 return Result.Failure<CancelInvestmentRequestResponse>("Investment record not found.");

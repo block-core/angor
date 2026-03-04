@@ -108,7 +108,9 @@ public class PortfolioService(
 
         var savedLocally = await documentCollection.UpsertAsync(document => document.WalletId, doc);
 
-        return savedLocally.IsSuccess
+        var savedOnRelay = await PushInvestmentsRecordsToRelayAsync(walletId, investments);
+
+        return savedLocally.IsSuccess || savedOnRelay.IsSuccess
             ? Result.Success()
             : Result.Failure("Failed to save investment record");
     }
