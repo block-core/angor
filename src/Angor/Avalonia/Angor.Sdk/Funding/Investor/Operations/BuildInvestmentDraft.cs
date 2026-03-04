@@ -1,4 +1,5 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
@@ -36,6 +37,7 @@ public static class BuildInvestmentDraft
             IWalletOperations walletOperations,
             IDerivationOperations derivationOperations,
             IWalletAccountBalanceService walletAccountBalanceService,
+            IPortfolioService portfolioService,
             ILogger<BuildInvestmentDraftHandler> logger)
         : IRequestHandler<BuildInvestmentDraftRequest, Result<BuildInvestmentDraftResponse>>
     {
@@ -53,6 +55,9 @@ public static class BuildInvestmentDraft
 
                 var project = projectResult.Value;
 
+                // Determine the next investment index for this project (before getting wallet words)
+                var investmentIndex = await GetNextInvestmentIndexAsync(transactionRequest.WalletId.Value, transactionRequest.ProjectId.Value);
+
                 // Get wallet words
                 var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(transactionRequest.WalletId.Value);
                 if (sensitiveDataResult.IsFailure)
@@ -63,8 +68,8 @@ public static class BuildInvestmentDraft
 
                 var walletWords = sensitiveDataResult.Value.ToWalletWords();
 
-                // Derive investor key
-                var investorKey = derivationOperations.DeriveInvestorKey(walletWords, project.FounderKey);
+                // Derive investor key using the next available investment index for this project
+                var investorKey = derivationOperations.DeriveInvestorKey(walletWords, project.FounderKey, investmentIndex);
 
                 // Convert Project to ProjectInfo
                 var projectInfo = project.ToProjectInfo();
@@ -154,6 +159,7 @@ public static class BuildInvestmentDraft
                     InvestedAmount = transactionRequest.Amount,
                     SignedTxHex = signedTxHex,
                     TransactionId = trxId,
+                    InvestmentIndex = investmentIndex,
                 }));
             }
             catch (Exception ex)
@@ -360,6 +366,18 @@ public static class BuildInvestmentDraft
                     feerate));
 
             return signedTransactionResult;
+        }
+
+        private async Task<int> GetNextInvestmentIndexAsync(string walletId, string projectId)
+        {
+            var portfolioResult = await portfolioService.GetByWalletId(walletId);
+            if (portfolioResult.IsFailure)
+                return 0;
+
+            var existingCount = portfolioResult.Value.ProjectIdentifiers
+                .Count(r => r.ProjectIdentifier == projectId);
+
+            return existingCount;
         }
     }
 }

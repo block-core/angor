@@ -19,7 +19,7 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 
 public static class BuildEndOfProjectClaim
 {
-    public record BuildEndOfProjectClaimRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<BuildEndOfProjectClaimResponse>>;
+    public record BuildEndOfProjectClaimRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate, string? InvestmentTransactionHash = null) : IRequest<Result<BuildEndOfProjectClaimResponse>>;
     
     public record BuildEndOfProjectClaimResponse(EndOfProjectTransactionDraft TransactionDraft);
     
@@ -46,7 +46,9 @@ public static class BuildEndOfProjectClaim
             if (investments.IsFailure)
                 return Result.Failure<BuildEndOfProjectClaimResponse>(investments.Error);
             
-            var investment = investments.Value.ProjectIdentifiers.FirstOrDefault(p => p.ProjectIdentifier == request.ProjectId.Value);
+            var investment = investments.Value.ProjectIdentifiers.FirstOrDefault(p => 
+                p.ProjectIdentifier == request.ProjectId.Value &&
+                (request.InvestmentTransactionHash == null || p.InvestmentTransactionHash == request.InvestmentTransactionHash));
             if (investment is null)
                 return Result.Failure<BuildEndOfProjectClaimResponse>("No investment found for this project");
 
@@ -61,7 +63,7 @@ public static class BuildEndOfProjectClaim
             if (project.IsFailure)
                 return Result.Failure<BuildEndOfProjectClaimResponse>(project.Error);
             
-            var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey);
+            var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey, investment.InvestmentIndex);
 
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();
             if (changeAddress == null)

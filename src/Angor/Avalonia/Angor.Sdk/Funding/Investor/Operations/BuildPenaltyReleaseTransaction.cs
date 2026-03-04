@@ -24,7 +24,7 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 /// </summary>
 public static class BuildPenaltyReleaseTransaction
 {
-    public record BuildPenaltyReleaseTransactionRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<BuildPenaltyReleaseTransactionResponse>>;
+    public record BuildPenaltyReleaseTransactionRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate, string? InvestmentTransactionHash = null) : IRequest<Result<BuildPenaltyReleaseTransactionResponse>>;
 
     public record BuildPenaltyReleaseTransactionResponse(ReleaseTransactionDraft TransactionDraft);
 
@@ -50,7 +50,9 @@ public static class BuildPenaltyReleaseTransaction
                 return Result.Failure<BuildPenaltyReleaseTransactionResponse>(investments.Error);
 
             var investment = investments.Value.ProjectIdentifiers
-                .FirstOrDefault(p => p.ProjectIdentifier == request.ProjectId.Value);
+                .FirstOrDefault(p => 
+                    p.ProjectIdentifier == request.ProjectId.Value &&
+                    (request.InvestmentTransactionHash == null || p.InvestmentTransactionHash == request.InvestmentTransactionHash));
             if (investment is null)
                 return Result.Failure<BuildPenaltyReleaseTransactionResponse>("No investment found for this project");
 
@@ -75,7 +77,7 @@ public static class BuildPenaltyReleaseTransaction
             if (changeAddress == null)
                 return Result.Failure<BuildPenaltyReleaseTransactionResponse>("Could not get a change address");
 
-            var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey);
+            var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey, investment.InvestmentIndex);
 
             // Get the investment transaction
             var investmentTrxHex = investment.InvestmentTransactionHex;

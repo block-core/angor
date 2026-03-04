@@ -22,7 +22,7 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 
 public static class BuildUnfundedReleaseTransaction
 {
-    public record BuildUnfundedReleaseTransactionRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate) : IRequest<Result<BuildUnfundedReleaseTransactionResponse>>;
+    public record BuildUnfundedReleaseTransactionRequest(WalletId WalletId, ProjectId ProjectId, DomainFeerate SelectedFeeRate, string? InvestmentTransactionHash = null) : IRequest<Result<BuildUnfundedReleaseTransactionResponse>>;
     
     public record BuildUnfundedReleaseTransactionResponse(UnfundedReleaseTransactionDraft TransactionDraft);
     
@@ -44,7 +44,9 @@ public static class BuildUnfundedReleaseTransaction
             if (investments.IsFailure)
                 return Result.Failure<BuildUnfundedReleaseTransactionResponse>(investments.Error);
             
-            var investment = investments.Value.ProjectIdentifiers.FirstOrDefault(p => p.ProjectIdentifier == request.ProjectId.Value);
+            var investment = investments.Value.ProjectIdentifiers.FirstOrDefault(p => 
+                p.ProjectIdentifier == request.ProjectId.Value &&
+                (request.InvestmentTransactionHash == null || p.InvestmentTransactionHash == request.InvestmentTransactionHash));
             if (investment is null) //TODO we need to make sure we always have this data
                 return Result.Failure<BuildUnfundedReleaseTransactionResponse>("No investment found for this project");
 
@@ -59,7 +61,7 @@ public static class BuildUnfundedReleaseTransaction
             
             var accountInfo = accountBalanceResult.Value.AccountInfo;
 
-            var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey);
+            var investorPrivateKey = derivationOperations.DeriveInvestorPrivateKey(words.Value.ToWalletWords(), project.Value.FounderKey, investment.InvestmentIndex);
 
             var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(investment.InvestmentTransactionHex);
 

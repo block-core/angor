@@ -38,23 +38,26 @@ public static class GetInvestments
             if (investmentRecordsLookup.Value.ProjectIdentifiers.Count == 0)
                 return Result.Success(new GetInvestmentsResponse(Enumerable.Empty<InvestedProjectDto>()));
 
-            var ids = investmentRecordsLookup.Value.ProjectIdentifiers
-                .Select(id => new ProjectId(id.ProjectIdentifier)).ToArray();
+            var distinctIds = investmentRecordsLookup.Value.ProjectIdentifiers
+                .Select(id => new ProjectId(id.ProjectIdentifier))
+                .DistinctBy(id => id.Value)
+                .ToArray();
 
-            var lookup = await projectService.GetAllAsync(ids);
+            var lookup = await projectService.GetAllAsync(distinctIds);
             
             if (lookup.IsFailure)
                 return Result.Failure<GetInvestmentsResponse>("Failed to retrieve projects: " + lookup.Error);
 
-            var investmentLookupTasks = lookup.Value
-                .ToList()
-                .OrderByDescending(x => x.StartingDate)
-                .Select(async project =>
+            var projectMap = lookup.Value.ToDictionary(p => p.Id.Value);
+
+            var investmentLookupTasks = investmentRecordsLookup.Value.ProjectIdentifiers
+                .OrderByDescending(r => r.RequestEventTime)
+                .Select(async investmentRecord =>
             {
                 try
                 {
-                    var investmentRecord = investmentRecordsLookup.Value.ProjectIdentifiers
-                        .First(x => x.ProjectIdentifier == project.Id.Value);
+                    if (!projectMap.TryGetValue(investmentRecord.ProjectIdentifier, out var project))
+                        return Result.Failure<InvestedProjectDto>($"Project not found: {investmentRecord.ProjectIdentifier}");
 
                     var investmentTask = Result.Try(() => angorIndexerService.GetInvestmentAsync(project.Id.Value, investmentRecord.InvestorPubKey));
                     var statsTask = Result.Try(() => 
@@ -162,9 +165,9 @@ public static class GetInvestments
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e, "Error processing project {ProjectId}", project.Id.Value);
+                    logger.LogError(e, "Error processing project {ProjectId}", investmentRecord.ProjectIdentifier);
                     return Result.Failure<InvestedProjectDto>(
-                        $"Error processing project {project.Id.Value}: {e.Message}");
+                        $"Error processing project {investmentRecord.ProjectIdentifier}: {e.Message}");
                 }
             });
             

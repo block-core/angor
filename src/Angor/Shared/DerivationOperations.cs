@@ -98,26 +98,26 @@ public class DerivationOperations : IDerivationOperations
         return hash;
     }
 
-    public string DeriveInvestorKey(WalletWords walletWords, string founderKey)
+    public string DeriveInvestorKey(WalletWords walletWords, string founderKey, int investmentIndex = 0)
     {
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var upi = this.DeriveUniqueProjectIdentifier(founderKey);
 
-        var path = $"m/5'/0'/{upi}'/3'";
+        var path = $"m/5'/0'/{upi}'/3'/{investmentIndex}'";
 
         ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
 
         return extPubKey.PubKey.ToHex();
     }
 
-    public Key DeriveInvestorPrivateKey(WalletWords walletWords, string founderKey)
+    public Key DeriveInvestorPrivateKey(WalletWords walletWords, string founderKey, int investmentIndex = 0)
     {
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var upi = this.DeriveUniqueProjectIdentifier(founderKey);
 
-        var path = $"m/5'/0'/{upi}'/3'";
+        var path = $"m/5'/0'/{upi}'/3'/{investmentIndex}'";
 
         ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
 

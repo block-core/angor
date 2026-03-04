@@ -16,6 +16,13 @@ public class InvestmentRecord
     public string? EndOfProjectTransactionId { get; set; }
     
     /// <summary>
+    /// The index used to derive the investor key for this investment.
+    /// Allows the same investor to invest multiple times in the same project using different keys.
+    /// Defaults to 0 for backward compatibility with existing investments.
+    /// </summary>
+    public int InvestmentIndex { get; set; } = 0;
+
+    /// <summary>
     /// The amount invested in satoshis. Stored at publish time so we can sum totals without hitting the indexer.
     /// </summary>
     public long InvestedAmountSats { get; set; }

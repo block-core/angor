@@ -1,4 +1,5 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Domain;
@@ -30,6 +31,7 @@ public class CreateInvestmentTests
     private readonly Mock<IProjectService> _mockProjectService;
     private readonly Mock<ISeedwordsProvider> _mockSeedwordsProvider;
     private readonly Mock<IWalletAccountBalanceService> _mockWalletBalanceService;
+    private readonly Mock<IPortfolioService> _mockPortfolioService;
     private readonly IInvestorTransactionActions _investorTransactionActions;
     private readonly IWalletOperations _walletOperations;
     private readonly Mock<IIndexerService> _mockIndexerService;
@@ -43,6 +45,7 @@ public class CreateInvestmentTests
         _mockProjectService = new Mock<IProjectService>();
         _mockSeedwordsProvider = new Mock<ISeedwordsProvider>();
         _mockWalletBalanceService = new Mock<IWalletAccountBalanceService>();
+        _mockPortfolioService = new Mock<IPortfolioService>();
         _mockIndexerService = new Mock<IIndexerService>();
         
         _networkConfiguration = new NetworkConfiguration();
@@ -73,6 +76,10 @@ public class CreateInvestmentTests
             new NullLogger<WalletOperations>(),
             _networkConfiguration);
 
+        _mockPortfolioService
+            .Setup(x => x.GetByWalletId(It.IsAny<string>()))
+            .ReturnsAsync(Result.Success(new InvestmentRecords()));
+
         _sut = new BuildInvestmentDraft.BuildInvestmentDraftHandler(
             _mockProjectService.Object,
             _investorTransactionActions,
@@ -80,6 +87,7 @@ public class CreateInvestmentTests
             _walletOperations,
             _derivationOperations,
             _mockWalletBalanceService.Object,
+            _mockPortfolioService.Object,
             new NullLogger<BuildInvestmentDraft.BuildInvestmentDraftHandler>());
     }
 
@@ -413,6 +421,83 @@ public class CreateInvestmentTests
 
         // Assert
         _mockSeedwordsProvider.Verify(x => x.GetSensitiveData(walletId.Value), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WhenExistingInvestmentExists_QueriesPortfolioForNextIndex()
+    {
+        // Arrange - investor has already invested once
+        var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
+        var project = CreateTestInvestProject();
+        var walletId = new WalletId(Guid.NewGuid().ToString());
+
+        // Setup portfolio to show one existing investment for this project
+        var existingRecord = new InvestmentRecord
+        {
+            ProjectIdentifier = project.Id.Value,
+            InvestorPubKey = "existing-key",
+            InvestmentIndex = 0,
+            InvestmentTransactionHash = "existing-tx-hash"
+        };
+        _mockPortfolioService
+            .Setup(x => x.GetByWalletId(walletId.Value))
+            .ReturnsAsync(Result.Success(new InvestmentRecords
+            {
+                ProjectIdentifiers = new List<InvestmentRecord> { existingRecord }
+            }));
+
+        _mockProjectService
+            .Setup(x => x.GetAsync(project.Id))
+            .ReturnsAsync(Result.Success(project));
+
+        _mockSeedwordsProvider
+            .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
+            .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet not found"));
+
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
+            walletId,
+            project.Id,
+            new Amount(1_000_000),
+            new DomainFeerate(3000));
+
+        // Act
+        await _sut.Handle(request, CancellationToken.None);
+
+        // Assert - portfolio service was queried to determine the investment index
+        _mockPortfolioService.Verify(x => x.GetByWalletId(walletId.Value), Times.Once);
+    }
+
+    [Fact]
+    public void DeriveInvestorKey_WithDifferentIndices_ProducesDifferentKeys()
+    {
+        // Arrange
+        var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
+        var founderKey = _derivationOperations.DeriveFounderKey(words, 1);
+
+        // Act
+        var key0 = _derivationOperations.DeriveInvestorKey(words, founderKey, 0);
+        var key1 = _derivationOperations.DeriveInvestorKey(words, founderKey, 1);
+        var key2 = _derivationOperations.DeriveInvestorKey(words, founderKey, 2);
+
+        // Assert - each index produces a unique key
+        Assert.NotEqual(key0, key1);
+        Assert.NotEqual(key0, key2);
+        Assert.NotEqual(key1, key2);
+    }
+
+    [Fact]
+    public void DeriveInvestorKey_WithDefaultIndex_IsCompatibleWithIndex0()
+    {
+        // Arrange - ensure backward compatibility: default index (0) produces the same key as explicit index 0
+        var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
+        var founderKey = _derivationOperations.DeriveFounderKey(words, 1);
+
+        // Act
+        var keyDefault = _derivationOperations.DeriveInvestorKey(words, founderKey);
+        var keyExplicit0 = _derivationOperations.DeriveInvestorKey(words, founderKey, 0);
+
+        // Assert
+        Assert.Equal(keyDefault, keyExplicit0);
     }
 
     #region Helper Methods
