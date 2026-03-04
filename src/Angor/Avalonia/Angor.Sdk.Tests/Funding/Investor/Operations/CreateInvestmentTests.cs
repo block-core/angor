@@ -1,4 +1,5 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Domain;
@@ -30,6 +31,7 @@ public class CreateInvestmentTests
     private readonly Mock<IProjectService> _mockProjectService;
     private readonly Mock<ISeedwordsProvider> _mockSeedwordsProvider;
     private readonly Mock<IWalletAccountBalanceService> _mockWalletBalanceService;
+    private readonly Mock<IPortfolioService> _mockPortfolioService;
     private readonly IInvestorTransactionActions _investorTransactionActions;
     private readonly IWalletOperations _walletOperations;
     private readonly Mock<IIndexerService> _mockIndexerService;
@@ -43,6 +45,7 @@ public class CreateInvestmentTests
         _mockProjectService = new Mock<IProjectService>();
         _mockSeedwordsProvider = new Mock<ISeedwordsProvider>();
         _mockWalletBalanceService = new Mock<IWalletAccountBalanceService>();
+        _mockPortfolioService = new Mock<IPortfolioService>();
         _mockIndexerService = new Mock<IIndexerService>();
         
         _networkConfiguration = new NetworkConfiguration();
@@ -73,6 +76,11 @@ public class CreateInvestmentTests
             new NullLogger<WalletOperations>(),
             _networkConfiguration);
 
+        // Default: return empty portfolio (no existing investments)
+        _mockPortfolioService
+            .Setup(x => x.GetByWalletId(It.IsAny<string>()))
+            .ReturnsAsync(Result.Success(new InvestmentRecords()));
+
         _sut = new BuildInvestmentDraft.BuildInvestmentDraftHandler(
             _mockProjectService.Object,
             _investorTransactionActions,
@@ -80,6 +88,7 @@ public class CreateInvestmentTests
             _walletOperations,
             _derivationOperations,
             _mockWalletBalanceService.Object,
+            _mockPortfolioService.Object,
             new NullLogger<BuildInvestmentDraft.BuildInvestmentDraftHandler>());
     }
 
@@ -140,6 +149,55 @@ public class CreateInvestmentTests
         Assert.True(result.IsFailure);
         Assert.Contains("Wallet not found", result.Error);
     }
+
+    [Fact]
+    public async Task Handle_WhenAlreadyInvested_ReturnsFailure()
+    {
+        // Arrange
+        var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
+        var project = CreateTestInvestProject();
+        var walletId = new WalletId(Guid.NewGuid().ToString());
+        var projectId = project.Id;
+
+        _mockProjectService
+            .Setup(x => x.GetAsync(projectId))
+            .ReturnsAsync(Result.Success(project));
+
+        _mockSeedwordsProvider
+            .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
+            .ReturnsAsync(Result.Success((words.Words, Maybe<string>.None)));
+
+        // Simulate an existing investment with a transaction hash
+        var existingRecords = new InvestmentRecords
+        {
+            ProjectIdentifiers = new List<InvestmentRecord>
+            {
+                new InvestmentRecord
+                {
+                    ProjectIdentifier = projectId.Value,
+                    InvestmentTransactionHash = Encoders.Hex.EncodeData(RandomUtils.GetBytes(32)),
+                    InvestorPubKey = "somepubkey"
+                }
+            }
+        };
+        _mockPortfolioService
+            .Setup(x => x.GetByWalletId(walletId.Value))
+            .ReturnsAsync(Result.Success(existingRecords));
+
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
+            walletId,
+            projectId,
+            new Amount(1000000),
+            new DomainFeerate(3000));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.Contains("already invested", result.Error);
+    }
+
 
     [Fact(Skip = "Handler flow encounters address validation issues before reaching account balance check. " +
                  "This scenario requires proper network context and valid Bitcoin addresses to be testable. " +

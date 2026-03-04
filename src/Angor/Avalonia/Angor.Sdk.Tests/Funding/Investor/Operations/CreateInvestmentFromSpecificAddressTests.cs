@@ -1,4 +1,5 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Domain;
@@ -30,6 +31,7 @@ public class CreateInvestmentFromSpecificAddressTests
     private readonly Mock<IProjectService> _mockProjectService;
     private readonly Mock<ISeedwordsProvider> _mockSeedwordsProvider;
     private readonly Mock<IWalletAccountBalanceService> _mockWalletBalanceService;
+    private readonly Mock<IPortfolioService> _mockPortfolioService;
     private readonly IInvestorTransactionActions _investorTransactionActions;
     private readonly IWalletOperations _walletOperations;
     private readonly Mock<IIndexerService> _mockIndexerService;
@@ -44,6 +46,10 @@ public class CreateInvestmentFromSpecificAddressTests
         _mockSeedwordsProvider = new Mock<ISeedwordsProvider>();
         _mockWalletBalanceService = new Mock<IWalletAccountBalanceService>();
         _mockIndexerService = new Mock<IIndexerService>();
+        _mockPortfolioService = new Mock<IPortfolioService>();
+        _mockPortfolioService
+            .Setup(x => x.GetByWalletId(It.IsAny<string>()))
+            .ReturnsAsync(Result.Success(new InvestmentRecords()));
         
         _networkConfiguration = new NetworkConfiguration();
         _networkConfiguration.SetNetwork(Angor.Shared.Networks.Networks.Bitcoin.Testnet());
@@ -80,6 +86,7 @@ public class CreateInvestmentFromSpecificAddressTests
             _walletOperations,
             _derivationOperations,
             _mockWalletBalanceService.Object,
+            _mockPortfolioService.Object,
             new NullLogger<BuildInvestmentDraft.BuildInvestmentDraftHandler>());
     }
 
