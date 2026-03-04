@@ -48,7 +48,9 @@ namespace AngorApp.UI.Flows.InvestV2
             StageBreakdowns = this.WhenAnyValue(model => model.AmountToInvest)
                                   .CombineLatest(this.WhenAnyValue(model => model.SelectedPattern),
                                       (amount, pattern) => GetStageBreakdowns(fullProject, amount, pattern));
-            Details = this.WhenAnyValue(model => model.AmountToInvest).Select(GetTransactionDetails);
+            Details = this.WhenAnyValue(model => model.AmountToInvest)
+                          .CombineLatest(this.WhenAnyValue(model => model.SelectedPattern),
+                              (amount, pattern) => GetTransactionDetails(fullProject, amount, pattern));
             IsValid = this.WhenAnyValue(model => model.AmountToInvest).NotNull();
         }
 
@@ -168,15 +170,28 @@ namespace AngorApp.UI.Flows.InvestV2
             return target.AddDays(diff);
         }
 
-        private static TransactionDetails GetTransactionDetails(IAmountUI? amount)
+        private static TransactionDetails GetTransactionDetails(IFullProject fullProject, IAmountUI? amount, DynamicStagePattern? pattern)
         {
             if (amount == null)
             {
                 return TransactionDetails.Empty();
             }
 
+            int stageCount = pattern != null && fullProject.ProjectType is ProjectType.Fund or ProjectType.Subscribe
+                ? pattern.StageCount
+                : fullProject.Stages.Count();
+
+            // Estimate transaction virtual size:
+            // overhead + 1 P2WPKH input + Angor fee output + N stage outputs + change output
+            const int txOverhead = 10;
+            const int inputSize = 68;   // P2WPKH input
+            const int outputSize = 31;  // P2WPKH output
+            const int defaultFeeRateSatsPerVByte = 1;
+            int estimatedVSize = txOverhead + inputSize + (stageCount + 2) * outputSize;
+            long minerFeeSats = estimatedVSize * defaultFeeRateSatsPerVByte;
+
             AmountUI angorFee = new((long)Math.Ceiling(amount.Sats * 0.01));
-            return new TransactionDetails(amount, new AmountUI(0), angorFee);
+            return new TransactionDetails(amount, new AmountUI(minerFeeSats), angorFee);
         }
     }
 }
