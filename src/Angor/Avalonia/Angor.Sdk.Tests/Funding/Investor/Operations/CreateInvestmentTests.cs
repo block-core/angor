@@ -167,7 +167,7 @@ public class CreateInvestmentTests
             .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
             .ReturnsAsync(Result.Success((words.Words, Maybe<string>.None)));
 
-        // Simulate an existing investment with a transaction hash
+        // Simulate an existing investment with a transaction hash (completed investment)
         var existingRecords = new InvestmentRecords
         {
             ProjectIdentifiers = new List<InvestmentRecord>
@@ -176,6 +176,57 @@ public class CreateInvestmentTests
                 {
                     ProjectIdentifier = projectId.Value,
                     InvestmentTransactionHash = Encoders.Hex.EncodeData(RandomUtils.GetBytes(32)),
+                    InvestorPubKey = "somepubkey"
+                }
+            }
+        };
+        _mockPortfolioService
+            .Setup(x => x.GetByWalletId(walletId.Value))
+            .ReturnsAsync(Result.Success(existingRecords));
+
+        var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
+            walletId,
+            projectId,
+            new Amount(1000000),
+            new DomainFeerate(3000));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsFailure);
+        Assert.Contains("already invested", result.Error);
+    }
+
+    [Fact]
+    public async Task Handle_WhenInvestmentRecordExistsWithNoHash_ReturnsFailure()
+    {
+        // Arrange: "middle state" — record exists (e.g. pending founder signatures) but
+        // InvestmentTransactionHash is not yet set. Should still be blocked.
+        var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
+        var project = CreateTestInvestProject();
+        var walletId = new WalletId(Guid.NewGuid().ToString());
+        var projectId = project.Id;
+
+        _mockProjectService
+            .Setup(x => x.GetAsync(projectId))
+            .ReturnsAsync(Result.Success(project));
+
+        _mockSeedwordsProvider
+            .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
+            .ReturnsAsync(Result.Success((words.Words, Maybe<string>.None)));
+
+        // Record exists with a request event ID but no transaction hash yet
+        var existingRecords = new InvestmentRecords
+        {
+            ProjectIdentifiers = new List<InvestmentRecord>
+            {
+                new InvestmentRecord
+                {
+                    ProjectIdentifier = projectId.Value,
+                    InvestmentTransactionHash = string.Empty,
+                    RequestEventId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(32)),
+                    RequestEventTime = DateTime.UtcNow.AddMinutes(-5),
                     InvestorPubKey = "somepubkey"
                 }
             }

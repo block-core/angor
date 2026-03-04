@@ -79,7 +79,7 @@ public static class BuildInvestmentDraft
                     var existingInvestment = portfolioResult.Value?.ProjectIdentifiers
                         .FirstOrDefault(i => i.ProjectIdentifier == transactionRequest.ProjectId.Value);
 
-                    if (existingInvestment != null && !string.IsNullOrEmpty(existingInvestment.InvestmentTransactionHash))
+                    if (existingInvestment != null)
                     {
                         logger.LogWarning("Investor has already invested in project {ProjectId}", transactionRequest.ProjectId);
                         return Result.Failure<BuildInvestmentDraftResponse>("You have already invested in this project.");
