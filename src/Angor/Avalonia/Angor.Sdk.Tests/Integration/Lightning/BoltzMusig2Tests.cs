@@ -1,4 +1,6 @@
 ﻿using Angor.Sdk.Integration.Lightning;
+using Angor.Shared.Integration.Lightning;
+using Angor.Shared.Integration.Lightning.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NBitcoin;

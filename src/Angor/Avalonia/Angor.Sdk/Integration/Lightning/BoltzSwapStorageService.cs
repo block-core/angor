@@ -1,5 +1,6 @@
 ﻿using Angor.Data.Documents.Interfaces;
-using Angor.Sdk.Integration.Lightning.Models;
+using Angor.Shared.Integration.Lightning;
+using Angor.Shared.Integration.Lightning.Models;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 

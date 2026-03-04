@@ -3,8 +3,9 @@ using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Integration.Lightning;
-using Angor.Sdk.Integration.Lightning.Models;
 using Angor.Sdk.Wallet.Domain;
+using Angor.Shared.Integration.Lightning;
+using Angor.Shared.Integration.Lightning.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
