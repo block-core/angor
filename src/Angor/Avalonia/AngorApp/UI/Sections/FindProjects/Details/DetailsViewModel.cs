@@ -15,8 +15,8 @@ public class DetailsViewModel : ReactiveObject, IDetailsViewModel
 
     public DetailsViewModel(IProject project, IProjectAppService projectAppService, IDialog dialog, INetworkStorage networkStorage)
     {
-        var explorers = networkStorage.GetSettings().Explorers;
-        var primary = explorers.FirstOrDefault(e => e.IsPrimary) ?? explorers.FirstOrDefault();
+        var indexers = networkStorage.GetSettings().Indexers;
+        var primary = indexers.FirstOrDefault(e => e.IsPrimary) ?? indexers.FirstOrDefault();
         primaryExplorerUrl = primary?.Url?.TrimEnd('/') ?? "https://mempool.space";
 
         Project = project;
