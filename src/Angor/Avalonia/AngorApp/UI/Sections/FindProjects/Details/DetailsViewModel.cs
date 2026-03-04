@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Angor.Sdk.Funding.Projects;
+using Angor.Shared;
 using AngorApp.Model.ProjectsV2;
 using AngorApp.Model.ProjectsV2.FundProject;
 using AngorApp.Model.ProjectsV2.InvestmentProject;
@@ -10,8 +11,14 @@ namespace AngorApp.UI.Sections.FindProjects.Details;
 
 public class DetailsViewModel : ReactiveObject, IDetailsViewModel
 {
-    public DetailsViewModel(IProject project, IProjectAppService projectAppService, IDialog dialog)
+    private readonly string primaryExplorerUrl;
+
+    public DetailsViewModel(IProject project, IProjectAppService projectAppService, IDialog dialog, INetworkStorage networkStorage)
     {
+        var indexers = networkStorage.GetSettings().Indexers;
+        var primary = indexers.FirstOrDefault(e => e.IsPrimary) ?? indexers.FirstOrDefault();
+        primaryExplorerUrl = primary?.Url?.TrimEnd('/') ?? "https://mempool.space";
+
         Project = project;
         ShowProjectInfoJson = ReactiveCommand.CreateFromTask(async () =>
         {
@@ -36,7 +43,7 @@ public class DetailsViewModel : ReactiveObject, IDetailsViewModel
     public string FounderKey => Project.FounderPubKey ?? "[Backend: FounderPubKey is null]";
     public string ProjectId => Project.Id.Value ?? "[Backend: ProjectId is null]";
     public string ExplorerUrl => Project.Id.Value is { } id
-        ? $"https://mempool.space/tx/{id}"
+        ? $"{primaryExplorerUrl}/tx/{id}"
         : "[Backend: ProjectId is null]";
 
     public string NostrNpub => Project.NostrNpubKeyHex is { } hex
