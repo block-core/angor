@@ -2,8 +2,9 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Angor.Sdk.Integration.Lightning.Models;
 using Angor.Shared;
+using Angor.Shared.Integration.Lightning;
+using Angor.Shared.Integration.Lightning.Models;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 
@@ -120,7 +121,8 @@ public class BoltzSwapService : IBoltzSwapService
             _logger.LogInformation("Request JSON: {Json}", requestJson);
 
             // Use explicit JSON content to ensure our serialization options are applied
-            var content = new StringContent(requestJson, System.Text.Encoding.UTF8, "application/json");
+            var content = new StringContent(requestJson, System.Text.Encoding.UTF8);
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
             var response = await _httpClient.PostAsync($"{_apiPrefix}swap/reverse", content);
 
             if (!response.IsSuccessStatusCode)
