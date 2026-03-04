@@ -100,7 +100,7 @@
                                                     </Border>
                                                 </EdgePanel.EndContent>
                                             </EdgePanel>
-                                            <TextBlock Classes="Size-XS Text-Muted" TextWrapping="Wrap" Text="{Binding Description}" />
+                                            <TextBlock Classes="Size-XS Text-Muted" TextWrapping="Wrap" Text="{Binding DisplayDescription}" />
                                             <TextBlock Classes="Size-XS Dimmed" Text="{Binding Frequency, StringFormat='Frequency: {0}'}" />
                                         </StackPanel>
                                     </Border>
