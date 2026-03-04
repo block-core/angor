@@ -65,12 +65,6 @@ public static class GetInvestments
                     var investment = investmentTask.Result.IsSuccess ? investmentTask.Result.Value : null;
                     var stats = statsTask.Result.IsSuccess ? statsTask.Result.Value : (project.Id.Value, null);
 
-                    var initialStatus = investment != null
-                        ? InvestmentStatus.Invested
-                        : !string.IsNullOrEmpty(investmentRecord.RequestEventId)
-                            ? InvestmentStatus.PendingFounderSignatures
-                            : InvestmentStatus.Invalid;
-
                     var dto = new InvestedProjectDto
                     {
                         Id = project.Id.Value,
@@ -79,7 +73,7 @@ public static class GetInvestments
                         LogoUri = project.Picture,
                         Target = new Amount(project.TargetAmount),
                         FounderStatus = investment == null ? FounderStatus.Requested : FounderStatus.Approved,
-                        InvestmentStatus = initialStatus,
+                        InvestmentStatus = investment == null ? InvestmentStatus.Invalid : InvestmentStatus.Invested,
                         Investment = new Amount(investment?.TotalAmount ?? 0),
                         InvestmentId = investment?.TransactionId ?? string.Empty,
                         Raised = new Amount(stats.stats?.AmountInvested ?? 0),
