@@ -5,6 +5,7 @@
              xmlns:funders="clr-namespace:AngorApp.UI.Sections.Funders"
              xmlns:items="clr-namespace:AngorApp.UI.Sections.Funders.Items"
              xmlns:common="clr-namespace:AngorApp.UI.Shared.Controls.Common"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AngorApp.UI.Sections.Funders.Items.FunderItemView"
              x:DataType="items:IFunderItem">
@@ -29,14 +30,17 @@
               <Setter Property="Background" Value="{DynamicResource Error}" />
             </Style>
           </StackPanel.Styles>
-          <EdgePanel Classes="ColorPanel" CornerRadius="8" VerticalAlignment="Stretch" Padding="10">
+          <EdgePanel Classes="ColorPanel"
+                     Classes.Green="{Binding Status, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static items:FunderStatus.Approved}}"
+                     Classes.Red="{Binding Status, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static items:FunderStatus.Rejected}}"
+                     CornerRadius="8"
+                     VerticalAlignment="Stretch"
+                     Padding="10">
             <Interaction.Behaviors>
               <BindingTriggerBehavior Binding="{Binding Status}" Value="{x:Static items:FunderStatus.Approved}">
-                <AddClassAction ClassName="Green" />
                 <ChangePropertyAction PropertyName="Content" Value="Approved" />
               </BindingTriggerBehavior>
               <BindingTriggerBehavior Binding="{Binding Status}" Value="{x:Static items:FunderStatus.Rejected}">
-                <AddClassAction ClassName="Red" />
                 <ChangePropertyAction PropertyName="Content" Value="Rejected" />
               </BindingTriggerBehavior>
             </Interaction.Behaviors>

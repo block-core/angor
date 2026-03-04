@@ -1,0 +1,12 @@
+namespace AngorApp.Model.ProjectsV2.InvestmentProject
+{
+    public interface IStage
+    {
+        public StageStatus Status { get; }
+        public int Id { get; }
+        public decimal Ratio { get; }
+        public DateTimeOffset ReleaseDate { get; }
+        public IAmountUI Total { get; }
+        public IAmountUI Amount => new AmountUI((long)(Ratio * Total.Sats));
+    }
+}

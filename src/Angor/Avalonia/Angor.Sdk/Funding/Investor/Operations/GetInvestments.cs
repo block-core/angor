@@ -77,7 +77,10 @@ public static class GetInvestments
                         Investment = new Amount(investment?.TotalAmount ?? 0),
                         InvestmentId = investment?.TransactionId ?? string.Empty,
                         Raised = new Amount(stats.stats?.AmountInvested ?? 0),
-                        InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0)
+                        InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0),
+                        RequestedOn = investmentRecord.RequestEventTime.HasValue
+                            ? new DateTimeOffset(investmentRecord.RequestEventTime.Value)
+                            : null
                     };
 
                     if (investment != null)
@@ -142,6 +145,7 @@ public static class GetInvestments
                     dto.FounderStatus = Handshake.Status == InvestmentRequestStatus.Approved
                         ? FounderStatus.Approved
                         : FounderStatus.Requested;
+                    dto.RequestedOn = new DateTimeOffset(Handshake.RequestCreated);
 
                     dto.InvestmentStatus = DetermineInvestmentStatus(Handshake);
 
@@ -184,6 +188,5 @@ public static class GetInvestments
         }
     }
 }
-
 
 

@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:manage="clr-namespace:AngorApp.UI.Sections.Funded.Shared.Manage"
+             xmlns:cards="clr-namespace:AngorApp.UI.Sections.Funded.Investment.Cards"
+             xmlns:cards1="clr-namespace:AngorApp.UI.Sections.Funded.Fund.Cards"
+             xmlns:model="clr-namespace:AngorApp.Model.Funded.Investment.Model;assembly=AngorApp.Model"
+             xmlns:model1="clr-namespace:AngorApp.Model.Funded.Fund.Model;assembly=AngorApp.Model"
+             mc:Ignorable="d"
+             d:DesignWidth="400"
+             MinWidth="400"
+             x:Class="AngorApp.UI.Sections.Funded.Shared.Manage.ActionsCard"
+             x:DataType="manage:IManageViewModel">
+
+    <Design.DataContext>
+        <manage:ManageInvestmentViewModelSample />
+    </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding Funded.InvestorData.Refresh}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <Loading ClipToBounds="False" IsLoading="{Binding Funded.InvestorData.Refresh.IsExecuting^}" LoadingText="Updating data...">
+        <ContentControl Content="{Binding Funded}" ClipToBounds="False">
+            <ContentControl.DataTemplates>
+                <DataTemplate DataType="model:IInvestmentFunded">
+                    <cards:InvestmentActionsCard />
+                </DataTemplate>
+
+                <DataTemplate DataType="model1:IFundFunded">
+                    <cards1:FundActionsCard />
+                </DataTemplate>
+            </ContentControl.DataTemplates>
+        </ContentControl>
+    </Loading>
+</UserControl>

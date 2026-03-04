@@ -8,7 +8,7 @@
              x:Class="AngorApp.UI.Sections.Funders.Chat.ChatView" x:DataType="chat:IChatViewModel">
 
     <Design.DataContext>
-        <angorApp:ChatViewModelSample />
+        <chat:ChatViewModelSample />
     </Design.DataContext>
 
     <DockPanel VerticalSpacing="20">
@@ -27,16 +27,18 @@
             <ItemsControl ItemsSource="{Binding Messages}" Classes="Vertical">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Classes="ColorPanel" Margin="10 0" Padding="14 10">
+                        <Border Classes="ColorPanel"
+                                Classes.Blue="{Binding IsOwnMessage}"
+                                Classes.LightGray="{Binding IsOwnMessage, Converter={x:Static BoolConverters.Not}}"
+                                Margin="10 0"
+                                Padding="14 10">
                             <TextBlock Classes="Wrap" Text="{Binding Text}" />
                             <Interaction.Behaviors>
                                 <BindingTriggerBehavior Binding="{Binding IsOwnMessage}" Value="True">
                                     <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.HorizontalAlignmentProperty}" Value="Left" />
-                                    <AddClassAction ClassName="Blue" />
                                 </BindingTriggerBehavior>
                                 <BindingTriggerBehavior Binding="{Binding IsOwnMessage}" Value="False">
                                     <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.HorizontalAlignmentProperty}" Value="Right" />
-                                    <AddClassAction ClassName="LightGray" />
                                 </BindingTriggerBehavior>
                             </Interaction.Behaviors>
                         </Border>

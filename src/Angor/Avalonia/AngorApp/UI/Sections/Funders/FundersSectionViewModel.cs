@@ -73,7 +73,7 @@ public class FundersSectionViewModel : IFundersSectionViewModel
                                           new GetProjectInvestments.GetProjectInvestmentsRequest(
                                               input.wallet.Id,
                                               input.prj.Id)).Map(response => new { input.wallet, input.prj, response }))
-                     .MapEach(arg => arg.response.Investments.Where(IsCandidate).Select(IFunderItem (investment) => new FunderItem(
+                     .MapEach(arg => arg.response.Investments.Where(ShouldInclude).Select(IFunderItem (investment) => new FunderItem(
                          uiServices,
                          () => ApproveInvestment(arg.wallet.Id, arg.prj.Id, investment),
                          () => RejectInvestment(arg.wallet.Id, arg.prj.Id, investment))
@@ -91,7 +91,7 @@ public class FundersSectionViewModel : IFundersSectionViewModel
         return items;
     }
 
-    private static bool IsCandidate(Investment investment)
+    private static bool ShouldInclude(Investment investment)
     {
         return investment.Status == InvestmentStatus.PendingFounderSignatures || 
                investment.Status == InvestmentStatus.FounderSignaturesReceived ||

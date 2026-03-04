@@ -1,11 +1,13 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
     <Design.PreviewWith>
         <Border Padding="20">
             <WrapPanel>
                 <StackPanel Spacing="10">
                     <ContentControl Classes="Pill Red" Content="SOMETHING" />
                     <ContentControl Classes="Pill Green" Content="SOMETHING" />
+                    <ContentControl Classes="Pill Blue" Content="SOMETHING" />
                     <ContentControl Classes="Pill Orange" Content="SOMETHING" />
                     <ContentControl Classes="Pill BrightGreen" Content="SOMETHING" />
                 </StackPanel>
@@ -13,6 +15,7 @@
                     <StackPanel Spacing="10" Background="Black">
                         <ContentControl Classes="Pill Red" Content="SOMETHING" />
                         <ContentControl Classes="Pill Green" Content="SOMETHING" />
+                        <ContentControl Classes="Pill Blue" Content="SOMETHING" />
                         <ContentControl Classes="Pill Orange" Content="SOMETHING" />
                         <ContentControl Classes="Pill BrightGreen" Content="SOMETHING" />
                     </StackPanel>
@@ -39,6 +42,11 @@
         <Setter Property="Border.Background" Value="#1a22c55e" />
         <Setter Property="TextElement.Foreground" Value="#22c55e" />
     </Style>
+    <Style Selector=":is(Control).Pill.Blue">
+        <Setter Property="Border.BorderBrush" Value="#3b82f6" />
+        <Setter Property="Border.Background" Value="#1a3b82f6" />
+        <Setter Property="TextElement.Foreground" Value="#3b82f6" />
+    </Style>
     <Style Selector=":is(Control).Pill.Red">
         <Setter Property="Border.BorderBrush" Value="#ef4444" />
         <Setter Property="Border.Background" Value="#1aef4444" />
@@ -48,6 +56,14 @@
         <Setter Property="Border.BorderBrush" Value="#f7931a" />
         <Setter Property="Border.Background" Value="#1af7931a" />
         <Setter Property="TextElement.Foreground" Value="#f7931a" />
+    </Style>
+    
+    <Style Selector="Loading.Pill">
+        <Setter Property="LoadingTemplate">
+            <ControlTemplate>
+                <c:ProgressRing IsIndeterminate="True" Width="32" Foreground="{DynamicResource PrimaryGreen}" Height="32" VerticalAlignment="Center" />
+            </ControlTemplate>
+        </Setter>
     </Style>
 
 </Styles>

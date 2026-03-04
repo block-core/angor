@@ -14,22 +14,30 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds
     {
         public ManageFundsViewModel(ProjectId projectId, IProjectAppService projectAppService, UIServices uiServices, IWalletContext walletContext, IFounderAppService founderAppService)
         {
-            Load = EnhancedCommand.CreateWithResult(() => projectAppService.GetFullProject(projectId));
-            ProjectObs = Load.Successes();
-            ReleaseViewModel = ProjectObs.Select(project => new ReleaseViewModel(project, uiServices, founderAppService, walletContext));
-            ClaimViewModel = ProjectObs.Select(project => new ClaimViewModel(project, founderAppService, uiServices, walletContext));
+            var loadFullProject = EnhancedCommand.CreateWithResult(() => projectAppService.GetFullProject(projectId));
+            Load = loadFullProject;
+            IObservable<IFullProject> fullProjectObs = loadFullProject.Successes();
+            IObservable<IManageFundsProject> projectObs = fullProjectObs.Select(ToProjectView);
+            ProjectObs = projectObs;
+            ReleaseViewModel = projectObs.Select(project => new ReleaseViewModel(project, uiServices, founderAppService, walletContext));
+            ClaimViewModel = projectObs.Select(project => new ClaimViewModel(project, founderAppService, uiServices, walletContext));
             
-            Load.HandleErrorsWith(uiServices.NotificationService, "Cannot load project");
-            Header = Load.Successes().Select(project => new HeaderViewModel(project, Load));
+            loadFullProject.HandleErrorsWith(uiServices.NotificationService, "Cannot load project");
+            Header = projectObs.Select(project => new HeaderViewModel(project, loadFullProject));
         }
 
-        public IObservable<IFullProject> ProjectObs { get; }
+        public IObservable<IManageFundsProject> ProjectObs { get; }
 
-        public IEnhancedCommand<Result<IFullProject>> Load { get; }
+        public IEnhancedCommand Load { get; }
         public IObservable<IReleaseViewModel> ReleaseViewModel { get; }
         public IObservable<IClaimViewModel> ClaimViewModel { get; }
 
-        public IFullProject Project { get; } = new FullProjectSample();
+        public IManageFundsProject Project { get; } = ManageFundsProject.From(new FullProjectSample());
         public IObservable<object> Header { get; }
+
+        private static IManageFundsProject ToProjectView(IFullProject fullProject)
+        {
+            return ManageFundsProject.From(fullProject);
+        }
     }
 }

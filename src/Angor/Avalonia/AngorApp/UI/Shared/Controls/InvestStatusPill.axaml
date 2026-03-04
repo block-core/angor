@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:project="clr-namespace:Angor.Sdk.Funding.Founder;assembly=Angor.Sdk"
+             xmlns:model="clr-namespace:AngorApp.Model.Funded.Shared.Model;assembly=AngorApp.Model"
+             xmlns:m="clr-namespace:AngorApp.Model.Funded.Investment.Model;assembly=AngorApp.Model"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:c="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             mc:Ignorable="d"
+             x:Class="AngorApp.UI.Shared.Controls.InvestStatusPill" x:DataType="model:IInvestorData">
+
+    <Design.DataContext>
+        <m:InvestmentInvestorDataSample Status="{Return PendingFounderSignatures}" />
+    </Design.DataContext>
+
+    <Loading Classes="Pill" IsLoading="{Binding Refresh.IsExecuting^}">
+        <ContentControl Classes="Pill"
+                        Classes.BrightGreen="{Binding Status^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static project:InvestmentStatus.Invested}}"
+                        Classes.Orange="{Binding Status^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static project:InvestmentStatus.PendingFounderSignatures}}"
+                        Classes.Blue="{Binding Status^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static project:InvestmentStatus.FounderSignaturesReceived}}"
+                        Classes.Red="{Binding Status^, Converter={x:Static controls:AngorConverters.IsOneOf}, ConverterParameter='Cancelled|Invalid'}">
+            <Interaction.Behaviors>
+                <BindingTriggerBehavior Binding="{Binding Status^}" Value="{x:Static project:InvestmentStatus.Invested}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Invested" />
+                </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding Status^}" Value="{x:Static project:InvestmentStatus.PendingFounderSignatures}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Awaiting Approval" />
+                </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding Status^}" Value="{x:Static project:InvestmentStatus.FounderSignaturesReceived}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Approved by Founder" />
+                </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding Status^}" Value="{x:Static project:InvestmentStatus.Cancelled}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Cancelled" />
+                </BindingTriggerBehavior>
+                <BindingTriggerBehavior Binding="{Binding Status^}" Value="{x:Static project:InvestmentStatus.Invalid}">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Invalid Status" />
+                </BindingTriggerBehavior>
+            </Interaction.Behaviors>
+        </ContentControl>
+    </Loading>
+</UserControl>

@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ctrl="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:founder="clr-namespace:Angor.Sdk.Funding.Founder;assembly=Angor.Sdk"
+             xmlns:manage="clr-namespace:AngorApp.Model.Funded.Investment.Model;assembly=AngorApp.Model"
+             mc:Ignorable="d"
+             d:DesignWidth="800"
+             x:Class="AngorApp.UI.Sections.Funded.Investment.Cards.InvestmentFundingInformationCard"
+             x:DataType="manage:IInvestmentFunded">
+
+    <BalancedWrapGrid MinItemWidth="220">
+        <ctrl:NewCard ContainerClasses="Card Elevate White ThickBorder"
+                      HeaderPanelClasses=""
+                      Left="Investment Start Date"
+                      Right="{Icon fa-calendar}"
+                      Content="{Binding Project.FundingStart, StringFormat=m}" />
+
+        <ctrl:NewCard ContainerClasses="Card Elevate White ThickBorder"
+                      HeaderPanelClasses=""
+                      Left="Investment End Date"
+                      Right="{Icon fa-calendar}"
+                      Content="{Binding Project.FundingEnd, StringFormat=m}" />
+
+        <ctrl:NewCard ContainerClasses="Card Elevate White ThickBorder"
+                      HeaderPanelClasses=""
+                      Left="Transaction Date"
+                      Right="{Icon fa-clock}"
+                      Content="{Binding InvestorData.InvestedOn, StringFormat=m}" />
+
+        <ctrl:NewCard ContainerClasses="Card Elevate White ThickBorder"
+                      HeaderPanelClasses=""
+                      Left="Investment Status"
+                      Right="{Icon fa-check}">
+            <ctrl:NewCard.Content>
+                <ContentControl Content="Approved">
+                    <Interaction.Behaviors>
+                        <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.PendingFounderSignatures}">
+                            <ChangePropertyAction PropertyName="Content" Value="Waiting" />
+                        </BindingTriggerBehavior>
+                        <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.FounderSignaturesReceived}">
+                            <ChangePropertyAction PropertyName="Content" Value="Approved" />
+                        </BindingTriggerBehavior>
+                        <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.Invested}">
+                            <ChangePropertyAction PropertyName="Content" Value="Approved" />
+                        </BindingTriggerBehavior>
+                        <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.Invalid}">
+                            <ChangePropertyAction PropertyName="Content" Value="Invalid" />
+                        </BindingTriggerBehavior>
+                        <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.Cancelled}">
+                            <ChangePropertyAction PropertyName="Content" Value="Cancelled" />
+                        </BindingTriggerBehavior>
+                    </Interaction.Behaviors>
+                </ContentControl>
+            </ctrl:NewCard.Content>
+        </ctrl:NewCard>
+    </BalancedWrapGrid>
+</UserControl>

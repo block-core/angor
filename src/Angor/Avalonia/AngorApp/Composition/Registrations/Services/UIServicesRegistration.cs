@@ -1,6 +1,8 @@
 using System.IO;
 using Angor.Sdk.Common;
 using AngorApp.Core;
+using AngorApp.Model.Funded.Shared.Model;
+using AngorApp.UI.TransactionDrafts;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
@@ -36,11 +38,11 @@ public static class UIServicesRegistration
             .AddSingleton<ISectionActions, SectionActions>()
             .AddSingleton<IWalletContext, WalletContext>()
             .AddSingleton<IValidations, Validations>()
-            .AddSingleton<SharedCommands>()
             .AddSingleton<IStorageProvider>(_ => GetStorageProvider(mainView))
             .AddSingleton<ILauncherService, LauncherService>()
             .AddSingleton<INotificationService, NotificationService>()
             .AddSingleton<IImageValidationService, ImageValidationService>()
+            .AddSingleton<ITransactionDraftPreviewer, UI.TransactionDrafts.TransactionDraftPreviewer>()
             .AddSingleton(sp => ActivatorUtilities.CreateInstance<UIServices>(sp, profileContext.ProfileName, mainView));
     }
 

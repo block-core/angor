@@ -1,0 +1,83 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:a="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:project="clr-namespace:AngorApp.Model.ProjectsV2;assembly=AngorApp.Model"
+             xmlns:manage="clr-namespace:AngorApp.Model.Funded.Shared.Model;assembly=AngorApp.Model"
+             xmlns:model="clr-namespace:AngorApp.Model.Funded.Investment.Model;assembly=AngorApp.Model"
+             xmlns:model1="clr-namespace:AngorApp.Model.Funded.Fund.Model;assembly=AngorApp.Model"
+             mc:Ignorable="d"
+             d:DesignWidth="500"
+             x:Class="AngorApp.UI.Sections.Funded.Shared.ProjectList.FundedProjectItemView" x:DataType="manage:IFundedItem">
+
+    <Design.DataContext>
+        <manage:FundedItemSample />
+    </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <EnqueueCommandAction PoolName="FundedProjectsInvestorData" Command="{Binding Funded.InvestorData.Refresh}" />
+            <EnqueueCommandAction PoolName="FundedProjectsProjects" Command="{Binding Funded.Project.Refresh}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <Border Classes="Panel Elevate Shadow">
+        <StackPanel Classes="Gap-L">
+            <Grid>
+                <a:AdvancedImage CornerRadius="10 10 0 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="150" Source="{Binding Funded.Project.BannerUrl}" />
+            </Grid>
+            <Border Height="60" Width="60" Margin="0 -50 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource AppBackground}">
+                <a:AdvancedImage Source="{Binding Funded.Project.LogoUrl}" />
+            </Border>
+            <TextBlock Text="{Binding Funded.Project.Name}" Classes="Size-L Weight-Bold Strong" />
+            <StackPanel Orientation="Horizontal" Classes="Gap-S">
+                <controls:ProjectTypePill DataContext="{Binding Funded.Project}" />
+                <controls:InvestStatusPill DataContext="{Binding Funded.InvestorData}" />
+            </StackPanel>
+            <ContentControl Content="{Binding Funded}">
+                <ContentControl.DataTemplates>
+                    <DataTemplate DataType="model:IInvestmentFunded">
+                        <StackPanel Classes="Gap-M">
+                            <DockPanel>
+                                <TextBlock Text="Investment:" />
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding InvestorData.Amount.DecimalString}" />
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBlock Text="Date:" />
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding InvestorData.InvestedOn, StringFormat=d}" />
+                            </DockPanel>
+                            <ProgressBar IsIndeterminate="{Binding Project.Refresh.IsExecuting^}"
+                                         Classes.Red="{Binding Project.ProjectStatus^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static project:ProjectStatus.Closed}}"
+                                         Height="8"
+                                         Value="{Binding Project.FundingRaised^.Sats, FallbackValue=0}"
+                                         Maximum="{Binding Project.FundingTarget.Sats}" />
+                        </StackPanel>
+                    </DataTemplate>
+                    <DataTemplate DataType="model1:IFundFunded">
+                        <StackPanel Classes="Gap-M">
+                            <DockPanel>
+                                <TextBlock Text="Investment:" />
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding InvestorData.Amount.DecimalString}" />
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBlock Text="Date:" />
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding InvestorData.InvestedOn, StringFormat=d}" />
+                            </DockPanel>
+                            <ProgressBar IsIndeterminate="{Binding Project.Refresh.IsExecuting^}"
+                                         Classes.Red="{Binding Project.ProjectStatus^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static project:ProjectStatus.Closed}}"
+                                         Height="8"
+                                         Value="{Binding Project.FundingRaised^.Sats, FallbackValue=0}"
+                                         Maximum="{Binding Project.FundingTarget.Sats}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+
+            <EnhancedButton HorizontalContentAlignment="Center" Icon="{Icon fa-regular fa-clipboard}" Content="Manage" Command="{Binding Manage}" Classes="Outline" HorizontalAlignment="Stretch" />
+        </StackPanel>
+    </Border>
+
+
+</UserControl>
