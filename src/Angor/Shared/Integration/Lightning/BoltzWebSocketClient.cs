@@ -1,3 +1,4 @@
+<<<<<<<< HEAD:src/Angor/Shared/Integration/Lightning/BoltzWebSocketClient.cs
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -262,3 +263,6 @@ public class BoltzWebSocketClient : IBoltzWebSocketClient, IAsyncDisposable
     }
 }
 
+========
+// Moved to Angor.Shared.Integration.Lightning
+>>>>>>>> e7fcac64 (Refactor Boltz integration: move DTOs to Angor.Shared.Integration.Lightning and implement XunitLogger for test output):src/Angor/Avalonia/Angor.Sdk/Integration/Lightning/BoltzWebSocketClient.cs

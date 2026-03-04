@@ -1,3 +1,4 @@
+<<<<<<<< HEAD:src/Angor/Shared/Integration/Lightning/BoltzSwapService.cs
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -423,3 +424,6 @@ public class BoltzSwapService : IBoltzSwapService
     }
 }
 
+========
+// Moved to Angor.Shared.Integration.Lightning
+>>>>>>>> e7fcac64 (Refactor Boltz integration: move DTOs to Angor.Shared.Integration.Lightning and implement XunitLogger for test output):src/Angor/Avalonia/Angor.Sdk/Integration/Lightning/BoltzSwapService.cs
