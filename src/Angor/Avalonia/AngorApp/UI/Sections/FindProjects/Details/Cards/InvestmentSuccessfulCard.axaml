@@ -23,6 +23,16 @@
                     <Run> (100% of target)</Run>
                 </TextBlock.Inlines>
             </TextBlock>
+
+            <EnhancedButton Content="Invest Now (Debug)" Icon="{Icon fa-brands fa-bitcoin}"
+                            Command="{Binding Invest}"
+                            IsVisible="{Binding Invest.CanExecute^}"
+                            Classes="White"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            FontSize="18"
+                            Padding="24 14"
+                            FontWeight="Bold" />
         </StackPanel>
     </Border>
 </UserControl>

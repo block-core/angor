@@ -53,4 +53,40 @@ public class ProjectInvestCommandFactoryTests
 
         result.Should().BeFalse();
     }
+
+    [Fact]
+    public void CanInvest_returns_false_for_invest_when_funding_ended_and_debug_off()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var fundingStart = now.AddDays(-30);
+        var fundingEnd = now.AddDays(-10);
+
+        var result = ProjectInvestCommandFactory.CanInvest(ProjectType.Invest, now, fundingStart, fundingEnd, isDebugMode: false);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void CanInvest_returns_true_for_invest_when_funding_ended_and_debug_on()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var fundingStart = now.AddDays(-30);
+        var fundingEnd = now.AddDays(-10);
+
+        var result = ProjectInvestCommandFactory.CanInvest(ProjectType.Invest, now, fundingStart, fundingEnd, isDebugMode: true);
+
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void CanInvest_returns_true_for_invest_when_not_started_with_debug_on()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var fundingStart = now.AddDays(1);
+        var fundingEnd = now.AddDays(30);
+
+        var result = ProjectInvestCommandFactory.CanInvest(ProjectType.Invest, now, fundingStart, fundingEnd, isDebugMode: true);
+
+        result.Should().BeTrue();
+    }
 }

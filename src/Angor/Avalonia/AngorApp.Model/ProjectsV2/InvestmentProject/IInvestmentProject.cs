@@ -18,7 +18,7 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
             get
             {
                 DateTimeOffset now = DateTimeOffset.Now;
-                var isOpen = now >= FundingStart && now > FundingEnd;
+                var isOpen = now >= FundingStart && now <= FundingEnd;
                 return Observable.Return(isOpen);
             }
         }
