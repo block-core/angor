@@ -1,11 +1,7 @@
-﻿using Angor.Sdk.Integration.Lightning;
-using Angor.Shared.Integration.Lightning;
-using Angor.Shared.Integration.Lightning.Models;
+﻿using Angor.Shared.Integration.Lightning;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NBitcoin;
-using NBitcoin.Secp256k1;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace Angor.Sdk.Tests.Integration.Lightning;
