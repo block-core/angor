@@ -8,12 +8,13 @@ using Angor.Shared.Services;
 using Angor.Shared.Utilities;
 using Blockcore.Consensus.TransactionInfo;
 using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Logging;
 
 namespace Angor.Sdk.Funding.Projects;
 
 public class ProjectInvestmentsService(IProjectService projectService, INetworkConfiguration networkConfiguration,
     IAngorIndexerService angorIndexerService, IInvestorTransactionActions investorTransactionActions,
-    ITransactionService transactionService) : IProjectInvestmentsService
+    ITransactionService transactionService, ILogger<ProjectInvestmentsService> logger) : IProjectInvestmentsService
 {
     public async Task<Result<IEnumerable<StageData>>> ScanFullInvestments(string projectId)
     {
@@ -272,6 +273,8 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
     public async Task<Result<InvestmentSpendingLookup>> ScanInvestmentSpends(ProjectInfo project, string transactionId)
     {
+        logger.LogInformation("[ScanInvestmentSpends] Starting scan for project={ProjectId}, txId={TxId}", project.ProjectIdentifier, transactionId);
+        
         var trxInfo = await transactionService.GetTransactionInfoByIdAsync(transactionId);
 
         if (trxInfo == null)
@@ -293,16 +296,23 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
             : investmentTransaction.Outputs.AsIndexedOutputs()
                 .Count(o => o.TxOut.ScriptPubKey.IsTaprooOutput());
 
+        logger.LogInformation("[ScanInvestmentSpends] stageCount={StageCount}, projectStagesCount={ProjectStagesCount}", stageCount, project.Stages?.Count ?? 0);
+
         for (int stageIndex = 0; stageIndex < stageCount; stageIndex++)
         {
             var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
+
+            logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: SpentInTransaction={SpentTxId}", stageIndex, output.SpentInTransaction ?? "null");
 
             if (!string.IsNullOrEmpty(output.SpentInTransaction))
             {
                 var spentInfo = await transactionService.GetTransactionInfoByIdAsync(output.SpentInTransaction);
 
                 if (spentInfo == null)
+                {
+                    logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: spentInfo is null, skipping", stageIndex);
                     continue;
+                }
 
                 var spentInput = spentInfo.Inputs.FirstOrDefault(input =>
                     input.InputTransactionId == transactionId &&
@@ -311,6 +321,8 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                 if (spentInput != null) //TODO move the script discovery to another class
                 {
                     var scriptType = investorTransactionActions.DiscoverUsedScript(project, investmentTransaction, stageIndex, spentInput.WitScript);
+
+                    logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: DiscoverUsedScript returned {ScriptType}", stageIndex, scriptType.ScriptType);
 
                     switch (scriptType.ScriptType)
                     {
@@ -323,14 +335,41 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                         case ProjectScriptTypeEnum.EndOfProject:
                         {
                             response.EndOfProjectTransactionId = output.SpentInTransaction;
+                            logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: EndOfProject, returning", stageIndex);
                             return response;
                         }
 
                         case ProjectScriptTypeEnum.InvestorWithPenalty:
                         {
+                            // Both recovery and unfunded release use the same Recover script path.
+                            // Distinguish by checking the spending transaction's output types:
+                            // - Recovery outputs go to P2WSH (penalty timelock script)
+                            // - Unfunded release outputs go to P2WPKH (direct to investor address)
+                            
+                            // Log all output types for debugging
+                            foreach (var spentOutput in spentInfo.Outputs)
+                            {
+                                logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: SpentTx output idx={OutputIdx}, OutputType={OutputType}, Address={Address}, ScriptPubKey={ScriptPubKey}", 
+                                    stageIndex, spentOutput.Index, spentOutput.OutputType ?? "null", spentOutput.Address ?? "null", spentOutput.ScriptPubKey ?? "null");
+                            }
+                            
+                            var isUnfundedRelease = spentInfo.Outputs
+                                .Any(o => o.OutputType == "witness_v0_keyhash" || o.OutputType == "v0_p2wpkh");
+
+                            logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: isUnfundedRelease={IsUnfunded}", stageIndex, isUnfundedRelease);
+
+                            if (isUnfundedRelease)
+                            {
+                                response.UnfundedReleaseTransactionId = output.SpentInTransaction;
+                                logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: Set UnfundedReleaseTransactionId={TxId}, returning", stageIndex, output.SpentInTransaction);
+                                return response;
+                            }
+
                             response.RecoveryTransactionId = output.SpentInTransaction;
                             var totalsats = trxInfo.Outputs.SkipLast(1).Sum(s => s.Balance);
                             response.AmountInRecovery = totalsats;
+                            
+                            logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: Set RecoveryTransactionId={TxId}", stageIndex, output.SpentInTransaction);
 
                             var spentRecoveryInfo =
                                 await transactionService.GetTransactionInfoByIdAsync(response.RecoveryTransactionId);
@@ -351,12 +390,20 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                         case ProjectScriptTypeEnum.InvestorNoPenalty:
                         {
                             response.UnfundedReleaseTransactionId = output.SpentInTransaction;
+                            logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: InvestorNoPenalty, Set UnfundedReleaseTransactionId={TxId}, returning", stageIndex, output.SpentInTransaction);
                             return response;
                         }
                     }
                 }
+                else
+                {
+                    logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: spentInput is null (no matching input found)", stageIndex);
+                }
             }
         }
+
+        logger.LogInformation("[ScanInvestmentSpends] Completed scan. UnfundedReleaseTxId={UnfundedTxId}, RecoveryTxId={RecoveryTxId}", 
+            response.UnfundedReleaseTransactionId ?? "null", response.RecoveryTransactionId ?? "null");
 
         return response;
     }
