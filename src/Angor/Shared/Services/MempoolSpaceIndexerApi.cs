@@ -259,24 +259,39 @@ public class MempoolSpaceIndexerApi : IIndexerService
         return utxoDataList;
     }
 
-    public async Task<List<QueryTransaction>?> FetchAddressHistoryAsync(string address, string? afterTrxId = null) //TODO check the paging (I think it is 50 by default 
+    public async Task<List<QueryTransaction>?> FetchAddressHistoryAsync(string address, string? afterTrxId = null)
     {
-        var txsUrl = $"{MempoolApiRoute}/address/{address}/txs";
+        var allTransactions = new List<QueryTransaction>();
+        string? currentAfterTxId = afterTrxId;
 
-        if (!string.IsNullOrEmpty(afterTrxId))
-            txsUrl += $"?after_txid={afterTrxId}";
+        while (true)
+        {
+            var txsUrl = $"{MempoolApiRoute}/address/{address}/txs";
 
-        var response = await GetIndexerClient()
-                  .GetAsync(txsUrl);
-        _networkService.CheckAndHandleError(response);
+            if (!string.IsNullOrEmpty(currentAfterTxId))
+                txsUrl += $"?after_txid={currentAfterTxId}";
 
-        if (!response.IsSuccessStatusCode)
-            throw new InvalidOperationException(response.ReasonPhrase);
+            var response = await GetIndexerClient().GetAsync(txsUrl);
+            _networkService.CheckAndHandleError(response);
 
-        var trx = await response.Content.ReadFromJsonAsync<List<MempoolTransaction>>(new JsonSerializerOptions()
-        { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+            if (!response.IsSuccessStatusCode)
+                throw new InvalidOperationException(response.ReasonPhrase);
 
-        return trx?.Select(t => MapToQueryTransaction(t)).ToList() ?? new List<QueryTransaction>();
+            var trx = await response.Content.ReadFromJsonAsync<List<MempoolTransaction>>(new JsonSerializerOptions()
+            { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+
+            if (trx == null || !trx.Any())
+                break;
+
+            allTransactions.AddRange(trx.Select(t => MapToQueryTransaction(t)));
+
+            if (trx.Count < 50) 
+                break; // We've reached the last page
+
+            currentAfterTxId = trx.Last().Txid;
+        }
+
+        return allTransactions;
     }
 
     public async Task<FeeEstimations?> GetFeeEstimationAsync(int[] confirmations)
