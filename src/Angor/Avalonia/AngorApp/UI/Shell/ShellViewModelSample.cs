@@ -58,6 +58,7 @@ namespace AngorApp.UI.Shell
         public IReadOnlyCollection<IWallet> Wallets { get; }
         public IWallet? CurrentWallet { get; set; }
         public IAmountUI? TotalInvested { get; }
+        public string? ProfileName => "TestProfile";
 
         public void SetSection(string sectionName)
         {

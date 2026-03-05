@@ -39,6 +39,9 @@ namespace AngorApp.UI.Shell
                                           .DisposeWith(disposable);
             IsDarkThemeEnabled = uiServices.IsDarkThemeEnabled;
 
+            var profile = uiServices.ProfileName;
+            ProfileName = string.Equals(profile, "Default", StringComparison.OrdinalIgnoreCase) ? null : profile;
+
             this.WhenAnyValue(x => x.IsDarkThemeEnabled)
                 .BindTo(uiServices, services => services.IsDarkThemeEnabled)
                 .DisposeWith(disposable);
@@ -77,6 +80,7 @@ namespace AngorApp.UI.Shell
 
         public ReactiveCommand<Unit, ISection> GoToSettings { get; set; }
         public IEnumerable<ISection> SidebarSections { get; }
+        public string? ProfileName { get; }
 
         public IReadOnlyCollection<IWallet> Wallets => walletContext.Wallets;
 
