@@ -1,33 +1,43 @@
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Zafiro.CSharpFunctionalExtensions;
+using Zafiro.Reactive;
 
 namespace AngorApp.Model.ProjectsV2.InvestmentProject
 {
     public class InvestmentProject : Project, IInvestmentProject
     {
-        public InvestmentProject(ProjectDto seed, IProjectAppService projectAppService, IEnhancedCommand<Result> invest) : base(seed, invest)
+        public InvestmentProject(ProjectDto seed, IProjectAppService projectAppService, IEnhancedCommand<Result> invest, IEnhancedCommand? manageFunds = null) : base(seed, invest, manageFunds ?? CreateUnsupportedManageFundsCommand())
         {
             var refresh = EnhancedCommand.CreateWithResult(() => projectAppService.GetProjectStatistics(seed.Id));
             var projectStatistics = refresh.Successes();
             var seedStages = seed.Stages ?? [];
             IReadOnlyCollection<IStage> mapStages() => Stage.MapFrom(seedStages, seed.TargetAmount);
 
-            Raised = projectStatistics.Select(ToRaisedAmount);
-            InvestorCount = projectStatistics.Select(ToInvestorCount);
+            Raised = projectStatistics.Select(ToRaisedAmount).ReplayLastActive();
+            TotalInvestment = projectStatistics.Select(ToTotalInvestment).ReplayLastActive();
+            AvailableBalance = projectStatistics.Select(ToAvailableBalance).ReplayLastActive();
+            Withdrawable = projectStatistics.Select(ToWithdrawable).ReplayLastActive();
+            TotalStages = projectStatistics.Select(ToTotalStages).ReplayLastActive();
+            InvestorCount = projectStatistics.Select(ToInvestorCount).ReplayLastActive();
             Target = new AmountUI(seed.TargetAmount);
             FundingStart = seed.FundingStartDate;
             FundingEnd = seed.FundingEndDate;
             Refresh = refresh;
             Stages = projectStatistics
                 .Select(_ => mapStages())
-                .StartWith(mapStages());
+                .StartWith(mapStages())
+                .ReplayLastActive();
             PenaltyDuration = seed.PenaltyDuration;
             PenaltyThreshold = ToPenaltyThreshold(seed);
         }
 
         public IAmountUI Target { get; }
         public IObservable<IAmountUI> Raised { get; }
+        public IObservable<IAmountUI> TotalInvestment { get; }
+        public IObservable<IAmountUI> AvailableBalance { get; }
+        public IObservable<IAmountUI> Withdrawable { get; }
+        public IObservable<int> TotalStages { get; }
         public IObservable<int> InvestorCount { get; }
         public DateTimeOffset FundingStart { get; }
         public DateTimeOffset FundingEnd { get; }
@@ -42,6 +52,26 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
         private static IAmountUI ToRaisedAmount(ProjectStatisticsDto statistics)
         {
             return new AmountUI(statistics.TotalInvested);
+        }
+
+        private static IAmountUI ToTotalInvestment(ProjectStatisticsDto statistics)
+        {
+            return new AmountUI(statistics.TotalInvested);
+        }
+
+        private static IAmountUI ToAvailableBalance(ProjectStatisticsDto statistics)
+        {
+            return new AmountUI(statistics.AvailableBalance);
+        }
+
+        private static IAmountUI ToWithdrawable(ProjectStatisticsDto statistics)
+        {
+            return new AmountUI(statistics.WithdrawableAmount);
+        }
+
+        private static int ToTotalStages(ProjectStatisticsDto statistics)
+        {
+            return statistics.TotalStages;
         }
 
         private static int ToInvestorCount(ProjectStatisticsDto statistics)

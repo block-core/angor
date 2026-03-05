@@ -5,7 +5,7 @@
              mc:Ignorable="d"
              d:DesignWidth="400"
              
-             x:Class="AngorApp.UI.Sections.Funded.Fund.Cards.InvalidCard">
+             x:Class="AngorApp.UI.Sections.Funded.Fund.Cards.Actions.InvalidCard">
 
     <Border Classes="ColorPanel Red Shadow">
         <TextBlock Classes="Wrap" HorizontalAlignment="Center">INVALID INVESTMENT STATUS</TextBlock>

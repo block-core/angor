@@ -1,3 +1,4 @@
+using System.Reactive.Linq;
 using System.Text.Json;
 using Angor.Sdk.Funding.Projects;
 using Angor.Shared;
@@ -22,12 +23,8 @@ public class DetailsViewModel : ReactiveObject, IDetailsViewModel
         Project = project;
         ShowProjectInfoJson = ReactiveCommand.CreateFromTask(async () =>
         {
-            var fullProject = await projectAppService.GetFullProject(project.Id);
-            if (fullProject.IsSuccess)
-            {
-                var json = SerializeProjectInfo(fullProject.Value);
-                await dialog.Show(new LongTextViewModel { Text = json }, "Project Info (JSON)", Observable.Return(true));
-            }
+            var json = await SerializeProjectInfoAsync(project);
+            await dialog.Show(new LongTextViewModel { Text = json }, "Project Info (JSON)", Observable.Return(true));
         }).Enhance();
     }
 
@@ -53,30 +50,15 @@ public class DetailsViewModel : ReactiveObject, IDetailsViewModel
     public IEnumerable<string> Relays => new[] { "[TODO: Backend - Needs IProject.Relays]" };
     public IEnhancedCommand ShowProjectInfoJson { get; }
 
-    private static string SerializeProjectInfo(IFullProject project)
+    private static async Task<string> SerializeProjectInfoAsync(IProject project)
     {
         try
         {
-            var info = new
+            var info = project switch
             {
-                ProjectId = project.ProjectId?.Value,
-                project.Name,
-                project.ShortDescription,
-                ProjectType = project.ProjectType.ToString(),
-                project.Version,
-                FounderPubKey = project.FounderPubKey,
-                NostrNpubKeyHex = project.NostrNpubKeyHex,
-                TargetAmount = new { project.TargetAmount.Sats, Btc = project.TargetAmount.Btc },
-                RaisedAmount = new { project.RaisedAmount.Sats, Btc = project.RaisedAmount.Btc },
-                TotalInvestors = project.TotalInvestors,
-                FundingStartDate = project.FundingStartDate,
-                FundingEndDate = project.FundingEndDate,
-                PenaltyDuration = project.PenaltyDuration.ToString(),
-                PenaltyThreshold = project.PenaltyThreshold != null ? new { project.PenaltyThreshold.Sats, Btc = project.PenaltyThreshold.Btc } : null,
-                Stages = project.Stages?.Select(s => new { s.ReleaseDate, s.RatioOfTotal, s.Amount, s.Index }),
-                DynamicStagePatterns = project.DynamicStagePatterns,
-                DynamicStages = project.DynamicStages,
-                Status = project.Status.ToString(),
+                IInvestmentProject investmentProject => await SerializeInvestmentProjectInfo(investmentProject),
+                IFundProject fundProject => await SerializeFundProjectInfo(fundProject),
+                _ => SerializeUnsupportedProjectInfo(project)
             };
 
             return JsonSerializer.Serialize(info, new JsonSerializerOptions { WriteIndented = true });
@@ -85,5 +67,112 @@ public class DetailsViewModel : ReactiveObject, IDetailsViewModel
         {
             return $"Error serializing project info: {ex.Message}";
         }
+    }
+
+    private static async Task<object> SerializeInvestmentProjectInfo(IInvestmentProject project)
+    {
+        var raised = await project.Raised.FirstAsync();
+        var investorCount = await project.InvestorCount.FirstAsync();
+        var stages = await project.Stages.FirstAsync();
+        var isFundingOpen = await project.IsFundingOpen.FirstAsync();
+        var isFundingSuccessful = await project.IsFundingSuccessful.FirstAsync();
+        var isFundingFailed = await project.IsFundingFailed.FirstAsync();
+
+        return new
+        {
+            Type = "investment",
+            SnapshotPolicy = "local",
+            Project = SerializeCommonProjectInfo(project),
+            Investment = new
+            {
+                Target = SerializeAmount(project.Target),
+                Raised = SerializeAmount(raised),
+                InvestorCount = investorCount,
+                FundingStart = project.FundingStart,
+                FundingEnd = project.FundingEnd,
+                PenaltyDuration = project.PenaltyDuration.ToString(),
+                PenaltyThreshold = SerializeAmount(project.PenaltyThreshold),
+                IsFundingOpen = isFundingOpen,
+                IsFundingSuccessful = isFundingSuccessful,
+                IsFundingFailed = isFundingFailed,
+                Stages = stages?.Select(stage => new
+                {
+                    stage.Id,
+                    Status = stage.Status.ToString(),
+                    stage.Ratio,
+                    stage.ReleaseDate,
+                    Amount = SerializeAmount(stage.Amount),
+                })
+            }
+        };
+    }
+
+    private static async Task<object> SerializeFundProjectInfo(IFundProject project)
+    {
+        var funded = await project.Funded.FirstAsync();
+        var funderCount = await project.FunderCount.FirstAsync();
+        var payments = await project.Payments.FirstAsync();
+        var isGoalReached = await project.IsGoalReached.FirstAsync();
+
+        return new
+        {
+            Type = "fund",
+            SnapshotPolicy = "local",
+            Project = SerializeCommonProjectInfo(project),
+            Fund = new
+            {
+                Goal = SerializeAmount(project.Goal),
+                Funded = SerializeAmount(funded),
+                FunderCount = funderCount,
+                project.TransactionDate,
+                IsGoalReached = isGoalReached,
+                Payments = payments?.Select(payment => new
+                {
+                    payment.Id,
+                    Status = payment.Status.ToString(),
+                    payment.PaymentDate,
+                    Amount = SerializeAmount(payment.Amount),
+                })
+            }
+        };
+    }
+
+    private static object SerializeUnsupportedProjectInfo(IProject project)
+    {
+        return new
+        {
+            Type = "unsupported",
+            SnapshotPolicy = "local",
+            Message = $"Unsupported project type '{project.GetType().Name}'.",
+            Project = SerializeCommonProjectInfo(project)
+        };
+    }
+
+    private static object SerializeCommonProjectInfo(IProject project)
+    {
+        return new
+        {
+            ProjectId = project.Id.Value,
+            project.Name,
+            Description = project.Description,
+            project.FounderPubKey,
+            project.NostrNpubKeyHex,
+            BannerUrl = project.BannerUrl?.ToString(),
+            LogoUrl = project.LogoUrl?.ToString(),
+            InformationUrl = project.InformationUri?.ToString(),
+        };
+    }
+
+    private static object? SerializeAmount(IAmountUI? amount)
+    {
+        return amount is null
+            ? null
+            : new
+            {
+                amount.Sats,
+                amount.Btc,
+                amount.DecimalString,
+                amount.ShortDecimalString,
+            };
     }
 }

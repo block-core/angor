@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignWidth="800"
              ClipToBounds="False"
-             x:Class="AngorApp.UI.Sections.Funded.Fund.Cards.FundProjectStatisticsCard"
+             x:Class="AngorApp.UI.Sections.Funded.Fund.Cards.Actions.FundProjectStatisticsCard"
              x:DataType="manage:IFundFunded">
 
     <StackPanel Classes="Gap-M">

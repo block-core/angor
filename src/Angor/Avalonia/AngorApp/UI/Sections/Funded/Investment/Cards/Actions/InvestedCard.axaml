@@ -5,7 +5,7 @@
              mc:Ignorable="d"
              d:DesignWidth="400"
              ClipToBounds="False"
-             x:Class="AngorApp.UI.Sections.Funded.Investment.Cards.InvestedCard">
+             x:Class="AngorApp.UI.Sections.Funded.Investment.Cards.Actions.InvestedCard">
 
     <UserControl.Resources>
         <SolidColorBrush x:Key="HyperlinkButtonBackground" Color="Transparent" />

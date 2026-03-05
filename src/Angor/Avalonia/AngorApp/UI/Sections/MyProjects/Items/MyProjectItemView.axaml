@@ -2,57 +2,44 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:items="clr-namespace:AngorApp.UI.Sections.MyProjects.Items"
              xmlns:a="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:project="clr-namespace:AngorApp.Model.ProjectsV2;assembly=AngorApp.Model"
+             xmlns:samples="clr-namespace:AngorApp.Model.Funded.Investment.Samples;assembly=AngorApp.Model"
              mc:Ignorable="d"
              d:DesignWidth="300"
              x:Class="AngorApp.UI.Sections.MyProjects.Items.MyProjectItemView"
-             x:DataType="items:IMyProjectItem">
+             x:DataType="project:IProject">
 
     <Design.DataContext>
-        <items:MyProjectItemSample />
+        <samples:InvestmentProjectSample />
     </Design.DataContext>
     
     <Interaction.Behaviors>
         <LoadedTrigger>
-            <EnqueueCommandAction PoolName="MyProjects" Command="{Binding Project.Refresh}" />
+            <EnqueueCommandAction PoolName="MyProjects" Command="{Binding Refresh}" />
         </LoadedTrigger>
     </Interaction.Behaviors>
 
     <Border Classes="Panel Elevate Shadow">
         <StackPanel Classes="Gap-L">
             <Grid>
-                <a:AdvancedImage CornerRadius="10 10 0 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="150" Source="{Binding Project.BannerUrl}" />
+                <a:AdvancedImage CornerRadius="10 10 0 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="150" Source="{Binding BannerUrl}" />
             </Grid>
             <Border Height="60" Width="60" Margin="0 -50 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource AppBackground}">
-                <a:AdvancedImage Source="{Binding Project.LogoUrl}" />
+                <a:AdvancedImage Source="{Binding LogoUrl}" />
             </Border>
             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Top" HorizontalAlignment="Left">
-                <controls:ProjectTypePill DataContext="{Binding Project}" />
-                <controls:ProjectStatusPill DataContext="{Binding Project}" />
+                <controls:ProjectTypePill DataContext="{Binding}" />
+                <controls:ProjectStatusPill DataContext="{Binding}" />
             </StackPanel>
 
             <EdgePanel Spacing="0">
-                <TextBlock Classes="Header" Text="{Binding Project.Name}" />
+                <TextBlock Classes="Header" Text="{Binding Name}" />
             </EdgePanel>
 
-            <TextBlock Classes="Text-Dimmed Wrap" Text="{Binding Project.Description}" MaxLines="2" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
-            <!-- <Grid ColumnDefinitions="*,Auto"> -->
-            <!--     <TextBlock Classes="Size-XS" Text="{Binding Project.SupporterCount^, TargetNullValue='', StringFormat='{}{0} Supporters'}" /> -->
-            <!--     <TextBlock Grid.Column="1" Classes="Strong" Text="{Binding Project.FundingRaised^.ShortDecimalString, FallbackValue='...'}" /> -->
-            <!-- </Grid> -->
-            <!-- <Grid ColumnDefinitions="*,Auto"> -->
-            <!--     <TextBlock Classes="Size-XS" Text="Target" /> -->
-            <!--     <TextBlock Grid.Column="1" Text="{Binding Project.FundingTarget.ShortDecimalString}" /> -->
-            <!-- </Grid> -->
-            <!-- <ProgressBar IsIndeterminate="{Binding Project.Refresh.IsExecuting^}" -->
-            <!--              Classes.Red="{Binding Project.ProjectStatus^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static project:ProjectStatus.Closed}}" -->
-            <!--              Height="8" -->
-            <!--              Value="{Binding Project.FundingRaised^.Sats, FallbackValue=0}" -->
-            <!--              Maximum="{Binding Project.FundingTarget.Sats}" /> -->
-            <EnhancedButton HorizontalContentAlignment="Center" Icon="{Icon fa-regular fa-clipboard}" Content="Manage Funds" Command="{Binding ManageFunds}" Classes="Outline" HorizontalAlignment="Stretch" />
+            <TextBlock Classes="Text-Dimmed Wrap" Text="{Binding Description}" MaxLines="2" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
+            <EnhancedButton HorizontalContentAlignment="Center" Icon="{Icon fa-regular fa-clipboard}" Content="{Binding ManageFunds.Text}" Command="{Binding ManageFunds}" Classes="Outline" HorizontalAlignment="Stretch" />
         </StackPanel>
     </Border>
 </UserControl>

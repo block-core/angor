@@ -4,10 +4,15 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:l="clr-namespace:AngorApp.UI.Sections.MyProjects"
              xmlns:items="clr-namespace:AngorApp.UI.Sections.MyProjects.Items"
+             xmlns:project="clr-namespace:AngorApp.Model.ProjectsV2;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="1900" 
              x:Class="AngorApp.UI.Sections.MyProjects.MyProjectsSectionView"
              x:DataType="l:IMyProjectsSectionViewModel">
 
+    <UserControl.Resources>
+        <CommandPoolMonitor x:Key="CommandPoolMonitor" PoolName="MyProjects" />
+    </UserControl.Resources>
+    
     <Design.DataContext>
         <l:MyProjectsSectionViewModelSample />
     </Design.DataContext>
@@ -45,9 +50,9 @@
                     </BalancedWrapGrid>
 
                     <StackPanel Spacing="5">
-                        <ProgressBar Maximum="{Binding ProjectStatsLoadTotalCount^}"
-                                     Value="{Binding ProjectStatsLoadCompletedCount^}"
-                                     IsIndeterminate="{Binding RefreshProjectStats.IsExecuting^}" />
+                        <ProgressBar Maximum="{Binding TotalCount^, Source={StaticResource CommandPoolMonitor}}"
+                                     Value="{Binding CompletedCount^, Source={StaticResource CommandPoolMonitor}}"
+                                     IsIndeterminate="{Binding LoadProjects.IsExecuting^}" IsVisible="{Binding IsExecuting^, Source={StaticResource CommandPoolMonitor}}" />
                     </StackPanel>
                     
                     <EnhancedButton Icon="{Icon fa-plus}" Command="{Binding Create}" Content="Launch a Project" Classes="Primary" HorizontalAlignment="Stretch" />
@@ -67,7 +72,7 @@
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="items:IMyProjectItem">
+                                    <DataTemplate DataType="project:IProject">
                                         <items:MyProjectItemView ClipToBounds="False" />
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>

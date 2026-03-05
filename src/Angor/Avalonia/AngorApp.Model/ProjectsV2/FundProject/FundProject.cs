@@ -7,18 +7,19 @@ namespace AngorApp.Model.ProjectsV2.FundProject
 {
     public class FundProject : Project, IFundProject
     {
-        public FundProject(ProjectDto seed, IProjectAppService projectAppService, IEnhancedCommand<Result> invest) : base(seed, invest)
+        public FundProject(ProjectDto seed, IProjectAppService projectAppService, IEnhancedCommand<Result> invest, IEnhancedCommand? manageFunds = null) : base(seed, invest, manageFunds ?? CreateUnsupportedManageFundsCommand())
         {
             var refresh = EnhancedCommand.CreateWithResult(() => projectAppService.GetProjectStatistics(seed.Id));
             var projectStatistics = refresh.Successes();
 
-            Funded = projectStatistics.Select(ToFundedAmount);
-            FunderCount = projectStatistics.Select(ToFunderCount);
+            Funded = projectStatistics.Select(ToFundedAmount).ReplayLastActive();
+            FunderCount = projectStatistics.Select(ToFunderCount).ReplayLastActive();
             Goal = new AmountUI(seed.TargetAmount);
             Refresh = refresh;
             Payments = projectStatistics
                 .Select(ToPayments)
-                .StartWith([]);
+                .StartWith([])
+                .ReplayLastActive();
         }
 
         public IAmountUI Goal { get; }
