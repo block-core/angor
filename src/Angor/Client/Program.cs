@@ -3,6 +3,8 @@ using Angor.Client.Services;
 using Angor.Client.Shared;
 using Angor.Client.Storage;
 using Angor.Shared;
+using Angor.Shared.Integration.Lightning;
+using Angor.Shared.Integration.Lightning.Models;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
 using Blazored.LocalStorage;
@@ -73,6 +75,19 @@ builder.Services.AddScoped<IconService>();
 builder.Services.AddScoped<IWalletUIService, WalletUIService>();
 
 builder.Services.AddScoped<IMessageService, MessageService>();
+
+builder.Services.AddScoped<IBoltzSwapStorageService, BoltzSwapStorageService>();
+
+// Lightning Network / Boltz submarine swap services
+builder.Services.AddSingleton<BoltzConfiguration>(_ => new BoltzConfiguration
+{
+    BaseUrl = BoltzConfiguration.TestnetUrl,
+    TimeoutSeconds = 30,
+    UseV2Prefix = true
+});
+builder.Services.AddScoped<IBoltzSwapService, BoltzSwapService>();
+builder.Services.AddScoped<IBoltzClaimService, BoltzClaimService>();
+builder.Services.AddTransient<IBoltzWebSocketClient, BoltzWebSocketClient>();
 
 // to change culture dynamically during startup,
 // set <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
