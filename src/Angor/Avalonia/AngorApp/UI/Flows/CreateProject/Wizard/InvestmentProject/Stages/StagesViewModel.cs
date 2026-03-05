@@ -73,7 +73,8 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages
             ClearStagesInternal();
 
             var stageCount = CalculateStageCount(totalDuration, frequency);
-            var percent = (decimal)1 / stageCount;
+            var basePercent = 100 / stageCount;
+            var remainder = 100 % stageCount;
 
             for (var i = 1; i <= stageCount; i++)
             {
@@ -84,7 +85,9 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages
                 }
 
                 var releaseDate = startDate.AddTicks(offsetTicks);
-                NewProject.CreateAndAddStage(percent, releaseDate);
+                // Distribute remainder to the last stages (e.g. 3 stages → 33, 33, 34)
+                var stagePercent = (decimal)(basePercent + (i > stageCount - remainder ? 1 : 0));
+                NewProject.CreateAndAddStage(stagePercent, releaseDate);
             }
         }
 

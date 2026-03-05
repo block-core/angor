@@ -63,7 +63,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
             this.ValidationRule(x => x.Description, x => !string.IsNullOrWhiteSpace(x), "Project description is required.").DisposeWith(Disposables);
             this.ValidationRule(x => x.Website, x => string.IsNullOrWhiteSpace(x) || (Uri.TryCreate(x, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)), "Website must be a valid URL (http or https).").DisposeWith(Disposables);
 
-            var isTotalPercentValid = totalPercent.Select(percent => Math.Abs(percent - 1.0m) < 0.0001m);
+            var isTotalPercentValid = totalPercent.Select(percent => Math.Abs(percent - 100m) < 0.5m);
             this.ValidationRule(x => x.Stages, isTotalPercentValid, "Total percentage must be 100%");
 
 

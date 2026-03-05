@@ -112,7 +112,7 @@ namespace AngorApp.UI.Shared.Controls
                     decimal percent = System.Convert.ToDecimal(obs[0]);
                     long totalSats = System.Convert.ToInt64(obs[1]);
 
-                    long resultSats = (long)(percent * totalSats);
+                    long resultSats = (long)(percent / 100m * totalSats);
 
                     IAmountUI amountUI = new AmountUI(resultSats);
                     return $" ({amountUI.BtcString})";

@@ -26,7 +26,7 @@
                         <TextBlock Text="{ItemIndex StartFromOne=True, StringFormat='Stage {0}'}"></TextBlock>
                         <TextBlock Grid.Column="1">
                             <TextBlock.Inlines>
-                                <Run Text="{Binding Percent, StringFormat={}{0:0.##%}}" />
+                                <Run Text="{Binding Percent, StringFormat={}{0:0}%}" />
                                 <Run>
                                     <Run.Text>
                                         <MultiBinding Converter="{x:Static controls:AngorConverters.PercentOfTotalToBtcString}">

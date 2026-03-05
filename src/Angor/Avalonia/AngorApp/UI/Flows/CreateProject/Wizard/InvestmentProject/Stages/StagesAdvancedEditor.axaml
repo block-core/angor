@@ -105,8 +105,8 @@
                                     </Border>
                                 </Border>
                                 <HeaderedContainer Grid.Row="0" Grid.Column="1" Header="Percentage">
-                                    <NumericUpDown Value="{Binding Percent, Mode=TwoWay, Converter={x:Static controls:AngorConverters.RatioToPercentage}}"
-                                                   FormatString="0.##"
+                                    <NumericUpDown Value="{Binding Percent, Mode=TwoWay}"
+                                                   FormatString="0"
                                                    Minimum="0"
                                                    VerticalAlignment="Top"
                                                    Maximum="100">
