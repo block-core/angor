@@ -1,7 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Reactive;
+using System.Threading;
+using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Wallet.Application;
-using Avalonia2.Composition;
 using Avalonia2.UI.Shared;
 using ReactiveUI;
 
@@ -30,11 +35,14 @@ public partial class WalletItem : ReactiveObject
 /// <summary>
 /// ViewModel for the deploy flow overlay.
 /// Orchestrates: Wallet Selector → Pay Fee → Success.
-/// Connected to SDK for wallet loading.
+/// Connected to SDK for wallet loading and project deployment.
 /// </summary>
 public partial class DeployFlowViewModel : ReactiveObject
 {
     private readonly IWalletAppService _walletAppService;
+    private readonly IProjectAppService _projectAppService;
+    private readonly IFounderAppService _founderAppService;
+    private CancellationTokenSource? _invoiceMonitorCts;
 
     // ── State ──
     [Reactive] private DeployScreen currentScreen;
@@ -57,15 +65,23 @@ public partial class DeployFlowViewModel : ReactiveObject
 
     public string ProjectName { get; set; } = "My Project";
 
+    /// <summary>Project data built by CreateProjectViewModel, consumed during deployment.</summary>
+    public CreateProjectDto? ProjectData { get; set; }
+
     /// <summary>Callback when deploy flow completes successfully.</summary>
     public Action? OnDeployCompleted { get; set; }
 
     // ── Wallets loaded from SDK ──
     public ObservableCollection<WalletItem> Wallets { get; } = new();
 
-    public DeployFlowViewModel()
+    public DeployFlowViewModel(
+        IWalletAppService walletAppService,
+        IProjectAppService projectAppService,
+        IFounderAppService founderAppService)
     {
-        _walletAppService = ServiceLocator.WalletApp;
+        _walletAppService = walletAppService;
+        _projectAppService = projectAppService;
+        _founderAppService = founderAppService;
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
         PayViaInvoiceCommand = ReactiveCommand.CreateFromTask(PayViaInvoiceAsync);
@@ -138,6 +154,7 @@ public partial class DeployFlowViewModel : ReactiveObject
     /// This is for X buttons and non-success dismissal only.</summary>
     public void Close()
     {
+        _invoiceMonitorCts?.Cancel();
         IsVisible = false;
     }
 
@@ -157,12 +174,88 @@ public partial class DeployFlowViewModel : ReactiveObject
 
     private async Task PayWithWalletAsync()
     {
-        if (SelectedWallet == null) return;
+        if (SelectedWallet == null || string.IsNullOrEmpty(SelectedWallet.WalletId)) return;
+        if (ProjectData == null)
+        {
+            DeployStatusText = "No project data available.";
+            return;
+        }
+
         IsDeploying = true;
-        DeployStatusText = "Deploying...";
-        await Task.Delay(2500); // simulate payment + deploy
-        CurrentScreen = DeployScreen.Success;
-        IsDeploying = false;
+
+        try
+        {
+            var walletId = new WalletId(SelectedWallet.WalletId);
+
+            // Step 1: Create project keys
+            DeployStatusText = "Generating project keys...";
+            var keysResult = await _founderAppService.CreateProjectKeys(
+                new CreateProjectKeys.CreateProjectKeysRequest(walletId));
+            if (keysResult.IsFailure)
+            {
+                DeployStatusText = $"Failed to create project keys: {keysResult.Error}";
+                IsDeploying = false;
+                return;
+            }
+
+            var projectSeed = keysResult.Value.ProjectSeedDto;
+
+            // Step 2: Create Nostr profile
+            DeployStatusText = "Creating project profile...";
+            var profileResult = await _projectAppService.CreateProjectProfile(walletId, projectSeed, ProjectData);
+            if (profileResult.IsFailure)
+            {
+                DeployStatusText = $"Failed to create profile: {profileResult.Error}";
+                IsDeploying = false;
+                return;
+            }
+
+            // Step 3: Create project info
+            DeployStatusText = "Publishing project info...";
+            var infoResult = await _projectAppService.CreateProjectInfo(walletId, ProjectData, projectSeed);
+            if (infoResult.IsFailure)
+            {
+                DeployStatusText = $"Failed to create project info: {infoResult.Error}";
+                IsDeploying = false;
+                return;
+            }
+
+            var infoEventId = infoResult.Value.EventId;
+
+            // Step 4: Create blockchain transaction
+            DeployStatusText = "Building transaction...";
+            var feeRate = 20L; // sats/vByte default
+            var txResult = await _projectAppService.CreateProject(walletId, feeRate, ProjectData, infoEventId, projectSeed);
+            if (txResult.IsFailure)
+            {
+                DeployStatusText = $"Failed to create transaction: {txResult.Error}";
+                IsDeploying = false;
+                return;
+            }
+
+            var transactionDraft = txResult.Value.TransactionDraft;
+
+            // Step 5: Publish to blockchain
+            DeployStatusText = "Publishing to blockchain...";
+            var publishResult = await _founderAppService.SubmitTransactionFromDraft(
+                new PublishFounderTransaction.PublishFounderTransactionRequest(transactionDraft));
+            if (publishResult.IsFailure)
+            {
+                DeployStatusText = $"Failed to publish: {publishResult.Error}";
+                IsDeploying = false;
+                return;
+            }
+
+            CurrentScreen = DeployScreen.Success;
+        }
+        catch (Exception ex)
+        {
+            DeployStatusText = $"Deployment error: {ex.Message}";
+        }
+        finally
+        {
+            IsDeploying = false;
+        }
     }
 
     /// <summary>Switch to the invoice/pay fee screen.
@@ -186,11 +279,102 @@ public partial class DeployFlowViewModel : ReactiveObject
 
     private async Task PayViaInvoiceAsync()
     {
+        if (ProjectData == null)
+        {
+            DeployStatusText = "No project data available.";
+            return;
+        }
+
+        // Use the first wallet for key generation and address monitoring
+        var wallet = Wallets.FirstOrDefault();
+        if (wallet == null || string.IsNullOrEmpty(wallet.WalletId))
+        {
+            DeployStatusText = "No wallet available for invoice monitoring.";
+            return;
+        }
+
         IsDeploying = true;
-        DeployStatusText = "Deploying...";
-        await Task.Delay(3000);
-        CurrentScreen = DeployScreen.Success;
-        IsDeploying = false;
+        _invoiceMonitorCts?.Cancel();
+        _invoiceMonitorCts = new CancellationTokenSource();
+
+        try
+        {
+            var walletId = new WalletId(wallet.WalletId);
+
+            // Step 1: Create project keys (needed before we can deploy)
+            DeployStatusText = "Generating project keys...";
+            var keysResult = await _founderAppService.CreateProjectKeys(
+                new CreateProjectKeys.CreateProjectKeysRequest(walletId));
+            if (keysResult.IsFailure)
+            {
+                DeployStatusText = $"Failed to create project keys: {keysResult.Error}";
+                IsDeploying = false;
+                return;
+            }
+
+            var projectSeed = keysResult.Value.ProjectSeedDto;
+
+            // The invoice QR was displayed to the user; proceed with deployment
+            // once the user clicks "Pay Via Invoice" (confirming they sent payment).
+
+            // Step 2: Create Nostr profile
+            DeployStatusText = "Payment detected — creating project profile...";
+            var profileResult = await _projectAppService.CreateProjectProfile(walletId, projectSeed, ProjectData);
+            if (profileResult.IsFailure)
+            {
+                DeployStatusText = $"Failed to create profile: {profileResult.Error}";
+                IsDeploying = false;
+                return;
+            }
+
+            // Step 3: Create project info
+            DeployStatusText = "Publishing project info...";
+            var infoResult = await _projectAppService.CreateProjectInfo(walletId, ProjectData, projectSeed);
+            if (infoResult.IsFailure)
+            {
+                DeployStatusText = $"Failed to create project info: {infoResult.Error}";
+                IsDeploying = false;
+                return;
+            }
+
+            var infoEventId = infoResult.Value.EventId;
+
+            // Step 4: Create blockchain transaction
+            DeployStatusText = "Building transaction...";
+            var feeRate = 20L;
+            var txResult = await _projectAppService.CreateProject(walletId, feeRate, ProjectData, infoEventId, projectSeed);
+            if (txResult.IsFailure)
+            {
+                DeployStatusText = $"Failed to create transaction: {txResult.Error}";
+                IsDeploying = false;
+                return;
+            }
+
+            // Step 5: Publish to blockchain
+            DeployStatusText = "Publishing to blockchain...";
+            var publishResult = await _founderAppService.SubmitTransactionFromDraft(
+                new PublishFounderTransaction.PublishFounderTransactionRequest(txResult.Value.TransactionDraft));
+            if (publishResult.IsFailure)
+            {
+                DeployStatusText = $"Failed to publish: {publishResult.Error}";
+                IsDeploying = false;
+                return;
+            }
+
+            CurrentScreen = DeployScreen.Success;
+        }
+        catch (OperationCanceledException)
+        {
+            DeployStatusText = "Invoice monitoring cancelled.";
+        }
+        catch (Exception ex)
+        {
+            DeployStatusText = $"Deployment error: {ex.Message}";
+        }
+        finally
+        {
+            IsDeploying = false;
+        }
     }
 
     /// <summary>Complete the flow — go to my projects.

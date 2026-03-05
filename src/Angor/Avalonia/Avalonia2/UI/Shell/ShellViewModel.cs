@@ -1,12 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using Angor.Sdk.Wallet.Application;
 using Avalonia2.UI.Sections.FindProjects;
-using Avalonia2.UI.Sections.Funders;
-using Avalonia2.UI.Sections.Funds;
-using Avalonia2.UI.Sections.Home;
 using Avalonia2.UI.Sections.MyProjects;
 using Avalonia2.UI.Sections.Portfolio;
-using Avalonia2.UI.Sections.Settings;
 using Avalonia2.UI.Shared;
 
 namespace Avalonia2.UI.Shell;
@@ -147,22 +144,6 @@ public class SignatureStore
 }
 
 /// <summary>
-/// Provides access to shared ViewModels that persist across sidebar navigations.
-/// Holds PortfolioViewModel, SignatureStore, and prototype-level settings so data survives navigation.
-/// Uses Lazy&lt;T&gt; to eliminate fragile static field initialization ordering.
-/// </summary>
-public static class SharedViewModels
-{
-    private static readonly Lazy<SignatureStore> _signatures = new(() => new SignatureStore());
-    private static readonly Lazy<PrototypeSettings> _prototype = new(() => new PrototypeSettings());
-    private static readonly Lazy<PortfolioViewModel> _portfolio = new(() => new PortfolioViewModel());
-
-    public static SignatureStore Signatures => _signatures.Value;
-    public static PrototypeSettings Prototype => _prototype.Value;
-    public static PortfolioViewModel Portfolio => _portfolio.Value;
-}
-
-/// <summary>
 /// Global prototype-level settings (e.g. show populated vs empty states).
 /// Sections observe ShowPopulatedApp to decide whether to load sample data.
 /// </summary>
@@ -195,6 +176,10 @@ public record NavGroupHeader(string Title) : NavEntry;
 
 public partial class ShellViewModel : ReactiveObject
 {
+    private readonly PortfolioViewModel _portfolioVm;
+    private readonly Func<string, object?> _viewFactory;
+    private readonly IWalletAppService _walletAppService;
+
     [Reactive] private NavItem? selectedNavItem;
     [Reactive] private bool isSettingsOpen;
     [Reactive] private string? sectionTitleOverride;
@@ -236,8 +221,11 @@ public partial class ShellViewModel : ReactiveObject
             ? SelectedWallet.Balance.ToString("F4", CultureInfo.InvariantCulture) + " BTC"
             : "10.0000 BTC";
 
-    public ShellViewModel()
+    public ShellViewModel(PortfolioViewModel portfolioVm, Func<string, object?> viewFactory, IWalletAppService walletAppService)
     {
+        _portfolioVm = portfolioVm;
+        _viewFactory = viewFactory;
+        _walletAppService = walletAppService;
         NavEntries = new ObservableCollection<NavEntry>
         {
             // Ungrouped
@@ -277,8 +265,8 @@ public partial class ShellViewModel : ReactiveObject
         this.WhenAnyValue(x => x.SectionTitleOverride)
             .Subscribe(_ => this.RaisePropertyChanged(nameof(SelectedSectionName)));
 
-        // ── Initialize wallet switcher data (Vue: walletGroups defaults in App.vue) ──
-        InitializeSwitcherWallets();
+        // ── Initialize wallet switcher data from SDK ──
+        _ = LoadSwitcherWalletsAsync();
 
         // When selected wallet changes, update header display properties
         this.WhenAnyValue(x => x.SelectedWallet)
@@ -368,35 +356,39 @@ public partial class ShellViewModel : ReactiveObject
     }
 
     /// <summary>
-    /// Initialize the switcher wallets with stubbed data matching Vue prototype defaults.
-    /// Vue: walletGroups in App.vue with hardcoded mainnet wallets.
+    /// Load wallets from SDK for the wallet switcher.
+    /// Replaces hardcoded wallet data with real SDK wallet metadatas and balances.
     /// </summary>
-    private void InitializeSwitcherWallets()
+    private async Task LoadSwitcherWalletsAsync()
     {
-        var wallets = new[]
+        try
         {
-            new WalletSwitcherItem
-            {
-                Id = "wallet-1", Name = "Bitcoin Wallet", WalletType = "bitcoin",
-                Balance = 2.5432, Subtitle = "Bitcoin • Angor Account"
-            },
-            new WalletSwitcherItem
-            {
-                Id = "wallet-3", Name = "Liquid Wallet", WalletType = "liquid",
-                Balance = 1.5678, Subtitle = "Liquid • Angor Account"
-            },
-            new WalletSwitcherItem
-            {
-                Id = "wallet-4", Name = "Bitcoin Wallet 2", WalletType = "bitcoin",
-                Balance = 0.9876, Subtitle = "Bitcoin • Imported Account"
-            },
-        };
+            var metadatasResult = await _walletAppService.GetMetadatas();
+            if (metadatasResult.IsFailure) return;
 
-        foreach (var w in wallets)
-            SwitcherWallets.Add(w);
+            SwitcherWallets.Clear();
+            foreach (var meta in metadatasResult.Value)
+            {
+                var balanceResult = await _walletAppService.GetBalance(meta.Id);
+                var balanceBtc = balanceResult.IsSuccess ? balanceResult.Value.Sats / 100_000_000.0 : 0;
 
-        // Auto-select the first wallet (Vue: default selectedWalletId = first mainnet wallet)
-        SelectSwitcherWallet(SwitcherWallets[0]);
+                SwitcherWallets.Add(new WalletSwitcherItem
+                {
+                    Id = meta.Id.Value,
+                    Name = meta.Name,
+                    WalletType = "bitcoin",
+                    Balance = balanceBtc,
+                    Subtitle = "Bitcoin • Angor Account"
+                });
+            }
+
+            if (SwitcherWallets.Count > 0)
+                SelectSwitcherWallet(SwitcherWallets[0]);
+        }
+        catch
+        {
+            // Wallet loading failed — switcher stays empty
+        }
     }
 
     /// <summary>
@@ -445,13 +437,13 @@ public partial class ShellViewModel : ReactiveObject
         get
         {
             if (IsSettingsOpen)
-                return GetOrCreateView("Settings", () => new SettingsView());
+                return GetOrCreateView("Settings");
 
             return SelectedNavItem?.Label switch
             {
-                "Home" => GetOrCreateView("Home", () => new HomeView()),
-                "Funds" => GetOrCreateView("Funds", () => new FundsView()),
-                "Find Projects" => GetOrCreateView("Find Projects", () => new FindProjectsView(),
+                "Home" => GetOrCreateView("Home"),
+                "Funds" => GetOrCreateView("Funds"),
+                "Find Projects" => GetOrCreateView("Find Projects",
                     onReuse: v =>
                     {
                         // Reset sub-nav state when re-selecting Find Projects from sidebar
@@ -461,13 +453,9 @@ public partial class ShellViewModel : ReactiveObject
                             fpVm.CloseProjectDetail();
                         }
                     }),
-                "Funded" => GetOrCreateView("Funded", () =>
-                {
-                    // PortfolioView constructor calls CloseInvestmentDetail(),
-                    // so on first creation the reset happens automatically.
-                    return new PortfolioView();
-                }, onReuse: _ => SharedViewModels.Portfolio.CloseInvestmentDetail()),
-                "My Projects" => GetOrCreateView("My Projects", () => new MyProjectsView(),
+                "Funded" => GetOrCreateView("Funded",
+                    onReuse: _ => _portfolioVm.CloseInvestmentDetail()),
+                "My Projects" => GetOrCreateView("My Projects",
                     onReuse: v =>
                     {
                         // Reset sub-nav state when re-selecting My Projects from sidebar
@@ -477,18 +465,18 @@ public partial class ShellViewModel : ReactiveObject
                             mpVm.CloseManageProject();
                         }
                     }),
-                "Funders" => GetOrCreateView("Funders", () => new FundersView()),
+                "Funders" => GetOrCreateView("Funders"),
                 _ => null,
             };
         }
     }
 
     /// <summary>
-    /// Returns a cached view or creates + caches a new one.
+    /// Returns a cached view or creates one via the injected view factory.
     /// Optional <paramref name="onReuse"/> callback runs when returning an already-cached view
     /// (e.g. to reset sub-navigation state).
     /// </summary>
-    private object GetOrCreateView(string key, Func<object> factory, Action<object>? onReuse = null)
+    private object? GetOrCreateView(string key, Action<object>? onReuse = null)
     {
         if (_viewCache.TryGetValue(key, out var existing))
         {
@@ -496,8 +484,9 @@ public partial class ShellViewModel : ReactiveObject
             return existing;
         }
 
-        var view = factory();
-        _viewCache[key] = view;
+        var view = _viewFactory(key);
+        if (view != null)
+            _viewCache[key] = view;
         return view;
     }
 }

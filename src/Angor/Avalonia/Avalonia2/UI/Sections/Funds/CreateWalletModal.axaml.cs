@@ -77,9 +77,8 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
             case "BtnContinueBackup":
                 if (_seedDownloaded)
                 {
-                    // Vue: finishGenerateWallet() creates "Generated Account" group
-                    Vm?.AddWalletGroup("Generated Account", "generate");
-                    ShowStep("success");
+                    // Create wallet via SDK
+                    _ = CreateWalletViaSdkAsync("Generated Account");
                 }
                 break;
 
@@ -125,11 +124,22 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         SeedError.IsVisible = false;
         SeedSuccess.IsVisible = true;
 
-        // Add the imported wallet group to the ViewModel
-        Vm?.AddWalletGroup("Imported Account", "import");
+        // Create wallet via SDK with imported seed words
+        _ = CreateWalletViaSdkAsync("Imported Account");
+    }
 
-        // Show success step
-        ShowStep("success");
+    /// <summary>
+    /// Create a wallet via the SDK's CreateWalletAsync and show success step.
+    /// </summary>
+    private async Task CreateWalletViaSdkAsync(string walletName)
+    {
+        if (Vm == null) return;
+
+        var (success, _) = await Vm.CreateWalletAsync(walletName, "default-key");
+        if (success)
+        {
+            ShowStep("success");
+        }
     }
 
     /// <summary>

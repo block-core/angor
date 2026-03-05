@@ -1,15 +1,16 @@
 using System.Collections.ObjectModel;
 using System.Reactive;
+using System.Threading;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Application;
-using Avalonia2.Composition;
 using Avalonia2.UI.Sections.MyProjects.Deploy;
 using Avalonia2.UI.Sections.Portfolio;
 using Avalonia2.UI.Shared;
+using MonitorOp = Angor.Sdk.Funding.Investor.Operations.MonitorAddressForFunds;
 using ReactiveUI;
 
 namespace Avalonia2.UI.Sections.FindProjects;
@@ -79,6 +80,8 @@ public partial class InvestPageViewModel : ReactiveObject
 {
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
+    private readonly PortfolioViewModel _portfolioVm;
+    private CancellationTokenSource? _invoiceMonitorCts;
 
     // ── Project Reference ──
     public ProjectItemViewModel Project { get; }
@@ -181,11 +184,16 @@ public partial class InvestPageViewModel : ReactiveObject
 
     public string InvoiceString { get; } = Constants.InvoiceString;
 
-    public InvestPageViewModel(ProjectItemViewModel project)
+    public InvestPageViewModel(
+        ProjectItemViewModel project,
+        IWalletAppService walletAppService,
+        IInvestmentAppService investmentAppService,
+        PortfolioViewModel portfolioVm)
     {
         Project = project;
-        _walletAppService = ServiceLocator.WalletApp;
-        _investmentAppService = ServiceLocator.InvestmentApp;
+        _walletAppService = walletAppService;
+        _investmentAppService = investmentAppService;
+        _portfolioVm = portfolioVm;
 
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
@@ -591,22 +599,148 @@ public partial class InvestPageViewModel : ReactiveObject
 
     private async Task PayViaInvoiceAsync()
     {
+        // Use the first available wallet for address generation and monitoring
+        var wallet = Wallets.FirstOrDefault();
+        if (wallet == null || string.IsNullOrEmpty(wallet.WalletId))
+        {
+            PaymentStatusText = "No wallet available for invoice monitoring.";
+            return;
+        }
+
         IsProcessing = true;
-        PaymentStatusText = "Payment received!";
-        PaymentReceived = true;
-        await Task.Delay(2000);
-        CurrentScreen = InvestScreen.Success;
-        IsProcessing = false;
+        _invoiceMonitorCts?.Cancel();
+        _invoiceMonitorCts = new CancellationTokenSource();
+
+        try
+        {
+            var walletId = new WalletId(wallet.WalletId);
+            var amountSats = (long)Math.Round(ParseAmount() * 100_000_000);
+
+            // Get a receive address to monitor
+            PaymentStatusText = "Generating invoice address...";
+            var addressResult = await _walletAppService.GetNextReceiveAddress(walletId);
+            if (addressResult.IsFailure)
+            {
+                PaymentStatusText = "Failed to generate receive address.";
+                IsProcessing = false;
+                return;
+            }
+
+            // Monitor the address for incoming funds
+            PaymentStatusText = "Waiting for payment...";
+            var monitorRequest = new MonitorOp.MonitorAddressForFundsRequest(
+                walletId,
+                addressResult.Value.Value,
+                new Angor.Sdk.Wallet.Domain.Amount(amountSats),
+                TimeSpan.FromMinutes(30));
+
+            var monitorResult = await _investmentAppService.MonitorAddressForFunds(
+                monitorRequest, _invoiceMonitorCts.Token);
+
+            if (monitorResult.IsFailure)
+            {
+                PaymentStatusText = "Payment monitoring failed or timed out.";
+                IsProcessing = false;
+                return;
+            }
+
+            PaymentStatusText = "Payment received!";
+            PaymentReceived = true;
+
+            // Now proceed with the investment flow (same as PayWithWallet)
+            var projectId = new ProjectId(Project.ProjectId);
+
+            PaymentStatusText = "Building investment transaction...";
+            var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
+                walletId,
+                projectId,
+                new Amount(amountSats),
+                new DomainFeerate(20));
+
+            var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
+            if (buildResult.IsFailure)
+            {
+                PaymentStatusText = "Failed to build transaction.";
+                IsProcessing = false;
+                return;
+            }
+
+            var draft = buildResult.Value.InvestmentDraft;
+
+            // Check threshold and submit
+            var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
+                projectId,
+                new Amount(amountSats));
+
+            var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
+
+            if (thresholdResult.IsSuccess && thresholdResult.Value.IsAboveThreshold)
+            {
+                PaymentStatusText = "Requesting founder approval...";
+                var submitRequest = new RequestInvestmentSignatures.RequestFounderSignaturesRequest(
+                    walletId,
+                    projectId,
+                    draft);
+
+                var submitResult = await _investmentAppService.SubmitInvestment(submitRequest);
+                if (submitResult.IsFailure)
+                {
+                    PaymentStatusText = "Failed to submit investment.";
+                    IsProcessing = false;
+                    return;
+                }
+            }
+            else
+            {
+                PaymentStatusText = "Publishing transaction...";
+                var publishRequest = new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
+                    walletId.Value,
+                    projectId,
+                    draft);
+
+                var publishResult = await _investmentAppService.SubmitTransactionFromDraft(publishRequest);
+                if (publishResult.IsFailure)
+                {
+                    PaymentStatusText = "Failed to publish transaction.";
+                    IsProcessing = false;
+                    return;
+                }
+            }
+
+            CurrentScreen = InvestScreen.Success;
+        }
+        catch (OperationCanceledException)
+        {
+            PaymentStatusText = "Invoice monitoring cancelled.";
+        }
+        catch
+        {
+            PaymentStatusText = "An error occurred during payment.";
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
     }
 
     /// <summary>Close modal overlays, return to invest form.</summary>
     public void CloseModal()
     {
+        _invoiceMonitorCts?.Cancel();
         CurrentScreen = InvestScreen.InvestForm;
         SelectedWallet = null;
         foreach (var w in Wallets) w.IsSelected = false;
         IsProcessing = false;
         PaymentStatusText = "Awaiting payment...";
         PaymentReceived = false;
+    }
+
+    /// <summary>
+    /// Add this investment to the shared Portfolio so it appears in the "Funded" section.
+    /// Called after a successful invest flow completes.
+    /// </summary>
+    public void AddToPortfolio()
+    {
+        _portfolioVm.AddInvestmentFromProject(Project, FormattedAmount);
     }
 }

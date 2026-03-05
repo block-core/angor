@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Application;
-using Avalonia2.Composition;
 using Avalonia2.UI.Shell;
 
 namespace Avalonia2.UI.Sections.Funds;
@@ -60,10 +59,12 @@ public partial class FundsViewModel : ReactiveObject
 
     public ObservableCollection<SeedGroupViewModel> SeedGroups { get; } = new();
 
-    public FundsViewModel()
+    public FundsViewModel(
+        IWalletAppService walletAppService,
+        IWalletAccountBalanceService balanceService)
     {
-        _walletAppService = ServiceLocator.WalletApp;
-        _balanceService = ServiceLocator.BalanceService;
+        _walletAppService = walletAppService;
+        _balanceService = balanceService;
 
         // Load wallets from SDK on construction
         _ = LoadWalletsFromSdkAsync();
@@ -222,30 +223,4 @@ public partial class FundsViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(LiquidBalance));
     }
 
-    /// <summary>
-    /// Add a new wallet group (called from the create wallet modal).
-    /// This is the UI-only fallback; prefer CreateWalletAsync for SDK integration.
-    /// </summary>
-    public void AddWalletGroup(string groupName, string walletType)
-    {
-        var group = new SeedGroupViewModel
-        {
-            GroupName = groupName,
-            GroupBalance = "0.0000",
-            Wallets = new ObservableCollection<WalletItemViewModel>
-            {
-                new()
-                {
-                    Name = "Bitcoin Wallet",
-                    Balance = "0.00000000 BTC",
-                    WalletType = "On-Chain",
-                    Label = "",
-                    IconType = "bitcoin"
-                }
-            }
-        };
-
-        SeedGroups.Add(group);
-        HasWallets = true;
-    }
 }

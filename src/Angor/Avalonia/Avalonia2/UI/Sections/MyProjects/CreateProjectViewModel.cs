@@ -1,7 +1,11 @@
 using System.Collections.ObjectModel;
+using Angor.Sdk.Funding.Projects.Dtos;
+using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Shared.Models;
 using Avalonia2.UI.Sections.MyProjects.Deploy;
 using Avalonia2.UI.Shared;
 using ReactiveUI;
+using SdkProjectType = Angor.Shared.Models.ProjectType;
 
 namespace Avalonia2.UI.Sections.MyProjects;
 
@@ -117,10 +121,11 @@ public partial class CreateProjectViewModel : ReactiveObject
     public Action? OnProjectDeployed { get; set; }
 
     /// <summary>The deploy flow overlay ViewModel.</summary>
-    public DeployFlowViewModel DeployFlow { get; } = new();
+    public DeployFlowViewModel DeployFlow { get; }
 
-    public CreateProjectViewModel()
+    public CreateProjectViewModel(DeployFlowViewModel deployFlow)
     {
+        DeployFlow = deployFlow;
         // Default start date to today
         StartDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
         InvestStartDate = DateTime.Now;
@@ -332,6 +337,10 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// </summary>
     public void Deploy()
     {
+        // Build the CreateProjectDto from wizard fields
+        var dto = BuildCreateProjectDto();
+        DeployFlow.ProjectData = dto;
+
         DeployFlow.OnDeployCompleted = () =>
         {
             IsDeployed = true;
@@ -340,6 +349,102 @@ public partial class CreateProjectViewModel : ReactiveObject
             OnProjectDeployed?.Invoke();
         };
         DeployFlow.Show(ProjectName ?? "My Project");
+    }
+
+    /// <summary>
+    /// Build a CreateProjectDto from all wizard fields for SDK project creation.
+    /// </summary>
+    private CreateProjectDto BuildCreateProjectDto()
+    {
+        // Parse target amount to satoshis
+        var targetSats = long.TryParse(TargetAmount, out var tSats) ? tSats
+            : double.TryParse(TargetAmount, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var tBtc)
+                ? (long)Math.Round(tBtc * 100_000_000)
+                : 0L;
+
+        // Map UI project type to SDK ProjectType
+        var sdkProjectType = ProjectType switch
+        {
+            "fund" => SdkProjectType.Fund,
+            "subscription" => SdkProjectType.Subscribe,
+            _ => SdkProjectType.Invest
+        };
+
+        // Parse dates
+        var startDt = DateTime.TryParse(StartDate, out var sd) ? sd : DateTime.UtcNow;
+        DateTime? endDt = DateTime.TryParse(EndDate, out var ed) ? ed : null;
+
+        // Build stages from the wizard's generated Stages collection
+        var stageDtos = Stages.Select((s, i) =>
+        {
+            var pctStr = s.Percentage.Replace("%", "");
+            var pct = decimal.TryParse(pctStr, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var p) ? p : 0m;
+
+            // Parse the release date from the display text
+            var stageDate = DateTime.TryParse(s.ReleaseDate, out var rd)
+                ? DateOnly.FromDateTime(rd)
+                : DateOnly.FromDateTime(startDt.AddMonths(i + 1));
+
+            return new CreateProjectStageDto(stageDate, pct);
+        }).ToList();
+
+        // Build dynamic patterns for Fund/Subscribe types
+        List<DynamicStagePattern>? patterns = null;
+        int? payoutDayValue = null;
+
+        if (sdkProjectType is SdkProjectType.Fund or SdkProjectType.Subscribe)
+        {
+            patterns = SelectedInstallmentCounts.Select((count, idx) =>
+            {
+                var freq = PayoutFrequency == "Weekly"
+                    ? StageFrequency.Weekly
+                    : StageFrequency.Monthly;
+
+                return new DynamicStagePattern
+                {
+                    PatternId = (byte)idx,
+                    Name = $"{count} {PayoutFrequency}",
+                    Description = $"{count} {PayoutFrequency.ToLower()} payouts",
+                    Frequency = freq,
+                    StageCount = count,
+                    PayoutDay = IsPayoutMonthly && MonthlyPayoutDate.HasValue
+                        ? MonthlyPayoutDate.Value
+                        : 1
+                };
+            }).ToList();
+
+            payoutDayValue = IsPayoutMonthly && MonthlyPayoutDate.HasValue
+                ? MonthlyPayoutDate.Value
+                : int.TryParse(PayoutDay, out var pd) ? pd : 1;
+        }
+
+        // For subscription, parse the subscription price as sats
+        long? sats = null;
+        if (sdkProjectType == SdkProjectType.Subscribe &&
+            long.TryParse(SubscriptionPrice, out var subSats))
+        {
+            sats = subSats;
+        }
+
+        return new CreateProjectDto
+        {
+            ProjectName = ProjectName ?? "Untitled Project",
+            Description = ProjectAbout ?? "",
+            AvatarUri = ProfileUrl ?? "",
+            BannerUri = BannerUrl ?? "",
+            WebsiteUri = string.IsNullOrWhiteSpace(ProjectWebsite) ? null : ProjectWebsite,
+            ProjectType = sdkProjectType,
+            Sats = sats,
+            StartDate = startDt,
+            EndDate = endDt,
+            TargetAmount = new Amount(targetSats),
+            PenaltyDays = PenaltyDays,
+            Stages = stageDtos,
+            SelectedPatterns = patterns,
+            PayoutDay = payoutDayValue
+        };
     }
 
     // ── Step 5: Payout frequency visibility (Fund/Subscription) ──
