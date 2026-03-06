@@ -76,13 +76,14 @@ namespace AngorApp.UI.Sections.Funded.Shared.Section
                          .MapSequentially(GetItem);
         }
 
-        private Task<Result<IFundedItem>> GetItem(InvestedProjectDto dto)
+        private async Task<Result<IFundedItem>> GetItem(InvestedProjectDto dto)
         {
-            return projectAppService
+            return await projectAppService
                    .Get(new GetProject.GetProjectRequest(new ProjectId(dto.Id)))
                    .Map(IFundedItem (response) =>
                    {
                        var project = projectFactory.Create(response.Project);
+
                        IFunded funded = project switch
                        {
                            IInvestmentProject investmentProject => new InvestmentFunded(investmentProject, new InvestmentInvestorData(dto, investmentAppService, walletContext), notificationService, draftPreviewer, investmentAppService, walletContext),

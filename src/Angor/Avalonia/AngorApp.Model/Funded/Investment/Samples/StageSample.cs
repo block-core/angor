@@ -5,7 +5,7 @@ namespace AngorApp.Model.Funded.Investment.Samples
 {
     public class StageSample : IStage
     {
-        public StageStatus Status { get; } = StageStatus.Pending;
+        public string Status { get; } = "Pending";
         public int Id { get; } = 1;
         public decimal Ratio { get; } = 0.3m;
         public DateTimeOffset ReleaseDate { get; } = DateTimeOffset.Now;

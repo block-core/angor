@@ -330,8 +330,8 @@ public static class GetRecoveryStatus
             }
             else
             {
-                item.Status = string.Empty;
-                logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: Not spent, status=''", item.StageIndex);
+                item.Status = "Unspent";
+                logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: Not spent, status='Unspent'", item.StageIndex);
             }
             
             return Result.Success();

@@ -2,6 +2,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Dtos;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using AngorApp.Model.Shared.Services;
@@ -16,6 +17,7 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
     private readonly CompositeDisposable disposables = new();
     private readonly BehaviorSubject<InvestmentStatus> status;
     private readonly BehaviorSubject<RecoveryState> recovery = new(RecoveryState.None);
+    private readonly BehaviorSubject<IReadOnlyList<InvestorStageItemDto>> stageItems = new(new List<InvestorStageItemDto>());
 
     protected InvestorDataBase(InvestedProjectDto dto, IInvestmentAppService investmentAppService, IWalletContext walletContext)
     {
@@ -30,6 +32,7 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
         status = new BehaviorSubject<InvestmentStatus>(dto.InvestmentStatus);
         Status = status;
         Recovery = recovery;
+        StageItems = stageItems;
 
         var refresh = EnhancedCommand.CreateWithResult(DoRefresh).DisposeWith(disposables);
         refresh.Successes()
@@ -45,8 +48,9 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
     public string ProjectId { get; }
     public IObservable<InvestmentStatus> Status { get; }
     public IObservable<RecoveryState> Recovery { get; }
+    public IObservable<IReadOnlyList<InvestorStageItemDto>> StageItems { get; }
 
-    private async Task<Result<(InvestedProjectDto Dto, RecoveryState Recovery)>> DoRefresh()
+    private async Task<Result<(InvestedProjectDto Dto, RecoveryState Recovery, IReadOnlyList<InvestorStageItemDto> Items)>> DoRefresh()
     {
         return await walletContext
             .Require()
@@ -59,11 +63,13 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
                         .ToResult($"Investment not found: {ProjectId}"));
 
                 if (dto.IsFailure)
-                    return Result.Failure<(InvestedProjectDto, RecoveryState)>(dto.Error);
+                    return Result.Failure<(InvestedProjectDto, RecoveryState, IReadOnlyList<InvestorStageItemDto>)>(dto.Error);
 
                 var recoveryState = dto.Value.InvestmentStatus == InvestmentStatus.Invested
                     ? recovery.Value
                     : RecoveryState.None;
+
+                IReadOnlyList<InvestorStageItemDto> recoveryItems = new List<InvestorStageItemDto>();
 
                 if (dto.Value.InvestmentStatus == InvestmentStatus.Invested)
                 {
@@ -74,18 +80,20 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
                     {
                         var r = recoveryResult.Value.RecoveryData;
                         recoveryState = new RecoveryState(r.HasUnspentItems, r.HasItemsInPenalty, r.HasReleaseSignatures, r.EndOfProject, r.IsAboveThreshold);
+                        recoveryItems = r.Items;
                     }
                 }
 
-                return Result.Success((dto.Value, recoveryState));
+                return Result.Success((dto.Value, recoveryState, recoveryItems));
             });
     }
 
-    private void Update((InvestedProjectDto Dto, RecoveryState Recovery) result)
+    private void Update((InvestedProjectDto Dto, RecoveryState Recovery, IReadOnlyList<InvestorStageItemDto> Items) result)
     {
         InvestedOn = result.Dto.RequestedOn ?? DateTimeOffset.MinValue;
         status.OnNext(result.Dto.InvestmentStatus);
         recovery.OnNext(result.Recovery);
+        stageItems.OnNext(result.Items);
     }
 
     public void Dispose()
@@ -93,5 +101,6 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
         disposables.Dispose();
         status.Dispose();
         recovery.Dispose();
+        stageItems.Dispose();
     }
 }

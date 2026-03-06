@@ -6,6 +6,7 @@ using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Services;
+using Angor.Shared.Utilities;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -153,7 +154,7 @@ public static class GetInvestments
                     {
                         var trx = networkConfiguration.GetNetwork()
                             .CreateTransaction(Handshake.InvestmentTransactionHex);
-                        dto.Investment = new Amount(trx.Outputs.Sum(x => x.Value));
+                        dto.Investment = new Amount(trx.GetTotalInvestmentAmount());
                     }
 
                     dto.InvestmentId = investmentRecord.InvestmentTransactionHash;
