@@ -1,3 +1,4 @@
+using System;
 using AsyncImageLoader;
 using AsyncImageLoader.Loaders;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -11,6 +12,8 @@ namespace Avalonia2;
 
 public partial class App : Application
 {
+    public static IServiceProvider Services { get; private set; } = null!;
+
     public override void Initialize()
     {
         IconProvider.Current.Register<FontAwesomeIconProvider>();
@@ -27,14 +30,53 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        // Initialize SDK services before creating the UI
-        ServiceLocator.Initialize();
+        var lifetime = ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
+        var profileName = GetProfileName(lifetime?.Args);
 
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        // Build DI container with profile-specific data isolation
+        Services = CompositionRoot.BuildServiceProvider(profileName);
+
+        if (lifetime != null)
         {
-            desktop.MainWindow = new MainWindow();
+            lifetime.MainWindow = new MainWindow();
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private const string DefaultProfileName = "Default";
+    private const string ProfileOption = "--profile";
+
+    private static string GetProfileName(string[]? args)
+    {
+        if (args == null || args.Length == 0)
+            return DefaultProfileName;
+
+        for (var index = 0; index < args.Length; index++)
+        {
+            var argument = args[index];
+            if (string.IsNullOrWhiteSpace(argument))
+                continue;
+
+            if (argument.StartsWith(ProfileOption + "=", StringComparison.OrdinalIgnoreCase))
+            {
+                var value = argument.Substring(ProfileOption.Length + 1).Trim();
+                return string.IsNullOrWhiteSpace(value) ? DefaultProfileName : value;
+            }
+
+            if (!string.Equals(argument, ProfileOption, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (index + 1 < args.Length)
+            {
+                var value = args[index + 1]?.Trim();
+                if (!string.IsNullOrWhiteSpace(value) && !value.StartsWith("--", StringComparison.Ordinal))
+                    return value;
+            }
+
+            return DefaultProfileName;
+        }
+
+        return DefaultProfileName;
     }
 }

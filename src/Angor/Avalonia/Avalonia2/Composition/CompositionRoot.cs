@@ -34,12 +34,12 @@ namespace Avalonia2.Composition;
 /// </summary>
 public static class CompositionRoot
 {
-    public static IServiceProvider BuildServiceProvider()
+    public static IServiceProvider BuildServiceProvider(string profileName = "Default")
     {
         var services = new ServiceCollection();
 
         var applicationStorage = new Avalonia2ApplicationStorage();
-        var profileContext = new ProfileContext("Avalonia2", "Default");
+        var profileContext = new ProfileContext("Avalonia2", applicationStorage.SanitizeProfileName(profileName));
 
         var store = new FileStore(applicationStorage, profileContext);
         var networkStorage = new NetworkStorage(store);
