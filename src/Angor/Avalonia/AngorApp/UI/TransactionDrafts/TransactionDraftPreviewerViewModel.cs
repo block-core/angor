@@ -13,11 +13,15 @@ public partial class TransactionDraftPreviewerViewModel : ReactiveValidationObje
 {
     private readonly UIServices uiServices;
     [Reactive] private long? selectedFeerate;
+    [ObservableAsProperty] private IEnumerable<IFeeratePreset>? feerates;
 
     public TransactionDraftPreviewerViewModel(Func<long, Task<Result<ITransactionDraftViewModel>>> getDraft, Func<ITransactionDraftViewModel, Task<Result<Guid>>> commitDraft, UIServices uiServices)
     {
         this.uiServices = uiServices;
         var isGeneratingDraft = new BehaviorSubject<bool>(false);
+
+        feeratesHelper = Observable.FromAsync(() => uiServices.GetFeeratePresetsAsync())
+            .ToProperty(this, x => x.Feerates);
 
         var draftResults = this.WhenAnyValue(model => model.SelectedFeerate)
             .WhereNotNull()
@@ -41,7 +45,6 @@ public partial class TransactionDraftPreviewerViewModel : ReactiveValidationObje
     public IEnhancedCommand<Result<Guid>> CommitDraft { get; }
     public IObservable<bool> IsGettingDraft { get; }
     public Reactive.Bindings.ReactiveProperty<ITransactionDraftViewModel?> Draft { get; }
-    public IEnumerable<IFeeratePreset> Feerates => uiServices.FeeratePresets;
     public IObservable<bool> IsValid => this.IsValid();
     public IAmountUI? Amount { get; set; }
 }

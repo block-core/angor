@@ -138,7 +138,16 @@ public class FounderTransactionActions : IFounderTransactionActions
             .AddCoins(stageOutputs.Select(_ => _.ToCoin()))
             .EstimateFees(spendingTransaction, new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(fee.FeeRate)));
 
-        spendingTransaction.Outputs[0].Value -= totalFee < minimumFee ? minimumFee : totalFee;
+        var appliedFee = totalFee < minimumFee ? minimumFee : totalFee;
+
+        if (spendingTransaction.Outputs[0].Value <= appliedFee)
+        {
+            throw new InvalidOperationException(
+                $"Stage funds ({spendingTransaction.Outputs[0].Value.Satoshi} sats) are insufficient to cover the transaction fee ({appliedFee.Satoshi} sats). " +
+                $"The stage amount must be greater than the fee.");
+        }
+
+        spendingTransaction.Outputs[0].Value -= appliedFee;
 
         _logger.LogInformation($"Unsigned spendingTransaction hex {spendingTransaction.ToHex()}");
 

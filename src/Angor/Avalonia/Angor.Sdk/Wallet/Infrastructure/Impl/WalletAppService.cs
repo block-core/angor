@@ -307,6 +307,19 @@ public class WalletAppService(
         }
     }
 
+    public async Task<Result<IEnumerable<FeeEstimation>>> GetFeeEstimates()
+    {
+        try
+        {
+            var feeEstimations = await walletOperations.GetFeeEstimationAsync();
+            return Result.Success(feeEstimations);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IEnumerable<FeeEstimation>>($"Error fetching fee estimates: {ex.Message}");
+        }
+    }
+
     private Task<Result<(long Fee, long VirtualSize)>> CalculateTransactionFee(SendInfo sendInfo, AccountInfo accountInfo, WalletWords walletWords, DomainFeeRate feeRate)
     {
         try
