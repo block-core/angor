@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Application;
+using Angor.Sdk.Wallet.Domain;
 using Angor.Shared.Models;
 using Avalonia2.UI.Shell;
 
@@ -40,6 +41,7 @@ public partial class FundsViewModel : ReactiveObject
 {
     private readonly IWalletAppService _walletAppService;
     private readonly IWalletAccountBalanceService _balanceService;
+    private readonly Func<BitcoinNetwork> _getNetwork;
 
     /// <summary>True when wallets exist and populated state should show.</summary>
     [Reactive] private bool hasWallets;
@@ -65,10 +67,12 @@ public partial class FundsViewModel : ReactiveObject
 
     public FundsViewModel(
         IWalletAppService walletAppService,
-        IWalletAccountBalanceService balanceService)
+        IWalletAccountBalanceService balanceService,
+        Func<BitcoinNetwork> getNetwork)
     {
         _walletAppService = walletAppService;
         _balanceService = balanceService;
+        _getNetwork = getNetwork;
 
         // Load wallets from SDK on construction
         _ = LoadWalletsFromSdkAsync();
@@ -183,16 +187,36 @@ public partial class FundsViewModel : ReactiveObject
             seedWords,
             CSharpFunctionalExtensions.Maybe<string>.None,
             encryptionKey,
-            Angor.Sdk.Wallet.Domain.BitcoinNetwork.Testnet);
+            _getNetwork());
 
         if (result.IsSuccess)
         {
-            // Refresh wallet list
             await LoadWalletsFromSdkAsync();
             return (true, seedWords);
         }
 
         return (false, null);
+    }
+
+    /// <summary>
+    /// Import an existing wallet from user-provided seed words.
+    /// </summary>
+    public async Task<bool> ImportWalletAsync(string walletName, string seedWords, string encryptionKey)
+    {
+        var result = await _walletAppService.CreateWallet(
+            walletName,
+            seedWords,
+            CSharpFunctionalExtensions.Maybe<string>.None,
+            encryptionKey,
+            _getNetwork());
+
+        if (result.IsSuccess)
+        {
+            await LoadWalletsFromSdkAsync();
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>

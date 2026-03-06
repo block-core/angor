@@ -105,7 +105,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     }
 
     /// <summary>
-    /// Validate seed phrase and create "Imported Account" wallet group.
+    /// Validate seed phrase and import wallet with user-provided seed words.
     /// Vue: submitSeedImport() — validates 12 or 24 words.
     /// </summary>
     private void SubmitImport()
@@ -124,12 +124,26 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         SeedError.IsVisible = false;
         SeedSuccess.IsVisible = true;
 
-        // Create wallet via SDK with imported seed words
-        _ = CreateWalletViaSdkAsync("Imported Account");
+        // Import wallet with the user's seed words
+        _ = ImportWalletViaSdkAsync("Imported Account", string.Join(" ", words));
     }
 
     /// <summary>
-    /// Create a wallet via the SDK's CreateWalletAsync and show success step.
+    /// Import a wallet via the SDK with user-provided seed words.
+    /// </summary>
+    private async Task ImportWalletViaSdkAsync(string walletName, string seedWords)
+    {
+        if (Vm == null) return;
+
+        var success = await Vm.ImportWalletAsync(walletName, seedWords, "default-key");
+        if (success)
+        {
+            ShowStep("success");
+        }
+    }
+
+    /// <summary>
+    /// Create a new wallet via the SDK (generate flow) and show success step.
     /// </summary>
     private async Task CreateWalletViaSdkAsync(string walletName)
     {
