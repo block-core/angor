@@ -1,6 +1,7 @@
 using Angor.Data.Documents.LiteDb.Extensions;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding;
+using Angor.Sdk.Integration;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Projects;
@@ -78,6 +79,7 @@ public static class CompositionRoot
         // Register SDK services
         WalletContextServices.Register(services, serilogLogger, network);
         FundingContextServices.Register(services, serilogLogger);
+        services.AddSingleton<ISeedwordsProvider, SeedwordsProvider>();
 
         // ── Shared singletons (replaces SharedViewModels static class) ──
         services.AddSingleton<SignatureStore>();
@@ -100,12 +102,35 @@ public static class CompositionRoot
             project => new InvestPageViewModel(
                 project,
                 sp.GetRequiredService<IWalletAppService>(),
-                sp.GetRequiredService<IInvestmentAppService>()));
+                sp.GetRequiredService<IInvestmentAppService>(),
+                sp.GetRequiredService<PortfolioViewModel>()));
 
         services.AddSingleton<Func<MyProjectItemViewModel, ManageProjectViewModel>>(sp =>
             project => new ManageProjectViewModel(
                 project,
                 sp.GetRequiredService<IFounderAppService>()));
+
+        // ── Section Views (transient — each receives its VM via constructor injection) ──
+        services.AddTransient<HomeView>();
+        services.AddTransient<FundsView>();
+        services.AddTransient<FindProjectsView>();
+        services.AddTransient<PortfolioView>();
+        services.AddTransient<MyProjectsView>();
+        services.AddTransient<FundersView>();
+        services.AddTransient<SettingsView>();
+
+        // ── View factory — maps section keys to DI-resolved Views ──
+        services.AddSingleton<Func<string, object?>>(sp => key => key switch
+        {
+            "Home" => sp.GetRequiredService<HomeView>(),
+            "Funds" => sp.GetRequiredService<FundsView>(),
+            "Find Projects" => sp.GetRequiredService<FindProjectsView>(),
+            "Funded" => sp.GetRequiredService<PortfolioView>(),
+            "My Projects" => sp.GetRequiredService<MyProjectsView>(),
+            "Funders" => sp.GetRequiredService<FundersView>(),
+            "Settings" => sp.GetRequiredService<SettingsView>(),
+            _ => null,
+        });
 
         var provider = services.BuildServiceProvider();
 
