@@ -17,9 +17,9 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
         {
             StagesSource.AddRange(
             [
-                new FundingStageConfigSample { Percent = 33.33m },
-                new FundingStageConfigSample { Percent = 33.33m },
-                new FundingStageConfigSample { Percent = 33.34m }
+                new FundingStageConfigSample { Percent = 33m },
+                new FundingStageConfigSample { Percent = 33m },
+                new FundingStageConfigSample { Percent = 34m }
             ]);
             StagesSource.Connect().Bind(out stages).Subscribe();
         }

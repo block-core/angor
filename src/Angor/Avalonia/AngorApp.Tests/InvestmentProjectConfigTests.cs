@@ -31,8 +31,8 @@ namespace AngorApp.Tests
                 FundingEndDate = DateTime.Now.AddDays(1),
                 StartDate = DateTime.Now
             };
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(10);
-            AddStage(sut, 0.4m).ReleaseDate = DateTime.Now.AddDays(20);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(10);
+            AddStage(sut, 40m).ReleaseDate = DateTime.Now.AddDays(20);
 
             bool isValid = await sut.IsValid().FirstAsync();
             isValid.Should().BeFalse();
@@ -50,8 +50,8 @@ namespace AngorApp.Tests
                 FundingEndDate = DateTime.Now.AddDays(1),
                 StartDate = DateTime.Now
             };
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(10);
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(20);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(10);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(20);
 
             bool isValid = await sut.IsValid().FirstAsync();
             isValid.Should().BeTrue();
@@ -69,8 +69,8 @@ namespace AngorApp.Tests
                 FundingEndDate = DateTime.Now.AddDays(1),
                 StartDate = DateTime.Now
             };
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(10);
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(20);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(10);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(20);
 
             bool isValid = await sut.IsValid().FirstAsync();
             isValid.Should().BeFalse();
@@ -88,8 +88,8 @@ namespace AngorApp.Tests
                 FundingEndDate = DateTime.Now.AddDays(1),
                 StartDate = DateTime.Now
             };
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(10);
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(20);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(10);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(20);
 
             bool isValid = await sut.IsValid().FirstAsync();
             isValid.Should().BeFalse();
@@ -108,8 +108,8 @@ namespace AngorApp.Tests
                 FundingEndDate = DateTime.Now.AddDays(1),
                 StartDate = DateTime.Now
             };
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(10);
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(20);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(10);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(20);
 
             bool isValid = await sut.IsValid().FirstAsync();
             isValid.Should().BeFalse();
@@ -128,8 +128,8 @@ namespace AngorApp.Tests
                 FundingEndDate = DateTime.Now.AddDays(1),
                 StartDate = DateTime.Now
             };
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(10);
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(20);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(10);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(20);
 
             bool isValid = await sut.IsValid().FirstAsync();
             isValid.Should().BeTrue();
@@ -148,8 +148,8 @@ namespace AngorApp.Tests
                 FundingEndDate = DateTime.Now.AddDays(1),
                 StartDate = DateTime.Now
             };
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(10);
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(20);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(10);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(20);
 
             bool isValid = await sut.IsValid().FirstAsync();
             isValid.Should().BeTrue();
@@ -167,15 +167,15 @@ namespace AngorApp.Tests
                 FundingEndDate = DateTime.Now.AddDays(1),
                 StartDate = DateTime.Now
             };
-            IFundingStageConfig stage1 = AddStage(sut, 0.5m);
+            IFundingStageConfig stage1 = AddStage(sut, 50m);
             stage1.ReleaseDate = DateTime.Now.AddDays(10);
-            IFundingStageConfig stage2 = AddStage(sut, 0.4m);
+            IFundingStageConfig stage2 = AddStage(sut, 40m);
             stage2.ReleaseDate = DateTime.Now.AddDays(20);
 
             bool isValidInitial = await sut.IsValid().FirstAsync();
             isValidInitial.Should().BeFalse();
 
-            stage1.Percent = 0.6m;
+            stage1.Percent = 60m;
 
             // Wait for the validation to become true
             bool isValidAfterUpdate = await sut.IsValid()
@@ -197,8 +197,8 @@ namespace AngorApp.Tests
                 StartDate = DateTime.Now
             };
             // Stages valid
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(10);
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(20);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(10);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(20);
 
             bool isValid = await sut.IsValid().FirstAsync();
             isValid.Should().BeFalse();
@@ -215,8 +215,8 @@ namespace AngorApp.Tests
                 StartDate = DateTime.Now
             };
             // Stages valid
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(10);
-            AddStage(sut, 0.5m).ReleaseDate = DateTime.Now.AddDays(20);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(10);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(20);
 
             bool isValid = await sut.IsValid().FirstAsync();
             isValid.Should().BeFalse();

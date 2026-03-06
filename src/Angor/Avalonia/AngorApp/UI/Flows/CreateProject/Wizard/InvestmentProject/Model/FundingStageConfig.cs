@@ -42,7 +42,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
         public decimal? Percent
         {
             get => percent;
-            set => this.RaiseAndSetIfChanged(ref percent, value.HasValue ? Math.Clamp(value.Value, 0.0m, 1.0m) : value);
+            set => this.RaiseAndSetIfChanged(ref percent, value.HasValue ? Math.Clamp(value.Value, 0m, 100m) : value);
         }
 
         public void SetPreviousDateSource(IObservable<DateTime> source)

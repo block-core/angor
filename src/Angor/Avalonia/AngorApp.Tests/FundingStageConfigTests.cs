@@ -10,8 +10,8 @@ namespace AngorApp.Tests
         public void Percent_clamps_values_upper_bound()
         {
             FundingStageConfig stage = new();
-            stage.Percent = 1.5m;
-            stage.Percent.Should().Be(1.0m);
+            stage.Percent = 150m;
+            stage.Percent.Should().Be(100m);
         }
 
         [Fact]
