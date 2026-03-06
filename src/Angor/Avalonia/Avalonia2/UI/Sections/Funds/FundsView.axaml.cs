@@ -9,10 +9,13 @@ namespace Avalonia2.UI.Sections.Funds;
 
 public partial class FundsView : UserControl
 {
-    public FundsView()
+    /// <summary>Design-time only.</summary>
+    public FundsView() => InitializeComponent();
+
+    public FundsView(FundsViewModel vm)
     {
         InitializeComponent();
-        DataContext = new FundsViewModel();
+        DataContext = vm;
 
         // Handle button clicks from EmptyState "Add Wallet", populated "Add Wallet",
         // and WalletCard action buttons (BtnSend, BtnReceive, BtnUtxo)
@@ -125,7 +128,8 @@ public partial class FundsView : UserControl
             modal.SetWallet(
                 card.WalletName ?? "Wallet",
                 card.WalletType ?? "On-Chain",
-                card.Balance ?? "0.0000 BTC");
+                card.Balance ?? "0.0000 BTC",
+                card.WalletId ?? "");
             shellVm.ShowModal(modal);
         }
     }

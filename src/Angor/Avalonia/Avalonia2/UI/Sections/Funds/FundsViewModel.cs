@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Application;
+using Angor.Shared.Models;
 using Avalonia2.UI.Shell;
 
 namespace Avalonia2.UI.Sections.Funds;
@@ -59,6 +60,9 @@ public partial class FundsViewModel : ReactiveObject
 
     public ObservableCollection<SeedGroupViewModel> SeedGroups { get; } = new();
 
+    /// <summary>Cached AccountBalanceInfo per wallet for UTXO access.</summary>
+    private readonly Dictionary<string, AccountBalanceInfo> _walletBalanceInfos = new();
+
     public FundsViewModel(
         IWalletAppService walletAppService,
         IWalletAccountBalanceService balanceService)
@@ -71,8 +75,16 @@ public partial class FundsViewModel : ReactiveObject
     }
 
     /// <summary>
+    /// Get cached AccountBalanceInfo for a wallet (used by WalletDetailModal for real UTXOs).
+    /// </summary>
+    public AccountBalanceInfo? GetAccountBalanceInfo(string walletId)
+    {
+        return _walletBalanceInfos.GetValueOrDefault(walletId);
+    }
+
+    /// <summary>
     /// Load wallet data from the SDK.
-    /// Retrieves all wallet metadatas and their balances.
+    /// Uses RefreshAndGetAccountBalanceInfo to get UTXO-based balances.
     /// </summary>
     public async Task LoadWalletsFromSdkAsync()
     {
@@ -95,8 +107,9 @@ public partial class FundsViewModel : ReactiveObject
             }
 
             SeedGroups.Clear();
-            double totalBal = 0;
-            double btcBal = 0;
+            _walletBalanceInfos.Clear();
+            long totalSats = 0;
+            long btcSats = 0;
 
             var group = new SeedGroupViewModel
             {
@@ -107,22 +120,26 @@ public partial class FundsViewModel : ReactiveObject
             foreach (var meta in metadatas)
             {
                 var walletId = meta.Id;
-                var balanceResult = await _walletAppService.GetBalance(walletId);
-                double balanceValue = 0;
+                long balanceSats = 0;
 
-                if (balanceResult.IsSuccess)
+                // Use AccountBalanceInfo for UTXO-based balance
+                var balanceInfoResult = await _walletAppService.RefreshAndGetAccountBalanceInfo(walletId);
+                if (balanceInfoResult.IsSuccess)
                 {
-                    // Balance is in satoshis, convert to BTC
-                    balanceValue = balanceResult.Value.Sats / 100_000_000.0;
+                    var info = balanceInfoResult.Value;
+                    _walletBalanceInfos[walletId.Value] = info;
+                    balanceSats = info.TotalBalance + info.TotalUnconfirmedBalance;
                 }
 
-                totalBal += balanceValue;
-                btcBal += balanceValue;
+                totalSats += balanceSats;
+                btcSats += balanceSats;
+
+                double balanceBtc = balanceSats / 100_000_000.0;
 
                 group.Wallets.Add(new WalletItemViewModel
                 {
                     Name = meta.Name,
-                    Balance = $"{balanceValue:F8} BTC",
+                    Balance = $"{balanceBtc:F8} BTC",
                     WalletType = "On-Chain",
                     Label = "",
                     IconType = "bitcoin",
@@ -130,11 +147,14 @@ public partial class FundsViewModel : ReactiveObject
                 });
             }
 
-            group.GroupBalance = totalBal.ToString("F4", CultureInfo.InvariantCulture);
+            double totalBtc = totalSats / 100_000_000.0;
+            double btcBtc = btcSats / 100_000_000.0;
+
+            group.GroupBalance = totalBtc.ToString("F4", CultureInfo.InvariantCulture);
             SeedGroups.Add(group);
 
-            TotalBalance = totalBal.ToString("F4", CultureInfo.InvariantCulture);
-            BitcoinBalance = btcBal.ToString("F4", CultureInfo.InvariantCulture);
+            TotalBalance = totalBtc.ToString("F4", CultureInfo.InvariantCulture);
+            BitcoinBalance = btcBtc.ToString("F4", CultureInfo.InvariantCulture);
             HasWallets = true;
 
             this.RaisePropertyChanged(nameof(TotalBalance));

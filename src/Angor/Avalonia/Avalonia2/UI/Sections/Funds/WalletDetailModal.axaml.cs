@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Angor.Shared.Models;
 using Avalonia2.UI.Shell;
 using Projektanker.Icons.Avalonia;
 
@@ -28,15 +29,9 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
     private string _walletName = "";
     private string _walletType = "";
     private string _walletBalance = "";
+    private string _walletId = "";
     private readonly HashSet<string> _selectedUtxos = new();
-
-    /// <summary>Mock UTXO data matching Vue getWalletUTXOs().</summary>
-    private static readonly List<UtxoData> MockUtxos = new()
-    {
-        new("a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456", 0.5432, 6),
-        new("f6e5d4c3b2a1098765432109876543210987654321fedcba0987654321fedcba", 1.2345, 12),
-        new("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", 0.7654, 24),
-    };
+    private List<UtxoData> _utxos = new();
 
     public WalletDetailModal()
     {
@@ -50,19 +45,34 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
     public void OnBackdropCloseRequested() { }
 
     /// <summary>
-    /// Set the wallet info and populate UTXOs.
+    /// Set the wallet info and populate UTXOs from SDK data.
     /// Called by FundsView before showing the modal.
     /// </summary>
-    public void SetWallet(string name, string type, string balance)
+    public void SetWallet(string name, string type, string balance, string walletId)
     {
         _walletName = name;
         _walletType = type;
         _walletBalance = balance;
+        _walletId = walletId;
 
         HeaderWalletName.Text = name;
         HeaderWalletType.Text = type;
         HeaderBalance.Text = balance;
         _selectedUtxos.Clear();
+
+        // Load real UTXOs from the FundsViewModel's cached AccountBalanceInfo
+        _utxos = new List<UtxoData>();
+        if (DataContext is FundsViewModel fundsVm && !string.IsNullOrEmpty(walletId))
+        {
+            var accountInfo = fundsVm.GetAccountBalanceInfo(walletId);
+            if (accountInfo?.AccountInfo != null)
+            {
+                _utxos = accountInfo.AccountInfo.AllUtxos()
+                    .Where(u => !u.PendingSpent)
+                    .ToList();
+            }
+        }
+
         UpdateSendButtonText();
         BuildUtxoList();
     }
@@ -102,7 +112,7 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
     {
         UtxoList.Children.Clear();
 
-        if (MockUtxos.Count == 0)
+        if (_utxos.Count == 0)
         {
             EmptyUtxoState.IsVisible = true;
             return;
@@ -110,9 +120,9 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
 
         EmptyUtxoState.IsVisible = false;
 
-        for (var i = 0; i < MockUtxos.Count; i++)
+        for (var i = 0; i < _utxos.Count; i++)
         {
-            var utxo = MockUtxos[i];
+            var utxo = _utxos[i];
             var card = CreateUtxoCard(utxo, i);
             UtxoList.Children.Add(card);
         }
@@ -125,13 +135,16 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
     /// </summary>
     private Border CreateUtxoCard(UtxoData utxo, int index)
     {
+        var outpointStr = utxo.outpoint?.ToString() ?? "";
+        var txid = utxo.outpoint?.transactionId ?? outpointStr;
+
         var card = new Border
         {
             Name = $"UtxoCard_{index}",
             CornerRadius = new CornerRadius(8),
             Padding = new Thickness(16),
             Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
-            Tag = utxo.Txid,
+            Tag = outpointStr,
         };
 
         // Apply CSS class for DynamicResource styling (Rule #9: class toggle only)
@@ -140,14 +153,14 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
         // Click to toggle selection
         card.PointerPressed += (_, _) =>
         {
-            ToggleUtxoSelection(utxo.Txid, card, index);
+            ToggleUtxoSelection(outpointStr, card, index);
         };
 
         // Card content: DockPanel with checkbox on right, info on left
         var dock = new DockPanel();
 
         // Right: checkbox 24x24
-        var checkbox = CreateCheckbox(utxo.Txid, index);
+        var checkbox = CreateCheckbox(outpointStr, index);
         DockPanel.SetDock(checkbox, Dock.Right);
         dock.Children.Add(checkbox);
 
@@ -166,10 +179,10 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
 
         var txidRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
 
-        // Truncated green txid (clickable link style) — brand green is same in both themes
-        var truncated = utxo.Txid.Length > 16
-            ? utxo.Txid[..16] + "..."
-            : utxo.Txid;
+        // Truncated green txid
+        var truncated = txid.Length > 16
+            ? txid[..16] + "..."
+            : txid;
 
         txidRow.Children.Add(new TextBlock
         {
@@ -181,7 +194,7 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
             Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
         });
 
-        // Copy button — use ModalBtn class for transparent chrome
+        // Copy button
         var copyBtn = new Button
         {
             Name = $"BtnCopyTxid_{index}",
@@ -203,17 +216,17 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
         infoStack.Children.Add(txidSection);
 
         // Amount + Confirmations row
-        // Vue: flex gap-4 text-sm
         var statsRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 16 };
 
-        // Amount
+        // Amount (value is in satoshis, convert to BTC)
+        double amountBtc = utxo.value / 100_000_000.0;
         var amountPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
         var amountLabel = new TextBlock { Text = "Amount:", FontSize = 13 };
         amountLabel.Classes.Add("TextMuted");
         amountPanel.Children.Add(amountLabel);
         var amountValue = new TextBlock
         {
-            Text = $"{utxo.Amount:F4} BTC",
+            Text = $"{amountBtc:F8} BTC",
             FontSize = 13,
             FontWeight = FontWeight.SemiBold,
         };
@@ -221,14 +234,14 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
         amountPanel.Children.Add(amountValue);
         statsRow.Children.Add(amountPanel);
 
-        // Confirmations
+        // Confirmations (blockIndex > 0 means confirmed)
         var confPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        var confLabel = new TextBlock { Text = "Confirmations:", FontSize = 13 };
+        var confLabel = new TextBlock { Text = "Status:", FontSize = 13 };
         confLabel.Classes.Add("TextMuted");
         confPanel.Children.Add(confLabel);
         var confValue = new TextBlock
         {
-            Text = utxo.Confirmations.ToString(),
+            Text = utxo.blockIndex > 0 ? "Confirmed" : "Unconfirmed",
             FontSize = 13,
             FontWeight = FontWeight.SemiBold,
         };
@@ -334,10 +347,10 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
         // Pre-fill amount if UTXOs selected
         if (_selectedUtxos.Count > 0)
         {
-            var totalAmount = MockUtxos
-                .Where(u => _selectedUtxos.Contains(u.Txid))
-                .Sum(u => u.Amount);
-            sendModal.PrefillAmount(totalAmount);
+            var totalSats = _utxos
+                .Where(u => _selectedUtxos.Contains(u.outpoint?.ToString() ?? ""))
+                .Sum(u => u.value);
+            sendModal.PrefillAmount(totalSats / 100_000_000.0);
         }
 
         shellVm.ShowModal(sendModal);
@@ -353,6 +366,4 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
         shellVm.ShowModal(receiveModal);
     }
 
-    /// <summary>Simple record for mock UTXO data.</summary>
-    private record UtxoData(string Txid, double Amount, int Confirmations);
 }

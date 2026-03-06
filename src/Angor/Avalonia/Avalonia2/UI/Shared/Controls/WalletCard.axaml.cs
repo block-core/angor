@@ -24,6 +24,9 @@ public class WalletCard : TemplatedControl
     public static readonly StyledProperty<string?> LabelProperty =
         AvaloniaProperty.Register<WalletCard, string?>(nameof(Label));
 
+    public static readonly StyledProperty<string?> WalletIdProperty =
+        AvaloniaProperty.Register<WalletCard, string?>(nameof(WalletId));
+
     public string? WalletName
     {
         get => GetValue(WalletNameProperty);
@@ -46,5 +49,11 @@ public class WalletCard : TemplatedControl
     {
         get => GetValue(LabelProperty);
         set => SetValue(LabelProperty, value);
+    }
+
+    public string? WalletId
+    {
+        get => GetValue(WalletIdProperty);
+        set => SetValue(WalletIdProperty, value);
     }
 }

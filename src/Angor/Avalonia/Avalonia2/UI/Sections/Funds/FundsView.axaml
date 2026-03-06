@@ -241,7 +241,8 @@
                                                             WalletName="{Binding Name}"
                                                             Balance="{Binding Balance}"
                                                             WalletType="{Binding WalletType}"
-                                                            Label="{Binding Label}" />
+                                                            Label="{Binding Label}"
+                                                            WalletId="{Binding WalletId}" />
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>
