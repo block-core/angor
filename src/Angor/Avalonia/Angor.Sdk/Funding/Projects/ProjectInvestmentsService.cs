@@ -50,7 +50,7 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
         var stageDataList = project.Stages
          .Select(x => new StageData
          {
-             Stage = new Angor.Shared.Models.Stage() { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal },
+             Stage = new Angor.Shared.Models.Stage() { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal * 100m },
              StageDate = x.ReleaseDate,
              StageIndex = x.Index,
              Items = [],
