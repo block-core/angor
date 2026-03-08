@@ -266,47 +266,41 @@ public static class GetRecoveryStatus
                                 }
                                 case ProjectScriptTypeEnum.InvestorWithPenalty:
                                 {
-                                    // Both recovery and unfunded release use the same Recover script path.
-                                    // Check spending transaction outputs to distinguish:
-                                    // - P2WPKH outputs = unfunded release (direct to investor)
-                                    // - P2WSH outputs = recovery with penalty
-                                    
-                                    // Log spending tx output types
-                                    if (spentInTransaction != null)
+                                    // InvestorWithPenalty = 2-of-2 multisig spent. Check the output script
+                                    // at the corresponding index (SIGHASH_SINGLE: input N signs output N)
+                                    // to distinguish recovery (penalty timelock P2WSH) from unfunded release (P2WPKH).
+                                    var correspondingOutput = spentInTransaction?.Outputs
+                                        .FirstOrDefault(o => o.Index == item.StageIndex);
+                                    var hasPenaltyTimelock = correspondingOutput != null
+                                        && !string.IsNullOrEmpty(correspondingOutput.ScriptPubKey)
+                                        && NBitcoin.Script.FromHex(correspondingOutput.ScriptPubKey)
+                                            .IsScriptType(NBitcoin.ScriptType.P2WSH);
+
+                                    if (!hasPenaltyTimelock)
                                     {
-                                        foreach (var spentOutput in spentInTransaction.Outputs)
-                                        {
-                                            logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: SpentTx output idx={OutputIdx}, OutputType={OutputType}, Address={Address}", 
-                                                item.StageIndex, spentOutput.Index, spentOutput.OutputType ?? "null", spentOutput.Address ?? "null");
-                                        }
-                                    }
-                                    
-                                    if (spentInTransaction != null && spentInTransaction.Outputs
-                                            .Any(o => o.OutputType == "witness_v0_keyhash" || o.OutputType == "v0_p2wpkh"))
-                                    {
+                                        // No timelock outputs = unfunded release
                                         item.Status = "Project Unfunded, Spent back to investor";
                                         item.ScriptType = ProjectScriptTypeEnum.InvestorNoPenalty;
-                                        logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: Detected unfunded release via output type, status='Project Unfunded, Spent back to investor'", item.StageIndex);
+                                        logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: Unfunded release detected via script parser, status='{Status}'", item.StageIndex, item.Status);
+                                        break;
+                                    }
+
+                                    // P2WSH outputs = penalty timelock recovery
+                                    if (spentInTransaction.Outputs.SkipLast(1)
+                                            .Any(o => !string.IsNullOrEmpty(o.SpentInTransaction)))
+                                    {
+                                        item.Status = "Recovered after penalty";
+                                        item.ScriptType = ProjectScriptTypeEnum.Unknown;
                                     }
                                     else
                                     {
-                                        // Check if the recovery transaction's penalty outputs have been spent
-                                        var recoveryTrxInfo = spentInTransaction;
-                                        if (recoveryTrxInfo != null && recoveryTrxInfo.Outputs.SkipLast(1)
-                                                .Any(o => !string.IsNullOrEmpty(o.SpentInTransaction)))
-                                        {
-                                            item.Status = "Recovered after penalty";
-                                            item.ScriptType = ProjectScriptTypeEnum.Unknown;
-                                        }
-                                        else
-                                        {
-                                            var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
-                                            item.Status = days > 0
-                                                ? $"Penalty, released in {days.ToString("0.0")} days"
-                                                : "Penalty can be released";
-                                        }
-                                        logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: Penalty path, status='{Status}'", item.StageIndex, item.Status);
+                                        var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                                        item.Status = days > 0
+                                            ? $"Penalty, released in {days.ToString("0.0")} days"
+                                            : "Penalty can be released";
                                     }
+                                    logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: Penalty path, status='{Status}'", item.StageIndex, item.Status);
+
                                     break;
                                 }
                                 case ProjectScriptTypeEnum.EndOfProject:
