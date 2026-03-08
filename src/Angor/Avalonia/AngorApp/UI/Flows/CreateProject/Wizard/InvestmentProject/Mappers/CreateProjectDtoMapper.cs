@@ -34,7 +34,7 @@ public static class CreateProjectDtoMapper
             PenaltyThreshold = newProject.PenaltyThreshold,
             TargetAmount = new Amount(satsValue),
             Stages = newProject.Stages.Select(stage =>
-                    new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent ?? 0)),
+                    new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), (stage.Percent ?? 0) * 100)),
 
 
 

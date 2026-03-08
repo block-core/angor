@@ -4,8 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:schedule="clr-namespace:AngorApp.UI.Sections.Funded.Investment.Cards.Schedule"
              xmlns:schedule1="clr-namespace:AngorApp.UI.Sections.Funded.Fund.Cards.Schedule"
-             xmlns:investmentProject="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
-             xmlns:fundProject="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
              xmlns:samples1="clr-namespace:AngorApp.Model.Funded.Shared.Model;assembly=AngorApp.Model"
              xmlns:model="clr-namespace:AngorApp.Model.Funded.Investment.Model;assembly=AngorApp.Model"
              xmlns:model1="clr-namespace:AngorApp.Model.Funded.Fund.Model;assembly=AngorApp.Model"
@@ -49,13 +47,13 @@
             </ContentControl>
         </HeaderedContainer.Header>
         <StackPanel Classes="Gap-L">
-            <ContentControl Content="{Binding  Project}">
+            <ContentControl Content="{Binding}">
                 <ContentControl.DataTemplates>
-                    <DataTemplate DataType="investmentProject:IInvestmentProject">
+                    <DataTemplate DataType="model:IInvestmentFunded">
                         <schedule:InvestmentScheduleCard />
                     </DataTemplate>
-                    <DataTemplate DataType="fundProject:IFundProject">
-                        <schedule1:FundScheduleCard />
+                    <DataTemplate DataType="model1:IFundFunded">
+                        <schedule1:FundScheduleCard DataContext="{Binding Project}" />
                     </DataTemplate>
                 </ContentControl.DataTemplates>
             </ContentControl>

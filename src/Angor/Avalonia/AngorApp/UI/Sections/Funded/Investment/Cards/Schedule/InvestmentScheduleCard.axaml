@@ -2,11 +2,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:p="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
+             xmlns:p="clr-namespace:AngorApp.Model.Funded.Investment.Model;assembly=AngorApp.Model"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="AngorApp.UI.Sections.Funded.Investment.Cards.Schedule.InvestmentScheduleCard" x:DataType="p:IInvestmentProject">
+             x:Class="AngorApp.UI.Sections.Funded.Investment.Cards.Schedule.InvestmentScheduleCard" x:DataType="p:IInvestmentFunded">
 
-    <SlimDataGrid ItemsSource="{Binding Stages^}">
+    <SlimDataGrid ItemsSource="{Binding StagesWithStatus^}">
         <SlimDataGrid.Columns>
             <Column Header="Stage" Binding="{Binding Id, Converter={x:Static MiscConverters.AddOne}}" />
             <Column Header="Stage %" Binding="{Binding Ratio, StringFormat=p0}" />

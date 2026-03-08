@@ -19,6 +19,7 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
     [Reactive] private long? feerate;
     [ObservableAsProperty] private ITransactionDraft? draft;
     [ObservableAsProperty] private IAmountUI? fee;
+    [ObservableAsProperty] private IEnumerable<IFeeratePreset>? presets;
     private readonly BehaviorSubject<bool> isCalculatingDraft = new(false);
     private readonly CompositeDisposable disposable = new();
 
@@ -29,6 +30,10 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
         this.uiServices = uiServices;
         
         isCalculatingDraft.DisposeWith(disposable);
+
+        presetsHelper = Observable.FromAsync(() => uiServices.GetFeeratePresetsAsync())
+            .ToProperty(this, x => x.Presets)
+            .DisposeWith(disposable);
 
         var createDraft = this.WhenAnyValue(x => x.Feerate)
             .WhereNotNull()
@@ -61,8 +66,6 @@ public partial class TransactionDraftViewModel : ReactiveValidationObject, ITran
     public IObservable<bool> IsSending { get; }
 
     public ReactiveCommand<Unit, Result<TxId>> Confirm { get; }
-    
-    public IEnumerable<IFeeratePreset> Presets => uiServices.FeeratePresets;
 
     private Task<Result<ITransactionDraft>> CreateDraftTo(long destinationAmount, string destinationBitcoinAddress, long feeRate)
     {

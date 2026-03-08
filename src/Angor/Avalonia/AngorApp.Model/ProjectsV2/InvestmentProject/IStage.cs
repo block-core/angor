@@ -2,7 +2,7 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
 {
     public interface IStage
     {
-        public StageStatus Status { get; }
+        public string Status { get; }
         public int Id { get; }
         public decimal Ratio { get; }
         public DateTimeOffset ReleaseDate { get; }

@@ -68,7 +68,7 @@ public static class ProjectExtensions
             Stages = project.Stages.Select(stage => new Stage
             {
                 ReleaseDate = stage.ReleaseDate,
-                AmountToRelease = stage.RatioOfTotal,
+                AmountToRelease = stage.RatioOfTotal * 100m,
             }).ToList(),
       
             // Dynamic patterns (for Fund/Subscribe projects)
