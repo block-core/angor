@@ -61,19 +61,15 @@ public class TransactionService(IGenericDocumentCollection<QueryTransaction> que
                     .InsertAsync(x => x.TransactionId, trxInfo);
             }
         }
-        else if(trxInfo.Outputs.Any(IsUnspent)) //If we have unspent outputs, check if they are still unspent
+        else if (trxInfo.Confirmations == 0 || trxInfo.Outputs.Any(IsUnspent))
         {
-            var spent = await indexerService.GetIsSpentOutputsOnTransactionAsync(transactionId);
-            var outputs = trxInfo.Outputs.ToList();
-            
-            if (!spent.Any(info => info.spent && IsUnspent(outputs[info.index]))) 
-                return trxInfo;
-            
-            trxInfo = await indexerService.GetTransactionInfoByIdAsync(transactionId);
-            if (trxInfo is not null)
+            // Re-fetch if unconfirmed (timestamp needed for penalty expiry)
+            // or if there are unspent outputs that may now be spent
+            var refreshed = await indexerService.GetTransactionInfoByIdAsync(transactionId);
+            if (refreshed is not null)
             {
-                var insertResult = await queryTransactionCollection
-                    .UpdateAsync(x => x.TransactionId, trxInfo);
+                trxInfo = refreshed;
+                await queryTransactionCollection.UpdateAsync(x => x.TransactionId, trxInfo);
             }
         }
         

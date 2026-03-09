@@ -11,7 +11,7 @@ public class InvestorProjectRecoveryDto
     public long TotalInPenalty { get; set; }
 
     public bool HasUnspentItems { get; set; }
-    public bool HasItemsInPenalty { get; set; }
+    public bool HasSpendableItemsInPenalty { get; set; }
     public bool EndOfProject { get; set; }
     public bool IsAboveThreshold { get; set; }
 

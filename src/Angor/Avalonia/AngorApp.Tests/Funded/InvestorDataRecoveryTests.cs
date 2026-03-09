@@ -74,7 +74,7 @@ public class InvestorDataRecoveryTests
             .ReturnsAsync(Result.Success(new GetRecoveryStatus.GetRecoveryStatusResponse(new InvestorProjectRecoveryDto
             {
                 HasUnspentItems = true,
-                HasItemsInPenalty = false,
+                HasSpendableItemsInPenalty = false,
                 HasReleaseSignatures = false,
                 EndOfProject = false,
                 IsAboveThreshold = true,
