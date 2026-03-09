@@ -65,7 +65,7 @@
                         <schedule:InvestmentScheduleCard />
                     </DataTemplate>
                     <DataTemplate DataType="model1:IFundFunded">
-                        <schedule1:FundScheduleCard DataContext="{Binding Project}" />
+                        <schedule1:FundScheduleCard />
                     </DataTemplate>
                 </ContentControl.DataTemplates>
             </ContentControl>
