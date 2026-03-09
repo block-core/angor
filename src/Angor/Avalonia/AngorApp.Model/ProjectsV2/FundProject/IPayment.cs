@@ -4,7 +4,7 @@ namespace AngorApp.Model.ProjectsV2.FundProject
     {
         int Id { get; }
         DateTimeOffset PaymentDate { get; }
-        PaymentStatus Status { get; }
+        string Status { get; }
         IAmountUI Amount { get; }
     }
 }

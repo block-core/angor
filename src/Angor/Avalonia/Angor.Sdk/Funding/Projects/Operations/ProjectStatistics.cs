@@ -111,9 +111,23 @@ public static class ProjectStatistics
                         TotalAmount = stage.TotalAmount,
                         TransactionCount = stage.Items.Count,
                         UnspentTransactionCount = stage.Items.Count(i => !i.IsSpent),
-                        UnspentAmount = stage.Items.Where(i => !i.IsSpent).Sum(i => i.Amount)
+                        UnspentAmount = stage.Items.Where(i => !i.IsSpent).Sum(i => i.Amount),
+                        Status = ResolveStageStatus(stage)
                     })
                     .ToList();
+        }
+
+        private static string ResolveStageStatus(StageData stage)
+        {
+            if (!stage.Items.Any())
+                return "";
+
+            var itemStatuses = stage.Items
+                .Select(item => DynamicStageDto.ResolveItemStatus(item, stage.StageDate))
+                .Distinct()
+                .ToList();
+
+            return itemStatuses.Count == 1 ? itemStatuses[0] : string.Join(" / ", itemStatuses);
         }
 
         private static decimal CalculateStagePercentage(StageData stage, bool isDynamic, ProjectInfo projectInfo)
