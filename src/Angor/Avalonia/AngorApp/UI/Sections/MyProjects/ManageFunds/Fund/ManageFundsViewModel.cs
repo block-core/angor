@@ -27,7 +27,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Fund
             IObservable<ProjectStatisticsDto> projectStatsObs = loadProjectStats.Successes()
                 .StartWith(new ProjectStatisticsDto());
 
-            Header = Observable.Return(new HeaderViewModel(project));
+            Header = Observable.Return(new HeaderViewModel(project, loadProjectStats));
             ReleaseViewModel = Observable.Return(new ReleaseViewModel(
                 project,
                 projectStatsObs.Select(stats => stats.AvailableTransactions),
@@ -35,12 +35,14 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Fund
                 founderAppService,
                 walletContext));
             ClaimViewModel = Observable.Return(new ClaimViewModel(project, founderAppService, uiServices, walletContext));
+            LoadProjectStats = loadProjectStats;
         }
         
         public IObservable<IReleaseViewModel> ReleaseViewModel { get; }
         public IObservable<IClaimViewModel> ClaimViewModel { get; }
 
         public IFundProject Project { get; }
+        public IEnhancedCommand LoadProjectStats { get; }
         public IObservable<object> Header { get; }
     }
 }

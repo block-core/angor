@@ -37,7 +37,7 @@
         <Border DockPanel.Dock="Left" Classes="White Button Shadow">
             <TextBlock Text="{Binding Project.Name}" />
         </Border>
-        <EnhancedButton Command="{Binding Project.Refresh}" Icon="{Icon fa-arrows-rotate}" DockPanel.Dock="Right" Classes="White" Content="Refresh" />
+        <EnhancedButton Command="{Binding Refresh}" Icon="{Icon fa-arrows-rotate}" DockPanel.Dock="Right" Classes="White" Content="Refresh" />
         <EnhancedButton Foreground="{DynamicResource Error}" Icon="{Icon fa-lock}" DockPanel.Dock="Right" Classes="White" Content="View Private Keys" />
     </DockPanel>
 </UserControl>

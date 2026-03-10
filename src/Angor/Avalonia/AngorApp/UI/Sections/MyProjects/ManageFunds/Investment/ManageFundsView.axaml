@@ -19,7 +19,7 @@
 
     <Interaction.Behaviors>
         <LoadedTrigger>
-            <InvokeCommandAction Command="{Binding Project.Refresh}" />
+            <InvokeCommandAction Command="{Binding LoadProjectStats}" />
         </LoadedTrigger>
     </Interaction.Behaviors>
 
@@ -32,7 +32,7 @@
 
     <ctrl:ScrollableView>
         <StackPanel Classes="Gap-XL">
-            <Loading IsLoading="{Binding Project.Refresh.IsExecuting^}" ClipToBounds="False">
+            <Loading IsLoading="{Binding LoadProjectStats.IsExecuting^}" ClipToBounds="False">
                 <StackPanel Classes="Gap-XL">
                     <Border Classes="ColorPanel White Shadow">
                         <DockPanel>

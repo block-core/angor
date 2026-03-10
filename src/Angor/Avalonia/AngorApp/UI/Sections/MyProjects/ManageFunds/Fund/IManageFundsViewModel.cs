@@ -7,6 +7,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Fund
     public interface IManageFundsViewModel
     {
         IFundProject Project { get; }
+        IEnhancedCommand LoadProjectStats { get; }
         public IObservable<IReleaseViewModel> ReleaseViewModel { get; }
         public IObservable<IClaimViewModel> ClaimViewModel { get; }
     }

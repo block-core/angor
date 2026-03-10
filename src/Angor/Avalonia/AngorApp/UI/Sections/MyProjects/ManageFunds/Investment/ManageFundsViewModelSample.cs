@@ -9,8 +9,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment
     public class ManageFundsViewModelSample : IManageFundsViewModel
     {
         public IInvestmentProject Project { get; } = new InvestmentProjectSample();
-        public IObservable<IProject> ProjectObs { get; } = Observable.Return<IProject>(new InvestmentProjectSample());
-        public IEnhancedCommand Load { get; } = ReactiveCommand.Create(() => { }).Enhance();
+        public IEnhancedCommand LoadProjectStats { get; } = ReactiveCommand.Create(() => { }).Enhance();
         public IObservable<IReleaseViewModel> ReleaseViewModel { get; } = Observable.Return(new ReleaseViewModelSample());
         public IObservable<IClaimViewModel> ClaimViewModel { get; } = Observable.Return(new ClaimViewModelSample());
     }

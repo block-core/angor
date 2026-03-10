@@ -6,4 +6,5 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Header;
 public class HeaderViewModelSample : IHeaderViewModel
 {
     public IProject Project { get; set; } = new InvestmentProjectSample();
+    public IEnhancedCommand Refresh => Project.Refresh;
 }
