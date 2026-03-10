@@ -66,6 +66,7 @@ public static class FundingContextServices
         services.TryAddSingleton<IProjectInvestmentsService, ProjectInvestmentsService>();
         services.TryAddSingleton<ITransactionService,TransactionService>();
         services.TryAddSingleton<IWalletAccountBalanceService, WalletAccountBalanceService>();
+        services.TryAddSingleton<IAddressPollingService, AddressPollingService>();
         services.TryAddSingleton<IMempoolMonitoringService, MempoolMonitoringService>();
         
         // Lightning Network / Boltz submarine swap services

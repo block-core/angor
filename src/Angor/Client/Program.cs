@@ -46,6 +46,7 @@ builder.Services.AddScoped<IAngorIndexerService, MempoolIndexerAngorApi>();
 builder.Services.AddScoped<MempoolIndexerMappers>();
 builder.Services.AddScoped<IIndexerService, MempoolSpaceIndexerApi>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
+builder.Services.AddScoped<IAddressPollingService, AddressPollingService>();
 
 builder.Services.AddTransient<IRelayService, RelayService>();
 builder.Services.AddTransient<ISignService, SignService>();
