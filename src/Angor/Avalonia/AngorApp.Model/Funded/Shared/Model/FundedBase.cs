@@ -51,6 +51,8 @@ public abstract class FundedBase : IFunded, IDisposable
             () => DoRecoverFunds(notificationService, draftPreviewer, appService, walletContext),
             canRecoverFunds).DisposeWith(disposables);
 
+        RecoverFundsLabel = investorData.Recovery.Select(r => r.ButtonLabel);
+
         var refreshHappened = CancelApproval.Merge(CancelInvestment).Merge(ConfirmInvestment).Merge(RecoverFunds).ToSignal();
 
         refreshHappened.InvokeCommand(InvestorData.Refresh).DisposeWith(disposables);
@@ -63,6 +65,7 @@ public abstract class FundedBase : IFunded, IDisposable
     public IEnhancedCommand<Result> ConfirmInvestment { get; }
     public IEnhancedCommand<Result> OpenChat { get; }
     public IEnhancedCommand<Result> RecoverFunds { get; }
+    public IObservable<string> RecoverFundsLabel { get; }
 
     private async Task<Result> DoCancelInvestment(
         INotificationService notificationService,

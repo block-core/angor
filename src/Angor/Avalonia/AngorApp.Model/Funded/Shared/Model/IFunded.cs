@@ -11,5 +11,6 @@ namespace AngorApp.Model.Funded.Shared.Model
         public IEnhancedCommand<Result> ConfirmInvestment { get; }
         public IEnhancedCommand<Result> OpenChat { get; }
         public IEnhancedCommand<Result> RecoverFunds { get; }
+        public IObservable<string> RecoverFundsLabel { get; }
     }
 }
