@@ -30,6 +30,17 @@
                              Text="{Binding ProjectName, Mode=TwoWay}"
                              Watermark="Enter the name of your project"
                              Padding="12,12,16,12" FontSize="16" CornerRadius="8" />
+                    <!-- Vue: char counter {n}/200 positioned below input, right-aligned -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <!-- Vue: nameError — red text below input -->
+                        <TextBlock Text="{Binding NameError}" FontSize="13"
+                                   Foreground="{DynamicResource ErrorFieldText}"
+                                   IsVisible="{Binding HasNameError}" />
+                        <TextBlock Grid.Column="1" Text="{Binding ProjectNameCharCount}"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   HorizontalAlignment="Right" />
+                    </Grid>
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -51,6 +62,16 @@
                              AcceptsReturn="True" TextWrapping="Wrap"
                              MinHeight="140" MaxHeight="200"
                              Padding="12,12,16,12" FontSize="16" CornerRadius="8" />
+                    <!-- Vue: char counter {n}/400 + aboutError -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{Binding AboutError}" FontSize="13"
+                                   Foreground="{DynamicResource ErrorFieldText}"
+                                   IsVisible="{Binding HasAboutError}" />
+                        <TextBlock Grid.Column="1" Text="{Binding ProjectAboutCharCount}"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   HorizontalAlignment="Right" />
+                    </Grid>
                 </StackPanel>
             </StackPanel>
         </Border>

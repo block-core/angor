@@ -68,6 +68,13 @@
             <SolidColorBrush x:Key="ErrorForeground" Color="#dc2626" />
             <SolidColorBrush x:Key="ErrorText" Color="#b91c1c" />
             <SolidColorBrush x:Key="SuccessText" Color="#15803d" />
+            <!-- Vue formError banner: bg-red-100, border-red-200, text-red-800 -->
+            <SolidColorBrush x:Key="ErrorBannerBg" Color="#fee2e2" />
+            <SolidColorBrush x:Key="ErrorBannerBorder" Color="#fecaca" />
+            <SolidColorBrush x:Key="ErrorBannerText" Color="#991b1b" />
+            <!-- Vue field error: text-red-600, border-red-500 -->
+            <SolidColorBrush x:Key="ErrorFieldText" Color="#dc2626" />
+            <SolidColorBrush x:Key="ErrorFieldBorder" Color="#EF4444" />
 
             <!-- Warning/Fee Box Colors (light mode: warm cream/amber) -->
             <SolidColorBrush x:Key="WarningBoxBackground" Color="#FFF7ED" />
@@ -207,6 +214,13 @@
             <SolidColorBrush x:Key="ErrorForeground" Color="#80991b1b" />
             <SolidColorBrush x:Key="ErrorText" Color="#EF4444" />
             <SolidColorBrush x:Key="SuccessText" Color="#4ADE80" />
+            <!-- Vue formError banner dark: bg-red-900/40, border-red-800/50, text-red-300 -->
+            <SolidColorBrush x:Key="ErrorBannerBg" Color="#66991b1b" />
+            <SolidColorBrush x:Key="ErrorBannerBorder" Color="#80991b1b" />
+            <SolidColorBrush x:Key="ErrorBannerText" Color="#fca5a5" />
+            <!-- Vue field error dark: text-red-400, border-red-500 -->
+            <SolidColorBrush x:Key="ErrorFieldText" Color="#f87171" />
+            <SolidColorBrush x:Key="ErrorFieldBorder" Color="#EF4444" />
 
             <!-- Warning/Fee Box Colors (dark mode: warm rust/brown) -->
             <SolidColorBrush x:Key="WarningBoxBackground" Color="#2A1A14" />

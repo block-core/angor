@@ -21,6 +21,10 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
     {
         InitializeComponent();
         AddHandler(Button.ClickEvent, OnButtonClick);
+
+        // Clear errors on input (Vue: @input clears errors)
+        AddressInput.TextChanged += (_, _) => ClearSendErrors();
+        AmountInput.TextChanged += (_, _) => ClearSendErrors();
     }
 
     private ShellViewModel? ShellVm =>
@@ -79,6 +83,8 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
                 break;
 
             case "BtnSend":
+                // Validate before sending
+                if (!ValidateSendForm()) return;
                 // Simulate sending — show success
                 SummaryAmount.Text = string.IsNullOrEmpty(AmountInput.Text)
                     ? "0.00000000 BTC"
@@ -115,5 +121,59 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
     {
         FormPanel.IsVisible = step == "form";
         SuccessPanel.IsVisible = step == "success";
+    }
+
+    private void ClearSendErrors()
+    {
+        AddressError.IsVisible = false;
+        AmountError.IsVisible = false;
+    }
+
+    /// <summary>
+    /// Validate address + amount before sending. Returns true if valid.
+    /// </summary>
+    private bool ValidateSendForm()
+    {
+        ClearSendErrors();
+
+        if (string.IsNullOrWhiteSpace(AddressInput.Text))
+        {
+            AddressError.Text = "Address is required";
+            AddressError.IsVisible = true;
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(AmountInput.Text) ||
+            !double.TryParse(AmountInput.Text, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var amount))
+        {
+            AmountError.Text = "Amount must be greater than 0";
+            AmountError.IsVisible = true;
+            return false;
+        }
+
+        if (amount <= 0)
+        {
+            AmountError.Text = "Amount must be greater than 0";
+            AmountError.IsVisible = true;
+            return false;
+        }
+
+        if (amount < 0.00001)
+        {
+            AmountError.Text = "Minimum 0.00001 BTC";
+            AmountError.IsVisible = true;
+            return false;
+        }
+
+        if (double.TryParse(_walletBalance, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var bal) && amount > bal)
+        {
+            AmountError.Text = "Amount exceeds balance";
+            AmountError.IsVisible = true;
+            return false;
+        }
+
+        return true;
     }
 }

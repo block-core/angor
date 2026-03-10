@@ -122,6 +122,10 @@
                                      Padding="12,10"
                                      FontSize="14"
                                      Foreground="{DynamicResource TextStrong}" />
+                            <!-- Address validation error -->
+                            <TextBlock Name="AddressError" FontSize="13"
+                                       Foreground="{DynamicResource ErrorFieldText}"
+                                       IsVisible="False" Margin="0,2,0,0" />
                         </StackPanel>
 
                         <!-- Amount -->
@@ -136,6 +140,10 @@
                                      Padding="12,10"
                                      FontSize="14"
                                      Foreground="{DynamicResource TextStrong}" />
+                            <!-- Amount validation error -->
+                            <TextBlock Name="AmountError" FontSize="13"
+                                       Foreground="{DynamicResource ErrorFieldText}"
+                                       IsVisible="False" Margin="0,2,0,0" />
                             <!-- Quick percentage buttons: 25% 50% 75% 100% -->
                             <!-- Vue: flex gap-2, each btn rounded-md px-3 py-1 text-sm -->
                             <StackPanel Orientation="Horizontal" Spacing="8">

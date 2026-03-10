@@ -54,6 +54,10 @@
                                 </Grid>
                                 <TextBlock Text="The minimum amount your project needs to raise"
                                            FontSize="12" Foreground="{DynamicResource BitcoinAccent}" />
+                                <!-- Vue: targetAmountError — red text below amount input -->
+                                <TextBlock Text="{Binding TargetAmountError}" FontSize="13"
+                                           Foreground="{DynamicResource ErrorFieldText}"
+                                           IsVisible="{Binding HasTargetAmountError}" />
                             </StackPanel>
 
                             <!-- Quick-select amount presets — ListBox with ButtonizedListBoxItem -->
@@ -119,6 +123,11 @@
                                                     HorizontalAlignment="Stretch" />
                                 <TextBlock Text="Must be before first stage (chosen on next screen)"
                                            FontSize="12" Foreground="{DynamicResource TextMuted}" />
+                                <!-- Vue: endDateError — red text below date picker -->
+                                <TextBlock Text="{Binding EndDateError}" FontSize="13" FontWeight="Medium"
+                                           Foreground="{DynamicResource ErrorFieldText}"
+                                           IsVisible="{Binding HasEndDateError}"
+                                           Margin="0,4,0,0" />
 
                                 <!-- Duration presets — ListBox with ButtonizedAccentListBoxItem -->
                                 <ListBox Name="DurationPresets" Classes="Transparent Horizontal"
@@ -177,6 +186,10 @@
                                 </Grid>
                                 <TextBlock Text="The amount you want to get funded"
                                            FontSize="12" Foreground="{DynamicResource BitcoinAccent}" />
+                                <!-- Vue: goalAmountError — red text below goal input -->
+                                <TextBlock Text="{Binding TargetAmountError}" FontSize="13"
+                                           Foreground="{DynamicResource ErrorFieldText}"
+                                           IsVisible="{Binding HasTargetAmountError}" />
                             </StackPanel>
 
                             <!-- Quick-select amount presets — ListBox with ButtonizedListBoxItem -->
@@ -282,6 +295,10 @@
                                 </Grid>
                                 <TextBlock Text="Amount charged per subscription period"
                                            FontSize="12" Foreground="{DynamicResource BitcoinAccent}" />
+                                <!-- Vue: subscription price error — red text below price input -->
+                                <TextBlock Text="{Binding TargetAmountError}" FontSize="13"
+                                           Foreground="{DynamicResource ErrorFieldText}"
+                                           IsVisible="{Binding HasTargetAmountError}" />
                             </StackPanel>
 
                             <!-- Quick-select price presets — ListBox with ButtonizedListBoxItem -->

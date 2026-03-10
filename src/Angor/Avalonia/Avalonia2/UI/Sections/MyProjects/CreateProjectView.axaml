@@ -417,6 +417,29 @@
                                   HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Spacing="0" Margin="32,32,32,24" MaxWidth="680">
 
+                        <!-- Vue formError banner: sticky red banner at top of step content -->
+                        <!-- Light: bg-red-100 border-red-200 text-red-800 -->
+                        <!-- Dark: bg-red-900/40 border-red-800/50 text-red-300 -->
+                        <Border IsVisible="{Binding HasFormError}"
+                                Background="{DynamicResource ErrorBannerBg}"
+                                BorderBrush="{DynamicResource ErrorBannerBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="14,12"
+                                Margin="0,0,0,20">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <i:Icon Value="fa-solid fa-circle-exclamation"
+                                       FontSize="16"
+                                       Foreground="{DynamicResource ErrorBannerText}"
+                                       VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding FormError}"
+                                           FontSize="14" FontWeight="Medium"
+                                           Foreground="{DynamicResource ErrorBannerText}"
+                                           TextWrapping="Wrap"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
                         <!-- Step 1: Project Type Selection -->
                         <steps:CreateProjectStep1View Name="Step1View" IsVisible="{Binding IsStep1}" />
 

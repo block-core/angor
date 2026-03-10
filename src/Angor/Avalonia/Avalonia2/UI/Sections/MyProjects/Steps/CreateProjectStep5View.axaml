@@ -108,6 +108,26 @@
         <TextBlock Text="{Binding Step5Subtitle}"
                    FontSize="14" Foreground="{DynamicResource TextMuted}" />
 
+        <!-- Vue: stages error — shown when trying to advance without generating stages -->
+        <Border IsVisible="{Binding HasStagesError}"
+                Background="{DynamicResource ErrorBannerBg}"
+                BorderBrush="{DynamicResource ErrorBannerBorder}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="14,12">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <i:Icon Value="fa-solid fa-circle-exclamation"
+                       FontSize="16"
+                       Foreground="{DynamicResource ErrorBannerText}"
+                       VerticalAlignment="Center" />
+                <TextBlock Text="{Binding StagesError}"
+                           FontSize="14" FontWeight="Medium"
+                           Foreground="{DynamicResource ErrorBannerText}"
+                           TextWrapping="Wrap"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
         <!-- ─── INVESTMENT TYPE: Step 5 ─── -->
         <!-- Duration + Frequency → Generate Stages -->
         <Panel IsVisible="{Binding IsInvestment}">

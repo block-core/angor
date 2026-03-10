@@ -46,6 +46,15 @@ public partial class PrivateKeysPasswordModal : UserControl, IBackdropCloseable
 
         var viewKeysBtn = this.FindControl<Button>("ViewKeysButton");
         if (viewKeysBtn != null) viewKeysBtn.Click += OnViewKeysClick;
+
+        // Clear password error on typing (Vue: @input clears errors)
+        var passwordInput = this.FindControl<TextBox>("PasswordInput");
+        if (passwordInput != null)
+            passwordInput.TextChanged += (_, _) =>
+            {
+                var errorBlock = this.FindControl<TextBlock>("PasswordError");
+                if (errorBlock != null) errorBlock.IsVisible = false;
+            };
     }
 
     private ShellViewModel? ShellVm =>
@@ -62,7 +71,12 @@ public partial class PrivateKeysPasswordModal : UserControl, IBackdropCloseable
     {
         var passwordInput = this.FindControl<TextBox>("PasswordInput");
         var password = passwordInput?.Text;
-        if (string.IsNullOrWhiteSpace(password)) return;
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            var errorBlock = this.FindControl<TextBlock>("PasswordError");
+            if (errorBlock != null) errorBlock.IsVisible = true;
+            return;
+        }
 
         var shellVm = ShellVm;
         if (shellVm == null) return;
