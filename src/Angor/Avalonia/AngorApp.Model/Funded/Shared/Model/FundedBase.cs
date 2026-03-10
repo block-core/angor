@@ -34,7 +34,7 @@ public abstract class FundedBase : IFunded, IDisposable
         var canCancelInvestment = canInvest;
         var canRecoverFunds = investorData.Status.CombineLatest(
             investorData.Recovery,
-            (status, r) => status == InvestmentStatus.Invested && (r.HasUnspentItems || r.HasItemsInPenalty));
+            (status, r) => status == InvestmentStatus.Invested && (r.HasUnspentItems || r.HasSpendableItemsInPenalty));
 
         OpenChat = EnhancedCommand.CreateWithResult(Result.Success);
 
@@ -164,7 +164,7 @@ public abstract class FundedBase : IFunded, IDisposable
                 "Funds claim transaction has been submitted successfully");
         }
 
-        if (r.HasUnspentItems && !r.HasItemsInPenalty)
+        if (r.HasUnspentItems && !r.HasSpendableItemsInPenalty)
         {
             return (
                 fr => appService.BuildRecoveryTransaction(new BuildRecoveryTransaction.BuildRecoveryTransactionRequest(walletId, projectId, new DomainFeerate(fr)))
@@ -174,7 +174,7 @@ public abstract class FundedBase : IFunded, IDisposable
                 "Funds recovery transaction has been submitted successfully");
         }
 
-        if (r.HasItemsInPenalty)
+        if (r.HasSpendableItemsInPenalty)
         {
             return (
                 fr => appService.BuildPenaltyReleaseTransaction(new BuildPenaltyReleaseTransaction.BuildPenaltyReleaseTransactionRequest(walletId, projectId, new DomainFeerate(fr)))

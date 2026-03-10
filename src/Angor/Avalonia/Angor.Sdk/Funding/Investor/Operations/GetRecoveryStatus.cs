@@ -179,7 +179,7 @@ public static class GetRecoveryStatus
             var response = new InvestorProjectRecoveryDto
             {
                 HasUnspentItems = stageItems.Any(a => a.IsSpent == false),
-                HasItemsInPenalty = (stageItems.Any(a => a.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) && DateTime.UtcNow > penaltyExpieryDate),
+                HasSpendableItemsInPenalty = (stageItems.Any(a => a.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) && DateTime.UtcNow > penaltyExpieryDate),
                 EndOfProject = isEndOfProject,
                 IsAboveThreshold = isAboveThreshold,
                 TotalSpendable = stageItems.Where(a => !a.IsSpent).Sum(a => a.Amount),

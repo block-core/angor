@@ -79,7 +79,7 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
                     if (recoveryResult.IsSuccess)
                     {
                         var r = recoveryResult.Value.RecoveryData;
-                        recoveryState = new RecoveryState(r.HasUnspentItems, r.HasItemsInPenalty, r.HasReleaseSignatures, r.EndOfProject, r.IsAboveThreshold);
+                        recoveryState = new RecoveryState(r.HasUnspentItems, r.HasSpendableItemsInPenalty, r.HasReleaseSignatures, r.EndOfProject, r.IsAboveThreshold);
                         recoveryItems = r.Items;
                     }
                 }

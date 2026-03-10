@@ -2,7 +2,7 @@ namespace AngorApp.Model.Funded.Shared.Model;
 
 public record RecoveryState(
     bool HasUnspentItems,
-    bool HasItemsInPenalty,
+    bool HasSpendableItemsInPenalty,
     bool HasReleaseSignatures,
     bool EndOfProject,
     bool IsAboveThreshold)

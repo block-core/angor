@@ -292,7 +292,7 @@ public class WalletAppService(
             }
 
             var httpClient = httpClientFactory.CreateClient();
-            var response = await httpClient.GetAsync($"https://faucettmp.angor.io/api/faucet/send/{addressResult.Value.Value}");
+            var response = await httpClient.GetAsync($"https://faucettmp.angor.io/api/faucet/send/{addressResult.Value.Value}/10");
             
             if (!response.IsSuccessStatusCode)
             {

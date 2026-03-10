@@ -1,6 +1,7 @@
 using System.Reactive.Linq;
 using System.Text.Json;
 using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Projects.Operations;
 using Angor.Shared;
 using AngorApp.Model.ProjectsV2;
 using AngorApp.Model.ProjectsV2.FundProject;
@@ -23,7 +24,7 @@ public class DetailsViewModel : ReactiveObject, IDetailsViewModel
         Project = project;
         ShowProjectInfoJson = ReactiveCommand.CreateFromTask(async () =>
         {
-            var json = await SerializeProjectInfoAsync(project);
+            var json = await SerializeProjectInfoAsync(project, projectAppService);
             await dialog.Show(new LongTextViewModel { Text = json }, "Project Info (JSON)", Observable.Return(true));
         }).Enhance();
     }
@@ -50,14 +51,14 @@ public class DetailsViewModel : ReactiveObject, IDetailsViewModel
     public IEnumerable<string> Relays => new[] { "[TODO: Backend - Needs IProject.Relays]" };
     public IEnhancedCommand ShowProjectInfoJson { get; }
 
-    private static async Task<string> SerializeProjectInfoAsync(IProject project)
+    private static async Task<string> SerializeProjectInfoAsync(IProject project, IProjectAppService projectAppService)
     {
         try
         {
             var info = project switch
             {
-                IInvestmentProject investmentProject => await SerializeInvestmentProjectInfo(investmentProject),
-                IFundProject fundProject => await SerializeFundProjectInfo(fundProject),
+                IInvestmentProject investmentProject => await SerializeInvestmentProjectInfo(investmentProject, projectAppService),
+                IFundProject fundProject => await SerializeFundProjectInfo(fundProject, projectAppService),
                 _ => SerializeUnsupportedProjectInfo(project)
             };
 
@@ -69,14 +70,11 @@ public class DetailsViewModel : ReactiveObject, IDetailsViewModel
         }
     }
 
-    private static async Task<object> SerializeInvestmentProjectInfo(IInvestmentProject project)
+    private static async Task<object> SerializeInvestmentProjectInfo(IInvestmentProject project, IProjectAppService projectAppService)
     {
-        var raised = await project.Raised.FirstAsync();
-        var investorCount = await project.InvestorCount.FirstAsync();
-        var stages = await project.Stages.FirstAsync();
-        var isFundingOpen = await project.IsFundingOpen.FirstAsync();
-        var isFundingSuccessful = await project.IsFundingSuccessful.FirstAsync();
-        var isFundingFailed = await project.IsFundingFailed.FirstAsync();
+        var projectResult = await projectAppService.TryGet(new TryGetProject.TryGetProjectRequest(project.Id));
+        var stages = projectResult.IsSuccess ? projectResult.Value.Project.GetValueOrDefault()?.Stages : null;
+        var statsResult = await projectAppService.GetProjectStatistics(project.Id);
 
         return new
         {
@@ -86,33 +84,27 @@ public class DetailsViewModel : ReactiveObject, IDetailsViewModel
             Investment = new
             {
                 Target = SerializeAmount(project.Target),
-                Raised = SerializeAmount(raised),
-                InvestorCount = investorCount,
                 FundingStart = project.FundingStart,
                 FundingEnd = project.FundingEnd,
                 PenaltyDuration = project.PenaltyDuration.ToString(),
                 PenaltyThreshold = SerializeAmount(project.PenaltyThreshold),
-                IsFundingOpen = isFundingOpen,
-                IsFundingSuccessful = isFundingSuccessful,
-                IsFundingFailed = isFundingFailed,
+                TotalInvested = statsResult.IsSuccess ? statsResult.Value.TotalInvested : (long?)null,
+                TotalInvestors = statsResult.IsSuccess ? statsResult.Value.TotalInvestors : null,
                 Stages = stages?.Select(stage => new
                 {
-                    stage.Id,
-                    Status = stage.Status.ToString(),
-                    stage.Ratio,
+                    stage.Index,
                     stage.ReleaseDate,
-                    Amount = SerializeAmount(stage.Amount),
+                    stage.Amount,
+                    stage.RatioOfTotal,
                 })
             }
         };
     }
 
-    private static async Task<object> SerializeFundProjectInfo(IFundProject project)
+    private static async Task<object> SerializeFundProjectInfo(IFundProject project, IProjectAppService projectAppService)
     {
-        var funded = await project.Funded.FirstAsync();
-        var funderCount = await project.FunderCount.FirstAsync();
-        var payments = await project.Payments.FirstAsync();
-        var isGoalReached = await project.IsGoalReached.FirstAsync();
+        var statsResult = await projectAppService.GetProjectStatistics(project.Id);
+        var dynamicStages = statsResult.IsSuccess ? statsResult.Value.DynamicStages : null;
 
         return new
         {
@@ -122,16 +114,19 @@ public class DetailsViewModel : ReactiveObject, IDetailsViewModel
             Fund = new
             {
                 Goal = SerializeAmount(project.Goal),
-                Funded = SerializeAmount(funded),
-                FunderCount = funderCount,
                 project.TransactionDate,
-                IsGoalReached = isGoalReached,
-                Payments = payments?.Select(payment => new
+                TotalInvested = statsResult.IsSuccess ? statsResult.Value.TotalInvested : (long?)null,
+                TotalInvestors = statsResult.IsSuccess ? statsResult.Value.TotalInvestors : null,
+                DynamicStages = dynamicStages?.Select(stage => new
                 {
-                    payment.Id,
-                    Status = payment.Status.ToString(),
-                    payment.PaymentDate,
-                    Amount = SerializeAmount(payment.Amount),
+                    stage.StageIndex,
+                    stage.ReleaseDate,
+                    stage.TotalAmount,
+                    stage.TransactionCount,
+                    stage.UnspentTransactionCount,
+                    stage.UnspentAmount,
+                    stage.IsReleased,
+                    stage.Status,
                 })
             }
         };

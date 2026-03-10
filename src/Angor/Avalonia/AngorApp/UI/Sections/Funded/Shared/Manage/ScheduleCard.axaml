@@ -41,7 +41,19 @@
                         </EdgePanel>
                     </DataTemplate>
                     <DataTemplate DataType="model1:IFundFunded">
-                        <EdgePanel Content="Payment Schedule" ContentClasses="Size-XL BlackText" StartContent="{Icon fa-bitcoin}" />
+                        <EdgePanel Content="Payment Schedule" ContentClasses="Size-XL BlackText" StartContent="{Icon fa-bitcoin}">
+                            <EdgePanel.EndContent>
+                                <EnhancedButton Icon="{Icon fa-arrows-rotate}" Classes="Filled Orange" IconOptions.Size="16" Content="Recover Funds"
+                                                Command="{Binding RecoverFunds}">
+                                    <EnhancedButton.IsVisible>
+                                        <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                            <Binding Path="$self.IsEffectivelyEnabled" />
+                                            <Binding Path="RecoverFunds.IsExecuting^" />
+                                        </MultiBinding>
+                                    </EnhancedButton.IsVisible>
+                                </EnhancedButton>
+                            </EdgePanel.EndContent>
+                        </EdgePanel>
                     </DataTemplate>
                 </ContentControl.DataTemplates>
             </ContentControl>
@@ -53,7 +65,7 @@
                         <schedule:InvestmentScheduleCard />
                     </DataTemplate>
                     <DataTemplate DataType="model1:IFundFunded">
-                        <schedule1:FundScheduleCard DataContext="{Binding Project}" />
+                        <schedule1:FundScheduleCard />
                     </DataTemplate>
                 </ContentControl.DataTemplates>
             </ContentControl>
