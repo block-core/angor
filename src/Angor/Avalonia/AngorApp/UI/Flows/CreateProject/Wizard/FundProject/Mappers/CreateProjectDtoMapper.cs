@@ -31,7 +31,7 @@ public static class CreateProjectDtoMapper
             EndDate = null,
 
             TargetAmount = new Amount(satsValue),
-            PenaltyDays = 0,
+            PenaltyDays = fundProject.PenaltyDays ?? 0,
             PenaltyThreshold = fundProject.Threshold?.Sats,
 
             Stages = Enumerable.Empty<CreateProjectStageDto>(),

@@ -48,6 +48,7 @@
                 <StackPanel Classes="Gap-XL">
                     <EdgePanel StartContent="Goal Amount" EndContent="{Binding NewProject.GoalAmount.DecimalString}" />
                     <EdgePanel StartContent="Threshold" EndContent="{Binding NewProject.Threshold.DecimalString}" />
+                    <EdgePanel StartContent="Penalty Days" EndContent="{Binding NewProject.PenaltyDays, StringFormat='{}{0} days'}" />
                 </StackPanel>
             </HeaderedContainer>
             

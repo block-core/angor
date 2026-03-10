@@ -140,6 +140,7 @@ namespace AngorApp.UI.Flows.CreateProject
 
             project.GoalAmount = AmountUI.FromBtc(0.5m);
             project.Threshold = AmountUI.FromBtc(0.01m);
+            project.PenaltyDays = 0;
 
             project.PayoutFrequency = PayoutFrequency.Monthly;
             project.MonthlyPayoutDate = DateTime.Now.Day;
