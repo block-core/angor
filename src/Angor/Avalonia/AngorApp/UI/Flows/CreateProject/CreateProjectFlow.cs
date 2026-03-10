@@ -158,14 +158,14 @@ namespace AngorApp.UI.Flows.CreateProject
             project.Website = "https://angor.io";
             project.TargetAmount = AmountUI.FromBtc(0.01);
             project.PenaltyDays = 0;
-            project.StartDate = DateTime.Now;
-            project.FundingEndDate = DateTime.Now;
-            project.ExpiryDate = DateTime.Now.AddDays(31);
+            project.StartDate = DateTime.Now.Date;
+            project.FundingEndDate = DateTime.Now.Date;
+            project.ExpiryDate = DateTime.Now.Date.AddDays(31);
 
             // Add stages with dates matching the funding end date for immediate release
-            project.CreateAndAddStage(0.10m, DateTime.Now);
-            project.CreateAndAddStage(0.30m, DateTime.Now);
-            project.CreateAndAddStage(0.60m, DateTime.Now);
+            project.CreateAndAddStage(0.10m, DateTime.Now.Date);
+            project.CreateAndAddStage(0.30m, DateTime.Now.Date);
+            project.CreateAndAddStage(0.60m, DateTime.Now.Date);
         }
 
         private async Task<Result<ProjectSeedDto>> GetProjectSeed(WalletId walletId)

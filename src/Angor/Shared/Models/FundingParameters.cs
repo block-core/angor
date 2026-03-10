@@ -182,6 +182,9 @@ public class FundingParameters
         if (TotalInvestmentAmount < 0)
             throw new ArgumentException("TotalInvestmentAmount cannot be negative", nameof(TotalInvestmentAmount));
 
+        if (ExpiryDateOverride.HasValue && ExpiryDateOverride.Value != ExpiryDateOverride.Value.Date)
+            throw new ArgumentException("ExpiryDateOverride must not include a time component", nameof(ExpiryDateOverride));
+
         if (stageIndex.HasValue && stageIndex.Value < 0)
             throw new ArgumentException("stageIndex cannot be negative", nameof(stageIndex));
 
@@ -218,6 +221,9 @@ public class FundingParameters
         if (!InvestmentStartDate.HasValue)
             throw new ArgumentException("InvestmentStartDate is required for Fund/Subscribe projects", nameof(InvestmentStartDate));
 
+        if (InvestmentStartDate.Value != InvestmentStartDate.Value.Date)
+            throw new ArgumentException("InvestmentStartDate must not include a time component", nameof(InvestmentStartDate));
+
         if (projectInfo.DynamicStagePatterns == null || !projectInfo.DynamicStagePatterns.Any())
             throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");
 
@@ -245,6 +251,9 @@ public class FundingParameters
     {
         if (!InvestmentStartDate.HasValue)
             throw new ArgumentException("InvestmentStartDate is required for Fund/Subscribe projects", nameof(InvestmentStartDate));
+
+        if (InvestmentStartDate.Value != InvestmentStartDate.Value.Date)
+            throw new ArgumentException("InvestmentStartDate must not include a time component", nameof(InvestmentStartDate));
 
         if (projectInfo.DynamicStagePatterns == null || !projectInfo.DynamicStagePatterns.Any())
             throw new InvalidOperationException("Fund/Subscribe projects must have at least one DynamicStagePattern");

@@ -88,12 +88,14 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
 
 
             this.ValidationRule(x => x.FundingEndDate, x => x != null, "Funding end date is required.").DisposeWith(Disposables);
+            this.ValidationRule(x => x.FundingEndDate, x => x is null || x.Value == x.Value.Date, "Funding end date should not include a time.").DisposeWith(Disposables);
 
 
             var areStagesValid = StagesSource.Connect().FilterOnObservable(stage => stage.IsValid).IsEmpty().Select(b => !b);
             this.ValidationRule(x => x.Stages, areStagesValid, "Stages are not valid").DisposeWith(Disposables);
 
             this.ValidationRule(x => x.StartDate, x => x != null, "Start date is required.").DisposeWith(Disposables);
+            this.ValidationRule(x => x.StartDate, x => x is null || x.Value == x.Value.Date, "Start date should not include a time.").DisposeWith(Disposables);
 
             this.ValidationRule(
                 this.WhenAnyValue(x => x.StartDate, x => x.FundingEndDate, (start, end) => new { Start = start, End = end }),
