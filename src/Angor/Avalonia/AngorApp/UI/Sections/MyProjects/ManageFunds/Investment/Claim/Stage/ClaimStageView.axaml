@@ -20,13 +20,20 @@
                 <EdgePanel.EndContent>
                     <ContentControl Classes="Box"
                                     Classes.Orange="{Binding FundsAvailability, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static stage1:FundsAvailability.SpentByFounder}}"
+                                    Classes.Red="{Binding FundsAvailability, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static stage1:FundsAvailability.SpentByInvestor}}"
                                     Classes.Green="{Binding FundsAvailability, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static stage1:FundsAvailability.FundsAvailable}}">
                         <Interaction.Behaviors>
                             <BindingTriggerBehavior Value="SpentByFounder" Binding="{Binding FundsAvailability}">
                                 <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Spent by founder" />
                             </BindingTriggerBehavior>
+                            <BindingTriggerBehavior Value="SpentByInvestor" Binding="{Binding FundsAvailability}">
+                                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Spent by investor" />
+                            </BindingTriggerBehavior>
+                            <BindingTriggerBehavior Value="Pending" Binding="{Binding FundsAvailability}">
+                                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Pending" />
+                            </BindingTriggerBehavior>
                             <BindingTriggerBehavior Value="FundsAvailable" Binding="{Binding FundsAvailability}">
-                                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Funds Available" />
+                                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Unspent" />
                             </BindingTriggerBehavior>
                         </Interaction.Behaviors>
                     </ContentControl>
@@ -50,9 +57,9 @@
             </TextBlock>
             <EnhancedButton Content="{Binding Claim.Text}"
                             Classes="HorizontalStretch"
-                            Classes.Emphasized="{Binding Claim.Name, Converter={x:Static controls:AngorConverters.IsOneOf}, ConverterParameter='Available|NotReady'}"
-                            Classes.Outline="{Binding Claim.Name, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter=Spent}"
-                            Classes.Orange="{Binding Claim.Name, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter=Spent}"
+                            Classes.Emphasized="{Binding Claim.Name, Converter={x:Static controls:AngorConverters.IsOneOf}, ConverterParameter='Available|NotReady|Pending'}"
+                            Classes.Outline="{Binding Claim.Name, Converter={x:Static controls:AngorConverters.IsOneOf}, ConverterParameter='SpentByFounder|SpentByInvestor'}"
+                            Classes.Orange="{Binding Claim.Name, Converter={x:Static controls:AngorConverters.IsOneOf}, ConverterParameter='SpentByFounder|SpentByInvestor'}"
                             Command="{Binding Claim}" />
         </StackPanel>
     </HeaderedContainer>

@@ -112,9 +112,18 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Fund.Claim
                 return FundsAvailability.FundsAvailable;
             }
 
-            return stageTransactions.Any(transaction => transaction.ClaimStatus == ClaimStatus.SpentByFounder)
-                ? FundsAvailability.SpentByFounder
-                : FundsAvailability.Invalid;
+            var txList = stageTransactions.ToList();
+
+            if (txList.Any(transaction => transaction.ClaimStatus == ClaimStatus.SpentByFounder))
+                return FundsAvailability.SpentByFounder;
+
+            if (txList.Any(transaction => transaction.ClaimStatus == ClaimStatus.WithdrawByInvestor))
+                return FundsAvailability.SpentByInvestor;
+
+            if (txList.Any(transaction => transaction.ClaimStatus == ClaimStatus.Pending))
+                return FundsAvailability.Pending;
+
+            return FundsAvailability.Invalid;
         }
     }
 }
