@@ -540,18 +540,23 @@
                     </div>
 
                     <!-- Payment Status -->
-                    @if (paymentReceived)
+
+                    @if (paymentReceived && invoiceProcessing)
+                    {
+                        <div class="alert alert-success d-flex align-items-center justify-content-center gap-2 mb-2">
+                            <Icon IconName="circle-check" Width="20" Height="20" />
+                            <span class="fw-bold">Payment received</span>
+                        </div>
+                        <div class="alert alert-info d-flex align-items-center justify-content-center gap-2 mb-0">
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                            <span>@(invoiceStatusMessage ?? "Processing investment...")</span>
+                        </div>
+                    }
+                    else if (paymentReceived)
                     {
                         <div class="alert alert-success d-flex align-items-center justify-content-center gap-2 mb-0">
                             <Icon IconName="circle-check" Width="20" Height="20" />
                             <span class="fw-bold">Payment received</span>
-                        </div>
-                    }
-                    else if (invoiceProcessing)
-                    {
-                        <div class="alert alert-info d-flex align-items-center justify-content-center gap-2 mb-0">
-                            <span class="spinner-border spinner-border-sm" role="status"></span>
-                            <span>Processing investment...</span>
                         </div>
                     }
                     else
@@ -670,6 +675,7 @@
     private bool invoiceProcessing;
     private bool showBackupModal;
     private string? invoiceAddress;
+    private string? invoiceStatusMessage;
     private string? autoCreatedSeedWords;
     private string? newWalletPasswordInput;
     private CancellationTokenSource? invoiceMonitorCts;
@@ -1407,10 +1413,13 @@
             // Funds received!
             paymentReceived = true;
             if (walletAutoCreated) fundsReceivedOnNewWallet = true;
+            invoiceProcessing = true;
+            invoiceStatusMessage = "Preparing investment transaction...";
             StateHasChanged();
-            await Task.Delay(1000); // Brief pause to show "Payment received" state
 
             // Update account info with detected UTXOs
+            invoiceStatusMessage = "Updating account information...";
+            StateHasChanged();
             var accountInfo = storage.GetAccountInfo(network.Name);
             var addressInfo = accountInfo.AllAddresses().FirstOrDefault(a => a.Address == invoiceAddress);
             if (addressInfo != null)
@@ -1425,8 +1434,8 @@
                 storage.SetAccountInfo(network.Name, accountInfo);
             }
 
-            // Build and submit the investment
-            invoiceProcessing = true;
+            // Build and submit the investment directly (no confirmation dialog)
+            invoiceStatusMessage = "Fetching fee estimates...";
             StateHasChanged();
             await BuildAndSubmitFromAddress(accountInfo);
         }
@@ -1443,7 +1452,8 @@
     }
 
     /// <summary>
-    /// Step 6: Build the investment transaction from the funded address and submit it.
+    /// Step 6: Build the investment transaction from the funded address and submit it directly.
+    /// Selects the medium fee and skips the confirmation dialog.
     /// </summary>
     private async Task BuildAndSubmitFromAddress(AccountInfo accountInfo)
     {
@@ -1451,13 +1461,22 @@
         {
             var words = await passwordComponent.GetWalletAsync();
 
-            // Get fee estimation
+            // Get fee estimation and select medium fee
+            invoiceStatusMessage = "Fetching fee estimates...";
+            StateHasChanged();
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
-            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
+
+            // Select medium fee (middle of the list) instead of highest
+            var feeList = feeData.FeeEstimations.Fees;
+            feeData.SelectedFeeEstimation = feeList.Count > 2
+                ? feeList[feeList.Count / 2]
+                : feeList.First();
 
             // Derive investor key
+            invoiceStatusMessage = "Building investment transaction...";
+            StateHasChanged();
             InvestorPubKey = _derivationOperations.DeriveInvestorKey(words, project!.ProjectInfo.FounderKey);
 
             // Create the unsigned investment transaction
@@ -1466,6 +1485,8 @@
                 project.ProjectInfo, InvestorPubKey, investmentAmount);
 
             // Sign using UTXOs from the specific funded address
+            invoiceStatusMessage = "Signing transaction...";
+            StateHasChanged();
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();
             signedTransaction = _WalletOperations.AddInputsFromAddressAndSignTransaction(
                 invoiceAddress!,
@@ -1475,10 +1496,10 @@
                 accountInfo,
                 feeData.SelectedFeeEstimation.FeeRate);
 
-            // Now follow the same Send() flow as the existing confirmation path
-            showInvoiceModal = false;
-            showCreateModal = true;
+            // Submit directly — skip the confirmation dialog
+            invoiceStatusMessage = "Sending signature request to founder...";
             StateHasChanged();
+            await Send();
         }
         catch (Exception e)
         {
