@@ -51,7 +51,8 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
                         })
                         .Map(_ => Guid.Empty);
                 },
-                uiServices);
+                uiServices,
+                refreshWallet: () => uiServices.RefreshWalletBalance(walletId));
 
             var dialogRes = await uiServices.Dialog.ShowAndGetResult(transactionDraftPreviewerViewModel, "Review Project Creation", s => s.CommitDraft.Enhance("Create Project"));
 

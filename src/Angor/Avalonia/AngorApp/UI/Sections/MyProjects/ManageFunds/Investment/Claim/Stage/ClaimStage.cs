@@ -41,8 +41,8 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim.Stage
             StageId = stageId;
             Transactions = transactions;
             ClaimableOn = claimableOn;
-            Claim = CreateClaimCommand();
             FundsAvailability = fundsAvailability;
+            Claim = CreateClaimCommand();
             ClaimableAmount = new AmountUI(transactions.Sum(transaction => transaction.Amount.Sats));
         }
 
@@ -83,7 +83,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim.Stage
                     text: "Claim");
             }
 
-            if (SpentByFounder())
+            if (FundsAvailability == FundsAvailability.SpentByFounder)
             {
                 ClaimDialogViewModel dialog = new(
                     "Spent UTXOs",
@@ -91,8 +91,29 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim.Stage
                     Transactions);
                 return EnhancedCommand.Create(
                     () => uiServices.Dialog.Show(dialog, closeable => [CloseOption(closeable)]),
-                    name: "Spent",
-                    text: "Spent");
+                    name: "SpentByFounder",
+                    text: "Spent by Founder");
+            }
+
+            if (FundsAvailability == FundsAvailability.SpentByInvestor)
+            {
+                ClaimDialogViewModel dialog = new(
+                    "Withdrawn UTXOs",
+                    "These UTXOs have been withdrawn by the investor.",
+                    Transactions);
+                return EnhancedCommand.Create(
+                    () => uiServices.Dialog.Show(dialog, closeable => [CloseOption(closeable)]),
+                    name: "SpentByInvestor",
+                    text: "Spent by Investor");
+            }
+
+            if (FundsAvailability == FundsAvailability.Pending)
+            {
+                return EnhancedCommand.Create(
+                    () => Task.FromResult(Result.Success()),
+                    canExecute: Observable.Return(false),
+                    name: "Pending",
+                    text: "Pending");
             }
             else
             {
@@ -175,7 +196,8 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim.Stage
                             new PublishFounderTransaction.PublishFounderTransactionRequest(draftModel.Model))
                         .Map(_ => Guid.Empty);
                 },
-                uiServices);
+                uiServices,
+                refreshWallet: () => uiServices.RefreshWalletBalance(wallet.Id));
 
             var result = await uiServices.Dialog.ShowAndGetResult(
                 draftPreviewer,
@@ -206,11 +228,6 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim.Stage
         private bool CanClaimNow()
         {
             return Transactions.Any(transaction => transaction.IsClaimable) && DateTimeOffset.Now >= ClaimableOn;
-        }
-
-        private bool SpentByFounder()
-        {
-            return Transactions.All(transaction => transaction.ClaimStatus == ClaimStatus.SpentByFounder);
         }
     }
 }

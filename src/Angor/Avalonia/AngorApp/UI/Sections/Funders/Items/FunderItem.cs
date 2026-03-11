@@ -38,6 +38,7 @@ public class FunderItem(UIServices uiServices, Func<Task<Result>>? approveOperat
 
     public FunderStatus Status { get; set; } = FunderStatus.Pending;
     public string InvestorNpub { get; set; } = "sample_npub";
+    public string EventId { get; set; } = "";
 
     private async Task<Result> ApproveCore()
     {

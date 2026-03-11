@@ -719,13 +719,13 @@ namespace Angor.Test.Protocol
 
             var projectInvestmentInfo = new ProjectInfo();
             projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
-            projectInvestmentInfo.StartDate = DateTime.UtcNow;
-            projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
+            projectInvestmentInfo.StartDate = DateTime.UtcNow.Date;
+            projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.Date.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
             {
-                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
-                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
-                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.Date.AddDays(1) },
+                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.Date.AddDays(2) },
+                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.Date.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
             projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
@@ -784,13 +784,13 @@ namespace Angor.Test.Protocol
 
             var projectInvestmentInfo = new ProjectInfo();
             projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
-            projectInvestmentInfo.StartDate = DateTime.UtcNow;
-            projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
+            projectInvestmentInfo.StartDate = DateTime.UtcNow.Date;
+            projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.Date.AddDays(5);
             projectInvestmentInfo.Stages = new List<Stage>
             {
-                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(1) },
-                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(2) },
-                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.Date.AddDays(1) },
+                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.Date.AddDays(2) },
+                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.Date.AddDays(3) }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
             projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
@@ -1033,7 +1033,7 @@ namespace Angor.Test.Protocol
                 ProjectType = ProjectType.Subscribe,
                 TargetAmount = 0,
                 PenaltyDays = 0,
-                StartDate = DateTime.UtcNow.AddDays(-1),
+                StartDate = DateTime.UtcNow.Date.AddDays(-1),
                 FounderKey = derivationOperations.DeriveFounderKey(words, 1),
                 FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, derivationOperations.DeriveFounderKey(words, 1)),
                 ProjectSeeders = new ProjectSeeders(),

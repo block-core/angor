@@ -13,5 +13,6 @@ namespace AngorApp.UI.Sections.Funders.Items
         public IEnhancedCommand OpenChat { get; }
         public FunderStatus Status { get; }
         public string InvestorNpub { get; }
+        public string EventId { get; }
     }
 }

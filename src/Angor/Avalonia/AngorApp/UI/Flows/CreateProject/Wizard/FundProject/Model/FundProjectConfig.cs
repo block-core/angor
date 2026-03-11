@@ -34,6 +34,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model
         [Reactive] private PayoutFrequency? payoutFrequency;
         [Reactive] private int? monthlyPayoutDate;
         [Reactive] private DayOfWeek? weeklyPayoutDay;
+        [Reactive] private int? penaltyDays = 30;
 
         public FundProjectConfig()
         {

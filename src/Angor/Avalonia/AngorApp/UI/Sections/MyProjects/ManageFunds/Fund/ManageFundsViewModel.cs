@@ -34,8 +34,11 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Fund
                 uiServices,
                 founderAppService,
                 walletContext));
-            ClaimViewModel = Observable.Return(new ClaimViewModel(project, founderAppService, uiServices, walletContext));
+            var claimViewModel = new ClaimViewModel(project, founderAppService, uiServices, walletContext);
+            ClaimViewModel = Observable.Return(claimViewModel);
             LoadProjectStats = loadProjectStats;
+
+            loadProjectStats.Successes().Subscribe(_ => claimViewModel.Load.Execute(null));
         }
         
         public IObservable<IReleaseViewModel> ReleaseViewModel { get; }

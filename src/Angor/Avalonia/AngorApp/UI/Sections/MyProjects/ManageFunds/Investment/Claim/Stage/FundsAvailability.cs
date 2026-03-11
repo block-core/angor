@@ -4,6 +4,8 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim.Stage
     {
         Invalid,
         SpentByFounder,
+        SpentByInvestor,
+        Pending,
         FundsAvailable
     }
 }

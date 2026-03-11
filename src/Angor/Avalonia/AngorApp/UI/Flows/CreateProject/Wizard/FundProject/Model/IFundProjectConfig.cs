@@ -17,6 +17,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model
         DayOfWeek? WeeklyPayoutDay { get; set; }
         IEnumerable<int> AvailableInstallmentCounts { get; }
         IAmountUI? Threshold { get; set; }
+        int? PenaltyDays { get; set; }
     }
 }
 

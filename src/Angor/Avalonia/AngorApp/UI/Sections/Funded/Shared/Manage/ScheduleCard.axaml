@@ -28,7 +28,7 @@
                     <DataTemplate DataType="model:IInvestmentFunded">
                         <EdgePanel Content="Stages" ContentClasses="Size-XL BlackText" StartContent="{StaticResource StagesIcon}">
                             <EdgePanel.EndContent>
-                                <EnhancedButton Icon="{Icon fa-arrows-rotate}" Classes="Filled Orange" IconOptions.Size="16" Content="Recover Funds"
+                                <EnhancedButton Icon="{Icon fa-arrows-rotate}" Classes="Filled Orange" IconOptions.Size="16" Content="{Binding RecoverFundsLabel^, FallbackValue='Recover Funds'}"
                                                 Command="{Binding RecoverFunds}">
                                     <EnhancedButton.IsVisible>
                                         <MultiBinding Converter="{x:Static BoolConverters.Or}">
@@ -43,7 +43,7 @@
                     <DataTemplate DataType="model1:IFundFunded">
                         <EdgePanel Content="Payment Schedule" ContentClasses="Size-XL BlackText" StartContent="{Icon fa-bitcoin}">
                             <EdgePanel.EndContent>
-                                <EnhancedButton Icon="{Icon fa-arrows-rotate}" Classes="Filled Orange" IconOptions.Size="16" Content="Recover Funds"
+                                <EnhancedButton Icon="{Icon fa-arrows-rotate}" Classes="Filled Orange" IconOptions.Size="16" Content="{Binding RecoverFundsLabel^, FallbackValue='Recover Funds'}"
                                                 Command="{Binding RecoverFunds}">
                                     <EnhancedButton.IsVisible>
                                         <MultiBinding Converter="{x:Static BoolConverters.Or}">
