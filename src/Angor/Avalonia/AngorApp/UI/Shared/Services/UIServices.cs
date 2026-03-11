@@ -1,5 +1,6 @@
 using System;
 using System.Reactive.Linq;
+using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Application;
 using Angor.Shared;
 using AngorApp.UI.Shared.Controls;
@@ -187,4 +188,10 @@ public partial class UIServices : ReactiveObject, IUIServices
     }
 
     public IValidations Validations { get; }
+
+    public async Task<Result> RefreshWalletBalance(WalletId walletId)
+    {
+        var result = await walletAppService.RefreshAndGetAccountBalanceInfo(walletId);
+        return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
+    }
 }

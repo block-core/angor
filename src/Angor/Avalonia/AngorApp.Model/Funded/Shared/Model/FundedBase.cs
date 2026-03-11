@@ -133,7 +133,7 @@ public abstract class FundedBase : IFunded, IDisposable
                 if (createDraft == null)
                     return Result.Failure("No recovery action available");
 
-                return await draftPreviewer.PreviewAndCommit(createDraft, commitDraft!, title!)
+                return await draftPreviewer.PreviewAndCommit(createDraft, commitDraft!, title!, wallet.Id)
                     .Tap(() => notificationService.Show(successMessage!, "Success"));
             });
     }

@@ -13,4 +13,5 @@ public class FunderItemSample : IFunderItem
     public IEnhancedCommand OpenChat { get; } = EnhancedCommand.Create(() => { });
     public FunderStatus Status { get; set; } = FunderStatus.Pending;
     public string InvestorNpub { get; } = "investor_npub";
+    public string EventId { get; } = Guid.NewGuid().ToString();
 }

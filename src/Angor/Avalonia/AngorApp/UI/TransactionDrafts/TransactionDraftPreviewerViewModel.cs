@@ -15,7 +15,7 @@ public partial class TransactionDraftPreviewerViewModel : ReactiveValidationObje
     [Reactive] private long? selectedFeerate;
     [ObservableAsProperty] private IEnumerable<IFeeratePreset>? feerates;
 
-    public TransactionDraftPreviewerViewModel(Func<long, Task<Result<ITransactionDraftViewModel>>> getDraft, Func<ITransactionDraftViewModel, Task<Result<Guid>>> commitDraft, UIServices uiServices)
+    public TransactionDraftPreviewerViewModel(Func<long, Task<Result<ITransactionDraftViewModel>>> getDraft, Func<ITransactionDraftViewModel, Task<Result<Guid>>> commitDraft, UIServices uiServices, Func<Task<Result>>? refreshWallet = null)
     {
         this.uiServices = uiServices;
         var isGeneratingDraft = new BehaviorSubject<bool>(false);
@@ -23,9 +23,20 @@ public partial class TransactionDraftPreviewerViewModel : ReactiveValidationObje
         feeratesHelper = Observable.FromAsync(() => uiServices.GetFeeratePresetsAsync())
             .ToProperty(this, x => x.Feerates);
 
+        // Wrap getDraft to refresh wallet UTXOs first if a refresh function is provided
+        Func<long, Task<Result<ITransactionDraftViewModel>>> getDraftWithRefresh = refreshWallet != null
+            ? async feerate =>
+            {
+                var refreshResult = await refreshWallet();
+                if (refreshResult.IsFailure)
+                    return Result.Failure<ITransactionDraftViewModel>($"Failed to refresh wallet: {refreshResult.Error}");
+                return await getDraft(feerate);
+            }
+            : getDraft;
+
         var draftResults = this.WhenAnyValue(model => model.SelectedFeerate)
             .WhereNotNull()
-            .SelectLatest(feerate => getDraft(feerate!.Value), isGeneratingDraft, TimeSpan.FromSeconds(0.2), RxApp.MainThreadScheduler)
+            .SelectLatest(feerate => getDraftWithRefresh(feerate!.Value), isGeneratingDraft, TimeSpan.FromSeconds(0.2), RxApp.MainThreadScheduler)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Publish()
             .RefCount();

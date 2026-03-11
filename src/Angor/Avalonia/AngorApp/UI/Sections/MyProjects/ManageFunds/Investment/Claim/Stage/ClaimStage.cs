@@ -196,7 +196,8 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim.Stage
                             new PublishFounderTransaction.PublishFounderTransactionRequest(draftModel.Model))
                         .Map(_ => Guid.Empty);
                 },
-                uiServices);
+                uiServices,
+                refreshWallet: () => uiServices.RefreshWalletBalance(wallet.Id));
 
             var result = await uiServices.Dialog.ShowAndGetResult(
                 draftPreviewer,

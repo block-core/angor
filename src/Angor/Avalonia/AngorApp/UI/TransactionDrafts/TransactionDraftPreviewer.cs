@@ -1,3 +1,4 @@
+using Angor.Sdk.Common;
 using AngorApp.Model.Funded.Shared.Model;
 using AngorApp.UI.TransactionDrafts.DraftTypes;
 using AngorApp.UI.TransactionDrafts.DraftTypes.Base;
@@ -11,7 +12,8 @@ public class TransactionDraftPreviewer(IDialog dialog, UIServices uiServices) : 
     public async Task<Result> PreviewAndCommit(
         Func<long, Task<Result<TransactionDraft>>> createDraft,
         Func<TransactionDraft, Task<Result<Guid>>> commitDraft,
-        string title)
+        string title,
+        WalletId? walletId = null)
     {
         Func<long, Task<Result<ITransactionDraftViewModel>>> getDraft = feerate =>
             createDraft(feerate).Map(ITransactionDraftViewModel (draft) => new TransactionDraftViewModel(draft, uiServices));
@@ -19,7 +21,11 @@ public class TransactionDraftPreviewer(IDialog dialog, UIServices uiServices) : 
         Func<ITransactionDraftViewModel, Task<Result<Guid>>> commit = model =>
             commitDraft(model.Model);
 
-        var previewer = new TransactionDraftPreviewerViewModel(getDraft, commit, uiServices);
+        Func<Task<Result>>? refreshWallet = walletId != null
+            ? () => uiServices.RefreshWalletBalance(walletId)
+            : null;
+
+        var previewer = new TransactionDraftPreviewerViewModel(getDraft, commit, uiServices, refreshWallet);
         await dialog.ShowAndGetResult(previewer, title, s => s.CommitDraft.Enhance(title));
 
         return Result.Success();
