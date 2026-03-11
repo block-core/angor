@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using Avalonia2.Composition;
 using Avalonia2.UI.Shell;
 
 namespace Avalonia2.UI.Sections.Settings;
@@ -41,13 +40,15 @@ public partial class SettingsViewModel : ReactiveObject
     // Wipe data modal
     [Reactive] private bool isWipeDataModalOpen;
 
-    // Prototype settings toggle — delegates to SharedViewModels.Prototype
+    private readonly PrototypeSettings _prototypeSettings;
+
+    // Prototype settings toggle — delegates to injected PrototypeSettings
     public bool ShowPopulatedApp
     {
-        get => SharedViewModels.Prototype.ShowPopulatedApp;
+        get => _prototypeSettings.ShowPopulatedApp;
         set
         {
-            SharedViewModels.Prototype.ShowPopulatedApp = value;
+            _prototypeSettings.ShowPopulatedApp = value;
             this.RaisePropertyChanged();
         }
     }
@@ -67,11 +68,16 @@ public partial class SettingsViewModel : ReactiveObject
         }
     }
 
-    public SettingsViewModel()
+    public SettingsViewModel(
+        INetworkService networkService,
+        INetworkConfiguration networkConfig,
+        INetworkStorage networkStorage,
+        PrototypeSettings prototypeSettings)
     {
-        _networkService = ServiceLocator.NetworkService;
-        _networkConfig = ServiceLocator.NetworkConfig;
-        _networkStorage = ServiceLocator.NetworkStorage;
+        _networkService = networkService;
+        _networkConfig = networkConfig;
+        _networkStorage = networkStorage;
+        _prototypeSettings = prototypeSettings;
 
         // Ensure default settings exist
         _networkService.AddSettingsIfNotExist();

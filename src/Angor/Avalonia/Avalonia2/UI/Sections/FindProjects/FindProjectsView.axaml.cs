@@ -15,10 +15,13 @@ public partial class FindProjectsView : UserControl
     private Panel? _detailPanel;
     private Panel? _investPanel;
 
-    public FindProjectsView()
+    /// <summary>Design-time only.</summary>
+    public FindProjectsView() => InitializeComponent();
+
+    public FindProjectsView(FindProjectsViewModel vm)
     {
         InitializeComponent();
-        DataContext = new FindProjectsViewModel();
+        DataContext = vm;
 
         // Cache panels once
         _detailPanel = this.FindControl<Panel>("ProjectDetailPanel");

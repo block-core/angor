@@ -24,21 +24,33 @@ public partial class CreateProjectView : UserControl
     public CreateProjectView()
     {
         InitializeComponent();
-        DataContext = new CreateProjectViewModel();
+        // DataContext is set by the parent MyProjectsView (XAML-embedded view)
 
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
 
-        // Update stepper visuals whenever the current step changes
+        DataContextChanged += OnDataContextSet;
+    }
+
+    private void OnDataContextSet(object? sender, EventArgs e)
+    {
+        // Subscribe to VM observables when DataContext is set by the parent
+        SubscribeToVm();
+    }
+
+    private void SubscribeToVm()
+    {
+        _stepSubscription?.Dispose();
+        _typeSubscription?.Dispose();
+        _deploySubscription?.Dispose();
+
         if (DataContext is CreateProjectViewModel vm)
         {
             _stepSubscription = vm.WhenAnyValue(x => x.CurrentStep)
                 .Subscribe(_ => UpdateStepper());
 
-            // Update stepper labels when project type changes (step names change)
             _typeSubscription = vm.WhenAnyValue(x => x.ProjectType)
                 .Subscribe(_ => UpdateStepperLabels());
 
-            // Watch deploy flow visibility to push modal to shell
             _deploySubscription = vm.DeployFlow.WhenAnyValue(x => x.IsVisible)
                 .Subscribe(isVisible =>
                 {
@@ -61,21 +73,8 @@ public partial class CreateProjectView : UserControl
 
         // Re-subscribe after view is re-attached from cache (subscriptions are
         // disposed in OnDetachedFromLogicalTree when the user navigates away).
-        if (_deploySubscription == null && DataContext is CreateProjectViewModel vm)
-        {
-            _stepSubscription = vm.WhenAnyValue(x => x.CurrentStep)
-                .Subscribe(_ => UpdateStepper());
-
-            _typeSubscription = vm.WhenAnyValue(x => x.ProjectType)
-                .Subscribe(_ => UpdateStepperLabels());
-
-            _deploySubscription = vm.DeployFlow.WhenAnyValue(x => x.IsVisible)
-                .Subscribe(isVisible =>
-                {
-                    if (isVisible)
-                        ShowDeployShellModal(vm);
-                });
-        }
+        if (_deploySubscription == null)
+            SubscribeToVm();
     }
 
     protected override void OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs e)

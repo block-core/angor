@@ -6,7 +6,6 @@ using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Projects.Operations;
 using Avalonia.Media.Imaging;
-using Avalonia2.Composition;
 using Avalonia2.UI.Sections.Portfolio;
 using Avalonia2.UI.Shared;
 using Avalonia2.UI.Shared.Helpers;
@@ -158,6 +157,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
 public partial class FindProjectsViewModel : ReactiveObject
 {
     private readonly IProjectAppService _projectAppService;
+    private readonly Func<ProjectItemViewModel, InvestPageViewModel> _investPageFactory;
 
     [Reactive] private ProjectItemViewModel? selectedProject;
     [Reactive] private InvestPageViewModel? investPageViewModel;
@@ -169,16 +169,19 @@ public partial class FindProjectsViewModel : ReactiveObject
     public void OpenInvestPage()
     {
         if (SelectedProject == null) return;
-        InvestPageViewModel = new InvestPageViewModel(SelectedProject);
+        InvestPageViewModel = _investPageFactory(SelectedProject);
     }
 
     public void CloseInvestPage() => InvestPageViewModel = null;
 
     public ObservableCollection<ProjectItemViewModel> Projects { get; } = new();
 
-    public FindProjectsViewModel()
+    public FindProjectsViewModel(
+        IProjectAppService projectAppService,
+        Func<ProjectItemViewModel, InvestPageViewModel> investPageFactory)
     {
-        _projectAppService = ServiceLocator.ProjectApp;
+        _projectAppService = projectAppService;
+        _investPageFactory = investPageFactory;
 
         // Load projects from SDK
         _ = LoadProjectsFromSdkAsync();

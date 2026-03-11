@@ -99,7 +99,7 @@ public partial class InvestPageView : UserControl
             OnNavigateBackToList = () =>
             {
                 // Add the invested project to the Portfolio section
-                AddInvestmentToPortfolio(vm);
+                vm.AddToPortfolio();
                 // Navigate to the Funded section to show the new investment
                 var shell = GetShellVm();
                 shell?.NavigateToFunded();
@@ -190,17 +190,6 @@ public partial class InvestPageView : UserControl
         {
             vm.CloseInvestPage();
         }
-    }
-
-    /// <summary>
-    /// Add the invested project to the shared Portfolio ViewModel
-    /// so it appears in the "Funded" section.
-    /// </summary>
-    private static void AddInvestmentToPortfolio(InvestPageViewModel investVm)
-    {
-        SharedViewModels.Portfolio.AddInvestmentFromProject(
-            investVm.Project,
-            investVm.FormattedAmount);
     }
 
     /// <summary>Update quick amount borders via CSS class toggling.

@@ -8,6 +8,7 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Transformation;
 using Avalonia.Styling;
+using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
 
 namespace Avalonia2.UI.Shell;
@@ -86,7 +87,7 @@ public partial class ShellView : UserControl
     public ShellView()
     {
         InitializeComponent();
-        var vm = new ShellViewModel();
+        var vm = App.Services.GetRequiredService<ShellViewModel>();
         DataContext = vm;
 
         var modalOverlay = this.FindControl<Panel>("ModalOverlay")!;

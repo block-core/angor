@@ -4,17 +4,25 @@ using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using Avalonia2.UI.Shared.Controls;
 using Avalonia2.UI.Shell;
+
 namespace Avalonia2.UI.Sections.MyProjects;
 
 public partial class MyProjectsView : UserControl
 {
     private CompositeDisposable? _subscriptions;
 
-    public MyProjectsView()
+    /// <summary>Design-time only.</summary>
+    public MyProjectsView() => InitializeComponent();
+
+    public MyProjectsView(MyProjectsViewModel vm)
     {
         InitializeComponent();
-        var vm = new MyProjectsViewModel();
         DataContext = vm;
+
+        // Set the create wizard's DataContext from the parent VM
+        // (CreateProjectView is XAML-embedded, so it can't use constructor injection)
+        if (CreateWizardView != null)
+            CreateWizardView.DataContext = vm.CreateProjectVm;
 
         _subscriptions = new CompositeDisposable();
 

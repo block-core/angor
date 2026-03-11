@@ -8,7 +8,6 @@ using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Application;
 using Avalonia.Media.Imaging;
-using Avalonia2.Composition;
 using Avalonia2.UI.Sections.FindProjects;
 using Avalonia2.UI.Shared;
 using Avalonia2.UI.Shared.Helpers;
@@ -412,6 +411,7 @@ public partial class PortfolioViewModel : ReactiveObject
 {
     private readonly IInvestmentAppService _investmentAppService;
     private readonly IWalletAppService _walletAppService;
+    private readonly SignatureStore _signatureStore;
 
     [Reactive] private bool hasInvestments;
     [Reactive] private InvestmentViewModel? selectedInvestment;
@@ -427,13 +427,17 @@ public partial class PortfolioViewModel : ReactiveObject
     // ── Right panel investments ──
     public ObservableCollection<InvestmentViewModel> Investments { get; } = new();
 
-    public PortfolioViewModel()
+    public PortfolioViewModel(
+        IInvestmentAppService investmentAppService,
+        IWalletAppService walletAppService,
+        SignatureStore signatureStore)
     {
-        _investmentAppService = ServiceLocator.InvestmentApp;
-        _walletAppService = ServiceLocator.WalletApp;
+        _investmentAppService = investmentAppService;
+        _walletAppService = walletAppService;
+        _signatureStore = signatureStore;
 
         // Listen for signature status changes to update investment steps
-        SharedViewModels.Signatures.SignatureStatusChanged += OnSignatureStatusChanged;
+        _signatureStore.SignatureStatusChanged += OnSignatureStatusChanged;
 
         // Load investments from SDK
         _ = LoadInvestmentsFromSdkAsync();
@@ -825,7 +829,7 @@ public partial class PortfolioViewModel : ReactiveObject
             Stages = stages
         };
 
-        var sig = SharedViewModels.Signatures.AddSignature(
+        var sig = _signatureStore.AddSignature(
             project.ProjectName,
             project.ProjectName,
             investmentAmount);

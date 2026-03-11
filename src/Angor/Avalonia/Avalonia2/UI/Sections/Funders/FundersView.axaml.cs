@@ -14,10 +14,13 @@ public partial class FundersView : UserControl
 {
     private CompositeDisposable? _subscriptions;
 
-    public FundersView()
+    /// <summary>Design-time only.</summary>
+    public FundersView() => InitializeComponent();
+
+    public FundersView(FundersViewModel vm)
     {
         InitializeComponent();
-        DataContext = new FundersViewModel();
+        DataContext = vm;
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
 
         // Wire up filter tab click handlers (Borders use Tapped, not Button.Click)

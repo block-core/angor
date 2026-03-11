@@ -12,17 +12,18 @@ public partial class PortfolioView : UserControl
 {
     private IDisposable? _visibilitySubscription;
 
-    public PortfolioView()
+    /// <summary>Design-time only.</summary>
+    public PortfolioView() => InitializeComponent();
+
+    public PortfolioView(PortfolioViewModel vm)
     {
         InitializeComponent();
-        // Use the shared singleton PortfolioViewModel so investments added
-        // during the invest flow persist across sidebar navigations.
-        DataContext = SharedViewModels.Portfolio;
+        DataContext = vm;
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
 
         // When navigating back to Funded, clear any open detail view
         // so the user sees the list (not a stale detail screen from last time).
-        SharedViewModels.Portfolio.CloseInvestmentDetail();
+        vm.CloseInvestmentDetail();
 
         // Manage visibility of the portfolio list panel based on ViewModel state
         DataContextChanged += (_, _) => SubscribeToVisibility();

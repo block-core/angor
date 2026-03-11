@@ -6,7 +6,6 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Shared;
-using Avalonia2.Composition;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
 
@@ -164,9 +163,11 @@ public partial class ManageProjectViewModel : ReactiveObject
             ? Stages[SelectedStageIndex]
             : null;
 
-    public ManageProjectViewModel(MyProjectItemViewModel project)
+    public ManageProjectViewModel(
+        MyProjectItemViewModel project,
+        IFounderAppService founderAppService)
     {
-        _founderAppService = ServiceLocator.FounderApp;
+        _founderAppService = founderAppService;
         Project = project;
         WalletPassword = "";
         ClaimedAmount = "0";

@@ -7,10 +7,13 @@ namespace Avalonia2.UI.Sections.Home;
 
 public partial class HomeView : UserControl
 {
-    public HomeView()
+    /// <summary>Design-time only.</summary>
+    public HomeView() => InitializeComponent();
+
+    public HomeView(HomeViewModel vm)
     {
         InitializeComponent();
-        DataContext = new HomeViewModel();
+        DataContext = vm;
 
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
     }

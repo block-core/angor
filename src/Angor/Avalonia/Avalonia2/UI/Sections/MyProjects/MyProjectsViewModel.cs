@@ -5,7 +5,6 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Wallet.Application;
-using Avalonia2.Composition;
 using Avalonia2.UI.Shared;
 using ReactiveUI;
 
@@ -52,10 +51,14 @@ public partial class MyProjectsViewModel : ReactiveObject
 {
     private readonly IProjectAppService _projectAppService;
     private readonly IWalletAppService _walletAppService;
+    private readonly Func<MyProjectItemViewModel, ManageProjectViewModel> _manageFactory;
 
     [Reactive] private bool showCreateWizard;
     [Reactive] private ManageProjectViewModel? selectedManageProject;
     [Reactive] private bool isLoading;
+
+    /// <summary>The create project wizard VM, injected via DI.</summary>
+    public CreateProjectViewModel CreateProjectVm { get; }
 
     public bool HasProjects => Projects.Count > 0;
 
@@ -75,10 +78,16 @@ public partial class MyProjectsViewModel : ReactiveObject
 
     public ObservableCollection<MyProjectItemViewModel> Projects { get; } = new();
 
-    public MyProjectsViewModel()
+    public MyProjectsViewModel(
+        IProjectAppService projectAppService,
+        IWalletAppService walletAppService,
+        Func<MyProjectItemViewModel, ManageProjectViewModel> manageFactory,
+        CreateProjectViewModel createProjectVm)
     {
-        _projectAppService = ServiceLocator.ProjectApp;
-        _walletAppService = ServiceLocator.WalletApp;
+        _projectAppService = projectAppService;
+        _walletAppService = walletAppService;
+        _manageFactory = manageFactory;
+        CreateProjectVm = createProjectVm;
 
         // Load founder projects from SDK
         _ = LoadFounderProjectsAsync();
@@ -176,7 +185,7 @@ public partial class MyProjectsViewModel : ReactiveObject
 
     public void OpenManageProject(MyProjectItemViewModel project)
     {
-        SelectedManageProject = new ManageProjectViewModel(project);
+        SelectedManageProject = _manageFactory(project);
     }
 
     public void CloseManageProject() => SelectedManageProject = null;

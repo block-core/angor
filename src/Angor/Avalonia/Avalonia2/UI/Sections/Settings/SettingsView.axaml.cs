@@ -5,10 +5,13 @@ namespace Avalonia2.UI.Sections.Settings;
 
 public partial class SettingsView : UserControl
 {
-    public SettingsView()
+    /// <summary>Design-time only.</summary>
+    public SettingsView() => InitializeComponent();
+
+    public SettingsView(SettingsViewModel vm)
     {
         InitializeComponent();
-        DataContext = new SettingsViewModel();
+        DataContext = vm;
     }
 
     private SettingsViewModel? Vm => DataContext as SettingsViewModel;

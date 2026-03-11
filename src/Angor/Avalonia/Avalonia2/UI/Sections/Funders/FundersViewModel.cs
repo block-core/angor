@@ -6,7 +6,6 @@ using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Application;
-using Avalonia2.Composition;
 using Avalonia2.UI.Shell;
 using Avalonia2.UI.Shared;
 
@@ -76,6 +75,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     private readonly IFounderAppService _founderAppService;
     private readonly IProjectAppService _projectAppService;
     private readonly IWalletAppService _walletAppService;
+    private readonly SignatureStore _signatureStore;
 
     [Reactive] private bool hasFunders;
     [Reactive] private string currentFilter = SignatureStatus.Waiting.ToLowerString();
@@ -98,11 +98,16 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     private readonly CompositeDisposable _disposables = new();
     private readonly NotifyCollectionChangedEventHandler _collectionChangedHandler;
 
-    public FundersViewModel()
+    public FundersViewModel(
+        IFounderAppService founderAppService,
+        IProjectAppService projectAppService,
+        IWalletAppService walletAppService,
+        SignatureStore signatureStore)
     {
-        _founderAppService = ServiceLocator.FounderApp;
-        _projectAppService = ServiceLocator.ProjectApp;
-        _walletAppService = ServiceLocator.WalletApp;
+        _founderAppService = founderAppService;
+        _projectAppService = projectAppService;
+        _walletAppService = walletAppService;
+        _signatureStore = signatureStore;
 
         this.WhenAnyValue(x => x.CurrentFilter)
             .Subscribe(_ => UpdateFilteredSignatures())
@@ -114,7 +119,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
             _cachedAllViewModels = null;
             UpdateFilteredSignatures();
         };
-        SharedViewModels.Signatures.AllSignatures.CollectionChanged += _collectionChangedHandler;
+        _signatureStore.AllSignatures.CollectionChanged += _collectionChangedHandler;
 
         // Load investment requests from SDK
         _ = LoadInvestmentRequestsAsync();
@@ -205,7 +210,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
         var all = new List<SignatureRequestViewModel>();
         all.AddRange(_sdkSignatures);
         // Include shared store entries (from UI-only invest flow)
-        foreach (var shared in SharedViewModels.Signatures.AllSignatures)
+        foreach (var shared in _signatureStore.AllSignatures)
         {
             all.Add(SignatureRequestViewModel.FromShared(shared));
         }
@@ -240,7 +245,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
         }
 
         // Fallback to shared store
-        SharedViewModels.Signatures.Approve(id);
+        _signatureStore.Approve(id);
         _cachedAllViewModels = null;
         UpdateFilteredSignatures();
     }
@@ -290,7 +295,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
             return;
         }
 
-        SharedViewModels.Signatures.Reject(id);
+        _signatureStore.Reject(id);
         _cachedAllViewModels = null;
         UpdateFilteredSignatures();
     }
@@ -303,7 +308,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
             _ = ApproveSignatureAsync(sig);
         }
         // Approve shared store signatures
-        SharedViewModels.Signatures.ApproveAll();
+        _signatureStore.ApproveAll();
         _cachedAllViewModels = null;
         UpdateFilteredSignatures();
     }
@@ -323,6 +328,6 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     public void Dispose()
     {
         _disposables.Dispose();
-        SharedViewModels.Signatures.AllSignatures.CollectionChanged -= _collectionChangedHandler;
+        _signatureStore.AllSignatures.CollectionChanged -= _collectionChangedHandler;
     }
 }
