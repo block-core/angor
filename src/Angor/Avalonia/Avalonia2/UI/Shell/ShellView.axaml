@@ -189,12 +189,11 @@
                 CornerRadius="8"
                 Padding="16,8">
             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                <!-- Checkmark icon — Vue: 16x16 white SVG path M5 13l4 4L19 7 -->
-                <Viewbox Width="16" Height="16">
-                    <Path Data="M5 13 L9 17 L19 7"
-                          Stroke="White" StrokeThickness="2"
-                          StrokeLineCap="Round" StrokeJoin="Round" />
-                </Viewbox>
+                <!-- Checkmark icon — fa-solid fa-check, white -->
+                <i:Icon Value="fa-solid fa-check"
+                        FontSize="14"
+                        Foreground="White"
+                        VerticalAlignment="Center" />
                 <TextBlock Name="ToastText"
                            Text="{Binding ToastMessage}"
                            FontSize="14" FontWeight="Medium"
