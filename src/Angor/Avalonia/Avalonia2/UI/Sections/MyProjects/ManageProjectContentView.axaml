@@ -85,7 +85,8 @@
 
                     <!-- Copy button (icon only) -->
                     <!-- Vue: .copy-button — pad 8, rounded 6, color #6b7280 -->
-                    <Button Background="Transparent"
+                    <Button Name="CopyProjectIdBtn"
+                            Background="Transparent"
                             BorderThickness="0"
                             CornerRadius="6"
                             Padding="8">

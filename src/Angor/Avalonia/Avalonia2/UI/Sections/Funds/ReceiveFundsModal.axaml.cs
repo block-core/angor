@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using Avalonia2.UI.Shared.Helpers;
 using Avalonia2.UI.Shell;
 
 namespace Avalonia2.UI.Sections.Funds;
@@ -48,7 +49,8 @@ public partial class ReceiveFundsModal : UserControl, IBackdropCloseable
                 break;
 
             case "BtnCopyAddress":
-                // Stub: copy address to clipboard
+                // Vue: copyAddress() — copies displayed address to clipboard
+                ClipboardHelper.CopyToClipboard(this, AddressText.Text);
                 break;
         }
     }

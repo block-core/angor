@@ -74,6 +74,17 @@ public partial class ShellView : UserControl
         },
     };
 
+    /// <summary>Transitions for the toast fade animation (Vue: 0.3s ease).</summary>
+    private static readonly Transitions ToastTransitions = new()
+    {
+        new DoubleTransition
+        {
+            Property = OpacityProperty,
+            Duration = TimeSpan.FromMilliseconds(300),
+            Easing = new CubicEaseOut(),
+        },
+    };
+
     /// <summary>
     /// The current modal content control that has been added as a direct child
     /// of the ModalOverlay Panel. We track it so we can remove it on close.
@@ -181,6 +192,35 @@ public partial class ShellView : UserControl
 
         // Shell-level backdrop click-to-close
         backdrop.PointerPressed += OnBackdropPressed;
+
+        // ── Toast notification animation ──
+        // React to ToastMessage changes: fade in when set, fade out when cleared.
+        var toastBorder = this.FindControl<Border>("ToastOverlay")!;
+        toastBorder.Transitions = ToastTransitions;
+
+        vm.WhenAnyValue(x => x.ToastMessage)
+            .Subscribe(message =>
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (!string.IsNullOrEmpty(message))
+                    {
+                        // Show: make visible at opacity 0, then animate to 1
+                        toastBorder.Opacity = 0;
+                        toastBorder.IsVisible = true;
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                            toastBorder.Opacity = 1;
+                        }, Avalonia.Threading.DispatcherPriority.Render);
+                    }
+                    else
+                    {
+                        // Hide: animate opacity to 0, then set IsVisible=false after transition
+                        toastBorder.Opacity = 0;
+                        _ = HideToastAfterFadeAsync(toastBorder);
+                    }
+                });
+            });
     }
 
     /// <summary>
@@ -206,6 +246,20 @@ public partial class ShellView : UserControl
                 shellContent.Effect = null;
             }
             _isClosing = false;
+        });
+    }
+
+    /// <summary>
+    /// Wait for the toast fade-out transition (300ms), then hide the border.
+    /// If a new toast appeared in the meantime (Opacity went back to 1), skip hiding.
+    /// </summary>
+    private static async Task HideToastAfterFadeAsync(Border toastBorder)
+    {
+        await Task.Delay(350); // 300ms transition + 50ms buffer
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (toastBorder.Opacity < 0.01)
+                toastBorder.IsVisible = false;
         });
     }
 

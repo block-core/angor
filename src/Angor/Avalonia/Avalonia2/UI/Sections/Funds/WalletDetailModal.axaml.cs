@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Avalonia2.UI.Shared.Helpers;
 using Avalonia2.UI.Shell;
 using Projektanker.Icons.Avalonia;
 
@@ -89,7 +90,12 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
         // Check for UTXO copy buttons (named "BtnCopyTxid_N")
         if (btn.Name?.StartsWith("BtnCopyTxid_") == true)
         {
-            // Stub: copy txid to clipboard
+            // Parse index from button name and copy the corresponding UTXO txid
+            var indexStr = btn.Name["BtnCopyTxid_".Length..];
+            if (int.TryParse(indexStr, out var idx) && idx >= 0 && idx < MockUtxos.Count)
+            {
+                ClipboardHelper.CopyToClipboard(this, MockUtxos[idx].Txid);
+            }
             e.Handled = true;
         }
     }

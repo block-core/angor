@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Threading;
 using Avalonia2.UI.Sections.FindProjects;
 using Avalonia2.UI.Sections.Funders;
 using Avalonia2.UI.Sections.Funds;
@@ -213,6 +214,18 @@ public partial class ShellViewModel : ReactiveObject
     [Reactive] private object? modalContent;
 
     /// <summary>
+    /// Toast notification message. Set by ShowToast(), auto-cleared after timeout.
+    /// Vue: showCopyToast / showSaveToast + toastMessage in App.vue.
+    /// </summary>
+    [Reactive] private string? toastMessage;
+
+    /// <summary>True when a toast is visible (non-null message).</summary>
+    public bool HasToast => ToastMessage != null;
+
+    /// <summary>Timer handle to cancel previous toast if a new one fires before timeout.</summary>
+    private CancellationTokenSource? _toastCts;
+
+    /// <summary>
     /// Currently selected wallet for the header wallet switcher.
     /// Vue: selectedWalletId + selectedWalletName computed in App.vue.
     /// </summary>
@@ -287,6 +300,10 @@ public partial class ShellViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(SelectedWalletName));
                 this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
             });
+
+        // When toast message changes, notify HasToast
+        this.WhenAnyValue(x => x.ToastMessage)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(HasToast)));
     }
 
     public ObservableCollection<NavEntry> NavEntries { get; }
@@ -397,6 +414,41 @@ public partial class ShellViewModel : ReactiveObject
 
         // Auto-select the first wallet (Vue: default selectedWalletId = first mainnet wallet)
         SelectSwitcherWallet(SwitcherWallets[0]);
+    }
+
+    /// <summary>
+    /// Show a toast notification with auto-dismiss.
+    /// Vue: showCopyToast = true → setTimeout → showCopyToast = false.
+    /// If called while a toast is already visible, cancels the previous timeout
+    /// and restarts with the new message.
+    /// </summary>
+    /// <param name="message">Toast text (e.g. "Copied to clipboard").</param>
+    /// <param name="durationMs">Auto-dismiss delay. Vue: 2000-3000ms for copy, 5000ms for save.</param>
+    public void ShowToast(string message, int durationMs = 2000)
+    {
+        // Cancel any previous dismiss timer
+        _toastCts?.Cancel();
+        _toastCts = new CancellationTokenSource();
+        var token = _toastCts.Token;
+
+        ToastMessage = message;
+
+        // Auto-dismiss after duration
+        _ = DismissToastAsync(durationMs, token);
+    }
+
+    private async Task DismissToastAsync(int durationMs, CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(durationMs, token);
+            if (!token.IsCancellationRequested)
+                ToastMessage = null;
+        }
+        catch (TaskCanceledException)
+        {
+            // Expected when a new toast replaces the current one
+        }
     }
 
     /// <summary>

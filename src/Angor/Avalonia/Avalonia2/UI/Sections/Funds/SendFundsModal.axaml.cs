@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using Avalonia2.UI.Shared.Helpers;
 using Avalonia2.UI.Shell;
 
 namespace Avalonia2.UI.Sections.Funds;
@@ -16,6 +17,9 @@ namespace Avalonia2.UI.Sections.Funds;
 public partial class SendFundsModal : UserControl, IBackdropCloseable
 {
     private string _walletBalance = "0.00000000";
+
+    /// <summary>Stub txid for the success view — matches the truncated XAML text.</summary>
+    private const string StubTxid = "a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef7890abcd";
 
     public SendFundsModal()
     {
@@ -93,7 +97,8 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
                 break;
 
             case "BtnCopyTxid":
-                // Stub: copy txid to clipboard
+                // Vue: copyToClipboard(txid) — copy stub txid to clipboard
+                ClipboardHelper.CopyToClipboard(this, StubTxid);
                 break;
 
             case "BtnDone":

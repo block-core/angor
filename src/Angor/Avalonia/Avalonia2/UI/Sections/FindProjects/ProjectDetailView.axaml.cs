@@ -6,6 +6,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using Avalonia2.UI.Shared.Controls;
+using Avalonia2.UI.Shared.Helpers;
 using Avalonia2.UI.Shell;
 
 namespace Avalonia2.UI.Sections.FindProjects;
@@ -85,6 +86,34 @@ public partial class ProjectDetailView : UserControl
 
         if (_nostrContainer != null)
             _nostrContainer.PointerPressed += OnCollapsibleContainerPressed;
+
+        // Copy buttons — Vue: copyToClipboard() on project ID, founder key, npub
+        var copyProjectIdBtn = this.FindControl<Border>("CopyProjectIdBtn");
+        if (copyProjectIdBtn != null)
+            copyProjectIdBtn.PointerPressed += (_, ev) =>
+            {
+                if (DataContext is ProjectItemViewModel vm)
+                    ClipboardHelper.CopyToClipboard(this, vm.ProjectId);
+                ev.Handled = true;
+            };
+
+        var copyFounderKeyBtn = this.FindControl<Border>("CopyFounderKeyBtn");
+        if (copyFounderKeyBtn != null)
+            copyFounderKeyBtn.PointerPressed += (_, ev) =>
+            {
+                if (DataContext is ProjectItemViewModel vm)
+                    ClipboardHelper.CopyToClipboard(this, vm.FounderKey);
+                ev.Handled = true;
+            };
+
+        var copyNpubBtn = this.FindControl<Border>("CopyNpubBtn");
+        if (copyNpubBtn != null)
+            copyNpubBtn.PointerPressed += (_, ev) =>
+            {
+                if (DataContext is ProjectItemViewModel vm)
+                    ClipboardHelper.CopyToClipboard(this, vm.NostrNpub);
+                ev.Handled = true;
+            };
 
         // Set progress bar width after loaded
         Loaded += OnLoaded;

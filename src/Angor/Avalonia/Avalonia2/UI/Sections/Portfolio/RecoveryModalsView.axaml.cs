@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Avalonia2.UI.Shared.Helpers;
 using Avalonia2.UI.Shell;
 
 namespace Avalonia2.UI.Sections.Portfolio;
@@ -22,6 +23,17 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         InitializeComponent();
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
         AddHandler(Border.PointerPressedEvent, OnBorderPressed, RoutingStrategies.Bubble);
+
+        // Wire copy button for claim project ID
+        // Vue: copyToClipboard(recoveryProjectId) in Claim Penalties modal
+        var copyClaimBtn = this.FindControl<Border>("CopyClaimProjectIdBtn");
+        if (copyClaimBtn != null)
+            copyClaimBtn.PointerPressed += (_, ev) =>
+            {
+                if (DataContext is InvestmentViewModel vm)
+                    ClipboardHelper.CopyToClipboard(this, vm.RecoveryProjectId);
+                ev.Handled = true;
+            };
     }
 
     private InvestmentViewModel? Vm => DataContext as InvestmentViewModel;

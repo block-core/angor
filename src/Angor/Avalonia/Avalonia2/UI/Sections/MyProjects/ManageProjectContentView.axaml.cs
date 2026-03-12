@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia2.UI.Shared.Helpers;
 
 namespace Avalonia2.UI.Sections.MyProjects;
 
@@ -20,6 +21,16 @@ public partial class ManageProjectContentView : UserControl
         // bubble up. The parent ManageProjectView catches these to open modals.
         var stagesCtrl = this.FindControl<ItemsControl>("StagesItemsControl");
         stagesCtrl?.AddHandler(Button.ClickEvent, OnStageButtonClick, RoutingStrategies.Bubble);
+
+        // Wire copy project ID button
+        // Vue: copyToClipboard(projectId) — .copy-button in ManageFunds.vue
+        var copyBtn = this.FindControl<Button>("CopyProjectIdBtn");
+        if (copyBtn != null)
+            copyBtn.Click += (_, _) =>
+            {
+                if (DataContext is ManageProjectViewModel vm)
+                    ClipboardHelper.CopyToClipboard(this, vm.ProjectId);
+            };
     }
 
     /// <summary>
