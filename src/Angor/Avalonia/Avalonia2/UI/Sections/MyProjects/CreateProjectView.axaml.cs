@@ -1,3 +1,4 @@
+using System.Threading;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
@@ -20,6 +21,7 @@ public partial class CreateProjectView : UserControl
     private IDisposable? _deploySubscription;
     private IDisposable? _stepSubscription;
     private IDisposable? _typeSubscription;
+    private CancellationTokenSource? _autoSavedCts;
 
     public CreateProjectView()
     {
@@ -153,7 +155,11 @@ public partial class CreateProjectView : UserControl
                 Vm?.DismissStep5Welcome();
                 break;
             case "NextStepButton":
+                var stepBefore = Vm?.CurrentStep;
                 Vm?.GoNext();
+                // Vue: show "Auto saved" indicator for 5s when step advances past step 2
+                if (Vm != null && Vm.CurrentStep != stepBefore && stepBefore >= 2)
+                    ShowAutoSaved();
                 break;
             case "PrevStepButton":
                 if (Vm?.CurrentStep == 1)
@@ -279,6 +285,40 @@ public partial class CreateProjectView : UserControl
         this.FindControl<CreateProjectStep3View>("Step3View")?.ResetVisualState();
         this.FindControl<CreateProjectStep4View>("Step4View")?.ResetVisualState();
         this.FindControl<CreateProjectStep5View>("Step5View")?.ResetVisualState();
+    }
+
+    /// <summary>
+    /// Show the "Auto saved" indicator in the top-right of the content area.
+    /// Vue: showAutoSaved = true, setTimeout 5000ms to hide.
+    /// Semi-transparent, fade in/out 0.3s via Opacity transition.
+    /// </summary>
+    private async void ShowAutoSaved()
+    {
+        var indicator = this.FindControl<Border>("AutoSavedIndicator");
+        if (indicator == null) return;
+
+        // Cancel any previous dismiss timer
+        _autoSavedCts?.Cancel();
+        _autoSavedCts = new CancellationTokenSource();
+        var token = _autoSavedCts.Token;
+
+        // Show + fade in
+        indicator.IsVisible = true;
+        indicator.Opacity = 0.9;
+
+        try
+        {
+            // Vue: auto-dismiss after 5s
+            await Task.Delay(5000, token);
+            if (token.IsCancellationRequested) return;
+
+            // Fade out
+            indicator.Opacity = 0;
+            await Task.Delay(300, token); // wait for opacity transition
+            if (!token.IsCancellationRequested)
+                indicator.IsVisible = false;
+        }
+        catch (TaskCanceledException) { /* new ShowAutoSaved() call replaced this one */ }
     }
 
     private void NavigateBackToMyProjects()
