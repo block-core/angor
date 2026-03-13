@@ -11,7 +11,7 @@ public enum InvestmentMessageType
     /// <summary>Investment signature request ("Investment offer")</summary>
     Request,
     /// <summary>Investment completion notification ("Investment completed")</summary>
-    Notification,
+    Completion,
     /// <summary>Investment cancellation notification ("Investment canceled")</summary>
     Cancellation,
     /// <summary>Founder approval response ("Re:Investment offer")</summary>

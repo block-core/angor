@@ -27,6 +27,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
                                          .DisposeWith(disposable);
 
             this.ValidationRule(stage => stage.ReleaseDate, time => time != null, "Release date is required").DisposeWith(disposable);
+            this.ValidationRule(stage => stage.ReleaseDate, time => time is null || time.Value == time.Value.Date, "Release date should not include a time.").DisposeWith(disposable);
             this.ValidationRule(stage => stage.ReleaseDate,
                 this.WhenAnyValue(x => x.ReleaseDate)
                     .CombineLatest(minAllowed, (relDate, minDate) => new { relDate, minDate }),

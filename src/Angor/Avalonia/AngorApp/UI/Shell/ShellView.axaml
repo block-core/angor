@@ -15,6 +15,9 @@
         <DockPanel Grid.Row="0" Grid.Column="1" Dock="Top">
             <DockPanel DockPanel.Dock="Top" HorizontalSpacing="20">
                 <TextBlock FontWeight="Bold" VerticalAlignment="Center" FontSize="20" Text="{Binding SelectedSection.FriendlyName}" />
+                <Border IsVisible="{Binding ProfileName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Background="{DynamicResource Brand}" CornerRadius="4" Padding="8 2" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding ProfileName}" FontSize="12" Foreground="White" />
+                </Border>
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="16" Orientation="Horizontal">
                     <StackPanel x:Name="AccountPanel" IsVisible="{Binding !!Wallets.Count}" Spacing="16" Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center" IsVisible="{Binding TotalInvested.IsPositive, FallbackValue=False}">

@@ -26,12 +26,12 @@ public static class CreateProjectDtoMapper
 
             ProjectType = Angor.Shared.Models.ProjectType.Fund,
             Sats = satsValue,
-            StartDate = DateTime.Now,
+            StartDate = DateTime.Now.Date,
 
             EndDate = null,
 
             TargetAmount = new Amount(satsValue),
-            PenaltyDays = 0,
+            PenaltyDays = fundProject.PenaltyDays ?? 0,
             PenaltyThreshold = fundProject.Threshold?.Sats,
 
             Stages = Enumerable.Empty<CreateProjectStageDto>(),

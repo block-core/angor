@@ -295,7 +295,7 @@ namespace Angor.Shared.Services
                 var messageType = subject switch
                 {
                     "Investment offer" => InvestmentMessageType.Request,
-                    "Investment completed" => InvestmentMessageType.Notification,
+                    "Investment completed" => InvestmentMessageType.Completion,
                     "Investment canceled" => InvestmentMessageType.Cancellation,
                     "Re:Investment offer" => InvestmentMessageType.Approval,
                     _ => (InvestmentMessageType?)null

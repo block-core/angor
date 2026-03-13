@@ -1,4 +1,3 @@
-using ProjectId = Angor.Sdk.Funding.Shared.ProjectId;
 using AngorApp.Core.Factories;
 using AngorApp.UI.Sections.MyProjects;
 using AngorApp.UI.Sections.Settings;
@@ -13,8 +12,11 @@ using AngorApp.UI.Flows.InvestV2.PaymentSelector;
 using AngorApp.UI.Sections.Funds.Accounts;
 using AngorApp.UI.Sections.Funds.Empty;
 using AngorApp.UI.Sections.FindProjects.Details;
-using AngorApp.UI.Sections.MyProjects.ManageFunds;
 using AngorApp.Model.ProjectsV2;
+using AngorApp.Model.ProjectsV2.FundProject;
+using AngorApp.Model.ProjectsV2.InvestmentProject;
+using AngorApp.UI.Sections.MyProjects.ManageFunds.Investment;
+using FundManageFunds = AngorApp.UI.Sections.MyProjects.ManageFunds.Fund;
 
 namespace AngorApp.Composition.Registrations.ViewModels;
 
@@ -24,8 +26,10 @@ public static class ViewModels
     {
         return services
                 .AddScoped<IProjectInvestCommandFactory, ProjectInvestCommandFactory>()
+                .AddScoped<IProjectFactory, ProjectFactory>()
                 .AddScoped<Func<IProject, IDetailsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<DetailsViewModel>(provider, project))
-                .AddScoped<Func<ProjectId, IManageFundsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<ManageFundsViewModel>(provider, project))
+                .AddScoped<Func<IInvestmentProject, IManageFundsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<ManageFundsViewModel>(provider, project))
+                .AddScoped<Func<IFundProject, FundManageFunds.IManageFundsViewModel>>(provider => project => ActivatorUtilities.CreateInstance<FundManageFunds.ManageFundsViewModel>(provider, project))
                 .AddTransient<IAccountsViewModel, AccountsViewModel>()
                 .AddTransient<ISeedBackupFileService, SeedBackupFileService>()
                 .AddTransient<IAddWalletFlow, AddWalletFlow>()

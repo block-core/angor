@@ -1,5 +1,7 @@
 using System;
 using System.Reactive.Linq;
+using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Application;
 using Angor.Shared;
 using AngorApp.UI.Shared.Controls;
 using AngorApp.UI.Shared.Controls.Feerate;
@@ -23,6 +25,7 @@ public partial class UIServices : ReactiveObject, IUIServices
 {
     private readonly ISettings<UIPreferences> preferences;
     private readonly INetworkConfiguration networkConfiguration;
+    private readonly IWalletAppService walletAppService;
 
     [Reactive] private bool isDarkThemeEnabled;
     [Reactive] private bool isBitcoinPreferred = true;
@@ -38,6 +41,7 @@ public partial class UIServices : ReactiveObject, IUIServices
         ISettings<UIPreferences> preferences,
         string profileName,
         INetworkConfiguration networkConfiguration,
+        IWalletAppService walletAppService,
         Control mainView)
     {
         if (string.IsNullOrWhiteSpace(profileName))
@@ -47,6 +51,7 @@ public partial class UIServices : ReactiveObject, IUIServices
 
         this.preferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
         this.networkConfiguration = networkConfiguration ?? throw new ArgumentNullException(nameof(networkConfiguration));
+        this.walletAppService = walletAppService ?? throw new ArgumentNullException(nameof(walletAppService));
 
         Dialog = dialog;
         NotificationService = notificationService;
@@ -142,5 +147,51 @@ public partial class UIServices : ReactiveObject, IUIServices
         }
     }
 
+    public async Task<IEnumerable<IFeeratePreset>> GetFeeratePresetsAsync()
+    {
+        try
+        {
+            var result = await walletAppService.GetFeeEstimates();
+            if (result.IsSuccess)
+            {
+                var fees = result.Value.OrderByDescending(f => f.FeeRate).ToList();
+                var presets = new List<IFeeratePreset>();
+
+                // Map confirmations to named presets (sat/KB → sat/vByte for display)
+                foreach (var fee in fees)
+                {
+                    var satsPerVByte = Math.Max(1, fee.FeeRate / 1000);
+                    var name = fee.Confirmations switch
+                    {
+                        <= 1 => "Priority",
+                        <= 6 => "Standard",
+                        _ => "Economy"
+                    };
+
+                    // Avoid duplicate names
+                    if (presets.All(p => p.Name != name))
+                    {
+                        presets.Add(new Preset(name, new AmountUI(satsPerVByte), null, null));
+                    }
+                }
+
+                if (presets.Count > 0)
+                    return presets;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Could not fetch fee estimates from indexer: {Error}", ex.Message);
+        }
+
+        return FeeratePresets;
+    }
+
     public IValidations Validations { get; }
+
+    public async Task<Result> RefreshWalletBalance(WalletId walletId)
+    {
+        var result = await walletAppService.RefreshAndGetAccountBalanceInfo(walletId);
+        return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
+    }
 }

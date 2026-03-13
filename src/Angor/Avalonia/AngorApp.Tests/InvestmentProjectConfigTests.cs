@@ -47,11 +47,11 @@ namespace AngorApp.Tests
                 Description = "My description",
                 TargetAmount = new MutableAmountUI { Sats = 100000 },
                 PenaltyDays = 10,
-                FundingEndDate = DateTime.Now.AddDays(1),
-                StartDate = DateTime.Now
+                FundingEndDate = DateTime.Today.AddDays(1),
+                StartDate = DateTime.Today
             };
-            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(10);
-            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(20);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Today.AddDays(10);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Today.AddDays(20);
 
             bool isValid = await sut.IsValid().FirstAsync();
             isValid.Should().BeTrue();
@@ -125,11 +125,11 @@ namespace AngorApp.Tests
                 Website = "https://example.com", // Valid
                 TargetAmount = new MutableAmountUI { Sats = 100000 },
                 PenaltyDays = 10,
-                FundingEndDate = DateTime.Now.AddDays(1),
-                StartDate = DateTime.Now
+                FundingEndDate = DateTime.Today.AddDays(1),
+                StartDate = DateTime.Today
             };
-            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(10);
-            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(20);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Today.AddDays(10);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Today.AddDays(20);
 
             bool isValid = await sut.IsValid().FirstAsync();
             isValid.Should().BeTrue();
@@ -145,11 +145,11 @@ namespace AngorApp.Tests
                 Website = "", // Empty is valid (optional)
                 TargetAmount = new MutableAmountUI { Sats = 100000 },
                 PenaltyDays = 10,
-                FundingEndDate = DateTime.Now.AddDays(1),
-                StartDate = DateTime.Now
+                FundingEndDate = DateTime.Today.AddDays(1),
+                StartDate = DateTime.Today
             };
-            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(10);
-            AddStage(sut, 50m).ReleaseDate = DateTime.Now.AddDays(20);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Today.AddDays(10);
+            AddStage(sut, 50m).ReleaseDate = DateTime.Today.AddDays(20);
 
             bool isValid = await sut.IsValid().FirstAsync();
             isValid.Should().BeTrue();
@@ -164,13 +164,13 @@ namespace AngorApp.Tests
                 Description = "My description",
                 TargetAmount = new MutableAmountUI { Sats = 100000 },
                 PenaltyDays = 10,
-                FundingEndDate = DateTime.Now.AddDays(1),
-                StartDate = DateTime.Now
+                FundingEndDate = DateTime.Today.AddDays(1),
+                StartDate = DateTime.Today
             };
             IFundingStageConfig stage1 = AddStage(sut, 50m);
-            stage1.ReleaseDate = DateTime.Now.AddDays(10);
+            stage1.ReleaseDate = DateTime.Today.AddDays(10);
             IFundingStageConfig stage2 = AddStage(sut, 40m);
-            stage2.ReleaseDate = DateTime.Now.AddDays(20);
+            stage2.ReleaseDate = DateTime.Today.AddDays(20);
 
             bool isValidInitial = await sut.IsValid().FirstAsync();
             isValidInitial.Should().BeFalse();

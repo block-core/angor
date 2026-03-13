@@ -1,4 +1,3 @@
-using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Shared;
 
@@ -6,7 +5,7 @@ namespace AngorApp.Model.ProjectsV2
 {
     public abstract class Project : IProject
     {
-        protected Project(ProjectDto seed, IEnhancedCommand<Result> invest)
+        protected Project(ProjectDto seed, IEnhancedCommand<Result> invest, IEnhancedCommand manageFunds)
         {
             Name = seed.Name;
             Description = seed.ShortDescription;
@@ -17,6 +16,7 @@ namespace AngorApp.Model.ProjectsV2
             NostrNpubKeyHex = seed.NostrNpubKeyHex;
             InformationUri = seed.InformationUri;
             Invest = invest;
+            ManageFunds = manageFunds;
         }
 
         public string Name { get; }
@@ -28,19 +28,17 @@ namespace AngorApp.Model.ProjectsV2
         public string NostrNpubKeyHex { get; }
         public Uri? InformationUri { get; }
         public IEnhancedCommand<Result> Invest { get; }
+        public IEnhancedCommand ManageFunds { get; }
         public abstract IEnhancedCommand Refresh { get; }
         public abstract IAmountUI FundingTarget { get; }
         public abstract IObservable<IAmountUI> FundingRaised { get; }
         public abstract IObservable<int> SupporterCount { get; }
 
-        public static IProject Create(ProjectDto seed, IProjectAppService projectAppService, IEnhancedCommand<Result> invest)
+        protected static IEnhancedCommand CreateUnsupportedManageFundsCommand()
         {
-            return seed.ProjectType switch
-            {
-                Angor.Shared.Models.ProjectType.Invest => new InvestmentProject.InvestmentProject(seed, projectAppService, invest),
-                Angor.Shared.Models.ProjectType.Fund => new FundProject.FundProject(seed, projectAppService, invest),
-                _ => throw new ArgumentOutOfRangeException(nameof(seed.ProjectType), "Unsupported project type")
-            };
+            return EnhancedCommand.Create(
+                () => throw new NotSupportedException("Manage funds is not supported for this project type."),
+                Observable.Return(false), text: "N/A");
         }
     }
 }

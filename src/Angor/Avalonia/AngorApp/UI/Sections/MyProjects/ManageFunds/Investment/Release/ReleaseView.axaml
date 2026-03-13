@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:release="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Release"
+             xmlns:investmentProject="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
+             xmlns:fundProject="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
+             xmlns:release1="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Release"
+             mc:Ignorable="d"
+             x:Class="AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Release.ReleaseView"
+             x:DataType="release1:IReleaseViewModel">
+    
+    <Design.DataContext>
+        <release1:ReleaseViewModelSample />
+    </Design.DataContext>
+    
+    <HeaderedContainer Header="The project didn't meet its target" Classes="Card White MediumBigHeader Shadow">
+        <Border Classes="ColorPanel LightGray">
+            <StackPanel Classes="Gap-M">
+                <EdgePanel HorizontalAlignment="Left">
+                    <EdgePanel.StartContent>
+                        <TextBlock Classes="Strong" VerticalAlignment="Center" FontWeight="Bold">Funds Received</TextBlock>
+                    </EdgePanel.StartContent>
+                    <EdgePanel.Content>
+                        <ContentControl Content="{Binding Project}">
+                            <ContentControl.DataTemplates>
+                                <DataTemplate DataType="investmentProject:IInvestmentProject">
+                                    <ContentControl Classes="Pill Green" Content="{Binding Raised^.ShortDecimalString}" />
+                                </DataTemplate>
+                                <DataTemplate DataType="fundProject:IFundProject">
+                                    <ContentControl Classes="Pill Green" Content="{Binding Funded^.ShortDecimalString}" />
+                                </DataTemplate>
+                            </ContentControl.DataTemplates>
+                        </ContentControl>
+                    </EdgePanel.Content>
+                </EdgePanel>
+                <Separator />
+                <ContentControl Content="{Binding Project}">
+                    <ContentControl.DataTemplates>
+                        <DataTemplate DataType="investmentProject:IInvestmentProject">
+                            <EdgePanel StartContent="Total amount received from investors" ContentClasses="Weight-Bold Strong" Content="{Binding Raised^.ShortDecimalString}" />
+                        </DataTemplate>
+                        <DataTemplate DataType="fundProject:IFundProject">
+                            <EdgePanel StartContent="Total amount received from funders" ContentClasses="Weight-Bold Strong" Content="{Binding Funded^.ShortDecimalString}" />
+                        </DataTemplate>
+                    </ContentControl.DataTemplates>
+                </ContentControl>
+                <EnhancedButton Command="{Binding ReleaseAll}"
+                                Classes="HorizontalStretch"
+                                Classes.Emphasized="{Binding HasReleasableTransactions^}"
+                                Classes.Outline="{Binding HasReleasableTransactions^, Converter={x:Static BoolConverters.Not}}"
+                                Classes.Orange="{Binding HasReleasableTransactions^, Converter={x:Static BoolConverters.Not}}">
+                    <Interaction.Behaviors>
+                        <BindingTriggerBehavior Binding="{Binding HasReleasableTransactions^}" Value="True">
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="Release Funds Back to Investors" />
+                        </BindingTriggerBehavior>
+                        <BindingTriggerBehavior Binding="{Binding HasReleasableTransactions^}" Value="False">
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentControl.ContentProperty}" Value="All Funds Released" />
+                        </BindingTriggerBehavior>
+                    </Interaction.Behaviors>
+                </EnhancedButton>
+            </StackPanel>
+        </Border>
+    </HeaderedContainer>
+</UserControl>

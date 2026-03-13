@@ -319,7 +319,7 @@ public class InvestmentHandshakeService(
                         case InvestmentMessageType.Request:
                             requests.Add(new DirectMessage(id, pubKey, content, created));
                             break;
-                        case InvestmentMessageType.Notification:
+                        case InvestmentMessageType.Completion:
                             notifications.Add(new DirectMessage(id, pubKey, content, created));
                             break;
                         case InvestmentMessageType.Cancellation:

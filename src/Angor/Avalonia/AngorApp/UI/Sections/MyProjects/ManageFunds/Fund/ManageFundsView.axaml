@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ctrl="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:common="clr-namespace:AngorApp.UI.Shared.Controls.Common"
+             xmlns:fund="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Fund"
+             xmlns:claim="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Fund.Claim"
+             xmlns:release="clr-namespace:AngorApp.UI.Sections.MyProjects.ManageFunds.Fund.Release"
+             mc:Ignorable="d" d:DesignWidth="1200"
+             x:Class="AngorApp.UI.Sections.MyProjects.ManageFunds.Fund.ManageFundsView" x:DataType="fund:IManageFundsViewModel">
+
+    <Design.DataContext>
+        <fund:ManageFundsViewModelSample />
+    </Design.DataContext>
+
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding LoadProjectStats}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+
+    <UserControl.Styles>
+        <Style Selector="BalancedWrapGrid">
+            <Setter Property="HorizontalSpacing" Value="24" />
+            <Setter Property="VerticalSpacing" Value="24" />
+        </Style>
+    </UserControl.Styles>
+
+    <ctrl:ScrollableView>
+        <StackPanel Classes="Gap-XL">
+            <Loading IsLoading="{Binding LoadProjectStats.IsExecuting^}" ClipToBounds="False">
+                <StackPanel Classes="Gap-XL">
+                    <Border Classes="ColorPanel White Shadow">
+                        <DockPanel>
+                            <common:CopyButton DockPanel.Dock="Right" VerticalAlignment="Center" />
+                            <HeaderedContainer Header="Project ID" Content="{Binding Project.Id.Value}" />
+                        </DockPanel>
+                    </Border>
+                    <HeaderedContainer x:Name="ProjectStatistics" Classes="Card Apricot Shadow" ClipToBounds="False">
+                        <HeaderedContainer.Header>
+                            <EdgePanel ContentClasses="Size-XL BlackText" IconOptions.Fill="{DynamicResource BitcoinOrange}" IconOptions.Size="48" IconOptions.Padding="5" StartContent="{Icon fa-bitcoin}"
+                                       Content="Project Statistics" />
+                        </HeaderedContainer.Header>
+                        <BalancedWrapGrid MinItemWidth="160">
+                            <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Goal" Content="{Binding Project.Goal.ShortDecimalString}" />
+                            <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Funded" Content="{Binding Project.Funded^.ShortDecimalString}" />
+                            <ctrl:NewCard ContainerClasses="Card Elevate ApricotBorder ThickBorder" Left="Funder Count" Content="{Binding Project.FunderCount^}" />
+                        </BalancedWrapGrid>
+                    </HeaderedContainer>
+                </StackPanel>
+            </Loading>
+            <claim:ClaimView ClipToBounds="False" DataContext="{Binding ClaimViewModel^}" />
+            <release:ReleaseView DataContext="{Binding ReleaseViewModel^}" ClipToBounds="False" />
+        </StackPanel>
+    </ctrl:ScrollableView>
+</UserControl>

@@ -11,12 +11,11 @@ namespace AngorApp.UI.Sections.FindProjects
     {
         public FindProjectItem(
             ProjectDto dto,
-            IProjectAppService projectAppService,
-            IProjectInvestCommandFactory projectInvestCommandFactory,
+            IProjectFactory projectFactory,
             Func<IProject, IDetailsViewModel> detailsFactory,
             INavigator navigator)
         {
-            Project = Model.ProjectsV2.Project.Create(dto, projectAppService, projectInvestCommandFactory.Create(dto.Id, dto.FundingStartDate, dto.FundingEndDate, dto.ProjectType));
+            Project = projectFactory.Create(dto);
             GoToDetails = EnhancedCommand.Create(() => navigator.Go(() => detailsFactory(Project)));
         }
 

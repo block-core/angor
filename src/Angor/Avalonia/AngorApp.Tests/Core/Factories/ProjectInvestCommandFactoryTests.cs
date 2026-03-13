@@ -51,7 +51,7 @@ public class ProjectInvestCommandFactoryTests
 
         var result = ProjectInvestCommandFactory.CanInvest(ProjectType.Fund, now, fundingStart, fundingEnd);
 
-        result.Should().BeFalse();
+        result.Should().BeTrue();
     }
 
     [Fact]

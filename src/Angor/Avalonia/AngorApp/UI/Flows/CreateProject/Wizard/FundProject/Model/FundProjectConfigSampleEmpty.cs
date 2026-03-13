@@ -24,5 +24,6 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model
         public DayOfWeek? WeeklyPayoutDay { get; set; }
         public IEnumerable<int> AvailableInstallmentCounts { get; } = [3, 6, 12];
         public IAmountUI? Threshold { get; set; } = AmountUI.FromBtc(0.01);
+        public int? PenaltyDays { get; set; }
     }
 }

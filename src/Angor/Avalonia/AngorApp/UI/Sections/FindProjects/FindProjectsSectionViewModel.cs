@@ -16,19 +16,19 @@ namespace AngorApp.UI.Sections.FindProjects;
 public class FindProjectsSectionViewModel : IFindProjectsSectionViewModel, IDisposable
 {
     private readonly IProjectAppService projectAppService;
-    private readonly IProjectInvestCommandFactory projectInvestCommandFactory;
+    private readonly IProjectFactory projectFactory;
     private readonly Func<IProject, IDetailsViewModel> detailsFactory;
     private readonly CompositeDisposable disposable = new();
     private readonly INavigator navigator;
 
     public FindProjectsSectionViewModel(
         IProjectAppService projectAppService,
-        IProjectInvestCommandFactory projectInvestCommandFactory,
+        IProjectFactory projectFactory,
         Func<IProject, IDetailsViewModel> detailsFactory,
         INavigator navigator)
     {
         this.projectAppService = projectAppService;
-        this.projectInvestCommandFactory = projectInvestCommandFactory;
+        this.projectFactory = projectFactory;
         this.detailsFactory = detailsFactory;
         this.navigator = navigator;
         LoadProjects = EnhancedCommand.Create(DoLoadItems).DisposeWith(disposable);
@@ -50,7 +50,7 @@ public class FindProjectsSectionViewModel : IFindProjectsSectionViewModel, IDisp
         return projectAppService
                .Latest(new LatestProjects.LatestProjectsRequest())
                .Map(response => response.Projects.Select(dto =>
-                                                             new FindProjectItem(dto, projectAppService, projectInvestCommandFactory, detailsFactory, navigator)));
+                                                             new FindProjectItem(dto, projectFactory, detailsFactory, navigator)));
     }
 
     public IEnumerable<IFindProjectItem> Projects { get; }

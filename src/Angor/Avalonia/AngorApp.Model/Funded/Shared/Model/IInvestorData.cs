@@ -1,4 +1,5 @@
 using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Investor.Dtos;
 
 namespace AngorApp.Model.Funded.Shared.Model
 {
@@ -10,6 +11,7 @@ namespace AngorApp.Model.Funded.Shared.Model
         DateTimeOffset InvestedOn { get; }
         IObservable<InvestmentStatus> Status { get; }
         IObservable<RecoveryState> Recovery { get; }
+        IObservable<IReadOnlyList<InvestorStageItemDto>> StageItems { get; }
         public IAmountUI Amount { get; }
     }
 }

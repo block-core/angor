@@ -395,7 +395,7 @@ public class DynamicStageCalculatorTests
         {
             InvestorKey = "testkey",
             TotalInvestmentAmount = 100000,
-            InvestmentStartDate = DateTime.UtcNow,
+            InvestmentStartDate = DateTime.UtcNow.Date,
             PatternId = 0
         };
 
@@ -423,7 +423,7 @@ public class DynamicStageCalculatorTests
         {
             InvestorKey = "testkey",
             TotalInvestmentAmount = 100000, // Matches pattern amount
-            InvestmentStartDate = DateTime.UtcNow,
+            InvestmentStartDate = DateTime.UtcNow.Date,
             PatternId = 0
         };
 
@@ -450,7 +450,7 @@ public class DynamicStageCalculatorTests
         {
             InvestorKey = "testkey",
             TotalInvestmentAmount = 50000, // Does not match pattern amount
-            InvestmentStartDate = DateTime.UtcNow,
+            InvestmentStartDate = DateTime.UtcNow.Date,
             PatternId = 0
         };
 
@@ -478,7 +478,7 @@ public class DynamicStageCalculatorTests
         {
             InvestorKey = "testkey",
             TotalInvestmentAmount = 100000,
-            InvestmentStartDate = DateTime.UtcNow,
+            InvestmentStartDate = DateTime.UtcNow.Date,
             PatternId = 0
         };
 
@@ -505,7 +505,7 @@ public class DynamicStageCalculatorTests
         {
             InvestorKey = "testkey",
             TotalInvestmentAmount = 100000,
-            InvestmentStartDate = DateTime.UtcNow,
+            InvestmentStartDate = DateTime.UtcNow.Date,
             PatternId = 0
         };
 
@@ -534,7 +534,7 @@ public class DynamicStageCalculatorTests
         {
             InvestorKey = "testkey",
             TotalInvestmentAmount = 100000,
-            InvestmentStartDate = DateTime.UtcNow,
+            InvestmentStartDate = DateTime.UtcNow.Date,
             PatternId = 0
         };
 
@@ -563,7 +563,7 @@ public class DynamicStageCalculatorTests
         {
             InvestorKey = "testkey",
             TotalInvestmentAmount = 100000,
-            InvestmentStartDate = DateTime.UtcNow,
+            InvestmentStartDate = DateTime.UtcNow.Date,
             PatternId = 0
         };
 

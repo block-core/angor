@@ -10,7 +10,11 @@
         <common:LongTextViewModel Text="THIS IS VERY LONG TEXT THIS IS VERY LONG TEXT THIS IS VERY LONG TEXT THIS IS VERY LONG TEXT THIS IS VERY LONG TEXT THIS IS VERY LONG TEXT "></common:LongTextViewModel>
     </Design.DataContext>
     
-    <ScrollViewer HorizontalScrollBarVisibility="Auto">
-        <TextBlock TextWrapping="NoWrap" Text="{Binding Text}" />
-    </ScrollViewer>
+    <DockPanel>
+        <Button DockPanel.Dock="Top" HorizontalAlignment="Right" Margin="0 0 0 8"
+                Click="CopyToClipboard_Click" Content="Copy to Clipboard" />
+        <ScrollViewer HorizontalScrollBarVisibility="Auto">
+            <TextBlock TextWrapping="NoWrap" Text="{Binding Text}" />
+        </ScrollViewer>
+    </DockPanel>
 </UserControl>

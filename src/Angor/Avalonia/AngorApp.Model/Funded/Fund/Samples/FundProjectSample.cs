@@ -14,6 +14,7 @@ namespace AngorApp.Model.Funded.Fund.Samples
         public string NostrNpubKeyHex { get; } = "ca6e84aa974d00af805a754b34bc4e3c9a899aac14487a6f2e21fe9ea4b9fe43";
         public Uri? InformationUri { get; } = null;
         public IEnhancedCommand<Result> Invest { get; } = EnhancedCommand.CreateWithResult(Result.Success);
+        public IEnhancedCommand ManageFunds { get; } = EnhancedCommand.Create(() => { }, Observable.Return(false), text: "Manage Funds");
         public IEnhancedCommand Refresh { get; } = EnhancedCommand.Create(() => { });
         public IAmountUI Goal { get; set; } = AmountUI.FromBtc(2m);
         public IObservable<IAmountUI> Funded { get; } = Observable.Return(AmountUI.FromBtc(1.5m));

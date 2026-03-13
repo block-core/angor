@@ -9,6 +9,8 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
+using Angor.Shared.Utilities;
+using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
@@ -75,14 +77,22 @@ public static class BuildRecoveryTransaction
             if (transactionInfo is null)
                 return Result.Failure<BuildRecoveryTransactionResponse>("Could not find transaction info");
 
-            transactionInfo.Outputs.ForEach((output, i) =>
-             {
-                 if (i < 2 || string.IsNullOrEmpty(output.SpentInTransaction))
-                     return;
+            var investmentTxId = investmentTransaction.GetHash();
+            var spentOutpoints = transactionInfo.Outputs
+                .Select((output, i) => new { output, i })
+                .Where(x => new Script(Encoders.Hex.DecodeData(x.output.ScriptPubKey)).IsTaprooOutput()
+                            && !string.IsNullOrEmpty(x.output.SpentInTransaction))
+                .Select(x => new OutPoint(investmentTxId, x.i))
+                .ToHashSet();
 
-                 unsignedRecoveryTransaction.Inputs.RemoveAt(i - 2);
-                 unsignedRecoveryTransaction.Outputs.RemoveAt(i - 2);
-             });
+            for (int i = unsignedRecoveryTransaction.Inputs.Count - 1; i >= 0; i--)
+            {
+                if (spentOutpoints.Contains(unsignedRecoveryTransaction.Inputs[i].PrevOut))
+                {
+                    unsignedRecoveryTransaction.Inputs.RemoveAt(i);
+                    unsignedRecoveryTransaction.Outputs.RemoveAt(i);
+                }
+            }
 
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();
             if (changeAddress == null)

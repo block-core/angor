@@ -7,6 +7,8 @@
              xmlns:manage="clr-namespace:AngorApp.Model.Funded.Shared.Model;assembly=AngorApp.Model"
              xmlns:model="clr-namespace:AngorApp.Model.Funded.Investment.Model;assembly=AngorApp.Model"
              xmlns:model1="clr-namespace:AngorApp.Model.Funded.Fund.Model;assembly=AngorApp.Model"
+             xmlns:actions="clr-namespace:AngorApp.UI.Sections.Funded.Investment.Cards.Actions"
+             xmlns:actions1="clr-namespace:AngorApp.UI.Sections.Funded.Fund.Cards.Actions"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.UI.Sections.Funded.Shared.Manage.ProjectStatisticsCard" x:DataType="manage:IFunded">
 
@@ -22,11 +24,11 @@
         <ContentControl ClipToBounds="False" Content="{Binding}">
             <ContentControl.DataTemplates>
                 <DataTemplate DataType="model:IInvestmentFunded">
-                    <cards:InvestmentProjectStatisticsCard ClipToBounds="False" />
+                    <actions:InvestmentProjectStatisticsCard ClipToBounds="False" />
                 </DataTemplate>
 
                 <DataTemplate DataType="model1:IFundFunded">
-                    <cards1:FundProjectStatisticsCard ClipToBounds="False" />
+                    <actions1:FundProjectStatisticsCard ClipToBounds="False" />
                 </DataTemplate>
             </ContentControl.DataTemplates>
         </ContentControl>

@@ -7,5 +7,6 @@ namespace AngorApp.Model.Funded.Fund.Model
     {
         new IFundProject Project { get; }
         new IFundInvestorData InvestorData { get; }
+        IObservable<IReadOnlyCollection<IPayment>> PaymentsWithStatus { get; }
     }
 }

@@ -6,7 +6,7 @@ namespace AngorApp.Model.Funded.Fund.Model
     {
         public int Id { get; } = 1;
         public DateTimeOffset PaymentDate { get; } = DateTimeOffset.Now;
-        public PaymentStatus Status { get; } = PaymentStatus.Pending;
+        public string Status { get; } = "Pending";
         public IAmountUI Amount { get; } = AmountUI.FromBtc(1m);
         public decimal Ratio => 0.4m;
     }

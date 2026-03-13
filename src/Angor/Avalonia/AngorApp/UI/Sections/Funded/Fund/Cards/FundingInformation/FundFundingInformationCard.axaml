@@ -6,7 +6,7 @@
              xmlns:manage="clr-namespace:AngorApp.Model.Funded.Fund.Model;assembly=AngorApp.Model"
              mc:Ignorable="d"
              d:DesignWidth="800"
-             x:Class="AngorApp.UI.Sections.Funded.Fund.Cards.FundFundingInformationCard"
+             x:Class="AngorApp.UI.Sections.Funded.Fund.Cards.FundingInformation.FundFundingInformationCard"
              x:DataType="manage:IFundFunded">
 
     <BalancedWrapGrid MinItemWidth="220">

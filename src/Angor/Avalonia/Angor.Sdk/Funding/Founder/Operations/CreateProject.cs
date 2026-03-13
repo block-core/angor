@@ -83,7 +83,7 @@ public static class CreateProjectConstants
                     string projectIdentifier,
                     string projectInfoEventId)
             {
-                var accountBalanceInfo = await RefreshWalletBalance(walletId);
+                var accountBalanceInfo = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
                 if (accountBalanceInfo.IsFailure)
                 {
                     logger.LogDebug("Failed to get account balance information for WalletId {WalletId}: {Error}",
@@ -108,39 +108,6 @@ public static class CreateProjectConstants
                         selectedFee);
 
                 return Result.Success(signedTransaction);
-            }
-
-            private async Task<Result<AccountBalanceInfo>> RefreshWalletBalance(WalletId walletId)
-            {
-                try
-                {
-                    // Try to get from service first
-                    var dbResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
-
-                    if (dbResult.IsFailure)
-                    {
-                        logger.LogDebug("Failed to get account balance info from DB for WalletId {WalletId}: {Error}",
-                     walletId, dbResult.Error);
-                        return Result.Failure<AccountBalanceInfo>(dbResult.Error);
-                    }
-
-                    // Refresh the existing balance
-                    var refreshResult = await walletAccountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
-
-                    if (refreshResult.IsFailure)
-                    {
-                        logger.LogDebug("Failed to refresh account balance info for WalletId {WalletId}: {Error}",
-                       walletId, refreshResult.Error);
-                        return Result.Failure<AccountBalanceInfo>(refreshResult.Error);
-                    }
-
-                    return Result.Success(refreshResult.Value);
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e, "Error refreshing balance for wallet {WalletId}", walletId);
-                    return Result.Failure<AccountBalanceInfo>($"Error refreshing balance: {e.Message}");
-                }
             }
         }
     }

@@ -1,4 +1,5 @@
 using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Investor.Dtos;
 using AngorApp.Model.Funded.Shared.Model;
 
 namespace AngorApp.Model.Funded.Fund.Model
@@ -18,5 +19,6 @@ namespace AngorApp.Model.Funded.Fund.Model
         public string ProjectId { get; }
         public IObservable<InvestmentStatus> Status { get; }
         public IObservable<RecoveryState> Recovery { get; }
+        public IObservable<IReadOnlyList<InvestorStageItemDto>> StageItems { get; } = Observable.Return<IReadOnlyList<InvestorStageItemDto>>(new List<InvestorStageItemDto>());
     }
 }

@@ -50,7 +50,7 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
         var stageDataList = project.Stages
          .Select(x => new StageData
          {
-             Stage = new Angor.Shared.Models.Stage() { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal },
+             Stage = new Angor.Shared.Models.Stage() { ReleaseDate = x.ReleaseDate, AmountToRelease = x.RatioOfTotal * 100m },
              StageDate = x.ReleaseDate,
              StageIndex = x.Index,
              Items = [],
@@ -341,27 +341,23 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
                         case ProjectScriptTypeEnum.InvestorWithPenalty:
                         {
-                            // Both recovery and unfunded release use the same Recover script path.
-                            // Distinguish by checking the spending transaction's output types:
-                            // - Recovery outputs go to P2WSH (penalty timelock script)
-                            // - Unfunded release outputs go to P2WPKH (direct to investor address)
-                            
-                            // Log all output types for debugging
-                            foreach (var spentOutput in spentInfo.Outputs)
-                            {
-                                logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: SpentTx output idx={OutputIdx}, OutputType={OutputType}, Address={Address}, ScriptPubKey={ScriptPubKey}", 
-                                    stageIndex, spentOutput.Index, spentOutput.OutputType ?? "null", spentOutput.Address ?? "null", spentOutput.ScriptPubKey ?? "null");
-                            }
-                            
-                            var isUnfundedRelease = spentInfo.Outputs
-                                .Any(o => o.OutputType == "witness_v0_keyhash" || o.OutputType == "v0_p2wpkh");
+                            // InvestorWithPenalty = 2-of-2 multisig spent. Check the output script
+                            // at the corresponding index (SIGHASH_SINGLE: input N signs output N)
+                            // to distinguish recovery (penalty timelock P2WSH) from unfunded release (P2WPKH).
+                            var correspondingOutput = spentInfo.Outputs.FirstOrDefault(o => o.Index == stageIndex);
+                            var hasPenaltyTimelock = correspondingOutput != null
+                                && !string.IsNullOrEmpty(correspondingOutput.ScriptPubKey)
+                                && NBitcoin.Script.FromHex(correspondingOutput.ScriptPubKey)
+                                    .IsScriptType(NBitcoin.ScriptType.P2WSH);
 
-                            logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: isUnfundedRelease={IsUnfunded}", stageIndex, isUnfundedRelease);
+                            logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: InvestorWithPenalty, correspondingOutput.Index={OutputIndex}, hasPenaltyTimelock={HasPenalty}", 
+                                stageIndex, correspondingOutput?.Index, hasPenaltyTimelock);
 
-                            if (isUnfundedRelease)
+                            if (!hasPenaltyTimelock)
                             {
+                                // No timelock outputs = unfunded release (direct to investor)
                                 response.UnfundedReleaseTransactionId = output.SpentInTransaction;
-                                logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: Set UnfundedReleaseTransactionId={TxId}, returning", stageIndex, output.SpentInTransaction);
+                                logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: Unfunded release, Set UnfundedReleaseTransactionId={TxId}", stageIndex, output.SpentInTransaction);
                                 return response;
                             }
 
@@ -369,7 +365,7 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                             var totalsats = trxInfo.Outputs.SkipLast(1).Sum(s => s.Balance);
                             response.AmountInRecovery = totalsats;
                             
-                            logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: Set RecoveryTransactionId={TxId}", stageIndex, output.SpentInTransaction);
+                            logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: Penalty recovery, Set RecoveryTransactionId={TxId}", stageIndex, output.SpentInTransaction);
 
                             var spentRecoveryInfo =
                                 await transactionService.GetTransactionInfoByIdAsync(response.RecoveryTransactionId);

@@ -6,6 +6,7 @@ using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Services;
+using Angor.Shared.Utilities;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -20,7 +21,7 @@ public static class GetInvestments
     
     public class GetInvestmentsHandler(
         IAngorIndexerService angorIndexerService,
-        IPortfolioService investmentService,
+        IPortfolioService portfolioService,
         IProjectService projectService,
         IInvestmentHandshakeService HandshakeService,
         INetworkConfiguration networkConfiguration,
@@ -30,7 +31,7 @@ public static class GetInvestments
 
         public async Task<Result<GetInvestmentsResponse>> Handle(GetInvestmentsRequest request, CancellationToken cancellationToken)
         {
-            var investmentRecordsLookup = await investmentService.GetByWalletId(request.WalletId.Value);
+            var investmentRecordsLookup = await portfolioService.GetByWalletId(request.WalletId.Value);
 
             if (investmentRecordsLookup.IsFailure)
                 return Result.Failure<GetInvestmentsResponse>("Failed to retrieve investment records: " + investmentRecordsLookup.Error);
@@ -65,6 +66,10 @@ public static class GetInvestments
                     var investment = investmentTask.Result.IsSuccess ? investmentTask.Result.Value : null;
                     var stats = statsTask.Result.IsSuccess ? statsTask.Result.Value : (project.Id.Value, null);
 
+                    if (investment?.TransactionId != null)
+                        if (investment.TransactionId != investmentRecord.InvestmentTransactionHash)
+                            return Result.Failure<InvestedProjectDto>($"Investment transaction mismatch for project: {project.Id.Value} expected: {investmentRecord.InvestmentTransactionHash}, actual: {investment.TransactionId}");
+
                     var dto = new InvestedProjectDto
                     {
                         Id = project.Id.Value,
@@ -75,7 +80,7 @@ public static class GetInvestments
                         FounderStatus = investment == null ? FounderStatus.Requested : FounderStatus.Approved,
                         InvestmentStatus = investment == null ? InvestmentStatus.Invalid : InvestmentStatus.Invested,
                         Investment = new Amount(investment?.TotalAmount ?? 0),
-                        InvestmentId = investment?.TransactionId ?? string.Empty,
+                        InvestmentId = investmentRecord.InvestmentTransactionHash,
                         Raised = new Amount(stats.stats?.AmountInvested ?? 0),
                         InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0),
                         RequestedOn = investmentRecord.RequestEventTime.HasValue
@@ -137,7 +142,14 @@ public static class GetInvestments
                     var Handshake = HandshakeResult.Value;
                     if (Handshake == null)
                     {
-                        // No Handshake found, return current dto
+                        // No Handshake found yet. If we have a RequestEventId, we know a request
+                        // was sent (e.g. just after reinvesting and the relay hasn't synced yet),
+                        // so treat it as PendingFounderSignatures instead of Invalid.
+                        if (!string.IsNullOrEmpty(investmentRecord.RequestEventId))
+                        {
+                            dto.InvestmentStatus = InvestmentStatus.PendingFounderSignatures;
+                        }
+
                         return Result.Success(dto);
                     }
 
@@ -153,7 +165,7 @@ public static class GetInvestments
                     {
                         var trx = networkConfiguration.GetNetwork()
                             .CreateTransaction(Handshake.InvestmentTransactionHex);
-                        dto.Investment = new Amount(trx.Outputs.Sum(x => x.Value));
+                        dto.Investment = new Amount(trx.GetTotalInvestmentAmount());
                     }
 
                     dto.InvestmentId = investmentRecord.InvestmentTransactionHash;
@@ -178,6 +190,9 @@ public static class GetInvestments
         
         private static InvestmentStatus DetermineInvestmentStatus(InvestmentHandshake Handshake)
         {
+            if (Handshake.Status == InvestmentRequestStatus.Cancelled)
+                return InvestmentStatus.Cancelled;
+
             if (string.IsNullOrEmpty(Handshake.InvestmentTransactionHex))
                 return InvestmentStatus.PendingFounderSignatures;
 

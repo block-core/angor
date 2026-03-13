@@ -292,7 +292,7 @@ public class WalletAppService(
             }
 
             var httpClient = httpClientFactory.CreateClient();
-            var response = await httpClient.GetAsync($"https://faucettmp.angor.io/api/faucet/send/{addressResult.Value.Value}");
+            var response = await httpClient.GetAsync($"https://faucettmp.angor.io/api/faucet/send/{addressResult.Value.Value}/10");
             
             if (!response.IsSuccessStatusCode)
             {
@@ -304,6 +304,19 @@ public class WalletAppService(
         catch (Exception ex)
         {
             return Result.Failure($"Error getting test coins: {ex.Message}");
+        }
+    }
+
+    public async Task<Result<IEnumerable<FeeEstimation>>> GetFeeEstimates()
+    {
+        try
+        {
+            var feeEstimations = await walletOperations.GetFeeEstimationAsync();
+            return Result.Success(feeEstimations);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IEnumerable<FeeEstimation>>($"Error fetching fee estimates: {ex.Message}");
         }
     }
 

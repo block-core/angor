@@ -4,8 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:schedule="clr-namespace:AngorApp.UI.Sections.Funded.Investment.Cards.Schedule"
              xmlns:schedule1="clr-namespace:AngorApp.UI.Sections.Funded.Fund.Cards.Schedule"
-             xmlns:investmentProject="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
-             xmlns:fundProject="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
              xmlns:samples1="clr-namespace:AngorApp.Model.Funded.Shared.Model;assembly=AngorApp.Model"
              xmlns:model="clr-namespace:AngorApp.Model.Funded.Investment.Model;assembly=AngorApp.Model"
              xmlns:model1="clr-namespace:AngorApp.Model.Funded.Fund.Model;assembly=AngorApp.Model"
@@ -30,7 +28,7 @@
                     <DataTemplate DataType="model:IInvestmentFunded">
                         <EdgePanel Content="Stages" ContentClasses="Size-XL BlackText" StartContent="{StaticResource StagesIcon}">
                             <EdgePanel.EndContent>
-                                <EnhancedButton Icon="{Icon fa-arrows-rotate}" Classes="Filled Orange" IconOptions.Size="16" Content="Recover Funds"
+                                <EnhancedButton Icon="{Icon fa-arrows-rotate}" Classes="Filled Orange" IconOptions.Size="16" Content="{Binding RecoverFundsLabel^, FallbackValue='Recover Funds'}"
                                                 Command="{Binding RecoverFunds}">
                                     <EnhancedButton.IsVisible>
                                         <MultiBinding Converter="{x:Static BoolConverters.Or}">
@@ -43,18 +41,30 @@
                         </EdgePanel>
                     </DataTemplate>
                     <DataTemplate DataType="model1:IFundFunded">
-                        <EdgePanel Content="Payment Schedule" ContentClasses="Size-XL BlackText" StartContent="{Icon fa-bitcoin}" />
+                        <EdgePanel Content="Payment Schedule" ContentClasses="Size-XL BlackText" StartContent="{Icon fa-bitcoin}">
+                            <EdgePanel.EndContent>
+                                <EnhancedButton Icon="{Icon fa-arrows-rotate}" Classes="Filled Orange" IconOptions.Size="16" Content="{Binding RecoverFundsLabel^, FallbackValue='Recover Funds'}"
+                                                Command="{Binding RecoverFunds}">
+                                    <EnhancedButton.IsVisible>
+                                        <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                            <Binding Path="$self.IsEffectivelyEnabled" />
+                                            <Binding Path="RecoverFunds.IsExecuting^" />
+                                        </MultiBinding>
+                                    </EnhancedButton.IsVisible>
+                                </EnhancedButton>
+                            </EdgePanel.EndContent>
+                        </EdgePanel>
                     </DataTemplate>
                 </ContentControl.DataTemplates>
             </ContentControl>
         </HeaderedContainer.Header>
         <StackPanel Classes="Gap-L">
-            <ContentControl Content="{Binding  Project}">
+            <ContentControl Content="{Binding}">
                 <ContentControl.DataTemplates>
-                    <DataTemplate DataType="investmentProject:IInvestmentProject">
+                    <DataTemplate DataType="model:IInvestmentFunded">
                         <schedule:InvestmentScheduleCard />
                     </DataTemplate>
-                    <DataTemplate DataType="fundProject:IFundProject">
+                    <DataTemplate DataType="model1:IFundFunded">
                         <schedule1:FundScheduleCard />
                     </DataTemplate>
                 </ContentControl.DataTemplates>

@@ -4,7 +4,6 @@ using Angor.Shared.Models;
 using AngorApp.UI.Flows.InvestV2;
 using AngorApp.UI.Shared.Services;
 using Zafiro.UI.Navigation;
-using Zafiro.UI.Shell.Utils;
 
 namespace AngorApp.Core.Factories;
 
@@ -46,8 +45,7 @@ public class ProjectInvestCommandFactory : IProjectInvestCommandFactory
                 return Task.FromResult(Result.Failure<Unit>("Investment is not available at this time."));
             }
 
-            return projectAppService.GetFullProject(projectId)
-                .Bind(project => navigator.Go(() => investViewModelFactory(project)));
+            return projectAppService.GetFullProject(projectId).Bind(project => navigator.Go(() => investViewModelFactory(project)));
         }, canExecute).AsResult();
         command.HandleErrorsWith(notificationService, "Investment failed");
         return command;
@@ -63,8 +61,8 @@ public class ProjectInvestCommandFactory : IProjectInvestCommandFactory
         return projectType switch
         {
             ProjectType.Invest => IsInsideInvestmentPeriod(currentTime, fundingStart, fundingEnd, isDebugMode),
-            ProjectType.Fund => currentTime >= fundingStart,
-            ProjectType.Subscribe => currentTime >= fundingStart,
+            ProjectType.Fund => true,
+            ProjectType.Subscribe => true,
             _ => false
         };
     }

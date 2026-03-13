@@ -84,7 +84,8 @@ public class FundersSectionViewModel : IFundersSectionViewModel
                          InvestorNpub =
                              investment.InvestorNostrPubKey,
                          Name = arg.prj.Name,
-                         Status = GetStatus(investment.Status)
+                         Status = GetStatus(investment.Status),
+                         EventId = investment.EventId
                      }))
                      .Map(items => items.Flatten());
 
@@ -100,7 +101,7 @@ public class FundersSectionViewModel : IFundersSectionViewModel
 
     private static string GetItemKey(IFunderItem item)
     {
-        return $"{item.ProjectId.Value}::{item.InvestorNpub}";
+        return item.EventId;
     }
 
     private FunderStatus GetStatus(InvestmentStatus investmentStatus)

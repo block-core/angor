@@ -24,6 +24,8 @@ namespace AngorApp.Model.Funded.Fund.Model
         public IEnhancedCommand<Result> ConfirmInvestment { get; } = EnhancedCommand.CreateWithResult(Result.Success);
         public IEnhancedCommand<Result> OpenChat { get; } = EnhancedCommand.CreateWithResult(Result.Success);
         public IEnhancedCommand<Result> RecoverFunds { get; } = EnhancedCommand.CreateWithResult(Result.Success);
+        public IObservable<string> RecoverFundsLabel { get; } = Observable.Return("Recover Funds");
+        public IObservable<IReadOnlyCollection<IPayment>> PaymentsWithStatus => Project.Payments;
 
         IProject IFunded.Project => Project;
         IInvestorData IFunded.InvestorData => InvestorData;

@@ -26,15 +26,15 @@ public static class CreateProjectDtoMapper
 
             ProjectType = newProject.ProjectType,
             Sats = satsValue,
-            StartDate = newProject.StartDate ?? DateTime.Now,
+            StartDate = (newProject.StartDate ?? DateTime.Now).Date,
 
-            ExpiryDate = newProject.ExpiryDate,
-            EndDate = newProject.FundingEndDate,
+            ExpiryDate = newProject.ExpiryDate?.Date,
+            EndDate = newProject.FundingEndDate?.Date,
             PenaltyDays = penaltyDaysValue,
             PenaltyThreshold = newProject.PenaltyThreshold,
             TargetAmount = new Amount(satsValue),
             Stages = newProject.Stages.Select(stage =>
-                    new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), stage.Percent ?? 0)),
+                    new CreateProjectStageDto(DateOnly.FromDateTime(stage.ReleaseDate!.Value.Date), (stage.Percent ?? 0) * 100)),
 
 
 

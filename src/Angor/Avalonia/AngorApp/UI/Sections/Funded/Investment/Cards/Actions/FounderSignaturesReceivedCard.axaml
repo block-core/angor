@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignWidth="400"
              ClipToBounds="False"
-             x:Class="AngorApp.UI.Sections.Funded.Investment.Cards.FounderSignaturesReceivedCard"
+             x:Class="AngorApp.UI.Sections.Funded.Investment.Cards.Actions.FounderSignaturesReceivedCard"
              x:DataType="sh:IFunded">
     
     <Design.DataContext>
