@@ -8,6 +8,7 @@ public class Stage(int id, DateTimeOffset releaseDate, decimal ratio, IAmountUI 
     public DateTimeOffset ReleaseDate { get; } = releaseDate;
     public decimal Ratio { get; } = ratio;
     public IAmountUI Total { get; } = total;
+    public IAmountUI Amount { get; } = total;
     public string Status { get; } = status;
 
     public static IReadOnlyCollection<IStage> MapFrom(List<StageDto> stages, long targetAmount)
@@ -22,4 +23,5 @@ public class Stage(int id, DateTimeOffset releaseDate, decimal ratio, IAmountUI 
     }
 
     public Stage WithStatus(string newStatus) => new(Id, ReleaseDate, Ratio, Total, newStatus);
+    public Stage WithTotal(IAmountUI newTotal) => new(Id, ReleaseDate, Ratio, newTotal, Status);
 }

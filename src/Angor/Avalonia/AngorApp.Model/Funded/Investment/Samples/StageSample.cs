@@ -10,5 +10,6 @@ namespace AngorApp.Model.Funded.Investment.Samples
         public decimal Ratio { get; } = 0.3m;
         public DateTimeOffset ReleaseDate { get; } = DateTimeOffset.Now;
         public IAmountUI Total { get; } = AmountUI.FromBtc(1m);
+        public IAmountUI Amount { get; } = AmountUI.FromBtc(0.3m);
     }
 }

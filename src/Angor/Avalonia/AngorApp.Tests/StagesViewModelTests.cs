@@ -1,4 +1,5 @@
 using System.Reactive;
+using System.Linq;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages;
 using AngorApp.UI.Shared.Services;
@@ -40,6 +41,25 @@ namespace AngorApp.Tests
             sut.RemoveStage.Execute(stage).Subscribe();
 
             newProject.Stages.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void GenerateStages_uses_whole_percentages_that_sum_to_100()
+        {
+            using InvestmentProjectConfig newProject = new()
+            {
+                FundingEndDate = DateTime.Today,
+            };
+            StagesViewModel sut = new(newProject)
+            {
+                DurationValue = 3,
+                DurationUnit = TimeSpan.FromDays(30),
+                ReleaseFrequency = TimeSpan.FromDays(30)
+            };
+
+            sut.GenerateStages.Execute(Unit.Default).Subscribe();
+
+            newProject.Stages.Select(stage => stage.Percent).Should().Equal(0.33m, 0.33m, 0.34m);
         }
     }
 }

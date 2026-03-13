@@ -187,6 +187,26 @@ namespace AngorApp.Tests
         }
 
         [Fact]
+        public async Task Validation_fails_when_stage_percent_is_not_whole_number()
+        {
+            using InvestmentProjectConfig sut = new()
+            {
+                Name = "My project",
+                Description = "My description",
+                TargetAmount = new MutableAmountUI { Sats = 100000 },
+                PenaltyDays = 10,
+                FundingEndDate = DateTime.Today.AddDays(1),
+                StartDate = DateTime.Today
+            };
+            AddStage(sut, 0.335m).ReleaseDate = DateTime.Today.AddDays(10);
+            AddStage(sut, 0.335m).ReleaseDate = DateTime.Today.AddDays(20);
+            AddStage(sut, 0.33m).ReleaseDate = DateTime.Today.AddDays(30);
+
+            bool isValid = await sut.IsValid().FirstAsync();
+            isValid.Should().BeFalse();
+        }
+
+        [Fact]
         public async Task Validation_fails_when_TargetAmount_invalid()
         {
             using InvestmentProjectConfig sut = new()

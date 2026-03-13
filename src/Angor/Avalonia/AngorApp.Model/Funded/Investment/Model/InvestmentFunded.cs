@@ -43,11 +43,22 @@ namespace AngorApp.Model.Funded.Investment.Model
 
             return stages.Select(stage =>
             {
-                if (itemsByIndex.TryGetValue(stage.Id, out var item) && !string.IsNullOrEmpty(item.Status))
+                var updatedStage = stage;
+
+                if (itemsByIndex.TryGetValue(stage.Id, out var item))
                 {
-                    return stage is Stage s ? s.WithStatus(item.Status) : stage;
+                    if (stage is Stage s)
+                    {
+                        updatedStage = s.WithTotal(new AmountUI(item.Amount));
+
+                        if (!string.IsNullOrEmpty(item.Status))
+                        {
+                            updatedStage = ((Stage)updatedStage).WithStatus(item.Status);
+                        }
+                    }
                 }
-                return stage;
+
+                return updatedStage;
             }).ToList();
         }
     }

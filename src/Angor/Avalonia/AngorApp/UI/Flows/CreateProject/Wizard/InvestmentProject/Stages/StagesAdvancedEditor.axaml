@@ -106,10 +106,11 @@
                                 </Border>
                                 <HeaderedContainer Grid.Row="0" Grid.Column="1" Header="Percentage">
                                     <NumericUpDown Value="{Binding Percent, Mode=TwoWay, Converter={x:Static controls:AngorConverters.RatioToPercentage}}"
-                                                   FormatString="0.##"
-                                                   Minimum="0"
-                                                   VerticalAlignment="Top"
-                                                   Maximum="100">
+                                                    FormatString="0"
+                                                    Increment="1"
+                                                    Minimum="0"
+                                                    VerticalAlignment="Top"
+                                                    Maximum="100">
                                         <NumericUpDown.InnerRightContent>
                                             <TextBlock Padding="0 0 10 0">%</TextBlock>
                                         </NumericUpDown.InnerRightContent>

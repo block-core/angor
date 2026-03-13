@@ -11,6 +11,7 @@ using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 using Stage = Angor.Shared.Models.Stage;
 using Angor.Sdk.Funding.Projects.Dtos;
 
@@ -81,6 +82,12 @@ public static class CreateProjectInfo
             {
                 case ProjectType.Invest:
                     {
+                        var totalPercentage = project.Stages.Sum(stage => stage.PercentageOfTotal);
+                        if (totalPercentage != 100m)
+                        {
+                            return Result.Failure<string>("Invest project stages must total 100%.");
+                        }
+
                         projectInfo.EndDate = project.EndDate ?? throw new InvalidOperationException("End date is required for Invest projects");
                         projectInfo.ExpiryDate = project.ExpiryDate ?? project.Stages.OrderByDescending(x => x.startDate).First().startDate.AddMonths(2).ToDateTime(TimeOnly.MinValue);
                         projectInfo.PenaltyDays = project.PenaltyDays;
