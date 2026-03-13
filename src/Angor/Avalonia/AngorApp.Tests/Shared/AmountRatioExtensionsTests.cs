@@ -35,6 +35,15 @@ namespace AngorApp.Tests.Shared
         }
 
         [Fact]
+        public void RatioOrZero_should_return_zero_when_numerator_is_null()
+        {
+            IAmountUI? raised = null;
+            IAmountUI? target = new AmountUI(100_000_000);
+
+            raised.RatioOrZero(target).Should().Be(0m);
+        }
+        
+        [Fact]
         public void RatioOrZeroAsDouble_should_return_zero_when_denominator_is_zero()
         {
             IAmountUI? raised = new AmountUI(50_000_000);
