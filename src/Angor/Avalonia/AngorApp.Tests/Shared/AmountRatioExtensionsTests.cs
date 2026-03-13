@@ -51,5 +51,14 @@ namespace AngorApp.Tests.Shared
 
             raised.RatioOrZeroAsDouble(target).Should().Be(0d);
         }
+
+        [Fact]
+        public void RatioOrZeroAsDouble_should_return_expected_ratio_when_denominator_is_valid()
+        {
+            IAmountUI? raised = new AmountUI(25_000_000);
+            IAmountUI? target = new AmountUI(100_000_000);
+
+            raised.RatioOrZeroAsDouble(target).Should().Be(0.25d);
+        }
     }
 }
