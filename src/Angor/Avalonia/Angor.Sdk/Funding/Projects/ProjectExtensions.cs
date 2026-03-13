@@ -65,6 +65,7 @@ public static class ProjectExtensions
             TargetAmount = project.TargetAmount,
    
             // Stages (for Invest projects)
+            // AmountToRelease is in 0-100 percentage range; RatioOfTotal is 0-1 ratio
             Stages = project.Stages.Select(stage => new Stage
             {
                 ReleaseDate = stage.ReleaseDate,

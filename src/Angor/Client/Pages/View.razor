@@ -1100,12 +1100,9 @@
         NavigationManager.NavigateTo($"/recover/{ProjectId}");
     }
 
-    private async Task InvestInProject()
+    private void InvestInProject()
     {
-        if (hasWallet)
-            NavigationManager.NavigateTo($"/invest/{ProjectId}");
-        else
-            notificationComponent.ShowNotificationMessage("You must create a wallet if you want to invest");
+        NavigationManager.NavigateTo($"/investview/{ProjectId}");
     }
 
 

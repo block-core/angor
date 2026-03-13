@@ -1,11 +1,11 @@
 using System.Text.Json;
-using Angor.Sdk.Integration.Lightning.Models;
 using Angor.Shared;
+using Angor.Shared.Integration.Lightning.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 
-namespace Angor.Sdk.Integration.Lightning;
+namespace Angor.Shared.Integration.Lightning;
 
 /// <summary>
 /// Service for claiming funds from Boltz reverse submarine swaps.
@@ -65,6 +65,7 @@ public class BoltzClaimService : IBoltzClaimService
 
             // STEP 1: Try cooperative claiming via Boltz API using MuSig2
             _logger.LogInformation("Attempting cooperative MuSig2 claim via Boltz API...");
+            string? cooperativeError = null;
             try
             {
                 var cooperativeResult = await CooperativeMusig2Claim(
@@ -76,19 +77,29 @@ public class BoltzClaimService : IBoltzClaimService
                     return cooperativeResult;
                 }
                 
+                cooperativeError = cooperativeResult.Error;
                 _logger.LogWarning("Cooperative MuSig2 claim failed: {Error}. Will try script path...", 
                     cooperativeResult.Error);
             }
             catch (Exception ex)
             {
+                cooperativeError = ex.Message;
                 _logger.LogWarning(ex, "Cooperative MuSig2 claim threw exception. Will try script path...");
             }
 
             // STEP 2: Manual claiming - build and broadcast our own transaction
             _logger.LogInformation("Proceeding with manual claim transaction (Taproot script path spend)...");
             
-            return await BuildAndBroadcastClaimTransaction(
+            var scriptPathResult = await BuildAndBroadcastClaimTransaction(
                 swap, claimPrivateKeyHex, lockupTransactionHex, lockupOutputIndex, feeRate, preimageBytes);
+            
+            if (scriptPathResult.IsFailure && cooperativeError != null)
+            {
+                return Result.Failure<BoltzClaimResult>(
+                    $"Cooperative claim failed: {cooperativeError}. Script path also failed: {scriptPathResult.Error}");
+            }
+            
+            return scriptPathResult;
         }
         catch (Exception ex)
         {
@@ -176,7 +187,7 @@ public class BoltzClaimService : IBoltzClaimService
         
         // Parse the swap tree
         var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        var swapTree = JsonSerializer.Deserialize<SwapTreeDto>(swap.SwapTree, jsonOptions);
+        var swapTree = JsonSerializer.Deserialize<SwapTreeResponse>(swap.SwapTree, jsonOptions);
         
         if (swapTree?.ClaimLeaf?.Output == null || swapTree?.RefundLeaf?.Output == null)
         {
@@ -284,12 +295,21 @@ public class BoltzClaimService : IBoltzClaimService
         if (broadcastResult.IsFailure)
         {
             _logger.LogWarning("Boltz broadcast failed: {Error}. Trying indexer...", broadcastResult.Error);
-            var indexerError = await _indexerService.PublishTransactionAsync(signedTxHex);
-            
-            if (!string.IsNullOrEmpty(indexerError))
+            try
             {
+                var indexerError = await _indexerService.PublishTransactionAsync(signedTxHex);
+                
+                if (!string.IsNullOrEmpty(indexerError))
+                {
+                    return Result.Failure<BoltzClaimResult>(
+                        $"Failed to broadcast: Boltz: {broadcastResult.Error}, Indexer: {indexerError}");
+                }
+            }
+            catch (Exception broadcastEx)
+            {
+                _logger.LogError(broadcastEx, "Indexer broadcast also failed for cooperative claim");
                 return Result.Failure<BoltzClaimResult>(
-                    $"Failed to broadcast: Boltz: {broadcastResult.Error}, Indexer: {indexerError}");
+                    $"Failed to broadcast: Boltz: {broadcastResult.Error}, Indexer: {broadcastEx.Message}");
             }
         }
         
@@ -333,7 +353,7 @@ public class BoltzClaimService : IBoltzClaimService
             }
 
             var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var swapTree = JsonSerializer.Deserialize<SwapTreeDto>(swap.SwapTree, jsonOptions);
+            var swapTree = JsonSerializer.Deserialize<SwapTreeResponse>(swap.SwapTree, jsonOptions);
             
             if (swapTree?.ClaimLeaf?.Output == null)
             {
@@ -439,14 +459,23 @@ public class BoltzClaimService : IBoltzClaimService
             if (broadcastResult.IsFailure)
             {
                 _logger.LogWarning("Boltz broadcast failed: {Error}. Trying indexer...", broadcastResult.Error);
-                var indexerError = await _indexerService.PublishTransactionAsync(signedClaimHex);
-                
-                if (!string.IsNullOrEmpty(indexerError))
+                try
                 {
-                    return Result.Failure<BoltzClaimResult>(
-                        $"Failed to broadcast via Boltz: {broadcastResult.Error}. Indexer: {indexerError}");
+                    var indexerError = await _indexerService.PublishTransactionAsync(signedClaimHex);
+                    
+                    if (!string.IsNullOrEmpty(indexerError))
+                    {
+                        return Result.Failure<BoltzClaimResult>(
+                            $"Failed to broadcast via Boltz: {broadcastResult.Error}. Indexer: {indexerError}");
+                    }
+                    _logger.LogInformation("Transaction broadcast successfully via indexer");
                 }
-                _logger.LogInformation("Transaction broadcast successfully via indexer");
+                catch (Exception broadcastEx)
+                {
+                    _logger.LogError(broadcastEx, "Indexer broadcast also failed for swap {SwapId}", swap.Id);
+                    return Result.Failure<BoltzClaimResult>(
+                        $"Failed to broadcast via Boltz: {broadcastResult.Error}. Indexer: {broadcastEx.Message}");
+                }
             }
             else
             {
@@ -509,7 +538,7 @@ public class BoltzClaimService : IBoltzClaimService
     }
 
     private (byte[] ControlBlock, string ComputedAddress) BuildControlBlockWithVerification(
-        SwapTreeDto swapTree, 
+        SwapTreeResponse swapTree, 
         NBitcoin.Script claimScript, 
         string claimPublicKeyHex, 
         string refundPublicKeyHex,
@@ -522,14 +551,12 @@ public class BoltzClaimService : IBoltzClaimService
         
         try
         {
-            var claimPubKeyBytes = Convert.FromHexString(claimPublicKeyHex.Length == 66 
-                ? claimPublicKeyHex.Substring(2)
-                : claimPublicKeyHex);
-            var refundPubKeyBytes = Convert.FromHexString(refundPublicKeyHex.Length == 66 
-                ? refundPublicKeyHex.Substring(2)
-                : refundPublicKeyHex);
+            // Use compressed keys (33 bytes) to preserve actual parity
+            var claimPubKeyBytes = Convert.FromHexString(claimPublicKeyHex);
+            var refundPubKeyBytes = Convert.FromHexString(refundPublicKeyHex);
             
-            var aggregateXOnly = BoltzMusig2.KeyAggSorted(claimPubKeyBytes, refundPubKeyBytes);
+            // Boltz convention: aggregate in fixed order [refundKey, claimKey] (NOT sorted)
+            var aggregateXOnly = BoltzMusig2.KeyAgg(refundPubKeyBytes, claimPubKeyBytes);
             internalKey = new NBitcoin.TaprootInternalPubKey(aggregateXOnly);
         }
         catch (Exception ex)
@@ -599,23 +626,4 @@ public class BoltzClaimService : IBoltzClaimService
         return a.Length.CompareTo(b.Length);
     }
 
-    // DTO for deserializing the swap tree
-    private class SwapTreeDto
-    {
-        [System.Text.Json.Serialization.JsonPropertyName("claimLeaf")]
-        public SwapLeafDto? ClaimLeaf { get; set; }
-        
-        [System.Text.Json.Serialization.JsonPropertyName("refundLeaf")]
-        public SwapLeafDto? RefundLeaf { get; set; }
-    }
-
-    private class SwapLeafDto
-    {
-        [System.Text.Json.Serialization.JsonPropertyName("version")]
-        public int Version { get; set; }
-        
-        [System.Text.Json.Serialization.JsonPropertyName("output")]
-        public string Output { get; set; } = string.Empty;
-    }
 }
-

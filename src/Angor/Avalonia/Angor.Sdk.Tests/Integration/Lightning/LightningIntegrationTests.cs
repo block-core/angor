@@ -6,7 +6,8 @@ using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Integration.Lightning;
-using Angor.Sdk.Integration.Lightning.Models;
+using Angor.Shared.Integration.Lightning;
+using Angor.Shared.Integration.Lightning.Models;
 using Angor.Sdk.Tests.Funding.TestDoubles;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Shared;
@@ -47,7 +48,7 @@ public class BoltzSwapIntegrationTests : IDisposable
     private const string TestWalletWords = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     private const string TestWalletPassphrase = "";
     private const string TestProjectId = "test-project-id";
-    private const string BoltzApiUrl = "http://localhost:9001/";
+    private const string BoltzApiUrl = "https://boltz.thedude.cloud/";
     private const bool UseV2Prefix = true;
 
     public BoltzSwapIntegrationTests(ITestOutputHelper output)
@@ -95,13 +96,13 @@ public class BoltzSwapIntegrationTests : IDisposable
             _httpClient,
             boltzConfig,
             _networkConfiguration,
-            new NullLogger<BoltzSwapService>());
+            new XunitLogger<BoltzSwapService>(output));
 
         _boltzClaimService = new BoltzClaimService(
             _boltzSwapService,
             _indexerService,
             _networkConfiguration,
-            new NullLogger<BoltzClaimService>());
+            new XunitLogger<BoltzClaimService>(output));
 
         _boltzWebSocketClient = new BoltzWebSocketClient(
             boltzConfig,
@@ -134,7 +135,8 @@ public class BoltzSwapIntegrationTests : IDisposable
         (_boltzWebSocketClient as IAsyncDisposable)?.DisposeAsync().AsTask().Wait();
     }
 
-    [Fact(Skip = "Integration test - requires boltz local server. Run manually.")]
+    //[Fact(Skip = "Integration test - requires boltz local server. Run manually.")]
+    [Fact]
     public async Task FullReverseSwapFlow_CreatePayAndMonitor_Success()
     {
         _output.WriteLine(new string('=', 80));
