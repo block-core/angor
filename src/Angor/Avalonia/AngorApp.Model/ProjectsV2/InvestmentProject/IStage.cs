@@ -7,6 +7,6 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
         public decimal Ratio { get; }
         public DateTimeOffset ReleaseDate { get; }
         public IAmountUI Total { get; }
-        public IAmountUI Amount => new AmountUI((long)(Ratio * Total.Sats));
+        public IAmountUI Amount { get; }
     }
 }

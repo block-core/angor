@@ -35,6 +35,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
                 arg => $"Date must be {arg.minDate.Date:d} or later").DisposeWith(disposable);
 
             this.ValidationRule(x => x.Percent, x => x != null, "Percent is required").DisposeWith(disposable);
+            this.ValidationRule(x => x.Percent, x => x is null || decimal.Truncate(x.Value * 100m) == x.Value * 100m, "Percent must be a whole number").DisposeWith(disposable);
         }
 
         private decimal? percent;

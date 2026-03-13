@@ -73,7 +73,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages
             ClearStagesInternal();
 
             var stageCount = CalculateStageCount(totalDuration, frequency);
-            var percent = (decimal)1 / stageCount;
+            var stagePercents = GetStagePercents(stageCount);
 
             for (var i = 1; i <= stageCount; i++)
             {
@@ -84,7 +84,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages
                 }
 
                 var releaseDate = startDate.AddTicks(offsetTicks);
-                NewProject.CreateAndAddStage(percent, releaseDate);
+                NewProject.CreateAndAddStage(stagePercents[i - 1], releaseDate);
             }
         }
 
@@ -129,6 +129,22 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages
         {
             var count = (int)Math.Ceiling(totalDuration.Ticks / (double)frequency.Ticks);
             return Math.Max(1, count);
+        }
+
+        private static decimal[] GetStagePercents(int stageCount)
+        {
+            var basePercent = 100 / stageCount;
+            var remainder = 100 % stageCount;
+            var percents = new decimal[stageCount];
+
+            for (var i = 0; i < stageCount; i++)
+            {
+                // Example: 3 stages become 33%, 33%, 34% so the total stays at 100%.
+                var wholePercent = basePercent + (i >= stageCount - remainder ? 1 : 0);
+                percents[i] = wholePercent / 100m;
+            }
+
+            return percents;
         }
 
         private void DoClearStages()

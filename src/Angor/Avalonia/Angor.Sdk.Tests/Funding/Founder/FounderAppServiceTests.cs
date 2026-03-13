@@ -1,12 +1,15 @@
 using Angor.Data.Documents.Interfaces;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Tests.Shared;
+using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
+using Blockcore.NBitcoin;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -26,6 +29,9 @@ public class FounderAppServiceTests : IClassFixture<TestNetworkFixture>
     private readonly Mock<IAngorIndexerService> _mockAngorIndexerService;
     private readonly Mock<IInvestmentHandshakeService> _mockInvestmentHandshakeService;
     private readonly Mock<IGenericDocumentCollection<DerivedProjectKeys>> _mockDerivedProjectKeysCollection;
+    private readonly Mock<ISeedwordsProvider> _mockSeedwordsProvider;
+    private readonly Mock<IDerivationOperations> _mockDerivationOperations;
+    private readonly Mock<IRelayService> _mockRelayService;
 
     public FounderAppServiceTests(TestNetworkFixture fixture)
     {
@@ -34,6 +40,9 @@ public class FounderAppServiceTests : IClassFixture<TestNetworkFixture>
         _mockAngorIndexerService = new Mock<IAngorIndexerService>();
         _mockInvestmentHandshakeService = new Mock<IInvestmentHandshakeService>();
         _mockDerivedProjectKeysCollection = new Mock<IGenericDocumentCollection<DerivedProjectKeys>>();
+        _mockSeedwordsProvider = new Mock<ISeedwordsProvider>();
+        _mockDerivationOperations = new Mock<IDerivationOperations>();
+        _mockRelayService = new Mock<IRelayService>();
     }
 
     #region GetProjectInvestmentsHandler Tests
@@ -242,4 +251,58 @@ public class FounderAppServiceTests : IClassFixture<TestNetworkFixture>
     }
 
     #endregion
+
+    [Fact]
+    public async Task CreateProjectInfoHandler_WhenInvestStagePercentagesDoNotTotal100_ReturnsFailure()
+    {
+        var walletId = new WalletId(Guid.NewGuid().ToString());
+        var founderKeys = new ProjectSeedDto("founder", "recovery", "nostr-pub", "project-id");
+        var project = new CreateProjectDto
+        {
+            ProjectName = "Test Project",
+            Description = "Test description",
+            AvatarUri = "https://example.com/avatar.png",
+            BannerUri = "https://example.com/banner.png",
+            ProjectType = ProjectType.Invest,
+            Sats = 100_000,
+            StartDate = DateTime.Today,
+            EndDate = DateTime.Today.AddDays(10),
+            ExpiryDate = DateTime.Today.AddDays(40),
+            TargetAmount = new Amount(100_000),
+            PenaltyDays = 10,
+            PenaltyThreshold = 0,
+            Stages =
+            [
+                new CreateProjectStageDto(DateOnly.FromDateTime(DateTime.Today.AddDays(15)), 33),
+                new CreateProjectStageDto(DateOnly.FromDateTime(DateTime.Today.AddDays(30)), 33),
+                new CreateProjectStageDto(DateOnly.FromDateTime(DateTime.Today.AddDays(45)), 33)
+            ],
+            SelectedPatterns = null,
+            PayoutDay = null
+        };
+
+        _mockSeedwordsProvider
+            .Setup(x => x.GetSensitiveData(walletId.Value))
+            .ReturnsAsync(Result.Success((TestNetworkFixture.AlternateWalletWords, Maybe<string>.None)));
+
+        _mockDerivationOperations
+            .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), founderKeys.FounderKey))
+            .ReturnsAsync(new Key());
+
+        var handler = new CreateProjectInfo.CreateProjectInfoHandler(
+            _mockSeedwordsProvider.Object,
+            _mockDerivationOperations.Object,
+            _mockRelayService.Object,
+            _mockAngorIndexerService.Object,
+            _mockDerivedProjectKeysCollection.Object,
+            NullLogger<CreateProjectInfo.CreateProjectInfoHandler>.Instance);
+
+        var request = new CreateProjectInfo.CreateProjectInfoRequest(walletId, project, founderKeys);
+
+        var result = await handler.Handle(request, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Contain("100%");
+        _mockRelayService.Verify(x => x.AddProjectAsync(It.IsAny<ProjectInfo>(), It.IsAny<string>(), It.IsAny<Action<Nostr.Client.Responses.NostrOkResponse>>()), Times.Never);
+    }
 }

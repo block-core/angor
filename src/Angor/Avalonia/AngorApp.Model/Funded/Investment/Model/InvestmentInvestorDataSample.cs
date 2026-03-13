@@ -23,6 +23,6 @@ namespace AngorApp.Model.Funded.Investment.Model
         public string ProjectId { get; }
         public IObservable<InvestmentStatus> Status { get; set; }
         public IObservable<RecoveryState> Recovery { get; }
-        public IObservable<IReadOnlyList<InvestorStageItemDto>> StageItems { get; } = Observable.Return<IReadOnlyList<InvestorStageItemDto>>(new List<InvestorStageItemDto>());
+        public IObservable<IReadOnlyList<InvestorStageItemDto>> StageItems { get; set; } = Observable.Return<IReadOnlyList<InvestorStageItemDto>>(new List<InvestorStageItemDto>());
     }
 }

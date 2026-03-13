@@ -58,6 +58,11 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
                 .ToCollection()
                 .Select(items => items.Sum(x => x.Percent ?? 0));
 
+            var areStagePercentsWholeNumbers = StagesSource.Connect()
+                .AutoRefresh(x => x.Percent)
+                .ToCollection()
+                .Select(items => items.All(stage => !stage.Percent.HasValue || decimal.Truncate(stage.Percent.Value * 100m) == stage.Percent.Value * 100m));
+
 
             this.ValidationRule(x => x.Name, x => !string.IsNullOrWhiteSpace(x), "Project name is required.").DisposeWith(Disposables);
             this.ValidationRule(x => x.Description, x => !string.IsNullOrWhiteSpace(x), "Project description is required.").DisposeWith(Disposables);
@@ -65,6 +70,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
 
             var isTotalPercentValid = totalPercent.Select(percent => Math.Abs(percent - 1.0m) < 0.0001m);
             this.ValidationRule(x => x.Stages, isTotalPercentValid, "Total percentage must be 100%");
+            this.ValidationRule(x => x.Stages, areStagePercentsWholeNumbers, "Stage percentages must be whole numbers").DisposeWith(Disposables);
 
 
             this.ValidationRule(
