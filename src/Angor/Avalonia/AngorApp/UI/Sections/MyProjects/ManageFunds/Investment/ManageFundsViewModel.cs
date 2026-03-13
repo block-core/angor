@@ -1,6 +1,6 @@
 using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
-using Angor.Sdk.Funding.Projects.Dtos;
 using AngorApp.Model.ProjectsV2.InvestmentProject;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Header;
@@ -24,13 +24,32 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment
 
             loadProjectStats.HandleErrorsWith(uiServices.NotificationService, "Cannot load project");
 
-            IObservable<ProjectStatisticsDto> projectStatsObs = loadProjectStats.Successes()
-                .StartWith(new ProjectStatisticsDto());
+            IObservable<int> releasableCountObs = loadProjectStats.Successes()
+                .SelectMany(async _ =>
+                {
+                    try
+                    {
+                        var walletResult = await walletContext.Require();
+                        if (walletResult.IsFailure)
+                            return 0;
+
+                        var result = await founderAppService.GetReleasableTransactions(
+                            new GetReleasableTransactions.GetReleasableTransactionsRequest(walletResult.Value.Id, project.Id));
+
+                        return result.IsSuccess ? result.Value.Transactions.Count(t => t.Released is null) : 0;
+                    }
+                    catch (Exception)
+                    {
+                        // Prevent observable from terminating on transient errors; button state falls back to 0 (no releases needed)
+                        return 0;
+                    }
+                })
+                .StartWith(0);
 
             Header = Observable.Return(new HeaderViewModel(project, loadProjectStats));
             ReleaseViewModel = Observable.Return(new ReleaseViewModel(
                 project,
-                projectStatsObs.Select(stats => stats.AvailableTransactions),
+                releasableCountObs,
                 uiServices,
                 founderAppService,
                 walletContext));
