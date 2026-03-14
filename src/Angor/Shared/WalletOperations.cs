@@ -473,13 +473,38 @@ public class WalletOperations : IWalletOperations
         
         var rootExtPubKeyHash = Convert.ToHexString(Hashes.SHA256(rootExtPubKey.ToBytes()));
 
+        // Compute the 4-byte master fingerprint: first 4 bytes of HASH160(master pubkey).
+        var masterFingerprint = ComputeMasterFingerprint(rootExtPubKey.PubKey.ToBytes());
+
+        var accountExtPubKeyStr = accountExtPubKeyTostore.ToString(network);
+        var (receiveDescriptor, changeDescriptor) = StandardWalletDescriptors.Build(
+            accountExtPubKeyStr,
+            masterFingerprint,
+            coinType,
+            Purpose,
+            AccountIndex);
+
         return new AccountInfo()
         {
             walletId = rootExtPubKeyHash,
             RootExtPubKey = rootExtPubKey.ToString(network),
-            ExtPubKey = accountExtPubKeyTostore.ToString(network),
-            Path = accountHdPath
+            ExtPubKey = accountExtPubKeyStr,
+            Path = accountHdPath,
+            MasterFingerprint = masterFingerprint,
+            ReceiveDescriptor = receiveDescriptor,
+            ChangeDescriptor = changeDescriptor,
         };
+    }
+
+    /// <summary>
+    /// Computes the 4-byte master key fingerprint used in BIP-32 descriptor origin blocks.
+    /// Fingerprint = first 4 bytes of HASH160 (RIPEMD160(SHA256(pubkey))).
+    /// </summary>
+    private static string ComputeMasterFingerprint(byte[] compressedPubKeyBytes)
+    {
+        // Use NBitcoin's Hashes (imported via "using NBitcoin.Crypto") which exposes Hash160.
+        var hash160 = Hashes.Hash160(compressedPubKeyBytes);
+        return Convert.ToHexString(hash160.ToBytes()[..4]).ToLowerInvariant();
     }
 
     public async Task UpdateDataForExistingAddressesAsync(AccountInfo accountInfo)
@@ -546,8 +571,23 @@ public class WalletOperations : IWalletOperations
         Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
         Network network = _networkConfiguration.GetNetwork();
-        
-        var (index, items) = await FetchAddressesDataForPubKeyAsync(accountInfo.LastFetchIndex, accountInfo.ExtPubKey, network, false);
+
+        // Migrate legacy AccountInfo records that do not yet have descriptors.
+        // For existing wallets this is a no-op after the first call; for brand new
+        // wallets the descriptors are already set by BuildAccountInfoForWalletWords.
+        StandardWalletDescriptors.TryMigrate(accountInfo, network.Consensus.CoinType);
+
+        // Derive the xpub to scan from the receive/change descriptors when available,
+        // falling back to the raw ExtPubKey for legacy records that could not be migrated.
+        var receiveXPub = !string.IsNullOrEmpty(accountInfo.ReceiveDescriptor)
+            ? StandardWalletDescriptors.ExtractXPub(accountInfo.ReceiveDescriptor)
+            : accountInfo.ExtPubKey;
+
+        var changeXPub = !string.IsNullOrEmpty(accountInfo.ChangeDescriptor)
+            ? StandardWalletDescriptors.ExtractXPub(accountInfo.ChangeDescriptor)
+            : accountInfo.ExtPubKey;
+
+        var (index, items) = await FetchAddressesDataForPubKeyAsync(accountInfo.LastFetchIndex, receiveXPub, network, false);
 
         accountInfo.LastFetchIndex = index;
         foreach (var addressInfoToAdd in items)
@@ -564,7 +604,7 @@ public class WalletOperations : IWalletOperations
             accountInfo.AddressesInfo.Add(addressInfoToAdd);
         }
 
-        var (changeIndex, changeItems) = await FetchAddressesDataForPubKeyAsync(accountInfo.LastFetchChangeIndex, accountInfo.ExtPubKey, network, true);
+        var (changeIndex, changeItems) = await FetchAddressesDataForPubKeyAsync(accountInfo.LastFetchChangeIndex, changeXPub, network, true);
 
         accountInfo.LastFetchChangeIndex = changeIndex;
         foreach (var changeAddressInfoToAdd in changeItems)
