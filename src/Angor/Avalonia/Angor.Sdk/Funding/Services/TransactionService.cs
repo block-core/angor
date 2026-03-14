@@ -23,7 +23,7 @@ public class TransactionService(IGenericDocumentCollection<QueryTransaction> que
         if (hexDocumentResult.Value is null && !string.IsNullOrEmpty(transactionHex))
         {
             // store the hex for future use
-            var insertResult = await trxHexCollection.InsertAsync(
+            var upsertResult = await trxHexCollection.UpsertAsync(
                 x => x.Id
                 , new TransactionHexDocument
                 {
@@ -31,7 +31,7 @@ public class TransactionService(IGenericDocumentCollection<QueryTransaction> que
                     Hex = transactionHex
                 });
 
-            //TODO log the insert result?
+            //TODO log the upsert result?
         }
 
         return transactionHex;
@@ -42,7 +42,7 @@ public class TransactionService(IGenericDocumentCollection<QueryTransaction> que
         if (string.IsNullOrEmpty(transactionId) || string.IsNullOrEmpty(transactionHex))
             return Task.CompletedTask;
 
-        return trxHexCollection.InsertAsync(x => x.Id,
+        return trxHexCollection.UpsertAsync(x => x.Id,
             new TransactionHexDocument { Id = transactionId, Hex = transactionHex });
     }
 
@@ -57,8 +57,8 @@ public class TransactionService(IGenericDocumentCollection<QueryTransaction> que
             trxInfo = await indexerService.GetTransactionInfoByIdAsync(transactionId);
             if (trxInfo is not null)
             {
-                var insertResult = await queryTransactionCollection
-                    .InsertAsync(x => x.TransactionId, trxInfo);
+                var upsertResult = await queryTransactionCollection
+                    .UpsertAsync(x => x.TransactionId, trxInfo);
             }
         }
         else if (trxInfo.Confirmations == 0 || trxInfo.Outputs.Any(IsUnspent))
@@ -81,6 +81,6 @@ public class TransactionService(IGenericDocumentCollection<QueryTransaction> que
 
     public Task SaveQueryTransactionAsync(QueryTransaction document)
     {
-        return queryTransactionCollection.InsertAsync(x => x.TransactionId, document);
+        return queryTransactionCollection.UpsertAsync(x => x.TransactionId, document);
     }
 }
