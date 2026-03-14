@@ -6,6 +6,16 @@ public class AccountInfo
     public string ExtPubKey { get; init; }
     public string RootExtPubKey { get; init; }
     public string Path { get; init; }
+
+    // ── Descriptor fields (Phase 1: wpkh only) ──────────────────────────────
+    // Receive (external/branch-0) descriptor: wpkh([fingerprint/84h/…]xpub/0/*)
+    public string? ReceiveDescriptor { get; set; }
+    // Change (internal/branch-1) descriptor: wpkh([fingerprint/84h/…]xpub/1/*)
+    public string? ChangeDescriptor { get; set; }
+    // 4-byte master key fingerprint as lower-case hex, e.g. "aabbccdd" (optional).
+    public string? MasterFingerprint { get; set; }
+    // ────────────────────────────────────────────────────────────────────────
+
     public int LastFetchIndex { get; set; }
     public int LastFetchChangeIndex { get; set; }
     public List<AddressInfo> AddressesInfo { get; set; } = new();
