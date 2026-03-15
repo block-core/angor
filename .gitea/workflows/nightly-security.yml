@@ -1,0 +1,39 @@
+name: Nightly Security Review
+on:
+  schedule:
+    - cron: '37 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  security-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run security review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1..HEAD 2>/dev/null || echo "")
+          if [ -z "$CHANGED" ]; then
+            echo "No recent changes to review"
+            exit 0
+          fi
+
+          claude --print "Run a security review on these recently changed files in the Angor C#/Avalonia project:
+          $CHANGED
+
+          Check for:
+          - Bitcoin amount handling (must use long/decimal, never float/double)
+          - Private key exposure in logs, error messages, or UI
+          - Missing input validation on transaction parameters
+          - Hardcoded credentials or API keys
+          - Unsafe deserialization
+          - Missing null checks on blockchain data
+
+          Output a structured report." > security-report.txt 2>&1
+
+          cat security-report.txt

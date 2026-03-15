@@ -1,0 +1,32 @@
+name: Weekly Dependency Audit
+on:
+  schedule:
+    - cron: '23 2 * * 0'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: .NET dependency audit
+        run: |
+          echo "=== Dotnet List Vulnerable Packages ==="
+          dotnet list package --vulnerable 2>&1 | tee dotnet-audit.txt || true
+
+          echo ""
+          echo "=== Outdated Packages ==="
+          dotnet list package --outdated 2>&1 | head -30 || true
+
+      - name: Check for critical vulnerabilities
+        run: |
+          if grep -qi "critical\|high" dotnet-audit.txt 2>/dev/null; then
+            echo "::warning::Dependency vulnerabilities found — review dotnet-audit.txt"
+          fi
+          echo "Audit complete"
