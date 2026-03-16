@@ -4,7 +4,7 @@ This guide will show you how to deploy Angor services, to allow users to self-ho
 
 ## Table of Contents
 - [Overview](#overview)
-- [Deploy a Proxy Server](#deploy-a-proxy-server)
+- [Deploy Explorers and Indexers](#deploy-explorers-and-indexers)
 - [Deploy The Angor Application](#deploy-the-angor-application)
 - [Deploy The Angor Hub](#deploy-the-angor-hub)
 - [Creating Your Own Custom Signet](#creating-your-own-custom-signet)
@@ -19,9 +19,14 @@ Angor services can be deployed using Docker Compose, enabling users to run the s
 - **Explorers and Blockchain Indexers**: Host specialized indexers required by Angor (future updates may remove this dependency for the web app).
 - **Nostr Relays**: Ideal for project founders who want to host relays themselves to serve their community and investors.
 
-## Deploy a Proxy Server
+## Deploy Explorers and Indexers
 
-To deploy a proxy server, follow the instructions in the [Proxy Server README](/proxy/readme.md).
+Docker Compose files for running blockchain explorers and indexers are in the `explorers/` directory:
+
+- **`explorers/mainnet/`** — Mainnet explorer stack (mempool backend + frontend + MariaDB). Connects to a Bitcoin Core node and Fulcrum running natively on the host.
+- **`explorers/angornet/`** — Angor testnet (signet) explorer stack (custom signet node + Fulcrum + mempool backend + frontend + MariaDB). Self-contained, syncs from the Angor signet peer.
+
+TLS termination is handled externally via FRP reverse proxy and Caddy. See the [deploy-proxy-frp](https://github.com/block-core/deploy-proxy-frp) repo for the reverse proxy setup.
 
 ## Deploy The Angor Application
 
