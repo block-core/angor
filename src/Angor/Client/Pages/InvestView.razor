@@ -1658,7 +1658,22 @@
             var claimPubKey = _derivationOperations.DeriveInvestorKey(words, project!.ProjectInfo.FounderKey);
 
             // Calculate the required on-chain amount in sats
-            var requiredSats = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+            // Must include: investment amount + Angor fee + estimated miner fee
+            // so the Lightning invoice covers the full cost of the investment transaction
+            long investmentSats = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+            int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
+            long angorFee = (investmentSats * angorFeePercentage) / 100;
+
+            // Estimate investment tx vSize: overhead + 1 P2WPKH input + (stageCount + 2) P2WPKH outputs
+            int stageCount = project!.ProjectInfo.Stages?.Count ?? 1;
+            const int txOverhead = 10;
+            const int inputSize = 68;
+            const int outputSize = 31;
+            const int defaultFeeRateSatsPerVbyte = 2;
+            int estimatedVSize = txOverhead + inputSize + (stageCount + 2) * outputSize;
+            long estimatedMinerFee = estimatedVSize * defaultFeeRateSatsPerVbyte;
+
+            long requiredSats = investmentSats + angorFee + estimatedMinerFee;
 
             // Calculate the Lightning invoice amount (includes Boltz fees)
             _Logger.LogInformation("Calculating Lightning invoice amount for {RequiredSats} sats on-chain", requiredSats);
