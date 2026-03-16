@@ -336,7 +336,7 @@
 
 ## <small>0.0.46-release (2024-07-22)</small>
 
-* add some logs to teh ynl ([c9d1ca7](https://github.com/block-core/angor/commit/c9d1ca7))
+* add some logs to the yaml ([c9d1ca7](https://github.com/block-core/angor/commit/c9d1ca7))
 * Bump Version ([7a62c61](https://github.com/block-core/angor/commit/7a62c61))
 
 
