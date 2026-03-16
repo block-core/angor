@@ -1,8 +1,9 @@
 using Angor.Data.Documents.Interfaces;
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Founder.Operations;
-using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Tests.Shared;
@@ -14,7 +15,6 @@ using CSharpFunctionalExtensions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using Xunit;
 
 namespace Angor.Sdk.Tests.Funding.Founder;
 

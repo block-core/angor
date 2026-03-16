@@ -68,15 +68,19 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
         if (accountBalanceInfo.AccountPendingReceive.Count == 0)
             return;
 
+        var currentOutpoints = accountBalanceInfo.AccountInfo.AllUtxos()
+                .Select(u => u.outpoint.ToString())
+                .ToHashSet();
+
         // Get all confirmed UTXOs from the account
         var confirmedOutpoints = accountBalanceInfo.AccountInfo.AllUtxos()
                 .Where(u => u.blockIndex > 0)
                 .Select(u => u.outpoint.ToString())
                 .ToHashSet();
 
-        // Remove pending receive UTXOs that are now confirmed
+        // Remove pending receive UTXOs that are now confirmed or no longer exist in the current UTXO set.
         accountBalanceInfo.AccountPendingReceive.RemoveAll(pending => 
-            confirmedOutpoints.Contains(pending.outpoint.ToString()));
+            confirmedOutpoints.Contains(pending.outpoint.ToString()) || !currentOutpoints.Contains(pending.outpoint.ToString()));
     }
 
     public async Task<Result<IEnumerable<AccountBalanceInfo>>> GetAllAccountBalancesAsync()
