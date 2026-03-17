@@ -1,9 +1,9 @@
 using Angor.Sdk.Wallet.Application;
+using Angor.Sdk.Wallet.Domain;
 using AngorApp.Model.Contracts.Flows;
+using System.Reactive.Threading.Tasks;
 using Zafiro.Avalonia.Dialogs;
-using Zafiro.Avalonia.Dialogs.Wizards.Slim;
-using Zafiro.UI.Wizards.Slim;
-using Zafiro.UI.Wizards.Slim.Builder;
+using Zafiro.Avalonia.Wizards.Graph.Core;
 using AddressAndAmountViewModel = AngorApp.UI.Flows.SendWalletMoney.AddressAndAmount.AddressAndAmountViewModel;
 using TransactionDraftViewModel = AngorApp.UI.Flows.SendWalletMoney.TransactionDraft.TransactionDraftViewModel;
 
@@ -13,12 +13,9 @@ public class SendMoneyFlow(IWalletAppService walletAppService, UIServices uiServ
 {
     public async Task SendMoney(IWallet sourceWallet)
     {
-        var wizard = WizardBuilder
-            .StartWith(() => new AddressAndAmountViewModel(sourceWallet), "Amount and address").Next(model => (model.Amount, model.Address)).WhenValid<AddressAndAmountViewModel>()
-            .Then(sendData => new TransactionDraftViewModel(sourceWallet.Id, walletAppService, new SendAmount("Test", sendData.Amount.Value, sendData.Address), uiServices), "Summary").NextCommand(model => model.Confirm.Enhance("Confirm"))
-            .Build(StepKind.Commit);
+        var wizard = CreateWizard(sourceWallet);
 
-        var result = await uiServices.Dialog.ShowWizard(wizard, "Send");
+        var result = await wizard.ShowInDialog(uiServices.Dialog, "Send");
 
         if (result.HasValue)
         {
@@ -29,5 +26,32 @@ public class SendMoneyFlow(IWalletAppService walletAppService, UIServices uiServ
                 new Icon("fa-check"),
                 DialogTone.Success);
         }
+    }
+
+    private GraphWizard<TxId> CreateWizard(IWallet sourceWallet)
+    {
+        var flow = GraphWizard.For<TxId>();
+        var addressAndAmount = new AddressAndAmountViewModel(sourceWallet);
+
+        var addressNode = flow
+            .Step(addressAndAmount, "Amount and address")
+            .Next(
+                model =>
+                {
+                    var draft = new TransactionDraftViewModel(
+                        sourceWallet.Id,
+                        walletAppService,
+                        new SendAmount("Test", model.Amount!.Value, model.Address!),
+                        uiServices);
+
+                    return flow
+                        .Step(draft, "Summary")
+                        .Finish(vm => vm.Confirm.Execute().ToTask(), draft.Confirm.CanExecute, "Confirm")
+                        .Build();
+                },
+                canExecute: addressAndAmount.IsValid)
+            .Build();
+
+        return new GraphWizard<TxId>(addressNode);
     }
 }
