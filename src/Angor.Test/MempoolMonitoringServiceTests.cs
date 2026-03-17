@@ -205,7 +205,7 @@ public class MempoolMonitoringServiceTests
             });
 
         // Act & Assert
-        await Assert.ThrowsAsync<TaskCanceledException>(() =>
+        await Assert.ThrowsAsync<OperationCanceledException>(() =>
             _sut.MonitorAddressForFundsAsync(
                 address,
                 requiredAmount,
