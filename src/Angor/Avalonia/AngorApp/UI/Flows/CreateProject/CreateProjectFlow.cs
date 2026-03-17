@@ -10,13 +10,11 @@ using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages;
 using AngorApp.UI.Flows.CreateProject.Wizard.FundProject;
 using AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Model;
 using AngorApp.UI.Flows.CreateProject.Wizard.FundProject.Payouts;
+using System.Reactive.Threading.Tasks;
 using Serilog;
 using Zafiro.Avalonia.Dialogs;
-using Zafiro.Avalonia.Controls.Wizards.Slim;
+using Zafiro.Avalonia.Wizards.Graph.Core;
 using Zafiro.UI.Navigation;
-using Zafiro.UI.Wizards.Slim;
-using Zafiro.UI.Wizards.Slim.Builder;
-using Avalonia.Threading;
 
 namespace AngorApp.UI.Flows.CreateProject
 {
@@ -41,16 +39,8 @@ namespace AngorApp.UI.Flows.CreateProject
 
         private async Task<Result<Maybe<string>>> Create(WalletId walletId, ProjectSeedDto seed)
         {
-            SlimWizard<string> rootWizard = WizardBuilder
-                                            .StartWith(() => new WelcomeViewModel()).NextCommand(model => model.Start)
-                                            .Then(_ => new ProjectTypeViewModel())
-                                            .NextCommand<Unit, ProjectTypeViewModel, string>(vm => CreateProjectOfType(
-                                                vm,
-                                                walletId,
-                                                seed))
-                                            .Build(StepKind.Commit);
-
-            var result = await rootWizard.Navigate(navigator);
+            var wizard = CreateProjectWizard(walletId, seed);
+            var result = await wizard.Navigate(navigator);
 
             if (result.HasValue)
             {
@@ -65,81 +55,131 @@ namespace AngorApp.UI.Flows.CreateProject
             return result;
         }
 
-        private IEnhancedCommand<Result<string>> CreateProjectOfType(
-            ProjectTypeViewModel vm,
-            WalletId walletId,
-            ProjectSeedDto seed
-        )
+        private GraphWizard<string> CreateProjectWizard(WalletId walletId, ProjectSeedDto seed)
         {
-            var canExecute = vm.WhenAnyValue(x => x.ProjectType).Select(x => x != null);
+            var flow = GraphWizard.For<string>();
+            var investmentWizard = CreateInvestmentProjectWizard(walletId, seed);
+            var fundWizard = CreateFundProjectWizard(walletId, seed);
 
-            return ReactiveCommand.CreateFromTask(async () =>
-            {
-                var projectType = vm.ProjectType;
-                return await Dispatcher.UIThread.InvokeAsync(() => projectType.Name switch
-                {
-                    "Investment" => CreateInvestmentProjectWizard(walletId, seed).Navigate(navigator).ToResult("Wizard was cancelled by user"),
-                    "Fund" => CreateFundProjectWizard(walletId, seed).Navigate(navigator).ToResult("Wizard was cancelled by user"),
-                    _ => throw new NotImplementedException($"Project type {projectType.Name} not implemented")
-                });
-            }, canExecute).Enhance();
+            var projectType = new ProjectTypeViewModel();
+            var projectTypeNode = flow
+                .Step(projectType, projectType.Title)
+                .Next(
+                    vm => vm.ProjectType.Name switch
+                    {
+                        "Investment" => investmentWizard,
+                        "Fund" => fundWizard,
+                        _ => throw new NotImplementedException($"Project type {vm.ProjectType.Name} not implemented"),
+                    },
+                    canExecute: projectType.WhenAnyValue(x => x.ProjectType).Select(x => x != null))
+                .Build();
+
+            var welcome = new WelcomeViewModel();
+            var welcomeNode = flow
+                .Step(welcome, welcome.Title)
+                .Next(_ => projectTypeNode, nextLabel: "Start")
+                .Build();
+
+            return new GraphWizard<string>(welcomeNode);
         }
 
-        private SlimWizard<string> CreateInvestmentProjectWizard(WalletId walletId, ProjectSeedDto seed)
+        private IWizardNode<string> CreateInvestmentProjectWizard(WalletId walletId, ProjectSeedDto seed)
         {
+            var flow = GraphWizard.For<string>();
             var isDebug = !uiServices.EnableProductionValidations();
             var environment = isDebug ? ValidationEnvironment.Debug : ValidationEnvironment.Production;
             InvestmentProjectConfigBase newProject = isDebug ? new InvestmentProjectConfigDebug() : new InvestmentProjectConfig();
 
             Action? prefillAction = isDebug ? () => PopulateInvestDebugDefaults(newProject) : null;
 
-            SlimWizard<string> wizard = WizardBuilder
-                                        .StartWith(() => new ProjectProfileViewModel(newProject, prefillAction)).NextUnit().WhenValid()
-                                        .Then(_ => new ProjectImagesViewModel(newProject, imagePicker)).NextUnit().Always()
-                                        .Then(_ => new FundingConfigurationViewModel(newProject, environment)).NextUnit().WhenValid()
-                                        .Then(_ => new StagesViewModel(newProject)).NextUnit().WhenValid()
-                                        .Then(_ => new ReviewAndDeployViewModel(
-                                                  newProject,
-                                                  new ProjectDeploymentOrchestrator(
-                                                      projectAppService,
-                                                      founderAppService,
-                                                      uiServices,
-                                                      logger),
-                                                  walletId,
-                                                  seed,
-                                                  uiServices))
-                                        .NextCommand(review => review.DeployCommand)
-                                        .Build(StepKind.Commit);
+            var review = new ReviewAndDeployViewModel(
+                newProject,
+                new ProjectDeploymentOrchestrator(
+                    projectAppService,
+                    founderAppService,
+                    uiServices,
+                    logger),
+                walletId,
+                seed,
+                uiServices);
 
-            return wizard;
+            var reviewNode = flow
+                .Step(review, review.Title)
+                .Finish(vm => vm.DeployCommand.Execute().ToTask(), review.DeployCommand.CanExecute, "Deploy")
+                .Build();
+
+            var stages = new StagesViewModel(newProject);
+            var stagesNode = flow
+                .Step(stages, stages.Title)
+                .Next(_ => reviewNode, stages.IsValid)
+                .Build();
+
+            var funding = new FundingConfigurationViewModel(newProject, environment);
+            var fundingNode = flow
+                .Step(funding, funding.Title)
+                .Next(_ => stagesNode, funding.IsValid)
+                .Build();
+
+            var images = new ProjectImagesViewModel(newProject, imagePicker);
+            var imagesNode = flow
+                .Step(images, images.Title)
+                .Next(_ => fundingNode)
+                .Build();
+
+            var profile = new ProjectProfileViewModel(newProject, prefillAction);
+            return flow
+                .Step(profile, profile.Title)
+                .Next(_ => imagesNode, profile.IsValid)
+                .Build();
         }
 
-        private SlimWizard<string> CreateFundProjectWizard(WalletId walletId, ProjectSeedDto seed)
+        private IWizardNode<string> CreateFundProjectWizard(WalletId walletId, ProjectSeedDto seed)
         {
+            var flow = GraphWizard.For<string>();
             var isDebug = !uiServices.EnableProductionValidations();
             var newProject = new FundProjectConfig();
 
             Action? prefillAction = isDebug ? () => PopulateFundDebugDefaults(newProject) : null;
 
-            SlimWizard<string> wizard = WizardBuilder
-                                         .StartWith(() => new ProjectProfileViewModel(newProject, prefillAction)).NextUnit().WhenValid()
-                                         .Then(_ => new ProjectImagesViewModel(newProject, imagePicker)).NextUnit().Always()
-                                         .Then(_ => new GoalViewModel(newProject)).NextUnit().WhenValid()
-                                         .Then(_ => new FundPayoutsViewModel(newProject)).NextUnit().WhenValid()
-                                         .Then(_ => new FundReviewAndDeployViewModel(
-                                                   newProject,
-                                                   new ProjectDeploymentOrchestrator(
-                                                       projectAppService,
-                                                       founderAppService,
-                                                       uiServices,
-                                                       logger),
-                                                   walletId,
-                                                   seed,
-                                                   uiServices))
-                                         .NextCommand(review => review.DeployCommand)
-                                         .Build(StepKind.Commit);
+            var review = new FundReviewAndDeployViewModel(
+                newProject,
+                new ProjectDeploymentOrchestrator(
+                    projectAppService,
+                    founderAppService,
+                    uiServices,
+                    logger),
+                walletId,
+                seed,
+                uiServices);
 
-            return wizard;
+            var reviewNode = flow
+                .Step(review, review.Title)
+                .Finish(vm => vm.DeployCommand.Execute().ToTask(), review.DeployCommand.CanExecute, "Deploy")
+                .Build();
+
+            var payouts = new FundPayoutsViewModel(newProject);
+            var payoutsNode = flow
+                .Step(payouts, payouts.Title)
+                .Next(_ => reviewNode, payouts.IsValid)
+                .Build();
+
+            var goal = new GoalViewModel(newProject);
+            var goalNode = flow
+                .Step(goal, goal.Title)
+                .Next(_ => payoutsNode, goal.IsValid)
+                .Build();
+
+            var images = new ProjectImagesViewModel(newProject, imagePicker);
+            var imagesNode = flow
+                .Step(images, images.Title)
+                .Next(_ => goalNode)
+                .Build();
+
+            var profile = new ProjectProfileViewModel(newProject, prefillAction);
+            return flow
+                .Step(profile, profile.Title)
+                .Next(_ => imagesNode, profile.IsValid)
+                .Build();
         }
 
         private static void PopulateFundDebugDefaults(FundProjectConfig project)
