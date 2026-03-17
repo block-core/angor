@@ -402,3 +402,6 @@ FodyWeavers.xsd
 
 # VS Code settings (local only)
 .vscode/settings.json
+
+# Windows reserved device names
+nul
