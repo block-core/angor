@@ -29,7 +29,7 @@ public class ProjectInvestCommandFactory : IProjectInvestCommandFactory
         this.uiServices = uiServices;
     }
 
-    public IEnhancedCommand<Result> Create(ProjectId projectId, DateTimeOffset fundingStart, DateTimeOffset fundingEnd, ProjectType projectType)
+    public IEnhancedCommand<Result> Create(ProjectId projectId, DateTime fundingStart, DateTime fundingEnd, ProjectType projectType)
     {
         var canExecute = Observable.Interval(TimeSpan.FromMinutes(1))
             .StartWith(0L)
@@ -51,12 +51,18 @@ public class ProjectInvestCommandFactory : IProjectInvestCommandFactory
         return command;
     }
 
-    private static bool CanInvest(ProjectType projectType, DateTimeOffset fundingStart, DateTimeOffset fundingEnd, bool isDebugMode = false)
+    private static bool CanInvest(ProjectType projectType, DateTime fundingStart, DateTime fundingEnd, bool isDebugMode = false)
     {
-        return CanInvest(projectType, DateTimeOffset.UtcNow, fundingStart, fundingEnd, isDebugMode);
+        return projectType switch
+        {
+            ProjectType.Invest => CanInvest(projectType, DateTime.UtcNow, fundingStart, fundingEnd, isDebugMode),
+            ProjectType.Fund => true,
+            ProjectType.Subscribe => true,
+            _ => false
+        };
     }
 
-    public static bool CanInvest(ProjectType projectType, DateTimeOffset currentTime, DateTimeOffset fundingStart, DateTimeOffset fundingEnd, bool isDebugMode = false)
+    public static bool CanInvest(ProjectType projectType, DateTime currentTime, DateTime fundingStart, DateTime fundingEnd, bool isDebugMode = false)
     {
         return projectType switch
         {
@@ -67,13 +73,14 @@ public class ProjectInvestCommandFactory : IProjectInvestCommandFactory
         };
     }
 
-    public static bool IsInsideInvestmentPeriod(DateTimeOffset currentTime, DateTimeOffset fundingStart, DateTimeOffset fundingEnd, bool isDebugMode = false)
+    public static bool IsInsideInvestmentPeriod(DateTime currentTime, DateTime fundingStart, DateTime fundingEnd, bool isDebugMode = false)
     {
         if (isDebugMode)
         {
             return true;
         }
 
-        return currentTime >= fundingStart && currentTime <= fundingEnd;
+        var currentDate = currentTime.Date;
+        return currentDate >= fundingStart.Date && currentDate <= fundingEnd.Date;
     }
 }
