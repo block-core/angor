@@ -39,6 +39,19 @@ public class ProjectFactoryTests
         result.ManageFunds.CanExecute(null).Should().BeTrue();
     }
 
+    [Fact]
+    public void Create_returns_fund_project_when_fund_dates_are_local_min_value()
+    {
+        var sut = CreateSut();
+        var seed = CreateSeed(ProjectType.Fund);
+        seed.FundingStartDate = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Local);
+        seed.FundingEndDate = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Local);
+
+        var result = sut.Create(seed);
+
+        result.Should().BeAssignableTo<IFundProject>();
+    }
+
     private static IProjectFactory CreateSut()
     {
         Mock<IProjectAppService> projectAppService = new();
@@ -48,7 +61,7 @@ public class ProjectFactoryTests
         var fundManageFundsFactory = new Mock<Func<IFundProject, FundManageFunds.IManageFundsViewModel>>();
 
         projectInvestCommandFactory
-            .Setup(x => x.Create(It.IsAny<ProjectId>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<ProjectType>()))
+            .Setup(x => x.Create(It.IsAny<ProjectId>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<ProjectType>()))
             .Returns(EnhancedCommand.CreateWithResult(Result.Success));
 
         return new ProjectFactory(projectAppService.Object, projectInvestCommandFactory.Object, manageFundsFactory.Object, fundManageFundsFactory.Object, navigator.Object);

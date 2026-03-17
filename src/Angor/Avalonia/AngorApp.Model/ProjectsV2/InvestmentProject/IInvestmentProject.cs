@@ -12,8 +12,8 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
         public IObservable<int> TotalStages { get; }
         public IObservable<IReadOnlyCollection<IStage>> Stages { get; }
         public IObservable<int> InvestorCount { get; }
-        public DateTimeOffset FundingStart { get; }
-        public DateTimeOffset FundingEnd { get; }
+        public DateTime FundingStart { get; }
+        public DateTime FundingEnd { get; }
         public TimeSpan PenaltyDuration { get; }
         public IAmountUI? PenaltyThreshold { get; }
         IObservable<bool> IsNotInvestedYet => Observable.Return(true);
@@ -21,8 +21,8 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
         {
             get
             {
-                DateTimeOffset now = DateTimeOffset.Now;
-                var isOpen = now >= FundingStart && now <= FundingEnd;
+                DateTime now = DateTime.UtcNow.Date;
+                var isOpen = now >= FundingStart.Date && now <= FundingEnd.Date;
                 return Observable.Return(isOpen);
             }
         }

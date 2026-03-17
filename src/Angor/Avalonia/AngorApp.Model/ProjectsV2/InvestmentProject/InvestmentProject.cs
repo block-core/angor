@@ -39,8 +39,8 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
         public IObservable<IAmountUI> Withdrawable { get; }
         public IObservable<int> TotalStages { get; }
         public IObservable<int> InvestorCount { get; }
-        public DateTimeOffset FundingStart { get; }
-        public DateTimeOffset FundingEnd { get; }
+        public DateTime FundingStart { get; }
+        public DateTime FundingEnd { get; }
         public override IObservable<int> SupporterCount => InvestorCount;
         public override IAmountUI FundingTarget => Target;
         public override IObservable<IAmountUI> FundingRaised => Raised;
@@ -84,7 +84,7 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
             return seed.PenaltyThreshold is { } threshold ? new AmountUI(threshold) : null;
         }
 
-        private static bool IsFundingFinished(DateTimeOffset fundingEndDate)
+        private static bool IsFundingFinished(DateTime fundingEndDate)
         {
             return DateTime.UtcNow.Date >= fundingEndDate.Date;
         }
