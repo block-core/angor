@@ -63,8 +63,6 @@ public class SeederTransactionActions : ISeederTransactionActions
         string receiveAddress, SignatureInfo founderSignatures, string privateKey, string? secret)
     {
         var recoveryTransaction = _investmentTransactionBuilder.BuildUpfrontRecoverFundsTransaction(projectInfo, investmentTransaction, projectInfo.PenaltyDays, receiveAddress);
-
-        var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
         
         var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
         var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
@@ -80,7 +78,12 @@ public class SeederTransactionActions : ISeederTransactionActions
         var key = new Key(Encoders.Hex.DecodeData(privateKey));
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
-        for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
+        var stageCount = projectInfo.Stages?.Count > 0
+            ? projectInfo.Stages.Count
+            : nbitcoinInvestmentTransaction.Outputs.AsIndexedOutputs()
+                .Count(o => o.TxOut.ScriptPubKey.IsScriptType(NBitcoin.ScriptType.Taproot));
+
+        for (var stageIndex = 0; stageIndex < stageCount; stageIndex++)
         {
             var projectScripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageIndex);
 
