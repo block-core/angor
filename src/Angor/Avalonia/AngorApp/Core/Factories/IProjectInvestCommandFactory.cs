@@ -5,5 +5,5 @@ namespace AngorApp.Core.Factories;
 
 public interface IProjectInvestCommandFactory
 {
-    IEnhancedCommand<Result> Create(ProjectId projectId, DateTimeOffset fundingStart, DateTimeOffset fundingEnd, ProjectType projectType);
+    IEnhancedCommand<Result> Create(ProjectId projectId, DateTime fundingStart, DateTime fundingEnd, ProjectType projectType);
 }
