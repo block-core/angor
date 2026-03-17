@@ -9,9 +9,9 @@ public class ProjectInvestCommandFactoryTests
     [Fact]
     public void IsInsideInvestmentPeriod_returns_false_when_funding_has_not_started()
     {
-        var now = DateTime.UtcNow;
-        var fundingStart = now.AddMinutes(1);
-        var fundingEnd = now.AddHours(1);
+        var now = DateTime.UtcNow.Date;
+        var fundingStart = now.AddDays(1);
+        var fundingEnd = now.AddDays(2);
 
         var result = ProjectInvestCommandFactory.IsInsideInvestmentPeriod(now, fundingStart, fundingEnd);
 
@@ -21,11 +21,23 @@ public class ProjectInvestCommandFactoryTests
     [Fact]
     public void IsInsideInvestmentPeriod_returns_true_when_inside_funding_window()
     {
-        var now = DateTime.UtcNow;
-        var fundingStart = now.AddMinutes(-1);
-        var fundingEnd = now.AddMinutes(1);
+        var now = DateTime.UtcNow.Date;
+        var fundingStart = now.AddDays(-1);
+        var fundingEnd = now.AddDays(1);
 
         var result = ProjectInvestCommandFactory.IsInsideInvestmentPeriod(now, fundingStart, fundingEnd);
+
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsInsideInvestmentPeriod_returns_true_for_any_time_within_the_funding_end_day()
+    {
+        var currentTime = DateTime.UtcNow.Date.AddHours(23).AddMinutes(59);
+        var fundingStart = currentTime.Date.AddDays(-2);
+        var fundingEnd = currentTime.Date;
+
+        var result = ProjectInvestCommandFactory.IsInsideInvestmentPeriod(currentTime, fundingStart, fundingEnd);
 
         result.Should().BeTrue();
     }

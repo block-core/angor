@@ -21,8 +21,8 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
         {
             get
             {
-                DateTime now = DateTime.UtcNow;
-                var isOpen = now >= FundingStart && now <= FundingEnd;
+                DateTime now = DateTime.UtcNow.Date;
+                var isOpen = now >= FundingStart.Date && now <= FundingEnd.Date;
                 return Observable.Return(isOpen);
             }
         }

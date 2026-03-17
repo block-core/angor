@@ -80,6 +80,7 @@ public class ProjectInvestCommandFactory : IProjectInvestCommandFactory
             return true;
         }
 
-        return currentTime >= fundingStart && currentTime <= fundingEnd;
+        var currentDate = currentTime.Date;
+        return currentDate >= fundingStart.Date && currentDate <= fundingEnd.Date;
     }
 }
