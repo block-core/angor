@@ -42,8 +42,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Test", "..\..\Angor.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AngorApp.Tests", "AngorApp.Tests\AngorApp.Tests.csproj", "{E7997F04-DA79-4F76-A617-499EBC590B71}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Client", "..\Client\Angor.Client.csproj", "{0E91C19D-387F-4F60-87DE-54F0BB78814E}"
-EndProject
+
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -94,10 +93,7 @@ Global
 		{E7997F04-DA79-4F76-A617-499EBC590B71}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7997F04-DA79-4F76-A617-499EBC590B71}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7997F04-DA79-4F76-A617-499EBC590B71}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0E91C19D-387F-4F60-87DE-54F0BB78814E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0E91C19D-387F-4F60-87DE-54F0BB78814E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0E91C19D-387F-4F60-87DE-54F0BB78814E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0E91C19D-387F-4F60-87DE-54F0BB78814E}.Release|Any CPU.Build.0 = Release|Any CPU
+
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

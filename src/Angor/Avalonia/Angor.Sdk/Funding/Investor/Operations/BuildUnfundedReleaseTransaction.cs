@@ -13,6 +13,9 @@ using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Angor.Sdk.Funding.Projects;
+using Angor.Shared.Utilities;
+using Blockcore.Consensus.ScriptInfo;
+using Blockcore.Consensus.TransactionInfo;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 
@@ -78,14 +81,17 @@ public static class BuildUnfundedReleaseTransaction
             if (!sigCheckResult)
                 throw new Exception("Failed to validate signatures");
 
-            var transactionInfo = await transactionService.GetTransactionInfoByIdAsync(investmentTransaction.GetHash().ToString());
+            var investmentTxId = investmentTransaction.GetHash();
+            var transactionInfo = await transactionService.GetTransactionInfoByIdAsync(investmentTxId.ToString());
 
             if (transactionInfo is null)
                 return Result.Failure<BuildUnfundedReleaseTransactionResponse>("Could not find transaction info");
             
+            
             var spentIndexes = transactionInfo.Outputs
                                               .Where((output, i) =>
-                                                         (i < 2 || string.IsNullOrEmpty(output.SpentInTransaction)))
+                                                         new Script(output.ScriptPubKey).IsTaprooOutput() &&
+                                                         string.IsNullOrEmpty(output.SpentInTransaction))
                                               .Select(o => o.Index - 2)
                                               .Reverse(); // we reverse the order of the indexes to remove outputs from the end first, preventing index shifting issues
 
@@ -93,6 +99,22 @@ public static class BuildUnfundedReleaseTransaction
             {
                 unsignedReleaseTransaction.Inputs.RemoveAt(spentIndex);
                 unsignedReleaseTransaction.Outputs.RemoveAt(spentIndex);
+            }
+            
+            var spentOutpoints = transactionInfo.Outputs
+                                                .Select((output, i) => new { output, i })
+                                                .Where(x => new Script(Encoders.Hex.DecodeData(x.output.ScriptPubKey)).IsTaprooOutput()
+                                                            && !string.IsNullOrEmpty(x.output.SpentInTransaction))
+                                                .Select(x => new OutPoint(investmentTxId, x.i))
+                                                .ToHashSet();
+
+            for (int i = unsignedReleaseTransaction.Inputs.Count - 1; i >= 0; i--)
+            {
+                if (!spentOutpoints.Contains(unsignedReleaseTransaction.Inputs[i].PrevOut))
+                    continue;
+
+                unsignedReleaseTransaction.Inputs.RemoveAt(i);
+                unsignedReleaseTransaction.Outputs.RemoveAt(i);
             }
             
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();

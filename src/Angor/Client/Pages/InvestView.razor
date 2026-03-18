@@ -14,6 +14,8 @@
 @using Angor.Client.Shared
 @using Angor.Shared.Protocol
 @using QRCoder
+@using Angor.Shared.Integration.Lightning
+@using Angor.Shared.Integration.Lightning.Models
 
 @inherits BaseComponent
 
@@ -38,6 +40,9 @@
 @inject IEncryptionService encryption
 @inject IAddressPollingService _addressPollingService
 @inject IWalletStorage _walletStorage
+@inject IBoltzSwapService _boltzSwapService
+@inject IBoltzClaimService _boltzClaimService
+@inject IIndexerService _indexerService
 
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
@@ -467,18 +472,26 @@
                         <div class="fw-bold text-success fs-5">@Investment.InvestmentAmountBtc @network.CoinTicker</div>
                     </div>
                     <div class="d-grid gap-3">
-                        <button class="btn btn-success btn-lg" @onclick="PayWithWallet">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-2">
-                                    <Icon IconName="wallet" Width="24" Height="24" />
-                                    <div class="text-start">
-                                        <div class="fw-bold">Pay with Wallet</div>
-                                        <small class="opacity-75">Use your existing wallet balance</small>
+                        @{
+                            var walletBalance = WalletBalance.TotalBalance;
+                            var requiredSatsForModal = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+                            var canPayWithWallet = walletBalance >= requiredSatsForModal;
+                        }
+                        @if (canPayWithWallet)
+                        {
+                            <button class="btn btn-success btn-lg" @onclick="PayWithWallet">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <Icon IconName="wallet" Width="24" Height="24" />
+                                        <div class="text-start">
+                                            <div class="fw-bold">Pay with Wallet</div>
+                                            <small class="opacity-75">Use your existing wallet balance</small>
+                                        </div>
                                     </div>
+                                    <Icon IconName="arrow-right" Width="18" Height="18" />
                                 </div>
-                                <Icon IconName="arrow-right" Width="18" Height="18" />
-                            </div>
-                        </button>
+                            </button>
+                        }
                         <button class="btn btn-outline-success btn-lg" @onclick="PayWithAddress">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center gap-2">
@@ -486,6 +499,18 @@
                                     <div class="text-start">
                                         <div class="fw-bold">Send to Address</div>
                                         <small class="opacity-75">Send from an external wallet</small>
+                                    </div>
+                                </div>
+                                <Icon IconName="arrow-right" Width="18" Height="18" />
+                            </div>
+                        </button>
+                        <button class="btn btn-outline-warning btn-lg" @onclick="PayWithLightning">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-2">
+                                    <Icon IconName="bitcoin" Width="24" Height="24" />
+                                    <div class="text-start">
+                                        <div class="fw-bold">Pay with Lightning</div>
+                                        <small class="opacity-75">Pay via Lightning Network</small>
                                     </div>
                                 </div>
                                 <Icon IconName="arrow-right" Width="18" Height="18" />
@@ -565,6 +590,88 @@
                             <span class="spinner-border spinner-border-sm" role="status"></span>
                             <span>Awaiting payment...</span>
                         </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Lightning Invoice Modal -->
+@if (showLightningInvoiceModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title d-flex align-items-center gap-2">
+                        <Icon IconName="bitcoin" Width="24" Height="24" />
+                        Lightning Invoice
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseLightningModal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <!-- Amount Required -->
+                    <div class="bg-light rounded p-3 mb-3">
+                        <small class="text-muted">Amount Required</small>
+                        <div class="fw-bold text-success fs-4">@Investment.InvestmentAmountBtc @network.CoinTicker</div>
+                    </div>
+
+                    @if (lightningLoading)
+                    {
+                        <div class="d-flex flex-column align-items-center py-4">
+                            <div class="spinner-border text-warning mb-3" role="status"></div>
+                            <span class="text-muted">Creating Lightning invoice...</span>
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(lightningInvoiceString))
+                    {
+                        <!-- QR Code -->
+                        <div class="mb-3">
+                            <img src="data:image/png;base64,@GenerateQRCode(lightningInvoiceString)"
+                                 class="img-fluid rounded" style="max-width: 200px;"
+                                 alt="Lightning Invoice QR Code" />
+                        </div>
+
+                        <!-- Invoice with Copy -->
+                        <div class="bg-light rounded p-3 mb-3">
+                            <small class="text-muted d-block mb-1">Lightning Invoice (BOLT11)</small>
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <span class="text-break small" style="word-break: break-all; max-height: 80px; overflow-y: auto;">
+                                    @lightningInvoiceString
+                                </span>
+                                <button class="btn btn-sm btn-outline-secondary flex-shrink-0" @onclick="() => CopyToClipboard(lightningInvoiceString!)">
+                                    <Icon IconName="copy" Width="16" Height="16" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Payment Status -->
+                        @if (paymentReceived && invoiceProcessing)
+                        {
+                            <div class="alert alert-success d-flex align-items-center justify-content-center gap-2 mb-2">
+                                <Icon IconName="circle-check" Width="20" Height="20" />
+                                <span class="fw-bold">Lightning payment received!</span>
+                            </div>
+                            <div class="alert alert-info d-flex align-items-center justify-content-center gap-2 mb-0">
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                <span>@(lightningStatusMessage ?? "Processing investment...")</span>
+                            </div>
+                        }
+                        else if (paymentReceived)
+                        {
+                            <div class="alert alert-success d-flex align-items-center justify-content-center gap-2 mb-0">
+                                <Icon IconName="circle-check" Width="20" Height="20" />
+                                <span class="fw-bold">Lightning payment received!</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning d-flex align-items-center justify-content-center gap-2 mb-0">
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                <span>@(lightningStatusMessage ?? "Awaiting Lightning payment...")</span>
+                            </div>
+                        }
                     }
                 </div>
             </div>
@@ -680,6 +787,15 @@
     private string? newWalletPasswordInput;
     private CancellationTokenSource? invoiceMonitorCts;
 
+    // Lightning payment flow
+    private bool showLightningInvoiceModal;
+    private bool lightningLoading;
+    private string? lightningInvoiceString;
+    private string? lightningSwapId;
+    private string? lightningStatusMessage;
+    private BoltzSubmarineSwap? currentSwap;
+    private CancellationTokenSource? lightningMonitorCts;
+
     private TransactionInfo? signedTransaction;
     private Transaction? unSignedTransaction;
     private string? InvestorPubKey;
@@ -763,8 +879,8 @@
     {
         // Load dynamic stage patterns if applicable
         // For standard invest projects, no patterns are shown
-        AvailablePatterns = project?.ProjectInfo?.Stages?.Count > 0
-            ? null  // Standard invest — stages are fixed
+        AvailablePatterns = project?.ProjectInfo?.AllowDynamicStages ?? false
+            ? project.ProjectInfo.DynamicStagePatterns
             : null;
     }
 
@@ -1202,28 +1318,10 @@
 
         if (walletAvailable)
         {
-            // Wallet exists - check balance to decide flow
-            var balance = WalletBalance.TotalBalance;
-            var requiredSats = Investment.InvestmentAmountBtc.ToUnitSatoshi();
-
-            if (balance >= requiredSats)
-            {
-                // Sufficient balance - show payment method choice (Step 7)
-                showPaymentMethodModal = true;
-                StateHasChanged();
-            }
-            else
-            {
-                // Insufficient balance - go directly to invoice modal
-                if (!passwordComponent.HasPassword())
-                {
-                    passwordComponent.ShowPassword(async () => await StartInvoiceFlow());
-                }
-                else
-                {
-                    await StartInvoiceFlow();
-                }
-            }
+            // Wallet exists — show payment method choice
+            // "Pay with Wallet" will only appear if balance is sufficient
+            showPaymentMethodModal = true;
+            StateHasChanged();
         }
         else
         {
@@ -1320,16 +1418,8 @@
             _PasswordCacheService.Data = password;
             _PasswordCacheService.SetTimer(TimeSpan.FromMinutes(5));
 
-            // Get receive address
-            invoiceAddress = accountInfo.GetNextReceiveAddress();
-            if (string.IsNullOrEmpty(invoiceAddress))
-            {
-                notificationComponent.ShowErrorMessage("Failed to generate receive address");
-                return;
-            }
-
-            // Show the invoice modal and start monitoring
-            await ShowInvoiceAndMonitor();
+            // Show payment method choice (on-chain address or Lightning)
+            showPaymentMethodModal = true;
         }
         catch (Exception e)
         {
@@ -1512,6 +1602,366 @@
     {
         invoiceMonitorCts?.Cancel();
         showInvoiceModal = false;
+        CheckAndShowBackupIfNeeded();
+        StateHasChanged();
+    }
+
+    // --- Lightning Payment Flow Methods ---
+
+    /// <summary>
+    /// User chose "Pay with Lightning" from payment method modal.
+    /// </summary>
+    private async Task PayWithLightning()
+    {
+        showPaymentMethodModal = false;
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(async () => await StartLightningFlow());
+        }
+        else
+        {
+            await StartLightningFlow();
+        }
+    }
+
+    /// <summary>
+    /// Create a Boltz reverse submarine swap and show the Lightning invoice.
+    /// User pays the Lightning invoice → Boltz sends BTC on-chain to the receive address.
+    /// </summary>
+    private async Task StartLightningFlow()
+    {
+        lightningLoading = true;
+        showLightningInvoiceModal = true;
+        paymentReceived = false;
+        invoiceProcessing = false;
+        lightningInvoiceString = null;
+        lightningSwapId = null;
+        lightningStatusMessage = "Creating Lightning invoice...";
+        StateHasChanged();
+
+        try
+        {
+            // Get receive address
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            invoiceAddress = accountInfo.GetNextReceiveAddress();
+
+            if (string.IsNullOrEmpty(invoiceAddress))
+            {
+                notificationComponent.ShowErrorMessage("Failed to get receive address");
+                showLightningInvoiceModal = false;
+                lightningLoading = false;
+                return;
+            }
+
+            // Derive a claim public key for the Boltz swap
+            var words = await passwordComponent.GetWalletAsync();
+            var claimPubKey = _derivationOperations.DeriveInvestorKey(words, project!.ProjectInfo.FounderKey);
+
+            // Calculate the required on-chain amount in sats
+            // Must include: investment amount + Angor fee + estimated miner fee
+            // so the Lightning invoice covers the full cost of the investment transaction
+            long investmentSats = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+            int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
+            long angorFee = (investmentSats * angorFeePercentage) / 100;
+
+            // Estimate investment tx vSize: overhead + 1 P2WPKH input + (stageCount + 2) P2WPKH outputs
+            int stageCount = project!.ProjectInfo.Stages?.Count ?? 1;
+            const int txOverhead = 10;
+            const int inputSize = 68;
+            const int outputSize = 31;
+            const int defaultFeeRateSatsPerVbyte = 2;
+            int estimatedVSize = txOverhead + inputSize + (stageCount + 2) * outputSize;
+            long estimatedMinerFee = estimatedVSize * defaultFeeRateSatsPerVbyte;
+
+            long requiredSats = investmentSats + angorFee + estimatedMinerFee;
+
+            // Calculate the Lightning invoice amount (includes Boltz fees)
+            _Logger.LogInformation("Calculating Lightning invoice amount for {RequiredSats} sats on-chain", requiredSats);
+            var invoiceAmountResult = await _boltzSwapService.CalculateInvoiceAmountAsync(requiredSats);
+
+            if (invoiceAmountResult.IsFailure)
+            {
+                _Logger.LogError("Failed to calculate Lightning invoice amount: {Error}", invoiceAmountResult.Error);
+                notificationComponent.ShowErrorMessage($"Failed to calculate Lightning fees: {invoiceAmountResult.Error}");
+                showLightningInvoiceModal = false;
+                lightningLoading = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Create the Boltz reverse submarine swap
+            _Logger.LogInformation(
+                "Creating Boltz reverse swap: invoice amount={InvoiceAmount} sats, destination={Address}, claimKey={Key}",
+                invoiceAmountResult.Value, invoiceAddress, claimPubKey[..8] + "...");
+
+            var swapResult = await _boltzSwapService.CreateSubmarineSwapAsync(
+                invoiceAddress, invoiceAmountResult.Value, claimPubKey);
+
+            if (swapResult.IsFailure)
+            {
+                _Logger.LogError("Failed to create Boltz swap: {Error}", swapResult.Error);
+                notificationComponent.ShowErrorMessage($"Failed to create Lightning swap: {swapResult.Error}");
+                showLightningInvoiceModal = false;
+                lightningLoading = false;
+                StateHasChanged();
+                return;
+            }
+
+            currentSwap = swapResult.Value;
+            lightningInvoiceString = currentSwap.Invoice;
+            lightningSwapId = currentSwap.Id;
+            lightningLoading = false;
+            lightningStatusMessage = "Awaiting Lightning payment...";
+
+            _Logger.LogInformation(
+                "Boltz swap created: ID={SwapId}, invoice amount={Amount} sats",
+                currentSwap.Id, currentSwap.InvoiceAmount);
+
+            StateHasChanged();
+
+            // Start monitoring the swap and proceed when funds arrive on-chain
+            await MonitorLightningSwapAndProceed(accountInfo, requiredSats);
+        }
+        catch (Exception e)
+        {
+            _Logger.LogError(e, "Error in Lightning payment flow");
+            notificationComponent.ShowErrorMessage($"Lightning error: {e.Message}", e);
+            showLightningInvoiceModal = false;
+            lightningLoading = false;
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Monitor the Boltz swap status. Once the lockup tx is in mempool, claim the funds
+    /// using our preimage (only we have it), then poll our address for the claimed funds.
+    /// </summary>
+    private async Task MonitorLightningSwapAndProceed(AccountInfo accountInfo, long requiredSats)
+    {
+        lightningMonitorCts = new CancellationTokenSource();
+        var token = lightningMonitorCts.Token;
+
+        try
+        {
+            // Phase 1: Poll Boltz status until lockup tx is on-chain
+            _Logger.LogInformation("Starting Boltz swap monitoring for {SwapId}", lightningSwapId);
+            BoltzSwapStatus? lockupStatus = null;
+            var maxAttempts = 360;
+
+            for (int i = 0; i < maxAttempts && !token.IsCancellationRequested; i++)
+            {
+                await Task.Delay(5000, token);
+
+                var statusResult = await _boltzSwapService.GetSwapStatusAsync(lightningSwapId!);
+                if (statusResult.IsFailure)
+                {
+                    _Logger.LogWarning("Failed to poll swap status: {Error}", statusResult.Error);
+                    continue;
+                }
+
+                var status = statusResult.Value;
+                _Logger.LogDebug("Swap {SwapId} status: {Status}", lightningSwapId, status.Status);
+
+                switch (status.Status)
+                {
+                    case SwapState.InvoicePaid:
+                        lightningStatusMessage = "Lightning payment received! Waiting for on-chain lockup...";
+                        StateHasChanged();
+                        break;
+
+                    case SwapState.TransactionMempool:
+                    case SwapState.TransactionConfirmed:
+                        _Logger.LogInformation("Swap {SwapId} lockup on-chain: {Status}, txId={TxId}",
+                            lightningSwapId, status.Status, status.TransactionId ?? "unknown");
+                        lockupStatus = status;
+                        break;
+
+                    case SwapState.TransactionClaimed:
+                        // Already claimed somehow — skip straight to address polling
+                        _Logger.LogInformation("Swap {SwapId} already claimed", lightningSwapId);
+                        lockupStatus = status;
+                        break;
+
+                    case SwapState.InvoiceFailedToPay:
+                    case SwapState.InvoiceExpired:
+                    case SwapState.SwapExpired:
+                    case SwapState.TransactionRefunded:
+                        _Logger.LogWarning("Swap {SwapId} failed: {Status}", lightningSwapId, status.Status);
+                        notificationComponent.ShowErrorMessage($"Lightning payment failed: {status.Status}");
+                        showLightningInvoiceModal = false;
+                        StateHasChanged();
+                        return;
+                }
+
+                if (lockupStatus != null) break;
+            }
+
+            if (lockupStatus == null)
+            {
+                if (!token.IsCancellationRequested)
+                {
+                    _Logger.LogWarning("Swap monitoring timed out for {SwapId}", lightningSwapId);
+                    notificationComponent.ShowNotificationMessage("Lightning payment timed out. Please try again.", 5);
+                }
+                showLightningInvoiceModal = false;
+                StateHasChanged();
+                return;
+            }
+
+            paymentReceived = true;
+            invoiceProcessing = true;
+
+            // Phase 2: Claim the funds using our preimage (only we have it)
+            if (lockupStatus.Status != SwapState.TransactionClaimed)
+            {
+                lightningStatusMessage = "Lockup detected! Claiming funds...";
+                StateHasChanged();
+
+                // Get lockup tx hex — from status or via indexer
+                var lockupTxHex = lockupStatus.TransactionHex;
+                if (string.IsNullOrEmpty(lockupTxHex) && !string.IsNullOrEmpty(lockupStatus.TransactionId))
+                {
+                    _Logger.LogInformation("Fetching lockup tx hex via indexer for {TxId}", lockupStatus.TransactionId);
+                    try
+                    {
+                        lockupTxHex = await _indexerService.GetTransactionHexByIdAsync(lockupStatus.TransactionId);
+                    }
+                    catch (Exception ex)
+                    {
+                        _Logger.LogWarning(ex, "Failed to fetch lockup tx hex from indexer");
+                    }
+                }
+
+                if (string.IsNullOrEmpty(lockupTxHex))
+                {
+                    _Logger.LogError("Cannot claim: lockup tx hex unavailable for swap {SwapId}", lightningSwapId);
+                    notificationComponent.ShowErrorMessage("Failed to retrieve lockup transaction. Please contact support.");
+                    showLightningInvoiceModal = false;
+                    StateHasChanged();
+                    return;
+                }
+
+                // Derive claim private key (same path as the public key used at swap creation)
+                var words = await passwordComponent.GetWalletAsync();
+                var claimPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project!.ProjectInfo.FounderKey);
+                var claimPrivateKeyHex = Encoders.Hex.EncodeData(claimPrivateKey.ToBytes());
+
+                _Logger.LogInformation("Claiming swap {SwapId} from lockup {LockupAddress}",
+                    lightningSwapId, currentSwap!.LockupAddress);
+
+                lightningStatusMessage = "Signing and broadcasting claim transaction...";
+                StateHasChanged();
+
+                var claimResult = await _boltzClaimService.ClaimSwapAsync(
+                    currentSwap, claimPrivateKeyHex, lockupTxHex);
+
+                if (claimResult.IsFailure)
+                {
+                    _Logger.LogError("Claim failed for swap {SwapId}: {Error}", lightningSwapId, claimResult.Error);
+                    notificationComponent.ShowErrorMessage($"Failed to claim funds: {claimResult.Error}");
+                    showLightningInvoiceModal = false;
+                    StateHasChanged();
+                    return;
+                }
+
+                _Logger.LogInformation("Claim succeeded for swap {SwapId}: claimTxId={ClaimTxId}",
+                    lightningSwapId, claimResult.Value.ClaimTransactionId);
+                lightningStatusMessage = "Claim broadcast! Waiting for funds at address...";
+                StateHasChanged();
+            }
+            else
+            {
+                lightningStatusMessage = "Funds already claimed, detecting deposit...";
+                StateHasChanged();
+            }
+
+            // Phase 3: Poll our address for the claimed funds
+            // We poll directly instead of using _addressPollingService because:
+            // - The claim tx fee means the amount is slightly less than requiredSats
+            // - The UTXO may already be confirmed (blockIndex > 0), not just in mempool
+            _Logger.LogInformation("Polling for any funds at {Address}", invoiceAddress);
+
+            List<UtxoData> detectedUtxos = new();
+            var pollEnd = DateTime.UtcNow.AddMinutes(10);
+
+            while (DateTime.UtcNow < pollEnd && !token.IsCancellationRequested)
+            {
+                try
+                {
+                    var utxos = await _indexerService.FetchUtxoAsync(invoiceAddress!, limit: 50, offset: 0);
+                    if (utxos != null && utxos.Any())
+                    {
+                        detectedUtxos = utxos;
+                        _Logger.LogInformation("Detected {Count} UTXO(s) at {Address}, total: {Total} sats",
+                            utxos.Count, invoiceAddress, utxos.Sum(u => u.value));
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _Logger.LogWarning(ex, "Error polling address {Address}", invoiceAddress);
+                }
+
+                await Task.Delay(5000, token);
+            }
+
+            if (detectedUtxos.Count == 0)
+            {
+                if (!token.IsCancellationRequested)
+                {
+                    _Logger.LogError("Funds not detected at {Address} after claim for swap {SwapId}", invoiceAddress, lightningSwapId);
+                    notificationComponent.ShowErrorMessage("On-chain funds not detected after claim. Please contact support.");
+                }
+                showLightningInvoiceModal = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Phase 4: Build and submit investment
+            _Logger.LogInformation("Funds detected for swap {SwapId}, building investment", lightningSwapId);
+            if (walletAutoCreated) fundsReceivedOnNewWallet = true;
+            lightningStatusMessage = "Building investment transaction...";
+            StateHasChanged();
+
+            var addressInfo = accountInfo.AllAddresses().FirstOrDefault(a => a.Address == invoiceAddress);
+            if (addressInfo != null)
+            {
+                foreach (var utxo in detectedUtxos)
+                {
+                    if (!addressInfo.UtxoData.Any(u => u.outpoint.ToString() == utxo.outpoint.ToString()))
+                    {
+                        addressInfo.UtxoData.Add(utxo);
+                    }
+                }
+                storage.SetAccountInfo(network.Name, accountInfo);
+            }
+
+            await BuildAndSubmitFromAddress(accountInfo);
+        }
+        catch (OperationCanceledException)
+        {
+            _Logger.LogInformation("Lightning monitoring cancelled for {SwapId}", lightningSwapId);
+        }
+        catch (Exception e)
+        {
+            _Logger.LogError(e, "Error in Lightning swap flow for {SwapId}", lightningSwapId);
+            notificationComponent.ShowErrorMessage($"Error: {e.Message}", e);
+            CheckAndShowBackupIfNeeded();
+        }
+        finally
+        {
+            showLightningInvoiceModal = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CloseLightningModal()
+    {
+        lightningMonitorCts?.Cancel();
+        showLightningInvoiceModal = false;
         CheckAndShowBackupIfNeeded();
         StateHasChanged();
     }
