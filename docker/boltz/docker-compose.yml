@@ -1,0 +1,582 @@
+x-services:
+  base-scripts: &base-scripts
+    image: ${SCRIPTS_IMAGE}
+    volumes:
+      - cln1-data:/root/.lightning-1
+      - cln2-data:/root/.lightning-2
+      - lnd1-data:/root/.lnd-1
+      - lnd2-data:/root/.lnd-2
+      - boltz-client-data:/root/.boltz-client
+      - boltz-data:/root/.boltz-backend
+      - arkd-data:/root/.arkd
+      - fulmine-data:/root/.fulmine
+      - elements-data:/root/.elements
+    networks:
+      - angornet-network
+
+  base-lnd: &base-lnd
+    image: ${LND_IMAGE}
+    restart: always
+    user: '${UID:-1000}:${GID:-1000}'
+    depends_on:
+      signet-init:
+        condition: service_completed_successfully
+    command:
+      - --listen=0.0.0.0:9735
+      - --rpclisten=0.0.0.0:10009
+      - --restlisten=0.0.0.0:8081
+      - --bitcoin.timelockdelta=18
+      - --bitcoin.active
+      - --bitcoin.signet
+      - --bitcoin.node=bitcoind
+      - --bitcoind.rpchost=angornet-btc-node:38332
+      - --bitcoind.rpcuser=rpcuser
+      - --bitcoind.rpcpass=rpcpassword
+      - --bitcoind.zmqpubrawtx=tcp://angornet-btc-node:28333
+      - --bitcoind.zmqpubrawblock=tcp://angornet-btc-node:28332
+      - --noseedbackup
+      - --protocol.wumbo-channels
+      - --lnddir=/app/lnd
+    expose:
+      - 8081
+      - 9735
+    networks:
+      - angornet-network
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'lncli --network=signet --lnddir=/app/lnd --rpcserver=$$HOSTNAME
+          getinfo',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 600
+      start_period: 120s
+
+  base-cln: &base-cln
+    image: ${CLN_IMAGE}
+    restart: always
+    depends_on:
+      signet-init:
+        condition: service_completed_successfully
+    command:
+      - --lightning-dir=/app/lightning
+      - --large-channels
+      - --network
+      - signet
+      - --bind-addr=0.0.0.0:9735
+      - --bitcoin-rpcconnect=angornet-btc-node
+      - --bitcoin-rpcport=38332
+      - --bitcoin-rpcuser=rpcuser
+      - --bitcoin-rpcpassword=rpcpassword
+      - --grpc-host=0.0.0.0
+      - --grpc-port=9736
+      - --plugin=/usr/local/bin/hold
+      - --hold-grpc-host=0.0.0.0
+      - --plugin=/usr/local/bin/clnurl
+      - --clnurl-host=0.0.0.0
+      - --ignore-fee-limits=false
+      - --force-feerates=1000/500/253/253
+      - --min-emergency-msat=1000000
+      - --cltv-delta=18
+      - --cltv-final=18
+    expose:
+      - 9735
+      - 9736
+      # Hold gRPC
+      - 9292
+      # LNURL
+      - 3000
+    networks:
+      - angornet-network
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'lightning-cli',
+          '--lightning-dir=/app/lightning',
+          '--network=signet',
+          'getinfo',
+        ]
+      timeout: 5s
+      retries: 600
+      interval: 10s
+      start_period: 120s
+
+services:
+  cleanup:
+    <<: *base-scripts
+    restart: no
+    container_name: boltz-cleanup
+    entrypoint: ['/bin/bash', '-c', 'echo "Cleanup disabled for signet"']
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  postgres:
+    hostname: boltz-postgres
+    container_name: boltz-postgres
+    restart: always
+    image: ${POSTGRES_IMAGE}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready --dbname boltz --username boltz']
+      interval: 5s
+      timeout: 30s
+      retries: 10
+      start_period: 5s
+    environment:
+      - POSTGRES_DB=boltz
+      - POSTGRES_USER=boltz
+      - POSTGRES_PASSWORD=boltz
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+    ports:
+      - 15432:5432
+    expose:
+      - 5432
+    networks:
+      - angornet-network
+
+  boltz-backend:
+    hostname: boltz
+    container_name: boltz-backend
+    depends_on:
+      signet-start:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      elementsd:
+        condition: service_healthy
+    restart: always
+    image: ${BOLTZ_BACKEND_IMAGE}
+    command:
+      ['--datadir', '/boltz-data', '--configpath', '/boltz-data/boltz.conf']
+    volumes:
+      - boltz-data:/boltz-data
+      - lnd2-data:/data/lnd
+      - cln2-data:/data/lightning
+    ports:
+      - 9000:9000
+    networks:
+      - angornet-network
+    healthcheck:
+      test: ['CMD-SHELL', "timeout 1 bash -c 'echo > /dev/tcp/127.0.0.1/9000'"]
+      timeout: 1s
+      retries: 10
+      interval: 1s
+      start_period: 0s
+    profiles: ['default', 'ci', 'webapp-ci']
+
+  boltz-backend-nginx:
+    hostname: boltz-nginx
+    container_name: boltz-backend-nginx
+    depends_on:
+      boltz-backend:
+        condition: service_healthy
+    restart: always
+    image: ${NGINX_IMAGE}
+    ports:
+      - 8082:80
+      - 9001:9001
+    volumes:
+      - nginx-data:/etc/nginx/conf.d
+    networks:
+      - angornet-network
+    healthcheck:
+      test: ['CMD-SHELL', 'curl http://localhost:9001/version']
+      timeout: 1s
+      retries: 10
+      interval: 1s
+      start_period: 0s
+    profiles: ['default', 'ci', 'webapp-ci']
+
+  boltz-web-app:
+    hostname: web-app
+    container_name: boltz-web-app
+    depends_on:
+      boltz-backend-nginx:
+        condition: service_healthy
+    restart: always
+    image: ${BOLTZ_WEBAPP_IMAGE}
+    expose:
+      - 80
+    networks:
+      - angornet-network
+    profiles: ['default']
+
+  boltz-client:
+    hostname: boltz-client
+    container_name: boltz-client
+    depends_on:
+      boltz-backend-nginx:
+        condition: service_healthy
+    restart: always
+    image: ${BOLTZ_CLIENT_IMAGE}
+    ports:
+      - 9102:9002
+      - 9103:9003
+    healthcheck:
+      test: ['CMD', 'boltzcli', '--host', 'boltz-client', 'getinfo']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 0s
+    volumes:
+      - cln1-data:/root/.lightning
+      - boltz-client-data:/root/.boltz
+    networks:
+      - angornet-network
+    profiles: ['default']
+
+  elementsd:
+    hostname: elementsd
+    container_name: boltz-elementsd
+    restart: always
+    image: ${ELEMENTS_IMAGE}
+    command:
+      - -datadir=/root/.elements
+    volumes:
+      - elements-data:/root/.elements
+    expose:
+      - 18884
+      - 31000
+      - 31001
+      - 31002
+    ports:
+      - 18884:18884
+    networks:
+      - angornet-network
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'elements-cli -rpcconnect=127.0.0.1 -rpcport=18884 -rpcuser=regtest -rpcpassword=regtest getblockchaininfo',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  liquid-miner:
+    hostname: liquid-miner
+    container_name: boltz-liquid-miner
+    restart: always
+    image: ${ELEMENTS_IMAGE}
+    depends_on:
+      elementsd:
+        condition: service_healthy
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        echo "Liquid auto-miner: mining a block every 60 seconds"
+        elements-cli -rpcconnect=elementsd -rpcport=18884 -rpcuser=regtest -rpcpassword=regtest -generate 1
+        while true; do
+          sleep 60
+          elements-cli -rpcconnect=elementsd -rpcport=18884 -rpcuser=regtest -rpcpassword=regtest -generate 1 > /dev/null 2>&1 || echo "Mining failed, retrying..."
+        done
+    networks:
+      - angornet-network
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  cln-1:
+    container_name: boltz-cln-1
+    hostname: cln-1
+    <<: *base-cln
+    ports:
+      - 9736:9736
+      - 9292:9292
+      - 3000:3000
+    volumes:
+      - cln1-data:/app/lightning
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  cln-2:
+    container_name: boltz-cln-2
+    hostname: cln-2
+    <<: *base-cln
+    ports:
+      - 9737:9736
+      - 9738:9292
+      - 9739:9293
+    volumes:
+      - cln2-data:/app/lightning
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  lnd-1:
+    <<: *base-lnd
+    container_name: boltz-lnd-1
+    hostname: lnd-1
+    ports:
+      - 8081:8081
+      - 10009:10009
+      - 29735:9735
+    volumes:
+      - lnd1-data:/app/lnd/
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  lnd-2:
+    <<: *base-lnd
+    container_name: boltz-lnd-2
+    hostname: lnd-2
+    ports:
+      - 11009:10009
+    volumes:
+      - lnd2-data:/app/lnd/
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  signet-init:
+    <<: *base-scripts
+    restart: no
+    container_name: boltz-signet-init
+    entrypoint:
+      ['/bin/bash', '-c', 'source /etc/profile.d/utils.sh && signet-init']
+    depends_on:
+      cleanup:
+        condition: service_completed_successfully
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  signet-start:
+    <<: *base-scripts
+    restart: no
+    container_name: boltz-signet-start
+    environment:
+      - COMPOSE_PROFILES=${COMPOSE_PROFILES:-}
+    entrypoint:
+      ['/bin/bash', '-c', 'source /etc/profile.d/utils.sh && signet-start']
+    depends_on:
+      signet-init:
+        condition: service_completed_successfully
+      lnd-1:
+        condition: service_healthy
+      lnd-2:
+        condition: service_healthy
+      cln-1:
+        condition: service_healthy
+      cln-2:
+        condition: service_healthy
+      elementsd:
+        condition: service_healthy
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  scripts:
+    <<: *base-scripts
+    restart: no
+    container_name: boltz-scripts
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  electrs:
+    hostname: electrs-bitcoin
+    container_name: boltz-electrs-bitcoin
+    restart: always
+    image: ${ELECTRS_IMAGE}
+    depends_on:
+      signet-init:
+        condition: service_completed_successfully
+    entrypoint: ['electrs-bitcoin']
+    command:
+      - --electrum-rpc-addr
+      - electrs:19001
+      - --http-addr
+      - electrs:3002
+      - --daemon-rpc-addr
+      - angornet-btc-node:38332
+      - --cookie
+      - rpcuser:rpcpassword
+      - --network
+      - signet
+      - --jsonrpc-import
+      - -vvv
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -s $(hostname):3002/blocks/tip/height']
+      timeout: 5s
+      retries: 9999
+      interval: 15s
+      start_period: 300s
+    ports:
+      - 19001:19001
+      - 3002:3002
+    networks:
+      - angornet-network
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  electrs-liquid:
+    hostname: electrs-liquid
+    container_name: boltz-electrs-liquid
+    restart: always
+    image: ${ELECTRS_IMAGE}
+    depends_on:
+      elementsd:
+        condition: service_healthy
+    entrypoint: ['electrs-liquid']
+    command:
+      - --electrum-rpc-addr
+      - electrs-liquid:19002
+      - --http-addr
+      - electrs-liquid:3003
+      - --daemon-rpc-addr
+      - elementsd:18884
+      - --cookie
+      - regtest:regtest
+      - --network
+      - liquidregtest
+      - --jsonrpc-import
+      - -vvv
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -s $(hostname):3003/blocks/tip/height']
+      timeout: 5s
+      retries: 9999
+      interval: 15s
+      start_period: 120s
+    ports:
+      - 19002:19002
+      - 3003:3003
+    networks:
+      - angornet-network
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  thunderhub-lnd-1:
+    image: apotdevin/thunderhub:latest
+    container_name: boltz-thunderhub-lnd-1
+    hostname: thunderhub-lnd-1
+    restart: always
+    depends_on:
+      lnd-1:
+        condition: service_healthy
+    environment:
+      ACCOUNT_CONFIG_PATH: '/data/thubConfig.yaml'
+      LOG_LEVEL: 'debug'
+    volumes:
+      - ./thunderhub/thub-lnd1.yaml:/data/thubConfig.yaml:ro
+      - lnd1-data:/data/lnd:ro
+    networks:
+      - angornet-network
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  thunderhub-lnd-2:
+    image: apotdevin/thunderhub:latest
+    container_name: boltz-thunderhub-lnd-2
+    hostname: thunderhub-lnd-2
+    restart: always
+    depends_on:
+      lnd-2:
+        condition: service_healthy
+    environment:
+      ACCOUNT_CONFIG_PATH: '/data/thubConfig.yaml'
+      LOG_LEVEL: 'debug'
+    volumes:
+      - ./thunderhub/thub-lnd2.yaml:/data/thubConfig.yaml:ro
+      - lnd2-data:/data/lnd:ro
+    networks:
+      - angornet-network
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  rtl-cln-1:
+    image: shahanafarooqui/rtl:v0.15.8
+    container_name: boltz-rtl-cln-1
+    hostname: rtl-cln-1
+    restart: always
+    depends_on:
+      cln-1:
+        condition: service_healthy
+    environment:
+      RTL_CONFIG_PATH: '/data'
+      LN_IMPLEMENTATION: 'CLN'
+      LN_SERVER_URL: 'https://cln-1:9736'
+      CONFIG_PATH: ''
+      RUNE_PATH: '/data/rune'
+    volumes:
+      - ./rtl/RTL-Config-cln1.json:/data/RTL-Config.json
+      - ./rtl/cln1.rune:/data/rune:ro
+      - cln1-data:/data/lightning
+    networks:
+      - angornet-network
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+  rtl-cln-2:
+    image: shahanafarooqui/rtl:v0.15.8
+    container_name: boltz-rtl-cln-2
+    hostname: rtl-cln-2
+    restart: always
+    depends_on:
+      cln-2:
+        condition: service_healthy
+    environment:
+      RTL_CONFIG_PATH: '/data'
+      LN_IMPLEMENTATION: 'CLN'
+      LN_SERVER_URL: 'https://cln-2:9736'
+      CONFIG_PATH: ''
+      RUNE_PATH: '/data/rune'
+    volumes:
+      - ./rtl/RTL-Config-cln2.json:/data/RTL-Config.json
+      - ./rtl/cln2.rune:/data/rune:ro
+      - cln2-data:/data/lightning
+    networks:
+      - angornet-network
+    profiles: ['default', 'ci', 'backend-dev', 'webapp-ci']
+
+volumes:
+  boltz-data:
+    name: boltz-backend-data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/backend
+  boltz-client-data:
+    name: boltz-client-data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/boltz-client
+  cln1-data:
+    name: boltz-cln1-data
+  cln2-data:
+    name: boltz-cln2-data
+  lnd1-data:
+    name: boltz-lnd1-data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/lnd1
+  lnd2-data:
+    name: boltz-lnd2-data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/lnd2
+  nginx-data:
+    name: boltz-nginx-data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/backend-nginx/
+  arkd-data:
+    name: arkd-data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/arkd
+  fulmine-data:
+    name: fulmine-data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/fulmine
+  elements-data:
+    name: boltz-elements-data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/elements
+
+networks:
+  angornet-network:
+    external: true
+    name: angornet-network
