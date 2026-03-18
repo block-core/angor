@@ -169,6 +169,9 @@ public static class RequestInvestmentSignatures
                 }
             }
 
+            // Recalculate balance totals after modifying reserved UTXOs
+            accountBalanceInfo.UpdateAccountBalanceInfo(accountBalanceInfo.AccountInfo, accountBalanceInfo.AccountPendingReceive);
+
             await walletAccountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo);
         }
     }

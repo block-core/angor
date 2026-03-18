@@ -85,6 +85,9 @@ public static class CancelInvestmentRequest
                 accountBalanceInfo.AccountInfo.UtxoReservedForInvestment.Remove(outpointString);
             }
 
+            // Recalculate balance totals after modifying reserved UTXOs
+            accountBalanceInfo.UpdateAccountBalanceInfo(accountBalanceInfo.AccountInfo, accountBalanceInfo.AccountPendingReceive);
+
             await walletAccountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo);
         }
     }

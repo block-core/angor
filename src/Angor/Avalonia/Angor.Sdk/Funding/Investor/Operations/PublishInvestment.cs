@@ -137,6 +137,9 @@ public static class PublishInvestment
             // Add pending receive UTXOs to AccountPendingReceive
             accountBalanceInfo.AccountPendingReceive.AddRange(pendingReceiveUtxos);
 
+            // Recalculate balance totals after modifying UTXO state
+            accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, accountBalanceInfo.AccountPendingReceive);
+
             await walletAccountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo);
         }
 
