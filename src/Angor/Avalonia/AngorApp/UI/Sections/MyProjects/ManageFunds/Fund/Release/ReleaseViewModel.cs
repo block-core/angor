@@ -3,7 +3,6 @@ using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Operations;
 using AngorApp.Model.ProjectsV2.FundProject;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Release.ReleaseDialog;
-using AngorApp.UI.Shared.OperationResult;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Reactive;
 using Option = Zafiro.Avalonia.Dialogs.Option;
@@ -108,19 +107,12 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Fund.Release
         {
             closeable.Close();
             int releasedCount = model.Selection.SelectionModel.SelectedItems.Count;
-            await uiServices.Dialog.Show(
-                new OperationResultViewModel(
-                    "Funds Released!",
-                    $"Successfully released signatures for {releasedCount} funding(s)",
-                    new Icon("fa-check")),
-                "",
-                (_, innerCloseable) =>
-                [
-                    new Option(
-                        "Done",
-                        EnhancedCommand.Create(innerCloseable.Close),
-                        new Zafiro.Avalonia.Dialogs.Settings { IsCancel = true, Role = OptionRole.Primary })
-                ]);
+            await uiServices.Dialog.ShowMessage(
+                "Funds Released!",
+                $"Successfully released signatures for {releasedCount} funding(s)",
+                "Done",
+                new Icon("fa-check"),
+                DialogTone.Success);
             await uiServices.NotificationService.Show("Funds released successfully!", "Release Funds");
         }
 

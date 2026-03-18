@@ -5,7 +5,6 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim.ClaimDialog;
 using AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim.Transactions;
-using AngorApp.UI.Shared.OperationResult;
 using AngorApp.UI.TransactionDrafts;
 using AngorApp.UI.TransactionDrafts.DraftTypes;
 using AngorApp.UI.TransactionDrafts.DraftTypes.Base;
@@ -210,19 +209,12 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim.Stage
         private async Task NotifySuccess(ICloseable closeable)
         {
             closeable.Close();
-            await uiServices.Dialog.Show(
-                new OperationResultViewModel(
-                    "Funds Released!",
-                    "Successfully released to your investors",
-                    new Icon("fa-check")),
-                "",
-                (_, innerCloseable) =>
-                [
-                    new Option(
-                        "Close",
-                        EnhancedCommand.Create(innerCloseable.Close),
-                        new Zafiro.Avalonia.Dialogs.Settings { IsCancel = true, Role = OptionRole.Primary })
-                ]);
+            await uiServices.Dialog.ShowMessage(
+                "Funds Released!",
+                "Successfully released to your investors",
+                "Close",
+                new Icon("fa-check"),
+                DialogTone.Success);
         }
 
         private bool CanClaimNow()

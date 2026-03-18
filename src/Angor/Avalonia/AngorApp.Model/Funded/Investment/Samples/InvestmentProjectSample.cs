@@ -25,8 +25,8 @@ namespace AngorApp.Model.Funded.Investment.Samples
         public IObservable<int> TotalStages { get; set; } = Observable.Return(4);
         public IObservable<int> InvestorCount { get; set; } = Observable.Return(120);
         public IObservable<IReadOnlyCollection<IStage>> Stages { get; } = Observable.Return(new[] { new StageSample() });
-        public DateTimeOffset FundingStart { get; } = DateTimeOffset.Now.AddDays(-60);
-        public DateTimeOffset FundingEnd { get; } = DateTimeOffset.Now.AddDays(60);
+        public DateTime FundingStart { get; } = DateTime.UtcNow.AddDays(-60);
+        public DateTime FundingEnd { get; } = DateTime.UtcNow.AddDays(60);
         public IObservable<bool> IsFundingOpen { get; set; } = Observable.Return(true);
         public IObservable<bool> IsFundingSuccessful { get; set; } = Observable.Return(false);
         public IObservable<bool> IsFundingFailed { get; set; } = Observable.Return(false);

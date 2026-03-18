@@ -1,6 +1,6 @@
 using Angor.Sdk.Wallet.Application;
 using AngorApp.Model.Contracts.Flows;
-using AngorApp.UI.Shared.Controls.Common.Success;
+using Zafiro.Avalonia.Dialogs;
 using Zafiro.Avalonia.Dialogs.Wizards.Slim;
 using Zafiro.UI.Wizards.Slim;
 using Zafiro.UI.Wizards.Slim.Builder;
@@ -16,9 +16,18 @@ public class SendMoneyFlow(IWalletAppService walletAppService, UIServices uiServ
         var wizard = WizardBuilder
             .StartWith(() => new AddressAndAmountViewModel(sourceWallet), "Amount and address").Next(model => (model.Amount, model.Address)).WhenValid<AddressAndAmountViewModel>()
             .Then(sendData => new TransactionDraftViewModel(sourceWallet.Id, walletAppService, new SendAmount("Test", sendData.Amount.Value, sendData.Address), uiServices), "Summary").NextCommand(model => model.Confirm.Enhance("Confirm"))
-            .Then(_ => new SuccessViewModel("Transaction sent!"), "Transaction sent").NextUnit("Close").Always()
-            .Build(StepKind.Completion);
+            .Build(StepKind.Commit);
 
-        await uiServices.Dialog.ShowWizard(wizard, "Send");
+        var result = await uiServices.Dialog.ShowWizard(wizard, "Send");
+
+        if (result.HasValue)
+        {
+            await uiServices.Dialog.ShowMessage(
+                "Transaction sent",
+                "Transaction sent!",
+                "Done",
+                new Icon("fa-check"),
+                DialogTone.Success);
+        }
     }
 }

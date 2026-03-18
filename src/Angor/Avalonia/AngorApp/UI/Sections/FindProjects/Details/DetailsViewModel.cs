@@ -35,8 +35,8 @@ public class DetailsViewModel : ReactiveObject, IDetailsViewModel
 
     public bool IsInsideInvestmentPeriod =>
         Project is not IInvestmentProject investmentProject ||
-        (DateTimeOffset.UtcNow >= investmentProject.FundingStart &&
-         DateTimeOffset.UtcNow <= investmentProject.FundingEnd);
+        (DateTime.UtcNow.Date >= investmentProject.FundingStart.Date &&
+         DateTime.UtcNow.Date <= investmentProject.FundingEnd.Date);
 
     public string FounderKey => Project.FounderPubKey ?? "[Backend: FounderPubKey is null]";
     public string ProjectId => Project.Id.Value ?? "[Backend: ProjectId is null]";

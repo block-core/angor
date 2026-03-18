@@ -135,8 +135,8 @@ public class BoltzSwapIntegrationTests : IDisposable
         (_boltzWebSocketClient as IAsyncDisposable)?.DisposeAsync().AsTask().Wait();
     }
 
-    //[Fact(Skip = "Integration test - requires boltz local server. Run manually.")]
-    [Fact]
+    [Fact(Skip = "Integration test - requires boltz local server. Run manually.")]
+    //[Fact]
     public async Task FullReverseSwapFlow_CreatePayAndMonitor_Success()
     {
         _output.WriteLine(new string('=', 80));
