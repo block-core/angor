@@ -258,14 +258,14 @@
 
                         <TextBlock Classes="Muted">Must be before first stage (chosen on next screen)</TextBlock>
 
-                        <ListBox SelectedValueBinding="{Binding Months}" 
+                        <ListBox SelectedValueBinding="{Binding Value}" 
                                  SelectedValue="{Binding NewProject.FundingEndDate, Mode=TwoWay, Converter={x:Static controls:AngorConverters.AddMonthsToToday}}"
                                  ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}" Background="Transparent">
                             <ListBox.ItemsSource>
                                 <generic:List x:TypeArguments="model:PeriodOption">
-                                    <model:PeriodOption Months="1" Title="1 Month" />
-                                    <model:PeriodOption Months="2" Title="2 Months" />
-                                    <model:PeriodOption Months="3" Title="3 Months" />
+                                    <model:PeriodOption Value="1" Unit="Months" Title="1 Month" />
+                                    <model:PeriodOption Value="2" Unit="Months" Title="2 Months" />
+                                    <model:PeriodOption Value="3" Unit="Months" Title="3 Months" />
                                 </generic:List>
                             </ListBox.ItemsSource>
 

@@ -2,11 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:collections="clr-namespace:System.Collections;assembly=System.Runtime"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              xmlns:model="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model"
              xmlns:stages="clr-namespace:AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages"
-             xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
              mc:Ignorable="d" d:DesignWidth="800"
              x:Class="AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages.StagesSimpleEditor"
              x:DataType="stages:IStagesViewModel">
@@ -29,38 +27,23 @@
         <StackPanel Classes="Gap-XL" IsVisible="{Binding !!!NewProject.Stages.Count}">
             <HeaderedContainer Classes="Card Neutral Window">
                 <HeaderedContainer.Header>
-                    <TextBlock>Project length</TextBlock>
+                    <TextBlock>How long will the project take?</TextBlock>
                 </HeaderedContainer.Header>
-                <HeaderedContainer Header="Duration">
+                <HeaderedContainer Header="Project Length">
                     <StackPanel Classes="Gap-XL">
                         <DockPanel HorizontalSpacing="10">
                             <ComboBox DisplayMemberBinding="{Binding Title, DataType=model:PeriodOption}"
-                                      SelectedValueBinding="{Binding TimeSpan}"
-                                      SelectedValue="{Binding DurationUnit, Mode=TwoWay}"
+                                      ItemsSource="{Binding DurationUnits}"
+                                      SelectedValueBinding="{Binding Unit}"
+                                      SelectedValue="{Binding SelectedDurationUnit, Mode=TwoWay}"
                                       DockPanel.Dock="Right"
-                                      VerticalAlignment="Center">
-                                <ComboBox.ItemsSource>
-                                    <generic:List x:TypeArguments="model:PeriodOption">
-                                        <model:PeriodOption Title="Months" TimeSpan="30:00:00:00" />
-                                        <model:PeriodOption Title="Weeks" TimeSpan="7:00:00:00" />
-                                        <model:PeriodOption Title="Days" TimeSpan="1:00:00:00" />
-                                    </generic:List>
-                                </ComboBox.ItemsSource>
-                            </ComboBox>
-                            <TextBox Text="{Binding DurationValue, Mode=TwoWay}" />
+                                      VerticalAlignment="Center" />
+                            <TextBox Text="{Binding SelectedDurationValue, Mode=TwoWay}" />
                         </DockPanel>
                         <ListBox ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                                  Background="Transparent"
-                                 SelectedItem="{Binding DurationPreset, Mode=TwoWay}">
-                            <ListBox.ItemsSource>
-                                <collections:ArrayList>
-                                    <x:Int32>3</x:Int32>
-                                    <x:Int32>6</x:Int32>
-                                    <x:Int32>12</x:Int32>
-                                    <x:Int32>18</x:Int32>
-                                    <x:Int32>24</x:Int32>
-                                </collections:ArrayList>
-                            </ListBox.ItemsSource>
+                                 ItemsSource="{Binding DurationPresets^}"
+                                 SelectedItem="{Binding SelectedLength, Mode=TwoWay}">
 
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -69,13 +52,8 @@
                             </ListBox.ItemsPanel>
 
                             <ListBox.ItemTemplate>
-                                <DataTemplate DataType="x:Int32">
-                                    <TextBlock Classes="Bold" TextAlignment="Center">
-                                        <TextBlock.Inlines>
-                                            <Run Text="{Binding}" />
-                                            <Run Text="{Binding Converter={x:Static controls:AngorConverters.MonthLabel}}" />
-                                        </TextBlock.Inlines>
-                                    </TextBlock>
+                                <DataTemplate DataType="model:PeriodOption">
+                                    <TextBlock Classes="Bold" TextAlignment="Center" Text="{Binding Title}" />
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
@@ -85,21 +63,13 @@
             </HeaderedContainer>
             <HeaderedContainer Classes="Card Neutral Window">
                 <HeaderedContainer.Header>
-                    <TextBlock>How often do you need funding released?</TextBlock>
+                    <TextBlock>How would you like the payments to be split up?</TextBlock>
                 </HeaderedContainer.Header>
 
                 <ListBox ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                          Background="Transparent"
-                         SelectedValueBinding="{Binding TimeSpan}"
-                         SelectedValue="{Binding ReleaseFrequency, Mode=TwoWay}">
-                    <ListBox.ItemsSource>
-                        <generic:List x:TypeArguments="model:PeriodOption">
-                            <model:PeriodOption Title="Weekly" TimeSpan="7:00:00:00" />
-                            <model:PeriodOption Title="Monthly" TimeSpan="30:00:00:00" />
-                            <model:PeriodOption Title="Bi-Monthly" TimeSpan="60:00:00:00" />
-                            <model:PeriodOption Title="Quarterly" TimeSpan="120:00:00:00" />
-                        </generic:List>
-                    </ListBox.ItemsSource>
+                         ItemsSource="{Binding ReleaseFrequencies}"
+                         SelectedItem="{Binding ReleaseFrequency, Mode=TwoWay}">
 
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
