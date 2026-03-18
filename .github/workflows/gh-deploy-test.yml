@@ -1,0 +1,54 @@
+name: Deploy to Github Pages Test
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-test:
+    concurrency: ci-test-deploy
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_PATH: "src/Angor/Client/Angor.Client.csproj"
+      OUTPUT_PATH: "Output"
+      BUILD_CONFIGURATION: "Release"
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        global-json-file: global.json
+
+    - name: Publish Blazor WASM
+      run: dotnet publish ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --output ${{ env.OUTPUT_PATH }}
+
+    - name: Copy index.html to 404.html
+      run: cp ${{ env.OUTPUT_PATH }}/wwwroot/index.html ${{ env.OUTPUT_PATH }}/wwwroot/404.html
+
+    - name: Add .nojekyll file
+      run: touch ${{ env.OUTPUT_PATH }}/wwwroot/.nojekyll
+
+    - name: Minify JS files
+      run: |
+        npm install uglify-js -g
+        find ${{ env.OUTPUT_PATH }}/wwwroot/assets/js -type f -name '*.js' -exec uglifyjs {} -o {} --compress --mangle \; 2>/dev/null || true
+
+    - name: Minify CSS files
+      run: |
+        npm install csso-cli -g
+        find ${{ env.OUTPUT_PATH }}/wwwroot/assets/css -type f -name '*.css' -exec csso {} -o {} \; 2>/dev/null || true
+
+    - name: Deploy to test.angor.io
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: main
+        folder: ${{ env.OUTPUT_PATH }}/wwwroot
+        repository-name: block-core/angor-test
+        token: ${{ secrets.ANGOR_DEPLOY_TOKEN }}
