@@ -6,6 +6,7 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
     {
         public IAmountUI Target { get; }
         public IObservable<IAmountUI> Raised { get; }
+        public IObservable<InvestmentFundingState> FundingState { get; }
         public IObservable<IAmountUI> TotalInvestment { get; }
         public IObservable<IAmountUI> AvailableBalance { get; }
         public IObservable<IAmountUI> Withdrawable { get; }
@@ -17,17 +18,9 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
         public TimeSpan PenaltyDuration { get; }
         public IAmountUI? PenaltyThreshold { get; }
         IObservable<bool> IsNotInvestedYet => Observable.Return(true);
-        IObservable<bool> IsFundingOpen
-        {
-            get
-            {
-                DateTime now = DateTime.UtcNow.Date;
-                var isOpen = now >= FundingStart.Date && now <= FundingEnd.Date;
-                return Observable.Return(isOpen);
-            }
-        }
-        IObservable<bool> IsFundingSuccessful => IsFundingOpen.CombineLatest(Raised, (isOpen, raised) => !isOpen && raised.Sats >= Target.Sats);
-        IObservable<bool> IsFundingFailed => IsFundingOpen.CombineLatest(Raised, (isOpen, raised) => !isOpen && raised.Sats < Target.Sats);
+        IObservable<bool> IsFundingOpen => FundingState.Select(state => state == InvestmentFundingState.Open);
+        IObservable<bool> IsFundingSuccessful => FundingState.Select(state => state == InvestmentFundingState.Successful);
+        IObservable<bool> IsFundingFailed => FundingState.Select(state => state == InvestmentFundingState.Failed);
         IObservable<decimal> InvestmentProgress => Raised.Select(x => (decimal)x.Sats / Target.Sats);
     }
 }

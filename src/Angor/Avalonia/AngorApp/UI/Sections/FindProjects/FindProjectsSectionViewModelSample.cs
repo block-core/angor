@@ -12,9 +12,7 @@ namespace AngorApp.UI.Sections.FindProjects
             {
                 Project = new InvestmentProjectSample()
                 {
-                    IsFundingOpen = Observable.Return(true),
-                    IsFundingFailed = Observable.Return(false),
-                    IsFundingSuccessful = Observable.Return(false),
+                    FundingState = Observable.Return(InvestmentFundingState.Open),
                     InvestorCount = Observable.Return(123),
                     Target = new AmountUI(123456),
                     Raised = Observable.Return(new AmountUI(12345)),

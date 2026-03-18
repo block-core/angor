@@ -23,6 +23,10 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
             Target = new AmountUI(seed.TargetAmount);
             FundingStart = seed.FundingStartDate;
             FundingEnd = seed.FundingEndDate;
+            FundingState = Observable.Return(IsFundingOpenNow(FundingStart, FundingEnd))
+                .CombineLatest(Raised, (isOpen, raised) => ResolveFundingState(isOpen, raised, Target))
+                .DistinctUntilChanged()
+                .ReplayLastActive();
             Refresh = refresh;
             Stages = projectStatistics
                 .Select(_ => mapStages())
@@ -34,6 +38,7 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
 
         public IAmountUI Target { get; }
         public IObservable<IAmountUI> Raised { get; }
+        public IObservable<InvestmentFundingState> FundingState { get; }
         public IObservable<IAmountUI> TotalInvestment { get; }
         public IObservable<IAmountUI> AvailableBalance { get; }
         public IObservable<IAmountUI> Withdrawable { get; }
@@ -84,9 +89,22 @@ namespace AngorApp.Model.ProjectsV2.InvestmentProject
             return seed.PenaltyThreshold is { } threshold ? new AmountUI(threshold) : null;
         }
 
-        private static bool IsFundingFinished(DateTime fundingEndDate)
+        private static bool IsFundingOpenNow(DateTime fundingStartDate, DateTime fundingEndDate)
         {
-            return DateTime.UtcNow.Date >= fundingEndDate.Date;
+            var now = DateTime.UtcNow.Date;
+            return now >= fundingStartDate.Date && now <= fundingEndDate.Date;
+        }
+
+        internal static InvestmentFundingState ResolveFundingState(bool isOpen, IAmountUI raised, IAmountUI target)
+        {
+            if (isOpen)
+            {
+                return InvestmentFundingState.Open;
+            }
+
+            return raised.Sats >= target.Sats
+                ? InvestmentFundingState.Successful
+                : InvestmentFundingState.Failed;
         }
     }
 }

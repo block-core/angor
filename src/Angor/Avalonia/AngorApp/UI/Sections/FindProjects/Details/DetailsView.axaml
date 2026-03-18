@@ -9,6 +9,7 @@
              xmlns:cards="clr-namespace:AngorApp.UI.Sections.FindProjects.Details.Cards"
              xmlns:inv="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
              xmlns:fund="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
+             xmlns:states="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
              mc:Ignorable="d"
              x:Class="AngorApp.UI.Sections.FindProjects.Details.DetailsView"
              x:DataType="l:IDetailsViewModel">
@@ -16,6 +17,12 @@
     <Design.DataContext>
         <l:DetailsViewModelSample />
     </Design.DataContext>
+    
+    <Interaction.Behaviors>
+        <DataContextChangedTrigger>
+            <InvokeCommandAction Command="{Binding Project.Refresh}" />
+        </DataContextChangedTrigger>
+    </Interaction.Behaviors>
 
     <c:ScrollableView>
         <StackPanel Spacing="30" Margin="20" MaxWidth="1200" HorizontalAlignment="Stretch">
@@ -47,19 +54,25 @@
                             <Panel Classes="Gap-XL">
                                 <cards:InvestmentOpenCard>
                                     <cards:InvestmentOpenCard.IsVisible>
-                                        <Binding Path="IsFundingOpen^" />
+                                        <Binding Path="FundingState^"
+                                                 Converter="{x:Static ObjectConverters.Equal}"
+                                                 ConverterParameter="{x:Static states:InvestmentFundingState.Open}" />
                                     </cards:InvestmentOpenCard.IsVisible>
                                 </cards:InvestmentOpenCard>
 
                                 <cards:InvestmentFailedCard>
                                     <cards:InvestmentFailedCard.IsVisible>
-                                        <Binding Path="IsFundingFailed^" />
+                                        <Binding Path="FundingState^"
+                                                 Converter="{x:Static ObjectConverters.Equal}"
+                                                 ConverterParameter="{x:Static states:InvestmentFundingState.Failed}" />
                                     </cards:InvestmentFailedCard.IsVisible>
                                 </cards:InvestmentFailedCard>
 
                                 <cards:InvestmentSuccessfulCard>
                                     <cards:InvestmentSuccessfulCard.IsVisible>
-                                        <Binding Path="IsFundingSuccessful^" />
+                                        <Binding Path="FundingState^"
+                                                 Converter="{x:Static ObjectConverters.Equal}"
+                                                 ConverterParameter="{x:Static states:InvestmentFundingState.Successful}" />
                                     </cards:InvestmentSuccessfulCard.IsVisible>
                                 </cards:InvestmentSuccessfulCard>
                             </Panel>
