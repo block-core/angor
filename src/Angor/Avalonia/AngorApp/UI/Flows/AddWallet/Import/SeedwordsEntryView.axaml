@@ -5,5 +5,15 @@
              xmlns:addWallet="clr-namespace:AngorApp.UI.Flows.AddWallet.Import"
              mc:Ignorable="d" 
              x:Class="AngorApp.UI.Flows.AddWallet.Import.SeedwordsEntryView" x:DataType="addWallet:SeedwordsEntryViewModel">
-    <TextBox Watermark="twelve or twenty-four seed words separated by spaces" MaxWidth="600" MinWidth="400" MaxHeight="300" Text="{Binding Seedwords, Mode=TwoWay}" />
+    <StackPanel Classes="Gap-XL" Margin="10 10 10 20">
+        <TextBlock Classes="Size-M Center"
+                   Text="Enter your BIP-39 seed words separated by spaces to import an external wallet."
+                   TextWrapping="Wrap"
+                   MaxWidth="400" />
+        <TextBox Watermark="twelve or twenty-four seed words separated by spaces"
+                 MaxWidth="600"
+                 MinWidth="400"
+                 MaxHeight="300"
+                 Text="{Binding Seedwords, Mode=TwoWay}" />
+    </StackPanel>
 </UserControl>

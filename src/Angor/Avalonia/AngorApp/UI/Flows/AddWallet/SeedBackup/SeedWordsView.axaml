@@ -5,7 +5,13 @@
              xmlns:l="clr-namespace:AngorApp.UI.Flows.AddWallet.SeedBackup"
              mc:Ignorable="d"
              x:Class="AngorApp.UI.Flows.AddWallet.SeedBackup.SeedWordsView" x:DataType="l:SeedWordsViewModel">
-    <Border Classes="ColorPanel White">
-        <SelectableTextBlock TextWrapping="Wrap" TextAlignment="Center" Text="{Binding SeedWords}" />
-    </Border>
+    <StackPanel Classes="Gap-XL" Margin="10 10 10 20">
+        <TextBlock Classes="Size-M Center"
+                   Text="Download your seed phrase and keep it safe. You'll need this to recover your wallet if you lose access."
+                   TextWrapping="Wrap"
+                   MaxWidth="400" />
+        <Border Classes="ColorPanel White">
+            <SelectableTextBlock TextWrapping="Wrap" TextAlignment="Center" Text="{Binding SeedWords}" />
+        </Border>
+    </StackPanel>
 </UserControl>
