@@ -1,21 +1,17 @@
 using Angor.Sdk.Common;
-using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Funding.Shared.TransactionDrafts;
-using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
-using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
-using MoreLinq.Extensions;
 using Angor.Sdk.Funding.Projects;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
@@ -86,15 +82,18 @@ public static class BuildUnfundedReleaseTransaction
 
             if (transactionInfo is null)
                 return Result.Failure<BuildUnfundedReleaseTransactionResponse>("Could not find transaction info");
+            
+            var spentIndexes = transactionInfo.Outputs
+                                              .Where((output, i) =>
+                                                         (i < 2 || string.IsNullOrEmpty(output.SpentInTransaction)))
+                                              .Select(o => o.Index - 2)
+                                              .Reverse(); // we reverse the order of the indexes to remove outputs from the end first, preventing index shifting issues
 
-            transactionInfo.Outputs.ForEach((output, i) =>
+            foreach (int spentIndex in spentIndexes)
             {
-                if (i < 2 || string.IsNullOrEmpty(output.SpentInTransaction))
-                    return;
-
-                unsignedReleaseTransaction.Inputs.RemoveAt(i - 2);
-                unsignedReleaseTransaction.Outputs.RemoveAt(i - 2);
-            });
+                unsignedReleaseTransaction.Inputs.RemoveAt(spentIndex);
+                unsignedReleaseTransaction.Outputs.RemoveAt(spentIndex);
+            }
             
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();
             if (changeAddress == null)

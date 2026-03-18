@@ -1,10 +1,9 @@
 using System.Security.Cryptography;
-using NBitcoin;
 using NBitcoin.Secp256k1;
 using Microsoft.Extensions.Logging;
 using CryptoSHA256 = System.Security.Cryptography.SHA256;
 
-namespace Angor.Sdk.Integration.Lightning;
+namespace Angor.Shared.Integration.Lightning;
 
 /// <summary>
 /// MuSig2 implementation for Boltz cooperative claiming.
@@ -74,9 +73,10 @@ public class BoltzMusig2
         // Parse Boltz public key - use as-is (compressed, with its actual 02/03 prefix)
         _boltzPublicKey = ParseKey(boltzPublicKeyBytes);
 
-        // Aggregate the public keys using BIP-327 KeyAgg with sorted compressed keys
+        // Aggregate the public keys using BIP-327 KeyAgg with Boltz convention order:
+        // [refundKey (Boltz), claimKey (ours)] — Boltz uses fixed order, NOT sorted
         (_aggregatedPubKey, _orderedCompressedKeys, _keyAggLHash) =
-            AggregatePublicKeysWithOrder(_boltzPublicKey, _ourPublicKey);
+            AggregatePublicKeysInOrder(_boltzPublicKey, _ourPublicKey);
 
         _logger.LogDebug(
             "MuSig2 initialized - Our pubkey: {OurKey}, Boltz pubkey: {BoltzKey}, Aggregated Q: {AggKey}",
@@ -748,24 +748,18 @@ public class BoltzMusig2
         return a.Length.CompareTo(b.Length);
     }
 
-    private static (ECPubKey aggregatedKey, List<byte[]> orderedKeys, byte[] lHash) AggregatePublicKeysWithOrder(
+    /// <summary>
+    /// Aggregate two public keys using BIP-327 KeyAgg in INPUT order (no sorting).
+    /// Boltz convention for reverse swaps: [refundKey (Boltz), claimKey (ours)].
+    /// </summary>
+    private static (ECPubKey aggregatedKey, List<byte[]> orderedKeys, byte[] lHash) AggregatePublicKeysInOrder(
         ECPubKey pk1, ECPubKey pk2)
     {
         var compressed1 = pk1.ToBytes();
         var compressed2 = pk2.ToBytes();
 
-        List<byte[]> compressedKeys;
-        List<ECPubKey> ecPubKeys;
-        if (CompareBytes(compressed1, compressed2) <= 0)
-        {
-            compressedKeys = new List<byte[]> { compressed1, compressed2 };
-            ecPubKeys = new List<ECPubKey> { pk1, pk2 };
-        }
-        else
-        {
-            compressedKeys = new List<byte[]> { compressed2, compressed1 };
-            ecPubKeys = new List<ECPubKey> { pk2, pk1 };
-        }
+        var compressedKeys = new List<byte[]> { compressed1, compressed2 };
+        var ecPubKeys = new List<ECPubKey> { pk1, pk2 };
 
         var lHash = ComputeKeyListHash(compressedKeys);
         var aggregated = KeyAggInternal(compressedKeys, ecPubKeys);

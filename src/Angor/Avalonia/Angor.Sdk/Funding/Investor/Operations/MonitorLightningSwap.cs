@@ -1,6 +1,6 @@
 using Angor.Sdk.Common;
-using Angor.Sdk.Integration.Lightning;
-using Angor.Sdk.Integration.Lightning.Models;
+using Angor.Shared.Integration.Lightning;
+using Angor.Shared.Integration.Lightning.Models;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;

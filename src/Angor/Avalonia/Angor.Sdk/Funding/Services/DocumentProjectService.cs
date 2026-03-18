@@ -88,6 +88,7 @@ public class DocumentProjectService(
                              {
                                  Index = i,
                                  ReleaseDate = stage.ReleaseDate,
+                                 // AmountToRelease is 0-100 percentage; RatioOfTotal is 0-1 ratio
                                  RatioOfTotal = stage.AmountToRelease / 100m
                              }),
                              StartingDate = info.StartDate,
