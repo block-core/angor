@@ -27,7 +27,7 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Release
             this.walletContext = walletContext;
             Project = project;
             ReleaseAll = GetReleaseCommand();
-            HasReleasableTransactions = availableTransactions.Select(count => count > 0).StartWith(false);
+            HasReleasableTransactions = availableTransactions.Select(count => count > 0).StartWith(false).Replay(1).RefCount();
         }
 
         public IInvestmentProject Project { get; }

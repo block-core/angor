@@ -156,9 +156,10 @@ namespace AngorApp.UI.Flows.CreateProject
             project.PayoutFrequency = PayoutFrequency.Monthly;
             project.MonthlyPayoutDate = DateTime.Now.Day;
 
-            // Pick a reasonable default installment pattern.
+            // Pick reasonable default installment patterns (3-month and 6-month).
             project.SelectedInstallments.SelectionModel.Clear();
             project.SelectedInstallments.SelectionModel.Select(0);
+            project.SelectedInstallments.SelectionModel.Select(1);
         }
 
         private static void PopulateInvestDebugDefaults(InvestmentProjectConfigBase project)

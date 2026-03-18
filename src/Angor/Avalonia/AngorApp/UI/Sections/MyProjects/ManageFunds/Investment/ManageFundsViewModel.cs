@@ -44,7 +44,9 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment
                         return 0;
                     }
                 })
-                .StartWith(0);
+                .StartWith(0)
+                .Replay(1)
+                .RefCount();
 
             Header = Observable.Return(new HeaderViewModel(project, loadProjectStats));
             ReleaseViewModel = Observable.Return(new ReleaseViewModel(
