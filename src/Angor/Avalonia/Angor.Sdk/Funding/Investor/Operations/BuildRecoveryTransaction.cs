@@ -86,11 +86,11 @@ public static class BuildRecoveryTransaction
 
             for (int i = unsignedRecoveryTransaction.Inputs.Count - 1; i >= 0; i--)
             {
-                if (spentOutpoints.Contains(unsignedRecoveryTransaction.Inputs[i].PrevOut))
-                {
-                    unsignedRecoveryTransaction.Inputs.RemoveAt(i);
-                    unsignedRecoveryTransaction.Outputs.RemoveAt(i);
-                }
+                if (!spentOutpoints.Contains(unsignedRecoveryTransaction.Inputs[i].PrevOut))
+                    continue;
+
+                unsignedRecoveryTransaction.Inputs.RemoveAt(i);
+                unsignedRecoveryTransaction.Outputs.RemoveAt(i);
             }
 
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();
