@@ -879,8 +879,8 @@
     {
         // Load dynamic stage patterns if applicable
         // For standard invest projects, no patterns are shown
-        AvailablePatterns = project?.ProjectInfo?.Stages?.Count > 0
-            ? null  // Standard invest — stages are fixed
+        AvailablePatterns = project?.ProjectInfo?.AllowDynamicStages ?? false
+            ? project.ProjectInfo.DynamicStagePatterns
             : null;
     }
 
