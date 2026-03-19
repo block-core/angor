@@ -293,6 +293,7 @@ public class FounderAppServiceTests : IClassFixture<TestNetworkFixture>
             _mockSeedwordsProvider.Object,
             _mockDerivationOperations.Object,
             _mockRelayService.Object,
+            _fixture.NetworkConfiguration,
             _mockAngorIndexerService.Object,
             _mockDerivedProjectKeysCollection.Object,
             NullLogger<CreateProjectInfo.CreateProjectInfoHandler>.Instance);

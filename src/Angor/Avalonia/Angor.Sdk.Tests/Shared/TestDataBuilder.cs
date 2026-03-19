@@ -215,7 +215,8 @@ public static class TestDataBuilder
                 PenaltyDuration = _penaltyDuration,
                 Stages = stages,
                 ProjectType = _projectType,
-                DynamicStagePatterns = _dynamicStagePatterns ?? new List<DynamicStagePattern>()
+                DynamicStagePatterns = _dynamicStagePatterns ?? new List<DynamicStagePattern>(),
+                NetworkName = "TestNet"
             };
         }
     }

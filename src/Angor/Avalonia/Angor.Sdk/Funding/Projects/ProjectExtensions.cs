@@ -73,7 +73,10 @@ public static class ProjectExtensions
             }).ToList(),
       
             // Dynamic patterns (for Fund/Subscribe projects)
-            DynamicStagePatterns = project.DynamicStagePatterns ?? new List<DynamicStagePattern>()
+            DynamicStagePatterns = project.DynamicStagePatterns ?? new List<DynamicStagePattern>(),
+            
+            // Network identification
+            NetworkName = project.NetworkName
         };
     }
 }
