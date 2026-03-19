@@ -1,0 +1,80 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         BOTTOM TAB BAR STYLES
+         Vue: <nav> lg:hidden — 5 tabs (Home, Investor, Founder, Funds, Settings)
+         Each tab: flex-col, gap-1, px-3 py-2, rounded-lg, min-w-[60px]
+         Active: text-[#4B7C5A], Inactive: text-gray-600 (light) / #FAFAFA (dark)
+         ═══════════════════════════════════════════════════════════════════ -->
+
+    <!-- TabBarItem: individual tab button in the bottom tab bar
+         Vue: flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all min-w-[60px]
+         No background, foreground-only color changes (icon + label inherit from Button.Foreground) -->
+    <Style Selector="Button.TabBarItem">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="MinWidth" Value="60" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{DynamicResource TabBarInactiveText}" />
+    </Style>
+    <!-- Remove the default Button template hover background -->
+    <Style Selector="Button.TabBarItem /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.TabBarItem:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.TabBarItem:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Active tab: green foreground (Rule #9: NO BrushTransition, CSS class toggle) -->
+    <Style Selector="Button.TabBarItem.TabBarItemActive">
+        <Setter Property="Foreground" Value="{DynamicResource TabBarActiveText}" />
+    </Style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         FLOATING SUB-TAB BUTTON STYLES
+         Vue: flex-1 py-3.5 text-sm font-semibold transition-all
+         Active: bg-[#4B7C5A] text-white
+         Inactive: bg-white text-[#4A5568] hover:bg-gray-50 (light)
+                   bg-[#2A2A2A] text-[#FAFAFA] (dark)
+         ═══════════════════════════════════════════════════════════════════ -->
+
+    <Style Selector="Button.SubTab">
+        <Setter Property="Background" Value="{DynamicResource SubTabInactiveBg}" />
+        <Setter Property="Foreground" Value="{DynamicResource SubTabInactiveText}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0,14" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.SubTab /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SubTabInactiveBg}" />
+    </Style>
+    <Style Selector="Button.SubTab:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SubTabInactiveHoverBg}" />
+    </Style>
+
+    <!-- Active sub-tab: green bg, white text (Rule #9: NO BrushTransition, CSS class toggle) -->
+    <Style Selector="Button.SubTab.SubTabActive">
+        <Setter Property="Background" Value="{DynamicResource SubTabActiveBg}" />
+        <Setter Property="Foreground" Value="{DynamicResource SubTabActiveText}" />
+    </Style>
+    <Style Selector="Button.SubTab.SubTabActive /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SubTabActiveBg}" />
+    </Style>
+    <Style Selector="Button.SubTab.SubTabActive:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SubTabActiveBg}" />
+    </Style>
+
+</Styles>

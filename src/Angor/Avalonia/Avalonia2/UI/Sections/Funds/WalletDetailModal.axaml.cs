@@ -102,9 +102,10 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
         {
             // Parse index from button name and copy the corresponding UTXO txid
             var indexStr = btn.Name["BtnCopyTxid_".Length..];
-            if (int.TryParse(indexStr, out var idx) && idx >= 0 && idx < MockUtxos.Count)
+            if (int.TryParse(indexStr, out var idx) && idx >= 0 && idx < _utxos.Count)
             {
-                ClipboardHelper.CopyToClipboard(this, MockUtxos[idx].Txid);
+                var txid = _utxos[idx].outpoint?.transactionId ?? "";
+                ClipboardHelper.CopyToClipboard(this, txid);
             }
             e.Handled = true;
         }

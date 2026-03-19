@@ -13,18 +13,21 @@
     </Design.DataContext>
 
     <!--
-        Home page: two equal-width cards side by side.
+        Home page: two equal-width cards side by side (desktop) or stacked (compact).
         Left  — "Fund Projects"  (Bitcoin icon, search button)
         Right — "Get Funded"     (Lightning icon, launch button)
         
-        Matches Vue prototype at angor.tx1138.com/app.html (desktop layout)
-        and legacy AngorApp HomeSectionView.
+        Responsive: ColumnDefinitions="*,24,*" (desktop) → RowDefinitions with stacked (compact)
+        Vue: ProfileWelcome.vue — single-column centered on mobile
     -->
     <controls:ScrollableView ContentPadding="24,24,24,24">
-        <Grid ColumnDefinitions="*,24,*" RowDefinitions="*" ClipToBounds="False">
+        <!-- Desktop: two columns side by side. Compact: stacked vertically.
+             The code-behind toggles ColumnDefinitions/RowDefinitions + Grid.Column/Grid.Row 
+             assignments based on LayoutModeService. -->
+        <Grid Name="HomeGrid" ColumnDefinitions="*,24,*" RowDefinitions="*" ClipToBounds="False">
 
-            <!-- ═══ Fund Projects card (left) ═══ -->
-            <Grid Grid.Column="0" MinHeight="480" ClipToBounds="False">
+            <!-- ═══ Fund Projects card (left / top) ═══ -->
+            <Grid Name="FundCard" Grid.Column="0" MinHeight="480" ClipToBounds="False">
                 <!-- Card background -->
                 <Border Classes="Panel" ClipToBounds="False" />
                 <!-- Tiled logo watermark overlay (matches Vue invest-column ::before) -->
@@ -64,8 +67,8 @@
                 </StackPanel>
             </Grid>
 
-            <!-- ═══ Get Funded card (right) ═══ -->
-            <Grid Grid.Column="2" MinHeight="480" ClipToBounds="False">
+            <!-- ═══ Get Funded card (right / bottom) ═══ -->
+            <Grid Name="GetFundedCard" Grid.Column="2" MinHeight="480" ClipToBounds="False">
                 <!-- Card background -->
                 <Border Classes="Panel" ClipToBounds="False" />
                 <!-- Content -->

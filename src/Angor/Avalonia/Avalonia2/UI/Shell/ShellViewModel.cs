@@ -234,6 +234,17 @@ public partial class ShellViewModel : ReactiveObject
             ? SelectedWallet.Balance.ToString("F4", CultureInfo.InvariantCulture) + " BTC"
             : "10.0000 BTC";
 
+    // ── Mobile tab bar state ──
+    // Vue: mobileActiveTab, mobileInvestorSubTab, mobileFounderSubTab in App.vue
+    [Reactive] private string mobileActiveTab = "home";
+    [Reactive] private string mobileInvestorSubTab = "find-projects";
+    [Reactive] private string mobileFounderSubTab = "my-projects";
+
+    /// <summary>
+    /// Reference to the LayoutModeService singleton for XAML bindings.
+    /// </summary>
+    public LayoutModeService Layout => LayoutModeService.Instance;
+
     public ShellViewModel(PortfolioViewModel portfolioVm, Func<string, object?> viewFactory, IWalletAppService walletAppService)
     {
         _portfolioVm = portfolioVm;
@@ -263,6 +274,7 @@ public partial class ShellViewModel : ReactiveObject
             {
                 IsSettingsOpen = false;
                 SectionTitleOverride = null;
+                SyncMobileTabState();
                 this.RaisePropertyChanged(nameof(CurrentSectionContent));
                 this.RaisePropertyChanged(nameof(SelectedSectionName));
             });
@@ -271,6 +283,7 @@ public partial class ShellViewModel : ReactiveObject
             .Where(open => open)
             .Subscribe(_ =>
             {
+                SyncMobileTabState();
                 this.RaisePropertyChanged(nameof(CurrentSectionContent));
                 this.RaisePropertyChanged(nameof(SelectedSectionName));
             });
@@ -355,6 +368,108 @@ public partial class ShellViewModel : ReactiveObject
         {
             SelectedNavItem = fundsItem;
         }
+    }
+
+    // ── Mobile tab bar navigation ──
+    // Vue: handleMobileTabChange, handleInvestorSubTabChange, handleFounderSubTabChange
+
+    /// <summary>
+    /// Handle a mobile bottom tab bar tap.
+    /// Vue: handleMobileTabChange() in App.vue (line 9075).
+    /// Maps the 5 mobile tabs to the sidebar nav items.
+    /// </summary>
+    public void HandleMobileTabChange(string tab)
+    {
+        MobileActiveTab = tab;
+
+        switch (tab)
+        {
+            case "home":
+                SelectNavByLabel("Home");
+                break;
+            case "funds":
+                SelectNavByLabel("Funds");
+                break;
+            case "investor":
+                // Remember last sub-tab (Vue: changePage(mobileInvestorSubTab.value))
+                SelectNavByLabel(MobileInvestorSubTab == "investments" ? "Funded" : "Find Projects");
+                break;
+            case "founder":
+                SelectNavByLabel(MobileFounderSubTab == "funders" ? "Funders" : "My Projects");
+                break;
+            case "settings":
+                NavigateToSettings();
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Handle investor floating sub-tab change.
+    /// Vue: handleInvestorSubTabChange() in App.vue.
+    /// </summary>
+    public void HandleInvestorSubTabChange(string subTab)
+    {
+        MobileInvestorSubTab = subTab;
+        MobileActiveTab = "investor";
+        SelectNavByLabel(subTab == "investments" ? "Funded" : "Find Projects");
+    }
+
+    /// <summary>
+    /// Handle founder floating sub-tab change.
+    /// Vue: handleFounderSubTabChange() in App.vue.
+    /// </summary>
+    public void HandleFounderSubTabChange(string subTab)
+    {
+        MobileFounderSubTab = subTab;
+        MobileActiveTab = "founder";
+        SelectNavByLabel(subTab == "funders" ? "Funders" : "My Projects");
+    }
+
+    /// <summary>
+    /// Sync the mobile tab state when desktop sidebar navigation changes.
+    /// Vue: changePage() sync logic in App.vue (line 8546).
+    /// </summary>
+    private void SyncMobileTabState()
+    {
+        if (IsSettingsOpen)
+        {
+            MobileActiveTab = "settings";
+            return;
+        }
+
+        switch (SelectedNavItem?.Label)
+        {
+            case "Home":
+                MobileActiveTab = "home";
+                break;
+            case "Funds":
+                MobileActiveTab = "funds";
+                break;
+            case "Find Projects":
+                MobileActiveTab = "investor";
+                MobileInvestorSubTab = "find-projects";
+                break;
+            case "Funded":
+                MobileActiveTab = "investor";
+                MobileInvestorSubTab = "investments";
+                break;
+            case "My Projects":
+                MobileActiveTab = "founder";
+                MobileFounderSubTab = "my-projects";
+                break;
+            case "Funders":
+                MobileActiveTab = "founder";
+                MobileFounderSubTab = "funders";
+                break;
+        }
+    }
+
+    /// <summary>Select a sidebar nav item by label.</summary>
+    private void SelectNavByLabel(string label)
+    {
+        var item = NavEntries.OfType<NavItem>().FirstOrDefault(n => n.Label == label);
+        if (item != null)
+            SelectedNavItem = item;
     }
 
     /// <summary>

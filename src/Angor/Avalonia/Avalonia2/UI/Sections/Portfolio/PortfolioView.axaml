@@ -55,8 +55,9 @@
                 <!-- ═══════════════════════════════════════ -->
                 <!-- LEFT PANEL: Portfolio Summary Card      -->
                 <!-- (STICKY — does not scroll)              -->
+                <!-- Responsive: stacked above content on compact -->
                 <!-- ═══════════════════════════════════════ -->
-                <Border Grid.Column="0"
+                <Border Name="PortfolioSidebar" Grid.Column="0"
                         Background="{DynamicResource Surface}"
                         BorderBrush="{DynamicResource Stroke}"
                         BorderThickness="1"
@@ -240,8 +241,9 @@
                 <!-- ═══════════════════════════════════════ -->
                 <!-- RIGHT PANEL: Your Investments           -->
                 <!-- (Scrollable — only this column scrolls) -->
+                <!-- Responsive: stacked below sidebar on compact -->
                 <!-- ═══════════════════════════════════════ -->
-                <controls:ScrollableView Grid.Column="1" ContentPadding="0,0,16,0">
+                <controls:ScrollableView Name="PortfolioContent" Grid.Column="1" ContentPadding="0,0,16,0">
                 <StackPanel Spacing="16">
 
                     <!-- Section heading -->

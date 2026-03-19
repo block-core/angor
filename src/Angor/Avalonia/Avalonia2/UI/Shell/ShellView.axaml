@@ -12,14 +12,16 @@
     <!-- Outer Panel allows modal overlay to stack above entire shell -->
     <Panel>
         <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- MAIN SHELL LAYOUT                                           -->
+        <!-- DESKTOP SHELL LAYOUT (>= 1024px)                           -->
+        <!-- Vue: hidden lg:flex — sidebar + header + content            -->
         <!-- ═══════════════════════════════════════════════════════════ -->
-        <Grid Name="ShellContent" Margin="0,24,24,24" ColumnDefinitions="208 *" RowDefinitions="42 *" ColumnSpacing="0" RowSpacing="20">
+        <Grid Name="ShellContent" Margin="0,24,24,24" ColumnDefinitions="208 *" RowDefinitions="42 *" ColumnSpacing="0" RowSpacing="20"
+              IsVisible="{Binding Layout.IsDesktop}">
             <!-- Logo — centered within the 208px sidebar column (Vue: w-52 = 208px, logo centered) -->
             <Svg Path="/Assets/logo.svg" Width="32" Height="32"
                  HorizontalAlignment="Center" VerticalAlignment="Center" />
 
-            <!-- Top bar -->
+            <!-- Top bar (Vue: hidden lg:flex header) -->
             <DockPanel Grid.Row="0" Grid.Column="1">
                 <TextBlock FontWeight="Bold" VerticalAlignment="Center" FontSize="20"
                            Text="{Binding SelectedSectionName}" />
@@ -143,7 +145,7 @@
                 </ListBox>
             </Border>
 
-            <!-- Main content area -->
+            <!-- Main content area (desktop) -->
             <Border Grid.Row="1" Grid.Column="1" Classes="Panel" Padding="0" ClipToBounds="True">
                 <ContentControl Content="{Binding CurrentSectionContent}" />
             </Border>
@@ -155,15 +157,167 @@
         </Grid>
 
         <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- COMPACT / MOBILE SHELL LAYOUT (< 1024px)                    -->
+        <!-- Vue: lg:hidden — full-width content + bottom tab bar        -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <Grid Name="CompactShellContent" RowDefinitions="*,Auto"
+              IsVisible="{Binding Layout.IsCompact}">
+
+            <!-- Content area (fills all space above tab bar) -->
+            <Border Grid.Row="0" ClipToBounds="True">
+                <ContentControl Content="{Binding CurrentSectionContent}" />
+            </Border>
+
+            <!-- App-wide crosshatch texture overlay (compact) -->
+            <Border Grid.RowSpan="2"
+                    Background="{DynamicResource AppTextureBrush}"
+                    IsHitTestVisible="False" />
+
+            <!-- ── Floating sub-tab panels (above the tab bar) ── -->
+            <!-- Vue: fixed bottom-20, z-40, rounded-2xl pill with two buttons -->
+
+            <!-- Investor sub-tabs: "Find Projects" / "Funded"
+                 Vue: shown when mobileActiveTab === 'investor' && not in detail views -->
+            <Border Name="InvestorSubTabs" Grid.Row="0"
+                    IsVisible="False"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Stretch"
+                    Margin="16,0,16,8"
+                    ZIndex="40"
+                    Background="{DynamicResource SubTabPanelBg}"
+                    BorderBrush="{DynamicResource SubTabPanelBorder}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    BoxShadow="0 10 15 -3 #1A000000"
+                    ClipToBounds="True">
+                <Grid ColumnDefinitions="*,*">
+                    <Button Name="InvestorSubTabFind" Grid.Column="0"
+                            Classes="SubTab SubTabActive"
+                            Content="Find Projects"
+                            Click="OnInvestorSubTabFind" />
+                    <Button Name="InvestorSubTabFunded" Grid.Column="1"
+                            Classes="SubTab"
+                            Content="Funded"
+                            Click="OnInvestorSubTabFunded" />
+                </Grid>
+            </Border>
+
+            <!-- Founder sub-tabs: "My Projects" / "Funders"
+                 Vue: shown when mobileActiveTab === 'founder' && not in detail views -->
+            <Border Name="FounderSubTabs" Grid.Row="0"
+                    IsVisible="False"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Stretch"
+                    Margin="16,0,16,8"
+                    ZIndex="40"
+                    Background="{DynamicResource SubTabPanelBg}"
+                    BorderBrush="{DynamicResource SubTabPanelBorder}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    BoxShadow="0 10 15 -3 #1A000000"
+                    ClipToBounds="True">
+                <Grid ColumnDefinitions="*,*">
+                    <Button Name="FounderSubTabMyProjects" Grid.Column="0"
+                            Classes="SubTab SubTabActive"
+                            Content="My Projects"
+                            Click="OnFounderSubTabMyProjects" />
+                    <Button Name="FounderSubTabFunders" Grid.Column="1"
+                            Classes="SubTab"
+                            Content="Funders"
+                            Click="OnFounderSubTabFunders" />
+                </Grid>
+            </Border>
+
+            <!-- ── Bottom Tab Bar ── -->
+            <!-- Vue: <nav> lg:hidden fixed bottom-0, bg-white, border-t border-gray-200, z-50
+                 5 tabs: Home, Investor, Founder, Funds, Settings
+                 Each: flex-col, gap-1, px-3 py-2, rounded-lg, min-w-[60px]
+                 Active: text-[#4B7C5A], Inactive: text-gray-600 (light) / #FAFAFA (dark) -->
+            <Border Grid.Row="1" ZIndex="50"
+                    Background="{DynamicResource TabBarBackground}"
+                    BorderBrush="{DynamicResource TabBarBorder}"
+                    BorderThickness="0,1,0,0"
+                    Padding="8">
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            MaxWidth="512"
+                            Spacing="0">
+                    <!-- Home tab -->
+                    <Button Name="TabHome" Classes="TabBarItem TabBarItemActive"
+                            Click="OnTabHome">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-house" FontSize="20" />
+                            <TextBlock Text="Home" FontSize="12" FontWeight="Medium"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Investor tab -->
+                    <Button Name="TabInvestor" Classes="TabBarItem"
+                            Click="OnTabInvestor">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-chart-line" FontSize="20" />
+                            <TextBlock Text="Investor" FontSize="12" FontWeight="Medium"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Founder tab -->
+                    <Button Name="TabFounder" Classes="TabBarItem"
+                            Click="OnTabFounder">
+                        <Panel>
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <i:Icon Value="fa-solid fa-file-lines" FontSize="20" />
+                                <TextBlock Text="Founder" FontSize="12" FontWeight="Medium"
+                                           HorizontalAlignment="Center" />
+                            </StackPanel>
+                            <!-- Notification badge (Vue: absolute top-1 right-1, w-4 h-4, bg Bitcoin orange) -->
+                            <Border Name="FounderBadge"
+                                    IsVisible="False"
+                                    Width="16" Height="16"
+                                    CornerRadius="8"
+                                    Background="#F7931A"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Margin="0,-2,-8,0">
+                                <TextBlock Name="FounderBadgeText"
+                                           Text="0"
+                                           FontSize="10" FontWeight="Bold"
+                                           Foreground="White"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            </Border>
+                        </Panel>
+                    </Button>
+
+                    <!-- Funds tab -->
+                    <Button Name="TabFunds" Classes="TabBarItem"
+                            Click="OnTabFunds">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-wallet" FontSize="20" />
+                            <TextBlock Text="Funds" FontSize="12" FontWeight="Medium"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Settings tab -->
+                    <Button Name="TabSettings" Classes="TabBarItem"
+                            Click="OnTabSettings">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-gear" FontSize="20" />
+                            <TextBlock Text="Settings" FontSize="12" FontWeight="Medium"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
         <!-- SHELL-LEVEL MODAL OVERLAY                                   -->
         <!-- Renders above the entire app (sidebar + top bar + content)  -->
         <!-- Any section can push content here via ShellViewModel         -->
         <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- Modal content is managed entirely in code-behind to avoid
-             ContentPresenter binding race conditions. The Panel starts
-             hidden; code-behind adds the content control as a direct
-             child, then makes the Panel visible. This guarantees the
-             content is in the visual tree before the layout pass. -->
         <Panel Name="ModalOverlay" IsVisible="False" ZIndex="1000">
             <Border Name="ShellModalBackdrop"
                     Background="{DynamicResource ModalBackdrop}"

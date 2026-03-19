@@ -1,5 +1,6 @@
 using Avalonia.Platform;
 using Avalonia.Styling;
+using Avalonia2.UI.Shared;
 
 namespace Avalonia2.UI.Shell;
 
@@ -12,6 +13,13 @@ public partial class MainWindow : Window
         Application.Current!
             .GetObservable(ThemeVariantScope.ActualThemeVariantProperty)
             .Subscribe(_ => SetWindowIconForCurrentTheme());
+
+        // Wire LayoutModeService — track window width for responsive breakpoints
+        // Vue: lg = 1024px (sidebar visible), md = 768px (tablet)
+        this.GetObservable(ClientSizeProperty).Subscribe(size =>
+        {
+            LayoutModeService.Instance.UpdateWidth(size.Width);
+        });
     }
 
     private void SetWindowIconForCurrentTheme()

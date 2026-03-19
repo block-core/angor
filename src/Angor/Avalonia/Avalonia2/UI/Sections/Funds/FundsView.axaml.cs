@@ -1,25 +1,142 @@
+using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using Avalonia2.UI.Shell;
+using Avalonia2.UI.Shared;
 using Avalonia2.UI.Shared.Controls;
+using ReactiveUI;
 
 namespace Avalonia2.UI.Sections.Funds;
 
 public partial class FundsView : UserControl
 {
+    private IDisposable? _layoutSubscription;
+
+    // Cached responsive controls
+    private Border? _fundsSummaryCard;
+    private Grid? _fundsStatsGrid;
+    private Border? _fundsStatCard0;
+    private Border? _fundsStatCard1;
+    private Border? _fundsStatCard2;
+    private ScrollableView? _scrollableView;
+
     /// <summary>Design-time only.</summary>
-    public FundsView() => InitializeComponent();
+    public FundsView()
+    {
+        InitializeComponent();
+        CacheControls();
+        SubscribeLayout();
+    }
 
     public FundsView(FundsViewModel vm)
     {
         InitializeComponent();
         DataContext = vm;
 
+        CacheControls();
+        SubscribeLayout();
+
         // Handle button clicks from EmptyState "Add Wallet", populated "Add Wallet",
         // and WalletCard action buttons (BtnSend, BtnReceive, BtnUtxo)
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
+    }
+
+    private void CacheControls()
+    {
+        _fundsSummaryCard = this.FindControl<Border>("FundsSummaryCard");
+        _fundsStatsGrid = this.FindControl<Grid>("FundsStatsGrid");
+        _fundsStatCard0 = this.FindControl<Border>("FundsStatCard0");
+        _fundsStatCard1 = this.FindControl<Border>("FundsStatCard1");
+        _fundsStatCard2 = this.FindControl<Border>("FundsStatCard2");
+        _scrollableView = this.FindControl<ScrollableView>("FundsScrollableView");
+    }
+
+    private void SubscribeLayout()
+    {
+        _layoutSubscription = LayoutModeService.Instance
+            .WhenAnyValue(x => x.IsCompact)
+            .Subscribe(ApplyResponsiveLayout);
+    }
+
+    /// <summary>
+    /// Responsive layout: compact → stats stack single column, reduced padding.
+    /// Vue: <=768px → stats-grid repeat(2,1fr) gap 12; <=640px → 1fr.
+    /// We use single breakpoint (IsCompact = <=1024px) → 1-col stacked.
+    /// </summary>
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        if (_fundsStatsGrid == null) return;
+
+        if (isCompact)
+        {
+            // Stats grid: single column stacked
+            _fundsStatsGrid.ColumnDefinitions.Clear();
+            _fundsStatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            _fundsStatsGrid.RowDefinitions.Clear();
+            _fundsStatsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            _fundsStatsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            _fundsStatsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+            if (_fundsStatCard0 != null)
+            {
+                Grid.SetColumn(_fundsStatCard0, 0); Grid.SetRow(_fundsStatCard0, 0);
+                _fundsStatCard0.Margin = new Thickness(0, 0, 0, 12);
+            }
+            if (_fundsStatCard1 != null)
+            {
+                Grid.SetColumn(_fundsStatCard1, 0); Grid.SetRow(_fundsStatCard1, 1);
+                _fundsStatCard1.Margin = new Thickness(0, 0, 0, 12);
+            }
+            if (_fundsStatCard2 != null)
+            {
+                Grid.SetColumn(_fundsStatCard2, 0); Grid.SetRow(_fundsStatCard2, 2);
+                _fundsStatCard2.Margin = new Thickness(0);
+            }
+
+            // Vue: summary card padding 16px on mobile
+            if (_fundsSummaryCard != null)
+                _fundsSummaryCard.Padding = new Thickness(16);
+
+            // Vue: container padding 16px on mobile
+            if (_scrollableView != null)
+                _scrollableView.ContentPadding = new Thickness(16);
+        }
+        else
+        {
+            // Stats grid: 3 columns
+            _fundsStatsGrid.ColumnDefinitions.Clear();
+            _fundsStatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            _fundsStatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            _fundsStatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            _fundsStatsGrid.RowDefinitions.Clear();
+
+            if (_fundsStatCard0 != null)
+            {
+                Grid.SetColumn(_fundsStatCard0, 0); Grid.SetRow(_fundsStatCard0, 0);
+                _fundsStatCard0.Margin = new Thickness(0, 0, 8, 0);
+            }
+            if (_fundsStatCard1 != null)
+            {
+                Grid.SetColumn(_fundsStatCard1, 1); Grid.SetRow(_fundsStatCard1, 0);
+                _fundsStatCard1.Margin = new Thickness(4, 0, 4, 0);
+            }
+            if (_fundsStatCard2 != null)
+            {
+                Grid.SetColumn(_fundsStatCard2, 2); Grid.SetRow(_fundsStatCard2, 0);
+                _fundsStatCard2.Margin = new Thickness(8, 0, 0, 0);
+            }
+
+            // Vue: summary card padding 24px on desktop
+            if (_fundsSummaryCard != null)
+                _fundsSummaryCard.Padding = new Thickness(24);
+
+            // Vue: container padding 24px on desktop
+            if (_scrollableView != null)
+                _scrollableView.ContentPadding = new Thickness(24);
+        }
     }
 
     /// <summary>
@@ -169,5 +286,12 @@ public partial class FundsView : UserControl
             var modal = new CreateWalletModal { DataContext = DataContext as FundsViewModel };
             shellVm.ShowModal(modal);
         }
+    }
+
+    protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
+        base.OnDetachedFromLogicalTree(e);
     }
 }

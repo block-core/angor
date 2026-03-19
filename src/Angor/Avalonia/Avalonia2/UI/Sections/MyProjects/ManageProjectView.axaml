@@ -44,7 +44,8 @@
             justify-content: space-between.
             Standardized pattern: DockPanel with Margin="24,24,24,0".
         -->
-        <DockPanel VerticalAlignment="Top"
+        <DockPanel Name="ManageNavBar"
+                   VerticalAlignment="Top"
                    ZIndex="100"
                    Margin="24,24,24,0"
                    IsHitTestVisible="True">
@@ -209,7 +210,7 @@
                 <StackPanel Spacing="24"
                             Margin="24,0,24,24">
                     <!-- Spacer for floating nav: 24 (nav top margin) + 44 (nav h) + 24 (gap below) = 92 -->
-                    <Panel Height="92" />
+                    <Panel Name="ManageNavSpacer" Height="92" />
 
                     <!-- Content sections (Project ID, Stats, Next Stage, Stages) -->
                     <mp:ManageProjectContentView Name="ContentView" />

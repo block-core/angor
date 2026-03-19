@@ -34,7 +34,7 @@
             Vertical stack: Balance Summary card → Wallet Groups → Add Wallet button.
         -->
         <Panel Name="PopulatedPanel" IsVisible="{Binding HasWallets}">
-            <controls:ScrollableView ContentPadding="24,24,24,24">
+            <controls:ScrollableView Name="FundsScrollableView" ContentPadding="24,24,24,24">
                 <StackPanel Spacing="24" MaxWidth="1200" HorizontalAlignment="Stretch">
 
                     <!-- ═══ Balance Summary Card ═══ -->
@@ -44,7 +44,8 @@
                         Dark: bg linear-gradient(to br, rgba(234,88,12,0.15), rgba(251,191,36,0.15)), border rgba(234,88,12,0.3)
                         border-radius: 16px, padding: 24px, shadow: 0 2px 8px rgba(0,0,0,0.1)
                     -->
-                    <Border Background="{DynamicResource StatsDetailCardBackground}"
+                    <Border Name="FundsSummaryCard"
+                            Background="{DynamicResource StatsDetailCardBackground}"
                             BorderBrush="{DynamicResource StatsDetailCardBorder}"
                             BorderThickness="1"
                             CornerRadius="16"
@@ -77,10 +78,13 @@
                                 Vue: grid-template-columns: repeat(4, 1fr) but only 3 shown.
                                 Each stat card: bg rgba(255,255,255,0.7), border 2px solid rgba(253,186,116,0.4),
                                 border-radius 12px, padding 20px, backdrop-filter blur(10px)
+                                Responsive: <=768px → repeat(2,1fr) gap 12; <=640px → 1fr
                             -->
-                            <UniformGrid Columns="3" Rows="1">
+                            <Grid Name="FundsStatsGrid" ColumnDefinitions="*,*,*">
                                 <!-- Total Balance stat card -->
-                                <Border Background="{DynamicResource StatsDetailInnerBackground}"
+                                <Border Name="FundsStatCard0"
+                                        Grid.Column="0"
+                                        Background="{DynamicResource StatsDetailInnerBackground}"
                                         BorderBrush="{DynamicResource StatsDetailInnerBorder}"
                                         BorderThickness="2"
                                         CornerRadius="12"
@@ -111,7 +115,9 @@
                                 </Border>
 
                                 <!-- Bitcoin stat card -->
-                                <Border Background="{DynamicResource StatsDetailInnerBackground}"
+                                <Border Name="FundsStatCard1"
+                                        Grid.Column="1"
+                                        Background="{DynamicResource StatsDetailInnerBackground}"
                                         BorderBrush="{DynamicResource StatsDetailInnerBorder}"
                                         BorderThickness="2"
                                         CornerRadius="12"
@@ -141,7 +147,9 @@
                                 </Border>
 
                                 <!-- Liquid stat card -->
-                                <Border Background="{DynamicResource StatsDetailInnerBackground}"
+                                <Border Name="FundsStatCard2"
+                                        Grid.Column="2"
+                                        Background="{DynamicResource StatsDetailInnerBackground}"
                                         BorderBrush="{DynamicResource StatsDetailInnerBorder}"
                                         BorderThickness="2"
                                         CornerRadius="12"
@@ -170,7 +178,7 @@
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
-                            </UniformGrid>
+                            </Grid>
                         </StackPanel>
                     </Border>
 

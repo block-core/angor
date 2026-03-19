@@ -95,6 +95,19 @@ public partial class ShellView : UserControl
     /// <summary>Guard to prevent re-entrant close animation.</summary>
     private bool _isClosing;
 
+    // ── Named controls for mobile tab bar ──
+    private Button _tabHome = null!;
+    private Button _tabInvestor = null!;
+    private Button _tabFounder = null!;
+    private Button _tabFunds = null!;
+    private Button _tabSettings = null!;
+    private Border _investorSubTabs = null!;
+    private Border _founderSubTabs = null!;
+    private Button _investorSubTabFind = null!;
+    private Button _investorSubTabFunded = null!;
+    private Button _founderSubTabMyProjects = null!;
+    private Button _founderSubTabFunders = null!;
+
     public ShellView()
     {
         InitializeComponent();
@@ -103,10 +116,59 @@ public partial class ShellView : UserControl
 
         var modalOverlay = this.FindControl<Panel>("ModalOverlay")!;
         var shellContent = this.FindControl<Grid>("ShellContent")!;
+        var compactShellContent = this.FindControl<Grid>("CompactShellContent")!;
         var backdrop = this.FindControl<Border>("ShellModalBackdrop")!;
+
+        // ── Resolve mobile tab bar controls (may be null in desktop-only scenarios) ──
+        _tabHome = this.FindControl<Button>("TabHome")!;
+        _tabInvestor = this.FindControl<Button>("TabInvestor")!;
+        _tabFounder = this.FindControl<Button>("TabFounder")!;
+        _tabFunds = this.FindControl<Button>("TabFunds")!;
+        _tabSettings = this.FindControl<Button>("TabSettings")!;
+        _investorSubTabs = this.FindControl<Border>("InvestorSubTabs")!;
+        _founderSubTabs = this.FindControl<Border>("FounderSubTabs")!;
+        _investorSubTabFind = this.FindControl<Button>("InvestorSubTabFind")!;
+        _investorSubTabFunded = this.FindControl<Button>("InvestorSubTabFunded")!;
+        _founderSubTabMyProjects = this.FindControl<Button>("FounderSubTabMyProjects")!;
+        _founderSubTabFunders = this.FindControl<Button>("FounderSubTabFunders")!;
 
         // Apply backdrop transitions once
         backdrop.Transitions = BackdropTransitions;
+
+        // ── React to MobileActiveTab changes — update tab bar active states ──
+        // Rule #9: CSS class toggling only, no BrushTransition, no code-behind color logic.
+        vm.WhenAnyValue(x => x.MobileActiveTab)
+            .Subscribe(tab =>
+            {
+                // Toggle TabBarItemActive class on each tab button
+                _tabHome.Classes.Set("TabBarItemActive", tab == "home");
+                _tabInvestor.Classes.Set("TabBarItemActive", tab == "investor");
+                _tabFounder.Classes.Set("TabBarItemActive", tab == "founder");
+                _tabFunds.Classes.Set("TabBarItemActive", tab == "funds");
+                _tabSettings.Classes.Set("TabBarItemActive", tab == "settings");
+
+                // Show/hide floating sub-tab panels
+                // Vue: show investor sub-tabs when mobileActiveTab === 'investor'
+                _investorSubTabs.IsVisible = tab == "investor";
+                // Vue: show founder sub-tabs when mobileActiveTab === 'founder'
+                _founderSubTabs.IsVisible = tab == "founder";
+            });
+
+        // ── React to MobileInvestorSubTab changes — update sub-tab active states ──
+        vm.WhenAnyValue(x => x.MobileInvestorSubTab)
+            .Subscribe(subTab =>
+            {
+                _investorSubTabFind.Classes.Set("SubTabActive", subTab == "find-projects");
+                _investorSubTabFunded.Classes.Set("SubTabActive", subTab == "investments");
+            });
+
+        // ── React to MobileFounderSubTab changes — update sub-tab active states ──
+        vm.WhenAnyValue(x => x.MobileFounderSubTab)
+            .Subscribe(subTab =>
+            {
+                _founderSubTabMyProjects.Classes.Set("SubTabActive", subTab == "my-projects");
+                _founderSubTabFunders.Classes.Set("SubTabActive", subTab == "funders");
+            });
 
         // React to ModalContent changes — manage the visual tree directly.
         // This replaces the XAML ContentPresenter binding which suffered from
@@ -150,7 +212,10 @@ public partial class ShellView : UserControl
 
                         // Make the overlay visible
                         modalOverlay.IsVisible = true;
+
+                        // Apply blur to whichever shell grid is currently visible
                         shellContent.Effect = ModalBlur;
+                        compactShellContent.Effect = ModalBlur;
 
                         // Force layout so the initial state is rendered
                         modalOverlay.InvalidateMeasure();
@@ -179,13 +244,14 @@ public partial class ShellView : UserControl
                             backdrop.Opacity = 0;
 
                             // Wait for transition to finish, then clean up
-                            _ = CleanupAfterClose(closingChild, modalOverlay, shellContent);
+                            _ = CleanupAfterClose(closingChild, modalOverlay, shellContent, compactShellContent);
                         }
                         else if (_currentModalChild == null)
                         {
                             // Nothing to animate, just hide
                             modalOverlay.IsVisible = false;
                             shellContent.Effect = null;
+                            compactShellContent.Effect = null;
                         }
                     }
                 });
@@ -224,12 +290,80 @@ public partial class ShellView : UserControl
             });
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // MOBILE TAB BAR CLICK HANDLERS
+    // Vue: @click="handleMobileTabChange('home')" etc. in App.vue
+    // ═══════════════════════════════════════════════════════════════
+
+    private void OnTabHome(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+            vm.HandleMobileTabChange("home");
+    }
+
+    private void OnTabInvestor(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+            vm.HandleMobileTabChange("investor");
+    }
+
+    private void OnTabFounder(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+            vm.HandleMobileTabChange("founder");
+    }
+
+    private void OnTabFunds(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+            vm.HandleMobileTabChange("funds");
+    }
+
+    private void OnTabSettings(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+            vm.HandleMobileTabChange("settings");
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // FLOATING SUB-TAB CLICK HANDLERS
+    // Vue: @click="handleInvestorSubTabChange('find-projects')" etc.
+    // ═══════════════════════════════════════════════════════════════
+
+    private void OnInvestorSubTabFind(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+            vm.HandleInvestorSubTabChange("find-projects");
+    }
+
+    private void OnInvestorSubTabFunded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+            vm.HandleInvestorSubTabChange("investments");
+    }
+
+    private void OnFounderSubTabMyProjects(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+            vm.HandleFounderSubTabChange("my-projects");
+    }
+
+    private void OnFounderSubTabFunders(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+            vm.HandleFounderSubTabChange("funders");
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MODAL LIFECYCLE
+    // ═══════════════════════════════════════════════════════════════
+
     /// <summary>
     /// Wait for the close transition to finish, then remove the modal from the tree.
     /// Only hides the overlay/blur if no new modal was opened in the meantime
     /// (i.e., multi-step modal flows where ShowModal is called right after HideModal).
     /// </summary>
-    private async Task CleanupAfterClose(Control closingChild, Panel modalOverlay, Grid shellContent)
+    private async Task CleanupAfterClose(Control closingChild, Panel modalOverlay, Grid shellContent, Grid compactShellContent)
     {
         // Wait for the transition duration + small buffer
         await Task.Delay(AnimDuration + TimeSpan.FromMilliseconds(50));
@@ -245,6 +379,7 @@ public partial class ShellView : UserControl
                 _currentModalChild = null;
                 modalOverlay.IsVisible = false;
                 shellContent.Effect = null;
+                compactShellContent.Effect = null;
             }
             _isClosing = false;
         });

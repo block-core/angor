@@ -76,6 +76,21 @@
             <SolidColorBrush x:Key="ErrorFieldText" Color="#dc2626" />
             <SolidColorBrush x:Key="ErrorFieldBorder" Color="#EF4444" />
 
+            <!-- ── Bottom Tab Bar Colors (light) ──
+                 Vue: bg-white, border-gray-200, active #4B7C5A, inactive text-gray-600 (#4B5563) -->
+            <SolidColorBrush x:Key="TabBarBackground" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="TabBarBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="TabBarActiveText" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="TabBarInactiveText" Color="#4B5563" />
+            <!-- Sub-tab panel (floating pill) — Vue: bg-white, border-gray-200, inactive text #4A5568 -->
+            <SolidColorBrush x:Key="SubTabPanelBg" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="SubTabPanelBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="SubTabActiveBg" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="SubTabActiveText" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="SubTabInactiveBg" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="SubTabInactiveText" Color="#4A5568" />
+            <SolidColorBrush x:Key="SubTabInactiveHoverBg" Color="#F9FAFB" />
+
             <!-- Warning/Fee Box Colors (light mode: warm cream/amber) -->
             <SolidColorBrush x:Key="WarningBoxBackground" Color="#FFF7ED" />
             <SolidColorBrush x:Key="WarningBoxBorder" Color="#FDBA74" />
@@ -221,6 +236,21 @@
             <!-- Vue field error dark: text-red-400, border-red-500 -->
             <SolidColorBrush x:Key="ErrorFieldText" Color="#f87171" />
             <SolidColorBrush x:Key="ErrorFieldBorder" Color="#EF4444" />
+
+            <!-- ── Bottom Tab Bar Colors (dark) ──
+                 Vue: .ultra-modern bg-white → #2A2A2A, border-gray-200 → #3A3A3A, inactive #FAFAFA -->
+            <SolidColorBrush x:Key="TabBarBackground" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="TabBarBorder" Color="#3A3A3A" />
+            <SolidColorBrush x:Key="TabBarActiveText" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="TabBarInactiveText" Color="#FAFAFA" />
+            <!-- Sub-tab panel (floating pill) — Vue dark: bg #2A2A2A, border #3A3A3A, inactive text #FAFAFA -->
+            <SolidColorBrush x:Key="SubTabPanelBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="SubTabPanelBorder" Color="#3A3A3A" />
+            <SolidColorBrush x:Key="SubTabActiveBg" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="SubTabActiveText" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="SubTabInactiveBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="SubTabInactiveText" Color="#FAFAFA" />
+            <SolidColorBrush x:Key="SubTabInactiveHoverBg" Color="#2A2A2A" />
 
             <!-- Warning/Fee Box Colors (dark mode: warm rust/brown) -->
             <SolidColorBrush x:Key="WarningBoxBackground" Color="#2A1A14" />

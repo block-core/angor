@@ -1,19 +1,31 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
+using Avalonia2.UI.Shared;
 using Avalonia2.UI.Shared.Controls;
 using Avalonia2.UI.Shell;
+using ReactiveUI;
 
 namespace Avalonia2.UI.Sections.MyProjects;
 
 public partial class ManageProjectView : UserControl
 {
     private ManageProjectViewModel? Vm => DataContext as ManageProjectViewModel;
+    private IDisposable? _layoutSubscription;
+
+    // Cached responsive controls
+    private DockPanel? _navBar;
+    private Panel? _navSpacer;
 
     public ManageProjectView()
     {
         InitializeComponent();
+
+        // Cache responsive controls
+        _navBar = this.FindControl<DockPanel>("ManageNavBar");
+        _navSpacer = this.FindControl<Panel>("ManageNavSpacer");
 
         // ── Wire content -> modals bridge: stage buttons open claim/spent modals ──
         var contentView = this.FindControl<ManageProjectContentView>("ContentView");
@@ -38,6 +50,32 @@ public partial class ManageProjectView : UserControl
         // ── View Private Keys button (opens shell modal password step) ──
         var viewPKBtn = this.FindControl<Button>("ViewPrivateKeysButton");
         if (viewPKBtn != null) viewPKBtn.Click += OnViewPrivateKeysClick;
+
+        // Subscribe to layout mode changes
+        _layoutSubscription = LayoutModeService.Instance
+            .WhenAnyValue(x => x.IsCompact)
+            .Subscribe(ApplyResponsiveLayout);
+    }
+
+    /// <summary>
+    /// Responsive layout: compact → hide nav bar (bottom tab bar provides navigation).
+    /// Vue: desktop nav hidden md:flex, mobile nav md:hidden.
+    /// </summary>
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        // Hide desktop nav bar on compact — the shell's bottom tab bar provides navigation
+        // Vue: .sticky-nav-bar { display: none !important; } at <=768px
+        if (_navBar != null) _navBar.IsVisible = !isCompact;
+
+        // Adjust spacer: no nav bar means no spacer needed
+        if (_navSpacer != null) _navSpacer.Height = isCompact ? 0 : 92;
+    }
+
+    protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
+        base.OnDetachedFromLogicalTree(e);
     }
 
     // Track the back button handler to prevent accumulation across SetBackAction calls

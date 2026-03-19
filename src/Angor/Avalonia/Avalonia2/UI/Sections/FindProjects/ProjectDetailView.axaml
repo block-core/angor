@@ -189,7 +189,7 @@
             </Border>
 
             <!-- CENTER: Project Name pill -->
-            <Border Background="{DynamicResource FloatingBtnBg}"
+            <Border Name="ProjectNamePill" Background="{DynamicResource FloatingBtnBg}"
                     BorderBrush="{DynamicResource FloatingBtnBorder}"
                     BorderThickness="1"
                     CornerRadius="8"
@@ -224,11 +224,11 @@
             <!-- TOP SECTION: 2-column grid              -->
             <!-- Vue: grid 1fr 400px, gap 24px           -->
             <!-- ═══════════════════════════════════════ -->
-            <Grid ColumnDefinitions="*,400">
+            <Grid Name="TopSectionGrid" ColumnDefinitions="*,400">
 
                 <!-- LEFT: Project Card Compact -->
                 <!-- Vue: white bg, border-radius 16px, shadow 0 2px 8px rgba(0,0,0,0.1) -->
-                <Border Grid.Column="0"
+                <Border Name="TopLeftCard" Grid.Column="0"
                         Background="{DynamicResource Surface}"
                         BorderBrush="{DynamicResource Stroke}"
                         BorderThickness="1"
@@ -272,7 +272,7 @@
                 </Border>
 
                 <!-- RIGHT: Investment/Status Card -->
-                <Panel Grid.Column="1">
+                <Panel Name="TopRightCard" Grid.Column="1">
 
                     <!-- OPEN: Green gradient investment card -->
                     <!-- Vue: linear-gradient(135deg, #2d5a3d 0%, #4a8f5f 100%), white text, centered -->
@@ -436,9 +436,9 @@
 
                     <!-- 3 stat cards in a row -->
                     <!-- Vue: stat-card bg rgba(255,255,255,0.7), border 2px rgba(253,186,116,0.4), radius 12, padding 20 -->
-                    <Grid ColumnDefinitions="*,16,*,16,*">
+                    <Grid Name="StatsGrid" ColumnDefinitions="*,16,*,16,*">
                         <!-- Target Amount -->
-                        <Border Grid.Column="0"
+                        <Border Name="StatCard0" Grid.Column="0"
                                 Background="{DynamicResource StatsDetailInnerBackground}"
                                 BorderBrush="{DynamicResource StatsDetailInnerBorder}"
                                 BorderThickness="2"
@@ -464,7 +464,7 @@
                         </Border>
 
                         <!-- Total Raised -->
-                        <Border Grid.Column="2"
+                        <Border Name="StatCard1" Grid.Column="2"
                                 Background="{DynamicResource StatsDetailInnerBackground}"
                                 BorderBrush="{DynamicResource StatsDetailInnerBorder}"
                                 BorderThickness="2"
@@ -490,7 +490,7 @@
                         </Border>
 
                         <!-- Total Investors -->
-                        <Border Grid.Column="4"
+                        <Border Name="StatCard2" Grid.Column="4"
                                 Background="{DynamicResource StatsDetailInnerBackground}"
                                 BorderBrush="{DynamicResource StatsDetailInnerBorder}"
                                 BorderThickness="2"
@@ -573,7 +573,7 @@
                     </StackPanel>
 
                     <!-- Investment info (4 cards) — shown for Invest type -->
-                    <Grid ColumnDefinitions="*,16,*" RowDefinitions="Auto,16,Auto"
+                    <Grid Name="InvestInfoGrid" ColumnDefinitions="*,16,*" RowDefinitions="Auto,16,Auto"
                           IsVisible="{Binding IsInvestmentType}">
                         <!-- Start Date -->
                         <Border Grid.Row="0" Grid.Column="0"
@@ -656,7 +656,7 @@
                     </Grid>
 
                     <!-- Fund info (2 cards) — shown for Fund type -->
-                    <Grid ColumnDefinitions="*,16,*"
+                    <Grid Name="FundInfoGrid" ColumnDefinitions="*,16,*"
                           IsVisible="{Binding IsFundType}">
                         <Border Grid.Column="0"
                                 Background="{DynamicResource SurfaceMedium}"
@@ -699,7 +699,7 @@
                     </Grid>
 
                     <!-- Subscription info (3 cards) — shown for Subscription type -->
-                    <Grid ColumnDefinitions="*,16,*,16,*"
+                    <Grid Name="SubInfoGrid" ColumnDefinitions="*,16,*,16,*"
                           IsVisible="{Binding IsSubscriptionType}">
                         <Border Grid.Column="0"
                                 Background="{DynamicResource SurfaceMedium}"

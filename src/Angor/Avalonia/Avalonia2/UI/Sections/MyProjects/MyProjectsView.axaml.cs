@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
+using Avalonia2.UI.Shared;
 using Avalonia2.UI.Shared.Controls;
 using Avalonia2.UI.Shell;
 
@@ -10,6 +11,7 @@ namespace Avalonia2.UI.Sections.MyProjects;
 public partial class MyProjectsView : UserControl
 {
     private CompositeDisposable? _subscriptions;
+    private IDisposable? _layoutSubscription;
 
     /// <summary>Design-time only.</summary>
     public MyProjectsView() => InitializeComponent();
@@ -33,6 +35,52 @@ public partial class MyProjectsView : UserControl
 
         // Check if we should auto-open the wizard (from Home "Launch a Project" button)
         AttachedToVisualTree += OnAttachedToVisualTree;
+
+        // ── Responsive layout: 380px sidebar + content (desktop) → stacked (compact) ──
+        var grid = this.FindControl<Grid>("ProjectListGrid")!;
+        var sidebar = this.FindControl<Border>("MyProjectsSidebar")!;
+        var content = this.FindControl<ScrollableView>("MyProjectsContent")!;
+
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact =>
+            {
+                if (isCompact)
+                {
+                    // Stacked: single column, sidebar above content
+                    grid.ColumnDefinitions.Clear();
+                    grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                    grid.RowDefinitions.Clear();
+                    grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                    grid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+
+                    Grid.SetColumn(sidebar, 0);
+                    Grid.SetRow(sidebar, 0);
+                    sidebar.Margin = new Avalonia.Thickness(0, 0, 0, 24);
+                    sidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
+
+                    Grid.SetColumn(content, 0);
+                    Grid.SetRow(content, 1);
+                    content.ContentPadding = new Avalonia.Thickness(0);
+                }
+                else
+                {
+                    // Side by side: 380px sidebar + * content
+                    grid.ColumnDefinitions.Clear();
+                    grid.ColumnDefinitions.Add(new ColumnDefinition(380, GridUnitType.Pixel));
+                    grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                    grid.RowDefinitions.Clear();
+                    grid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+
+                    Grid.SetColumn(sidebar, 0);
+                    Grid.SetRow(sidebar, 0);
+                    sidebar.Margin = new Avalonia.Thickness(0, 0, 24, 0);
+                    sidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
+
+                    Grid.SetColumn(content, 1);
+                    Grid.SetRow(content, 0);
+                    content.ContentPadding = new Avalonia.Thickness(0);
+                }
+            });
     }
 
     private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
@@ -111,6 +159,8 @@ public partial class MyProjectsView : UserControl
     {
         _subscriptions?.Dispose();
         _subscriptions = null;
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
         base.OnDetachedFromLogicalTree(e);
     }
 

@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Avalonia2.UI.Shared;
 using Avalonia2.UI.Shared.Controls;
 using Avalonia2.UI.Shared.Helpers;
 using Avalonia2.UI.Shell;
@@ -16,6 +17,7 @@ public partial class ProjectDetailView : UserControl
     private bool _detailsExpanded = false;
     private bool _nostrExpanded = false;
     private bool _navCtaVisible;
+    private IDisposable? _layoutSubscription;
 
     // Cached FindControl results — avoid repeated tree walks
     private Button? _backBtn;
@@ -32,6 +34,19 @@ public partial class ProjectDetailView : UserControl
     private Border? _nostrHeader;
     private StackPanel? _nostrContent;
     private Control? _nostrChevron;
+
+    // Responsive layout controls
+    private Grid? _topSectionGrid;
+    private Border? _topLeftCard;
+    private Panel? _topRightCard;
+    private Grid? _statsGrid;
+    private Border? _statCard0;
+    private Border? _statCard1;
+    private Border? _statCard2;
+    private Grid? _investInfoGrid;
+    private Grid? _fundInfoGrid;
+    private Grid? _subInfoGrid;
+    private Border? _projectNamePill;
 
     // Track the PropertyChanged handler to prevent accumulation
     private EventHandler<AvaloniaPropertyChangedEventArgs>? _parentPropertyChangedHandler;
@@ -117,6 +132,223 @@ public partial class ProjectDetailView : UserControl
 
         // Set progress bar width after loaded
         Loaded += OnLoaded;
+
+        // Cache responsive layout controls
+        _topSectionGrid = this.FindControl<Grid>("TopSectionGrid");
+        _topLeftCard = this.FindControl<Border>("TopLeftCard");
+        _topRightCard = this.FindControl<Panel>("TopRightCard");
+        _statsGrid = this.FindControl<Grid>("StatsGrid");
+        _statCard0 = this.FindControl<Border>("StatCard0");
+        _statCard1 = this.FindControl<Border>("StatCard1");
+        _statCard2 = this.FindControl<Border>("StatCard2");
+        _investInfoGrid = this.FindControl<Grid>("InvestInfoGrid");
+        _fundInfoGrid = this.FindControl<Grid>("FundInfoGrid");
+        _subInfoGrid = this.FindControl<Grid>("SubInfoGrid");
+        _projectNamePill = this.FindControl<Border>("ProjectNamePill");
+
+        // ── Responsive layout switching ──
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+    }
+
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        // ── Top section: *,400 → stacked ──
+        if (_topSectionGrid != null && _topLeftCard != null && _topRightCard != null)
+        {
+            if (isCompact)
+            {
+                _topSectionGrid.ColumnDefinitions.Clear();
+                _topSectionGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _topSectionGrid.RowDefinitions.Clear();
+                _topSectionGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _topSectionGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+                Grid.SetColumn(_topLeftCard, 0);
+                Grid.SetRow(_topLeftCard, 0);
+                _topLeftCard.Margin = new Thickness(0, 0, 0, 24);
+
+                Grid.SetColumn(_topRightCard, 0);
+                Grid.SetRow(_topRightCard, 1);
+            }
+            else
+            {
+                _topSectionGrid.ColumnDefinitions.Clear();
+                _topSectionGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _topSectionGrid.ColumnDefinitions.Add(new ColumnDefinition(400, GridUnitType.Pixel));
+                _topSectionGrid.RowDefinitions.Clear();
+
+                Grid.SetColumn(_topLeftCard, 0);
+                Grid.SetRow(_topLeftCard, 0);
+                _topLeftCard.Margin = new Thickness(0, 0, 24, 0);
+
+                Grid.SetColumn(_topRightCard, 1);
+                Grid.SetRow(_topRightCard, 0);
+            }
+        }
+
+        // ── Stats grid: 3 cols with spacers → stacked ──
+        if (_statsGrid != null && _statCard0 != null && _statCard1 != null && _statCard2 != null)
+        {
+            if (isCompact)
+            {
+                _statsGrid.ColumnDefinitions.Clear();
+                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _statsGrid.RowDefinitions.Clear();
+                _statsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _statsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _statsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+                Grid.SetColumn(_statCard0, 0); Grid.SetRow(_statCard0, 0);
+                Grid.SetColumn(_statCard1, 0); Grid.SetRow(_statCard1, 1);
+                Grid.SetColumn(_statCard2, 0); Grid.SetRow(_statCard2, 2);
+                _statCard0.Margin = new Thickness(0, 0, 0, 12);
+                _statCard1.Margin = new Thickness(0, 0, 0, 12);
+                _statCard2.Margin = new Thickness(0);
+            }
+            else
+            {
+                _statsGrid.ColumnDefinitions.Clear();
+                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
+                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
+                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _statsGrid.RowDefinitions.Clear();
+
+                Grid.SetColumn(_statCard0, 0); Grid.SetRow(_statCard0, 0);
+                Grid.SetColumn(_statCard1, 2); Grid.SetRow(_statCard1, 0);
+                Grid.SetColumn(_statCard2, 4); Grid.SetRow(_statCard2, 0);
+                _statCard0.Margin = new Thickness(0);
+                _statCard1.Margin = new Thickness(0);
+                _statCard2.Margin = new Thickness(0);
+            }
+        }
+
+        // ── Investment info grid: 2x2 → stacked ──
+        if (_investInfoGrid != null)
+        {
+            if (isCompact)
+            {
+                _investInfoGrid.ColumnDefinitions.Clear();
+                _investInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _investInfoGrid.RowDefinitions.Clear();
+                // 4 cards stacked with 12px gap rows
+                for (int i = 0; i < 7; i++)
+                    _investInfoGrid.RowDefinitions.Add(new RowDefinition(i % 2 == 0 ? GridLength.Auto : new GridLength(12, GridUnitType.Pixel)));
+
+                // Re-assign children positions
+                var children = _investInfoGrid.Children.OfType<Border>().ToArray();
+                for (int i = 0; i < children.Length; i++)
+                {
+                    Grid.SetColumn(children[i], 0);
+                    Grid.SetRow(children[i], i * 2);
+                }
+            }
+            else
+            {
+                _investInfoGrid.ColumnDefinitions.Clear();
+                _investInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _investInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
+                _investInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _investInfoGrid.RowDefinitions.Clear();
+                _investInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _investInfoGrid.RowDefinitions.Add(new RowDefinition(16, GridUnitType.Pixel));
+                _investInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+                // Restore 2x2 layout
+                var children = _investInfoGrid.Children.OfType<Border>().ToArray();
+                if (children.Length >= 4)
+                {
+                    Grid.SetRow(children[0], 0); Grid.SetColumn(children[0], 0);
+                    Grid.SetRow(children[1], 0); Grid.SetColumn(children[1], 2);
+                    Grid.SetRow(children[2], 2); Grid.SetColumn(children[2], 0);
+                    Grid.SetRow(children[3], 2); Grid.SetColumn(children[3], 2);
+                }
+            }
+        }
+
+        // ── Fund info grid: 2 cols → stacked ──
+        if (_fundInfoGrid != null)
+        {
+            if (isCompact)
+            {
+                _fundInfoGrid.ColumnDefinitions.Clear();
+                _fundInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _fundInfoGrid.RowDefinitions.Clear();
+                _fundInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _fundInfoGrid.RowDefinitions.Add(new RowDefinition(12, GridUnitType.Pixel));
+                _fundInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+                var children = _fundInfoGrid.Children.OfType<Border>().ToArray();
+                if (children.Length >= 2)
+                {
+                    Grid.SetColumn(children[0], 0); Grid.SetRow(children[0], 0);
+                    Grid.SetColumn(children[1], 0); Grid.SetRow(children[1], 2);
+                }
+            }
+            else
+            {
+                _fundInfoGrid.ColumnDefinitions.Clear();
+                _fundInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _fundInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
+                _fundInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _fundInfoGrid.RowDefinitions.Clear();
+
+                var children = _fundInfoGrid.Children.OfType<Border>().ToArray();
+                if (children.Length >= 2)
+                {
+                    Grid.SetColumn(children[0], 0); Grid.SetRow(children[0], 0);
+                    Grid.SetColumn(children[1], 2); Grid.SetRow(children[1], 0);
+                }
+            }
+        }
+
+        // ── Subscription info grid: 3 cols → stacked ──
+        if (_subInfoGrid != null)
+        {
+            if (isCompact)
+            {
+                _subInfoGrid.ColumnDefinitions.Clear();
+                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _subInfoGrid.RowDefinitions.Clear();
+                _subInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _subInfoGrid.RowDefinitions.Add(new RowDefinition(12, GridUnitType.Pixel));
+                _subInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _subInfoGrid.RowDefinitions.Add(new RowDefinition(12, GridUnitType.Pixel));
+                _subInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+                var children = _subInfoGrid.Children.OfType<Border>().ToArray();
+                if (children.Length >= 3)
+                {
+                    Grid.SetColumn(children[0], 0); Grid.SetRow(children[0], 0);
+                    Grid.SetColumn(children[1], 0); Grid.SetRow(children[1], 2);
+                    Grid.SetColumn(children[2], 0); Grid.SetRow(children[2], 4);
+                }
+            }
+            else
+            {
+                _subInfoGrid.ColumnDefinitions.Clear();
+                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
+                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
+                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _subInfoGrid.RowDefinitions.Clear();
+
+                var children = _subInfoGrid.Children.OfType<Border>().ToArray();
+                if (children.Length >= 3)
+                {
+                    Grid.SetColumn(children[0], 0); Grid.SetRow(children[0], 0);
+                    Grid.SetColumn(children[1], 2); Grid.SetRow(children[1], 0);
+                    Grid.SetColumn(children[2], 4); Grid.SetRow(children[2], 0);
+                }
+            }
+        }
+
+        // ── Nav bar: hide project name pill on compact ──
+        if (_projectNamePill != null)
+            _projectNamePill.IsVisible = !isCompact;
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
@@ -256,5 +488,12 @@ public partial class ProjectDetailView : UserControl
                 container.Cursor = new Cursor(StandardCursorType.Hand);
             }
         }
+    }
+
+    protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
+        base.OnDetachedFromLogicalTree(e);
     }
 }

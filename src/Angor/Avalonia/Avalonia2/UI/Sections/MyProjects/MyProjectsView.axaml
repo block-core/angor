@@ -36,14 +36,15 @@
             - "Scan for your projects" button absolute top-right
         -->
         <Panel Name="ProjectListPanel" IsVisible="False">
-            <Grid ColumnDefinitions="380,*" Margin="24">
+            <Grid Name="ProjectListGrid" ColumnDefinitions="380,*" Margin="24">
                 <!-- ── Left Sidebar Panel ── -->
                 <!--
                     Vue: w-64 xl:w-96, bg-gray-50 dark:bg-[#2A2A2A],
                     rounded-2xl, border border-gray-200 dark:border-gray-700,
                     padding p-4 md:p-6 xl:p-8, flex column centered
+                    Responsive: stacked above content on compact
                 -->
-                <Border Grid.Column="0"
+                <Border Name="MyProjectsSidebar" Grid.Column="0"
                         Background="{DynamicResource Surface}"
                         BorderBrush="{DynamicResource Stroke}"
                         BorderThickness="1"
@@ -185,7 +186,7 @@
                 </Border>
 
                 <!-- ── Right Content: Project Grid ── -->
-                <controls:ScrollableView Grid.Column="1" ContentPadding="0">
+                <controls:ScrollableView Name="MyProjectsContent" Grid.Column="1" ContentPadding="0">
                     <StackPanel Spacing="20">
                         <!-- Header row -->
                         <Grid ColumnDefinitions="*,Auto">

@@ -134,9 +134,12 @@
 
                 <!-- Stats Grid: 4 columns -->
                 <!-- Vue: .stats-grid — grid-template-columns repeat(4,1fr), gap 16 -->
-                <UniformGrid Columns="4" Rows="1">
+                <!-- Responsive: <=1024px → repeat(2,1fr); <=640px → 1fr -->
+                <Grid Name="ManageStatsGrid" ColumnDefinitions="*,*,*,*">
                     <!-- Total Investment -->
-                    <Border Background="{DynamicResource StatCardBackground}"
+                    <Border Name="ManageStatCard0"
+                            Grid.Column="0"
+                            Background="{DynamicResource StatCardBackground}"
                             BorderBrush="{DynamicResource StatCardBorder}"
                             BorderThickness="2"
                             CornerRadius="12"
@@ -153,7 +156,9 @@
                     </Border>
 
                     <!-- Available Balance -->
-                    <Border Background="{DynamicResource StatCardBackground}"
+                    <Border Name="ManageStatCard1"
+                            Grid.Column="1"
+                            Background="{DynamicResource StatCardBackground}"
                             BorderBrush="{DynamicResource StatCardBorder}"
                             BorderThickness="2"
                             CornerRadius="12"
@@ -170,7 +175,9 @@
                     </Border>
 
                     <!-- Withdrawable -->
-                    <Border Background="{DynamicResource StatCardBackground}"
+                    <Border Name="ManageStatCard2"
+                            Grid.Column="2"
+                            Background="{DynamicResource StatCardBackground}"
                             BorderBrush="{DynamicResource StatCardBorder}"
                             BorderThickness="2"
                             CornerRadius="12"
@@ -187,7 +194,9 @@
                     </Border>
 
                     <!-- Total Stages -->
-                    <Border Background="{DynamicResource StatCardBackground}"
+                    <Border Name="ManageStatCard3"
+                            Grid.Column="3"
+                            Background="{DynamicResource StatCardBackground}"
                             BorderBrush="{DynamicResource StatCardBorder}"
                             BorderThickness="2"
                             CornerRadius="12"
@@ -202,16 +211,18 @@
                                        Foreground="{DynamicResource StatsCardTitle}" />
                         </StackPanel>
                     </Border>
-                </UniformGrid>
+                </Grid>
             </StackPanel>
         </Border>
 
         <!-- ═══ 3. NEXT STAGE + TRANSACTION STATISTICS (side by side) ═══ -->
         <!-- Vue: .stats-row-container — grid-template-columns 1fr 1fr, gap 24 -->
-        <Grid ColumnDefinitions="*,24,*">
+        <!-- Responsive: <=1024px → grid-template-columns 1fr (stacked) -->
+        <Grid Name="ManageStatsRowGrid" ColumnDefinitions="*,24,*">
             <!-- ── Left: Next Stage Countdown ── -->
             <!-- Vue: .detail-card.next-stage-detail-card — green gradient bg/border -->
-            <Border Grid.Column="0"
+            <Border Name="ManageNextStageCard"
+                    Grid.Column="0"
                     Background="{DynamicResource NextStageCardBackground}"
                     BorderBrush="{DynamicResource NextStageCardBorder}"
                     BorderThickness="1"
@@ -298,7 +309,8 @@
 
             <!-- ── Right: Transaction Statistics ── -->
             <!-- Vue: .detail-card (generic) -->
-            <Border Grid.Column="2"
+            <Border Name="ManageTxStatsCard"
+                    Grid.Column="2"
                     Background="{DynamicResource DetailCardBg}"
                     BorderBrush="{DynamicResource DetailCardBorder}"
                     BorderThickness="1"
