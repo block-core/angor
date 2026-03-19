@@ -2,7 +2,18 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
 using Avalonia2.UI.Shared.Controls;
+using Avalonia2.UI.Shell;
+using System.Reactive.Linq;
+
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
+using Avalonia2.UI.Shared.Controls;
+using Avalonia2.UI.Shell;
 using System.Reactive.Linq;
 
 namespace Avalonia2.UI.Sections.FindProjects;
@@ -59,6 +70,14 @@ public partial class FindProjectsView : UserControl
 
                   if (_investPanel != null)
                       _investPanel.IsVisible = hasInvest;
+
+                  // Publish detail view state to ShellViewModel for mobile sub-tab/back-button visibility
+                  var shell = this.FindAncestorOfType<ShellView>();
+                  if (shell?.DataContext is ShellViewModel shellVm)
+                  {
+                      shellVm.IsProjectDetailOpen = hasProject && !hasInvest;
+                      shellVm.IsInvestPageOpen = hasInvest;
+                  }
               });
         }
     }

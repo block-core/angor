@@ -240,6 +240,15 @@ public partial class ShellViewModel : ReactiveObject
     [Reactive] private string mobileInvestorSubTab = "find-projects";
     [Reactive] private string mobileFounderSubTab = "my-projects";
 
+    // ── Detail view state tracking (for mobile sub-tab/back-button visibility) ──
+    // Vue: showProjectDetail, showInvestPage, showInvestmentDetail, showManageFunds, isCreatingProject
+    // Sections set these when entering/exiting detail views so ShellView can react.
+    [Reactive] private bool isProjectDetailOpen;
+    [Reactive] private bool isInvestPageOpen;
+    [Reactive] private bool isInvestmentDetailOpen;
+    [Reactive] private bool isManageFundsOpen;
+    [Reactive] private bool isCreatingProject;
+
     /// <summary>
     /// Reference to the LayoutModeService singleton for XAML bindings.
     /// </summary>
@@ -380,6 +389,14 @@ public partial class ShellViewModel : ReactiveObject
     /// </summary>
     public void HandleMobileTabChange(string tab)
     {
+        // Vue special case (line 9077): clicking founder tab while ManageFunds is open
+        // calls backFromManageFunds() and returns early.
+        if (tab == "founder" && IsManageFundsOpen)
+        {
+            CloseManageFundsFromShell();
+            return;
+        }
+
         MobileActiveTab = tab;
 
         switch (tab)
@@ -655,5 +672,98 @@ public partial class ShellViewModel : ReactiveObject
         if (view != null)
             _viewCache[key] = view;
         return view;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MOBILE BACK BUTTON ACTIONS
+    // Vue: backToProjects(), backToProjectDetail(), backToInvestments(),
+    //      backFromManageFunds() in App.vue
+    // ═══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Back from ProjectDetail/InvestPage in the investor flow.
+    /// Vue: showInvestPage ? backToProjectDetail() : backToProjects()
+    /// </summary>
+    public void BackFromInvestorDetail()
+    {
+        if (IsInvestPageOpen)
+        {
+            // Back from invest page → project detail
+            if (_viewCache.TryGetValue("Find Projects", out var v) &&
+                v is FindProjectsView { DataContext: FindProjectsViewModel fpVm })
+            {
+                fpVm.CloseInvestPage();
+            }
+        }
+        else if (IsProjectDetailOpen)
+        {
+            // Back from project detail → project list
+            if (_viewCache.TryGetValue("Find Projects", out var v) &&
+                v is FindProjectsView { DataContext: FindProjectsViewModel fpVm })
+            {
+                fpVm.CloseProjectDetail();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Back from InvestmentDetail → portfolio list.
+    /// Vue: backToInvestments()
+    /// </summary>
+    public void BackFromInvestmentDetail()
+    {
+        _portfolioVm.CloseInvestmentDetail();
+    }
+
+    /// <summary>
+    /// Close ManageFunds from the shell (used by founder tab special case and back button).
+    /// Vue: backFromManageFunds()
+    /// </summary>
+    public void CloseManageFundsFromShell()
+    {
+        if (_viewCache.TryGetValue("My Projects", out var v) &&
+            v is MyProjectsView { DataContext: MyProjectsViewModel mpVm })
+        {
+            mpVm.CloseManageProject();
+        }
+        // Ensure the founder tab is set and sub-tabs re-appear
+        MobileActiveTab = "founder";
+        MobileFounderSubTab = "my-projects";
+    }
+
+    /// <summary>
+    /// Action for the invest/submit CTA button on the mobile back bar.
+    /// Vue: showInvestPage ? handleInvestPageAction() : viewInvestPage()
+    /// </summary>
+    public void MobileInvestAction()
+    {
+        if (IsInvestPageOpen)
+        {
+            // Submit invest — handled by the InvestPage itself, not here
+            // The floating button just triggers the invest flow via the page
+        }
+        else if (IsProjectDetailOpen)
+        {
+            // Open invest page from project detail
+            if (_viewCache.TryGetValue("Find Projects", out var v) &&
+                v is FindProjectsView { DataContext: FindProjectsViewModel fpVm })
+            {
+                fpVm.OpenInvestPage();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Reset all detail view state flags. Called on breakpoint crossing
+    /// or when navigating to a different section to ensure clean state.
+    /// Vue: changePage() resets showProjectDetail, showInvestPage, selectedProject.
+    /// </summary>
+    public void ResetDetailViewState()
+    {
+        IsProjectDetailOpen = false;
+        IsInvestPageOpen = false;
+        IsInvestmentDetailOpen = false;
+        IsManageFundsOpen = false;
+        IsCreatingProject = false;
     }
 }

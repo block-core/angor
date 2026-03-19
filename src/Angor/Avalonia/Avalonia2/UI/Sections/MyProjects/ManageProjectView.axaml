@@ -207,7 +207,7 @@
         -->
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <Panel>
-                <StackPanel Spacing="24"
+                <StackPanel Name="ManageContentStack" Spacing="24"
                             Margin="24,0,24,24">
                     <!-- Spacer for floating nav: 24 (nav top margin) + 44 (nav h) + 24 (gap below) = 92 -->
                     <Panel Name="ManageNavSpacer" Height="92" />

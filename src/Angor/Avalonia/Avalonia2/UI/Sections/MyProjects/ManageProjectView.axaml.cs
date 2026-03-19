@@ -18,6 +18,7 @@ public partial class ManageProjectView : UserControl
     // Cached responsive controls
     private DockPanel? _navBar;
     private Panel? _navSpacer;
+    private StackPanel? _contentStack;
 
     public ManageProjectView()
     {
@@ -26,6 +27,7 @@ public partial class ManageProjectView : UserControl
         // Cache responsive controls
         _navBar = this.FindControl<DockPanel>("ManageNavBar");
         _navSpacer = this.FindControl<Panel>("ManageNavSpacer");
+        _contentStack = this.FindControl<StackPanel>("ManageContentStack");
 
         // ── Wire content -> modals bridge: stage buttons open claim/spent modals ──
         var contentView = this.FindControl<ManageProjectContentView>("ContentView");
@@ -58,8 +60,9 @@ public partial class ManageProjectView : UserControl
     }
 
     /// <summary>
-    /// Responsive layout: compact → hide nav bar (bottom tab bar provides navigation).
-    /// Vue: desktop nav hidden md:flex, mobile nav md:hidden.
+    /// Responsive layout: compact → hide nav bar (bottom tab bar provides navigation),
+    /// reduce side margins and gap.
+    /// Vue: <=768px → nav hidden, content padding 16px sides + 16px gap + 96px bottom.
     /// </summary>
     private void ApplyResponsiveLayout(bool isCompact)
     {
@@ -69,6 +72,17 @@ public partial class ManageProjectView : UserControl
 
         // Adjust spacer: no nav bar means no spacer needed
         if (_navSpacer != null) _navSpacer.Height = isCompact ? 0 : 92;
+
+        // Adjust content margins and spacing
+        // Vue: <=768px → .content-grid { gap: 16px; padding: 0 16px 96px 16px; }
+        // Note: the 96px bottom padding is handled by ManageProjectContentView's _contentStack
+        if (_contentStack != null)
+        {
+            _contentStack.Spacing = isCompact ? 16 : 24;
+            _contentStack.Margin = isCompact
+                ? new Avalonia.Thickness(16, 0, 16, 0)
+                : new Avalonia.Thickness(24, 0, 24, 24);
+        }
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)

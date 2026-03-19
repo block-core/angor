@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia2.UI.Shell;
 using Avalonia2.UI.Shared;
 using Avalonia.VisualTree;
@@ -9,6 +10,13 @@ namespace Avalonia2.UI.Sections.Home;
 
 public partial class HomeView : UserControl
 {
+    private IDisposable? _layoutSubscription;
+
+    // Cached controls for responsive layout
+    private Grid? _homeGrid;
+    private Grid? _fundCard;
+    private Grid? _getFundedCard;
+
     /// <summary>Design-time only.</summary>
     public HomeView() => InitializeComponent();
 
@@ -19,45 +27,57 @@ public partial class HomeView : UserControl
 
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
 
+        // Cache responsive layout controls
+        _homeGrid = this.FindControl<Grid>("HomeGrid");
+        _fundCard = this.FindControl<Grid>("FundCard");
+        _getFundedCard = this.FindControl<Grid>("GetFundedCard");
+
         // ── Responsive layout: two-col (desktop) → stacked (compact) ──
-        var homeGrid = this.FindControl<Grid>("HomeGrid")!;
-        var fundCard = this.FindControl<Grid>("FundCard")!;
-        var getFundedCard = this.FindControl<Grid>("GetFundedCard")!;
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+    }
 
-        LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
-            .Subscribe(isCompact =>
-            {
-                if (isCompact)
-                {
-                    // Stacked: single column, two rows with 24px gap
-                    homeGrid.ColumnDefinitions.Clear();
-                    homeGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                    homeGrid.RowDefinitions.Clear();
-                    homeGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                    homeGrid.RowDefinitions.Add(new RowDefinition(24, GridUnitType.Pixel));
-                    homeGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        if (_homeGrid == null || _fundCard == null || _getFundedCard == null) return;
 
-                    Grid.SetColumn(fundCard, 0);
-                    Grid.SetRow(fundCard, 0);
-                    Grid.SetColumn(getFundedCard, 0);
-                    Grid.SetRow(getFundedCard, 2);
-                }
-                else
-                {
-                    // Side by side: two columns with 24px gap column
-                    homeGrid.ColumnDefinitions.Clear();
-                    homeGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                    homeGrid.ColumnDefinitions.Add(new ColumnDefinition(24, GridUnitType.Pixel));
-                    homeGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                    homeGrid.RowDefinitions.Clear();
-                    homeGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+        if (isCompact)
+        {
+            // Stacked: single column, two rows with 24px gap
+            _homeGrid.ColumnDefinitions.Clear();
+            _homeGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            _homeGrid.RowDefinitions.Clear();
+            _homeGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            _homeGrid.RowDefinitions.Add(new RowDefinition(24, GridUnitType.Pixel));
+            _homeGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
 
-                    Grid.SetColumn(fundCard, 0);
-                    Grid.SetRow(fundCard, 0);
-                    Grid.SetColumn(getFundedCard, 2);
-                    Grid.SetRow(getFundedCard, 0);
-                }
-            });
+            Grid.SetColumn(_fundCard, 0);
+            Grid.SetRow(_fundCard, 0);
+            Grid.SetColumn(_getFundedCard, 0);
+            Grid.SetRow(_getFundedCard, 2);
+        }
+        else
+        {
+            // Side by side: two columns with 24px gap column
+            _homeGrid.ColumnDefinitions.Clear();
+            _homeGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            _homeGrid.ColumnDefinitions.Add(new ColumnDefinition(24, GridUnitType.Pixel));
+            _homeGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            _homeGrid.RowDefinitions.Clear();
+            _homeGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+
+            Grid.SetColumn(_fundCard, 0);
+            Grid.SetRow(_fundCard, 0);
+            Grid.SetColumn(_getFundedCard, 2);
+            Grid.SetRow(_getFundedCard, 0);
+        }
+    }
+
+    protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
+        base.OnDetachedFromLogicalTree(e);
     }
 
     private void OnButtonClick(object? sender, RoutedEventArgs e)

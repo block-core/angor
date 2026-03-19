@@ -28,6 +28,7 @@ public partial class ManageProjectContentView : UserControl
     private Grid? _manageStatsRowGrid;
     private Border? _manageNextStageCard;
     private Border? _manageTxStatsCard;
+    private StackPanel? _contentStack;
 
     public ManageProjectContentView()
     {
@@ -58,6 +59,7 @@ public partial class ManageProjectContentView : UserControl
         _manageStatsRowGrid = this.FindControl<Grid>("ManageStatsRowGrid");
         _manageNextStageCard = this.FindControl<Border>("ManageNextStageCard");
         _manageTxStatsCard = this.FindControl<Border>("ManageTxStatsCard");
+        _contentStack = this.FindControl<StackPanel>("ContentStack");
 
         // Subscribe to layout mode changes
         _layoutSubscription = LayoutModeService.Instance
@@ -66,13 +68,23 @@ public partial class ManageProjectContentView : UserControl
     }
 
     /// <summary>
-    /// Responsive layout: compact → stats stack single column, side-by-side → stacked.
+    /// Responsive layout: compact → stats stack single column, side-by-side → stacked,
+    /// stage pills stack vertically, bottom padding for tab bar clearance.
     /// Vue: <=1024px → stats repeat(2,1fr), stats-row 1fr; <=640px → stats 1fr.
+    /// Vue: <=768px → .stage-header-left column, .stage-pills column, padding-bottom 96px.
     /// We use IsCompact (<=1024px) → 1-col stacked for both.
     /// </summary>
     private void ApplyResponsiveLayout(bool isCompact)
     {
         if (_manageStatsGrid == null) return;
+
+        // Toggle CSS class for style-selector-driven changes (stage pills, etc.)
+        Classes.Set("Compact", isCompact);
+
+        // Bottom padding for tab bar clearance
+        // Vue: <=768px → .content-grid { padding-bottom: 96px }
+        if (_contentStack != null)
+            _contentStack.Margin = isCompact ? new Thickness(0, 0, 0, 96) : new Thickness(0);
 
         if (isCompact)
         {

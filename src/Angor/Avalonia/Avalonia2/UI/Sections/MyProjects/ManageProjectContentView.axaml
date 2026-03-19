@@ -15,7 +15,43 @@
         Shares DataContext (ManageProjectViewModel) with parent via inheritance.
     -->
 
-    <StackPanel Spacing="24">
+    <UserControl.Styles>
+        <!--
+            Vue ref: @media (max-width: 768px) — stage header stacks vertically.
+            .stage-header-left { flex-direction: column; gap: 24px; }
+            .stage-pills { flex-direction: column; width: 100%; }
+            .stage-pill { width: 100%; text-align: center; }
+            .stage-header-right { position: absolute; top: 0; right: 0; }
+        -->
+
+        <!-- Compact: stage header left — stack stage number above pills vertically -->
+        <Style Selector="UserControl.Compact StackPanel.StageHeaderLeft">
+            <Setter Property="Orientation" Value="Vertical" />
+            <Setter Property="Spacing" Value="12" />
+        </Style>
+
+        <!-- Compact: stage pills — stack vertically, stretch full width -->
+        <Style Selector="UserControl.Compact StackPanel.StagePills">
+            <Setter Property="Orientation" Value="Vertical" />
+            <Setter Property="Spacing" Value="8" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+
+        <!-- Compact: individual stage pill — stretch full width, center text -->
+        <Style Selector="UserControl.Compact Border.StagePill">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="UserControl.Compact Border.StagePill > TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+
+        <!-- Compact: stage header right — align top-right -->
+        <Style Selector="UserControl.Compact StackPanel.StageHeaderRight">
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Name="ContentStack" Spacing="24">
 
         <!-- ═══ 1. PROJECT ID CARD ═══ -->
         <!--
@@ -440,8 +476,9 @@
                                             Margin="0,0,0,12">
                                         <Grid ColumnDefinitions="*,Auto">
                                             <!-- Left: Stage number + pills -->
-                                            <!-- Vue: .stage-header-left — gap 12 -->
-                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12"
+                                            <!-- Vue: .stage-header-left — gap 12; <=768px: flex-direction column, gap 24 -->
+                                            <StackPanel Classes="StageHeaderLeft"
+                                                        Grid.Column="0" Orientation="Horizontal" Spacing="12"
                                                         VerticalAlignment="Center">
                                                 <!-- Vue: .stage-number — 16px, 600, #1a1a1a/#fafafa -->
                                                 <TextBlock Text="{Binding Number, StringFormat=Stage {0}}"
@@ -450,12 +487,14 @@
                                                            VerticalAlignment="Center" />
 
                                                 <!-- Pills -->
-                                                <!-- Vue: .stage-pills — gap 8 -->
-                                                <StackPanel Orientation="Horizontal" Spacing="8"
+                                                <!-- Vue: .stage-pills — gap 8; <=768px: flex-direction column, width 100% -->
+                                                <StackPanel Classes="StagePills"
+                                                            Orientation="Horizontal" Spacing="8"
                                                             VerticalAlignment="Center">
                                                     <!-- BTC pill -->
-                                                    <!-- Vue: .stage-pill — pad 4 12, rounded 16, font 12px 600 -->
-                                                    <Border Background="{DynamicResource PillGreenBg}"
+                                                    <!-- Vue: .stage-pill — pad 4 12, rounded 16, font 12px 600; <=768px: width 100%, text-align center -->
+                                                    <Border Classes="StagePill"
+                                                            Background="{DynamicResource PillGreenBg}"
                                                             BorderBrush="{DynamicResource StagePillBorder}"
                                                             BorderThickness="1"
                                                             CornerRadius="16"
@@ -466,7 +505,8 @@
                                                     </Border>
 
                                                     <!-- UTXO count pill -->
-                                                    <Border Background="{DynamicResource PillGreenBg}"
+                                                    <Border Classes="StagePill"
+                                                            Background="{DynamicResource PillGreenBg}"
                                                             BorderBrush="{DynamicResource StagePillBorder}"
                                                             BorderThickness="1"
                                                             CornerRadius="16"
@@ -479,8 +519,9 @@
                                             </StackPanel>
 
                                             <!-- Right: status badges -->
-                                            <!-- Vue: .stage-header-right — gap 12 -->
-                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12"
+                                            <!-- Vue: .stage-header-right — gap 12; <=768px: position absolute top-0 right-0 -->
+                                            <StackPanel Classes="StageHeaderRight"
+                                                        Grid.Column="1" Orientation="Horizontal" Spacing="12"
                                                         VerticalAlignment="Center">
                                                 <!-- "Spent by founder" badge (when fully spent) -->
                                                 <!-- Vue: .spent-by-founder-button — pad 8 16, rounded 6, color #f59e0b, border 1px #f59e0b -->

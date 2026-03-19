@@ -12,17 +12,28 @@
     <!-- Outer Panel allows modal overlay to stack above entire shell -->
     <Panel>
         <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- DESKTOP SHELL LAYOUT (>= 1024px)                           -->
-        <!-- Vue: hidden lg:flex — sidebar + header + content            -->
+        <!-- UNIFIED ADAPTIVE SHELL LAYOUT                               -->
+        <!-- Single Grid with ONE ContentControl — avoids dual-parent    -->
+        <!-- crash. Desktop: sidebar+header visible, tab bar hidden.     -->
+        <!-- Compact: sidebar+header hidden, tab bar visible.            -->
         <!-- ═══════════════════════════════════════════════════════════ -->
-        <Grid Name="ShellContent" Margin="0,24,24,24" ColumnDefinitions="208 *" RowDefinitions="42 *" ColumnSpacing="0" RowSpacing="20"
-              IsVisible="{Binding Layout.IsDesktop}">
-            <!-- Logo — centered within the 208px sidebar column (Vue: w-52 = 208px, logo centered) -->
-            <Svg Path="/Assets/logo.svg" Width="32" Height="32"
+        <Grid Name="ShellContent">
+            <!-- Desktop layout: Column 0 = sidebar (208px), Column 1 = content
+                 Row 0 = header (42px), Row 1 = content, Row 2 = tab bar (0 on desktop)
+                 Compact layout: Column 0 = 0px, Column 1 = content full-width
+                 Row 0 = 0px (header hidden), Row 1 = content, Row 2 = tab bar (Auto)
+                 ColumnDefinitions/RowDefinitions set in code-behind via LayoutModeService -->
+
+            <!-- ── DESKTOP HEADER ROW (Row 0) ── -->
+            <!-- Vue: hidden lg:flex — logo + section name + balances + wallet switcher + settings -->
+
+            <!-- Logo — centered within the sidebar column (Vue: w-52 = 208px, logo centered) -->
+            <Svg Name="DesktopLogo" Path="/Assets/logo.svg" Width="32" Height="32"
+                 Grid.Row="0" Grid.Column="0"
                  HorizontalAlignment="Center" VerticalAlignment="Center" />
 
             <!-- Top bar (Vue: hidden lg:flex header) -->
-            <DockPanel Grid.Row="0" Grid.Column="1">
+            <DockPanel Name="DesktopHeader" Grid.Row="0" Grid.Column="1">
                 <TextBlock FontWeight="Bold" VerticalAlignment="Center" FontSize="20"
                            Text="{Binding SelectedSectionName}" />
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="16" Orientation="Horizontal">
@@ -94,8 +105,9 @@
                 </StackPanel>
             </DockPanel>
 
-            <!-- Sidebar navigation (Vue: w-52 = 208px, px-6 = 24px horizontal padding) -->
-            <Border Grid.Row="1" Grid.Column="0" Padding="24,8" ClipToBounds="False">
+            <!-- ── SIDEBAR (Row 1, Column 0) ── -->
+            <!-- Vue: w-52 = 208px, px-6 = 24px horizontal padding, hidden below lg (1024px) -->
+            <Border Name="DesktopSidebar" Grid.Row="1" Grid.Column="0" Padding="24,8" ClipToBounds="False">
                 <ListBox ItemsSource="{Binding NavEntries}"
                          SelectedItem="{Binding SelectedNavItem}"
                          Classes="Nav"
@@ -145,40 +157,20 @@
                 </ListBox>
             </Border>
 
-            <!-- Main content area (desktop) -->
-            <Border Grid.Row="1" Grid.Column="1" Classes="Panel" Padding="0" ClipToBounds="True">
+            <!-- ── MAIN CONTENT AREA (Row 1, Column 1) — SINGLE ContentControl ── -->
+            <!-- This is the ONLY ContentControl binding CurrentSectionContent.
+                 On desktop: sits in column 1, right of sidebar.
+                 On compact: column 0 collapses to 0px, so this fills full width. -->
+            <Border Name="ContentBorder" Grid.Row="1" Grid.Column="1" Classes="Panel" Padding="0" ClipToBounds="True">
                 <ContentControl Content="{Binding CurrentSectionContent}" />
             </Border>
 
-            <!-- App-wide crosshatch texture overlay -->
-            <Border Grid.ColumnSpan="2" Grid.RowSpan="2"
-                    Background="{DynamicResource AppTextureBrush}"
-                    IsHitTestVisible="False" />
-        </Grid>
-
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- COMPACT / MOBILE SHELL LAYOUT (< 1024px)                    -->
-        <!-- Vue: lg:hidden — full-width content + bottom tab bar        -->
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <Grid Name="CompactShellContent" RowDefinitions="*,Auto"
-              IsVisible="{Binding Layout.IsCompact}">
-
-            <!-- Content area (fills all space above tab bar) -->
-            <Border Grid.Row="0" ClipToBounds="True">
-                <ContentControl Content="{Binding CurrentSectionContent}" />
-            </Border>
-
-            <!-- App-wide crosshatch texture overlay (compact) -->
-            <Border Grid.RowSpan="2"
-                    Background="{DynamicResource AppTextureBrush}"
-                    IsHitTestVisible="False" />
-
-            <!-- ── Floating sub-tab panels (above the tab bar) ── -->
+            <!-- ── COMPACT-ONLY: Floating sub-tab panels (Row 1, above tab bar) ── -->
             <!-- Vue: fixed bottom-20, z-40, rounded-2xl pill with two buttons -->
 
             <!-- Investor sub-tabs: "Find Projects" / "Funded"
                  Vue: shown when mobileActiveTab === 'investor' && not in detail views -->
-            <Border Name="InvestorSubTabs" Grid.Row="0"
+            <Border Name="InvestorSubTabs" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                     IsVisible="False"
                     VerticalAlignment="Bottom"
                     HorizontalAlignment="Stretch"
@@ -204,7 +196,7 @@
 
             <!-- Founder sub-tabs: "My Projects" / "Funders"
                  Vue: shown when mobileActiveTab === 'founder' && not in detail views -->
-            <Border Name="FounderSubTabs" Grid.Row="0"
+            <Border Name="FounderSubTabs" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                     IsVisible="False"
                     VerticalAlignment="Bottom"
                     HorizontalAlignment="Stretch"
@@ -228,12 +220,129 @@
                 </Grid>
             </Border>
 
-            <!-- ── Bottom Tab Bar ── -->
+            <!-- ── COMPACT-ONLY: Floating back button bars (Row 1, above tab bar) ── -->
+            <!-- These replace sub-tabs when detail views are open. Visibility managed in code-behind. -->
+
+            <!-- Investor back bar: Back + green Invest CTA + Share button
+                 Vue (line 6203): v-if="(showProjectDetail || showInvestPage) && mobileActiveTab === 'investor'"
+                 Height 52px, rounded-2xl, gap-2, fixed bottom-20 -->
+            <Border Name="InvestorBackBar" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                    IsVisible="False"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Stretch"
+                    Margin="16,0,16,8"
+                    ZIndex="40">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <!-- Back button — Vue: flex-1 bg-[#1a1a1a] (dark) / bg-white (light), rounded-2xl, 52px height -->
+                    <Button Name="InvestorBackBtn"
+                            HorizontalAlignment="Stretch"
+                            Height="52"
+                            CornerRadius="16"
+                            Background="{DynamicResource MobileBackBtnBg}"
+                            BorderBrush="{DynamicResource MobileBackBtnBorder}"
+                            BorderThickness="1"
+                            Foreground="{DynamicResource MobileBackBtnText}"
+                            FontWeight="SemiBold" FontSize="14"
+                            Content="Back"
+                            Cursor="Hand"
+                            Click="OnInvestorBackClick" />
+
+                    <!-- Invest CTA — Vue: flex-1 bg-gradient green, rounded-2xl, 52px height, Bitcoin icon + text -->
+                    <Button Name="InvestorCtaBtn"
+                            HorizontalAlignment="Stretch"
+                            Height="52"
+                            CornerRadius="16"
+                            Background="{StaticResource GreenGradient}"
+                            BorderThickness="0"
+                            Foreground="White"
+                            FontWeight="SemiBold" FontSize="14"
+                            Cursor="Hand"
+                            Click="OnInvestorCtaClick">
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-bitcoin-sign" FontSize="16" Foreground="White" />
+                            <TextBlock Name="InvestorCtaText" Text="Invest" FontWeight="SemiBold" FontSize="14"
+                                       Foreground="White" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Share button — Vue: 52x52, rounded-2xl, bg-white (light) / bg-[#1a1a1a] (dark) -->
+                    <Button Name="InvestorShareBtn"
+                            Width="52" MinWidth="52" Height="52"
+                            CornerRadius="16"
+                            Background="{DynamicResource MobileBackBtnBg}"
+                            BorderBrush="{DynamicResource MobileBackBtnBorder}"
+                            BorderThickness="1"
+                            Cursor="Hand"
+                            Padding="0"
+                            Click="OnInvestorShareClick">
+                        <i:Icon Value="fa-solid fa-share-nodes" FontSize="16"
+                                Foreground="{DynamicResource MobileBackBtnText}" />
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- Investment detail back button: "Back to Investments"
+                 Vue (line 6234): v-if="showInvestmentDetail && currentPage === 'investments'"
+                 Full-width green button, rounded-2xl, 52px height -->
+            <Border Name="InvestmentDetailBackBar" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                    IsVisible="False"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Stretch"
+                    Margin="16,0,16,8"
+                    ZIndex="40">
+                <Button Name="InvestmentDetailBackBtn"
+                        HorizontalAlignment="Stretch"
+                        Height="52"
+                        CornerRadius="16"
+                        Background="{StaticResource PrimaryGreenBrush}"
+                        BorderThickness="0"
+                        Foreground="White"
+                        FontWeight="SemiBold" FontSize="14"
+                        Cursor="Hand"
+                        Click="OnInvestmentDetailBackClick">
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                        <i:Icon Value="fa-solid fa-chevron-left" FontSize="14" Foreground="White" />
+                        <TextBlock Text="Back to Investments" FontWeight="SemiBold" FontSize="14"
+                                   Foreground="White" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </Border>
+
+            <!-- Manage funds back button: "Back to My Projects"
+                 Vue (line 6247): v-if="showManageFunds && selectedManageFundsProject && currentPage === 'my-projects' && !isCreatingProject"
+                 Full-width green button, rounded-2xl, 52px height -->
+            <Border Name="ManageFundsBackBar" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                    IsVisible="False"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Stretch"
+                    Margin="16,0,16,8"
+                    ZIndex="40">
+                <Button Name="ManageFundsBackBtn"
+                        HorizontalAlignment="Stretch"
+                        Height="52"
+                        CornerRadius="16"
+                        Background="{StaticResource PrimaryGreenBrush}"
+                        BorderThickness="0"
+                        Foreground="White"
+                        FontWeight="SemiBold" FontSize="14"
+                        Cursor="Hand"
+                        Click="OnManageFundsBackClick">
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                        <i:Icon Value="fa-solid fa-chevron-left" FontSize="14" Foreground="White" />
+                        <TextBlock Text="Back to My Projects" FontWeight="SemiBold" FontSize="14"
+                                   Foreground="White" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </Border>
+
+            <!-- ── COMPACT-ONLY: Bottom Tab Bar (Row 2) ── -->
             <!-- Vue: <nav> lg:hidden fixed bottom-0, bg-white, border-t border-gray-200, z-50
                  5 tabs: Home, Investor, Founder, Funds, Settings
                  Each: flex-col, gap-1, px-3 py-2, rounded-lg, min-w-[60px]
                  Active: text-[#4B7C5A], Inactive: text-gray-600 (light) / #FAFAFA (dark) -->
-            <Border Grid.Row="1" ZIndex="50"
+            <Border Name="BottomTabBar" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                    ZIndex="50"
+                    IsVisible="False"
                     Background="{DynamicResource TabBarBackground}"
                     BorderBrush="{DynamicResource TabBarBorder}"
                     BorderThickness="0,1,0,0"
@@ -311,6 +420,11 @@
                     </Button>
                 </StackPanel>
             </Border>
+
+            <!-- App-wide crosshatch texture overlay -->
+            <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" Grid.RowSpan="3"
+                    Background="{DynamicResource AppTextureBrush}"
+                    IsHitTestVisible="False" />
         </Grid>
 
         <!-- ═══════════════════════════════════════════════════════════ -->

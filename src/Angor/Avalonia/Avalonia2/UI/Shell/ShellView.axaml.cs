@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
@@ -8,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Transformation;
 using Avalonia.Styling;
+using Avalonia2.UI.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
 
@@ -95,6 +97,14 @@ public partial class ShellView : UserControl
     /// <summary>Guard to prevent re-entrant close animation.</summary>
     private bool _isClosing;
 
+    // ── Cached controls ──
+    private Grid _shellContent = null!;
+    private Control _desktopLogo = null!;
+    private DockPanel _desktopHeader = null!;
+    private Border _desktopSidebar = null!;
+    private Border _contentBorder = null!;
+    private Border _bottomTabBar = null!;
+
     // ── Named controls for mobile tab bar ──
     private Button _tabHome = null!;
     private Button _tabInvestor = null!;
@@ -108,18 +118,33 @@ public partial class ShellView : UserControl
     private Button _founderSubTabMyProjects = null!;
     private Button _founderSubTabFunders = null!;
 
+    // ── Named controls for mobile floating back bars ──
+    private Border _investorBackBar = null!;
+    private Border _investmentDetailBackBar = null!;
+    private Border _manageFundsBackBar = null!;
+    private TextBlock _investorCtaText = null!;
+
+    private IDisposable? _layoutSubscription;
+    private IDisposable? _detailStateSubscription;
+
     public ShellView()
     {
         InitializeComponent();
         var vm = App.Services.GetRequiredService<ShellViewModel>();
         DataContext = vm;
 
+        // ── Resolve layout controls ──
+        _shellContent = this.FindControl<Grid>("ShellContent")!;
+        _desktopLogo = this.FindControl<Control>("DesktopLogo")!;
+        _desktopHeader = this.FindControl<DockPanel>("DesktopHeader")!;
+        _desktopSidebar = this.FindControl<Border>("DesktopSidebar")!;
+        _contentBorder = this.FindControl<Border>("ContentBorder")!;
+        _bottomTabBar = this.FindControl<Border>("BottomTabBar")!;
+
         var modalOverlay = this.FindControl<Panel>("ModalOverlay")!;
-        var shellContent = this.FindControl<Grid>("ShellContent")!;
-        var compactShellContent = this.FindControl<Grid>("CompactShellContent")!;
         var backdrop = this.FindControl<Border>("ShellModalBackdrop")!;
 
-        // ── Resolve mobile tab bar controls (may be null in desktop-only scenarios) ──
+        // ── Resolve mobile tab bar controls ──
         _tabHome = this.FindControl<Button>("TabHome")!;
         _tabInvestor = this.FindControl<Button>("TabInvestor")!;
         _tabFounder = this.FindControl<Button>("TabFounder")!;
@@ -131,6 +156,18 @@ public partial class ShellView : UserControl
         _investorSubTabFunded = this.FindControl<Button>("InvestorSubTabFunded")!;
         _founderSubTabMyProjects = this.FindControl<Button>("FounderSubTabMyProjects")!;
         _founderSubTabFunders = this.FindControl<Button>("FounderSubTabFunders")!;
+
+        // ── Resolve mobile floating back bar controls ──
+        _investorBackBar = this.FindControl<Border>("InvestorBackBar")!;
+        _investmentDetailBackBar = this.FindControl<Border>("InvestmentDetailBackBar")!;
+        _manageFundsBackBar = this.FindControl<Border>("ManageFundsBackBar")!;
+        _investorCtaText = this.FindControl<TextBlock>("InvestorCtaText")!;
+
+        // ── Subscribe to layout mode changes — toggle desktop/compact elements ──
+        ApplyShellLayout(!LayoutModeService.Instance.IsCompact);
+        _layoutSubscription = LayoutModeService.Instance
+            .WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact => ApplyShellLayout(!isCompact));
 
         // Apply backdrop transitions once
         backdrop.Transitions = BackdropTransitions;
@@ -147,12 +184,21 @@ public partial class ShellView : UserControl
                 _tabFunds.Classes.Set("TabBarItemActive", tab == "funds");
                 _tabSettings.Classes.Set("TabBarItemActive", tab == "settings");
 
-                // Show/hide floating sub-tab panels
-                // Vue: show investor sub-tabs when mobileActiveTab === 'investor'
-                _investorSubTabs.IsVisible = tab == "investor";
-                // Vue: show founder sub-tabs when mobileActiveTab === 'founder'
-                _founderSubTabs.IsVisible = tab == "founder";
+                // Sub-tab and back-bar visibility is handled by the detail state subscription below.
+                // Trigger a re-evaluation by reading current detail state.
+                UpdateCompactOverlays(vm);
             });
+
+        // ── React to detail view state changes — toggle sub-tabs vs back bars ──
+        // Vue: sub-tabs hidden when detail views are open; back bars shown instead.
+        _detailStateSubscription = vm.WhenAnyValue(
+                x => x.MobileActiveTab,
+                x => x.IsProjectDetailOpen,
+                x => x.IsInvestPageOpen,
+                x => x.IsInvestmentDetailOpen,
+                x => x.IsManageFundsOpen,
+                x => x.IsCreatingProject)
+            .Subscribe(_ => UpdateCompactOverlays(vm));
 
         // ── React to MobileInvestorSubTab changes — update sub-tab active states ──
         vm.WhenAnyValue(x => x.MobileInvestorSubTab)
@@ -213,9 +259,8 @@ public partial class ShellView : UserControl
                         // Make the overlay visible
                         modalOverlay.IsVisible = true;
 
-                        // Apply blur to whichever shell grid is currently visible
-                        shellContent.Effect = ModalBlur;
-                        compactShellContent.Effect = ModalBlur;
+                        // Apply blur to the shell grid
+                        _shellContent.Effect = ModalBlur;
 
                         // Force layout so the initial state is rendered
                         modalOverlay.InvalidateMeasure();
@@ -244,14 +289,13 @@ public partial class ShellView : UserControl
                             backdrop.Opacity = 0;
 
                             // Wait for transition to finish, then clean up
-                            _ = CleanupAfterClose(closingChild, modalOverlay, shellContent, compactShellContent);
+                            _ = CleanupAfterClose(closingChild, modalOverlay);
                         }
                         else if (_currentModalChild == null)
                         {
                             // Nothing to animate, just hide
                             modalOverlay.IsVisible = false;
-                            shellContent.Effect = null;
-                            compactShellContent.Effect = null;
+                            _shellContent.Effect = null;
                         }
                     }
                 });
@@ -288,6 +332,104 @@ public partial class ShellView : UserControl
                     }
                 });
             });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ADAPTIVE LAYOUT
+    // Switches between desktop (sidebar+header) and compact (tab bar)
+    // by adjusting the single Grid's structure and element visibility.
+    // ═══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Apply the shell layout for desktop or compact mode.
+    /// Desktop: sidebar column 208px, header row 42px, tab bar hidden.
+    /// Compact: sidebar column 0px, header row 0px, tab bar visible.
+    /// </summary>
+    private void ApplyShellLayout(bool isDesktop)
+    {
+        if (_shellContent == null) return;
+
+        if (isDesktop)
+        {
+            // Desktop: sidebar (208px) + content (*), header (42px) + content (*) + no tab bar (0)
+            // Vue: sidebar w-52 = 208px, hidden lg:flex
+            _shellContent.Margin = new Avalonia.Thickness(0, 24, 24, 24);
+            _shellContent.ColumnDefinitions = ColumnDefinitions.Parse("208,*");
+            _shellContent.RowDefinitions = RowDefinitions.Parse("42,*,0");
+            _shellContent.ColumnSpacing = 0;
+            _shellContent.RowSpacing = 20;
+
+            // Show desktop elements
+            _desktopLogo.IsVisible = true;
+            _desktopHeader.IsVisible = true;
+            _desktopSidebar.IsVisible = true;
+
+            // Content in column 1 with Panel class (rounded card background)
+            Grid.SetColumn(_contentBorder, 1);
+            _contentBorder.Classes.Set("Panel", true);
+
+            // Hide compact elements
+            _bottomTabBar.IsVisible = false;
+            _investorSubTabs.IsVisible = false;
+            _founderSubTabs.IsVisible = false;
+            _investorBackBar.IsVisible = false;
+            _investmentDetailBackBar.IsVisible = false;
+            _manageFundsBackBar.IsVisible = false;
+        }
+        else
+        {
+            // Compact: no sidebar, no header, content full-width, tab bar visible
+            // Vue: lg:hidden — full-width content + bottom tab bar
+            _shellContent.Margin = new Avalonia.Thickness(0);
+            _shellContent.ColumnDefinitions = ColumnDefinitions.Parse("*");
+            _shellContent.RowDefinitions = RowDefinitions.Parse("0,*,Auto");
+            _shellContent.ColumnSpacing = 0;
+            _shellContent.RowSpacing = 0;
+
+            // Hide desktop elements
+            _desktopLogo.IsVisible = false;
+            _desktopHeader.IsVisible = false;
+            _desktopSidebar.IsVisible = false;
+
+            // Content fills full width (column 0, the only column)
+            Grid.SetColumn(_contentBorder, 0);
+            _contentBorder.Classes.Set("Panel", false);
+
+            // Show tab bar
+            _bottomTabBar.IsVisible = true;
+
+            // Re-evaluate sub-tab and back-bar visibility based on active tab + detail state
+            if (DataContext is ShellViewModel vm)
+            {
+                UpdateCompactOverlays(vm);
+            }
+        }
+
+        // Move sub-tabs, back bars, and tab bar to column 0 in compact (single column)
+        // and keep spanning in desktop (they're hidden anyway)
+        var subTabCol = isDesktop ? 0 : 0;
+        var subTabColSpan = isDesktop ? 2 : 1;
+        Grid.SetColumn(_investorSubTabs, subTabCol);
+        Grid.SetColumnSpan(_investorSubTabs, subTabColSpan);
+        Grid.SetColumn(_founderSubTabs, subTabCol);
+        Grid.SetColumnSpan(_founderSubTabs, subTabColSpan);
+        Grid.SetColumn(_investorBackBar, subTabCol);
+        Grid.SetColumnSpan(_investorBackBar, subTabColSpan);
+        Grid.SetColumn(_investmentDetailBackBar, subTabCol);
+        Grid.SetColumnSpan(_investmentDetailBackBar, subTabColSpan);
+        Grid.SetColumn(_manageFundsBackBar, subTabCol);
+        Grid.SetColumnSpan(_manageFundsBackBar, subTabColSpan);
+        Grid.SetColumn(_bottomTabBar, 0);
+        Grid.SetColumnSpan(_bottomTabBar, isDesktop ? 2 : 1);
+    }
+
+    protected override void OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromLogicalTree(e);
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
+        _detailStateSubscription?.Dispose();
+        _detailStateSubscription = null;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -355,6 +497,124 @@ public partial class ShellView : UserControl
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // FLOATING BACK BAR CLICK HANDLERS
+    // Vue: Back buttons + CTAs on the mobile floating bar
+    // ═══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Back from project detail or invest page.
+    /// Vue (line 6203): back button in investor back bar.
+    /// </summary>
+    private void OnInvestorBackClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+            vm.BackFromInvestorDetail();
+    }
+
+    /// <summary>
+    /// Invest/Submit CTA on the investor back bar.
+    /// Vue: showInvestPage ? submit : navigate to invest page.
+    /// </summary>
+    private void OnInvestorCtaClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+            vm.MobileInvestAction();
+    }
+
+    /// <summary>
+    /// Share button on the investor back bar.
+    /// Opens share modal for the currently selected project.
+    /// </summary>
+    private void OnInvestorShareClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        // Share is handled by the project detail view itself via shell modal.
+        // For now, this is a no-op placeholder — the share action is context-dependent
+        // and the ProjectDetailView already has its own share button.
+    }
+
+    /// <summary>
+    /// "Back to Investments" button on the investment detail back bar.
+    /// Vue (line 6234): full-width green back button.
+    /// </summary>
+    private void OnInvestmentDetailBackClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+            vm.BackFromInvestmentDetail();
+    }
+
+    /// <summary>
+    /// "Back to My Projects" button on the manage funds back bar.
+    /// Vue (line 6247): full-width green back button.
+    /// </summary>
+    private void OnManageFundsBackClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+            vm.CloseManageFundsFromShell();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // COMPACT OVERLAY VISIBILITY
+    // Manages sub-tab panels and floating back bars based on
+    // active tab + detail view state, only in compact mode.
+    // ═══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Re-evaluate visibility of sub-tab panels and floating back bars.
+    /// Called whenever MobileActiveTab or any detail state flag changes.
+    /// Vue conditions (from App.vue):
+    ///   Investor sub-tabs: mobileActiveTab === 'investor' && !isCreatingProject && !showProjectDetail && !showInvestPage && !showInvestmentDetail
+    ///   Founder sub-tabs:  mobileActiveTab === 'founder' && !isCreatingProject && !showManageFunds
+    ///   Investor back bar: (showProjectDetail || showInvestPage) && mobileActiveTab === 'investor'
+    ///   Investment detail back bar: showInvestmentDetail && mobileActiveTab === 'investor' (currentPage === 'investments')
+    ///   Manage funds back bar: showManageFunds && !isCreatingProject && mobileActiveTab === 'founder'
+    /// </summary>
+    private void UpdateCompactOverlays(ShellViewModel vm)
+    {
+        var isCompact = LayoutModeService.Instance.IsCompact;
+        var tab = vm.MobileActiveTab;
+
+        // ── Investor sub-tabs ──
+        // Vue (line 6163): v-if="mobileActiveTab === 'investor' && !isCreatingProject && !showProjectDetail && !showInvestPage && !showInvestmentDetail"
+        _investorSubTabs.IsVisible = isCompact
+            && tab == "investor"
+            && !vm.IsCreatingProject
+            && !vm.IsProjectDetailOpen
+            && !vm.IsInvestPageOpen
+            && !vm.IsInvestmentDetailOpen;
+
+        // ── Founder sub-tabs ──
+        // Vue (line 6500): v-if="mobileActiveTab === 'founder' && !isCreatingProject && !showManageFunds"
+        _founderSubTabs.IsVisible = isCompact
+            && tab == "founder"
+            && !vm.IsCreatingProject
+            && !vm.IsManageFundsOpen;
+
+        // ── Investor back bar (Back + Invest CTA + Share) ──
+        // Vue (line 6203): v-if="(showProjectDetail || showInvestPage) && mobileActiveTab === 'investor'"
+        _investorBackBar.IsVisible = isCompact
+            && tab == "investor"
+            && (vm.IsProjectDetailOpen || vm.IsInvestPageOpen);
+
+        // Update CTA text: "Submit" when on invest page, "Invest" when on project detail
+        if (_investorCtaText != null)
+            _investorCtaText.Text = vm.IsInvestPageOpen ? "Submit" : "Invest";
+
+        // ── Investment detail back bar ──
+        // Vue (line 6234): v-if="showInvestmentDetail && currentPage === 'investments'"
+        // currentPage === 'investments' maps to mobileActiveTab === 'investor' && mobileInvestorSubTab === 'investments'
+        _investmentDetailBackBar.IsVisible = isCompact
+            && vm.IsInvestmentDetailOpen
+            && tab == "investor";
+
+        // ── Manage funds back bar ──
+        // Vue (line 6247): v-if="showManageFunds && selectedManageFundsProject && currentPage === 'my-projects' && !isCreatingProject"
+        _manageFundsBackBar.IsVisible = isCompact
+            && vm.IsManageFundsOpen
+            && !vm.IsCreatingProject
+            && tab == "founder";
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // MODAL LIFECYCLE
     // ═══════════════════════════════════════════════════════════════
 
@@ -363,7 +623,7 @@ public partial class ShellView : UserControl
     /// Only hides the overlay/blur if no new modal was opened in the meantime
     /// (i.e., multi-step modal flows where ShowModal is called right after HideModal).
     /// </summary>
-    private async Task CleanupAfterClose(Control closingChild, Panel modalOverlay, Grid shellContent, Grid compactShellContent)
+    private async Task CleanupAfterClose(Control closingChild, Panel modalOverlay)
     {
         // Wait for the transition duration + small buffer
         await Task.Delay(AnimDuration + TimeSpan.FromMilliseconds(50));
@@ -378,8 +638,7 @@ public partial class ShellView : UserControl
             {
                 _currentModalChild = null;
                 modalOverlay.IsVisible = false;
-                shellContent.Effect = null;
-                compactShellContent.Effect = null;
+                _shellContent.Effect = null;
             }
             _isClosing = false;
         });

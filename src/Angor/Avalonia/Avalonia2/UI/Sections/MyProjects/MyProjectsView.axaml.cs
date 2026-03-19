@@ -13,6 +13,11 @@ public partial class MyProjectsView : UserControl
     private CompositeDisposable? _subscriptions;
     private IDisposable? _layoutSubscription;
 
+    // Cached controls for responsive layout
+    private Grid? _projectListGrid;
+    private Border? _myProjectsSidebar;
+    private ScrollableView? _myProjectsContent;
+
     /// <summary>Design-time only.</summary>
     public MyProjectsView() => InitializeComponent();
 
@@ -36,51 +41,56 @@ public partial class MyProjectsView : UserControl
         // Check if we should auto-open the wizard (from Home "Launch a Project" button)
         AttachedToVisualTree += OnAttachedToVisualTree;
 
+        // ── Cache responsive layout controls ──
+        _projectListGrid = this.FindControl<Grid>("ProjectListGrid");
+        _myProjectsSidebar = this.FindControl<Border>("MyProjectsSidebar");
+        _myProjectsContent = this.FindControl<ScrollableView>("MyProjectsContent");
+
         // ── Responsive layout: 380px sidebar + content (desktop) → stacked (compact) ──
-        var grid = this.FindControl<Grid>("ProjectListGrid")!;
-        var sidebar = this.FindControl<Border>("MyProjectsSidebar")!;
-        var content = this.FindControl<ScrollableView>("MyProjectsContent")!;
-
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
-            .Subscribe(isCompact =>
-            {
-                if (isCompact)
-                {
-                    // Stacked: single column, sidebar above content
-                    grid.ColumnDefinitions.Clear();
-                    grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                    grid.RowDefinitions.Clear();
-                    grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                    grid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+    }
 
-                    Grid.SetColumn(sidebar, 0);
-                    Grid.SetRow(sidebar, 0);
-                    sidebar.Margin = new Avalonia.Thickness(0, 0, 0, 24);
-                    sidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        if (_projectListGrid == null || _myProjectsSidebar == null || _myProjectsContent == null) return;
 
-                    Grid.SetColumn(content, 0);
-                    Grid.SetRow(content, 1);
-                    content.ContentPadding = new Avalonia.Thickness(0);
-                }
-                else
-                {
-                    // Side by side: 380px sidebar + * content
-                    grid.ColumnDefinitions.Clear();
-                    grid.ColumnDefinitions.Add(new ColumnDefinition(380, GridUnitType.Pixel));
-                    grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                    grid.RowDefinitions.Clear();
-                    grid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+        if (isCompact)
+        {
+            // Stacked: single column, sidebar above content
+            _projectListGrid.ColumnDefinitions.Clear();
+            _projectListGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            _projectListGrid.RowDefinitions.Clear();
+            _projectListGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            _projectListGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
 
-                    Grid.SetColumn(sidebar, 0);
-                    Grid.SetRow(sidebar, 0);
-                    sidebar.Margin = new Avalonia.Thickness(0, 0, 24, 0);
-                    sidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
+            Grid.SetColumn(_myProjectsSidebar, 0);
+            Grid.SetRow(_myProjectsSidebar, 0);
+            _myProjectsSidebar.Margin = new Avalonia.Thickness(0, 0, 0, 24);
+            _myProjectsSidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
 
-                    Grid.SetColumn(content, 1);
-                    Grid.SetRow(content, 0);
-                    content.ContentPadding = new Avalonia.Thickness(0);
-                }
-            });
+            Grid.SetColumn(_myProjectsContent, 0);
+            Grid.SetRow(_myProjectsContent, 1);
+            _myProjectsContent.ContentPadding = new Avalonia.Thickness(0);
+        }
+        else
+        {
+            // Side by side: 380px sidebar + * content
+            _projectListGrid.ColumnDefinitions.Clear();
+            _projectListGrid.ColumnDefinitions.Add(new ColumnDefinition(380, GridUnitType.Pixel));
+            _projectListGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            _projectListGrid.RowDefinitions.Clear();
+            _projectListGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+
+            Grid.SetColumn(_myProjectsSidebar, 0);
+            Grid.SetRow(_myProjectsSidebar, 0);
+            _myProjectsSidebar.Margin = new Avalonia.Thickness(0, 0, 24, 0);
+            _myProjectsSidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
+
+            Grid.SetColumn(_myProjectsContent, 1);
+            Grid.SetRow(_myProjectsContent, 0);
+            _myProjectsContent.ContentPadding = new Avalonia.Thickness(0);
+        }
     }
 
     private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
@@ -102,10 +112,13 @@ public partial class MyProjectsView : UserControl
             {
                 if (CreateWizardPanel != null) CreateWizardPanel.IsVisible = showWizard;
                 UpdateListVisibility(vm);
-                // Update shell title
+                // Update shell title + mobile detail state
                 var shell = this.FindAncestorOfType<ShellView>();
                 if (shell?.DataContext is ShellViewModel shellVm)
+                {
                     shellVm.SectionTitleOverride = showWizard ? "Create New Project" : null;
+                    shellVm.IsCreatingProject = showWizard;
+                }
             })
             .DisposeWith(_subscriptions!);
 
@@ -129,10 +142,12 @@ public partial class MyProjectsView : UserControl
 
                 UpdateListVisibility(vm);
 
-                // Set shell title to project name when managing
+                // Set shell title + mobile detail state for manage funds
                 var shell = this.FindAncestorOfType<ShellView>();
                 if (shell?.DataContext is ShellViewModel shellVm)
                 {
+                    shellVm.IsManageFundsOpen = manageVm != null;
+
                     if (manageVm != null)
                         shellVm.SectionTitleOverride = manageVm.Project.Name;
                     else if (!vm.ShowCreateWizard)

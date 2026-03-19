@@ -91,6 +91,13 @@
             <SolidColorBrush x:Key="SubTabInactiveText" Color="#4A5568" />
             <SolidColorBrush x:Key="SubTabInactiveHoverBg" Color="#F9FAFB" />
 
+            <!-- ── Mobile Back Button Colors (light) ──
+                 Vue: Back btn bg-[#1a1a1a] border-[#333] in dark, bg-white border-gray-200 in light
+                 Share btn same as Back btn -->
+            <SolidColorBrush x:Key="MobileBackBtnBg" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="MobileBackBtnBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="MobileBackBtnText" Color="#1A1A1A" />
+
             <!-- Warning/Fee Box Colors (light mode: warm cream/amber) -->
             <SolidColorBrush x:Key="WarningBoxBackground" Color="#FFF7ED" />
             <SolidColorBrush x:Key="WarningBoxBorder" Color="#FDBA74" />
@@ -251,6 +258,12 @@
             <SolidColorBrush x:Key="SubTabInactiveBg" Color="#2A2A2A" />
             <SolidColorBrush x:Key="SubTabInactiveText" Color="#FAFAFA" />
             <SolidColorBrush x:Key="SubTabInactiveHoverBg" Color="#2A2A2A" />
+
+            <!-- ── Mobile Back Button Colors (dark) ──
+                 Vue: bg-[#1a1a1a] border-[#333] text-white -->
+            <SolidColorBrush x:Key="MobileBackBtnBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="MobileBackBtnBorder" Color="#333333" />
+            <SolidColorBrush x:Key="MobileBackBtnText" Color="#FFFFFF" />
 
             <!-- Warning/Fee Box Colors (dark mode: warm rust/brown) -->
             <SolidColorBrush x:Key="WarningBoxBackground" Color="#2A1A14" />

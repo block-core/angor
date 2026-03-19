@@ -14,6 +14,11 @@ public partial class PortfolioView : UserControl
     private IDisposable? _visibilitySubscription;
     private IDisposable? _layoutSubscription;
 
+    // Cached controls for responsive layout
+    private Grid? _portfolioGrid;
+    private Border? _sidebar;
+    private ScrollableView? _content;
+
     /// <summary>Design-time only.</summary>
     public PortfolioView() => InitializeComponent();
 
@@ -35,51 +40,56 @@ public partial class PortfolioView : UserControl
         var penaltiesBtn = this.FindControl<Button>("PenaltiesButton");
         if (penaltiesBtn != null) penaltiesBtn.Click += OnPenaltiesClick;
 
+        // ── Cache responsive layout controls ──
+        _portfolioGrid = this.FindControl<Grid>("PortfolioListPanel");
+        _sidebar = this.FindControl<Border>("PortfolioSidebar");
+        _content = this.FindControl<ScrollableView>("PortfolioContent");
+
         // ── Responsive layout: 380px sidebar + content (desktop) → stacked (compact) ──
-        var portfolioGrid = this.FindControl<Grid>("PortfolioListPanel")!;
-        var sidebar = this.FindControl<Border>("PortfolioSidebar")!;
-        var content = this.FindControl<ScrollableView>("PortfolioContent")!;
-
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
-            .Subscribe(isCompact =>
-            {
-                if (isCompact)
-                {
-                    // Stacked: single column, sidebar above content
-                    portfolioGrid.ColumnDefinitions.Clear();
-                    portfolioGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                    portfolioGrid.RowDefinitions.Clear();
-                    portfolioGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                    portfolioGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+    }
 
-                    Grid.SetColumn(sidebar, 0);
-                    Grid.SetRow(sidebar, 0);
-                    sidebar.Margin = new Avalonia.Thickness(0, 0, 0, 24);
-                    sidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        if (_portfolioGrid == null || _sidebar == null || _content == null) return;
 
-                    Grid.SetColumn(content, 0);
-                    Grid.SetRow(content, 1);
-                    content.ContentPadding = new Avalonia.Thickness(0);
-                }
-                else
-                {
-                    // Side by side: 380px sidebar + * content
-                    portfolioGrid.ColumnDefinitions.Clear();
-                    portfolioGrid.ColumnDefinitions.Add(new ColumnDefinition(380, GridUnitType.Pixel));
-                    portfolioGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                    portfolioGrid.RowDefinitions.Clear();
-                    portfolioGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+        if (isCompact)
+        {
+            // Stacked: single column, sidebar above content
+            _portfolioGrid.ColumnDefinitions.Clear();
+            _portfolioGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            _portfolioGrid.RowDefinitions.Clear();
+            _portfolioGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            _portfolioGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
 
-                    Grid.SetColumn(sidebar, 0);
-                    Grid.SetRow(sidebar, 0);
-                    sidebar.Margin = new Avalonia.Thickness(0, 0, 24, 0);
-                    sidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
+            Grid.SetColumn(_sidebar, 0);
+            Grid.SetRow(_sidebar, 0);
+            _sidebar.Margin = new Avalonia.Thickness(0, 0, 0, 24);
+            _sidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
 
-                    Grid.SetColumn(content, 1);
-                    Grid.SetRow(content, 0);
-                    content.ContentPadding = new Avalonia.Thickness(0, 0, 16, 0);
-                }
-            });
+            Grid.SetColumn(_content, 0);
+            Grid.SetRow(_content, 1);
+            _content.ContentPadding = new Avalonia.Thickness(0);
+        }
+        else
+        {
+            // Side by side: 380px sidebar + * content
+            _portfolioGrid.ColumnDefinitions.Clear();
+            _portfolioGrid.ColumnDefinitions.Add(new ColumnDefinition(380, GridUnitType.Pixel));
+            _portfolioGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            _portfolioGrid.RowDefinitions.Clear();
+            _portfolioGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+
+            Grid.SetColumn(_sidebar, 0);
+            Grid.SetRow(_sidebar, 0);
+            _sidebar.Margin = new Avalonia.Thickness(0, 0, 24, 0);
+            _sidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
+
+            Grid.SetColumn(_content, 1);
+            Grid.SetRow(_content, 0);
+            _content.ContentPadding = new Avalonia.Thickness(0, 0, 16, 0);
+        }
     }
 
     private void SubscribeToVisibility()
@@ -94,11 +104,19 @@ public partial class PortfolioView : UserControl
             _visibilitySubscription = vm.WhenAnyValue(
                 x => x.HasInvestments,
                 x => x.SelectedInvestment,
-                (hasInvestments, selected) => hasInvestments && selected == null)
-              .Subscribe(visible =>
+                (hasInvestments, selected) => (hasInvestments, selected))
+              .Subscribe(tuple =>
               {
+                  var (hasInvestments, selected) = tuple;
+                  var visible = hasInvestments && selected == null;
+
                   if (PortfolioListPanel != null)
                       PortfolioListPanel.IsVisible = visible;
+
+                  // Publish detail view state to ShellViewModel for mobile back-button visibility
+                  var shell = this.FindAncestorOfType<ShellView>();
+                  if (shell?.DataContext is ShellViewModel shellVm)
+                      shellVm.IsInvestmentDetailOpen = selected != null;
               });
         }
     }
