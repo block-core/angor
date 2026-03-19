@@ -41,7 +41,9 @@ public class NavIconConverter : IValueConverter
 public partial class ShellView : UserControl
 {
     /// <summary>Heavy blur for modal backdrop — much more prominent than before.</summary>
-    private static readonly BlurEffect ModalBlur = new() { Radius = 20 };
+    /// <remarks>PERF: Reduced on mobile (radius 8 vs 20) to avoid GPU strain.</remarks>
+    private static readonly BlurEffect ModalBlurDesktop = new() { Radius = 20 };
+    private static readonly BlurEffect ModalBlurMobile = new() { Radius = 8 };
 
     /// <summary>Animation duration matching Vue prototype modal-fade: 250ms.</summary>
     private static readonly TimeSpan AnimDuration = TimeSpan.FromMilliseconds(250);
@@ -104,6 +106,7 @@ public partial class ShellView : UserControl
     private Border _desktopSidebar = null!;
     private Border _contentBorder = null!;
     private Border _bottomTabBar = null!;
+    private Border _textureOverlay = null!;
 
     // ── Named controls for mobile tab bar ──
     private Button _tabHome = null!;
@@ -111,6 +114,11 @@ public partial class ShellView : UserControl
     private Button _tabFounder = null!;
     private Button _tabFunds = null!;
     private Button _tabSettings = null!;
+    private Border _tabHomePill = null!;
+    private Border _tabInvestorPill = null!;
+    private Border _tabFounderPill = null!;
+    private Border _tabFundsPill = null!;
+    private Border _tabSettingsPill = null!;
     private Border _investorSubTabs = null!;
     private Border _founderSubTabs = null!;
     private Button _investorSubTabFind = null!;
@@ -127,6 +135,13 @@ public partial class ShellView : UserControl
     private IDisposable? _layoutSubscription;
     private IDisposable? _detailStateSubscription;
 
+    /// <summary>
+    /// Extra bottom padding for Android gesture navigation bar safe area.
+    /// On Android, the system nav bar overlaps the bottom ~24dp of the screen.
+    /// </summary>
+    private static readonly double AndroidSafeAreaBottom =
+        OperatingSystem.IsAndroid() ? 24 : 0;
+
     public ShellView()
     {
         InitializeComponent();
@@ -140,6 +155,7 @@ public partial class ShellView : UserControl
         _desktopSidebar = this.FindControl<Border>("DesktopSidebar")!;
         _contentBorder = this.FindControl<Border>("ContentBorder")!;
         _bottomTabBar = this.FindControl<Border>("BottomTabBar")!;
+        _textureOverlay = this.FindControl<Border>("TextureOverlay")!;
 
         var modalOverlay = this.FindControl<Panel>("ModalOverlay")!;
         var backdrop = this.FindControl<Border>("ShellModalBackdrop")!;
@@ -150,6 +166,11 @@ public partial class ShellView : UserControl
         _tabFounder = this.FindControl<Button>("TabFounder")!;
         _tabFunds = this.FindControl<Button>("TabFunds")!;
         _tabSettings = this.FindControl<Button>("TabSettings")!;
+        _tabHomePill = this.FindControl<Border>("TabHomePill")!;
+        _tabInvestorPill = this.FindControl<Border>("TabInvestorPill")!;
+        _tabFounderPill = this.FindControl<Border>("TabFounderPill")!;
+        _tabFundsPill = this.FindControl<Border>("TabFundsPill")!;
+        _tabSettingsPill = this.FindControl<Border>("TabSettingsPill")!;
         _investorSubTabs = this.FindControl<Border>("InvestorSubTabs")!;
         _founderSubTabs = this.FindControl<Border>("FounderSubTabs")!;
         _investorSubTabFind = this.FindControl<Button>("InvestorSubTabFind")!;
@@ -183,6 +204,13 @@ public partial class ShellView : UserControl
                 _tabFounder.Classes.Set("TabBarItemActive", tab == "founder");
                 _tabFunds.Classes.Set("TabBarItemActive", tab == "funds");
                 _tabSettings.Classes.Set("TabBarItemActive", tab == "settings");
+
+                // Toggle MD3 pill indicator active class
+                _tabHomePill.Classes.Set("TabBarPillActive", tab == "home");
+                _tabInvestorPill.Classes.Set("TabBarPillActive", tab == "investor");
+                _tabFounderPill.Classes.Set("TabBarPillActive", tab == "founder");
+                _tabFundsPill.Classes.Set("TabBarPillActive", tab == "funds");
+                _tabSettingsPill.Classes.Set("TabBarPillActive", tab == "settings");
 
                 // Sub-tab and back-bar visibility is handled by the detail state subscription below.
                 // Trigger a re-evaluation by reading current detail state.
@@ -259,8 +287,9 @@ public partial class ShellView : UserControl
                         // Make the overlay visible
                         modalOverlay.IsVisible = true;
 
-                        // Apply blur to the shell grid
-                        _shellContent.Effect = ModalBlur;
+                        // Apply blur to the shell grid (reduced on mobile for perf)
+                        _shellContent.Effect = LayoutModeService.Instance.IsCompact
+                            ? ModalBlurMobile : ModalBlurDesktop;
 
                         // Force layout so the initial state is rendered
                         modalOverlay.InvalidateMeasure();
@@ -370,6 +399,7 @@ public partial class ShellView : UserControl
 
             // Hide compact elements
             _bottomTabBar.IsVisible = false;
+            _textureOverlay.IsVisible = true; // PERF: texture overlay visible on desktop only
             _investorSubTabs.IsVisible = false;
             _founderSubTabs.IsVisible = false;
             _investorBackBar.IsVisible = false;
@@ -395,8 +425,10 @@ public partial class ShellView : UserControl
             Grid.SetColumn(_contentBorder, 0);
             _contentBorder.Classes.Set("Panel", false);
 
-            // Show tab bar
+            // Show tab bar, hide expensive texture overlay
             _bottomTabBar.IsVisible = true;
+            _bottomTabBar.Padding = new Avalonia.Thickness(0, 0, 0, AndroidSafeAreaBottom);
+            _textureOverlay.IsVisible = false; // PERF: DrawingBrush TileMode is expensive on mobile GPU
 
             // Re-evaluate sub-tab and back-bar visibility based on active tab + detail state
             if (DataContext is ShellViewModel vm)

@@ -19,6 +19,7 @@ public partial class HomeView : UserControl
     private Grid? _fundCard;
     private Grid? _getFundedCard;
     private ScrollableView? _scrollableView;
+    private Border? _tiledLogoBorder;
 
     /// <summary>Design-time only.</summary>
     public HomeView() => InitializeComponent();
@@ -35,6 +36,7 @@ public partial class HomeView : UserControl
         _fundCard = this.FindControl<Grid>("FundCard");
         _getFundedCard = this.FindControl<Grid>("GetFundedCard");
         _scrollableView = this.GetLogicalDescendants().OfType<ScrollableView>().FirstOrDefault();
+        _tiledLogoBorder = this.FindControl<Border>("TiledLogoBorder");
 
         // ── Responsive layout: two-col (desktop) → stacked (compact) ──
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
@@ -50,6 +52,10 @@ public partial class HomeView : UserControl
             _scrollableView.ContentPadding = isCompact
                 ? new Thickness(24, 24, 24, 96)
                 : new Thickness(24);
+
+        // PERF: Hide VisualBrush tiled logo on mobile — expensive on mobile GPU
+        if (_tiledLogoBorder != null)
+            _tiledLogoBorder.IsVisible = !isCompact;
 
         if (isCompact)
         {

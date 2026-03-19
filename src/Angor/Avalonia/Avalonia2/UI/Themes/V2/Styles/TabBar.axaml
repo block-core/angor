@@ -2,27 +2,30 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- ═══════════════════════════════════════════════════════════════════
-         BOTTOM TAB BAR STYLES
-         Vue: <nav> lg:hidden — 5 tabs (Home, Investor, Founder, Funds, Settings)
-         Each tab: flex-col, gap-1, px-3 py-2, rounded-lg, min-w-[60px]
-         Active: text-[#4B7C5A], Inactive: text-gray-600 (light) / #FAFAFA (dark)
+         MATERIAL DESIGN 3 — BOTTOM NAVIGATION BAR
+         MD3 spec: 80dp height, 24dp icons, 12px labels, rounded pill active
+         indicator (64x32dp, 16dp corner radius) behind active icon.
+         Colors: active = brand green, inactive = gray-600 (light) / #FAFAFA (dark)
          ═══════════════════════════════════════════════════════════════════ -->
 
     <!-- TabBarItem: individual tab button in the bottom tab bar
-         Vue: flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all min-w-[60px]
-         No background, foreground-only color changes (icon + label inherit from Button.Foreground) -->
+         MD3: transparent background, foreground-only color changes,
+         content vertically centered in 80dp height.
+         No padding on the button itself — layout handled by inner StackPanel. -->
     <Style Selector="Button.TabBarItem">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="Padding" Value="0" />
         <Setter Property="MinWidth" Value="60" />
-        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="CornerRadius" Value="0" />
         <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Foreground" Value="{DynamicResource TabBarInactiveText}" />
     </Style>
-    <!-- Remove the default Button template hover background -->
+    <!-- Remove the default Button template hover/pressed backgrounds -->
     <Style Selector="Button.TabBarItem /template/ ContentPresenter">
         <Setter Property="Background" Value="Transparent" />
     </Style>
@@ -36,6 +39,17 @@
     <!-- Active tab: green foreground (Rule #9: NO BrushTransition, CSS class toggle) -->
     <Style Selector="Button.TabBarItem.TabBarItemActive">
         <Setter Property="Foreground" Value="{DynamicResource TabBarActiveText}" />
+    </Style>
+
+    <!-- ── MD3 Active Indicator Pill ──
+         64x32dp rounded pill behind the active icon.
+         Inactive: transparent. Active: brand green at 12% opacity.
+         Rule #9: NO BrushTransition — instant state change via CSS class toggle. -->
+    <Style Selector="Border.TabBarPill">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.TabBarPill.TabBarPillActive">
+        <Setter Property="Background" Value="{DynamicResource TabBarPillActiveBg}" />
     </Style>
 
     <!-- ═══════════════════════════════════════════════════════════════════

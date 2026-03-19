@@ -30,8 +30,9 @@
             <Grid Name="FundCard" Grid.Column="0" MinHeight="480" ClipToBounds="False">
                 <!-- Card background -->
                 <Border Classes="Panel" ClipToBounds="False" />
-                <!-- Tiled logo watermark overlay (matches Vue invest-column ::before) -->
-                <Border CornerRadius="12" Background="{DynamicResource TiledLogoBrush}" IsHitTestVisible="False" />
+                <!-- Tiled logo watermark overlay (matches Vue invest-column ::before)
+                     PERF: Hidden on mobile — VisualBrush with SVG TileMode is expensive on mobile GPU -->
+                <Border Name="TiledLogoBorder" CornerRadius="12" Background="{DynamicResource TiledLogoBrush}" IsHitTestVisible="False" />
                 <!-- Content -->
                 <StackPanel Spacing="0" VerticalAlignment="Center" Margin="48">
                     <!-- Bitcoin logo (80x80) — Vue: w-24 h-24 mb-8, fill=currentColor
