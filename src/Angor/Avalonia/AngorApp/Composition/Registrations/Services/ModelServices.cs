@@ -1,4 +1,5 @@
 using AngorApp.Design;
+using AngorApp.Model.Funded.Shared.Model;
 using AngorApp.Model.Wallet.Simple;
 using AngorApp.UI.Flows.CreateProject;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject;
@@ -17,6 +18,7 @@ public static class ModelServices
         return services
             .AddSingleton<IAmountFactory, AmountFactory>()
             .AddSingleton<IWalletProvider, SimpleWalletProvider>()
+            .AddSingleton<IFundedCommandsFactory, FundedCommandsFactory>()
             .AddSingleton<IBlossomService, BlossomService>()
             .AddSingleton<IImagePicker, ImagePicker>()
             .AddScoped<ICreateProjectFlow, CreateProjectFlow>()

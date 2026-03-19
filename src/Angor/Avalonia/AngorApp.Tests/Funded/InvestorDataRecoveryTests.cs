@@ -27,7 +27,7 @@ public class InvestorDataRecoveryTests
 
         using var sut = new InvestmentInvestorData(CreateInvestedProjectDto(projectId), service.Object, walletContext.Object);
         RecoveryState? latest = null;
-        using var subscription = sut.Recovery.Subscribe(state => latest = state);
+        using var subscription = sut.RecoveryState.Subscribe(state => latest = state);
 
         sut.Refresh.Execute(null);
         await WaitUntil(() => latest?.HasUnspentItems == true);
@@ -50,7 +50,7 @@ public class InvestorDataRecoveryTests
 
         using var sut = new FundInvestorData(CreateInvestedProjectDto(projectId), service.Object, walletContext.Object);
         RecoveryState? latest = null;
-        using var subscription = sut.Recovery.Subscribe(state => latest = state);
+        using var subscription = sut.RecoveryState.Subscribe(state => latest = state);
 
         sut.Refresh.Execute(null);
         await WaitUntil(() => latest?.HasUnspentItems == true);

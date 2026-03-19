@@ -27,8 +27,7 @@ namespace AngorApp.UI.Sections.Funded.Shared.Section
         private readonly IWalletContext walletContext;
         private readonly INavigator navigator;
         private readonly IProjectFactory projectFactory;
-        private readonly INotificationService notificationService;
-        private readonly ITransactionDraftPreviewer draftPreviewer;
+        private readonly IFundedCommandsFactory fundedCommandsFactory;
 
         public FundedSectionViewModel(
             IShellViewModel shell,
@@ -37,8 +36,7 @@ namespace AngorApp.UI.Sections.Funded.Shared.Section
             IWalletContext walletContext,
             INavigator navigator,
             IProjectFactory projectFactory,
-            INotificationService notificationService,
-            ITransactionDraftPreviewer draftPreviewer
+            IFundedCommandsFactory fundedCommandsFactory
         )
         {
             this.investmentAppService = investmentAppService;
@@ -46,8 +44,7 @@ namespace AngorApp.UI.Sections.Funded.Shared.Section
             this.walletContext = walletContext;
             this.navigator = navigator;
             this.projectFactory = projectFactory;
-            this.notificationService = notificationService;
-            this.draftPreviewer = draftPreviewer;
+            this.fundedCommandsFactory = fundedCommandsFactory;
             FindProjects = EnhancedCommand.Create(() => shell.SetSection("Find Projects"));
 
             RefreshableCollection<IFundedItem, string> fundedProjects = RefreshableCollection.Create(
@@ -86,8 +83,8 @@ namespace AngorApp.UI.Sections.Funded.Shared.Section
 
                        IFunded funded = project switch
                        {
-                           IInvestmentProject investmentProject => new InvestmentFunded(investmentProject, new InvestmentInvestorData(dto, investmentAppService, walletContext), notificationService, draftPreviewer, investmentAppService, walletContext),
-                           IFundProject fundProject => new FundFunded(fundProject, new FundInvestorData(dto, investmentAppService, walletContext), notificationService, draftPreviewer, investmentAppService, walletContext),
+                           IInvestmentProject investmentProject => new InvestmentFunded(investmentProject, new InvestmentInvestorData(dto, investmentAppService, walletContext), fundedCommandsFactory),
+                           IFundProject fundProject => new FundFunded(fundProject, new FundInvestorData(dto, investmentAppService, walletContext), fundedCommandsFactory),
                            _ => throw new ArgumentOutOfRangeException(nameof(project))
                        };
                        var manage = EnhancedCommand.Create(() => navigator.Go(() => new ManageViewModel(funded)));
