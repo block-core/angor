@@ -10,7 +10,7 @@ namespace AngorApp.Model.Funded.Shared.Model
         string ProjectId { get; }
         DateTimeOffset InvestedOn { get; }
         IObservable<InvestmentStatus> Status { get; }
-        IObservable<RecoveryState> Recovery { get; }
+        IObservable<RecoveryState> RecoveryState { get; }
         IObservable<IReadOnlyList<InvestorStageItemDto>> StageItems { get; }
         public IAmountUI Amount { get; }
     }

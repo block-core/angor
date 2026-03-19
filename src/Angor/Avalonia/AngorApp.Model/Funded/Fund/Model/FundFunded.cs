@@ -13,11 +13,8 @@ namespace AngorApp.Model.Funded.Fund.Model
         public FundFunded(
             IFundProject project,
             IFundInvestorData investorData,
-            INotificationService notificationService,
-            ITransactionDraftPreviewer draftPreviewer,
-            IInvestmentAppService appService,
-            IWalletContext walletContext
-        ) : base(project, investorData, notificationService, draftPreviewer, appService, walletContext)
+            IFundedCommandsFactory fundedCommandsFactory
+        ) : base(project, investorData, fundedCommandsFactory)
         {
             PaymentsWithStatus = project.Payments
                 .CombineLatest(investorData.StageItems, ApplyStatuses)

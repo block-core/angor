@@ -9,7 +9,7 @@ namespace AngorApp.UI.TransactionDrafts;
 
 public class TransactionDraftPreviewer(IDialog dialog, UIServices uiServices) : ITransactionDraftPreviewer
 {
-    public async Task<Result> PreviewAndCommit(
+    public async Task<Maybe<Result>> PreviewAndCommit(
         Func<long, Task<Result<TransactionDraft>>> createDraft,
         Func<TransactionDraft, Task<Result<Guid>>> commitDraft,
         string title,
@@ -26,8 +26,7 @@ public class TransactionDraftPreviewer(IDialog dialog, UIServices uiServices) : 
             : null;
 
         var previewer = new TransactionDraftPreviewerViewModel(getDraft, commit, uiServices, refreshWallet);
-        await dialog.ShowAndGetResult(previewer, title, s => s.CommitDraft.Enhance(title));
-
-        return Result.Success();
+        return await dialog.ShowAndGetResult(previewer, title, s => s.CommitDraft.Enhance(title))
+            .Map(_ => Result.Success());
     }
 }

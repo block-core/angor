@@ -5,7 +5,7 @@ namespace AngorApp.Model.Funded.Shared.Model;
 
 public interface ITransactionDraftPreviewer
 {
-    Task<Result> PreviewAndCommit(
+    Task<Maybe<Result>> PreviewAndCommit(
         Func<long, Task<Result<TransactionDraft>>> createDraft,
         Func<TransactionDraft, Task<Result<Guid>>> commitDraft,
         string title,

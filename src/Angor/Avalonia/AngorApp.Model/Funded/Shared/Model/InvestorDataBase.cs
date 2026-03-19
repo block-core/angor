@@ -16,7 +16,7 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
     private readonly IWalletContext walletContext;
     private readonly CompositeDisposable disposables = new();
     private readonly BehaviorSubject<InvestmentStatus> status;
-    private readonly BehaviorSubject<RecoveryState> recovery = new(RecoveryState.None);
+    private readonly BehaviorSubject<RecoveryState> recovery = new(Model.RecoveryState.None);
     private readonly BehaviorSubject<IReadOnlyList<InvestorStageItemDto>> stageItems = new(new List<InvestorStageItemDto>());
 
     protected InvestorDataBase(InvestedProjectDto dto, IInvestmentAppService investmentAppService, IWalletContext walletContext)
@@ -31,7 +31,7 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
         InvestedOn = dto.RequestedOn ?? DateTimeOffset.MinValue;
         status = new BehaviorSubject<InvestmentStatus>(dto.InvestmentStatus);
         Status = status;
-        Recovery = recovery;
+        RecoveryState = recovery;
         StageItems = stageItems;
 
         var refresh = EnhancedCommand.CreateWithResult(DoRefresh).DisposeWith(disposables);
@@ -47,7 +47,7 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
     public string InvestmentId { get; }
     public string ProjectId { get; }
     public IObservable<InvestmentStatus> Status { get; }
-    public IObservable<RecoveryState> Recovery { get; }
+    public IObservable<RecoveryState> RecoveryState { get; }
     public IObservable<IReadOnlyList<InvestorStageItemDto>> StageItems { get; }
 
     private async Task<Result<(InvestedProjectDto Dto, RecoveryState Recovery, IReadOnlyList<InvestorStageItemDto> Items)>> DoRefresh()
@@ -67,7 +67,7 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
 
                 var recoveryState = dto.Value.InvestmentStatus == InvestmentStatus.Invested
                     ? recovery.Value
-                    : RecoveryState.None;
+                    : Model.RecoveryState.None;
 
                 IReadOnlyList<InvestorStageItemDto> recoveryItems = new List<InvestorStageItemDto>();
 
