@@ -31,6 +31,7 @@ public static class CreateProjectInfo
             ISeedwordsProvider seedwordsProvider,
             IDerivationOperations derivationOperations,
             IRelayService relayService,
+            INetworkConfiguration networkConfiguration,
             IAngorIndexerService angorIndexerService,
             IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
             ILogger<CreateProjectInfoHandler> logger
@@ -74,6 +75,7 @@ public static class CreateProjectInfo
                 FounderRecoveryKey = founderKeys.FounderRecoveryKey,
                 NostrPubKey = founderKeys.NostrPubKey,
                 ProjectIdentifier = founderKeys.ProjectIdentifier,
+                NetworkName = networkConfiguration.GetNetwork().Name,
                 StartDate = project.StartDate
             };
 

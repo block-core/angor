@@ -99,10 +99,11 @@ public class DocumentProjectService(
                              Name = metadata.Name,
                              ShortDescription = metadata.About,
 
-                             // New properties from ProjectInfo
-                             Version = info.Version,
-                             ProjectType = info.ProjectType,
-                             DynamicStagePatterns = info.DynamicStagePatterns ?? new List<DynamicStagePattern>()
+                              // New properties from ProjectInfo
+                              Version = info.Version,
+                              ProjectType = info.ProjectType,
+                              DynamicStagePatterns = info.DynamicStagePatterns ?? new List<DynamicStagePattern>(),
+                              NetworkName = info.NetworkName
                          };
                      });
 

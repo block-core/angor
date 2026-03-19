@@ -24,6 +24,7 @@ public class Project
     public int Version { get; set; } = 2;
     public ProjectType ProjectType { get; set; } = ProjectType.Invest;
     public List<DynamicStagePattern> DynamicStagePatterns { get; set; } = new();
+    public string NetworkName { get; set; }
     public override string ToString()
     {
         return Name;
