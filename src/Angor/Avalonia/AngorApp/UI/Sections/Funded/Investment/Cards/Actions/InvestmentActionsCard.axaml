@@ -7,6 +7,7 @@
              xmlns:model="clr-namespace:AngorApp.Model.Funded.Shared.Model;assembly=AngorApp.Model"
              xmlns:model1="clr-namespace:AngorApp.Model.Funded.Investment.Model;assembly=AngorApp.Model"
              xmlns:actions="clr-namespace:AngorApp.UI.Sections.Funded.Investment.Cards.Actions"
+             xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d"
              d:DesignWidth="400"
              x:Class="AngorApp.UI.Sections.Funded.Investment.Cards.Actions.InvestmentActionsCard"
@@ -18,24 +19,13 @@
     </Design.DataContext>
 
     <StackPanel Classes="Gap-XL">
-        <actions:InvestedCard ClipToBounds="False" x:Name="Invested" IsVisible="False" />
-        <actions:PendingFounderSignaturesCard  ClipToBounds="False" x:Name="WaitingForApproval" IsVisible="False" />
-        <actions:FounderSignaturesReceivedCard  ClipToBounds="False" x:Name="ApprovalReceived" IsVisible="False" />
-        <actions:InvalidCard x:Name="Invalid"  ClipToBounds="False" IsVisible="False" />
-
-        <Interaction.Behaviors>
-            <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.Invested}">
-                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Visual.IsVisibleProperty}" Value="True" TargetObject="Invested" />
-            </BindingTriggerBehavior>
-            <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.PendingFounderSignatures}">
-                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Visual.IsVisibleProperty}" Value="True" TargetObject="WaitingForApproval" />
-            </BindingTriggerBehavior>
-            <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.FounderSignaturesReceived}">
-                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Visual.IsVisibleProperty}" Value="True" TargetObject="ApprovalReceived" />
-            </BindingTriggerBehavior>
-            <BindingTriggerBehavior Binding="{Binding InvestorData.Status^}" Value="{x:Static founder:InvestmentStatus.Invalid}">
-                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Visual.IsVisibleProperty}" Value="True" TargetObject="Invalid" />
-            </BindingTriggerBehavior>
-        </Interaction.Behaviors>
+        <actions:InvestedCard ClipToBounds="False"
+            IsVisible="{Binding InvestorData.Status^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static founder:InvestmentStatus.Invested}}" />
+        <actions:PendingFounderSignaturesCard ClipToBounds="False"
+            IsVisible="{Binding InvestorData.Status^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static founder:InvestmentStatus.PendingFounderSignatures}}" />
+        <actions:FounderSignaturesReceivedCard ClipToBounds="False"
+            IsVisible="{Binding InvestorData.Status^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static founder:InvestmentStatus.FounderSignaturesReceived}}" />
+        <actions:InvalidCard ClipToBounds="False"
+            IsVisible="{Binding InvestorData.Status^, Converter={x:Static controls:AngorConverters.IsEqualTo}, ConverterParameter={x:Static founder:InvestmentStatus.Invalid}}" />
     </StackPanel>
 </UserControl>
