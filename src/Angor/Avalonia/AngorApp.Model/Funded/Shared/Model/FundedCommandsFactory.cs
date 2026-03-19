@@ -61,7 +61,7 @@ public class FundedCommandsFactory(
                 investorData.RecoveryState,
                 (status, recoveryState) =>
                     status == InvestmentStatus.Invested &&
-                    (recoveryState.HasUnspentItems || recoveryState.HasSpendableItemsInPenalty));
+                    RecoveryActionPolicy.Resolve(recoveryState) != RecoveryActionKind.None);
 
             OpenChat = EnhancedCommand.CreateWithResult(Result.Success);
 
@@ -70,7 +70,7 @@ public class FundedCommandsFactory(
             ConfirmInvestment = EnhancedCommand.CreateWithResult(Confirm, canConfirmInvestment).DisposeWith(disposables);
             RecoverFunds = EnhancedCommand.CreateWithResult(Recover, canRecoverFunds).DisposeWith(disposables);
 
-            RecoverFundsLabel = investorData.RecoveryState.Select(state => state.ButtonLabel);
+            RecoverFundsLabel = investorData.RecoveryState.Select(RecoveryActionPolicy.GetButtonLabel);
         }
 
         public IEnhancedCommand<Result> CancelApproval { get; }
@@ -132,9 +132,10 @@ public class FundedCommandsFactory(
 
             var wallet = walletResult.Value;
             var recoveryState = await investorData.RecoveryState.FirstAsync();
+            var recoveryAction = RecoveryActionPolicy.Resolve(recoveryState);
 
             var (createDraft, commitDraft, title, successMessage) =
-                ResolveRecoveryAction(recoveryState, wallet.Id, project.Id);
+                ResolveRecoveryAction(recoveryAction, wallet.Id, project.Id);
 
             if (createDraft == null)
                 return Result.Failure("No recovery action available");
@@ -149,55 +150,57 @@ public class FundedCommandsFactory(
         }
 
         private (Func<long, Task<Result<TransactionDraft>>>? CreateDraft, Func<TransactionDraft, Task<Result<Guid>>>? CommitDraft, string? Title, string? SuccessMessage)
-            ResolveRecoveryAction(RecoveryState recoveryState, WalletId walletId, ProjectId projectId)
+            ResolveRecoveryAction(RecoveryActionKind recoveryAction, WalletId walletId, ProjectId projectId)
         {
             Func<TransactionDraft, Task<Result<Guid>>> makeCommit() =>
                 draft => appService
                     .SubmitTransactionFromDraft(new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(walletId.Value, projectId, draft))
                     .Map(_ => Guid.Empty);
 
-            if (recoveryState is { HasUnspentItems: true, HasReleaseSignatures: true })
+            if (recoveryAction == RecoveryActionKind.None)
+            {
+                return (null, null, null, null);
+            }
+
+            var title = RecoveryActionPolicy.GetDialogTitle(recoveryAction);
+            var successMessage = RecoveryActionPolicy.GetSuccessMessage(recoveryAction);
+
+            if (recoveryAction == RecoveryActionKind.ClaimReleasedFunds)
             {
                 return (
                     feerate => appService.BuildUnfundedReleaseTransaction(new BuildUnfundedReleaseTransaction.BuildUnfundedReleaseTransactionRequest(walletId, projectId, new DomainFeerate(feerate)))
                         .Map(response => (TransactionDraft)response.TransactionDraft),
                     makeCommit(),
-                    "Claim Released Funds",
-                    "Released funds have been claimed successfully");
+                    title,
+                    successMessage);
             }
 
-            if (recoveryState.HasUnspentItems && (recoveryState.EndOfProject || !recoveryState.IsAboveThreshold))
+            if (recoveryAction is RecoveryActionKind.ClaimFunds or RecoveryActionKind.ClaimFundsBelowThreshold)
             {
-                var title = recoveryState.IsAboveThreshold ? "Claim Funds" : "Claim Funds (Below Threshold)";
                 return (
                     feerate => appService.BuildEndOfProjectClaim(new BuildEndOfProjectClaim.BuildEndOfProjectClaimRequest(walletId, projectId, new DomainFeerate(feerate)))
                         .Map(response => (TransactionDraft)response.TransactionDraft),
                     makeCommit(),
                     title,
-                    "Funds claim transaction has been submitted successfully");
+                    successMessage);
             }
 
-            if (recoveryState.HasUnspentItems && !recoveryState.HasSpendableItemsInPenalty)
+            if (recoveryAction == RecoveryActionKind.RecoverToPenalty)
             {
                 return (
                     feerate => appService.BuildRecoveryTransaction(new BuildRecoveryTransaction.BuildRecoveryTransactionRequest(walletId, projectId, new DomainFeerate(feerate)))
                         .Map(response => (TransactionDraft)response.TransactionDraft),
                     makeCommit(),
-                    "Recover Funds",
-                    "Funds recovery transaction has been submitted successfully");
+                    title,
+                    successMessage);
             }
 
-            if (recoveryState.HasSpendableItemsInPenalty)
-            {
-                return (
-                    feerate => appService.BuildPenaltyReleaseTransaction(new BuildPenaltyReleaseTransaction.BuildPenaltyReleaseTransactionRequest(walletId, projectId, new DomainFeerate(feerate)))
-                        .Map(response => (TransactionDraft)response.TransactionDraft),
-                    makeCommit(),
-                    "Release Funds",
-                    "Penalty release transaction has been submitted successfully");
-            }
-
-            return (null, null, null, null);
+            return (
+                feerate => appService.BuildPenaltyReleaseTransaction(new BuildPenaltyReleaseTransaction.BuildPenaltyReleaseTransactionRequest(walletId, projectId, new DomainFeerate(feerate)))
+                    .Map(response => (TransactionDraft)response.TransactionDraft),
+                makeCommit(),
+                title,
+                successMessage);
         }
     }
 }
