@@ -10,6 +10,7 @@ public class Payment(int id, DateTimeOffset paymentDate, IAmountUI amount, strin
     public string Status { get; } = status;
 
     public Payment WithStatus(string newStatus) => new(Id, PaymentDate, Amount, newStatus);
+    public Payment WithAmount(IAmountUI newAmount) => new(Id, PaymentDate, newAmount, Status);
 
     public static IReadOnlyCollection<IPayment> MapFrom(List<DynamicStageDto> dynamicStages)
     {

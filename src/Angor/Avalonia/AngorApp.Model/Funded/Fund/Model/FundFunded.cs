@@ -38,16 +38,16 @@ namespace AngorApp.Model.Funded.Fund.Model
             if (recoveryItems.Count == 0)
                 return payments;
 
-            var itemsByIndex = recoveryItems.ToDictionary(i => i.StageIndex);
+            var datesByIndex = payments.ToDictionary(p => p.Id, p => p.PaymentDate);
 
-            return payments.Select(payment =>
-            {
-                if (itemsByIndex.TryGetValue(payment.Id, out var item) && !string.IsNullOrEmpty(item.Status))
-                {
-                    return payment is ProjectsV2.FundProject.Payment p ? p.WithStatus(item.Status) : payment;
-                }
-                return payment;
-            }).ToList();
+            return recoveryItems
+                .OrderBy(item => item.StageIndex)
+                .Select(item => (IPayment)new ProjectsV2.FundProject.Payment(
+                    id: item.StageIndex,
+                    paymentDate: datesByIndex.TryGetValue(item.StageIndex, out var date) ? date : DateTimeOffset.MinValue,
+                    amount: new AmountUI(item.Amount),
+                    status: !string.IsNullOrEmpty(item.Status) ? item.Status : "Pending"
+                )).ToList();
         }
     }
 }

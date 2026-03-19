@@ -39,27 +39,21 @@ namespace AngorApp.Model.Funded.Investment.Model
             if (recoveryItems.Count == 0)
                 return stages;
 
-            var itemsByIndex = recoveryItems.ToDictionary(i => i.StageIndex);
+            var stagesByIndex = stages.ToDictionary(s => s.Id);
 
-            return stages.Select(stage =>
-            {
-                var updatedStage = stage;
-
-                if (itemsByIndex.TryGetValue(stage.Id, out var item))
+            return recoveryItems
+                .OrderBy(item => item.StageIndex)
+                .Select(item =>
                 {
-                    if (stage is Stage s)
-                    {
-                        updatedStage = s.WithTotal(new AmountUI(item.Amount));
-
-                        if (!string.IsNullOrEmpty(item.Status))
-                        {
-                            updatedStage = ((Stage)updatedStage).WithStatus(item.Status);
-                        }
-                    }
-                }
-
-                return updatedStage;
-            }).ToList();
+                    var hasStage = stagesByIndex.TryGetValue(item.StageIndex, out var stage);
+                    return (IStage)new Stage(
+                        id: item.StageIndex,
+                        releaseDate: hasStage ? stage!.ReleaseDate : DateTimeOffset.MinValue,
+                        ratio: hasStage ? stage!.Ratio : 0m,
+                        total: new AmountUI(item.Amount),
+                        status: !string.IsNullOrEmpty(item.Status) ? item.Status : "Pending"
+                    );
+                }).ToList();
         }
     }
 }
