@@ -120,10 +120,18 @@
     private void InitializeAppVersion()
     {
         var assembly = Assembly.GetEntryAssembly();
-        var version = assembly?.GetName().Version;
+        var informationalVersion = assembly?
+            .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion;
 
-        if (version != null)
-            _softwareVersion = version.ToString();
+        if (!string.IsNullOrEmpty(informationalVersion))
+            _softwareVersion = informationalVersion;
+        else
+        {
+            var version = assembly?.GetName().Version;
+            if (version != null)
+                _softwareVersion = version.ToString();
+        }
     }
 
     private void InitializeNetworkConfiguration()

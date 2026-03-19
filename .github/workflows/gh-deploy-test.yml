@@ -26,8 +26,14 @@ jobs:
       with:
         global-json-file: src/Angor/Client/global.json
 
+    - name: Set version with commit hash
+      run: |
+        BASE_VERSION=$(grep -oP '(?<=<Version>)[^<]+' src/Directory.Build.props)
+        COMMIT_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
+        echo "APP_VERSION=${BASE_VERSION}-${COMMIT_SHORT}" >> $GITHUB_ENV
+
     - name: Publish Blazor WASM
-      run: dotnet publish ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --output ${{ env.OUTPUT_PATH }}
+      run: dotnet publish ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --output ${{ env.OUTPUT_PATH }} /p:InformationalVersion=${{ env.APP_VERSION }}
 
     - name: Copy index.html to 404.html
       run: cp ${{ env.OUTPUT_PATH }}/wwwroot/index.html ${{ env.OUTPUT_PATH }}/wwwroot/404.html
