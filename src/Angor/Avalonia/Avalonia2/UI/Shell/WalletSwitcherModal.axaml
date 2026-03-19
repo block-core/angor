@@ -61,18 +61,8 @@
                                    FontSize="20" FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    VerticalAlignment="Center" />
-                        <Button Name="CloseWalletSwitcher" HorizontalAlignment="Right"
-                                VerticalAlignment="Center" Background="Transparent"
-                                Padding="4" Cursor="Hand" BorderThickness="0"
-                                CornerRadius="6">
-                            <!-- Vue: .modal-close-button — svg w-5 h-5 -->
-                            <Viewbox Width="20" Height="20">
-                                <Path Data="{StaticResource XMark}"
-                                      Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                                      StrokeLineCap="Round" StrokeJoin="Round"
-                                      Width="24" Height="24" Stretch="Uniform" />
-                            </Viewbox>
-                        </Button>
+                        <Button Name="CloseWalletSwitcher" Classes="ModalCloseBtnSmall"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
                     </Panel>
                 </Border>
 

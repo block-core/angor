@@ -75,17 +75,8 @@
                                        FontSize="18" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
-                            <Button Name="CloseForm" HorizontalAlignment="Right"
-                                    VerticalAlignment="Center" Background="Transparent"
-                                    Padding="4" Cursor="Hand" BorderThickness="0"
-                                    CornerRadius="6">
-                                <Viewbox Width="18" Height="18">
-                                    <Path Data="{StaticResource XMark}"
-                                          Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                                          StrokeLineCap="Round" StrokeJoin="Round"
-                                          Width="24" Height="24" Stretch="Uniform" />
-                                </Viewbox>
-                            </Button>
+                            <Button Name="CloseForm" Classes="ModalCloseBtnSmall"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
                         </Panel>
                     </Border>
 
@@ -131,6 +122,10 @@
                                      Padding="12,10"
                                      FontSize="14"
                                      Foreground="{DynamicResource TextStrong}" />
+                            <!-- Address validation error -->
+                            <TextBlock Name="AddressError" FontSize="13"
+                                       Foreground="{DynamicResource ErrorFieldText}"
+                                       IsVisible="False" Margin="0,2,0,0" />
                         </StackPanel>
 
                         <!-- Amount -->
@@ -145,6 +140,10 @@
                                      Padding="12,10"
                                      FontSize="14"
                                      Foreground="{DynamicResource TextStrong}" />
+                            <!-- Amount validation error -->
+                            <TextBlock Name="AmountError" FontSize="13"
+                                       Foreground="{DynamicResource ErrorFieldText}"
+                                       IsVisible="False" Margin="0,2,0,0" />
                             <!-- Quick percentage buttons: 25% 50% 75% 100% -->
                             <!-- Vue: flex gap-2, each btn rounded-md px-3 py-1 text-sm -->
                             <StackPanel Orientation="Horizontal" Spacing="8">

@@ -53,17 +53,8 @@
                                    Foreground="{DynamicResource TextStrong}"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center" />
-                        <Button Name="CloseChoice" HorizontalAlignment="Right"
-                                VerticalAlignment="Center" Background="Transparent"
-                                Padding="4" Cursor="Hand" BorderThickness="0"
-                                CornerRadius="6">
-                            <Viewbox Width="20" Height="20">
-                                <Path Data="{StaticResource XMark}"
-                                      Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                                      StrokeLineCap="Round" StrokeJoin="Round"
-                                      Width="24" Height="24" Stretch="Uniform" />
-                            </Viewbox>
-                        </Button>
+                        <Button Name="CloseChoice" Classes="ModalCloseBtnSmall"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
                     </Panel>
 
                     <!-- Two button choices stacked -->
@@ -129,17 +120,8 @@
                                    Foreground="{DynamicResource TextStrong}"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center" />
-                        <Button Name="CloseImport" HorizontalAlignment="Right"
-                                VerticalAlignment="Center" Background="Transparent"
-                                Padding="4" Cursor="Hand" BorderThickness="0"
-                                CornerRadius="6">
-                            <Viewbox Width="20" Height="20">
-                                <Path Data="{StaticResource XMark}"
-                                      Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                                      StrokeLineCap="Round" StrokeJoin="Round"
-                                      Width="24" Height="24" Stretch="Uniform" />
-                            </Viewbox>
-                        </Button>
+                        <Button Name="CloseImport" Classes="ModalCloseBtnSmall"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
                     </Panel>
 
                     <!-- Description -->

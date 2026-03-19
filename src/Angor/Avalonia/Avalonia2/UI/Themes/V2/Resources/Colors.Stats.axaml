@@ -1,0 +1,68 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             LIGHT THEME — Stats & Badges
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Default">
+
+            <SolidColorBrush x:Key="StatValue" Color="#92400e" />
+            <SolidColorBrush x:Key="StatLabel" Color="#92400e" />
+
+            <!-- Stat card orange-tinted border: Vue rgba(253,186,116,0.4) -->
+            <SolidColorBrush x:Key="StatCardBorder" Color="#66FDba74" />
+            <!-- Stat card background: Vue rgba(255,255,255,0.7) -->
+            <SolidColorBrush x:Key="StatCardBackground" Color="#B3FFFFFF" />
+            <!-- Investment detail: stats detail card warm gradient (light) -->
+            <LinearGradientBrush x:Key="StatsDetailCardBackground" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#FFF7ED" Offset="0" />
+                <GradientStop Color="#FEF3C7" Offset="1" />
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="StatsDetailCardBorder" Color="#40FED7AA" />
+            <!-- Inner stat card in stats detail section (light: white bg, orange border) -->
+            <SolidColorBrush x:Key="StatsDetailInnerBackground" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="StatsDetailInnerBorder" Color="#40FDBA74" />
+            <!-- Stats detail text colors (light: warm brown tones) -->
+            <SolidColorBrush x:Key="StatsDetailLabel" Color="#92400E" />
+            <SolidColorBrush x:Key="StatsDetailValue" Color="#1C1917" />
+            <SolidColorBrush x:Key="StatsDetailSubtext" Color="#78716C" />
+            <!-- Progress bar track in stats detail (light: warm amber) -->
+            <SolidColorBrush x:Key="StatsDetailProgressTrack" Color="#F5D0A9" />
+
+        </ResourceDictionary>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             DARK THEME — Stats & Badges
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Dark">
+
+            <SolidColorBrush x:Key="StatLabel" Color="#a0a0a0" />
+            <SolidColorBrush x:Key="StatValue" Color="#fafafa" />
+
+            <!-- Stat card orange-tinted border: Vue dark rgba(234,88,12,0.3) -->
+            <SolidColorBrush x:Key="StatCardBorder" Color="#4DEA580C" />
+            <!-- Stat card background: Vue dark rgba(42,42,42,0.7) -->
+            <SolidColorBrush x:Key="StatCardBackground" Color="#B32A2A2A" />
+            <!-- Investment detail: stats detail card warm gradient (dark) -->
+            <!-- Vue dark: linear-gradient(to bottom right, rgba(234,88,12,0.15), rgba(251,191,36,0.15)) -->
+            <LinearGradientBrush x:Key="StatsDetailCardBackground" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#26EA580C" Offset="0" />
+                <GradientStop Color="#26FBBF24" Offset="1" />
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="StatsDetailCardBorder" Color="#4DEA580C" />
+            <!-- Inner stat card in stats detail section (dark: dark surface, orange-tinted border) -->
+            <SolidColorBrush x:Key="StatsDetailInnerBackground" Color="#B32A2A2A" />
+            <SolidColorBrush x:Key="StatsDetailInnerBorder" Color="#4DEA580C" />
+            <!-- Stats detail text colors (dark: light text) -->
+            <SolidColorBrush x:Key="StatsDetailLabel" Color="#A0A0A0" />
+            <SolidColorBrush x:Key="StatsDetailValue" Color="#FAFAFA" />
+            <SolidColorBrush x:Key="StatsDetailSubtext" Color="#9CA3AF" />
+            <!-- Progress bar track in stats detail (dark: muted amber) -->
+            <SolidColorBrush x:Key="StatsDetailProgressTrack" Color="#4DEA580C" />
+
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+</ResourceDictionary>

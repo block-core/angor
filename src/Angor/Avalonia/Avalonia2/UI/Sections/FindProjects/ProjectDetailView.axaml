@@ -85,7 +85,7 @@
                     BorderBrush="{DynamicResource FloatingBtnBorder}"
                     BorderThickness="1"
                     CornerRadius="8"
-                    BoxShadow="0 4 12 0 #26000000"
+                    BoxShadow="{DynamicResource FloatingBtnShadow}"
                     Padding="16,0,16,0"
                     Height="44"
                     VerticalAlignment="Center"
@@ -124,7 +124,7 @@
                     BorderBrush="{DynamicResource FloatingBtnBorder}"
                     BorderThickness="1"
                     CornerRadius="8"
-                    BoxShadow="0 4 12 0 #26000000"
+                    BoxShadow="{DynamicResource FloatingBtnShadow}"
                     Padding="16,0,16,0"
                     Height="44"
                     VerticalAlignment="Center"
@@ -160,7 +160,7 @@
                     Opacity="0"
                     IsHitTestVisible="False"
                     IsVisible="{Binding IsOpen}"
-                    BoxShadow="0 4 12 0 #26000000"
+                    BoxShadow="{DynamicResource FloatingBtnShadow}"
                     RenderTransform="translate(0px, 0px)">
                 <Border.Transitions>
                     <Transitions>
@@ -193,7 +193,7 @@
                     BorderBrush="{DynamicResource FloatingBtnBorder}"
                     BorderThickness="1"
                     CornerRadius="8"
-                    BoxShadow="0 4 12 0 #26000000"
+                    BoxShadow="{DynamicResource FloatingBtnShadow}"
                     Padding="16,0,16,0"
                     Height="44"
                     Margin="12,0"
@@ -247,7 +247,7 @@
                                    Margin="24,0,0,-32">
                                 <Border CornerRadius="32" Width="64" Height="64"
                                         Background="{DynamicResource Surface}"
-                                        BoxShadow="0 4 12 0 #26000000"
+                                        BoxShadow="{DynamicResource FloatingBtnShadow}"
                                         ClipToBounds="True">
                                     <Image Stretch="UniformToFill"
                                            Source="{Binding AvatarBitmap}" />

@@ -1,9 +1,0 @@
-<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:Avalonia2.UI.Shared.Controls">
-    
-    <Style Selector="controls|IconButton.ReverseIcon ContentPresenter#IconPresenter">
-        <Setter Property="DockPanel.Dock" Value="Right" />
-    </Style>
-
-</Styles>

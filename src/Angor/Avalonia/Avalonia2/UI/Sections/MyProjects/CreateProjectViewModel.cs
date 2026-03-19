@@ -68,6 +68,14 @@ public partial class CreateProjectViewModel : ReactiveObject
     [Reactive] private string projectAbout = "";
     [Reactive] private string projectWebsite = "";
 
+    // ── Validation errors (Vue: formError, nameError, aboutError, etc.) ──
+    [Reactive] private string formError = "";
+    [Reactive] private string nameError = "";
+    [Reactive] private string aboutError = "";
+    [Reactive] private string targetAmountError = "";
+    [Reactive] private string endDateError = "";
+    [Reactive] private string stagesError = "";
+
     // ── Step 3: Project Images ──
     [Reactive] private string bannerUrl = "";
     [Reactive] private string profileUrl = "";
@@ -164,6 +172,50 @@ public partial class CreateProjectViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(IsPayoutMonthly));
                 this.RaisePropertyChanged(nameof(IsPayoutWeekly));
             });
+
+        // ── Clear validation errors on user input (Vue: @input="formError = ''; nameError = ''") ──
+        this.WhenAnyValue(x => x.ProjectName)
+            .Subscribe(_ =>
+            {
+                FormError = "";
+                NameError = "";
+                this.RaisePropertyChanged(nameof(HasFormError));
+                this.RaisePropertyChanged(nameof(HasNameError));
+                this.RaisePropertyChanged(nameof(ProjectNameCharCount));
+            });
+        this.WhenAnyValue(x => x.ProjectAbout)
+            .Subscribe(_ =>
+            {
+                FormError = "";
+                AboutError = "";
+                this.RaisePropertyChanged(nameof(HasFormError));
+                this.RaisePropertyChanged(nameof(HasAboutError));
+                this.RaisePropertyChanged(nameof(ProjectAboutCharCount));
+            });
+        this.WhenAnyValue(x => x.TargetAmount)
+            .Subscribe(_ =>
+            {
+                FormError = "";
+                TargetAmountError = "";
+                this.RaisePropertyChanged(nameof(HasFormError));
+                this.RaisePropertyChanged(nameof(HasTargetAmountError));
+            });
+        this.WhenAnyValue(x => x.SubscriptionPrice)
+            .Subscribe(_ =>
+            {
+                FormError = "";
+                TargetAmountError = "";
+                this.RaisePropertyChanged(nameof(HasFormError));
+                this.RaisePropertyChanged(nameof(HasTargetAmountError));
+            });
+        this.WhenAnyValue(x => x.InvestEndDate)
+            .Subscribe(_ =>
+            {
+                FormError = "";
+                EndDateError = "";
+                this.RaisePropertyChanged(nameof(HasFormError));
+                this.RaisePropertyChanged(nameof(HasEndDateError));
+            });
     }
 
     public string DeployButtonText => IsDeploying ? "Deploying..." : "Deploy Project";
@@ -199,6 +251,18 @@ public partial class CreateProjectViewModel : ReactiveObject
     public bool IsFund => ProjectType == "fund";
     public bool IsSubscription => ProjectType == "subscription";
     public bool IsTypeSelected => !string.IsNullOrEmpty(ProjectType);
+
+    // ── Validation error visibility helpers (for XAML binding) ──
+    public bool HasFormError => !string.IsNullOrEmpty(FormError);
+    public bool HasNameError => !string.IsNullOrEmpty(NameError);
+    public bool HasAboutError => !string.IsNullOrEmpty(AboutError);
+    public bool HasTargetAmountError => !string.IsNullOrEmpty(TargetAmountError);
+    public bool HasEndDateError => !string.IsNullOrEmpty(EndDateError);
+    public bool HasStagesError => !string.IsNullOrEmpty(StagesError);
+
+    // ── Char count displays (Vue: {n}/200, {n}/400) ──
+    public string ProjectNameCharCount => $"{ProjectName?.Length ?? 0}/200";
+    public string ProjectAboutCharCount => $"{ProjectAbout?.Length ?? 0}/400";
 
     // ── Cancel/Previous label for nav footer ──
     public string BackButtonText => CurrentStep == 1 ? "Cancel" : "Previous";
@@ -281,7 +345,99 @@ public partial class CreateProjectViewModel : ReactiveObject
 
     public void GoNext()
     {
-        if (!CanGoNext) return;
+        if (CurrentStep >= TotalSteps) return;
+
+        // ── Validate current step (Vue: nextStep() lines 9451-9629) ──
+        ClearErrors();
+
+        switch (CurrentStep)
+        {
+            case 1:
+                if (string.IsNullOrEmpty(ProjectType))
+                {
+                    FormError = "Please select a project type before proceeding";
+                    RaiseErrorProperties();
+                    return;
+                }
+                break;
+
+            case 2:
+                if (string.IsNullOrWhiteSpace(ProjectName))
+                {
+                    FormError = "Please enter a project name";
+                    NameError = "Project name is required";
+                    RaiseErrorProperties();
+                    return;
+                }
+                if (string.IsNullOrWhiteSpace(ProjectAbout))
+                {
+                    FormError = "Please enter a project description";
+                    AboutError = "Project description is required";
+                    RaiseErrorProperties();
+                    return;
+                }
+                break;
+
+            case 3:
+                // Images are optional — no validation
+                break;
+
+            case 4:
+                if (ProjectType == "subscription")
+                {
+                    if (string.IsNullOrWhiteSpace(SubscriptionPrice) ||
+                        !double.TryParse(SubscriptionPrice, out var subPrice) || subPrice <= 0)
+                    {
+                        FormError = "Please enter a valid subscription price";
+                        TargetAmountError = "Subscription price is required";
+                        RaiseErrorProperties();
+                        return;
+                    }
+                }
+                else if (ProjectType == "fund")
+                {
+                    if (string.IsNullOrWhiteSpace(TargetAmount) ||
+                        !double.TryParse(TargetAmount, out var goalAmt) || goalAmt <= 0)
+                    {
+                        FormError = "Please enter a valid goal amount";
+                        TargetAmountError = "Goal amount is required";
+                        RaiseErrorProperties();
+                        return;
+                    }
+                }
+                else // investment
+                {
+                    if (string.IsNullOrWhiteSpace(TargetAmount) ||
+                        !double.TryParse(TargetAmount, out var targetAmt) || targetAmt <= 0)
+                    {
+                        FormError = "Please enter a valid target amount";
+                        TargetAmountError = "Target amount is required";
+                        RaiseErrorProperties();
+                        return;
+                    }
+                    if (!InvestEndDate.HasValue)
+                    {
+                        FormError = "Please enter the funding window end date";
+                        EndDateError = "Please enter the funding window end date";
+                        RaiseErrorProperties();
+                        return;
+                    }
+                }
+                break;
+
+            case 5:
+                if (Stages.Count == 0)
+                {
+                    FormError = IsInvestment
+                        ? "Please create at least one funding stage before proceeding"
+                        : "Please generate a payout schedule before proceeding";
+                    StagesError = FormError;
+                    RaiseErrorProperties();
+                    return;
+                }
+                break;
+        }
+
         CurrentStep++;
         if (CurrentStep > MaxStepReached)
             MaxStepReached = CurrentStep;
@@ -305,6 +461,7 @@ public partial class CreateProjectViewModel : ReactiveObject
     public void SelectProjectType(string type)
     {
         ProjectType = type;
+        ClearErrors();
         this.RaisePropertyChanged(nameof(IsInvestment));
         this.RaisePropertyChanged(nameof(IsFund));
         this.RaisePropertyChanged(nameof(IsSubscription));
@@ -764,6 +921,9 @@ public partial class CreateProjectViewModel : ReactiveObject
         ProjectAbout = "";
         ProjectWebsite = "";
 
+        // Clear validation errors
+        ClearErrors();
+
         // Step 3: Project Images
         BannerUrl = "";
         ProfileUrl = "";
@@ -807,6 +967,27 @@ public partial class CreateProjectViewModel : ReactiveObject
 
         // Notify all step visibility properties
         RaiseAllStepProperties();
+    }
+
+    private void ClearErrors()
+    {
+        FormError = "";
+        NameError = "";
+        AboutError = "";
+        TargetAmountError = "";
+        EndDateError = "";
+        StagesError = "";
+        RaiseErrorProperties();
+    }
+
+    private void RaiseErrorProperties()
+    {
+        this.RaisePropertyChanged(nameof(HasFormError));
+        this.RaisePropertyChanged(nameof(HasNameError));
+        this.RaisePropertyChanged(nameof(HasAboutError));
+        this.RaisePropertyChanged(nameof(HasTargetAmountError));
+        this.RaisePropertyChanged(nameof(HasEndDateError));
+        this.RaisePropertyChanged(nameof(HasStagesError));
     }
 
     private void RaiseAllStepProperties()

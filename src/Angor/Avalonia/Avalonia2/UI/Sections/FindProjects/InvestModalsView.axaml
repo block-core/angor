@@ -66,17 +66,8 @@
                                        FontSize="20" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
-                            <Button Name="CloseWalletSelector" HorizontalAlignment="Right"
-                                    VerticalAlignment="Center" Background="Transparent"
-                                    Padding="8" Cursor="Hand" BorderThickness="0"
-                                    CornerRadius="8">
-                                <Viewbox Width="20" Height="20">
-                                    <Path Data="{StaticResource XMark}"
-                                          Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                                          StrokeLineCap="Round" StrokeJoin="Round"
-                                          Width="24" Height="24" Stretch="Uniform" />
-                                </Viewbox>
-                            </Button>
+                            <Button Name="CloseWalletSelector" Classes="ModalCloseBtn"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
                         </Panel>
                         <!-- Amount display -->
                         <Border CornerRadius="8" Padding="16"
@@ -249,17 +240,8 @@
                                Foreground="{DynamicResource TextStrong}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center" />
-                    <Button Name="CloseInvoice" HorizontalAlignment="Right"
-                            VerticalAlignment="Top" Background="Transparent"
-                            Padding="8" Cursor="Hand" BorderThickness="0"
-                            CornerRadius="8">
-                        <Viewbox Width="20" Height="20">
-                            <Path Data="{StaticResource XMark}"
-                                  Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                                  StrokeLineCap="Round" StrokeJoin="Round"
-                                  Width="24" Height="24" Stretch="Uniform" />
-                        </Viewbox>
-                    </Button>
+                    <Button Name="CloseInvoice" Classes="ModalCloseBtn"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" />
                 </Panel>
 
                 <!-- Network tabs: 4-column grid (Lightning selected, On-Chain, Liquid, Import) -->

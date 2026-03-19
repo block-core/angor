@@ -248,4 +248,50 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
 
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Button.ModalCloseBtn — standard modal close button (20×20 XMark icon)
+         Usage: <Button Classes="ModalCloseBtn" Name="CloseBtn" />
+         Provides transparent background, 8px padding, 8px corner radius,
+         and the Viewbox(20×20) + Path(XMark, ModalCloseBtn stroke) content.
+         ══════════════════════════════════════════════════════════════════════ -->
+    <Style Selector="Button.ModalCloseBtn">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="RenderTransform" Value="none" />
+        <Setter Property="ContentTemplate">
+            <DataTemplate>
+                <Viewbox Width="20" Height="20">
+                    <Path Data="{StaticResource XMark}"
+                          Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
+                          StrokeLineCap="Round" StrokeJoin="Round"
+                          Width="24" Height="24" Stretch="Uniform" />
+                </Viewbox>
+            </DataTemplate>
+        </Setter>
+    </Style>
+
+    <!-- Button.ModalCloseBtnSmall — compact variant (20×20 icon, tight padding)
+         Usage: <Button Classes="ModalCloseBtnSmall" Name="CloseBtn" /> -->
+    <Style Selector="Button.ModalCloseBtnSmall">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="RenderTransform" Value="none" />
+        <Setter Property="ContentTemplate">
+            <DataTemplate>
+                <Viewbox Width="20" Height="20">
+                    <Path Data="{StaticResource XMark}"
+                          Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
+                          StrokeLineCap="Round" StrokeJoin="Round"
+                          Width="24" Height="24" Stretch="Uniform" />
+                </Viewbox>
+            </DataTemplate>
+        </Setter>
+    </Style>
+
 </Styles>

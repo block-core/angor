@@ -73,17 +73,8 @@
                                        FontSize="20" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
-                            <Button Name="CloseWalletSelector" HorizontalAlignment="Right"
-                                    VerticalAlignment="Center" Background="Transparent"
-                                    Padding="8" Cursor="Hand" BorderThickness="0"
-                                    CornerRadius="8">
-                                <Viewbox Width="20" Height="20">
-                                    <Path Data="{StaticResource XMark}"
-                                          Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                                          StrokeLineCap="Round" StrokeJoin="Round"
-                                          Width="24" Height="24" Stretch="Uniform" />
-                                </Viewbox>
-                            </Button>
+                            <Button Name="CloseWalletSelector" Classes="ModalCloseBtn"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
                         </Panel>
                         <!-- Fee display: p-4 rounded-lg -->
                         <Border CornerRadius="8" Padding="16"
@@ -262,17 +253,8 @@
                                Foreground="{DynamicResource TextStrong}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center" />
-                    <Button Name="ClosePayFee" HorizontalAlignment="Right"
-                            VerticalAlignment="Top" Background="Transparent"
-                            Padding="8" Cursor="Hand" BorderThickness="0"
-                            CornerRadius="8">
-                        <Viewbox Width="20" Height="20">
-                            <Path Data="{StaticResource XMark}"
-                                  Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                                  StrokeLineCap="Round" StrokeJoin="Round"
-                                  Width="24" Height="24" Stretch="Uniform" />
-                        </Viewbox>
-                    </Button>
+                    <Button Name="ClosePayFee" Classes="ModalCloseBtn"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" />
                 </Panel>
 
                 <!-- Network tabs: grid-cols-4 gap-2, rounded-xl border-2 -->

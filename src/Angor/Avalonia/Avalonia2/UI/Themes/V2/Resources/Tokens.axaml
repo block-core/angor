@@ -1,25 +1,21 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Font families: matches Vue app.css angor-font-sans-serif and angor-font-monospace -->
+    <!-- Font families: matches Vue app.css angor-font-sans-serif -->
     <FontFamily x:Key="FontFamilySans">Roboto</FontFamily>
-    <FontFamily x:Key="FontFamilyMono">Consolas, Monaco, Menlo, Liberation Mono, Courier New, monospace</FontFamily>
 
-    <!-- Spacing scale (4px base): 4, 8, 12, 16, 24, 32, 40, 48 -->
-    <x:Double x:Key="Spacing1">4</x:Double>
+    <!-- Spacing scale (4px base): 8, 12, 16, 24, 32, 48 -->
     <x:Double x:Key="Spacing2">8</x:Double>
     <x:Double x:Key="Spacing3">12</x:Double>
     <x:Double x:Key="Spacing4">16</x:Double>
     <x:Double x:Key="Spacing5">24</x:Double>
     <x:Double x:Key="Spacing6">32</x:Double>
-    <x:Double x:Key="Spacing7">40</x:Double>
     <x:Double x:Key="Spacing8">48</x:Double>
 
     <!-- Typography scale -->
     <x:Double x:Key="FontSizeSm">12</x:Double>
     <x:Double x:Key="FontSizeBase">14</x:Double>
     <x:Double x:Key="FontSizeLg">16</x:Double>
-    <x:Double x:Key="FontSizeXl">20</x:Double>
 
     <!-- Radius scale (matching Storybook: buttons=12px, content cards=16px) -->
     <CornerRadius x:Key="RadiusSm">6</CornerRadius>
@@ -27,7 +23,6 @@
     <CornerRadius x:Key="RadiusLg">16</CornerRadius>
 
     <!-- Common padding/margin thicknesses -->
-    <Thickness x:Key="Thickness4">4</Thickness>
     <Thickness x:Key="Thickness8">8</Thickness>
     <Thickness x:Key="Thickness16">16</Thickness>
     <Thickness x:Key="Thickness32">32</Thickness>
@@ -35,10 +30,5 @@
     <Thickness x:Key="PaddingY3">0,12,0,12</Thickness>
     <Thickness x:Key="PaddingBadge">12,8,12,8</Thickness>
     <Thickness x:Key="MarginT4">0,16,0,0</Thickness>
-
-    <!-- Frame bar padding: 24px sides, 16px vertical (header/footer) -->
-    <Thickness x:Key="BarPadding">24,16,24,16</Thickness>
-    <!-- Section content padding (ScrollableView, PageContainer) -->
-    <Thickness x:Key="SectionPadding">24,24,24,24</Thickness>
 
 </ResourceDictionary>

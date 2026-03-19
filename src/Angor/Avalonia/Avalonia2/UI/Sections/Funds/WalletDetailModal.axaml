@@ -101,18 +101,8 @@
                     <StackPanel Spacing="16">
                         <!-- Top row: wallet icon + name/type + close X -->
                         <DockPanel>
-                            <Button Name="CloseBtn" DockPanel.Dock="Right"
-                                    VerticalAlignment="Top"
-                                    Background="Transparent"
-                                    Padding="8" Cursor="Hand" BorderThickness="0"
-                                    CornerRadius="8">
-                                <Viewbox Width="20" Height="20">
-                                    <Path Data="{StaticResource XMark}"
-                                          Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                                          StrokeLineCap="Round" StrokeJoin="Round"
-                                          Width="24" Height="24" Stretch="Uniform" />
-                                </Viewbox>
-                            </Button>
+                            <Button Name="CloseBtn" Classes="ModalCloseBtn" DockPanel.Dock="Right"
+                                    VerticalAlignment="Top" />
                             <StackPanel Orientation="Horizontal" Spacing="16">
                                 <!-- Wallet icon 48x48 (Bitcoin icon from Vue prototype) -->
                                 <Border Width="48" Height="48"

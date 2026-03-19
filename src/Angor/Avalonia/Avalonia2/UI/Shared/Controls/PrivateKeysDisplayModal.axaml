@@ -61,24 +61,9 @@
                                    FontSize="20" FontWeight="Bold"
                                    Foreground="#DC2626"
                                    VerticalAlignment="Center" />
-                        <Button Name="CloseButton" Grid.Column="3"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Padding="8"
-                                CornerRadius="8"
+                        <Button Name="CloseButton" Classes="ModalCloseBtn" Grid.Column="3"
                                 Width="36" Height="36"
-                                Cursor="Hand"
-                                VerticalAlignment="Center">
-                            <Viewbox Width="20" Height="20">
-                                <Path Data="{StaticResource XMark}"
-                                      Stroke="{DynamicResource ModalCloseBtn}"
-                                      StrokeThickness="2"
-                                      StrokeLineCap="Round"
-                                      StrokeJoin="Round"
-                                      Width="24" Height="24"
-                                      Stretch="Uniform" />
-                            </Viewbox>
-                        </Button>
+                                VerticalAlignment="Center" />
                     </Grid>
                 </Border>
 

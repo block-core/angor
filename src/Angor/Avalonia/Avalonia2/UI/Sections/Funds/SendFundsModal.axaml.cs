@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using Avalonia2.UI.Shared.Helpers;
 using Avalonia2.UI.Shell;
 
 namespace Avalonia2.UI.Sections.Funds;
@@ -17,10 +18,17 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
 {
     private string _walletBalance = "0.00000000";
 
+    /// <summary>Stub txid for the success view — matches the truncated XAML text.</summary>
+    private const string StubTxid = "a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef7890abcd";
+
     public SendFundsModal()
     {
         InitializeComponent();
         AddHandler(Button.ClickEvent, OnButtonClick);
+
+        // Clear errors on input (Vue: @input clears errors)
+        AddressInput.TextChanged += (_, _) => ClearSendErrors();
+        AmountInput.TextChanged += (_, _) => ClearSendErrors();
     }
 
     private ShellViewModel? ShellVm =>
@@ -79,6 +87,8 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
                 break;
 
             case "BtnSend":
+                // Validate before sending
+                if (!ValidateSendForm()) return;
                 // Simulate sending — show success
                 SummaryAmount.Text = string.IsNullOrEmpty(AmountInput.Text)
                     ? "0.00000000 BTC"
@@ -87,7 +97,8 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
                 break;
 
             case "BtnCopyTxid":
-                // Stub: copy txid to clipboard
+                // Vue: copyToClipboard(txid) — copy stub txid to clipboard
+                ClipboardHelper.CopyToClipboard(this, StubTxid);
                 break;
 
             case "BtnDone":
@@ -115,5 +126,59 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
     {
         FormPanel.IsVisible = step == "form";
         SuccessPanel.IsVisible = step == "success";
+    }
+
+    private void ClearSendErrors()
+    {
+        AddressError.IsVisible = false;
+        AmountError.IsVisible = false;
+    }
+
+    /// <summary>
+    /// Validate address + amount before sending. Returns true if valid.
+    /// </summary>
+    private bool ValidateSendForm()
+    {
+        ClearSendErrors();
+
+        if (string.IsNullOrWhiteSpace(AddressInput.Text))
+        {
+            AddressError.Text = "Address is required";
+            AddressError.IsVisible = true;
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(AmountInput.Text) ||
+            !double.TryParse(AmountInput.Text, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var amount))
+        {
+            AmountError.Text = "Amount must be greater than 0";
+            AmountError.IsVisible = true;
+            return false;
+        }
+
+        if (amount <= 0)
+        {
+            AmountError.Text = "Amount must be greater than 0";
+            AmountError.IsVisible = true;
+            return false;
+        }
+
+        if (amount < 0.00001)
+        {
+            AmountError.Text = "Minimum 0.00001 BTC";
+            AmountError.IsVisible = true;
+            return false;
+        }
+
+        if (double.TryParse(_walletBalance, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var bal) && amount > bal)
+        {
+            AmountError.Text = "Amount exceeds balance";
+            AmountError.IsVisible = true;
+            return false;
+        }
+
+        return true;
     }
 }
