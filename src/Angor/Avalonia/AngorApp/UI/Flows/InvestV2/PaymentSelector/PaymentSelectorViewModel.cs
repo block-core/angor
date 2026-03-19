@@ -89,6 +89,7 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
                                                         () => "Choose Wallet"));
 
             var payCommand = EnhancedCommand.CreateWithResult(() => PayFlow(closeable), this.WhenAnyValue(viewModel => viewModel.SelectedWallet).NotNull());
+            payCommand.HandleErrorsWith(uiServices.NotificationService, "Payment failed");
             return new Option(title, payCommand, new Settings());
         }
 

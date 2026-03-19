@@ -232,7 +232,7 @@ public static class BuildInvestmentDraft
                 return Result.Failure<FundingParameters>($"No pattern found with PatternId {patternId.Value}. Available patterns: {string.Join(", ", projectInfo.DynamicStagePatterns.Select(p => p.PatternId.ToString()))}.");
             }
 
-            var effectiveStartDate = investmentStartDate ?? DateTime.UtcNow;
+            var effectiveStartDate = investmentStartDate ?? DateTime.UtcNow.Date;
 
             return Result.Success(FundingParameters.CreateForFund(
                                             projectInfo,
@@ -268,7 +268,7 @@ public static class BuildInvestmentDraft
                    $"No pattern found with PatternId {patternId.Value}. Available patterns: {string.Join(", ", projectInfo.DynamicStagePatterns.Select(p => p.PatternId.ToString()))}.");
             }
 
-            var effectiveStartDate = investmentStartDate ?? DateTime.UtcNow;
+            var effectiveStartDate = investmentStartDate ?? DateTime.UtcNow.Date;
 
             return Result.Success(FundingParameters.CreateForSubscribe(
                                             projectInfo,
