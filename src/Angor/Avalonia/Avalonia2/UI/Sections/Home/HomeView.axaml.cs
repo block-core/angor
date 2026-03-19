@@ -1,8 +1,10 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia2.UI.Shell;
 using Avalonia2.UI.Shared;
+using Avalonia2.UI.Shared.Controls;
 using Avalonia.VisualTree;
 using ReactiveUI;
 
@@ -16,6 +18,7 @@ public partial class HomeView : UserControl
     private Grid? _homeGrid;
     private Grid? _fundCard;
     private Grid? _getFundedCard;
+    private ScrollableView? _scrollableView;
 
     /// <summary>Design-time only.</summary>
     public HomeView() => InitializeComponent();
@@ -31,6 +34,7 @@ public partial class HomeView : UserControl
         _homeGrid = this.FindControl<Grid>("HomeGrid");
         _fundCard = this.FindControl<Grid>("FundCard");
         _getFundedCard = this.FindControl<Grid>("GetFundedCard");
+        _scrollableView = this.GetLogicalDescendants().OfType<ScrollableView>().FirstOrDefault();
 
         // ── Responsive layout: two-col (desktop) → stacked (compact) ──
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
@@ -40,6 +44,12 @@ public partial class HomeView : UserControl
     private void ApplyResponsiveLayout(bool isCompact)
     {
         if (_homeGrid == null || _fundCard == null || _getFundedCard == null) return;
+
+        // Bottom padding: 96px in compact for tab bar + floating panel clearance
+        if (_scrollableView != null)
+            _scrollableView.ContentPadding = isCompact
+                ? new Thickness(24, 24, 24, 96)
+                : new Thickness(24);
 
         if (isCompact)
         {

@@ -34,6 +34,7 @@ public partial class InvestmentDetailView : UserControl
     private Border? _info4Card3;
     private StackPanel? _stagesTableDesktop;
     private ItemsControl? _stagesCardsMobile;
+    private StackPanel? _contentStack;
 
     public InvestmentDetailView()
     {
@@ -60,6 +61,7 @@ public partial class InvestmentDetailView : UserControl
         _info4Card3 = this.FindControl<Border>("Info4Card3");
         _stagesTableDesktop = this.FindControl<StackPanel>("StagesTableDesktop");
         _stagesCardsMobile = this.FindControl<ItemsControl>("StagesCardsMobile");
+        _contentStack = this.FindControl<StackPanel>("ContentStack");
 
         // Subscribe to layout mode changes for responsive behavior
         _layoutSubscription = LayoutModeService.Instance
@@ -137,6 +139,9 @@ public partial class InvestmentDetailView : UserControl
             // Vue: @media (max-width: 768px) { .stages-table-container { display: none; } .stages-cards-container { display: flex; } }
             if (_stagesTableDesktop != null) _stagesTableDesktop.IsVisible = false;
             if (_stagesCardsMobile != null) _stagesCardsMobile.IsVisible = true;
+
+            // --- Bottom padding: 96px clearance for tab bar + floating panel ---
+            if (_contentStack != null) _contentStack.Margin = new Thickness(0, 0, 0, 96);
         }
         else
         {
@@ -194,6 +199,9 @@ public partial class InvestmentDetailView : UserControl
             // Stages: show table, hide cards
             if (_stagesTableDesktop != null) _stagesTableDesktop.IsVisible = true;
             if (_stagesCardsMobile != null) _stagesCardsMobile.IsVisible = false;
+
+            // Restore bottom padding
+            if (_contentStack != null) _contentStack.Margin = new Thickness(0);
         }
     }
 

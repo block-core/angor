@@ -269,7 +269,7 @@
         <!-- ═══════════════════════════════════════ -->
         <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="0">
+            <StackPanel Name="ContentStack" Spacing="0">
 
             <!-- Spacer for the fixed nav bar: 24px top margin + 44px nav height + 24px gap = 92px -->
             <Panel Name="NavSpacer" Height="92" />

@@ -70,7 +70,7 @@ public partial class PortfolioView : UserControl
 
             Grid.SetColumn(_content, 0);
             Grid.SetRow(_content, 1);
-            _content.ContentPadding = new Avalonia.Thickness(0);
+            _content.ContentPadding = new Avalonia.Thickness(0, 0, 0, 96);
         }
         else
         {

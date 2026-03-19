@@ -100,9 +100,9 @@ public partial class FundsView : UserControl
             if (_fundsSummaryCard != null)
                 _fundsSummaryCard.Padding = new Thickness(16);
 
-            // Vue: container padding 16px on mobile
+            // Vue: container padding 16px on mobile, 96px bottom for tab bar clearance
             if (_scrollableView != null)
-                _scrollableView.ContentPadding = new Thickness(16);
+                _scrollableView.ContentPadding = new Thickness(16, 16, 16, 96);
         }
         else
         {

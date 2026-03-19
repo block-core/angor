@@ -1,10 +1,18 @@
+using Avalonia;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
+using Avalonia2.UI.Shared;
+using Avalonia2.UI.Shared.Controls;
+using ReactiveUI;
 
 namespace Avalonia2.UI.Sections.Settings;
 
 public partial class SettingsView : UserControl
 {
+    private IDisposable? _layoutSubscription;
+    private ScrollableView? _scrollableView;
+
     /// <summary>Design-time only.</summary>
     public SettingsView() => InitializeComponent();
 
@@ -12,6 +20,19 @@ public partial class SettingsView : UserControl
     {
         InitializeComponent();
         DataContext = vm;
+
+        // Cache ScrollableView for responsive bottom padding
+        _scrollableView = this.GetLogicalDescendants().OfType<ScrollableView>().FirstOrDefault();
+
+        // ── Responsive layout: adjust bottom padding for tab bar clearance ──
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact =>
+            {
+                if (_scrollableView != null)
+                    _scrollableView.ContentPadding = isCompact
+                        ? new Thickness(24, 24, 24, 96)
+                        : new Thickness(24);
+            });
     }
 
     private SettingsViewModel? Vm => DataContext as SettingsViewModel;
@@ -120,4 +141,11 @@ public partial class SettingsView : UserControl
 
     private void OnModalContentPressed(object? sender, PointerPressedEventArgs e) =>
         e.Handled = true; // Prevent backdrop close when clicking modal content
+
+    protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
+        base.OnDetachedFromLogicalTree(e);
+    }
 }

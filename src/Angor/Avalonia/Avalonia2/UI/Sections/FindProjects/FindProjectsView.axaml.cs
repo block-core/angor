@@ -1,17 +1,10 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
-using Avalonia2.UI.Shared.Controls;
-using Avalonia2.UI.Shell;
-using System.Reactive.Linq;
-
-using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Interactivity;
-using Avalonia.LogicalTree;
-using Avalonia.VisualTree;
+using Avalonia2.UI.Shared;
 using Avalonia2.UI.Shared.Controls;
 using Avalonia2.UI.Shell;
 using System.Reactive.Linq;
@@ -21,10 +14,12 @@ namespace Avalonia2.UI.Sections.FindProjects;
 public partial class FindProjectsView : UserControl
 {
     private IDisposable? _visibilitySubscription;
+    private IDisposable? _layoutSubscription;
 
     // Cached FindControl results — avoid repeated tree walks on every visibility update
     private Panel? _detailPanel;
     private Panel? _investPanel;
+    private ScrollableView? _projectListScrollable;
 
     /// <summary>Design-time only.</summary>
     public FindProjectsView() => InitializeComponent();
@@ -37,6 +32,7 @@ public partial class FindProjectsView : UserControl
         // Cache panels once
         _detailPanel = this.FindControl<Panel>("ProjectDetailPanel");
         _investPanel = this.FindControl<Panel>("InvestPagePanel");
+        _projectListScrollable = this.FindControl<ScrollableView>("ProjectListPanel");
 
         // Listen for taps on ProjectCard elements to open project detail
         AddHandler(InputElement.TappedEvent, OnCardTapped, RoutingStrategies.Bubble);
@@ -44,6 +40,18 @@ public partial class FindProjectsView : UserControl
         // Manage visibility of the project list panel based on ViewModel state
         DataContextChanged += (_, _) => SubscribeToVisibility();
         SubscribeToVisibility();
+
+        // ── Responsive layout: adjust bottom padding for tab bar clearance ──
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+    }
+
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        if (_projectListScrollable != null)
+            _projectListScrollable.ContentPadding = isCompact
+                ? new Thickness(24, 24, 24, 96)
+                : new Thickness(24);
     }
 
     private void SubscribeToVisibility()
@@ -95,6 +103,8 @@ public partial class FindProjectsView : UserControl
     {
         _visibilitySubscription?.Dispose();
         _visibilitySubscription = null;
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
         base.OnDetachedFromLogicalTree(e);
     }
 

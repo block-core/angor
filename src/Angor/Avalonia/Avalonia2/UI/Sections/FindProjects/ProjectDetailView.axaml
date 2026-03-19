@@ -215,7 +215,7 @@
         <ScrollViewer Name="ContentScroller"
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="24" MaxWidth="1400" Margin="24,0,24,24">
+        <StackPanel Name="ContentStack" Spacing="24" MaxWidth="1400" Margin="24,0,24,24">
 
             <!-- Spacer: 24px nav top margin + 44px nav height + 24px gap = 92px -->
             <Panel Height="92" />

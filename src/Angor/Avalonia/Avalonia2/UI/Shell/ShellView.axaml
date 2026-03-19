@@ -174,7 +174,7 @@
                     IsVisible="False"
                     VerticalAlignment="Bottom"
                     HorizontalAlignment="Stretch"
-                    Margin="16,0,16,8"
+                    Margin="16,0,16,12"
                     ZIndex="40"
                     Background="{DynamicResource SubTabPanelBg}"
                     BorderBrush="{DynamicResource SubTabPanelBorder}"
@@ -200,7 +200,7 @@
                     IsVisible="False"
                     VerticalAlignment="Bottom"
                     HorizontalAlignment="Stretch"
-                    Margin="16,0,16,8"
+                    Margin="16,0,16,12"
                     ZIndex="40"
                     Background="{DynamicResource SubTabPanelBg}"
                     BorderBrush="{DynamicResource SubTabPanelBorder}"
@@ -230,25 +230,27 @@
                     IsVisible="False"
                     VerticalAlignment="Bottom"
                     HorizontalAlignment="Stretch"
-                    Margin="16,0,16,8"
+                    Margin="16,0,16,12"
                     ZIndex="40">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <!-- Back button — Vue: flex-1 bg-[#1a1a1a] (dark) / bg-white (light), rounded-2xl, 52px height -->
-                    <Button Name="InvestorBackBtn"
+                <!-- Vue: flex gap-2 — Back (flex-1) + CTA (flex-1) + Share (52px fixed)
+                     Use Grid: col 0 = *, col 1 = *, col 2 = 52px -->
+                <Grid ColumnDefinitions="*,*,52" ColumnSpacing="8">
+                    <!-- Back button — Vue line 6207: ALWAYS bg-[#1a1a1a] border-[#333] text-white, NOT theme-aware -->
+                    <Button Name="InvestorBackBtn" Grid.Column="0"
                             HorizontalAlignment="Stretch"
                             Height="52"
                             CornerRadius="16"
-                            Background="{DynamicResource MobileBackBtnBg}"
-                            BorderBrush="{DynamicResource MobileBackBtnBorder}"
+                            Background="{StaticResource MobileBackBtnBg}"
+                            BorderBrush="{StaticResource MobileBackBtnBorder}"
                             BorderThickness="1"
-                            Foreground="{DynamicResource MobileBackBtnText}"
+                            Foreground="{StaticResource MobileBackBtnText}"
                             FontWeight="SemiBold" FontSize="14"
                             Content="Back"
                             Cursor="Hand"
                             Click="OnInvestorBackClick" />
 
                     <!-- Invest CTA — Vue: flex-1 bg-gradient green, rounded-2xl, 52px height, Bitcoin icon + text -->
-                    <Button Name="InvestorCtaBtn"
+                    <Button Name="InvestorCtaBtn" Grid.Column="1"
                             HorizontalAlignment="Stretch"
                             Height="52"
                             CornerRadius="16"
@@ -265,20 +267,20 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- Share button — Vue: 52x52, rounded-2xl, bg-white (light) / bg-[#1a1a1a] (dark) -->
-                    <Button Name="InvestorShareBtn"
+                    <!-- Share button — Vue: 52x52, rounded-2xl, theme-aware (light=white, dark=#1a1a1a) -->
+                    <Button Name="InvestorShareBtn" Grid.Column="2"
                             Width="52" MinWidth="52" Height="52"
                             CornerRadius="16"
-                            Background="{DynamicResource MobileBackBtnBg}"
-                            BorderBrush="{DynamicResource MobileBackBtnBorder}"
+                            Background="{DynamicResource MobileShareBtnBg}"
+                            BorderBrush="{DynamicResource MobileShareBtnBorder}"
                             BorderThickness="1"
                             Cursor="Hand"
                             Padding="0"
                             Click="OnInvestorShareClick">
                         <i:Icon Value="fa-solid fa-share-nodes" FontSize="16"
-                                Foreground="{DynamicResource MobileBackBtnText}" />
+                                Foreground="{DynamicResource MobileShareBtnText}" />
                     </Button>
-                </StackPanel>
+                </Grid>
             </Border>
 
             <!-- Investment detail back button: "Back to Investments"
@@ -288,8 +290,10 @@
                     IsVisible="False"
                     VerticalAlignment="Bottom"
                     HorizontalAlignment="Stretch"
-                    Margin="16,0,16,8"
-                    ZIndex="40">
+                    Margin="16,0,16,12"
+                    ZIndex="40"
+                    CornerRadius="16"
+                    BoxShadow="0 10 15 -3 #1A000000">
                 <Button Name="InvestmentDetailBackBtn"
                         HorizontalAlignment="Stretch"
                         Height="52"
@@ -315,8 +319,10 @@
                     IsVisible="False"
                     VerticalAlignment="Bottom"
                     HorizontalAlignment="Stretch"
-                    Margin="16,0,16,8"
-                    ZIndex="40">
+                    Margin="16,0,16,12"
+                    ZIndex="40"
+                    CornerRadius="16"
+                    BoxShadow="0 10 15 -3 #1A000000">
                 <Button Name="ManageFundsBackBtn"
                         HorizontalAlignment="Stretch"
                         Height="52"
@@ -347,36 +353,37 @@
                     BorderBrush="{DynamicResource TabBarBorder}"
                     BorderThickness="0,1,0,0"
                     Padding="8">
-                <StackPanel Orientation="Horizontal"
-                            HorizontalAlignment="Center"
-                            MaxWidth="512"
-                            Spacing="0">
+                <!-- Vue: flex items-center justify-around max-w-lg mx-auto
+                     justify-around = equal spacing between tabs. Use Grid with 5 equal columns. -->
+                <Grid ColumnDefinitions="*,*,*,*,*"
+                      HorizontalAlignment="Center"
+                      MaxWidth="512">
                     <!-- Home tab -->
-                    <Button Name="TabHome" Classes="TabBarItem TabBarItemActive"
+                    <Button Name="TabHome" Grid.Column="0" Classes="TabBarItem TabBarItemActive"
                             Click="OnTabHome">
                         <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <i:Icon Value="fa-solid fa-house" FontSize="20" />
+                            <i:Icon Value="fa-solid fa-house" FontSize="22" />
                             <TextBlock Text="Home" FontSize="12" FontWeight="Medium"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
 
                     <!-- Investor tab -->
-                    <Button Name="TabInvestor" Classes="TabBarItem"
+                    <Button Name="TabInvestor" Grid.Column="1" Classes="TabBarItem"
                             Click="OnTabInvestor">
                         <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <i:Icon Value="fa-solid fa-chart-line" FontSize="20" />
+                            <i:Icon Value="fa-solid fa-chart-line" FontSize="22" />
                             <TextBlock Text="Investor" FontSize="12" FontWeight="Medium"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
 
                     <!-- Founder tab -->
-                    <Button Name="TabFounder" Classes="TabBarItem"
+                    <Button Name="TabFounder" Grid.Column="2" Classes="TabBarItem"
                             Click="OnTabFounder">
                         <Panel>
                             <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                <i:Icon Value="fa-solid fa-file-lines" FontSize="20" />
+                                <i:Icon Value="fa-solid fa-file-lines" FontSize="22" />
                                 <TextBlock Text="Founder" FontSize="12" FontWeight="Medium"
                                            HorizontalAlignment="Center" />
                             </StackPanel>
@@ -400,25 +407,25 @@
                     </Button>
 
                     <!-- Funds tab -->
-                    <Button Name="TabFunds" Classes="TabBarItem"
+                    <Button Name="TabFunds" Grid.Column="3" Classes="TabBarItem"
                             Click="OnTabFunds">
                         <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <i:Icon Value="fa-solid fa-wallet" FontSize="20" />
+                            <i:Icon Value="fa-solid fa-wallet" FontSize="22" />
                             <TextBlock Text="Funds" FontSize="12" FontWeight="Medium"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
 
                     <!-- Settings tab -->
-                    <Button Name="TabSettings" Classes="TabBarItem"
+                    <Button Name="TabSettings" Grid.Column="4" Classes="TabBarItem"
                             Click="OnTabSettings">
                         <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <i:Icon Value="fa-solid fa-gear" FontSize="20" />
+                            <i:Icon Value="fa-solid fa-gear" FontSize="22" />
                             <TextBlock Text="Settings" FontSize="12" FontWeight="Medium"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                </StackPanel>
+                </Grid>
             </Border>
 
             <!-- App-wide crosshatch texture overlay -->

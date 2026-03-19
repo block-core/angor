@@ -47,6 +47,7 @@ public partial class ProjectDetailView : UserControl
     private Grid? _fundInfoGrid;
     private Grid? _subInfoGrid;
     private Border? _projectNamePill;
+    private StackPanel? _contentStack;
 
     // Track the PropertyChanged handler to prevent accumulation
     private EventHandler<AvaloniaPropertyChangedEventArgs>? _parentPropertyChangedHandler;
@@ -145,6 +146,7 @@ public partial class ProjectDetailView : UserControl
         _fundInfoGrid = this.FindControl<Grid>("FundInfoGrid");
         _subInfoGrid = this.FindControl<Grid>("SubInfoGrid");
         _projectNamePill = this.FindControl<Border>("ProjectNamePill");
+        _contentStack = this.FindControl<StackPanel>("ContentStack");
 
         // ── Responsive layout switching ──
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
@@ -349,6 +351,12 @@ public partial class ProjectDetailView : UserControl
         // ── Nav bar: hide project name pill on compact ──
         if (_projectNamePill != null)
             _projectNamePill.IsVisible = !isCompact;
+
+        // ── Bottom padding: 96px clearance for tab bar + floating panel in compact ──
+        if (_contentStack != null)
+            _contentStack.Margin = isCompact
+                ? new Thickness(24, 0, 24, 96)
+                : new Thickness(24, 0, 24, 24);
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)

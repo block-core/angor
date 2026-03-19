@@ -71,7 +71,7 @@ public partial class MyProjectsView : UserControl
 
             Grid.SetColumn(_myProjectsContent, 0);
             Grid.SetRow(_myProjectsContent, 1);
-            _myProjectsContent.ContentPadding = new Avalonia.Thickness(0);
+            _myProjectsContent.ContentPadding = new Avalonia.Thickness(0, 0, 0, 96);
         }
         else
         {
