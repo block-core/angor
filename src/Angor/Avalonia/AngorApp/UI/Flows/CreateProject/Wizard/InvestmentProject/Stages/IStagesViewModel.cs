@@ -7,10 +7,13 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages
     {
         IInvestmentProjectConfig NewProject { get; }
 
-        int? DurationValue { get; set; }
-        TimeSpan? DurationUnit { get; set; }
-        int? DurationPreset { get; set; }
-        TimeSpan? ReleaseFrequency { get; set; }
+        int? SelectedDurationValue { get; set; }
+        PeriodUnit? SelectedDurationUnit { get; set; }
+        PeriodOption? SelectedLength { get; set; }
+        PeriodOption? ReleaseFrequency { get; set; }
+        IReadOnlyList<PeriodOption> DurationUnits { get; }
+        IObservable<IReadOnlyList<PeriodOption>> DurationPresets { get; }
+        IReadOnlyList<PeriodOption> ReleaseFrequencies { get; }
 
         public void ToggleEditor()
         {
