@@ -96,13 +96,13 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
 
         // Don't let a stale indexer response revert an optimistic status update.
         // The indexer may not have indexed the just-broadcast transaction yet,
-        // so it can report FounderSignaturesReceived when we already know we're Invested.
+        // so it can report an outdated status when we already know the real one.
         var currentStatus = status.Value;
         var serverStatus = result.Dto.InvestmentStatus;
 
-        if (currentStatus == InvestmentStatus.Invested && serverStatus == InvestmentStatus.FounderSignaturesReceived)
+        if (currentStatus != serverStatus && IsStaleResponse(currentStatus, serverStatus))
         {
-            // Keep the optimistic Invested status; skip the downgrade.
+            // Keep the optimistic status; skip the stale server value.
         }
         else
         {
@@ -111,6 +111,23 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
 
         recovery.OnNext(result.Recovery);
         stageItems.OnNext(result.Items);
+    }
+
+    /// <summary>
+    /// Returns true when the server status appears to be stale relative to a local optimistic update.
+    /// </summary>
+    private static bool IsStaleResponse(InvestmentStatus local, InvestmentStatus server)
+    {
+        // After confirming investment: local is Invested but indexer still reports FounderSignaturesReceived.
+        if (local == InvestmentStatus.Invested && server == InvestmentStatus.FounderSignaturesReceived)
+            return true;
+
+        // After cancelling: local is Cancelled but indexer still reports the pre-cancel status.
+        if (local == InvestmentStatus.Cancelled &&
+            (server == InvestmentStatus.PendingFounderSignatures || server == InvestmentStatus.FounderSignaturesReceived))
+            return true;
+
+        return false;
     }
 
     public void SetStatus(InvestmentStatus newStatus)

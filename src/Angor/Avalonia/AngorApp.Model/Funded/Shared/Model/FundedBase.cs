@@ -83,9 +83,13 @@ public abstract class FundedBase : IFunded, IDisposable
                                               InvestorData.InvestmentId);
                                       return appService.CancelInvestmentRequest(cancelInvestmentRequest);
                                   })
-                                  .Tap(() => notificationService.Show(
-                                           "The investment has been canceled",
-                                           "Canceled"))
+                                  .Tap(() =>
+                                  {
+                                      InvestorData.SetStatus(InvestmentStatus.Cancelled);
+                                      notificationService.Show(
+                                          "The investment has been canceled",
+                                          "Canceled");
+                                  })
                                   .TapError(error => notificationService.Show(
                                                 $"Failed to cancel investment: {error}",
                                                 "Canceled"));
