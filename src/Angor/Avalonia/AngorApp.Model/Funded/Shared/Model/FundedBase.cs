@@ -83,9 +83,13 @@ public abstract class FundedBase : IFunded, IDisposable
                                               InvestorData.InvestmentId);
                                       return appService.CancelInvestmentRequest(cancelInvestmentRequest);
                                   })
-                                  .Tap(() => notificationService.Show(
-                                           "The investment has been canceled",
-                                           "Canceled"))
+                                  .Tap(() =>
+                                  {
+                                      InvestorData.SetStatus(InvestmentStatus.Cancelled);
+                                      notificationService.Show(
+                                          "The investment has been canceled",
+                                          "Canceled");
+                                  })
                                   .TapError(error => notificationService.Show(
                                                 $"Failed to cancel investment: {error}",
                                                 "Canceled"));
@@ -107,9 +111,13 @@ public abstract class FundedBase : IFunded, IDisposable
 
                                       return appService.ConfirmInvestment(publishInvestmentRequest);
                                   })
-                                  .Tap(() => notificationService.Show(
-                                           "The investment has been confirmed",
-                                           "Confirmed"))
+                                  .Tap(() =>
+                                  {
+                                      InvestorData.SetStatus(InvestmentStatus.Invested);
+                                      notificationService.Show(
+                                          "The investment has been confirmed",
+                                          "Confirmed");
+                                  })
                                   .TapError(error => notificationService.Show(
                                                 $"Failed to confirm investment: {error}",
                                                 "Confirmed"));

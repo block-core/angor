@@ -1,3 +1,4 @@
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using Angor.Sdk.Funding.Founder;
@@ -6,6 +7,7 @@ using Angor.Sdk.Funding.Investor.Dtos;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using AngorApp.Model.Shared.Services;
+using ReactiveUI;
 using Zafiro.CSharpFunctionalExtensions;
 
 namespace AngorApp.Model.Funded.Shared.Model;
@@ -91,9 +93,46 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
     private void Update((InvestedProjectDto Dto, RecoveryState Recovery, IReadOnlyList<InvestorStageItemDto> Items) result)
     {
         InvestedOn = result.Dto.RequestedOn ?? DateTimeOffset.MinValue;
-        status.OnNext(result.Dto.InvestmentStatus);
+
+        // Don't let a stale indexer response revert an optimistic status update.
+        // The indexer may not have indexed the just-broadcast transaction yet,
+        // so it can report an outdated status when we already know the real one.
+        var currentStatus = status.Value;
+        var serverStatus = result.Dto.InvestmentStatus;
+
+        if (currentStatus != serverStatus && IsStaleResponse(currentStatus, serverStatus))
+        {
+            // Keep the optimistic status; skip the stale server value.
+        }
+        else
+        {
+            status.OnNext(serverStatus);
+        }
+
         recovery.OnNext(result.Recovery);
         stageItems.OnNext(result.Items);
+    }
+
+    /// <summary>
+    /// Returns true when the server status appears to be stale relative to a local optimistic update.
+    /// </summary>
+    private static bool IsStaleResponse(InvestmentStatus local, InvestmentStatus server)
+    {
+        // After confirming investment: local is Invested but indexer still reports FounderSignaturesReceived.
+        if (local == InvestmentStatus.Invested && server == InvestmentStatus.FounderSignaturesReceived)
+            return true;
+
+        // After cancelling: local is Cancelled but indexer still reports the pre-cancel status.
+        if (local == InvestmentStatus.Cancelled &&
+            (server == InvestmentStatus.PendingFounderSignatures || server == InvestmentStatus.FounderSignaturesReceived))
+            return true;
+
+        return false;
+    }
+
+    public void SetStatus(InvestmentStatus newStatus)
+    {
+        RxApp.MainThreadScheduler.Schedule(() => status.OnNext(newStatus));
     }
 
     public void Dispose()
