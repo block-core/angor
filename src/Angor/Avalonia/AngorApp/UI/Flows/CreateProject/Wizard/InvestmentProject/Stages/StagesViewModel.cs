@@ -1,56 +1,129 @@
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model;
-using DynamicData;
-using DynamicData.Aggregation;
-using DynamicData.Binding;
-using System.Reactive;
-using System.Reactive.Linq;
 using AngorApp.UI.Shared;
 
 namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages
 {
     public partial class StagesViewModel : ReactiveObject, IHaveTitle, IStagesViewModel, IDisposable, IValidatable
     {
-        private static readonly TimeSpan DefaultDurationUnit = TimeSpan.FromDays(30);
+        private static readonly PeriodUnit DefaultDurationUnit = PeriodUnit.Months;
+        private static readonly IReadOnlyList<PeriodOption> DurationUnitOptions =
+        [
+            new() { Title = "Months", Unit = PeriodUnit.Months, Value = 1 },
+            new() { Title = "Weeks", Unit = PeriodUnit.Weeks, Value = 1 },
+            new() { Title = "Days", Unit = PeriodUnit.Days, Value = 1 }
+        ];
+        private static readonly IReadOnlyDictionary<PeriodUnit, IReadOnlyList<PeriodOption>> DurationPresetOptionsByUnit =
+            new Dictionary<PeriodUnit, IReadOnlyList<PeriodOption>>
+            {
+                [PeriodUnit.Days] = CreatePresetOptions(PeriodUnit.Days, "Days", 3, 7, 14, 21, 28, 30),
+                [PeriodUnit.Weeks] = CreatePresetOptions(PeriodUnit.Weeks, "Weeks", 2, 4, 6, 8, 12),
+                [PeriodUnit.Months] = CreatePresetOptions(PeriodUnit.Months, "Months", 3, 6, 12, 18, 24)
+            };
+        private static readonly IReadOnlyList<PeriodOption> ReleaseFrequencyOptions =
+        [
+            new() { Title = "Weekly", Unit = PeriodUnit.Weeks, Value = 1 },
+            new() { Title = "Monthly", Unit = PeriodUnit.Months, Value = 1 },
+            new() { Title = "Bi-Monthly", Unit = PeriodUnit.Months, Value = 2 },
+            new() { Title = "Quarterly", Unit = PeriodUnit.Months, Value = 3 }
+        ];
 
         public IInvestmentProjectConfig NewProject { get; }
         [Reactive]
         private bool isAdvanced;
         [Reactive]
-        private int? durationValue;
+        private int? selectedDurationValue;
         [Reactive]
-        private TimeSpan? durationUnit;
+        private PeriodUnit? selectedDurationUnit;
         [Reactive]
-        private TimeSpan? releaseFrequency;
+        private PeriodOption? selectedLength;
         [Reactive]
-        private int? durationPreset;
+        private PeriodOption? releaseFrequency;
         private readonly CompositeDisposable disposables = new();
 
         public StagesViewModel(IInvestmentProjectConfig newProject)
         {
             NewProject = newProject;
-            DurationUnit = DefaultDurationUnit;
+            SelectedDurationUnit = DefaultDurationUnit;
 
             AddStage = ReactiveCommand.Create(DoAddStage);
             RemoveStage = ReactiveCommand.Create<IFundingStageConfig>(DoRemoveStage);
             GenerateStages = ReactiveCommand.Create(DoGenerateStages);
             ClearStages = ReactiveCommand.Create(DoClearStages);
 
-            var presetValues = this.WhenAnyValue(x => x.DurationPreset)
-                .WhereNotNull();
-
-            presetValues
-                .BindTo(this, x => x.DurationValue)
-                .DisposeWith(disposables);
-
-            presetValues
-                .Select(_ => DefaultDurationUnit)
-                .BindTo(this, x => x.DurationUnit)
-                .DisposeWith(disposables);
+            SyncDuration().DisposeWith(disposables);
+            SyncSelectedLength().DisposeWith(disposables);
 
             var errorSummary = new ErrorSummarizer(newProject.ValidationContext).DisposeWith(disposables);
             Errors = errorSummary.Errors;
+        }
+
+        private IDisposable SyncSelectedLength()
+        {
+            return this.WhenAnyValue(x => x.SelectedDurationValue, x => x.SelectedDurationUnit, CreateSelectedLength)
+                       .DistinctUntilChanged()
+                       .Subscribe(length => SelectedLength = length);
+        }
+
+        private IDisposable SyncDuration()
+        {
+            return this.WhenAnyValue(x => x.SelectedLength)
+                       .DistinctUntilChanged()
+                       .Where(x => x is not null)
+                       .Subscribe(length =>
+                       {
+                           SelectedDurationUnit = length!.Unit;
+                           SelectedDurationValue = length.Value;
+                       });
+        }
+
+        public IReadOnlyList<PeriodOption> DurationUnits => DurationUnitOptions;
+        public IObservable<IReadOnlyList<PeriodOption>> DurationPresets =>
+            this.WhenAnyValue(x => x.SelectedDurationUnit)
+                .Select(durationUnit => durationUnit is { } value &&
+                                        DurationPresetOptionsByUnit.TryGetValue(value, out var presets)
+                    ? presets
+                    : Array.Empty<PeriodOption>());
+
+        public IReadOnlyList<PeriodOption> ReleaseFrequencies => ReleaseFrequencyOptions;
+
+        private static IReadOnlyList<PeriodOption> CreatePresetOptions(PeriodUnit unit, string title, params int[] values)
+        {
+            return values
+                .Select(value => new PeriodOption
+                {
+                    Value = value,
+                    Title = $"{value} {title}",
+                    Unit = unit
+                })
+                .ToArray();
+        }
+
+        private static PeriodOption? CreateSelectedLength(int? value, PeriodUnit? unit)
+        {
+            if (value is null || unit is null)
+            {
+                return null;
+            }
+
+            return new PeriodOption
+            {
+                Value = value.Value,
+                Unit = unit.Value,
+                Title = $"{value.Value} {GetUnitTitle(unit.Value)}"
+            };
+        }
+
+        private static string GetUnitTitle(PeriodUnit unit)
+        {
+            return unit switch
+            {
+                PeriodUnit.Days => "Days",
+                PeriodUnit.Weeks => "Weeks",
+                PeriodUnit.Months => "Months",
+                _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, null)
+            };
         }
 
         private void DoRemoveStage(IFundingStageConfig stage)
@@ -65,70 +138,83 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Stages
 
         private void DoGenerateStages()
         {
-            if (!TryGetGenerationSettings(out var startDate, out var totalDuration, out var frequency))
+            if (!TryGetGenerationSettings(out var startDate, out var endDate, out var frequency))
             {
                 return;
             }
 
             ClearStagesInternal();
 
-            var stageCount = CalculateStageCount(totalDuration, frequency);
+            var releaseDates = GetReleaseDates(startDate, endDate, frequency);
+            var stageCount = releaseDates.Count;
             var stagePercents = GetStagePercents(stageCount);
 
-            for (var i = 1; i <= stageCount; i++)
+            for (var i = 0; i < stageCount; i++)
             {
-                var offsetTicks = frequency.Ticks * i;
-                if (offsetTicks > totalDuration.Ticks)
-                {
-                    offsetTicks = totalDuration.Ticks;
-                }
-
-                var releaseDate = startDate.AddTicks(offsetTicks);
-                NewProject.CreateAndAddStage(stagePercents[i - 1], releaseDate);
+                NewProject.CreateAndAddStage(stagePercents[i], releaseDates[i]);
             }
         }
 
-        private bool TryGetGenerationSettings(out DateTime startDate, out TimeSpan totalDuration, out TimeSpan frequency)
+        private bool TryGetGenerationSettings(out DateTime startDate, out DateTime endDate, out PeriodOption frequency)
         {
             startDate = default;
-            totalDuration = default;
-            frequency = default;
+            endDate = default;
+            frequency = default!;
 
             if (!NewProject.FundingEndDate.HasValue)
             {
                 return false;
             }
 
-            if (DurationValue is null || DurationValue <= 0)
+            if (SelectedDurationValue is null || SelectedDurationValue <= 0)
             {
                 return false;
             }
 
-            if (!DurationUnit.HasValue || DurationUnit.Value <= TimeSpan.Zero)
+            if (!SelectedDurationUnit.HasValue)
             {
                 return false;
             }
 
-            if (!ReleaseFrequency.HasValue || ReleaseFrequency.Value <= TimeSpan.Zero)
+            if (ReleaseFrequency is null || ReleaseFrequency.Value <= 0)
             {
                 return false;
             }
 
-            totalDuration = TimeSpan.FromTicks(DurationUnit.Value.Ticks * DurationValue.Value);
-            if (totalDuration <= TimeSpan.Zero)
-            {
-                return false;
-            }
-
-            frequency = ReleaseFrequency.Value;
             startDate = NewProject.FundingEndDate.Value.Date;
+            endDate = AddPeriod(startDate, SelectedDurationValue.Value, SelectedDurationUnit.Value);
+            frequency = ReleaseFrequency;
             return true;
         }
 
-        private static int CalculateStageCount(TimeSpan totalDuration, TimeSpan frequency)
+        private static List<DateTime> GetReleaseDates(DateTime startDate, DateTime endDate, PeriodOption frequency)
         {
-            var count = (int)Math.Ceiling(totalDuration.Ticks / (double)frequency.Ticks);
-            return Math.Max(1, count);
+            var releaseDates = new List<DateTime>();
+            var iteration = 1;
+
+            while (true)
+            {
+                var nextDate = AddPeriod(startDate, frequency.Value * iteration, frequency.Unit);
+                if (nextDate >= endDate)
+                {
+                    releaseDates.Add(endDate);
+                    return releaseDates;
+                }
+
+                releaseDates.Add(nextDate);
+                iteration++;
+            }
+        }
+
+        private static DateTime AddPeriod(DateTime date, int value, PeriodUnit unit)
+        {
+            return unit switch
+            {
+                PeriodUnit.Days => date.AddDays(value),
+                PeriodUnit.Weeks => date.AddDays(value * 7),
+                PeriodUnit.Months => date.AddMonths(value),
+                _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, null)
+            };
         }
 
         private static decimal[] GetStagePercents(int stageCount)
