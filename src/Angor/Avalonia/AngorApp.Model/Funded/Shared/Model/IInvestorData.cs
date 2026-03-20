@@ -13,5 +13,6 @@ namespace AngorApp.Model.Funded.Shared.Model
         IObservable<RecoveryState> Recovery { get; }
         IObservable<IReadOnlyList<InvestorStageItemDto>> StageItems { get; }
         public IAmountUI Amount { get; }
+        void SetStatus(InvestmentStatus status);
     }
 }

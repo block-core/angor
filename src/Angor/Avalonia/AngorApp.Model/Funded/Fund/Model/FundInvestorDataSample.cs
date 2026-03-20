@@ -20,5 +20,9 @@ namespace AngorApp.Model.Funded.Fund.Model
         public IObservable<InvestmentStatus> Status { get; }
         public IObservable<RecoveryState> Recovery { get; }
         public IObservable<IReadOnlyList<InvestorStageItemDto>> StageItems { get; } = Observable.Return<IReadOnlyList<InvestorStageItemDto>>(new List<InvestorStageItemDto>());
+
+        public void SetStatus(InvestmentStatus status)
+        {
+        }
     }
 }

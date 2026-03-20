@@ -1,3 +1,4 @@
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using Angor.Sdk.Funding.Founder;
@@ -6,6 +7,7 @@ using Angor.Sdk.Funding.Investor.Dtos;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using AngorApp.Model.Shared.Services;
+using ReactiveUI;
 using Zafiro.CSharpFunctionalExtensions;
 
 namespace AngorApp.Model.Funded.Shared.Model;
@@ -91,9 +93,29 @@ public abstract class InvestorDataBase : IInvestorData, IDisposable
     private void Update((InvestedProjectDto Dto, RecoveryState Recovery, IReadOnlyList<InvestorStageItemDto> Items) result)
     {
         InvestedOn = result.Dto.RequestedOn ?? DateTimeOffset.MinValue;
-        status.OnNext(result.Dto.InvestmentStatus);
+
+        // Don't let a stale indexer response revert an optimistic status update.
+        // The indexer may not have indexed the just-broadcast transaction yet,
+        // so it can report FounderSignaturesReceived when we already know we're Invested.
+        var currentStatus = status.Value;
+        var serverStatus = result.Dto.InvestmentStatus;
+
+        if (currentStatus == InvestmentStatus.Invested && serverStatus == InvestmentStatus.FounderSignaturesReceived)
+        {
+            // Keep the optimistic Invested status; skip the downgrade.
+        }
+        else
+        {
+            status.OnNext(serverStatus);
+        }
+
         recovery.OnNext(result.Recovery);
         stageItems.OnNext(result.Items);
+    }
+
+    public void SetStatus(InvestmentStatus newStatus)
+    {
+        RxApp.MainThreadScheduler.Schedule(() => status.OnNext(newStatus));
     }
 
     public void Dispose()

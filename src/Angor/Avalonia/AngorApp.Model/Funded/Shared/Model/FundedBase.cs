@@ -107,9 +107,13 @@ public abstract class FundedBase : IFunded, IDisposable
 
                                       return appService.ConfirmInvestment(publishInvestmentRequest);
                                   })
-                                  .Tap(() => notificationService.Show(
-                                           "The investment has been confirmed",
-                                           "Confirmed"))
+                                  .Tap(() =>
+                                  {
+                                      InvestorData.SetStatus(InvestmentStatus.Invested);
+                                      notificationService.Show(
+                                          "The investment has been confirmed",
+                                          "Confirmed");
+                                  })
                                   .TapError(error => notificationService.Show(
                                                 $"Failed to confirm investment: {error}",
                                                 "Confirmed"));
