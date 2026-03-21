@@ -74,6 +74,11 @@ public class LiteDbGenericDocumentCollection<T>(IAngorDocumentDatabase database)
         return await _documentCollection.DeleteAsync(id);
     }
 
+    public async Task<Result<int>> DeleteAllAsync()
+    {
+        return await _documentCollection.DeleteAllAsync();
+    }
+
     public async Task<Result<int>> CountAsync(Expression<Func<T, bool>>? predicate = null)
     {
         if (predicate == null)

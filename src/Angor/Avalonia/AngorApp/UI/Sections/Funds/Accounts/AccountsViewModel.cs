@@ -5,14 +5,17 @@ using Angor.Shared;
 using AngorApp.UI.Flows.AddWallet;
 using Blockcore.Networks;
 using DynamicData;
+using ReactiveUI;
 using Zafiro.CSharpFunctionalExtensions;
 
 namespace AngorApp.UI.Sections.Funds.Accounts
 {
-    public class AccountsViewModel : IAccountsViewModel, IDisposable
+    public partial class AccountsViewModel : ReactiveObject, IAccountsViewModel, IDisposable
     {
         private readonly CompositeDisposable disposable = new();
         private readonly IWalletContext walletContext;
+
+        [Reactive] private bool canGetTestCoins;
 
         public AccountsViewModel(IWalletContext walletContext, IAddWalletFlow addWalletFlow, UIServices uiServices, INetworkConfiguration networkConfiguration, IWalletAppService walletAppService)
         {
@@ -38,6 +41,15 @@ namespace AngorApp.UI.Sections.Funds.Accounts
 
             CanGetTestCoins = networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet;
 
+            // Update CanGetTestCoins when wallets are reloaded (e.g. after network change)
+            walletContext.WalletChanges
+                .QueryWhenChanged()
+                .Select(wallets => wallets.Items.Any(w => w.CanGetTestCoins))
+                .StartWith(networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet)
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(value => CanGetTestCoins = value)
+                .DisposeWith(disposable);
+
             GetTestCoins = EnhancedCommand.Create(async () =>
             {
                 var wallet = walletContext.CurrentWallet;
@@ -62,7 +74,6 @@ namespace AngorApp.UI.Sections.Funds.Accounts
         public IEnhancedCommand ImportAccount { get; }
         public IEnumerable<IAccountBalance> Balances { get; }
         public IEnhancedCommand GetTestCoins { get; }
-        public bool CanGetTestCoins { get; }
         public IEnhancedCommand RefreshBalances { get; }
 
         public void Dispose()

@@ -82,6 +82,8 @@ public static class FundingContextServices
         services.TryAddSingleton<IBoltzSwapStorageService, BoltzSwapStorageService>();
         services.TryAddTransient<IBoltzWebSocketClient, BoltzWebSocketClient>();
         
+        services.TryAddSingleton<IDatabaseManagementService, DatabaseManagementService>();
+        
         //services.AddHttpClient();
         
         services.AddSingleton<IProjectAppService, ProjectAppService>();

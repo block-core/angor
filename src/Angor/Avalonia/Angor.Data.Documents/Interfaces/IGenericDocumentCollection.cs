@@ -15,5 +15,6 @@ public interface IGenericDocumentCollection<T> where T : class
     Task<Result<bool>> UpdateAsync(Expression<Func<T,string>> getDocumentId,T entity);
     Task<Result<bool>> UpsertAsync(Expression<Func<T,string>> getDocumentId,T entity);
     Task<Result<bool>> DeleteAsync(string id);
+    Task<Result<int>> DeleteAllAsync();
     Task<Result<int>> CountAsync(Expression<Func<T, bool>>? predicate = null);
 }

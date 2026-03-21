@@ -49,7 +49,7 @@ public class WalletFactory(
         if (accountInfoResult.IsFailure)
             return Result.Failure<Domain.Wallet>(accountInfoResult.Error);
 
-        var keysCreated = await CreateFounderKeyCollectionAsync(walletWords, walletId);
+        var keysCreated = await RebuildFounderKeysAsync(walletWords, walletId);
 
         return !keysCreated.IsSuccess 
             ? Result.Failure<Domain.Wallet>(keysCreated.Error) 
@@ -76,7 +76,7 @@ public class WalletFactory(
         return accountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo);
     }
 
-    private async Task<Result> CreateFounderKeyCollectionAsync(WalletWords walletWords, WalletId walletId)
+    public async Task<Result> RebuildFounderKeysAsync(WalletWords walletWords, WalletId walletId)
     {
         var founderKeys = derivationOperations.DeriveProjectKeys(walletWords, networkConfiguration.GetAngorKey());
 

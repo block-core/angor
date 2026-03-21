@@ -21,4 +21,5 @@ public interface IWalletAppService
     public string GenerateRandomSeedwords();
     Task<Result> GetTestCoins(WalletId walletId);
     Task<Result> DeleteWallet(WalletId walletId);
+    Task<Result> RebuildAllWalletBalancesAsync();
 }

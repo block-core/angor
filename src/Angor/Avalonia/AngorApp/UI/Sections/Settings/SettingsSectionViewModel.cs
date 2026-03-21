@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
+using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Wallet.Infrastructure.Impl;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
@@ -39,6 +40,8 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private readonly ISensitiveWalletDataProvider sensitiveWalletDataProvider;
 
+    private readonly IDatabaseManagementService databaseManagementService;
+
     private string network;
 
     private string newIndexer;
@@ -55,9 +58,11 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private bool hasWallet;
 
+    private string selectedNetwork;
+
     private readonly CompositeDisposable disposable = new();
 
-    public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, INetworkService networkService, INetworkConfiguration networkConfiguration, IWalletContext walletContext, IAddWalletFlow addWalletFlow, ISensitiveWalletDataProvider sensitiveWalletDataProvider)
+    public SettingsSectionViewModel(INetworkStorage networkStorage, IWalletStore walletStore, UIServices uiServices, INetworkService networkService, INetworkConfiguration networkConfiguration, IWalletContext walletContext, IAddWalletFlow addWalletFlow, ISensitiveWalletDataProvider sensitiveWalletDataProvider, IDatabaseManagementService databaseManagementService)
     {
         this.networkStorage = networkStorage;
         this.walletStore = walletStore;
@@ -66,6 +71,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         this.networkConfiguration = networkConfiguration;
         this.networkService = networkService;
         this.sensitiveWalletDataProvider = sensitiveWalletDataProvider;
+        this.databaseManagementService = databaseManagementService;
 
         this.networkService.AddSettingsIfNotExist();
 
@@ -80,13 +86,16 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
             _ => new Angornet()
         });
         Network = currentNetwork;
+        SelectedNetwork = currentNetwork;
         IsTestnet = currentNetwork == "Angornet";
 
         AddIndexer = ReactiveCommand.Create(DoAddIndexer, this.WhenAnyValue(x => x.NewIndexer, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
         AddRelay = ReactiveCommand.Create(DoAddRelay, this.WhenAnyValue(x => x.NewRelay, url => !string.IsNullOrWhiteSpace(url))).DisposeWith(disposable);
         RefreshIndexers = ReactiveCommand.CreateFromTask(RefreshIndexersAsync).DisposeWith(disposable);
         RefreshRelays = ReactiveCommand.CreateFromTask(RefreshRelaysAsync).DisposeWith(disposable);
-        ChangeNetwork = ReactiveCommand.CreateFromTask(ChangeNetworkAsync).DisposeWith(disposable);
+
+        var canChangeNetwork = this.WhenAnyValue(x => x.SelectedNetwork, x => x.Network, (selected, current) => !string.IsNullOrEmpty(selected) && selected != current);
+        ChangeNetwork = ReactiveCommand.CreateFromTask(ChangeNetworkAsync, canChangeNetwork).DisposeWith(disposable);
         ImportWallet = ReactiveCommand.CreateFromTask(addWalletFlow.Run).Enhance().DisposeWith(disposable);
 
         var canBackupWallet = walletContext.CurrentWalletChanges
@@ -170,6 +179,12 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         private set => this.RaiseAndSetIfChanged(ref hasWallet, value);
     }
 
+    public string SelectedNetwork
+    {
+        get => selectedNetwork;
+        set => this.RaiseAndSetIfChanged(ref selectedNetwork, value);
+    }
+
     private void DoAddIndexer()
     {
         Indexers.Add(CreateIndexer(new SettingsUrl
@@ -232,18 +247,25 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
 
     private async Task ChangeNetworkAsync()
     {
-        var confirmation = await uiServices.Dialog.ShowConfirmation("Change network?", "Changing network will delete the current wallet and all local data. This action cannot be undone.");
-        var shouldChange = confirmation.GetValueOrDefault(() => false);
+        var newNetwork = SelectedNetwork;
 
-        if (!shouldChange)
+        if (string.IsNullOrEmpty(newNetwork) || newNetwork == Network)
         {
             return;
         }
 
-        // Cycle through networks
-        var currentIndex = Array.IndexOf(Networks.ToArray(), Network);
-        var nextIndex = (currentIndex + 1) % Networks.Count;
-        var newNetwork = Networks[nextIndex];
+        var confirmation = await uiServices.Dialog.ShowConfirmation("Change network?", $"Changing network to {newNetwork} will clear all cached data (projects, investments, sync data). Your wallet will be preserved. This action cannot be undone.");
+        var shouldChange = confirmation.GetValueOrDefault(() => false);
+
+        if (!shouldChange)
+        {
+            SelectedNetwork = Network;
+            return;
+        }
+
+        // Delete all document collections (projects, investments, sync data, etc.)
+        // This preserves the wallet file (wallets.json) but clears all cached/synced data
+        await databaseManagementService.DeleteAllDataAsync();
 
         networkStorage.SetNetwork(newNetwork);
         networkStorage.SetSettings(new SettingsInfo());
@@ -257,9 +279,11 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         var s = networkStorage.GetSettings();
         Reset(Indexers, s.Indexers.Select(CreateIndexer));
         Reset(Relays, s.Relays.Select(CreateRelay));
-        this.walletStore.SaveAll([]);
         currentNetwork = newNetwork;
         Network = newNetwork;
+
+        // Reload wallet context: rebuild balance data from seed words with new network, then re-populate wallets
+        await walletContext.Reload();
     }
 
     private async Task RefreshIndexersAsync()
@@ -325,6 +349,9 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         {
             return;
         }
+
+        // Delete all document collections (projects, investments, sync data, etc.)
+        await databaseManagementService.DeleteAllDataAsync();
 
         // Delete wallet if exists
         var wallet = walletContext.CurrentWallet.GetValueOrDefault();
