@@ -1,4 +1,5 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
@@ -11,6 +12,13 @@ namespace Angor.Sdk.Tests.Common;
 
 public class WalletAccountBalanceServiceTests
 {
+    private readonly Mock<IWalletOperations> _walletOperations = new();
+    private readonly Mock<IGenericDocumentCollection<WalletAccountBalanceInfo>> _collection = new();
+
+    private WalletAccountBalanceService CreateSut() =>
+        new(_walletOperations.Object, _collection.Object,
+            NullLogger<WalletAccountBalanceService>.Instance);
+
     [Fact]
     public async Task RefreshAccountBalanceInfoAsync_removes_stale_pending_receive_utxos()
     {
@@ -37,27 +45,25 @@ public class WalletAccountBalanceServiceTests
         var balanceInfo = new AccountBalanceInfo();
         balanceInfo.UpdateAccountBalanceInfo(accountInfo, [stalePending]);
 
-        var walletOperations = new Mock<IWalletOperations>();
-        walletOperations
+        _walletOperations
             .Setup(x => x.UpdateDataForExistingAddressesAsync(accountInfo))
             .Returns(Task.CompletedTask);
-        walletOperations
+        _walletOperations
             .Setup(x => x.UpdateAccountInfoWithNewAddressesAsync(accountInfo))
             .Returns(Task.CompletedTask);
 
-        var collection = new Mock<IGenericDocumentCollection<WalletAccountBalanceInfo>>();
-        collection
+        _collection
             .Setup(x => x.FindByIdAsync(walletId.Value))
             .ReturnsAsync(Result.Success<WalletAccountBalanceInfo?>(new WalletAccountBalanceInfo
             {
                 WalletId = walletId.Value,
                 AccountBalanceInfo = balanceInfo
             }));
-        collection
+        _collection
             .Setup(x => x.UpsertAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<WalletAccountBalanceInfo, string>>>(), It.IsAny<WalletAccountBalanceInfo>()))
             .ReturnsAsync(Result.Success(true));
 
-        var sut = new WalletAccountBalanceService(walletOperations.Object, collection.Object, NullLogger<WalletAccountBalanceService>.Instance);
+        var sut = CreateSut();
 
         var result = await sut.RefreshAccountBalanceInfoAsync(walletId);
 

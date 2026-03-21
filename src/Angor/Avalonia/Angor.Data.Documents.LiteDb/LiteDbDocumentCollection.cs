@@ -145,6 +145,21 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
         }
     }
 
+    public async Task<Result<int>> DeleteAllAsync()
+    {
+        try
+        {
+            var count = _collection.DeleteAll();
+            _logger.LogDebug("Deleted all {Count} documents of type {Type}", count, typeof(T).Name);
+            return await Task.FromResult(Result.Success(count));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete all documents of type {Type}", typeof(T).Name);
+            return Result.Failure<int>($"Failed to delete all documents: {ex.Message}");
+        }
+    }
+
     public async Task<Result<T?>> FindByIdAsync(string id)
     {
         try

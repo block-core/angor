@@ -364,6 +364,13 @@ public class InMemoryBoltzSwapCollection : IGenericDocumentCollection<BoltzSwapD
     public Task<Result<bool>> DeleteAsync(string id) =>
         Task.FromResult(Result.Success(_documents.Remove(id)));
 
+    public Task<Result<int>> DeleteAllAsync()
+    {
+        var count = _documents.Count;
+        _documents.Clear();
+        return Task.FromResult(Result.Success(count));
+    }
+
     public Task<Result<int>> CountAsync(Expression<Func<BoltzSwapDocument, bool>>? predicate = null) =>
         Task.FromResult(Result.Success(predicate == null ? _documents.Count : _documents.Values.Count(predicate.Compile())));
 }

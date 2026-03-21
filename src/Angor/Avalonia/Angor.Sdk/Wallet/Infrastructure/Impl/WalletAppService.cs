@@ -307,6 +307,44 @@ public class WalletAppService(
         }
     }
 
+    public async Task<Result> RebuildAllWalletBalancesAsync()
+    {
+        var walletsResult = await walletStore.GetAll();
+        if (walletsResult.IsFailure)
+            return Result.Failure(walletsResult.Error);
+
+        var wallets = walletsResult.Value.ToList();
+        if (wallets.Count == 0)
+            return Result.Success();
+
+        foreach (var wallet in wallets)
+        {
+            var walletId = new WalletId(wallet.Id);
+
+            // Get seed words to rebuild AccountInfo with the current network's derivation paths
+            var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
+            if (sensitiveDataResult.IsFailure)
+                return Result.Failure($"Failed to get seed words for wallet {wallet.Id}: {sensitiveDataResult.Error}");
+
+            var walletWords = sensitiveDataResult.Value.ToWalletWords();
+            var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
+            var accountBalanceInfo = new AccountBalanceInfo();
+            accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, []);
+
+            // Save the rebuilt record so GetMetadatas() and RefreshAccountBalanceInfoAsync() can find it
+            var saveResult = await accountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceInfo);
+            if (saveResult.IsFailure)
+                return Result.Failure($"Failed to save rebuilt wallet {wallet.Id}: {saveResult.Error}");
+
+            // Rebuild founder keys with the new network's angor key
+            var keysResult = await walletFactory.RebuildFounderKeysAsync(walletWords, walletId);
+            if (keysResult.IsFailure)
+                return Result.Failure($"Failed to rebuild founder keys for wallet {wallet.Id}: {keysResult.Error}");
+        }
+
+        return Result.Success();
+    }
+
     public async Task<Result<IEnumerable<FeeEstimation>>> GetFeeEstimates()
     {
         try

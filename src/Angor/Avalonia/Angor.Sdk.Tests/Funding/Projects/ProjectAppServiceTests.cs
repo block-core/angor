@@ -45,7 +45,7 @@ public class ProjectAppServiceTests : IClassFixture<TestNetworkFixture>
             .Setup(x => x.LatestFromNostrAsync())
             .ReturnsAsync(Result.Success<IEnumerable<Project>>(projects));
         
-        var handler = new LatestProjects.LatestProjectsHandler(_mockProjectService.Object);
+        var handler = new LatestProjects.LatestProjectsHandler(_mockProjectService.Object, _fixture.NetworkConfiguration);
         var request = new LatestProjects.LatestProjectsRequest();
 
         // Act
@@ -67,7 +67,7 @@ public class ProjectAppServiceTests : IClassFixture<TestNetworkFixture>
             .Setup(x => x.LatestFromNostrAsync())
             .ReturnsAsync(Result.Success<IEnumerable<Project>>(Enumerable.Empty<Project>()));
         
-        var handler = new LatestProjects.LatestProjectsHandler(_mockProjectService.Object);
+        var handler = new LatestProjects.LatestProjectsHandler(_mockProjectService.Object, _fixture.NetworkConfiguration);
         var request = new LatestProjects.LatestProjectsRequest();
 
         // Act
@@ -86,7 +86,7 @@ public class ProjectAppServiceTests : IClassFixture<TestNetworkFixture>
             .Setup(x => x.LatestFromNostrAsync())
             .ReturnsAsync(Result.Failure<IEnumerable<Project>>("Failed to fetch projects from Nostr"));
         
-        var handler = new LatestProjects.LatestProjectsHandler(_mockProjectService.Object);
+        var handler = new LatestProjects.LatestProjectsHandler(_mockProjectService.Object, _fixture.NetworkConfiguration);
         var request = new LatestProjects.LatestProjectsRequest();
 
         // Act
@@ -105,7 +105,7 @@ public class ProjectAppServiceTests : IClassFixture<TestNetworkFixture>
             .Setup(x => x.LatestFromNostrAsync())
             .ReturnsAsync(Result.Success<IEnumerable<Project>>(Enumerable.Empty<Project>()));
         
-        var handler = new LatestProjects.LatestProjectsHandler(_mockProjectService.Object);
+        var handler = new LatestProjects.LatestProjectsHandler(_mockProjectService.Object, _fixture.NetworkConfiguration);
         var request = new LatestProjects.LatestProjectsRequest();
 
         // Act

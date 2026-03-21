@@ -16,4 +16,5 @@ public interface IWalletContext
     Task<Maybe<IWallet>> TryGet();
     Task<Result<IWallet>> ImportWallet(string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network, NetworkKind networkKind);
     Task<Result<IWallet>> ImportWallet(string seedwords, Maybe<string> passphrase);
+    Task Reload();
 }

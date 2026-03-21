@@ -18,13 +18,15 @@ public sealed class WalletContext : IWalletContext, IDisposable
     private readonly CompositeDisposable disposable = new();
     private readonly SourceCache<IWallet, WalletId> sourceCache = new(wallet => wallet.Id);
     private readonly BehaviorSubject<Maybe<IWallet>> current = new(Maybe<IWallet>.None);
+    private readonly SerialDisposable loadDisposable = new();
 
     public WalletContext(IWalletAppService walletAppService, IWalletProvider walletProvider, Func<BitcoinNetwork> bitcoinNetwork)
     {
         this.walletAppService = walletAppService;
         this.walletProvider = walletProvider;
         this.bitcoinNetwork = bitcoinNetwork;
-        LoadInitialWallets(walletAppService, walletProvider, sourceCache).DisposeWith(disposable);
+        loadDisposable.DisposeWith(disposable);
+        loadDisposable.Disposable = LoadWalletsFromMetadatas(walletAppService, walletProvider, sourceCache);
 
         WalletChanges = sourceCache.Connect();
         WalletChanges
@@ -37,7 +39,7 @@ public sealed class WalletContext : IWalletContext, IDisposable
         WalletChanges.OnItemRemoved(removed => CurrentWallet = sourceCache.Items.TryFirst(wallet => !wallet.Equals(removed))).Subscribe().DisposeWith(disposable);
     }
 
-    private static IDisposable LoadInitialWallets(IWalletAppService walletAppService, IWalletProvider walletProvider, SourceCache<IWallet, WalletId> sourceCache)
+    private static IDisposable LoadWalletsFromMetadatas(IWalletAppService walletAppService, IWalletProvider walletProvider, SourceCache<IWallet, WalletId> sourceCache)
     {
         var existingWallets = Observable.FromAsync(() => walletAppService.GetMetadatas().Bind(metadatas => metadatas.Select(metadata => walletProvider.Get(metadata.Id)).CombineInOrder()));
         var successes = existingWallets.Successes();
@@ -87,6 +89,27 @@ public sealed class WalletContext : IWalletContext, IDisposable
     public async Task<Maybe<IWallet>> TryGet()
     {
         return CurrentWallet;
+    }
+
+    public async Task Reload()
+    {
+        // Dispose old wallet objects
+        foreach (var wallet in sourceCache.Items.ToList())
+        {
+            if (wallet is IDisposable disposableWallet)
+            {
+                disposableWallet.Dispose();
+            }
+        }
+
+        // Clear the source cache (triggers OnItemRemoved, sets CurrentWallet to None)
+        sourceCache.Clear();
+
+        // Rebuild WalletAccountBalanceInfo records from seed words using new network config
+        await walletAppService.RebuildAllWalletBalancesAsync();
+
+        // Dispose old load subscription and re-subscribe to load wallets from rebuilt metadata
+        loadDisposable.Disposable = LoadWalletsFromMetadatas(walletAppService, walletProvider, sourceCache);
     }
 
     public Task<Result<IWallet>> ImportWallet(string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network, NetworkKind networkKind)

@@ -20,4 +20,5 @@ public interface IDocumentCollection<T> where T : BaseDocument
     Task<Result<bool>> UpdateAsync(T document);
     Task<Result<bool>> UpsertAsync(T document);
     Task<Result<bool>> DeleteAsync(string id);
+    Task<Result<int>> DeleteAllAsync();
 }

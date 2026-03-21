@@ -67,12 +67,13 @@
                 
                 <!-- Network Section -->
                 <Card HeaderStartContent="{Icon fa-globe}" Header="Network">
-                    <Card.HeaderEndContent>
-                        <EnhancedButton Classes="Primary" Icon="{Icon fa-plus}" Content="Change Network" Command="{Binding ChangeNetwork}" />
-                    </Card.HeaderEndContent>
-                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                        <TextBlock Text="Network Type:" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding Network}" FontWeight="Bold" VerticalAlignment="Center" />
+                    <StackPanel Classes="Gap-XL">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <TextBlock Text="Network Type:" VerticalAlignment="Center" />
+                            <ComboBox ItemsSource="{Binding Networks}" SelectedItem="{Binding SelectedNetwork}" MinWidth="200" />
+                        </StackPanel>
+                        <TextBlock Classes="Muted Wrap" Text="Changing the network will clear all cached data (projects, investments, sync data). Your wallet will be preserved." />
+                        <EnhancedButton HorizontalAlignment="Left" Classes="Primary" Icon="{Icon fa-exchange}" Content="Apply Network Change" Command="{Binding ChangeNetwork}" />
                     </StackPanel>
                 </Card>
 
