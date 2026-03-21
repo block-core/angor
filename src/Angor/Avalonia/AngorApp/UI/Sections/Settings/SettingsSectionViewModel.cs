@@ -10,6 +10,7 @@ using Angor.Shared.Services;
 using System.Linq;
 using System.Reactive.Disposables;
 using Angor.Sdk.Common;
+using AngorApp.Model.Amounts;
 using AngorApp.UI.Flows.AddWallet;
 using AngorApp.UI.Shared.Controls;
 using AngorApp.UI.Shared.Services;
@@ -275,6 +276,7 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
             "Liquid" => new LiquidMain(),
             _ => new Angornet()
         });
+        AmountUI.DefaultSymbol = networkConfiguration.GetNetwork().CoinTicker;
         networkService.AddSettingsIfNotExist();
         var s = networkStorage.GetSettings();
         Reset(Indexers, s.Indexers.Select(CreateIndexer));
