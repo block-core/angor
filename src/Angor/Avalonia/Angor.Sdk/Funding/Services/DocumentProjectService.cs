@@ -112,7 +112,8 @@ public class DocumentProjectService(
             if (!response.Any())
                 return Result.Failure<IEnumerable<Project>>("No projects found");
 
-            var insertResult = await collection.InsertAsync(project => project.Id.Value, response.ToArray()); //TODO log the result?
+            var upsertTasks = response.Select(project => collection.UpsertAsync(project => project.Id.Value, project));
+            await Task.WhenAll(upsertTasks);
 
             return Result.Success(response.Concat(localLookup).OrderByDescending(p => p.StartingDate).AsEnumerable());
         }

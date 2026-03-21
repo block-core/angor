@@ -53,7 +53,7 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
                 return Result.Success(result);
             }
             
-            _logger.LogDebug("Inserted {total} document {Type}",result, typeof(T).Name);
+            _logger.LogDebug("Inserted {total} document(s) of type {Type}",result, typeof(T).Name);
             
             return await Task.FromResult(Result.Success(result));
         }
