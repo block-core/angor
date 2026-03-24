@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      PROJECT_PATH: "src/Angor/Client/Angor.Client.csproj"
+      PROJECT_PATH: "src/webapp/Angor.Client/Angor.Client.csproj"
       OUTPUT_PATH: "Output"
       BUILD_CONFIGURATION: "Release"
 
@@ -24,7 +24,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        global-json-file: src/Angor/Client/global.json
+        global-json-file: src/webapp/Angor.Client/global.json
 
     - name: Publish Blazor WASM
       run: dotnet publish ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --output ${{ env.OUTPUT_PATH }}

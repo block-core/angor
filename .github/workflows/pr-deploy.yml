@@ -18,8 +18,8 @@ jobs:
     
     env:
       PROJECT_NAME: "Angor"
-      SOLUTION_PATH: "src/Angor.sln"
-      PROJECT_PATH: "src/Angor/Client/Angor.Client.csproj"
+      SOLUTION_PATH: "src/WebApp.sln"
+      PROJECT_PATH: "src/webapp/Angor.Client/Angor.Client.csproj"
       
     steps:
     - name: Get PR details
@@ -56,7 +56,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        global-json-file: src/Angor/Client/global.json
+        global-json-file: src/webapp/Angor.Client/global.json
         
     - name: Setup Node.js
       uses: actions/setup-node@v4

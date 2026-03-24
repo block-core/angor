@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CSharpFunctionalExtensions" />
+        <PackageReference Include="Microsoft.Extensions.Http" />
+        <PackageReference Include="Zafiro.Avalonia.Dialogs" />
+        <PackageReference Include="Zafiro.Avalonia.Generators" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\sdk\Angor.Sdk\Angor.Sdk.csproj" />
+        <ProjectReference Include="..\..\shared\Angor.Shared\Angor.Shared.csproj" />
+    </ItemGroup>
+
+</Project>

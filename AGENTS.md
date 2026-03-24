@@ -3,21 +3,43 @@
 ## Project Overview
 
 Angor is a Bitcoin investment platform with two frontends:
-- **Avalonia desktop/mobile app** (primary, .NET 9) in `src/Angor/Avalonia/`
-- **Blazor WASM web app** (legacy, .NET 8) in `src/Angor/Client/`
-- **Shared library** (.NET 8) in `src/Angor/Shared/`
+- **Avalonia desktop/mobile app** (primary, .NET 9) in `src/avalonia/`
+- **Blazor WASM web app** (legacy, .NET 8) in `src/webapp/`
+- **Shared library** (.NET 8) in `src/shared/`
+- **SDK** (.NET 9) in `src/sdk/`
+- **App** (future fresh Avalonia rewrite) in `src/app/`
+
+## Repository Structure
+
+```
+src/
+  shared/          Angor.Shared (net8.0), Angor.Shared.Tests (net8.0)
+  sdk/             Angor.Sdk (net9.0), Angor.Sdk.Tests, Angor.Data.Documents, Angor.Data.Documents.LiteDb
+  avalonia/        AngorApp, AngorApp.Model, AngorApp.Tests, AngorApp.Desktop, AngorApp.Android, AngorApp.iOS, AngorApp.Browser
+  app/             (empty - future fresh Avalonia app)
+  webapp/          Angor.Client (Blazor WASM, net8.0)
+  Avalonia.sln     Main solution: avalonia + sdk + shared
+  App.sln          Future app solution: app + sdk + shared
+  WebApp.sln       Web solution: webapp + shared
+  Directory.Build.props
+  Directory.Packages.props   Central Package Management (CPM)
+  .editorconfig
+```
 
 ## Build Commands
 
 ```bash
 # Avalonia desktop app (primary solution)
-dotnet build src/Angor/Avalonia/Angor.Avalonia.sln
+dotnet build src/Avalonia.sln
 
 # Blazor web app (legacy solution)
-dotnet build src/Angor.sln
+dotnet build src/WebApp.sln
+
+# Future app solution
+dotnet build src/App.sln
 
 # Single project build
-dotnet build src/Angor/Avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj
+dotnet build src/avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj
 ```
 
 ## Test Commands
@@ -26,13 +48,13 @@ All test projects use **xUnit** with **FluentAssertions** and **Moq**.
 
 ```bash
 # Run all SDK tests (net9.0)
-dotnet test src/Angor/Avalonia/Angor.Sdk.Tests/Angor.Sdk.Tests.csproj
+dotnet test src/sdk/Angor.Sdk.Tests/Angor.Sdk.Tests.csproj
 
-# Run legacy shared tests (net8.0)
-dotnet test src/Angor.Test/Angor.Test.csproj
+# Run shared tests (net8.0)
+dotnet test src/shared/Angor.Shared.Tests/Angor.Shared.Tests.csproj
 
 # Run Avalonia model tests (net9.0)
-dotnet test src/Angor/Avalonia/AngorApp.Tests/AngorApp.Tests.csproj
+dotnet test src/avalonia/AngorApp.Tests/AngorApp.Tests.csproj
 
 # Run a single test by fully qualified name
 dotnet test --filter "FullyQualifiedName=Angor.Sdk.Tests.Funding.Founder.FounderAppServiceTests.MethodName"
@@ -184,7 +206,7 @@ public partial class MyViewModel : ReactiveObject, IDisposable
 
 ## CI/CD
 
-- **`ci.yml`**: Build + test on push/PR to main (SDK tests + legacy tests)
+- **`ci.yml`**: Build + test on push/PR to main (SDK tests + shared tests + Avalonia model tests)
 - **`release-avalonia.yml`**: Triggered by `v*` tag push; builds Windows/Linux/macOS/Android installers, creates GitHub Release
 - **`gh-deploy.yml`**: Triggered by `v*` tag push; deploys Blazor WASM to angor.io (gh-pages)
 - **`gh-deploy-test.yml`**: Triggered by push to main; deploys to test.angor.io
@@ -194,4 +216,5 @@ public partial class MyViewModel : ReactiveObject, IDisposable
 
 - **Thread affinity**: Pushing to `BehaviorSubject` from background threads will crash Avalonia. Use `RxApp.MainThreadScheduler.Schedule(() => subject.OnNext(value))`.
 - **Indexer lag**: After broadcasting Bitcoin transactions, the indexer API may not reflect the change immediately. Use optimistic local updates and guard against stale responses in refresh handlers.
-- **Two .NET versions**: Avalonia projects target net9.0, Blazor/Shared target net8.0. Don't mix SDK references.
+- **Two .NET versions**: Avalonia/SDK projects target net9.0, Blazor/Shared target net8.0. Don't mix SDK references.
+- **Central Package Management**: All package versions are managed in `src/Directory.Packages.props`. Use `VersionOverride` in individual csproj files only when a project needs a different version than the centrally managed one.
