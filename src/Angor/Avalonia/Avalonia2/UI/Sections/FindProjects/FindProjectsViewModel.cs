@@ -9,6 +9,7 @@ using Avalonia.Media.Imaging;
 using Avalonia2.UI.Sections.Portfolio;
 using Avalonia2.UI.Shared;
 using Avalonia2.UI.Shared.Helpers;
+using ReactiveUI;
 
 namespace Avalonia2.UI.Sections.FindProjects;
 
@@ -174,7 +175,7 @@ public partial class FindProjectsViewModel : ReactiveObject
 
     public void CloseInvestPage() => InvestPageViewModel = null;
 
-    public ObservableCollection<ProjectItemViewModel> Projects { get; } = new();
+    public RangeObservableCollection<ProjectItemViewModel> Projects { get; } = new();
 
     public FindProjectsViewModel(
         IProjectAppService projectAppService,
@@ -201,11 +202,8 @@ public partial class FindProjectsViewModel : ReactiveObject
 
             if (result.IsSuccess)
             {
-                Projects.Clear();
-                foreach (var dto in result.Value.Projects)
-                {
-                    Projects.Add(ProjectItemViewModel.FromDto(dto));
-                }
+                var items = result.Value.Projects.Select(ProjectItemViewModel.FromDto).ToList();
+                Projects.ReplaceAll(items);
             }
         }
         catch

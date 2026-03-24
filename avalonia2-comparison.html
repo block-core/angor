@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avalonia2 vs Original AngorApp — Comparison Report</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1c1c1c;
+    --border: #2a2a2a;
+    --text: #e4e4e4;
+    --text-muted: #888;
+    --accent: #f7931a;
+    --accent-dim: #f7931a22;
+    --green: #34d399;
+    --green-dim: #34d39918;
+    --red: #f87171;
+    --red-dim: #f8717118;
+    --blue: #60a5fa;
+    --blue-dim: #60a5fa18;
+    --purple: #a78bfa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 0 1rem;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 3rem 0 6rem;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+  }
+
+  header h1 span { color: var(--accent); }
+
+  header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  /* Section titles */
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 3rem 0 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.02em;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.75rem;
+  }
+
+  p, li { font-size: 0.925rem; }
+
+  p + p { margin-top: 0.75rem; }
+
+  /* Verdict banner */
+  .verdict {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.75rem 2rem;
+    margin: 2rem 0;
+  }
+
+  .verdict p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+
+  .verdict strong { color: var(--text); }
+
+  /* Numbers row */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .stat .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+  }
+
+  .stat .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  .stat .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat .tag {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.15rem 0.55rem;
+    border-radius: 6px;
+  }
+
+  .tag-original { background: var(--blue-dim); color: var(--blue); }
+  .tag-v2 { background: var(--accent-dim); color: var(--accent); }
+
+  /* Comparison table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25rem 0;
+    font-size: 0.875rem;
+  }
+
+  thead th {
+    text-align: left;
+    padding: 0.65rem 1rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  td:first-child {
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .winner { color: var(--green); font-weight: 600; }
+  .loser { color: var(--text-muted); }
+
+  /* Pros / Cons cards */
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.25rem 0;
+  }
+
+  @media (max-width: 640px) {
+    .cards { grid-template-columns: 1fr; }
+    .stat .value { font-size: 1.25rem; }
+    header h1 { font-size: 1.5rem; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .card h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.75rem;
+  }
+
+  .card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .card li {
+    position: relative;
+    padding: 0.35rem 0 0.35rem 1.25rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .card li::before {
+    position: absolute;
+    left: 0;
+    font-weight: 700;
+  }
+
+  .card.good li::before { content: "+"; color: var(--green); }
+  .card.bad li::before { content: "!"; color: var(--red); }
+
+  .card.good h3 { color: var(--green); }
+  .card.bad h3 { color: var(--red); }
+
+  /* Code snippets */
+  code {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.8rem;
+    background: var(--surface2);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    color: var(--purple);
+  }
+
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.8rem;
+    line-height: 1.65;
+    color: var(--text-muted);
+  }
+
+  pre strong { color: var(--red); font-weight: 600; }
+  pre em { color: var(--text-muted); font-style: normal; }
+
+  /* Callout */
+  .callout {
+    border-left: 3px solid var(--accent);
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+    background: var(--accent-dim);
+    border-radius: 0 8px 8px 0;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  .callout strong { color: var(--accent); }
+
+  /* Fix list */
+  .fix-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+  }
+
+  .fix-list li {
+    padding: 0.75rem 1rem 0.75rem 3rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    position: relative;
+    font-size: 0.875rem;
+  }
+
+  .fix-list li::before {
+    content: attr(data-n);
+    position: absolute;
+    left: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 0.8rem;
+  }
+
+  .fix-list li span {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Avalonia2 vs <span>Original</span> AngorApp</h1>
+  <p>Front-end architecture comparison &mdash; March 2026</p>
+</header>
+
+<!-- ───────── NUMBERS ───────── -->
+<h2>By the Numbers</h2>
+
+<div class="stats">
+  <div class="stat">
+    <div class="label">Source Files</div>
+    <div class="row">
+      <div class="value">240</div>
+      <span class="tag tag-v2">Avalonia2</span>
+    </div>
+    <div class="row" style="margin-top:0.4rem">
+      <div class="value" style="color:var(--text-muted)">808</div>
+      <span class="tag tag-original">Original</span>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="label">Interfaces (1 impl)</div>
+    <div class="row">
+      <div class="value">2</div>
+      <span class="tag tag-v2">Avalonia2</span>
+    </div>
+    <div class="row" style="margin-top:0.4rem">
+      <div class="value" style="color:var(--red)">~100</div>
+      <span class="tag tag-original">Original</span>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="label">Sample / Dead-Code Files</div>
+    <div class="row">
+      <div class="value">0</div>
+      <span class="tag tag-v2">Avalonia2</span>
+    </div>
+    <div class="row" style="margin-top:0.4rem">
+      <div class="value" style="color:var(--red)">85</div>
+      <span class="tag tag-original">Original</span>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="label">Disposal / Lifecycle Refs</div>
+    <div class="row">
+      <div class="value" style="color:var(--red)">65</div>
+      <span class="tag tag-v2">Avalonia2</span>
+    </div>
+    <div class="row" style="margin-top:0.4rem">
+      <div class="value">274</div>
+      <span class="tag tag-original">Original</span>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── WHY THE LEADS ARE RIGHT ───────── -->
+<h2>Why the Original Feels Like Spaghetti</h2>
+
+<h3>Three paradigms fighting in one codebase</h3>
+<p>The original mixes <strong>DDD aggregates</strong>, <strong>functional monads</strong> (Result/Maybe chaining), and <strong>ReactiveUI streams</strong> &mdash; often in the same method. Developers must hold three mental models simultaneously to trace a single user action.</p>
+
+<pre>// Real type from the original codebase:
+<strong>Task&lt;Result&lt;Maybe&lt;Result&gt;&gt;&gt;</strong>
+<em>// Three nested monadic layers. Wrapping wrappers.</em></pre>
+
+<h3>Interface ceremony with no polymorphism</h3>
+<p>Nearly every ViewModel has a paired <code>IFooViewModel</code> interface with <strong>exactly one implementation</strong>. None are ever swapped at runtime. This doubles the file count and forces 85 <code>*Sample.cs</code> design-time stubs that duplicate every ViewModel.</p>
+
+<h3>Factory classes for one-liners</h3>
+<pre>// ProjectInvestCommandFactory.Create() — the entire body:
+var command = EnhancedCommand.CreateWithResult(
+    () => navigator.Go&lt;IInvestViewModel&gt;(), canExecute);
+<em>// A one-liner disguised as a factory + interface + DI registration.</em></pre>
+
+<h3>Tracing an invest flow: 12+ files</h3>
+<p>Button &rarr; DetailsViewModel &rarr; Navigator &rarr; FooterViewModel.InvestFlow() (40-line god method) &rarr; PaymentSelectorViewModel &rarr; InvoiceViewModel &rarr; Dialog. Scattered across <code>Flows/</code>, <code>Sections/</code>, <code>Factories/</code>, and <code>Core/</code>.</p>
+
+<!-- ───────── COMPARISON TABLE ───────── -->
+<h2>Head-to-Head</h2>
+
+<table>
+  <thead>
+    <tr><th>Area</th><th>Avalonia2</th><th>Original</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Cognitive load</td>
+      <td class="winner">1 file = 1 flow</td>
+      <td class="loser">12+ files per flow</td>
+    </tr>
+    <tr>
+      <td>Paradigm</td>
+      <td class="winner">ReactiveUI + plain methods</td>
+      <td class="loser">DDD + FP monads + Reactive + wizards</td>
+    </tr>
+    <tr>
+      <td>Dead code</td>
+      <td class="winner">~0 sample files</td>
+      <td class="loser">85 *Sample.cs files</td>
+    </tr>
+    <tr>
+      <td>Interface tax</td>
+      <td class="winner">2 interfaces</td>
+      <td class="loser">~100 single-impl interfaces</td>
+    </tr>
+    <tr>
+      <td>SDK integration</td>
+      <td class="winner">Direct service calls</td>
+      <td class="loser">Factory &rarr; interface &rarr; DI layers</td>
+    </tr>
+    <tr>
+      <td>Mobile / responsive</td>
+      <td class="winner">3 breakpoints, tab bar, back nav</td>
+      <td class="loser">None</td>
+    </tr>
+    <tr>
+      <td>Resource disposal</td>
+      <td class="loser">Mostly missing</td>
+      <td class="winner">CompositeDisposable throughout</td>
+    </tr>
+    <tr>
+      <td>Error handling</td>
+      <td class="loser">10 bare catch blocks</td>
+      <td class="winner">Result&lt;T&gt; + notification chain</td>
+    </tr>
+    <tr>
+      <td>Bitcoin amounts</td>
+      <td class="loser">double (floating point)</td>
+      <td class="winner">Sats (integer)</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ───────── WHAT V2 GOT RIGHT ───────── -->
+<h2>Where Avalonia2 Wins</h2>
+
+<div class="cards">
+  <div class="card good">
+    <h3>Architecture</h3>
+    <ul>
+      <li>One paradigm &mdash; ReactiveUI + simple methods</li>
+      <li>Flows are self-contained in single section folders</li>
+      <li>No interface ceremony or factory bloat</li>
+      <li>Direct SDK calls without indirection layers</li>
+    </ul>
+  </div>
+  <div class="card good">
+    <h3>User Experience</h3>
+    <ul>
+      <li>Mobile-first responsive layout (3 breakpoints)</li>
+      <li>Bottom tab bar with sub-tab state memory</li>
+      <li>View caching with onReuse callbacks</li>
+      <li>Material 3-style token theme system</li>
+      <li>Android AOT + trimming build pipeline</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ───────── WHAT V2 NEEDS TO FIX ───────── -->
+<h2>What Avalonia2 Must Fix Before Production</h2>
+
+<div class="cards">
+  <div class="card bad">
+    <h3>Engineering Gaps</h3>
+    <ul>
+      <li><code>double</code> used for BTC amounts &mdash; will produce rounding errors</li>
+      <li>ViewModels with subscriptions are never disposed &mdash; memory leaks</li>
+      <li>10 bare <code>catch</code> blocks silently swallow exceptions</li>
+      <li>Prototype data still wired (fake npubs, sample flags)</li>
+    </ul>
+  </div>
+  <div class="card bad">
+    <h3>Why These Matter</h3>
+    <ul>
+      <li>Floating-point money is a known source of lost funds</li>
+      <li>Undisposed subscriptions cause ghost updates in long sessions</li>
+      <li>Silent catches make production bugs invisible</li>
+      <li>Prototype data left in shipping code confuses users</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Concrete fixes</h3>
+<ul class="fix-list">
+  <li data-n="1"><strong>Replace <code>double</code> with integer sats</strong> <br><span>20+ locations using <code>double Balance</code>, <code>double.TryParse</code> for amounts</span></li>
+  <li data-n="2"><strong>Add CompositeDisposable to all subscribing ViewModels</strong> <br><span>65 disposal refs vs the original's 274 &mdash; subscriptions are leaking</span></li>
+  <li data-n="3"><strong>Replace bare <code>catch</code> blocks with logging</strong> <br><span>10 silent swallowers across 6 files, including <code>catch { }</code> in production</span></li>
+  <li data-n="4"><strong>Remove prototype/sample data</strong> <br><span>SignatureStore fake npubs, PrototypeSettings.ShowPopulatedApp, Guid investor names</span></li>
+</ul>
+
+<!-- ───────── VERDICT ───────── -->
+<h2>Verdict</h2>
+
+<div class="verdict">
+  <p>The original AngorApp is well-<em>intentioned</em> architecture that became over-engineered &mdash; <strong>interface ceremony, wrapper types around wrapper types, factory classes for one-liners, and three conflicting paradigms</strong> that make it hard to reason about flows. The 85 sample files are particularly telling: they exist because the design-time data pattern <em>requires</em> interface implementations, creating a duplication tax on every feature.</p>
+  <p style="margin-top:0.75rem">Avalonia2 correctly rejected the abstraction overhead. It has <strong>real mobile-first functionality</strong> the original lacks and is <strong>directly wired to the SDK</strong> without indirection layers. Its gaps &mdash; disposal, error handling, floating-point money, leftover prototype data &mdash; are <strong>concrete and fixable</strong>. They're missing plumbing, not architectural debt.</p>
+  <p style="margin-top:0.75rem"><strong>The decision to rewrite rather than refactor the original is defensible.</strong></p>
+</div>
+
+<div class="callout">
+  <strong>Bottom line:</strong> Avalonia2 is the right direction. Ship it &mdash; after fixing the four items above.
+</div>
+
+<footer>
+  Angor &middot; Avalonia2 Comparison Report &middot; Generated March 2026
+</footer>
+
+</div>
+</body>
+</html>

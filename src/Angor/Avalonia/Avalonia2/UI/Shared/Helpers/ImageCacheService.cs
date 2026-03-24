@@ -36,6 +36,12 @@ public static class ImageCacheService
     private static readonly ConcurrentDictionary<string, Task<Bitmap?>> InFlight = new();
 
     /// <summary>
+    /// Limits concurrent downloads+decodes to avoid flooding the thread pool and network
+    /// on mobile devices when many cards load simultaneously.
+    /// </summary>
+    private static readonly SemaphoreSlim DownloadSemaphore = new(4);
+
+    /// <summary>
     /// Disk cache directory — sits alongside the app's local data.
     /// </summary>
     private static readonly string CacheDir = Path.Combine(
@@ -94,6 +100,7 @@ public static class ImageCacheService
 
     private static async Task<Bitmap?> DownloadAndCacheAsync(string url)
     {
+        await DownloadSemaphore.WaitAsync();
         try
         {
             // Ensure cache directory exists
@@ -147,6 +154,10 @@ public static class ImageCacheService
         {
             // Network failure, decode failure, etc. — return null (shows fallback gradient)
             return null;
+        }
+        finally
+        {
+            DownloadSemaphore.Release();
         }
     }
 

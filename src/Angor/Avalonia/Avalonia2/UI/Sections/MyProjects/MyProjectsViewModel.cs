@@ -6,6 +6,7 @@ using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Wallet.Application;
 using Avalonia2.UI.Shared;
+using Avalonia2.UI.Shared.Helpers;
 using ReactiveUI;
 
 namespace Avalonia2.UI.Sections.MyProjects;
@@ -76,7 +77,7 @@ public partial class MyProjectsViewModel : ReactiveObject
         }
     }
 
-    public ObservableCollection<MyProjectItemViewModel> Projects { get; } = new();
+    public RangeObservableCollection<MyProjectItemViewModel> Projects { get; } = new();
 
     public MyProjectsViewModel(
         IProjectAppService projectAppService,
@@ -105,11 +106,16 @@ public partial class MyProjectsViewModel : ReactiveObject
             var metadatasResult = await _walletAppService.GetMetadatas();
             if (metadatasResult.IsFailure) return;
 
-            Projects.Clear();
-
-            foreach (var meta in metadatasResult.Value)
+            // Parallelize wallet queries instead of sequential foreach
+            var walletResults = await Task.WhenAll(metadatasResult.Value.Select(async meta =>
             {
                 var projectsResult = await _projectAppService.GetFounderProjects(meta.Id);
+                return (meta, projectsResult);
+            }));
+
+            var items = new List<MyProjectItemViewModel>();
+            foreach (var (meta, projectsResult) in walletResults)
+            {
                 if (projectsResult.IsFailure) continue;
 
                 foreach (var dto in projectsResult.Value.Projects)
@@ -122,7 +128,7 @@ public partial class MyProjectsViewModel : ReactiveObject
                         _ => "investment"
                     };
 
-                    Projects.Add(new MyProjectItemViewModel
+                    items.Add(new MyProjectItemViewModel
                     {
                         Name = dto.Name ?? "Untitled Project",
                         Description = dto.ShortDescription ?? "",
@@ -137,6 +143,8 @@ public partial class MyProjectsViewModel : ReactiveObject
                     });
                 }
             }
+
+            Projects.ReplaceAll(items);
 
             this.RaisePropertyChanged(nameof(HasProjects));
             this.RaisePropertyChanged(nameof(TotalRaised));

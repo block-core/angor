@@ -425,7 +425,7 @@ public partial class PortfolioViewModel : ReactiveObject
     public string TotalAvailable { get; private set; } = "0.0000";
 
     // ── Right panel investments ──
-    public ObservableCollection<InvestmentViewModel> Investments { get; } = new();
+    public RangeObservableCollection<InvestmentViewModel> Investments { get; } = new();
 
     public PortfolioViewModel(
         IInvestmentAppService investmentAppService,
@@ -466,16 +466,21 @@ public partial class PortfolioViewModel : ReactiveObject
                 return;
             }
 
-            Investments.Clear();
+            // Parallelize wallet queries instead of sequential foreach
+            var walletResults = await Task.WhenAll(metadatas.Select(async meta =>
+            {
+                var investmentsResult = await _investmentAppService.GetInvestments(
+                    new GetInvestments.GetInvestmentsRequest(meta.Id));
+                return (meta, investmentsResult);
+            }));
+
+            var items = new List<InvestmentViewModel>();
             double totalInvested = 0;
             double totalInRecovery = 0;
             int recoveryCount = 0;
 
-            foreach (var meta in metadatas)
+            foreach (var (meta, investmentsResult) in walletResults)
             {
-                var investmentsResult = await _investmentAppService.GetInvestments(
-                    new GetInvestments.GetInvestmentsRequest(meta.Id));
-
                 if (investmentsResult.IsFailure) continue;
 
                 foreach (var dto in investmentsResult.Value.Projects)
@@ -494,7 +499,7 @@ public partial class PortfolioViewModel : ReactiveObject
 
                     var (statusText, statusClass, step) = MapInvestmentStatus(dto.InvestmentStatus, dto.FounderStatus);
 
-                    var vm = new InvestmentViewModel
+                    items.Add(new InvestmentViewModel
                     {
                         ProjectName = dto.Name ?? "Unknown Project",
                         ShortDescription = dto.Description ?? "",
@@ -517,11 +522,11 @@ public partial class PortfolioViewModel : ReactiveObject
                         ProjectIdentifier = dto.Id ?? "",
                         InvestmentWalletId = meta.Id.Value,
                         InvestmentTransactionId = dto.InvestmentId ?? ""
-                    };
-
-                    Investments.Add(vm);
+                    });
                 }
             }
+
+            Investments.ReplaceAll(items);
 
             FundedProjects = Investments.Count;
             TotalInvested = totalInvested.ToString("F4", CultureInfo.InvariantCulture);
