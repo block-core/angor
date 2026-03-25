@@ -67,7 +67,6 @@ namespace Angor.Shared.Networks
                 "Angornet" => new Angornet(),
                 "Main" => new BitcoinMain(),
                 "Liquid" => new LiquidMain(),
-                "LiquidTestnet" => new LiquidMain(), // Fallback to Liquid mainnet for now
                 _ => new BitcoinMain() // Default fallback
             };
         }
