@@ -1,0 +1,55 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             LIGHT THEME — Investment status badges
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Default">
+
+            <SolidColorBrush x:Key="BadgeApprovedBackground" Color="#D4EDDA" />
+            <SolidColorBrush x:Key="BadgePendingBackground" Color="#FEF3C7" />
+            <SolidColorBrush x:Key="BadgePendingForeground" Color="#92400E" />
+            <SolidColorBrush x:Key="BadgePendingBorder" Color="#FDE68A" />
+            <!-- Released: Vue light bg=#d4edda, color=#155724, border=#c3e6cb -->
+            <SolidColorBrush x:Key="BadgeReleasedBackground" Color="#D4EDDA" />
+            <SolidColorBrush x:Key="BadgeReleasedForeground" Color="#155724" />
+            <SolidColorBrush x:Key="BadgeReleasedBorder" Color="#C3E6CB" />
+            <!-- Not Spent: Vue light bg=#f9fafb, color=#6b7280, border=#e5e7eb -->
+            <SolidColorBrush x:Key="BadgeNotSpentBackground" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="BadgeNotSpentForeground" Color="#6B7280" />
+            <SolidColorBrush x:Key="BadgeNotSpentBorder" Color="#E5E7EB" />
+            <!-- Recovered: Vue light bg=#dbeafe, color=#1e40af, border=#bfdbfe -->
+            <SolidColorBrush x:Key="BadgeRecoveredBackground" Color="#DBEAFE" />
+            <SolidColorBrush x:Key="BadgeRecoveredForeground" Color="#1E40AF" />
+            <SolidColorBrush x:Key="BadgeRecoveredBorder" Color="#BFDBFE" />
+
+        </ResourceDictionary>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             DARK THEME — Investment status badges
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Dark">
+
+            <SolidColorBrush x:Key="BadgeApprovedBackground" Color="#1A22C55E" />
+            <SolidColorBrush x:Key="BadgePendingBackground" Color="#26FBBF24" />
+            <SolidColorBrush x:Key="BadgePendingForeground" Color="#FDE68A" />
+            <SolidColorBrush x:Key="BadgePendingBorder" Color="#4DFBBF24" />
+            <!-- Released dark: Vue rgba(34,197,94,0.15), color #4ade80 -->
+            <SolidColorBrush x:Key="BadgeReleasedBackground" Color="#2622C55E" />
+            <SolidColorBrush x:Key="BadgeReleasedForeground" Color="#4ADE80" />
+            <SolidColorBrush x:Key="BadgeReleasedBorder" Color="#4D22C55E" />
+            <!-- Not Spent dark: Vue rgba(107,114,128,0.15), color #9ca3af -->
+            <SolidColorBrush x:Key="BadgeNotSpentBackground" Color="#266B7280" />
+            <SolidColorBrush x:Key="BadgeNotSpentForeground" Color="#9CA3AF" />
+            <SolidColorBrush x:Key="BadgeNotSpentBorder" Color="#4D6B7280" />
+            <!-- Recovered dark: Vue rgba(59,130,246,0.15), color #60a5fa -->
+            <SolidColorBrush x:Key="BadgeRecoveredBackground" Color="#263B82F6" />
+            <SolidColorBrush x:Key="BadgeRecoveredForeground" Color="#60A5FA" />
+            <SolidColorBrush x:Key="BadgeRecoveredBorder" Color="#4D3B82F6" />
+
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+</ResourceDictionary>

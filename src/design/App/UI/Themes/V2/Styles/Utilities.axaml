@@ -1,0 +1,111 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:flex="clr-namespace:Avalonia.Labs.Panels;assembly=Avalonia.Labs.Panels">
+
+    <!-- LAYOUT - FlexPanel utilities
+         Usage: <flex:FlexPanel Classes="flex flex-col items-center justify-between gap-4" /> -->
+
+    <Style Selector="flex|FlexPanel.flex">
+        <Setter Property="Direction" Value="{x:Static flex:FlexDirection.Row}" />
+    </Style>
+    <Style Selector="flex|FlexPanel.flex-col">
+        <Setter Property="Direction" Value="{x:Static flex:FlexDirection.Column}" />
+    </Style>
+
+    <Style Selector="flex|FlexPanel.items-center">
+        <Setter Property="AlignItems" Value="{x:Static flex:AlignItems.Center}" />
+    </Style>
+    <Style Selector="flex|FlexPanel.items-start">
+        <Setter Property="AlignItems" Value="{x:Static flex:AlignItems.FlexStart}" />
+    </Style>
+    <Style Selector="flex|FlexPanel.items-end">
+        <Setter Property="AlignItems" Value="{x:Static flex:AlignItems.FlexEnd}" />
+    </Style>
+    <Style Selector="flex|FlexPanel.justify-between">
+        <Setter Property="JustifyContent" Value="{x:Static flex:JustifyContent.SpaceBetween}" />
+    </Style>
+    <Style Selector="flex|FlexPanel.justify-center">
+        <Setter Property="JustifyContent" Value="{x:Static flex:JustifyContent.Center}" />
+    </Style>
+    <Style Selector="flex|FlexPanel.justify-end">
+        <Setter Property="JustifyContent" Value="{x:Static flex:JustifyContent.FlexEnd}" />
+    </Style>
+
+    <!-- Gap -->
+    <Style Selector="flex|FlexPanel.gap-2">
+        <Setter Property="ColumnSpacing" Value="{StaticResource Spacing2}" />
+        <Setter Property="RowSpacing" Value="{StaticResource Spacing2}" />
+    </Style>
+    <Style Selector="flex|FlexPanel.gap-3">
+        <Setter Property="ColumnSpacing" Value="{StaticResource Spacing3}" />
+        <Setter Property="RowSpacing" Value="{StaticResource Spacing3}" />
+    </Style>
+    <Style Selector="flex|FlexPanel.gap-4">
+        <Setter Property="ColumnSpacing" Value="{StaticResource Spacing4}" />
+        <Setter Property="RowSpacing" Value="{StaticResource Spacing4}" />
+    </Style>
+    <Style Selector="flex|FlexPanel.gap-5">
+        <Setter Property="ColumnSpacing" Value="{StaticResource Spacing5}" />
+        <Setter Property="RowSpacing" Value="{StaticResource Spacing5}" />
+    </Style>
+    <Style Selector="flex|FlexPanel.gap-6">
+        <Setter Property="ColumnSpacing" Value="{StaticResource Spacing6}" />
+        <Setter Property="RowSpacing" Value="{StaticResource Spacing6}" />
+    </Style>
+    <Style Selector="flex|FlexPanel.gap-8">
+        <Setter Property="ColumnSpacing" Value="{StaticResource Spacing8}" />
+        <Setter Property="RowSpacing" Value="{StaticResource Spacing8}" />
+    </Style>
+
+    <!-- SPACING - Padding + Margin -->
+
+    <Style Selector="Border.p-4">
+        <Setter Property="Padding" Value="{StaticResource Thickness16}" />
+    </Style>
+    <Style Selector="Border.px-6">
+        <Setter Property="Padding" Value="{StaticResource PaddingX6}" />
+    </Style>
+    <Style Selector="Border.py-3">
+        <Setter Property="Padding" Value="{StaticResource PaddingY3}" />
+    </Style>
+    <Style Selector="Border.p-6">
+        <Setter Property="Padding" Value="{StaticResource Thickness32}" />
+    </Style>
+    <Style Selector="Layoutable.m-2">
+        <Setter Property="Margin" Value="{StaticResource Thickness8}" />
+    </Style>
+    <Style Selector="Layoutable.mt-4">
+        <Setter Property="Margin" Value="{StaticResource MarginT4}" />
+    </Style>
+
+    <!-- TYPOGRAPHY -->
+
+    <Style Selector="TextBlock.text-sm">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSm}" />
+    </Style>
+    <Style Selector="TextBlock.text-base">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBase}" />
+    </Style>
+    <Style Selector="TextBlock.text-lg">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeLg}" />
+    </Style>
+    <Style Selector="TextBlock.text-muted">
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+    </Style>
+    <Style Selector="TextBlock.font-medium">
+        <Setter Property="FontWeight" Value="Medium" />
+    </Style>
+    <Style Selector="TextBlock.font-bold">
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <!-- BORDERS -->
+
+    <Style Selector="Border.rounded">
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMd}" />
+    </Style>
+    <Style Selector="Border.rounded-lg">
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusLg}" />
+    </Style>
+
+</Styles>

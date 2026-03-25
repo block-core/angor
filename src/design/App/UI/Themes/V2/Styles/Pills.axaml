@@ -1,0 +1,110 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shared="clr-namespace:App.UI.Shared">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <WrapPanel>
+                <StackPanel Spacing="10" Margin="0,0,20,0">
+                    <ContentControl Classes="Pill Red" Content="Error" />
+                    <ContentControl Classes="Pill Green" Content="Open" />
+                    <ContentControl Classes="Pill Orange" Content="Invest" />
+                    <ContentControl Classes="Pill BrightGreen" Content="Success" />
+                    <ContentControl Classes="Pill Blue" Content="Invest" />
+                    <ContentControl Classes="Pill Amber" Content="Fund" />
+                    <ContentControl Classes="Pill Pink" Content="Subscription" />
+                </StackPanel>
+                <ThemeVariantScope RequestedThemeVariant="Dark">
+                    <StackPanel Spacing="10" Background="Black" Margin="0,0,20,0">
+                        <ContentControl Classes="Pill Red" Content="Error" />
+                        <ContentControl Classes="Pill Green" Content="Open" />
+                        <ContentControl Classes="Pill Orange" Content="Invest" />
+                        <ContentControl Classes="Pill BrightGreen" Content="Success" />
+                        <ContentControl Classes="Pill Blue" Content="Invest" />
+                        <ContentControl Classes="Pill Amber" Content="Fund" />
+                        <ContentControl Classes="Pill Pink" Content="Subscription" />
+                    </StackPanel>
+                </ThemeVariantScope>
+            </WrapPanel>
+        </Border>
+    </Design.PreviewWith>
+
+    <!--
+        Vue ProjectCard pill styling (pixel-matched):
+        - padding: 4px 10px
+        - border-radius: 12px
+        - font-size: 11px
+        - font-weight: 600
+        - text-transform: uppercase
+        - letter-spacing: 0.5px
+        All colors use DynamicResource for light/dark theme support.
+    -->
+    <Style Selector=":is(Control).Pill">
+        <Setter Property="Border.CornerRadius" Value="12" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Border.BorderThickness" Value="1" />
+        <Setter Property="TextElement.FontSize" Value="11" />
+        <Setter Property="TextElement.FontWeight" Value="SemiBold" />
+        <Setter Property="Border.Padding" Value="10 4" />
+    </Style>
+
+    <!-- Vue: text-transform: uppercase — apply via ContentTemplate on ContentControl -->
+    <Style Selector="ContentControl.Pill">
+        <Setter Property="ContentTemplate">
+            <DataTemplate>
+                <TextBlock Text="{Binding Converter={x:Static shared:UpperCaseConverter.Instance}}"
+                           FontSize="11"
+                           FontWeight="SemiBold" />
+            </DataTemplate>
+        </Setter>
+    </Style>
+
+    <!-- Green — status "Open", "Active", generic success -->
+    <Style Selector=":is(Control).Pill.Green">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource PillGreenBorder}" />
+        <Setter Property="Border.Background" Value="{DynamicResource PillGreenBg}" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource PillGreenText}" />
+    </Style>
+
+    <!-- BrightGreen — "Successfully Funded", status-open -->
+    <Style Selector=":is(Control).Pill.BrightGreen">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource PillBrightGreenBorder}" />
+        <Setter Property="Border.Background" Value="{DynamicResource PillBrightGreenBg}" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource PillBrightGreenText}" />
+    </Style>
+
+    <!-- Red — errors, "Funding Closed" -->
+    <Style Selector=":is(Control).Pill.Red">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource PillRedBorder}" />
+        <Setter Property="Border.Background" Value="{DynamicResource PillRedBg}" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource PillRedText}" />
+    </Style>
+
+    <!-- Orange — Bitcoin/generic accent -->
+    <Style Selector=":is(Control).Pill.Orange">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource PillOrangeBorder}" />
+        <Setter Property="Border.Background" Value="{DynamicResource PillOrangeBg}" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource PillOrangeText}" />
+    </Style>
+
+    <!-- Blue — type "invest" -->
+    <Style Selector=":is(Control).Pill.Blue">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource PillBlueBorder}" />
+        <Setter Property="Border.Background" Value="{DynamicResource PillBlueBg}" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource PillBlueText}" />
+    </Style>
+
+    <!-- Amber — type "fund" -->
+    <Style Selector=":is(Control).Pill.Amber">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource PillAmberBorder}" />
+        <Setter Property="Border.Background" Value="{DynamicResource PillAmberBg}" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource PillAmberText}" />
+    </Style>
+
+    <!-- Pink — type "subscription" -->
+    <Style Selector=":is(Control).Pill.Pink">
+        <Setter Property="Border.BorderBrush" Value="{DynamicResource PillPinkBorder}" />
+        <Setter Property="Border.Background" Value="{DynamicResource PillPinkBg}" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource PillPinkText}" />
+    </Style>
+
+</Styles>

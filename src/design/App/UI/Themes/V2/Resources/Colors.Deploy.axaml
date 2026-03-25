@@ -1,0 +1,82 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             LIGHT THEME — Deploy flow
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Default">
+
+            <!-- Vue light: white backgrounds, gray borders, standard text -->
+            <SolidColorBrush x:Key="DeployModalBackground" Color="White" />
+            <SolidColorBrush x:Key="DeployModalBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="DeployModalInputBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="DeployModalQrBg" Color="#F3F4F6" />
+            <SolidColorBrush x:Key="DeploySuccessBg" Color="White" />
+            <SolidColorBrush x:Key="DeploySuccessIconBg" Color="#DCFCE7" />
+            <SolidColorBrush x:Key="DeploySuccessCheck" Color="#16A34A" />
+            <SolidColorBrush x:Key="DeployInfoBannerBg" Color="#F0FDF4" />
+            <SolidColorBrush x:Key="DeployInfoBannerBorder" Color="#86EFAC" />
+            <SolidColorBrush x:Key="DeployInfoBannerText" Color="#166534" />
+            <SolidColorBrush x:Key="DeployFeeBarBg" Color="#FFF7ED" />
+            <SolidColorBrush x:Key="DeployFeeBarBorder" Color="#FDBA74" />
+            <SolidColorBrush x:Key="DeployFeeLabel" Color="#9A3412" />
+            <SolidColorBrush x:Key="DeployFeeValue" Color="#7C2D12" />
+            <SolidColorBrush x:Key="DeployFeePillBg" Color="#FFFBEB" />
+            <SolidColorBrush x:Key="DeployFeePillBorder" Color="#FDE68A" />
+            <SolidColorBrush x:Key="DeployFeePillText" Color="#854D0E" />
+            <!-- Vue light: selected tab bg:#f1f7f3 border:#4B7C5A; unselected bg:white border:gray-200 -->
+            <SolidColorBrush x:Key="DeployTabSelectedBg" Color="#F1F7F3" />
+            <SolidColorBrush x:Key="DeployTabUnselectedBg" Color="White" />
+            <SolidColorBrush x:Key="DeployTabUnselectedText" Color="#6B7280" />
+            <SolidColorBrush x:Key="DeployWalletItemBg" Color="White" />
+            <SolidColorBrush x:Key="DeployWalletItemBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="DeployWalletSelectedBg" Color="#F1F7F3" />
+            <SolidColorBrush x:Key="DeployWalletSelectedBorder" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="DeployWalletIconBg" Color="#F3F4F6" />
+            <SolidColorBrush x:Key="DeploySecondaryBtnBorder" Color="#33000000" />
+            <SolidColorBrush x:Key="DeployQrBorder" Color="#D1D5DB" />
+            <SolidColorBrush x:Key="DeployQrIconFill" Color="#9CA3AF" />
+
+        </ResourceDictionary>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             DARK THEME — Deploy flow
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Dark">
+
+            <!-- Vue dark: bg-[#111] border-[#2a2a2a] -->
+            <SolidColorBrush x:Key="DeployModalBackground" Color="#111111" />
+            <SolidColorBrush x:Key="DeployModalBorder" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="DeployModalInputBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="DeployModalQrBg" Color="#222222" />
+            <SolidColorBrush x:Key="DeploySuccessBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="DeploySuccessIconBg" Color="#14532D" />
+            <SolidColorBrush x:Key="DeploySuccessCheck" Color="#22C55E" />
+            <SolidColorBrush x:Key="DeployInfoBannerBg" Color="#052E16" />
+            <SolidColorBrush x:Key="DeployInfoBannerBorder" Color="#86EFAC" />
+            <SolidColorBrush x:Key="DeployInfoBannerText" Color="#BBF7D0" />
+            <SolidColorBrush x:Key="DeployFeeBarBg" Color="#331A0A" />
+            <SolidColorBrush x:Key="DeployFeeBarBorder" Color="#9A3412" />
+            <SolidColorBrush x:Key="DeployFeeLabel" Color="#FDBA74" />
+            <SolidColorBrush x:Key="DeployFeeValue" Color="#FED7AA" />
+            <SolidColorBrush x:Key="DeployFeePillBg" Color="#33422006" />
+            <SolidColorBrush x:Key="DeployFeePillBorder" Color="#854D0E" />
+            <SolidColorBrush x:Key="DeployFeePillText" Color="#FDE68A" />
+            <SolidColorBrush x:Key="DeployTabSelectedBg" Color="#194B7C5A" />
+            <SolidColorBrush x:Key="DeployTabUnselectedBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="DeployTabUnselectedText" Color="#D1D5DB" />
+            <SolidColorBrush x:Key="DeployWalletItemBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="DeployWalletItemBorder" Color="#404040" />
+            <SolidColorBrush x:Key="DeployWalletSelectedBg" Color="#334B7C5A" />
+            <SolidColorBrush x:Key="DeployWalletSelectedBorder" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="DeployWalletIconBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="DeploySecondaryBtnBorder" Color="#33FFFFFF" />
+            <SolidColorBrush x:Key="DeployQrBorder" Color="#374151" />
+            <SolidColorBrush x:Key="DeployQrIconFill" Color="#555555" />
+
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+</ResourceDictionary>

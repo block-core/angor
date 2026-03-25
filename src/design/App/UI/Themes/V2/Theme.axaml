@@ -1,0 +1,110 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <FluentTheme />
+    <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
+
+    <!-- EnhancedButton must come first: it defines the default IconButton ControlTheme
+         that Styles.axaml and Button.axaml reference via BasedOn="{StaticResource {x:Type IconButton}}" -->
+    <StyleInclude Source="Controls/EnhancedButton.axaml" />
+
+    <StyleInclude Source="/UI/Shared/Styles/Styles.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/List.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/ProjectCard.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/ScrollableView.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/Badge.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/EmptyState.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/StatCard.axaml" />
+    <StyleInclude Source="/UI/Shared/Controls/WalletCard.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/Cards.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/TextBlock.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/ToggleButton.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/FlyoutPresenter.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/Button.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/Automation.axaml" />
+    
+    <StyleInclude Source="Styles/ToggleButtons.axaml" />
+    <StyleInclude Source="Controls/ListBox.axaml" />
+    <StyleInclude Source="Controls/CalendarPicker.axaml" />
+    <StyleInclude Source="Controls/NumericUpDown.axaml" />
+    
+    <StyleInclude Source="Styles/HeaderedContainer.axaml" />
+    <StyleInclude Source="Styles/EdgePanel.axaml" />
+    <StyleInclude Source="Styles/Border.axaml" />
+    <StyleInclude Source="Styles/Effects.axaml" />
+    <StyleInclude Source="Styles/OverlayBorder.axaml" />
+    <StyleInclude Source="Styles/SectionStrip.axaml" />
+    <StyleInclude Source="Styles/Layout.axaml" />
+    <StyleInclude Source="Styles/Buttons.axaml" />
+    <StyleInclude Source="Styles/Icons.axaml" />
+    <StyleInclude Source="Styles/Typography.axaml" />
+    <StyleInclude Source="Styles/Utilities.axaml" />
+    <StyleInclude Source="Styles/ColorVariants.axaml" />
+    <StyleInclude Source="Styles/Pills.axaml" />
+    <StyleInclude Source="Styles/Boxes.axaml" />
+    <StyleInclude Source="Styles/CheckBox.axaml" />
+    <StyleInclude Source="Styles/ComboBox.axaml" />
+    <StyleInclude Source="Styles/ProgressBar.axaml" />
+    <StyleInclude Source="Styles/Expander.axaml" />
+    <StyleInclude Source="Styles/DialogControl.axaml" />
+    <StyleInclude Source="Styles/DialogViewContainer.axaml" />
+    <StyleInclude Source="Styles/ScrollBar.axaml" />
+    
+    <Style Selector=":is(UserControl)">
+        <Setter Property="FontFamily" Value="{StaticResource FontFamilySans}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+    </Style>
+
+    <!-- Global fix: prevent anti-aliasing gap between background fill and border stroke
+         at rounded corners. CenterBorder extends the background to the middle of the
+         stroke instead of stopping at its inner edge, eliminating the dark-pixel seam. -->
+    <Style Selector="Border">
+        <Setter Property="BackgroundSizing" Value="CenterBorder" />
+    </Style>
+    
+    <Style Selector="Separator">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceLow}" />
+    </Style>
+    
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Colors split into domain files — Core MUST be first (brand colors, semantic tokens, shared resources) -->
+                <ResourceInclude Source="Resources/Colors.Core.axaml" />
+                <ResourceInclude Source="Resources/Colors.Stats.axaml" />
+                <ResourceInclude Source="Resources/Colors.Badges.axaml" />
+                <ResourceInclude Source="Resources/Colors.ManageProject.axaml" />
+                <ResourceInclude Source="Resources/Colors.CreateProject.axaml" />
+                <ResourceInclude Source="Resources/Colors.Deploy.axaml" />
+                <ResourceInclude Source="Resources/Colors.Wallet.axaml" />
+                <ResourceInclude Source="Resources/Colors.Settings.axaml" />
+                <ResourceInclude Source="Resources/Colors.Modals.axaml" />
+                <ResourceInclude Source="Resources/Tokens.axaml" />
+                <ResourceInclude Source="Resources/Icons.axaml" />
+                <ResourceInclude Source="Controls/ErrorSummary.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <ControlTheme x:Key="{x:Type TextBox}"
+                          TargetType="TextBox"
+                          BasedOn="{StaticResource {x:Type TextBox}}">
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="BorderBrush" Value="{DynamicResource SurfaceLow}" />
+                <Setter Property="Background" Value="{DynamicResource Surface}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+                <Setter Property="Padding" Value="14 12" />
+                <Style Selector="^ /template/ Border#PART_BorderElement">
+                    <Setter Property="Transitions">
+                        <Transitions>
+                            <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
+                            <BrushTransition Property="Background" Duration="0:0:0.2" />
+                        </Transitions>
+                    </Setter>
+                </Style>
+            </ControlTheme>
+
+        </ResourceDictionary>
+    </Styles.Resources>
+</Styles>

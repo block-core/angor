@@ -1,0 +1,205 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:shell="clr-namespace:App.UI.Shell"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
+             x:Class="App.UI.Shell.ShellView"
+             x:DataType="shell:ShellViewModel"
+             Background="{DynamicResource AppBackground}">
+
+    <!-- Outer Panel allows modal overlay to stack above entire shell -->
+    <Panel>
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- MAIN SHELL LAYOUT                                           -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <Grid Name="ShellContent" Margin="0,24,24,24" ColumnDefinitions="208 *" RowDefinitions="42 *" ColumnSpacing="0" RowSpacing="20">
+            <!-- Logo — centered within the 208px sidebar column (Vue: w-52 = 208px, logo centered) -->
+            <Svg Path="/Assets/logo.svg" Width="32" Height="32"
+                 HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+            <!-- Top bar -->
+            <DockPanel Grid.Row="0" Grid.Column="1">
+                <TextBlock FontWeight="Bold" VerticalAlignment="Center" FontSize="20"
+                           Text="{Binding SelectedSectionName}" />
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="16" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center">
+                        <TextBlock.Inlines>
+                            <Run Classes="Thin">Invested:</Run>
+                            <Run Classes="Label" Text="{Binding InvestedBalanceDisplay}" />
+                        </TextBlock.Inlines>
+                    </TextBlock>
+                    <TextBlock VerticalAlignment="Center">
+                        <TextBlock.Inlines>
+                            <Run Classes="Thin">Available:</Run>
+                            <Run Classes="Label" Text="{Binding AvailableBalanceDisplay}" />
+                        </TextBlock.Inlines>
+                    </TextBlock>
+                    <!-- Wallet Switcher Button
+                         Vue: .wallet-selector-header — pl-9 pr-10 py-2.5, text-sm, border rounded-md
+                         Contains: wallet icon (absolute left), wallet name, up/down chevron (absolute right)
+                         Height matches Widget buttons (42px), CornerRadius 10 -->
+                    <Button Name="WalletSwitcherButton"
+                            Background="{DynamicResource WalletSwitcherBg}"
+                            BorderBrush="{DynamicResource StrokeSubtle}"
+                            BorderThickness="1" CornerRadius="10"
+                            Height="42"
+                            Padding="36,0,40,0"
+                            Cursor="Hand" VerticalAlignment="Center"
+                            Click="OnWalletSwitcherClick">
+                        <Button.Styles>
+                            <Style Selector="Button#WalletSwitcherButton:pointerover /template/ ContentPresenter">
+                                <Setter Property="Background" Value="{DynamicResource WalletSwitcherHoverBg}" />
+                            </Style>
+                        </Button.Styles>
+                        <Panel>
+                            <!-- Wallet icon — same NavIconWallet as the Funds sidebar item (filled) -->
+                            <Viewbox Width="16" Height="16"
+                                     HorizontalAlignment="Left" VerticalAlignment="Center"
+                                     Margin="-24,0,0,0">
+                                <Path Data="{StaticResource NavIconWallet}"
+                                      Fill="{DynamicResource WalletSwitcherFg}"
+                                      Stretch="Uniform" />
+                            </Viewbox>
+                            <!-- Wallet name -->
+                            <TextBlock Text="{Binding SelectedWalletName}"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource WalletSwitcherFg}"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center" />
+                            <!-- Up/down chevron icon (positioned right) -->
+                            <i:Icon Value="fa-solid fa-sort" FontSize="13"
+                                    Foreground="{DynamicResource WalletSwitcherFg}"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Margin="0,0,-26,0" />
+                        </Panel>
+                    </Button>
+                    <ToggleButton Classes="Widget" IsChecked="{Binding IsDarkThemeEnabled, Mode=TwoWay}">
+                        <ToggleButton.Content>
+                            <i:Icon Value="fa-solid fa-sun" FontSize="16" Foreground="{DynamicResource TextMuted}" />
+                        </ToggleButton.Content>
+                    </ToggleButton>
+                    <Button Classes="Widget" Name="SettingsButton" Click="OnSettingsClick">
+                        <Panel Width="24" Height="24">
+                            <Path Data="{StaticResource NavIconSettings}"
+                                  Stroke="{DynamicResource TextMuted}"
+                                  StrokeThickness="2"
+                                  StrokeLineCap="Round"
+                                  StrokeJoin="Round" />
+                        </Panel>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Sidebar navigation (Vue: w-52 = 208px, px-6 = 24px horizontal padding) -->
+            <Border Grid.Row="1" Grid.Column="0" Padding="24,8" ClipToBounds="False">
+                <ListBox ItemsSource="{Binding NavEntries}"
+                         SelectedItem="{Binding SelectedNavItem}"
+                         Classes="Nav"
+                         ContainerPrepared="OnNavContainerPreparing">
+                    <ListBox.DataTemplates>
+                        <!-- Nav item: icon + label -->
+                        <DataTemplate DataType="shell:NavItem">
+                            <DockPanel HorizontalSpacing="10">
+                                <Viewbox Width="20" Height="20" DockPanel.Dock="Left">
+                                    <Panel Width="24" Height="24">
+                                        <!-- Stroke-based icon (Heroicons outline) -->
+                                        <Path Data="{Binding Icon, Converter={x:Static shell:NavIconConverter.Instance}}"
+                                              Stroke="{Binding $parent[ListBoxItem].Foreground}"
+                                              StrokeThickness="2"
+                                              StrokeLineCap="Round"
+                                              StrokeJoin="Round"
+                                              IsVisible="{Binding IconIsFilled, Converter={x:Static BoolConverters.Not}}" />
+                                        <!-- Fill-based icon (wallet) — uses different viewBox via Stretch -->
+                                        <Path Data="{Binding Icon, Converter={x:Static shell:NavIconConverter.Instance}}"
+                                              Fill="{Binding $parent[ListBoxItem].Foreground}"
+                                              Stretch="Uniform"
+                                              IsVisible="{Binding IconIsFilled}" />
+                                    </Panel>
+                                </Viewbox>
+                                <TextBlock Text="{Binding Label}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" />
+                            </DockPanel>
+                        </DataTemplate>
+                        <!-- Group header: gradient divider line + uppercase label
+                             Vue: px-3 mt-8 mb-6 wrapper, h-px mb-4 divider, text-sm font-extrabold tracking-widest label -->
+                        <DataTemplate DataType="shell:NavGroupHeader">
+                            <StackPanel Margin="12,0,12,0">
+                                <!-- Gradient divider: transparent → gray → transparent (1px height, 16px gap to label) -->
+                                <Rectangle Height="1" Margin="0,0,0,16"
+                                           Fill="{DynamicResource NavGroupDivider}" />
+                                <!-- Group label -->
+                                <TextBlock Text="{Binding Title}"
+                                           FontFamily="{StaticResource FontFamilySans}"
+                                           FontSize="14"
+                                           FontWeight="ExtraBold"
+                                           Foreground="{DynamicResource Brand}"
+                                           LetterSpacing="1.4" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.DataTemplates>
+                </ListBox>
+            </Border>
+
+            <!-- Main content area -->
+            <Border Grid.Row="1" Grid.Column="1" Classes="Panel" Padding="0" ClipToBounds="True">
+                <ContentControl Content="{Binding CurrentSectionContent}" />
+            </Border>
+
+            <!-- App-wide crosshatch texture overlay -->
+            <Border Grid.ColumnSpan="2" Grid.RowSpan="2"
+                    Background="{DynamicResource AppTextureBrush}"
+                    IsHitTestVisible="False" />
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- SHELL-LEVEL MODAL OVERLAY                                   -->
+        <!-- Renders above the entire app (sidebar + top bar + content)  -->
+        <!-- Any section can push content here via ShellViewModel         -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- Modal content is managed entirely in code-behind to avoid
+             ContentPresenter binding race conditions. The Panel starts
+             hidden; code-behind adds the content control as a direct
+             child, then makes the Panel visible. This guarantees the
+             content is in the visual tree before the layout pass. -->
+        <Panel Name="ModalOverlay" IsVisible="False" ZIndex="1000">
+            <Border Name="ShellModalBackdrop"
+                    Background="{DynamicResource ModalBackdrop}"
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        </Panel>
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- TOAST NOTIFICATION                                          -->
+        <!-- Vue: .copy-toast / .save-toast — fixed top-right, green bg, -->
+        <!-- white text, 8px radius, checkmark icon, fade in/out 0.3s    -->
+        <!-- ZIndex 2000 = above modals (1000)                           -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <Border Name="ToastOverlay"
+                ZIndex="2000"
+                IsHitTestVisible="False"
+                IsVisible="False"
+                Opacity="0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0,24,56,0"
+                Background="{StaticResource ToastBackground}"
+                BoxShadow="{StaticResource ToastShadow}"
+                CornerRadius="8"
+                Padding="16,8">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <!-- Checkmark icon — fa-solid fa-check, white -->
+                <i:Icon Value="fa-solid fa-check"
+                        FontSize="14"
+                        Foreground="White"
+                        VerticalAlignment="Center" />
+                <TextBlock Name="ToastText"
+                           Text="{Binding ToastMessage}"
+                           FontSize="14" FontWeight="Medium"
+                           Foreground="White"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
+    </Panel>
+</UserControl>

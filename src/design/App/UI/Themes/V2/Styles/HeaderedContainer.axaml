@@ -1,0 +1,141 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:App.UI.Shared.Controls">
+
+    <Design.PreviewWith>
+        <ScrollViewer>
+            <StackPanel Spacing="20" Width="500">
+                
+                <ThemeVariantScope RequestedThemeVariant="Light">
+                    <Border Padding="20">
+                        <Border.Background>
+                            <VisualBrush Opacity="0.2" DestinationRect="0,0,72,72" Stretch="UniformToFill" TileMode="Tile">
+                                <VisualBrush.Visual>
+                                    <Svg Path="/Assets/pattern.svg" />
+                                </VisualBrush.Visual>
+                            </VisualBrush>
+                        </Border.Background>
+                        <StackPanel Spacing="15">
+                            <TextBlock FontWeight="Bold" FontSize="16">Light Theme</TextBlock>
+                            <controls:HeaderedContainer Header="Window" Content="Window style" Classes="Card Window" />
+                            <controls:HeaderedContainer Header="Accent" Content="Accent translucent" Classes="Card Accent" />
+                            <controls:HeaderedContainer Header="Bitcoin" Content="Bitcoin accent" Classes="Card Bitcoin" />
+                            <controls:HeaderedContainer Header="Blue" Content="Blue gradient" Classes="Card Blue" />
+                            <controls:HeaderedContainer Header="Elevate" Content="Hover me to see lift + shadow" Classes="Card White Elevate" />
+                        </StackPanel>
+                    </Border>
+                </ThemeVariantScope>
+                <ThemeVariantScope RequestedThemeVariant="Dark">
+                    <Border Padding="20" Background="{DynamicResource AppBackground}">
+                        <StackPanel Spacing="15">
+                            <TextBlock FontWeight="Bold" FontSize="16" Foreground="White">Dark Theme</TextBlock>
+                            <controls:HeaderedContainer Header="Window" Content="Neutral style" Classes="Window" />
+                            <controls:HeaderedContainer Header="Accent" Content="Accent translucent" Classes="Card Accent" />
+                            <controls:HeaderedContainer Header="Bitcoin" Content="Bitcoin accent" Classes="Card Bitcoin" />
+                        </StackPanel>
+                    </Border>
+                </ThemeVariantScope>
+            </StackPanel>
+        </ScrollViewer>
+    </Design.PreviewWith>
+
+    <!-- Base -->
+    <Style Selector="controls|HeaderedContainer">
+        <Setter Property="Padding" Value="0 5" />
+    </Style>
+
+    <Style Selector="controls|HeaderedContainer.Title /template/ ContentControl#Header">
+        <Setter Property="FontSize" Value="25" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+    </Style>
+
+    <!-- WizardHighlight: DEPRECATED - use ".Card Radius-L Bitcoin" instead -->
+    <!-- Kept for backward compat, colors come from .Bitcoin in ColorVariants -->
+
+    <Style Selector="controls|HeaderedContainer.WizardHighlight controls|EdgePanel ContentControl#EndContent">
+        <Setter Property="Foreground" Value="{DynamicResource BitcoinAccent}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+    </Style>
+    
+    <Style Selector="controls|HeaderedContainer.MediumHeader /template/ ContentPresenter#Header">
+        <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="controls|HeaderedContainer.Fields">
+        <Setter Property="ContentTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-XL Weight-Bold Strong Wrap" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+        <Setter Property="HeaderTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-S Weight-Light NoWrap" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+    </Style>
+    
+    <Style Selector="controls|HeaderedContainer.Fields controls|EdgePanel">
+        <Setter Property="StartContentTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-S Weight-Bold NoWrap" Foreground="{DynamicResource StatLabel}" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="controls|HeaderedContainer.FieldsSmall">
+        <Setter Property="HeaderTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-XS Weight-Bold Dimmed" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+        <Setter Property="ContentTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-M Weight-Bold Strong" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+    </Style>
+    
+    <Style Selector="controls|HeaderedContainer.FieldsSmall controls|EdgePanel">
+        <Setter Property="StartContentTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-M Weight-Bold" Foreground="{DynamicResource StatLabel}" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="controls|HeaderedContainer.MediumBigHeader /template/ ContentPresenter#Header">
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryBlack}" />
+    </Style>
+    
+    <Style Selector="controls|HeaderedContainer.BigHeader controls|EdgePanel">
+        <Setter Property="ContentTemplate">
+            <DataTemplate>
+                <TextBlock Classes="Size-XL Weight-Bold" Text="{Binding DataType={x:Type x:String}}" />
+            </DataTemplate>
+        </Setter>
+    </Style>
+
+    <!-- Spec: content cards use RadiusLg (16px) -->
+    <Style Selector="controls|HeaderedContainer.Card">
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="HeaderPadding" Value="24" />
+        <Setter Property="ContentPadding" Value="24 0 24 24" />
+    </Style>
+
+    <Style Selector="controls|HeaderedContainer.Card.Window">
+        <Setter Property="HeaderBackground" Value="{DynamicResource SurfaceMedium}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
+        <Setter Property="HeaderPadding" Value="24" />
+        <Setter Property="ContentPadding" Value="24" />
+    </Style>
+
+</Styles>

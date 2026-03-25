@@ -1,0 +1,112 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             LIGHT THEME — CreateProject wizard
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Default">
+
+            <!-- Subscription plan button (Vue: .subscription-pattern-btn) -->
+            <!-- Light: bg white, border #e5e7eb, selected border/bg #9e9e9e / rgba(158,158,158,0.1) -->
+            <SolidColorBrush x:Key="SubPlanBtnBg" Color="White" />
+            <SolidColorBrush x:Key="SubPlanBtnBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="SubPlanBtnHoverBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="SubPlanBtnHoverBorder" Color="#9E9E9E" />
+            <SolidColorBrush x:Key="SubPlanBtnSelectedBg" Color="#199E9E9E" />
+            <SolidColorBrush x:Key="SubPlanBtnSelectedBorder" Color="#9E9E9E" />
+            <!-- Vue: .pattern-label #1a1a1a, .pattern-price #9e9e9e, .pattern-description #6b7280 -->
+            <SolidColorBrush x:Key="SubPlanLabel" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="SubPlanPrice" Color="#9E9E9E" />
+            <SolidColorBrush x:Key="SubPlanDescription" Color="#6B7280" />
+            <!-- Vue: .subscription-card-title #7c2d12 (light) -->
+            <SolidColorBrush x:Key="SubCardTitle" Color="#7C2D12" />
+
+            <!-- Waiting card (Step 1): Vue linear-gradient(to bottom right, #fef3c7, #fde68a), border #fbbf24 -->
+            <LinearGradientBrush x:Key="WaitingCardBackground" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#FEF3C7" Offset="0" />
+                <GradientStop Color="#FDE68A" Offset="1" />
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="WaitingCardBorder" Color="#FBBF24" />
+            <SolidColorBrush x:Key="WaitingCardTitle" Color="#92400E" />
+            <SolidColorBrush x:Key="WaitingCardSubtext" Color="#B45309" />
+            <SolidColorBrush x:Key="WaitingCardIconCircle" Color="#33F59E0B" />
+            <!-- Waiting card action buttons: Vue .waiting-button-secondary -->
+            <SolidColorBrush x:Key="WaitingBtnBg" Color="#E6FFFFFF" />
+            <SolidColorBrush x:Key="WaitingBtnFg" Color="#92400E" />
+            <SolidColorBrush x:Key="WaitingBtnBorder" Color="#FBBF24" />
+
+            <!-- Preview card (Step 2): Vue warm orange gradient -->
+            <LinearGradientBrush x:Key="PreviewCardBackground" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#FFF7ED" Offset="0" />
+                <GradientStop Color="#FEF3C7" Offset="1" />
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="PreviewCardBorder" Color="#FED7AA" />
+            <SolidColorBrush x:Key="PreviewCardTitle" Color="#92400E" />
+            <SolidColorBrush x:Key="PreviewCardSubtext" Color="#B45309" />
+            <SolidColorBrush x:Key="PreviewCardIconCircle" Color="#33F59E0B" />
+
+            <!-- ── Type Card Resources (light) ── -->
+            <SolidColorBrush x:Key="TypeCardDefaultBg" Color="#FCFCFD" />
+            <SolidColorBrush x:Key="TypeCardIconDefaultBg" Color="#F3F4F6" />
+            <SolidColorBrush x:Key="TypeCardInvestSelectedBg" Color="#0D4B7C5A" />
+            <SolidColorBrush x:Key="TypeCardFundSelectedBg" Color="#0DF7931A" />
+            <SolidColorBrush x:Key="TypeCardSubSelectedBg" Color="#0D9E9E9E" />
+            <!-- Vue: selected text color for installment/payout rows — light: #4B7C5A, dark: #5FAF78 -->
+            <SolidColorBrush x:Key="SelectionToggleTextSelected" Color="#4B7C5A" />
+
+        </ResourceDictionary>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             DARK THEME — CreateProject wizard
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Dark">
+
+            <!-- Subscription plan button (dark mode) -->
+            <SolidColorBrush x:Key="SubPlanBtnBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="SubPlanBtnBorder" Color="#404040" />
+            <SolidColorBrush x:Key="SubPlanBtnHoverBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="SubPlanBtnHoverBorder" Color="#B0B0B0" />
+            <SolidColorBrush x:Key="SubPlanBtnSelectedBg" Color="#269E9E9E" />
+            <SolidColorBrush x:Key="SubPlanBtnSelectedBorder" Color="#B0B0B0" />
+            <SolidColorBrush x:Key="SubPlanLabel" Color="#FAFAFA" />
+            <SolidColorBrush x:Key="SubPlanPrice" Color="#D0D0D0" />
+            <SolidColorBrush x:Key="SubPlanDescription" Color="#9CA3AF" />
+            <SolidColorBrush x:Key="SubCardTitle" Color="#FB923C" />
+
+            <!-- Waiting card (Step 1) dark: amber-tinted dark bg -->
+            <LinearGradientBrush x:Key="WaitingCardBackground" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#26FBBF24" Offset="0" />
+                <GradientStop Color="#26F59E0B" Offset="1" />
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="WaitingCardBorder" Color="#4DFBBF24" />
+            <SolidColorBrush x:Key="WaitingCardTitle" Color="#FDE68A" />
+            <SolidColorBrush x:Key="WaitingCardSubtext" Color="#FCD34D" />
+            <SolidColorBrush x:Key="WaitingCardIconCircle" Color="#33FBBF24" />
+            <SolidColorBrush x:Key="WaitingBtnBg" Color="#992A2A2A" />
+            <SolidColorBrush x:Key="WaitingBtnFg" Color="#FDBA74" />
+            <SolidColorBrush x:Key="WaitingBtnBorder" Color="#4DEA580C" />
+
+            <!-- Preview card (Step 2) dark: orange-tinted dark bg -->
+            <LinearGradientBrush x:Key="PreviewCardBackground" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#26EA580C" Offset="0" />
+                <GradientStop Color="#26FBBF24" Offset="1" />
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="PreviewCardBorder" Color="#4DEA580C" />
+            <SolidColorBrush x:Key="PreviewCardTitle" Color="#FDE68A" />
+            <SolidColorBrush x:Key="PreviewCardSubtext" Color="#FCD34D" />
+            <SolidColorBrush x:Key="PreviewCardIconCircle" Color="#33EA580C" />
+
+            <!-- ── Type Card Resources (dark) ── -->
+            <SolidColorBrush x:Key="TypeCardDefaultBg" Color="#121212" />
+            <SolidColorBrush x:Key="TypeCardIconDefaultBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="TypeCardInvestSelectedBg" Color="#0D4B7C5A" />
+            <SolidColorBrush x:Key="TypeCardFundSelectedBg" Color="#0DF7931A" />
+            <SolidColorBrush x:Key="TypeCardSubSelectedBg" Color="#0D9E9E9E" />
+            <SolidColorBrush x:Key="SelectionToggleTextSelected" Color="#5FAF78" />
+
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+</ResourceDictionary>

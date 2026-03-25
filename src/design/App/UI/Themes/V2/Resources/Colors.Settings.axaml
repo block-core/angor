@@ -1,0 +1,72 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             LIGHT THEME — Settings
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Default">
+
+            <!-- ── Danger Zone (light) ── -->
+            <SolidColorBrush x:Key="DangerZoneBorder" Color="#FEE2E2" />
+            <SolidColorBrush x:Key="DangerZoneHeaderBg" Color="#CCFEF2F2" />
+            <SolidColorBrush x:Key="DangerZoneHeaderBorder" Color="#FEE2E2" />
+            <SolidColorBrush x:Key="DangerButtonBg" Color="#EF4444" />
+            <SolidColorBrush x:Key="DangerButtonFg" Color="White" />
+            <!-- Vue: .settings-link color #2d5a3d -->
+            <SolidColorBrush x:Key="SettingsLinkFg" Color="#2D5A3D" />
+            <!-- Vue: .settings-table tbody td border-bottom #e8e8e8 -->
+            <SolidColorBrush x:Key="TableRowBorder" Color="#E8E8E8" />
+            <!-- Vue: network-warning-container: bg #fee2e2, border #fecaca, text #991b1b -->
+            <SolidColorBrush x:Key="NetworkWarningBg" Color="#FEE2E2" />
+            <SolidColorBrush x:Key="NetworkWarningBorder" Color="#FECACA" />
+            <SolidColorBrush x:Key="NetworkWarningText" Color="#991B1B" />
+            <!-- Vue: network-option: bg white, border #e5e7eb, active bg #f1f7f3, border/color #4B7C5A -->
+            <SolidColorBrush x:Key="NetworkOptionBg" Color="White" />
+            <SolidColorBrush x:Key="NetworkOptionBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="NetworkOptionActiveBg" Color="#F1F7F3" />
+            <SolidColorBrush x:Key="NetworkOptionActiveText" Color="#4B7C5A" />
+            <!-- Vue: modal-cancel-button bg #f3f4f6, color #6b7280 -->
+            <SolidColorBrush x:Key="ModalCancelBg" Color="#F3F4F6" />
+            <SolidColorBrush x:Key="ModalCancelFg" Color="#6B7280" />
+            <!-- Vue: .settings-help-text color #6b7280 -->
+            <SolidColorBrush x:Key="SettingsHelpText" Color="#6B7280" />
+
+            <!-- ── Settings Checkbox (light) ── -->
+            <SolidColorBrush x:Key="SettingsCheckboxBg" Color="White" />
+            <SolidColorBrush x:Key="SettingsCheckboxBorder" Color="#E5E7EB" />
+
+        </ResourceDictionary>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             DARK THEME — Settings
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Dark">
+
+            <SolidColorBrush x:Key="DangerZoneBorder" Color="#7F1D1D" />
+            <SolidColorBrush x:Key="DangerZoneHeaderBg" Color="#1A0A0A" />
+            <SolidColorBrush x:Key="DangerZoneHeaderBorder" Color="#7F1D1D" />
+            <SolidColorBrush x:Key="DangerButtonBg" Color="#EF4444" />
+            <SolidColorBrush x:Key="DangerButtonFg" Color="White" />
+            <SolidColorBrush x:Key="SettingsLinkFg" Color="#5FAF78" />
+            <SolidColorBrush x:Key="TableRowBorder" Color="#333333" />
+            <SolidColorBrush x:Key="NetworkWarningBg" Color="#7F1D1D" />
+            <SolidColorBrush x:Key="NetworkWarningBorder" Color="#991B1B" />
+            <SolidColorBrush x:Key="NetworkWarningText" Color="#FECACA" />
+            <SolidColorBrush x:Key="NetworkOptionBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="NetworkOptionBorder" Color="#404040" />
+            <SolidColorBrush x:Key="NetworkOptionActiveBg" Color="#1A3A2A" />
+            <SolidColorBrush x:Key="NetworkOptionActiveText" Color="#5FAF78" />
+            <SolidColorBrush x:Key="ModalCancelBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="ModalCancelFg" Color="#9CA3AF" />
+            <SolidColorBrush x:Key="SettingsHelpText" Color="#6B7280" />
+
+            <!-- ── Settings Checkbox (dark) ── -->
+            <SolidColorBrush x:Key="SettingsCheckboxBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="SettingsCheckboxBorder" Color="#404040" />
+
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+</ResourceDictionary>

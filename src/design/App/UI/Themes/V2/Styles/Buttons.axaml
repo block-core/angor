@@ -1,0 +1,297 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:App.UI.Shared.Controls">
+    <Design.PreviewWith>
+        <StackPanel Spacing="10" HorizontalAlignment="Center">
+            <ThemeVariantScope RequestedThemeVariant="Light">
+                <Border Padding="20" Background="{DynamicResource AppBackground}">
+                    <StackPanel Spacing="10">
+                        <TextBlock FontWeight="Bold">IconButton</TextBlock>
+                        <controls:IconButton Content="Default" />
+                        <controls:IconButton Classes="Primary" Content="Primary" />
+                        <controls:IconButton Classes="Emphasized" Content="Emphasized" />
+                        <controls:IconButton Classes="Secondary" Content="Secondary" />
+                        <controls:IconButton Classes="White" Content="White" />
+                        <controls:IconButton Classes="Outline" Content="Outline" />
+                        <controls:IconButton Classes="Outline Orange" Content="Outline Orange" />
+                        <controls:IconButton Classes="Widget" Content="Widget" />
+                        <controls:IconButton Classes="Destructive" Content="Destructive" />
+                        <TextBlock FontWeight="Bold" Margin="0,12,0,0">Button</TextBlock>
+                        <Button Content="Default" />
+                        <Button Classes="Primary" Content="Primary" />
+                        <Button Classes="Emphasized" Content="Emphasized" />
+                        <Button Classes="Secondary" Content="Secondary" />
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+                <Border Padding="20" Background="{DynamicResource AppBackground}">
+                    <StackPanel Spacing="10">
+                        <TextBlock FontWeight="Bold" Foreground="White">IconButton</TextBlock>
+                        <controls:IconButton Content="Default" />
+                        <controls:IconButton Classes="Primary" Content="Primary" />
+                        <controls:IconButton Classes="Emphasized" Content="Emphasized" />
+                        <controls:IconButton Classes="Secondary" Content="Secondary" />
+                        <controls:IconButton Classes="White" Content="White" />
+                        <controls:IconButton Classes="Outline" Content="Outline" />
+                        <controls:IconButton Classes="Outline Orange" Content="Outline Orange" />
+                        <controls:IconButton Classes="Widget" Content="Widget" />
+                        <controls:IconButton Classes="Destructive" Content="Destructive" />
+                        <TextBlock FontWeight="Bold" Foreground="White" Margin="0,12,0,0">Button</TextBlock>
+                        <Button Content="Default" />
+                        <Button Classes="Primary" Content="Primary" />
+                        <Button Classes="Emphasized" Content="Emphasized" />
+                        <Button Classes="Secondary" Content="Secondary" />
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         IconButton styles (replaces Zafiro EnhancedButton)
+         ══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Base IconButton Style -->
+    <Style Selector="controls|IconButton">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBorder}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <!-- Spec: .btn-primary — gradient, border #3a3a3a, radius 12px, shadow -->
+    <Style Selector="controls|IconButton.Primary">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBorder}" />
+        <Setter Property="Padding" Value="24,16" />
+        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
+    </Style>
+
+    <Style Selector="controls|IconButton.Emphasized">
+        <Setter Property="Foreground" Value="{DynamicResource AccentButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorder}" />
+        <Setter Property="Padding" Value="24 12" />
+    </Style>
+
+    <Style Selector="controls|IconButton.Secondary">
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource SecondaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SecondaryButtonBorder}" />
+        <Setter Property="Padding" Value="24 12" />
+    </Style>
+
+    <Style Selector="controls|IconButton.White">
+        <Setter Property="Padding" Value="24 12" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
+    </Style>
+
+    <Style Selector="controls|IconButton.Outline">
+        <Setter Property="Padding" Value="24 12" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    
+    <Style Selector="controls|IconButton.Outline.Orange">
+        <Setter Property="Padding" Value="24 12" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BitcoinOrange}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Foreground" Value="{DynamicResource BitcoinOrange}" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="controls|IconButton.Widget">
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        <Setter Property="Padding" Value="10" />
+    </Style>
+    
+    <Style Selector="controls|IconButton.Destructive">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource Error}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Error}" />
+        <Setter Property="Padding" Value="24 12" />
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Button styles (plain Avalonia Button — no Command required)
+         
+         Mirrors IconButton classes so visual-only / stub pages
+         can use <Button Classes="Green" /> without crashing.
+         ══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Base Button style -->
+    <Style Selector="Button">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBorder}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="ClipToBounds" Value="False" />
+        <!-- Vue: transition all 0.2s ease on buttons -->
+        <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- Smooth opacity transition for button hover/press -->
+    <Style Selector="Button /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- Vue: btn hover → translateY(-1px) + opacity 0.8 -->
+    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Opacity" Value="0.8" />
+    </Style>
+    <Style Selector="Button:pointerover">
+        <Setter Property="RenderTransform" Value="translate(0px, -1px)" />
+    </Style>
+    <!-- Vue: btn pressed → opacity 0.7 + translateY(0) (snap back) -->
+    <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Opacity" Value="0.7" />
+    </Style>
+    <Style Selector="Button:pressed">
+        <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
+    </Style>
+
+    <!-- Disabled state: reduced opacity + no cursor + no hover effects -->
+    <Style Selector="Button:disabled">
+        <Setter Property="Opacity" Value="0.45" />
+        <Setter Property="Cursor" Value="Arrow" />
+    </Style>
+    <Style Selector="Button:disabled /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <!-- Button.Primary — Vue btn-primary: dark gradient, bold, 12px radius, px-8 py-3 -->
+    <Style Selector="Button.Primary">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryButtonBorder}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Padding" Value="32,12" />
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Border.ButtonShadow — wrapper for Button that adds drop shadow
+         and hover scale-up effect (Vue: translateY(-1px) on hover).
+         Usage: <Border Classes="ButtonShadow"><Button Classes="Primary" /></Border>
+         ══════════════════════════════════════════════════════════════════════ -->
+    <Style Selector="Border.ButtonShadow">
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="BoxShadow" Value="{DynamicResource PrimaryButtonShadow}" />
+        <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+        <Setter Property="RenderTransform">
+            <ScaleTransform ScaleX="1" ScaleY="1" />
+        </Setter>
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" />
+                <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.15" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Border.ButtonShadow:pointerover">
+        <Setter Property="BoxShadow" Value="{DynamicResource PrimaryButtonShadowHover}" />
+        <Setter Property="RenderTransform" Value="scale(1.03)" />
+    </Style>
+
+    <!-- Button.Emphasized — accent green solid -->
+    <Style Selector="Button.Emphasized">
+        <Setter Property="Foreground" Value="{DynamicResource AccentButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorder}" />
+        <Setter Property="Padding" Value="24,12" />
+    </Style>
+
+    <!-- Button.Secondary -->
+    <Style Selector="Button.Secondary">
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource SecondaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SecondaryButtonBorder}" />
+        <Setter Property="Padding" Value="24,12" />
+    </Style>
+
+    <!-- Button.Widget — icon-only square button (matches ToggleButton.Widget) -->
+    <Style Selector="Button.Widget">
+        <Setter Property="Height" Value="42" />
+        <Setter Property="Width" Value="42" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Button.ModalCloseBtn — standard modal close button (20×20 XMark icon)
+         Usage: <Button Classes="ModalCloseBtn" Name="CloseBtn" />
+         Provides transparent background, 8px padding, 8px corner radius,
+         and the Viewbox(20×20) + Path(XMark, ModalCloseBtn stroke) content.
+         ══════════════════════════════════════════════════════════════════════ -->
+    <Style Selector="Button.ModalCloseBtn">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="RenderTransform" Value="none" />
+        <Setter Property="ContentTemplate">
+            <DataTemplate>
+                <Viewbox Width="20" Height="20">
+                    <Path Data="{StaticResource XMark}"
+                          Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
+                          StrokeLineCap="Round" StrokeJoin="Round"
+                          Width="24" Height="24" Stretch="Uniform" />
+                </Viewbox>
+            </DataTemplate>
+        </Setter>
+    </Style>
+
+    <!-- Button.ModalCloseBtnSmall — compact variant (20×20 icon, tight padding)
+         Usage: <Button Classes="ModalCloseBtnSmall" Name="CloseBtn" /> -->
+    <Style Selector="Button.ModalCloseBtnSmall">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="RenderTransform" Value="none" />
+        <Setter Property="ContentTemplate">
+            <DataTemplate>
+                <Viewbox Width="20" Height="20">
+                    <Path Data="{StaticResource XMark}"
+                          Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
+                          StrokeLineCap="Round" StrokeJoin="Round"
+                          Width="24" Height="24" Stretch="Uniform" />
+                </Viewbox>
+            </DataTemplate>
+        </Setter>
+    </Style>
+
+</Styles>

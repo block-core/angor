@@ -1,0 +1,182 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+        xmlns:i="https://github.com/projektanker/icons.avalonia">
+
+    <Design.PreviewWith>
+        <StackPanel Spacing="20" Width="500">
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+                <Border Background="{DynamicResource AppBackground}" Padding="24">
+                    <!-- Default: Angor logo mode (Funds example) -->
+                    <controls:EmptyState Title="FUNDS"
+                                         Description="Wallet's get created when you fund or launch projects but if you want to import or create one before please do"
+                                         ButtonText="Add Wallet"
+                                         HasButton="True"
+                                         HasButtonIcon="True"
+                                         ButtonIconValue="fa-solid fa-plus" />
+                </Border>
+            </ThemeVariantScope>
+            <ThemeVariantScope RequestedThemeVariant="Light">
+                <Border Background="{DynamicResource AppBackground}" Padding="24">
+                    <!-- Custom icon mode (Funders example) -->
+                    <controls:EmptyState Title="No Funders Yet"
+                                         Description="When investors fund your projects, they'll appear here. You can review and approve funding requests from this page."
+                                         HasButton="False"
+                                         UseCustomIcon="True"
+                                         IconData="{StaticResource NavIconUsers}" />
+                </Border>
+            </ThemeVariantScope>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|EmptyState">
+        <Setter Property="Template">
+            <ControlTemplate TargetType="controls:EmptyState">
+                <!-- Centered vertically and horizontally within the section content area -->
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            MaxWidth="420"
+                            Spacing="0">
+
+                    <!-- ═══ ICON AREA ═══ -->
+                    <!-- Vue: mb-8 = 32px below the icon area -->
+                    <Panel HorizontalAlignment="Center"
+                           Margin="0,0,0,32">
+
+                        <!-- DEFAULT: Angor logo — 112x112 (Vue: w-28 h-28), opacity 0.9 -->
+                        <Svg Name="AngorLogoIcon"
+                             Path="/Assets/logo.svg"
+                             Width="112" Height="112" />
+
+                        <!-- CUSTOM: Icon inside a rounded rectangle (Funders only) -->
+                        <!-- Vue: w-16 h-16 rounded-lg bg-black / bg-gray-100 -->
+                        <Border Name="CustomIconCircle"
+                                Width="64" Height="64"
+                                CornerRadius="8"
+                                Background="{DynamicResource SurfaceElevated}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                IsVisible="False">
+                            <Panel Width="32" Height="32"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center">
+                                <!-- Stroke-based icon (default) -->
+                                <Path Name="StrokeIcon"
+                                      Data="{TemplateBinding IconData}"
+                                      Stroke="{DynamicResource TextMuted}"
+                                      StrokeThickness="1.5"
+                                      StrokeLineCap="Round"
+                                      StrokeJoin="Round"
+                                      Stretch="Uniform" />
+                                <!-- Fill-based icon -->
+                                <Path Name="FillIcon"
+                                      Data="{TemplateBinding IconData}"
+                                      Fill="{DynamicResource TextMuted}"
+                                      Stretch="Uniform"
+                                      IsVisible="False" />
+                            </Panel>
+                        </Border>
+                    </Panel>
+
+                    <!-- Title — Vue: text-xl font-bold mb-3 tracking-tight uppercase -->
+                    <TextBlock Text="{TemplateBinding Title}"
+                               FontSize="20"
+                               FontWeight="Bold"
+                               LetterSpacing="2"
+                               Foreground="{DynamicResource TextStrong}"
+                               TextAlignment="Center"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,12" />
+
+                    <!-- Description — Vue: text-sm leading-relaxed max-w-md text-center mb-8 -->
+                    <!-- FontSize defaults to 14 (text-sm); My Projects and Funded override to 20 -->
+                    <TextBlock Text="{TemplateBinding Description}"
+                               FontSize="{TemplateBinding DescriptionFontSize}"
+                               LineHeight="23"
+                               FontWeight="Normal"
+                               Foreground="{DynamicResource TextMuted}"
+                               TextAlignment="Center"
+                               HorizontalAlignment="Center"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,32" />
+
+                    <!-- CTA Button (optional) -->
+                    <!-- Vue: inline-flex items-center gap-2 px-6 py-2.5 btn-primary text-white text-base rounded-lg -->
+                    <Border HorizontalAlignment="Center"
+                            Classes="ButtonShadow"
+                            IsVisible="{TemplateBinding HasButton}">
+                        <Button Classes="Primary">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <!-- Optional button icon — Vue: w-4 h-4 (16px), stroke 1.5 -->
+                                <!-- Path-based icon (legacy, for ButtonIconData) -->
+                                <Panel Name="ButtonIconPanel"
+                                       Width="16" Height="16"
+                                       VerticalAlignment="Center"
+                                       IsVisible="False">
+                                    <!-- Stroke-based button icon (default) -->
+                                    <Path Name="ButtonStrokeIcon"
+                                          Data="{TemplateBinding ButtonIconData}"
+                                          Stroke="{DynamicResource PrimaryButtonForeground}"
+                                          StrokeThickness="1.5"
+                                          StrokeLineCap="Round"
+                                          StrokeJoin="Round"
+                                          Stretch="Uniform" />
+                                    <!-- Fill-based button icon -->
+                                    <Path Name="ButtonFillIcon"
+                                          Data="{TemplateBinding ButtonIconData}"
+                                          Fill="{DynamicResource PrimaryButtonForeground}"
+                                          Stretch="Uniform"
+                                          IsVisible="False" />
+                                </Panel>
+                                <!-- FontAwesome icon (for ButtonIconValue) -->
+                                <i:Icon Name="ButtonFaIcon"
+                                        Value="{TemplateBinding ButtonIconValue}"
+                                        FontSize="14"
+                                        Foreground="{DynamicResource PrimaryButtonForeground}"
+                                        VerticalAlignment="Center"
+                                        IsVisible="False" />
+                                <TextBlock Text="{TemplateBinding ButtonText}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </Border>
+                </StackPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <!-- ═══ UseCustomIcon mode: hide Angor logo, show circle icon ═══ -->
+    <Style Selector="controls|EmptyState[UseCustomIcon=True] /template/ Svg#AngorLogoIcon">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="controls|EmptyState[UseCustomIcon=True] /template/ Border#CustomIconCircle">
+        <Setter Property="IsVisible" Value="True" />
+    </Style>
+
+    <!-- When IconIsFilled is true (in custom icon mode), show fill icon, hide stroke -->
+    <Style Selector="controls|EmptyState[IconIsFilled=True] /template/ Path#StrokeIcon">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="controls|EmptyState[IconIsFilled=True] /template/ Path#FillIcon">
+        <Setter Property="IsVisible" Value="True" />
+    </Style>
+
+    <!-- Show button icon panel when HasButtonIcon is true -->
+    <Style Selector="controls|EmptyState[HasButtonIcon=True] /template/ Panel#ButtonIconPanel">
+        <Setter Property="IsVisible" Value="True" />
+    </Style>
+
+    <!-- When ButtonIconIsFilled is true, show fill icon, hide stroke in button -->
+    <Style Selector="controls|EmptyState[ButtonIconIsFilled=True] /template/ Path#ButtonStrokeIcon">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="controls|EmptyState[ButtonIconIsFilled=True] /template/ Path#ButtonFillIcon">
+        <Setter Property="IsVisible" Value="True" />
+    </Style>
+
+    <!-- Show FontAwesome button icon when HasButtonFaIcon is true -->
+    <Style Selector="controls|EmptyState[HasButtonFaIcon=True] /template/ i|Icon#ButtonFaIcon">
+        <Setter Property="IsVisible" Value="True" />
+    </Style>
+
+</Styles>

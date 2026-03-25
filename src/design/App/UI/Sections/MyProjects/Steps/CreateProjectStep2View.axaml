@@ -1,0 +1,97 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mp="clr-namespace:App.UI.Sections.MyProjects"
+             mc:Ignorable="d" d:DesignWidth="680" d:DesignHeight="500"
+             x:Class="App.UI.Sections.MyProjects.Steps.CreateProjectStep2View"
+             x:DataType="mp:CreateProjectViewModel">
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- STEP 2: PROJECT PROFILE                  -->
+    <!-- ═══════════════════════════════════════ -->
+    <StackPanel Spacing="24">
+        <!-- Subtitle only — matches reference (no bold heading) -->
+        <TextBlock Text="Tell us about your project and what you're building."
+                   FontSize="14" Foreground="{DynamicResource TextMuted}" />
+
+        <!-- Card: What's the project called? -->
+        <Border CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                Background="{DynamicResource Surface}" ClipToBounds="True">
+            <StackPanel>
+                <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
+                    <TextBlock Text="What's the project called?" FontSize="16" FontWeight="Bold"
+                               Foreground="{DynamicResource TextStrong}" />
+                </Border>
+                <StackPanel Spacing="8" Margin="24">
+                    <TextBlock Text="Project Name *" FontSize="14" FontWeight="Bold"
+                               Foreground="{DynamicResource TextStrong}" />
+                    <TextBox Name="ProjectNameTextBox" MaxLength="200"
+                             Text="{Binding ProjectName, Mode=TwoWay}"
+                             Watermark="Enter the name of your project"
+                             Padding="12,12,16,12" FontSize="16" CornerRadius="8" />
+                    <!-- Vue: char counter {n}/200 positioned below input, right-aligned -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <!-- Vue: nameError — red text below input -->
+                        <TextBlock Text="{Binding NameError}" FontSize="13"
+                                   Foreground="{DynamicResource ErrorFieldText}"
+                                   IsVisible="{Binding HasNameError}" />
+                        <TextBlock Grid.Column="1" Text="{Binding ProjectNameCharCount}"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   HorizontalAlignment="Right" />
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Card: Tell us about the project -->
+        <Border CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                Background="{DynamicResource Surface}" ClipToBounds="True">
+            <StackPanel>
+                <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
+                    <TextBlock Text="Tell us about the project" FontSize="16" FontWeight="Bold"
+                               Foreground="{DynamicResource TextStrong}" />
+                </Border>
+                <StackPanel Spacing="8" Margin="24">
+                    <TextBlock Text="About *" FontSize="14" FontWeight="Bold"
+                               Foreground="{DynamicResource TextStrong}" />
+                    <TextBox Name="AboutTextBox" MaxLength="400"
+                             Text="{Binding ProjectAbout, Mode=TwoWay}"
+                             Watermark="Provide a brief description of the project"
+                             AcceptsReturn="True" TextWrapping="Wrap"
+                             MinHeight="140" MaxHeight="200"
+                             Padding="12,12,16,12" FontSize="16" CornerRadius="8" />
+                    <!-- Vue: char counter {n}/400 + aboutError -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{Binding AboutError}" FontSize="13"
+                                   Foreground="{DynamicResource ErrorFieldText}"
+                                   IsVisible="{Binding HasAboutError}" />
+                        <TextBlock Grid.Column="1" Text="{Binding ProjectAboutCharCount}"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   HorizontalAlignment="Right" />
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Card: What's the project website? -->
+        <Border CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                Background="{DynamicResource Surface}" ClipToBounds="True">
+            <StackPanel>
+                <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
+                    <TextBlock Text="What's the project website?" FontSize="16" FontWeight="Bold"
+                               Foreground="{DynamicResource TextStrong}" />
+                </Border>
+                <StackPanel Spacing="8" Margin="24">
+                    <TextBlock Text="Project Website" FontSize="14" FontWeight="Bold"
+                               Foreground="{DynamicResource TextStrong}" />
+                    <TextBox Text="{Binding ProjectWebsite, Mode=TwoWay}"
+                             Watermark="https://example.com"
+                             Padding="12,12,16,12" FontSize="16" CornerRadius="8" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

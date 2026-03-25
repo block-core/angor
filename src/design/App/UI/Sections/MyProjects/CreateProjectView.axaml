@@ -1,0 +1,505 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mp="clr-namespace:App.UI.Sections.MyProjects"
+             xmlns:steps="clr-namespace:App.UI.Sections.MyProjects.Steps"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="900"
+             x:Class="App.UI.Sections.MyProjects.CreateProjectView"
+             x:DataType="mp:CreateProjectViewModel">
+    <Design.DataContext>
+        <mp:CreateProjectViewModel />
+    </Design.DataContext>
+
+    <!--
+        Launch Project Wizard — Vue reference: two-column layout.
+        Left: vertical stepper sidebar (~250px).
+        Right: scrollable content area (welcome, type selection, forms, review).
+        Navigation footer at bottom of right column.
+
+        Step content is split into per-step UserControls in the Steps/ subfolder.
+        Each step inherits its DataContext from this parent view.
+    -->
+
+    <UserControl.Styles>
+        <!-- ═══ STEPPER STYLES ═══ -->
+        <!-- Base stepper circle: smooth transitions on bg/border -->
+        <Style Selector="Border.StepCircle">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StepInactiveGray}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+        </Style>
+        <!-- Current step circle: green border, transparent fill -->
+        <Style Selector="Border.StepCircle.StepCurrent">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StepCurrentGreen}" />
+        </Style>
+        <!-- Completed step circle: green filled -->
+        <Style Selector="Border.StepCircle.StepCompleted">
+            <Setter Property="Background" Value="{DynamicResource StepCompletedGreen}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StepCompletedGreen}" />
+        </Style>
+
+        <!-- Base step number text: gray -->
+        <Style Selector="TextBlock.StepNum">
+            <Setter Property="Foreground" Value="{DynamicResource StepInactiveGray}" />
+        </Style>
+        <Style Selector="TextBlock.StepNum.StepCurrent">
+            <Setter Property="Foreground" Value="{DynamicResource StepCurrentGreen}" />
+        </Style>
+        <Style Selector="TextBlock.StepNum.StepCompleted">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <!-- Base step label: muted text -->
+        <Style Selector="TextBlock.StepLabel">
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+            <Setter Property="FontWeight" Value="Normal" />
+        </Style>
+        <Style Selector="TextBlock.StepLabel.StepCurrent">
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="TextBlock.StepLabel.StepCompleted">
+            <Setter Property="Foreground" Value="{DynamicResource StepCompletedGreen}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <!-- Base step line: stroke color -->
+        <Style Selector="Border.StepLine">
+            <Setter Property="Background" Value="{DynamicResource Stroke}" />
+        </Style>
+        <Style Selector="Border.StepLine.StepLineCompleted">
+            <Setter Property="Background" Value="{DynamicResource StepLineGreen}" />
+        </Style>
+    </UserControl.Styles>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- MAIN WIZARD LAYOUT — two columns: stepper + content    -->
+    <!-- Stepper always visible; welcome card shown in right col -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- Root panel to allow deploy overlay on top of wizard -->
+    <Panel>
+
+    <Grid ColumnDefinitions="250,*" Margin="0">
+
+            <!-- ─── LEFT COLUMN: Vertical Stepper ─── -->
+            <!-- Lighter surface background with logo pattern overlay.
+                 Stepper is vertically centered. -->
+            <Grid Grid.Column="0">
+                <!-- Solid lighter background (no tiled pattern — clean surface) -->
+                <Border Background="{DynamicResource SurfaceMedium}" />
+                <!-- Subtle right-edge separator -->
+                <Border BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="0,0,1,0" />
+                <!-- Stepper content — vertically centered -->
+                <StackPanel Name="StepperPanel" Spacing="0" Margin="24,0"
+                            VerticalAlignment="Center">
+                    <!-- Step 1 -->
+                    <Button Name="StepBtn1" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Name="StepCircle1" Classes="StepCircle StepCurrent"
+                                    Width="40" Height="40" CornerRadius="20">
+                                <TextBlock Name="StepNum1" Classes="StepNum StepCurrent"
+                                           Text="1" FontSize="13" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Name="StepLabel1" Classes="StepLabel StepCurrent"
+                                       Text="Project Type" FontSize="14"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <!-- Line 1→2 -->
+                    <Border Name="StepLine1" Classes="StepLine"
+                            Width="2" Height="40" Margin="19,0,0,0"
+                            HorizontalAlignment="Left" />
+
+                    <!-- Step 2 -->
+                    <Button Name="StepBtn2" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Name="StepCircle2" Classes="StepCircle"
+                                    Width="40" Height="40" CornerRadius="20">
+                                <TextBlock Name="StepNum2" Classes="StepNum"
+                                           Text="2" FontSize="13" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Name="StepLabel2" Classes="StepLabel"
+                                       Text="Project Profile" FontSize="14"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <!-- Line 2→3 -->
+                    <Border Name="StepLine2" Classes="StepLine"
+                            Width="2" Height="40" Margin="19,0,0,0"
+                            HorizontalAlignment="Left" />
+
+                    <!-- Step 3 -->
+                    <Button Name="StepBtn3" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Name="StepCircle3" Classes="StepCircle"
+                                    Width="40" Height="40" CornerRadius="20">
+                                <TextBlock Name="StepNum3" Classes="StepNum"
+                                           Text="3" FontSize="13" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Name="StepLabel3" Classes="StepLabel"
+                                       Text="Project Images" FontSize="14"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <!-- Line 3→4 -->
+                    <Border Name="StepLine3" Classes="StepLine"
+                            Width="2" Height="40" Margin="19,0,0,0"
+                            HorizontalAlignment="Left" />
+
+                    <!-- Step 4 -->
+                    <Button Name="StepBtn4" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Name="StepCircle4" Classes="StepCircle"
+                                    Width="40" Height="40" CornerRadius="20">
+                                <TextBlock Name="StepNum4" Classes="StepNum"
+                                           Text="4" FontSize="13" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Name="StepLabel4" Classes="StepLabel"
+                                       Text="Configuration" FontSize="14"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <!-- Line 4→5 -->
+                    <Border Name="StepLine4" Classes="StepLine"
+                            Width="2" Height="40" Margin="19,0,0,0"
+                            HorizontalAlignment="Left" />
+
+                    <!-- Step 5 -->
+                    <Button Name="StepBtn5" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Name="StepCircle5" Classes="StepCircle"
+                                    Width="40" Height="40" CornerRadius="20">
+                                <TextBlock Name="StepNum5" Classes="StepNum"
+                                           Text="5" FontSize="13" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Name="StepLabel5" Classes="StepLabel"
+                                       Text="Stages" FontSize="14"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <!-- Line 5→6 -->
+                    <Border Name="StepLine5" Classes="StepLine"
+                            Width="2" Height="40" Margin="19,0,0,0"
+                            HorizontalAlignment="Left" />
+
+                    <!-- Step 6 -->
+                    <Button Name="StepBtn6" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Name="StepCircle6" Classes="StepCircle"
+                                    Width="40" Height="40" CornerRadius="20">
+                                <TextBlock Name="StepNum6" Classes="StepNum"
+                                           Text="6" FontSize="13" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Name="StepLabel6" Classes="StepLabel"
+                                       Text="Review &amp; Deploy" FontSize="14"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- ─── RIGHT COLUMN: Content + Nav Footer ─── -->
+            <!-- NOTE: TiledPatternBrush is provided by ShellView.axaml at the shell level.
+                 Do NOT add a pattern overlay here — it would double up. -->
+            <DockPanel Grid.Column="1">
+
+                <!-- Navigation footer — docked to bottom -->
+                <Border DockPanel.Dock="Bottom"
+                        IsVisible="{Binding ShowNavFooter}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="0,1,0,0"
+                        Padding="24">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <!-- Cancel / Previous button — outlined, standardized sizing -->
+                        <Button Grid.Column="0" Name="PrevStepButton"
+                                Height="44" Padding="16,0,16,0" CornerRadius="8"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                                Foreground="{DynamicResource TextStrong}"
+                                FontSize="14" FontWeight="Medium"
+                                Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <Viewbox Width="10" Height="16">
+                                    <Path Data="{StaticResource ChevronLeftThick}"
+                                          Fill="{DynamicResource TextStrong}"
+                                          Width="320" Height="512" Stretch="Uniform" />
+                                </Viewbox>
+                                <TextBlock Text="{Binding BackButtonText}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Next button (steps 1-5) — standardized sizing -->
+                        <Panel Grid.Column="2">
+                            <!-- Next button — shown on steps 1-5 -->
+                            <Border Classes="ButtonShadow" IsVisible="{Binding !IsLastStep}">
+                                <Button Name="NextStepButton" Height="44" CornerRadius="8" Padding="16,0,16,0"
+                                        FontSize="14" FontWeight="SemiBold">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <TextBlock Text="Next" VerticalAlignment="Center" />
+                                        <Viewbox Width="10" Height="16">
+                                            <Path Data="{StaticResource ChevronRightThick}"
+                                                  Fill="White"
+                                                  Width="320" Height="512" Stretch="Uniform" />
+                                        </Viewbox>
+                                    </StackPanel>
+                                </Button>
+                            </Border>
+
+                            <!-- Deploy Now button — shown on step 6 (IsLastStep) -->
+                            <!-- Vue: footer primary button triggers openDeployModal -->
+                            <Button Name="DeployButton" IsVisible="{Binding IsLastStep}"
+                                    Height="44" CornerRadius="8" Padding="16,0,24,0"
+                                    FontSize="14" FontWeight="Bold"
+                                    IsEnabled="{Binding !IsDeploying}"
+                                    Foreground="White" Cursor="Hand">
+                                <Button.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="{DynamicResource PrimaryGreen}" Offset="0" />
+                                        <GradientStop Color="{DynamicResource PrimaryGreenHover}" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Button.Background>
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <i:Icon Value="fa-solid fa-bolt" FontSize="14" Foreground="White" />
+                                    <TextBlock Text="Deploy Now" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Panel>
+                    </Grid>
+                </Border>
+
+                <!-- Content area — welcome card or scrollable step content -->
+                <Panel>
+
+                    <!-- ═══════════════════════════════════════════════════════ -->
+                    <!-- AUTO SAVED INDICATOR — Vue: absolute top-6 right-8    -->
+                    <!-- Semi-transparent green pill, shown for 5s after        -->
+                    <!-- advancing past step 2. Fade in/out 0.3s.              -->
+                    <!-- ═══════════════════════════════════════════════════════ -->
+                    <Border Name="AutoSavedIndicator"
+                            IsVisible="False" Opacity="0"
+                            IsHitTestVisible="False"
+                            ZIndex="20"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Margin="0,24,32,0"
+                            Background="{StaticResource ToastBackground}"
+                            CornerRadius="8"
+                            Padding="14,8">
+                        <Border.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Opacity" Duration="0:0:0.3" />
+                            </Transitions>
+                        </Border.Transitions>
+                        <StackPanel Orientation="Horizontal" Spacing="8" Opacity="0.85">
+                            <i:Icon Value="fa-solid fa-check"
+                                    FontSize="13"
+                                    Foreground="White"
+                                    VerticalAlignment="Center" />
+                            <TextBlock Text="Auto saved"
+                                       FontSize="13" FontWeight="Medium"
+                                       Foreground="White"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ═══════════════════════════════════════════════════════ -->
+                    <!-- WELCOME SCREEN — shown at step 0 before type selection -->
+                    <!-- Centered in right column, stepper visible on left      -->
+                    <!-- ═══════════════════════════════════════════════════════ -->
+                    <Border IsVisible="{Binding IsWelcome}"
+                            Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center"
+                            MaxWidth="520">
+                        <Border Background="{DynamicResource Surface}"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="1" CornerRadius="12"
+                                BoxShadow="{DynamicResource ItemShadow}"
+                                Padding="40">
+                            <StackPanel Spacing="20" HorizontalAlignment="Center">
+                                <!-- Lightning bolt icon in green circle -->
+                                <Border Width="64" Height="64" CornerRadius="32"
+                                        HorizontalAlignment="Center"
+                                        Background="{DynamicResource PrimaryGreenBrush12}">
+                                    <i:Icon Value="fa-solid fa-bolt"
+                                           FontSize="28"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                </Border>
+
+                                <TextBlock Text="Welcome" FontSize="24" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           TextAlignment="Center" HorizontalAlignment="Center" />
+
+                                <TextBlock Text="Create and launch your project to raise funding from the Bitcoin community."
+                                           FontSize="15" Foreground="{DynamicResource TextMuted}"
+                                           TextAlignment="Center" HorizontalAlignment="Center"
+                                           TextWrapping="Wrap" MaxWidth="400" />
+
+                                <!-- Fee info box — theme-aware warning colors -->
+                                <Border CornerRadius="10" Padding="16,14"
+                                        BorderThickness="1"
+                                        BorderBrush="{DynamicResource WarningBoxBorder}"
+                                        Background="{DynamicResource WarningBoxBackground}">
+                                    <TextBlock FontSize="13" Foreground="{DynamicResource WarningBoxText}"
+                                               TextWrapping="Wrap" TextAlignment="Center"
+                                               Text="A small fee is required to prevent spam and will be paid when you submit your project for deployment." />
+                                </Border>
+
+                                <!-- Start button — green, no arrow -->
+                                <Border HorizontalAlignment="Center" Classes="ButtonShadow" Margin="0,4,0,0">
+                                    <Button Name="StartButton" CornerRadius="12" Padding="40,14"
+                                            FontWeight="Bold" FontSize="16"
+                                            Content="Start">
+                                        <Button.Background>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                                <GradientStop Color="#3D6448" Offset="1" />
+                                            </LinearGradientBrush>
+                                        </Button.Background>
+                                        <Button.Foreground>
+                                            <SolidColorBrush Color="White" />
+                                        </Button.Foreground>
+                                    </Button>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </Border>
+
+                    <!-- ═══════════════════════════════════════════════════════ -->
+                    <!-- STEP 5 INTERSTITIAL — shown before stages/payouts form  -->
+                    <!-- Centered card like welcome screen, per project type     -->
+                    <!-- ═══════════════════════════════════════════════════════ -->
+                    <Border IsVisible="{Binding IsStep5Welcome}"
+                            Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center"
+                            MaxWidth="520">
+                        <Border Background="{DynamicResource Surface}"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="1" CornerRadius="12"
+                                BoxShadow="{DynamicResource ItemShadow}"
+                                Padding="40">
+                            <StackPanel Spacing="20" HorizontalAlignment="Center">
+                                <!-- Clipboard/checkmark icon in green circle -->
+                                <Border Width="64" Height="64" CornerRadius="32"
+                                        HorizontalAlignment="Center"
+                                        Background="{DynamicResource PrimaryGreenBrush12}">
+                                    <i:Icon Value="fa-solid fa-clipboard-check"
+                                           FontSize="28"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                </Border>
+
+                                <!-- Title — bound to type-specific text -->
+                                <TextBlock Text="{Binding Step5WelcomeTitle}" FontSize="24" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           TextAlignment="Center" HorizontalAlignment="Center" />
+
+                                <!-- Subtitle — only shown for Fund/Subscription (empty for Investment) -->
+                                <TextBlock Text="{Binding Step5WelcomeSubtitle}" FontSize="15"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           TextAlignment="Center" HorizontalAlignment="Center"
+                                           TextWrapping="Wrap" MaxWidth="400"
+                                           IsVisible="{Binding !IsInvestment}" />
+
+                                <!-- Info box — amber/warning style, type-specific text -->
+                                <Border CornerRadius="10" Padding="16,14"
+                                        BorderThickness="1"
+                                        BorderBrush="{DynamicResource WarningBoxBorder}"
+                                        Background="{DynamicResource WarningBoxBackground}">
+                                    <TextBlock FontSize="13" Foreground="{DynamicResource WarningBoxText}"
+                                               TextWrapping="Wrap" TextAlignment="Center"
+                                               Text="{Binding Step5WelcomeInfo}" />
+                                </Border>
+
+                                <!-- "Ok, Let's Go" button — green -->
+                                <Border HorizontalAlignment="Center" Classes="ButtonShadow" Margin="0,4,0,0">
+                                    <Button Name="Step5WelcomeButton" CornerRadius="12" Padding="40,14"
+                                            FontWeight="Bold" FontSize="16"
+                                            Content="Ok, Let's Go">
+                                        <Button.Background>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                                <GradientStop Color="#3D6448" Offset="1" />
+                                            </LinearGradientBrush>
+                                        </Button.Background>
+                                        <Button.Foreground>
+                                            <SolidColorBrush Color="White" />
+                                        </Button.Foreground>
+                                    </Button>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </Border>
+
+                    <!-- Scrollable step content (hidden on welcome/interstitial screens) -->
+                    <ScrollViewer IsVisible="{Binding ShowScrollContent}"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Spacing="0" Margin="32,32,32,24" MaxWidth="680">
+
+                        <!-- Vue formError banner: sticky red banner at top of step content -->
+                        <!-- Light: bg-red-100 border-red-200 text-red-800 -->
+                        <!-- Dark: bg-red-900/40 border-red-800/50 text-red-300 -->
+                        <Border IsVisible="{Binding HasFormError}"
+                                Background="{DynamicResource ErrorBannerBg}"
+                                BorderBrush="{DynamicResource ErrorBannerBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="14,12"
+                                Margin="0,0,0,20">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <i:Icon Value="fa-solid fa-circle-exclamation"
+                                       FontSize="16"
+                                       Foreground="{DynamicResource ErrorBannerText}"
+                                       VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding FormError}"
+                                           FontSize="14" FontWeight="Medium"
+                                           Foreground="{DynamicResource ErrorBannerText}"
+                                           TextWrapping="Wrap"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Step 1: Project Type Selection -->
+                        <steps:CreateProjectStep1View Name="Step1View" IsVisible="{Binding IsStep1}" />
+
+                        <!-- Step 2: Project Profile -->
+                        <steps:CreateProjectStep2View Name="Step2View" IsVisible="{Binding IsStep2}" />
+
+                        <!-- Step 3: Project Images -->
+                        <steps:CreateProjectStep3View Name="Step3View" IsVisible="{Binding IsStep3}" />
+
+                        <!-- Step 4: Funding Configuration -->
+                        <steps:CreateProjectStep4View Name="Step4View" IsVisible="{Binding IsStep4}" />
+
+                        <!-- Step 5: Stages / Payouts -->
+                        <steps:CreateProjectStep5View Name="Step5View" IsVisible="{Binding IsStep5Form}" />
+
+                        <!-- Step 6: Review & Deploy -->
+                        <steps:CreateProjectStep6View Name="Step6View" IsVisible="{Binding IsStep6}" />
+
+                    </StackPanel>
+                    </ScrollViewer>
+
+                </Panel>
+            </DockPanel>
+        </Grid>
+
+    <!-- Deploy flow overlay is now rendered at shell level -->
+    <!-- via DeployFlowOverlay pushed to ShellViewModel.ShowModal() -->
+
+    </Panel>
+
+</UserControl>
