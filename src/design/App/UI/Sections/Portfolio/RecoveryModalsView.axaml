@@ -1,0 +1,715 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:portfolio="clr-namespace:App.UI.Sections.Portfolio"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="App.UI.Sections.Portfolio.RecoveryModalsView"
+             x:DataType="portfolio:InvestmentViewModel">
+
+    <!--
+        Shell-level modal overlay for the Recovery Funds flow.
+        Contains 4 modal panels: Recovery Confirmation, Claim Penalties,
+        Release Confirmation, Release Success.
+        DataContext = InvestmentViewModel (set by InvestmentDetailView when opening).
+        Vue reference: InvestmentDetail.vue lines 321-813 (templates), 1046-1206 (script), 2366-2445 (CSS).
+    -->
+
+    <UserControl.Styles>
+        <!-- Fee priority button selection — Rule #9: NO BrushTransition on toggled elements -->
+        <Style Selector="Border.FeeBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StrokeSubtle}" />
+        </Style>
+        <Style Selector="Border.FeeBtn.FeeSelected">
+            <Setter Property="Background" Value="{DynamicResource RecoveryFeeSelectedBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource RecoveryFeeSelectedBorder}" />
+        </Style>
+
+        <!-- Kill FluentTheme chrome on all modal buttons -->
+        <Style Selector="Button.ModalBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="Button.ModalBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.ModalBtn:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <!-- MODAL 1: Recovery Confirmation (max-w-2xl = 672px)          -->
+        <!-- Vue: .recovery-modal                                        -->
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <Border IsVisible="{Binding ShowRecoveryModal}"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="600" MaxWidth="672"
+                MaxHeight="{Binding $parent[Panel].Bounds.Height, FallbackValue=800}"
+                CornerRadius="16"
+                Background="{DynamicResource RecoveryModalBg}"
+                BorderBrush="{DynamicResource RecoveryModalBorder}"
+                BorderThickness="1"
+                BoxShadow="0 8 32 0 #40000000"
+                ClipToBounds="True">
+            <DockPanel>
+                <!-- ── Header: icon + title + close X ── -->
+                <!-- Vue: border-bottom, padding 24px -->
+                <Border DockPanel.Dock="Top" Padding="24,20"
+                        BorderThickness="0,0,0,1"
+                        CornerRadius="15,15,0,0"
+                        BorderBrush="{DynamicResource ModalHeaderBorder}"
+                        Background="{DynamicResource RecoveryModalBg}">
+                    <Panel>
+                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="20"
+                                    Foreground="{DynamicResource TextMuted}" />
+                            <TextBlock Text="Recovery" FontSize="24" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </StackPanel>
+                        <Button Name="CloseRecoveryModal" Classes="ModalBtn ModalCloseBtn"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Panel>
+                </Border>
+
+                <!-- ── Footer: Cancel + Confirm ── -->
+                <!-- Vue: border-top, padding 24px, gap 12px -->
+                <Border DockPanel.Dock="Bottom" Padding="24,16"
+                        BorderThickness="0,1,0,0"
+                        CornerRadius="0,0,15,15"
+                        BorderBrush="{DynamicResource ModalHeaderBorder}"
+                        Background="{DynamicResource RecoveryModalBg}">
+                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                        <!-- Cancel -->
+                        <Button Name="CancelRecoveryModal" Classes="ModalBtn" Cursor="Hand">
+                            <Border CornerRadius="8" Padding="24,12"
+                                    Background="{DynamicResource ModalCancelBg}">
+                                <TextBlock Text="Cancel" FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource ModalCancelFg}" />
+                            </Border>
+                        </Button>
+                        <!-- Confirm -->
+                        <Button Name="ConfirmRecoveryModal" Classes="ModalBtn" Cursor="Hand">
+                            <Border CornerRadius="8" Padding="24,12"
+                                    ClipToBounds="True"
+                                    Background="{DynamicResource GreenGradient}">
+                                <Panel>
+                                    <TextBlock Text="Confirm" FontSize="14" FontWeight="SemiBold"
+                                               Foreground="White"
+                                               IsVisible="{Binding !IsProcessing}"
+                                               HorizontalAlignment="Center" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8"
+                                                IsVisible="{Binding IsProcessing}"
+                                                HorizontalAlignment="Center">
+                                        <i:Icon Value="fa-solid fa-spinner" FontSize="14" Foreground="White"
+                                                RenderTransformOrigin="50%,50%">
+                                            <i:Icon.RenderTransform>
+                                                <RotateTransform />
+                                            </i:Icon.RenderTransform>
+                                            <i:Icon.Styles>
+                                                <Style Selector="i|Icon[IsVisible=True]">
+                                                    <Style.Animations>
+                                                        <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                            <KeyFrame Cue="0%">
+                                                                <Setter Property="RotateTransform.Angle" Value="0" />
+                                                            </KeyFrame>
+                                                            <KeyFrame Cue="100%">
+                                                                <Setter Property="RotateTransform.Angle" Value="360" />
+                                                            </KeyFrame>
+                                                        </Animation>
+                                                    </Style.Animations>
+                                                </Style>
+                                            </i:Icon.Styles>
+                                        </i:Icon>
+                                        <TextBlock Text="Processing..." FontSize="14" FontWeight="SemiBold"
+                                                   Foreground="White" />
+                                    </StackPanel>
+                                </Panel>
+                            </Border>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Scrollable Content ── -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Spacing="20" Margin="24">
+
+                        <!-- Warning box -->
+                        <!-- Vue: bg-gray-800 dark / bg-gray-50 light, border-gray-700/200, text-gray-300/600 -->
+                        <Border CornerRadius="12" Padding="16"
+                                Background="{DynamicResource RecoveryWarningBg}"
+                                BorderBrush="{DynamicResource RecoveryWarningBorder}"
+                                BorderThickness="1">
+                            <DockPanel>
+                                <i:Icon Value="fa-solid fa-triangle-exclamation" FontSize="18"
+                                        Foreground="#F59E0B" VerticalAlignment="Top"
+                                        Margin="0,2,12,0" DockPanel.Dock="Left" />
+                                <TextBlock Text="When you recover funds, they will be locked in a penalty period. During this time, you will not be able to access them until the penalty period expires."
+                                           FontSize="14" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource RecoveryWarningText}" />
+                            </DockPanel>
+                        </Border>
+
+                        <!-- Info cards 2x2 grid -->
+                        <!-- Vue: grid-cols-2 gap-4 -->
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+                            <Grid.ColumnSpacing>16</Grid.ColumnSpacing>
+                            <Grid.RowSpacing>16</Grid.RowSpacing>
+
+                            <!-- Stages to Recover -->
+                            <Border Grid.Row="0" Grid.Column="0" CornerRadius="12" Padding="16"
+                                    Background="{DynamicResource RecoveryInfoCardBg}"
+                                    BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
+                                    BorderThickness="1">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Stages to Recover" FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                    <TextBlock Text="{Binding StagesToRecover}" FontSize="20" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Amount to Recover -->
+                            <Border Grid.Row="0" Grid.Column="1" CornerRadius="12" Padding="16"
+                                    Background="{DynamicResource RecoveryInfoCardBg}"
+                                    BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
+                                    BorderThickness="1">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Amount to Recover" FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryGreenBrush}">
+                                        <Run Text="{Binding AmountToRecover, Mode=OneWay}" /><Run Text=" BTC" />
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Penalty Duration -->
+                            <Border Grid.Row="1" Grid.Column="0" CornerRadius="12" Padding="16"
+                                    Background="{DynamicResource RecoveryInfoCardBg}"
+                                    BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
+                                    BorderThickness="1">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Penalty Duration" FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                    <TextBlock Text="{Binding PenaltyDuration}" FontSize="20" FontWeight="Bold"
+                                               Foreground="#F7931A" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Miner Fee -->
+                            <Border Grid.Row="1" Grid.Column="1" CornerRadius="12" Padding="16"
+                                    Background="{DynamicResource RecoveryInfoCardBg}"
+                                    BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
+                                    BorderThickness="1">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Miner Fee" FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="#F7931A">
+                                        <Run Text="{Binding MinerFee, Mode=OneWay}" /><Run Text=" BTC" />
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Transaction Fee section -->
+                        <StackPanel Spacing="12">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Transaction Fee" FontSize="16" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextStrong}" />
+                                <!-- Info badge -->
+                                <Border CornerRadius="6" Padding="8,4"
+                                        Background="{DynamicResource RecoveryFeeBadgeBg}">
+                                    <TextBlock Text="Network fee for Bitcoin transaction"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource RecoveryFeeBadgeText}" />
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Fee Priority selector: 3-col grid -->
+                            <!-- Vue: grid-cols-3 gap-3 -->
+                            <Grid ColumnDefinitions="*,*,*">
+                                <Grid.ColumnSpacing>12</Grid.ColumnSpacing>
+
+                                <!-- Priority -->
+                                <Border Name="FeePriority" Grid.Column="0"
+                                        Classes="FeeBtn" CornerRadius="8" Padding="12"
+                                        BorderThickness="2" Cursor="Hand">
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                        <TextBlock Name="FeePriorityLabel" Text="Priority" FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Name="FeePriorityDesc" Text="~1-3 blocks" FontSize="12"
+                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                                   HorizontalAlignment="Center" Opacity="0.7" />
+                                        <TextBlock Name="FeePriorityRate" Text="1.1 sat/vB" FontSize="11"
+                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                                   HorizontalAlignment="Center" Opacity="0.5" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Standard -->
+                                <Border Name="FeeStandard" Grid.Column="1"
+                                        Classes="FeeBtn FeeSelected" CornerRadius="8" Padding="12"
+                                        BorderThickness="2" Cursor="Hand">
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                        <TextBlock Name="FeeStandardLabel" Text="Standard" FontSize="14"
+                                                   FontWeight="SemiBold" Foreground="White"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Name="FeeStandardDesc" Text="~3-6 blocks" FontSize="12"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center" Opacity="0.7" />
+                                        <TextBlock Name="FeeStandardRate" Text="0.8 sat/vB" FontSize="11"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center" Opacity="0.5" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Economy -->
+                                <Border Name="FeeEconomy" Grid.Column="2"
+                                        Classes="FeeBtn" CornerRadius="8" Padding="12"
+                                        BorderThickness="2" Cursor="Hand">
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                        <TextBlock Name="FeeEconomyLabel" Text="Economy" FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Name="FeeEconomyDesc" Text="~6+ blocks" FontSize="12"
+                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                                   HorizontalAlignment="Center" Opacity="0.7" />
+                                        <TextBlock Name="FeeEconomyRate" Text="0.5 sat/vB" FontSize="11"
+                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                                   HorizontalAlignment="Center" Opacity="0.5" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- Custom Fee Rate checkbox -->
+                            <CheckBox IsChecked="{Binding IsCustomFeeRate}" Margin="0,4,0,0">
+                                <TextBlock Text="Custom Fee Rate" FontSize="14"
+                                           Foreground="{DynamicResource TextStrong}" />
+                            </CheckBox>
+                        </StackPanel>
+
+                        <!-- Confirmation question -->
+                        <TextBlock Text="Are you sure you want to recover these funds?"
+                                   FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,4,0,0" />
+
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <!-- MODAL 2: Claim Penalties (max-w-2xl = 672px)                -->
+        <!-- Vue: .claim-modal — table with inline action button          -->
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <Border IsVisible="{Binding ShowClaimModal}"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="600" MaxWidth="672"
+                CornerRadius="16"
+                Background="{DynamicResource RecoveryModalBg}"
+                BorderBrush="{DynamicResource RecoveryModalBorder}"
+                BorderThickness="1"
+                BoxShadow="0 8 32 0 #40000000"
+                ClipToBounds="True">
+            <StackPanel>
+                <!-- ── Header: lock icon + title + close X ── -->
+                <Border Padding="24,20"
+                        BorderThickness="0,0,0,1"
+                        BorderBrush="{DynamicResource ModalHeaderBorder}">
+                    <Panel>
+                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-lock" FontSize="20"
+                                    Foreground="{DynamicResource TextMuted}" />
+                            <TextBlock Text="Penalties Details" FontSize="24" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </StackPanel>
+                        <Button Name="CloseClaimModal" Classes="ModalBtn ModalCloseBtn"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Panel>
+                </Border>
+
+                <!-- ── Project ID field container ── -->
+                <StackPanel Margin="24,24,24,0" Spacing="6">
+                    <TextBlock Text="Project ID" FontSize="13" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextMuted}" />
+                    <Border Background="{DynamicResource SurfaceMedium}"
+                            BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="1"
+                            CornerRadius="8" Padding="12,10">
+                        <DockPanel>
+                            <i:Icon Value="fa-solid fa-cloud"
+                                   FontSize="18"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   DockPanel.Dock="Left" Margin="0,0,8,0" />
+                            <Border Name="CopyClaimProjectIdBtn" Cursor="Hand"
+                                    DockPanel.Dock="Right" HorizontalAlignment="Right"
+                                    Margin="8,0,0,0">
+                                <i:Icon Value="fa-solid fa-copy" FontSize="14" Foreground="{DynamicResource TextMuted}" />
+                            </Border>
+                            <TextBlock Text="{Binding RecoveryProjectId}"
+                                       FontSize="13"
+                                       FontFamily="Cascadia Code,Consolas,monospace"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ── Table ── -->
+                <StackPanel Margin="24">
+                    <!-- Table header row -->
+                    <Border Padding="16,12"
+                            BorderThickness="0,0,0,1"
+                            BorderBrush="{DynamicResource RecoveryTableHeaderBorder}">
+                        <Grid ColumnDefinitions="*,*,Auto">
+                            <TextBlock Grid.Column="0" Text="AMOUNT IN PENALTY" FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextMuted}" />
+                            <TextBlock Grid.Column="1" Text="DAYS REMAINING" FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextMuted}" />
+                            <TextBlock Grid.Column="2" Text="" Width="130" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Table data row (single row with inline claim button) -->
+                    <Border Padding="16,16"
+                            BorderThickness="0,0,0,1"
+                            BorderBrush="{DynamicResource RecoveryTableRowBorder}">
+                        <Grid ColumnDefinitions="*,*,Auto">
+                            <!-- Amount in penalty -->
+                            <TextBlock Grid.Column="0" FontSize="14" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center">
+                                <Run Text="{Binding PenaltyAmount, Mode=OneWay}" /><Run Text=" BTC" />
+                            </TextBlock>
+                            <!-- Days remaining -->
+                            <TextBlock Grid.Column="1" FontSize="14"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       VerticalAlignment="Center">
+                                <Run Text="{Binding PenaltyDaysRemaining, Mode=OneWay}" /><Run Text=" days" />
+                            </TextBlock>
+                            <!-- Claim Penalty button (green gradient, inline) -->
+                            <Button Name="ClaimPenaltyButton" Grid.Column="2" Classes="ModalBtn"
+                                    Cursor="Hand" VerticalAlignment="Center">
+                                <Border CornerRadius="8" Padding="16,8"
+                                        Background="{DynamicResource GreenGradient}">
+                                    <Panel>
+                                        <TextBlock Text="Claim Penalty" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="White"
+                                                   IsVisible="{Binding !IsProcessing}"
+                                                   HorizontalAlignment="Center" />
+                                        <StackPanel Orientation="Horizontal" Spacing="6"
+                                                    IsVisible="{Binding IsProcessing}"
+                                                    HorizontalAlignment="Center">
+                                            <i:Icon Value="fa-solid fa-spinner" FontSize="13" Foreground="White"
+                                                    RenderTransformOrigin="50%,50%">
+                                                <i:Icon.RenderTransform>
+                                                    <RotateTransform />
+                                                </i:Icon.RenderTransform>
+                                                <i:Icon.Styles>
+                                                    <Style Selector="i|Icon[IsVisible=True]">
+                                                        <Style.Animations>
+                                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                                <KeyFrame Cue="0%">
+                                                                    <Setter Property="RotateTransform.Angle" Value="0" />
+                                                                </KeyFrame>
+                                                                <KeyFrame Cue="100%">
+                                                                    <Setter Property="RotateTransform.Angle" Value="360" />
+                                                                </KeyFrame>
+                                                            </Animation>
+                                                        </Style.Animations>
+                                                    </Style>
+                                                </i:Icon.Styles>
+                                            </i:Icon>
+                                            <TextBlock Text="Processing..." FontSize="13" FontWeight="SemiBold"
+                                                       Foreground="White" />
+                                        </StackPanel>
+                                    </Panel>
+                                </Border>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <!-- MODAL 3: Release Recovery Confirmation (max-w-2xl = 672px)  -->
+        <!-- Vue: .release-modal — info fields + fee selector             -->
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <Border IsVisible="{Binding ShowReleaseModal}"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="600" MaxWidth="672"
+                MaxHeight="{Binding $parent[Panel].Bounds.Height, FallbackValue=800}"
+                CornerRadius="16"
+                Background="{DynamicResource RecoveryModalBg}"
+                BorderBrush="{DynamicResource RecoveryModalBorder}"
+                BorderThickness="1"
+                BoxShadow="0 8 32 0 #40000000"
+                ClipToBounds="True">
+            <DockPanel>
+                <!-- ── Header: check-circle icon + title + close X ── -->
+                <Border DockPanel.Dock="Top" Padding="24,20"
+                        BorderThickness="0,0,0,1"
+                        CornerRadius="15,15,0,0"
+                        BorderBrush="{DynamicResource ModalHeaderBorder}"
+                        Background="{DynamicResource RecoveryModalBg}">
+                    <Panel>
+                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-circle-check" FontSize="20"
+                                    Foreground="{DynamicResource PrimaryGreenBrush}" />
+                            <TextBlock Text="Release Recovery Confirmation" FontSize="24" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </StackPanel>
+                        <Button Name="CloseReleaseModal" Classes="ModalBtn ModalCloseBtn"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Panel>
+                </Border>
+
+                <!-- ── Footer: Cancel + Confirm ── -->
+                <Border DockPanel.Dock="Bottom" Padding="24,16"
+                        BorderThickness="0,1,0,0"
+                        CornerRadius="0,0,15,15"
+                        BorderBrush="{DynamicResource ModalHeaderBorder}"
+                        Background="{DynamicResource RecoveryModalBg}">
+                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                        <Button Name="CancelReleaseModal" Classes="ModalBtn" Cursor="Hand">
+                            <Border CornerRadius="8" Padding="24,12"
+                                    Background="{DynamicResource ModalCancelBg}">
+                                <TextBlock Text="Cancel" FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource ModalCancelFg}" />
+                            </Border>
+                        </Button>
+                        <Button Name="ConfirmReleaseModal" Classes="ModalBtn" Cursor="Hand">
+                            <Border CornerRadius="8" Padding="24,12"
+                                    ClipToBounds="True"
+                                    Background="{DynamicResource GreenGradient}">
+                                <Panel>
+                                    <TextBlock Text="Confirm" FontSize="14" FontWeight="SemiBold"
+                                               Foreground="White"
+                                               IsVisible="{Binding !IsProcessing}"
+                                               HorizontalAlignment="Center" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8"
+                                                IsVisible="{Binding IsProcessing}"
+                                                HorizontalAlignment="Center">
+                                        <i:Icon Value="fa-solid fa-spinner" FontSize="14" Foreground="White"
+                                                RenderTransformOrigin="50%,50%">
+                                            <i:Icon.RenderTransform>
+                                                <RotateTransform />
+                                            </i:Icon.RenderTransform>
+                                            <i:Icon.Styles>
+                                                <Style Selector="i|Icon[IsVisible=True]">
+                                                    <Style.Animations>
+                                                        <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                            <KeyFrame Cue="0%">
+                                                                <Setter Property="RotateTransform.Angle" Value="0" />
+                                                            </KeyFrame>
+                                                            <KeyFrame Cue="100%">
+                                                                <Setter Property="RotateTransform.Angle" Value="360" />
+                                                            </KeyFrame>
+                                                        </Animation>
+                                                    </Style.Animations>
+                                                </Style>
+                                            </i:Icon.Styles>
+                                        </i:Icon>
+                                        <TextBlock Text="Processing..." FontSize="14" FontWeight="SemiBold"
+                                                   Foreground="White" />
+                                    </StackPanel>
+                                </Panel>
+                            </Border>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Scrollable Content ── -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Spacing="20" Margin="24">
+
+                        <!-- Info message -->
+                        <Border CornerRadius="12" Padding="16"
+                                Background="{DynamicResource RecoveryWarningBg}"
+                                BorderBrush="{DynamicResource RecoveryWarningBorder}"
+                                BorderThickness="1">
+                            <DockPanel>
+                                <i:Icon Value="fa-solid fa-circle-info" FontSize="18"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Top"
+                                        Margin="0,2,12,0" DockPanel.Dock="Left" />
+                                <TextBlock Text="The penalty period has ended and your funds are now available for release. Please confirm the details below to release your recovered funds."
+                                           FontSize="14" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource RecoveryWarningText}" />
+                            </DockPanel>
+                        </Border>
+
+                        <!-- Amount to Release -->
+                        <Border CornerRadius="12" Padding="16"
+                                Background="{DynamicResource RecoveryInfoCardBg}"
+                                BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Amount to Release" FontSize="13"
+                                           Foreground="{DynamicResource TextMuted}" />
+                                <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryGreenBrush}">
+                                    <Run Text="{Binding AmountToRecover, Mode=OneWay}" /><Run Text=" BTC" />
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Destination Address -->
+                        <Border CornerRadius="12" Padding="16"
+                                Background="{DynamicResource RecoveryInfoCardBg}"
+                                BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Destination Address" FontSize="13"
+                                           Foreground="{DynamicResource TextMuted}" />
+                                <TextBlock Text="{Binding DestinationAddress}"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           FontFamily="Consolas,Menlo,monospace"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Miner Fee -->
+                        <Border CornerRadius="12" Padding="16"
+                                Background="{DynamicResource RecoveryInfoCardBg}"
+                                BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Miner Fee" FontSize="13"
+                                           Foreground="{DynamicResource TextMuted}" />
+                                <TextBlock FontSize="20" FontWeight="Bold" Foreground="#F7931A">
+                                    <Run Text="{Binding MinerFee, Mode=OneWay}" /><Run Text=" BTC" />
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Fee Priority selector (same as Modal 1) -->
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Fee Priority" FontSize="16" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                            <Grid ColumnDefinitions="*,*,*">
+                                <Grid.ColumnSpacing>12</Grid.ColumnSpacing>
+
+                                <Border Name="ReleaseFeePriority" Grid.Column="0"
+                                        Classes="FeeBtn" CornerRadius="8" Padding="12"
+                                        BorderThickness="2" Cursor="Hand">
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                        <TextBlock Name="ReleaseFeePriorityLabel" Text="Priority" FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Name="ReleaseFeePriorityDesc" Text="~1-3 blocks" FontSize="12"
+                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                                   HorizontalAlignment="Center" Opacity="0.7" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Name="ReleaseFeeStandard" Grid.Column="1"
+                                        Classes="FeeBtn FeeSelected" CornerRadius="8" Padding="12"
+                                        BorderThickness="2" Cursor="Hand">
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                        <TextBlock Name="ReleaseFeeStandardLabel" Text="Standard" FontSize="14"
+                                                   FontWeight="SemiBold" Foreground="White"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Name="ReleaseFeeStandardDesc" Text="~3-6 blocks" FontSize="12"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center" Opacity="0.7" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Name="ReleaseFeeEconomy" Grid.Column="2"
+                                        Classes="FeeBtn" CornerRadius="8" Padding="12"
+                                        BorderThickness="2" Cursor="Hand">
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                        <TextBlock Name="ReleaseFeeEconomyLabel" Text="Economy" FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Name="ReleaseFeeEconomyDesc" Text="~6+ blocks" FontSize="12"
+                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                                   HorizontalAlignment="Center" Opacity="0.7" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <!-- MODAL 4: Release Success (max-w-md = 448px, Style B)        -->
+        <!-- Vue: 64x64 gradient circle + white checkmark, "Funds Released" -->
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <Border IsVisible="{Binding ShowSuccessModal}"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="380" MaxWidth="448"
+                CornerRadius="16"
+                Background="{DynamicResource RecoveryModalBg}"
+                BorderBrush="{DynamicResource RecoveryModalBorder}"
+                BorderThickness="1"
+                BoxShadow="0 8 32 0 #40000000"
+                Padding="32">
+            <StackPanel Spacing="0" HorizontalAlignment="Center">
+                <!-- Success icon: 64x64 gradient circle with white checkmark (Style B) -->
+                <!-- Vue: w-16 h-16, linear-gradient(135deg, #4B7C5A, #3d6448) -->
+                <Border Width="64" Height="64" CornerRadius="32"
+                        HorizontalAlignment="Center" Margin="0,0,0,24">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                            <GradientStop Color="#3D6448" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <!-- White checkmark — Vue: w-8 h-8 stroke SVG -->
+                    <i:Icon Value="fa-solid fa-check" FontSize="28"
+                            Foreground="White"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center" />
+                </Border>
+
+                <!-- Title -->
+                <TextBlock Text="Funds Released" FontSize="24" FontWeight="Bold"
+                           Foreground="{DynamicResource TextStrong}"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,12" />
+
+                <!-- Message -->
+                <TextBlock Text="Your funds have been successfully released to your wallet."
+                           FontSize="14"
+                           Foreground="{DynamicResource TextMuted}"
+                           TextAlignment="Center" TextWrapping="Wrap"
+                           HorizontalAlignment="Center"
+                           MaxWidth="360"
+                           Margin="0,0,0,32" />
+
+                <!-- Go to Funds Tab button (green gradient, full width) -->
+                <Button Name="GoToFundsButton" Classes="ModalBtn" Cursor="Hand"
+                        HorizontalAlignment="Stretch">
+                    <Border CornerRadius="8" Padding="24,12"
+                            HorizontalAlignment="Stretch"
+                            Background="{DynamicResource GreenGradient}">
+                        <TextBlock Text="Go to Funds Tab" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="White" HorizontalAlignment="Center" />
+                    </Border>
+                </Button>
+            </StackPanel>
+        </Border>
+
+    </Panel>
+</UserControl>

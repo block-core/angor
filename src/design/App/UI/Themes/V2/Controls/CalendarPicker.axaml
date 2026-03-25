@@ -1,0 +1,45 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i="https://github.com/projektanker/icons.avalonia"
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <StackPanel Classes="Gap-XL">
+                <CalendarDatePicker />
+                <CalendarDatePicker>
+                    <DataValidationErrors.Errors>
+                        <generic:List x:TypeArguments="x:String">
+                            <x:String>hola</x:String>
+                        </generic:List>
+                    </DataValidationErrors.Errors>
+                </CalendarDatePicker>
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+
+    <Style Selector="CalendarDatePicker">
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="12 0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SurfaceLow}" />
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
+    </Style>
+
+    <Style Selector="CalendarDatePicker TextBox#PART_TextBox">
+        <Setter Property="Height" Value="42" />
+    </Style>
+
+    <!-- Replace the default drawn calendar icon with FontAwesome fa-calendar-days -->
+    <Style Selector="CalendarDatePicker /template/ Button#PART_Button">
+        <Setter Property="Width" Value="24" />
+        <Setter Property="Margin" Value="2,0,8,0" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <i:Icon Value="fa-regular fa-calendar"
+                        FontSize="16"
+                        Foreground="{DynamicResource TextMuted}" />
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

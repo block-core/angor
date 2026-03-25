@@ -1,0 +1,57 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:App.UI.Shared.Controls">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <StackPanel Classes="Gap-L">
+                <Border Classes="Card Blue Elevate Shadow">
+                    <TextBlock>Elevate</TextBlock>
+                </Border>
+                <controls:HeaderedContainer Classes="Card Shadow" Header="This is my header" />
+                <controls:HeaderedContainer Classes="Card Blue Elevate" Header="This is my header" />
+            </StackPanel>
+
+        </Border>
+    </Design.PreviewWith>
+
+    <!-- Utility classes -->
+    <Style Selector=":is(Control).Shadow">
+        <Setter Property="Border.BoxShadow" Value="{DynamicResource ItemShadow}" />
+        <Setter Property="ClipToBounds" Value="False" />
+    </Style>
+    
+    <Style Selector="Border.Elevate">
+        <Setter Property="ClipToBounds" Value="False" />
+        <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+            </Transitions>
+        </Setter>
+        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
+    </Style>
+    
+    <Style Selector="Border:pointerover.Elevate">
+        <Setter Property="RenderTransform" Value="translate(0px, -4px)" />
+        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadowHover}" />
+    </Style>
+    
+    <Style Selector="controls|HeaderedContainer.Elevate">
+        <Setter Property="ClipToBounds" Value="False" />
+        <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+            </Transitions>
+        </Setter>
+        <Setter Property="BoxShadow" Value="{DynamicResource ShadowNone}" />
+    </Style>
+    
+    <Style Selector="controls|HeaderedContainer:pointerover.Elevate">
+        <Setter Property="RenderTransform" Value="translate(0px, -2px)" />
+        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
+    </Style>
+
+</Styles>

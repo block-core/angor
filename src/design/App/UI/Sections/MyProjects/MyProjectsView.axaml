@@ -1,0 +1,249 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mp="clr-namespace:App.UI.Sections.MyProjects"
+             xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
+             x:Class="App.UI.Sections.MyProjects.MyProjectsView"
+             x:DataType="mp:MyProjectsViewModel">
+    <Design.DataContext>
+        <mp:MyProjectsViewModel />
+    </Design.DataContext>
+
+    <Panel>
+        <!-- ═══ EMPTY STATE (no projects, wizard not open) ═══ -->
+        <!--
+            Vue: Centered layout with Angor logo, "WELCOME TO ANGOR FOUNDER HUB",
+            description, "Launch a Project" button (btn-primary).
+        -->
+        <Panel Name="EmptyStatePanel">
+            <controls:EmptyState Title="WELCOME TO ANGOR FOUNDER HUB"
+                                 Description="This section is where you can launch your projects for funding."
+                                 DescriptionFontSize="20"
+                                 ButtonText="Launch a Project"
+                                 HasButton="True" />
+        </Panel>
+
+        <!-- ═══ PROJECT LIST (has projects, wizard not open) ═══ -->
+        <!--
+            Vue layout (desktop, App.vue lines 3398-3469):
+            - Two-column flex: left sidebar (w-64 xl:w-96) + right scrollable grid
+            - Left sidebar: branding + stats + CTA buttons
+            - Right: "My Projects" heading + responsive grid of ProjectCards with showManageFunds
+            - Gap: 16px (xl: 32px), padding: 16px (xl: 24px)
+            - "Scan for your projects" button absolute top-right
+        -->
+        <Panel Name="ProjectListPanel" IsVisible="False">
+            <Grid ColumnDefinitions="380,*" Margin="24">
+                <!-- ── Left Sidebar Panel ── -->
+                <!--
+                    Vue: w-64 xl:w-96, bg-gray-50 dark:bg-[#2A2A2A],
+                    rounded-2xl, border border-gray-200 dark:border-gray-700,
+                    padding p-4 md:p-6 xl:p-8, flex column centered
+                -->
+                <Border Grid.Column="0"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        BoxShadow="{DynamicResource ItemShadow}"
+                        Padding="24"
+                        Margin="0,0,24,0"
+                        VerticalAlignment="Stretch">
+                    <StackPanel Spacing="20" VerticalAlignment="Center">
+
+                        <!-- Angor Logo — centered, SVG asset -->
+                        <Panel HorizontalAlignment="Center" Width="80" Height="80" Margin="0,8,0,0">
+                            <Svg Path="/Assets/logo.svg" />
+                        </Panel>
+
+                        <!-- Title -->
+                        <TextBlock Text="ANGOR FOUNDER HUB"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   HorizontalAlignment="Center"
+                                   LetterSpacing="1" />
+
+                        <!-- Subtitle -->
+                        <!-- Vue: text-xs xl:text-sm — "Launch new projects and manage your existing fundraising campaigns." -->
+                        <TextBlock Text="Launch new projects and manage your existing fundraising campaigns."
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   TextWrapping="Wrap"
+                                   TextAlignment="Center"
+                                   HorizontalAlignment="Center" />
+
+                        <!-- Stats Grid: 2-column layout matching Portfolio pattern -->
+                        <!-- Vue: xl:grid-cols-2 gap-3 xl:gap-4, 2 stats (Active Projects, Total Raised) -->
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto"
+                              Margin="0,4,0,0">
+                            <!-- Active Projects stat -->
+                            <Border Grid.Row="0" Grid.Column="0"
+                                    Background="{DynamicResource SurfaceLow}"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="16"
+                                    Margin="0,0,8,0">
+                                <Grid RowDefinitions="28,Auto,Auto" HorizontalAlignment="Left">
+                                    <!-- Row 0: Icon -->
+                                    <Border Grid.Row="0" Width="28" Height="28" CornerRadius="14"
+                                            Background="#1A4B7C5A" HorizontalAlignment="Left"
+                                            VerticalAlignment="Top">
+                                        <i:Icon Value="fa-solid fa-file-lines"
+                                               FontSize="14"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                    </Border>
+                                    <!-- Row 1: Value -->
+                                    <TextBlock Grid.Row="1" Text="{Binding Projects.Count}"
+                                               FontSize="20" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}"
+                                               Margin="0,8,0,0"
+                                               VerticalAlignment="Bottom" />
+                                    <!-- Row 2: Label -->
+                                    <TextBlock Grid.Row="2" Text="Active Projects"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               Margin="0,8,0,0" />
+                                </Grid>
+                            </Border>
+
+                            <!-- Total Raised stat -->
+                            <Border Grid.Row="0" Grid.Column="1"
+                                    Background="{DynamicResource SurfaceLow}"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="16"
+                                    Margin="8,0,0,0">
+                                <Grid RowDefinitions="28,Auto,Auto" HorizontalAlignment="Left">
+                                    <!-- Row 0: Icon (muted style, matching neighboring stat cards) -->
+                                    <Border Grid.Row="0" Width="28" Height="28" CornerRadius="14"
+                                            Background="#1A4B7C5A" HorizontalAlignment="Left"
+                                            VerticalAlignment="Top">
+                                        <i:Icon Value="fa-brands fa-bitcoin"
+                                               FontSize="14"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                    </Border>
+                                    <!-- Row 1: Value -->
+                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4"
+                                                Margin="0,8,0,0"
+                                                VerticalAlignment="Bottom">
+                                        <TextBlock Text="{Binding TotalRaised}"
+                                                   FontSize="18" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextStrong}" />
+                                        <TextBlock Text="BTC"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   VerticalAlignment="Bottom" Margin="0,0,0,1" />
+                                    </StackPanel>
+                                    <!-- Row 2: Label -->
+                                    <TextBlock Grid.Row="2" Text="Total Raised"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               Margin="0,8,0,0" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <!-- CTA Buttons -->
+                        <!-- Vue: "Launch a Project" (btn-primary) + "How Funding Works" (outline, border-2 border-gray-300, mt-3) -->
+                        <StackPanel Spacing="12">
+                            <!-- Launch a Project — primary CTA -->
+                            <Border Classes="ButtonShadow">
+                                <Button Name="LaunchFromListButton" Classes="Primary"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        Padding="16,12">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <i:Icon Value="fa-solid fa-plus"
+                                               FontSize="14"
+                                               Foreground="{DynamicResource PrimaryButtonForeground}"
+                                               VerticalAlignment="Center" />
+                                        <TextBlock Text="Launch a Project" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </Border>
+                            <!-- How Funding Works — outline secondary CTA -->
+                            <!-- Vue: border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm py-3 hover:border-green-600 -->
+                            <Button HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    Padding="16,12"
+                                    Background="Transparent"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="2"
+                                    CornerRadius="12">
+                                <TextBlock Text="How Funding Works"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMuted}" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Right Content: Project Grid ── -->
+                <controls:ScrollableView Grid.Column="1" ContentPadding="0">
+                    <StackPanel Spacing="20">
+                        <!-- Header row -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="My Projects" FontSize="24" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+
+                        <!-- Project cards in responsive grid -->
+                        <!--
+                            Vue: .my-projects-grid — 1 col default, 2 cols at 1024px, 3 cols at 1920px
+                            Since the sidebar takes ~280px, the available width is narrower than FindProjects.
+                            MinItemWidth=320 + 2 cols = ~660px minimum (fits well in remaining space).
+                        -->
+                        <ItemsControl ItemsSource="{Binding Projects}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <controls:ResponsiveGrid MinItemWidth="320"
+                                                             ColumnSpacing="16"
+                                                             RowSpacing="16" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="mp:MyProjectItemViewModel">
+                                    <controls:ProjectCard
+                                        ProjectName="{Binding Name}"
+                                        ShortDescription="{Binding Description}"
+                                        InvestorCount="{Binding InvestorCount}"
+                                        InvestorLabel="{Binding InvestorLabel}"
+                                        Raised="{Binding Raised}"
+                                        Target="{Binding TargetAmount}"
+                                        TargetLabel="{Binding TargetLabel}"
+                                        Progress="{Binding Progress}"
+                                        ProjectType="{Binding TypePillValue}"
+                                        Status="{Binding Status}"
+                                        Banner="{Binding BannerUrl}"
+                                        Avatar="{Binding LogoUrl}"
+                                        ShowManageFunds="True" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </controls:ScrollableView>
+            </Grid>
+        </Panel>
+
+        <!-- ═══ CREATE PROJECT WIZARD ═══ -->
+        <Panel Name="CreateWizardPanel" IsVisible="False">
+            <mp:CreateProjectView Name="CreateWizardView" />
+        </Panel>
+
+        <!-- ═══ MANAGE PROJECT DETAIL ═══ -->
+        <!--
+            Vue: Clicking "Manage Project" on a ProjectCard navigates to ManageFunds.vue.
+            This panel is shown when SelectedManageProject is set, hiding list + wizard.
+        -->
+        <Panel Name="ManageProjectPanel" IsVisible="False">
+            <mp:ManageProjectView Name="ManageProjectViewControl" />
+        </Panel>
+    </Panel>
+</UserControl>

@@ -1,0 +1,145 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             LIGHT THEME — ManageProject
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Default">
+
+            <!-- ── Next Stage green gradient card (light) ── -->
+            <!-- Vue: linear-gradient(to bottom right, rgba(75,124,90,0.1), rgba(61,100,72,0.1)) -->
+            <LinearGradientBrush x:Key="NextStageCardBackground" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#1A4B7C5A" Offset="0" />
+                <GradientStop Color="#1A3D6448" Offset="1" />
+            </LinearGradientBrush>
+            <!-- Vue: border 1px solid rgba(75,124,90,0.3) -->
+            <SolidColorBrush x:Key="NextStageCardBorder" Color="#4D4B7C5A" />
+            <!-- Vue: next-stage-card inner: bg rgba(255,255,255,0.7), border 2px solid rgba(75,124,90,0.3) -->
+            <SolidColorBrush x:Key="NextStageInnerBackground" Color="#B3FFFFFF" />
+            <SolidColorBrush x:Key="NextStageInnerBorder" Color="#4D4B7C5A" />
+            <!-- Vue: next-stage-value/label/title color: #4B7C5A (shared brand green text token) -->
+            <SolidColorBrush x:Key="BrandGreenText" Color="#4B7C5A" />
+
+            <!-- ── Transaction stat cards (light) ── -->
+            <!-- Vue: bg #f9fafb, border 1px solid #e5e7eb -->
+            <SolidColorBrush x:Key="TransactionStatCardBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="TransactionStatCardBorder" Color="#E5E7EB" />
+            <!-- Vue: value #1a1a1a, label #6b7280 -->
+            <SolidColorBrush x:Key="TransactionStatValue" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="TransactionStatLabel" Color="#6B7280" />
+
+            <!-- ── Stage cards (light) ── -->
+            <!-- Vue: bg #f9f9f9, border 1px solid #e8e8e8 -->
+            <SolidColorBrush x:Key="StageCardBg" Color="#F9F9F9" />
+            <SolidColorBrush x:Key="StageCardBorder" Color="#E8E8E8" />
+            <!-- Vue: stage-card-header border-bottom: #e0e0e0 -->
+            <SolidColorBrush x:Key="StageCardHeaderBorder" Color="#E0E0E0" />
+            <!-- Vue: stage-number #1a1a1a, stage-card-label #666, stage-card-value #333 -->
+            <SolidColorBrush x:Key="StageCardNumber" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="StageCardLabel" Color="#666666" />
+            <SolidColorBrush x:Key="StageCardValue" Color="#333333" />
+            <!-- Vue: stage-pill border rgba(75,124,90,0.3), color #4B7C5A -->
+            <SolidColorBrush x:Key="StagePillBorder" Color="#4D4B7C5A" />
+            <SolidColorBrush x:Key="StagePillText" Color="#4B7C5A" />
+
+            <!-- ── Floating nav buttons (light) ── -->
+            <!-- Vue: bg white, border #e0e0e0, shadow 0 4px 12px rgba(0,0,0,0.15) -->
+            <SolidColorBrush x:Key="FloatingBtnBg" Color="White" />
+            <SolidColorBrush x:Key="FloatingBtnBorder" Color="#E0E0E0" />
+            <!-- FloatingBtnShadow moved to Colors.Core.axaml (shared across sections) -->
+            <!-- Vue: private keys button text color: #ea580c -->
+            <SolidColorBrush x:Key="PrivateKeysBtnText" Color="#EA580C" />
+            <!-- Vue: detail-card (light): bg white, border #e0e0e0 -->
+            <SolidColorBrush x:Key="DetailCardBg" Color="White" />
+            <SolidColorBrush x:Key="DetailCardBorder" Color="#E0E0E0" />
+            <!-- Vue: project-id-label #6b7280, project-id-value #1a1a1a -->
+            <SolidColorBrush x:Key="ProjectIdLabel" Color="#6B7280" />
+            <SolidColorBrush x:Key="ProjectIdValue" Color="#1A1A1A" />
+            <!-- Vue: edit/view project button: color #4B7C5A (border consolidated to StrokeSubtle) -->
+            <SolidColorBrush x:Key="ProjectActionBtnText" Color="#4B7C5A" />
+            <!-- Vue: stats-card-title #92400e -->
+            <SolidColorBrush x:Key="StatsCardTitle" Color="#92400E" />
+            <!-- Vue: claim button disabled: bg #e5e7eb, color #9ca3af -->
+            <SolidColorBrush x:Key="ClaimDisabledBg" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="ClaimDisabledText" Color="#9CA3AF" />
+            <SolidColorBrush x:Key="ClaimDisabledBorder" Color="#E5E7EB" />
+
+            <!-- Stage amount green (Vue: #2d5a3d light, #5FAF78 dark) -->
+            <SolidColorBrush x:Key="StageAmountGreen" Color="#2D5A3D" />
+            <!-- Progress percentage (Vue: #2d5a3d light, #5FAF78 dark) -->
+            <SolidColorBrush x:Key="ProgressPercentage" Color="#2D5A3D" />
+
+        </ResourceDictionary>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             DARK THEME — ManageProject
+             ═══════════════════════════════════════════════════════════════ -->
+        <ResourceDictionary x:Key="Dark">
+
+            <!-- Stage amount green (dark: #5FAF78) -->
+            <SolidColorBrush x:Key="StageAmountGreen" Color="#5FAF78" />
+
+            <!-- ── Next Stage green gradient card (dark) ── -->
+            <!-- Vue dark: linear-gradient(to bottom right, rgba(75,124,90,0.15), rgba(61,100,72,0.15)) -->
+            <LinearGradientBrush x:Key="NextStageCardBackground" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#264B7C5A" Offset="0" />
+                <GradientStop Color="#263D6448" Offset="1" />
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="NextStageCardBorder" Color="#4D4B7C5A" />
+            <!-- Vue dark: next-stage-card inner: bg rgba(42,42,42,0.7), border 2px solid rgba(75,124,90,0.3) -->
+            <SolidColorBrush x:Key="NextStageInnerBackground" Color="#B32A2A2A" />
+            <SolidColorBrush x:Key="NextStageInnerBorder" Color="#4D4B7C5A" />
+            <!-- Vue dark: next-stage-value/label/title: #5FAF78 -->
+            <SolidColorBrush x:Key="BrandGreenText" Color="#5FAF78" />
+
+            <!-- ── Transaction stat cards (dark) ── -->
+            <!-- Vue dark: bg #0A0A0A, border 1px solid #404040 -->
+            <SolidColorBrush x:Key="TransactionStatCardBg" Color="#0A0A0A" />
+            <SolidColorBrush x:Key="TransactionStatCardBorder" Color="#404040" />
+            <!-- Vue dark: value #fafafa, label #9ca3af -->
+            <SolidColorBrush x:Key="TransactionStatValue" Color="#FAFAFA" />
+            <SolidColorBrush x:Key="TransactionStatLabel" Color="#9CA3AF" />
+
+            <!-- ── Stage cards (dark) ── -->
+            <!-- Vue dark: bg #0A0A0A, border 1px solid #404040 -->
+            <SolidColorBrush x:Key="StageCardBg" Color="#0A0A0A" />
+            <SolidColorBrush x:Key="StageCardBorder" Color="#404040" />
+            <SolidColorBrush x:Key="StageCardHeaderBorder" Color="#333333" />
+            <!-- Vue dark: stage-number #fafafa, stage-card-label #a0a0a0, stage-card-value #fafafa -->
+            <SolidColorBrush x:Key="StageCardNumber" Color="#FAFAFA" />
+            <SolidColorBrush x:Key="StageCardLabel" Color="#A0A0A0" />
+            <SolidColorBrush x:Key="StageCardValue" Color="#FAFAFA" />
+            <!-- Vue dark: stage-pill border rgba(75,124,90,0.4), color #5FAF78 -->
+            <SolidColorBrush x:Key="StagePillBorder" Color="#664B7C5A" />
+            <SolidColorBrush x:Key="StagePillText" Color="#5FAF78" />
+
+            <!-- ── Floating nav buttons (dark) ── -->
+            <!-- Vue dark: bg #1a1a1a, border #404040 -->
+            <SolidColorBrush x:Key="FloatingBtnBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="FloatingBtnBorder" Color="#404040" />
+            <!-- FloatingBtnShadow moved to Colors.Core.axaml (shared across sections) -->
+            <!-- Vue dark: private keys button: #fb923c -->
+            <SolidColorBrush x:Key="PrivateKeysBtnText" Color="#FB923C" />
+            <!-- Vue dark: detail-card bg #1a1a1a, border #404040 -->
+            <SolidColorBrush x:Key="DetailCardBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="DetailCardBorder" Color="#404040" />
+            <!-- Vue dark: project-id-label #9ca3af, project-id-value #fafafa -->
+            <SolidColorBrush x:Key="ProjectIdLabel" Color="#9CA3AF" />
+            <SolidColorBrush x:Key="ProjectIdValue" Color="#FAFAFA" />
+            <!-- Vue dark: edit/view project button: color #4B7C5A (border consolidated to StrokeSubtle) -->
+            <SolidColorBrush x:Key="ProjectActionBtnText" Color="#4B7C5A" />
+            <!-- Vue dark: stats-card-title #fdba74 -->
+            <SolidColorBrush x:Key="StatsCardTitle" Color="#FDBA74" />
+            <!-- Vue dark: claim button disabled: transparent, border rgba(95,175,120,0.3), color rgba(95,175,120,0.5) -->
+            <SolidColorBrush x:Key="ClaimDisabledBg" Color="Transparent" />
+            <SolidColorBrush x:Key="ClaimDisabledText" Color="#805FAF78" />
+            <SolidColorBrush x:Key="ClaimDisabledBorder" Color="#4D5FAF78" />
+            <!-- Progress percentage (dark: #5FAF78) -->
+            <SolidColorBrush x:Key="ProgressPercentage" Color="#5FAF78" />
+
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+</ResourceDictionary>

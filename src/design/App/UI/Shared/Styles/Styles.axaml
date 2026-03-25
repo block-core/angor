@@ -1,0 +1,48 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:App.UI.Shared.Controls">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <StackPanel Spacing="10">
+                <controls:Card Header="Header">
+                    <controls:Card Header="Nested header">
+                        CONTENT
+                    </controls:Card>
+                </controls:Card>
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <Color x:Key="SuccessColor">Green</Color>
+        <Color x:Key="ErrorColor">Red</Color>
+        <Color x:Key="DangerColor">Red</Color>
+
+        <x:Double x:Key="FontSizeBig">20</x:Double>
+        <x:Double x:Key="FontSizeNormal">16</x:Double>
+        <x:Double x:Key="FontSizeSmall">12</x:Double>
+
+        <x:Double x:Key="IconSizeBig">40</x:Double>
+
+        <ControlTheme x:Key="{x:Type controls:IconButton}" TargetType="controls:IconButton" BasedOn="{StaticResource {x:Type controls:IconButton}}">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="TextBlock.FontWeight" Value="Bold" />
+        </ControlTheme>
+    </Styles.Resources>
+
+    <Style Selector="Separator">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Background" Value="#2B000000" />
+        <Setter Property="Height" Value="2" />
+    </Style>
+
+    <Style Selector="controls|Card controls|Card">
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Background" Value="#31000000" />
+    </Style>
+
+</Styles>

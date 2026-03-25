@@ -1,0 +1,38 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i="https://github.com/projektanker/icons.avalonia">
+
+    <!-- Icon utility styles — replaces Zafiro IconOptions attached properties.
+         Projektanker icons use FontSize for sizing and Foreground for color. -->
+
+    <!-- Defaults: all i:Icon elements in UserControls get TextMuted color -->
+    <Style Selector=":is(UserControl) i|Icon">
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+    </Style>
+
+    <!-- Sizes -->
+    <Style Selector="i|Icon.Icon-S">
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+    <Style Selector="i|Icon.Icon-M">
+        <Setter Property="FontSize" Value="24" />
+    </Style>
+    <Style Selector="i|Icon.Icon-L">
+        <Setter Property="FontSize" Value="32" />
+    </Style>
+
+    <!-- Fills (Foreground on i:Icon) -->
+    <Style Selector="i|Icon.Icon-Fill-White">
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="i|Icon.Icon-Fill-Muted">
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+    </Style>
+    <Style Selector="i|Icon.Icon-Fill-Green">
+        <Setter Property="Foreground" Value="{DynamicResource Brand}" />
+    </Style>
+    <Style Selector="i|Icon.Icon-Fill-Orange">
+        <Setter Property="Foreground" Value="{DynamicResource BitcoinOrange}" />
+    </Style>
+
+</Styles>

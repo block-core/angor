@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git pull:*)",
+      "Bash(mkdir -p src/design)",
+      "Bash(cp -r /c/Users/david/openCodeProjects/angor-zazawowow/src/Angor/Avalonia/App src/design/)",
+      "Bash(cp -r /c/Users/david/openCodeProjects/angor-zazawowow/src/Angor/Avalonia/App.Desktop src/design/)"
+    ]
+  }
+}

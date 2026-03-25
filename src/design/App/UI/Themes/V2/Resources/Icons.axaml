@@ -1,0 +1,76 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- Icons kept as StreamGeometry (simple geometric shapes, brand logos, -->
+    <!-- nav sidebar icons, and fill-based icons that render well at size). -->
+    <!-- All other icons have been migrated to Projektanker FontAwesome.    -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+    <!-- ═══ Sidebar nav icons (Heroicons outline, 24x24 viewBox, stroke-based) ═══ -->
+    <!-- Used by NavIconConverter in ShellView for sidebar navigation -->
+    <StreamGeometry x:Key="NavIconHome">M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6</StreamGeometry>
+    <StreamGeometry x:Key="NavIconSearch">M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z</StreamGeometry>
+    <StreamGeometry x:Key="NavIconTrendUp">M13 7h8m0 0v8m0-8l-8 8-4-4-6 6</StreamGeometry>
+    <StreamGeometry x:Key="NavIconDocument">M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z</StreamGeometry>
+    <StreamGeometry x:Key="NavIconUsers">M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z</StreamGeometry>
+    <!-- Wallet icon (fill-based, non-standard viewBox 122.88x101.33, FillRule=EvenOdd) -->
+    <StreamGeometry x:Key="NavIconWallet">M90.62,33.32h18.4v-2.79c-2.88-10.73-10.2-10.66-19.25-10.57c-1.49,0.02-2.84,0.03-2.92,0.03H18.07c-1.58,0-2.86-1.28-2.86-2.86c0-1.58,1.28-2.86,2.86-2.86h68.78c2.03,0,2.46,0,2.87-0.01c7.74-0.08,14.5-0.15,19.3,4.38v-1.31c0-3.2-1.31-6.1-3.42-8.21c-2.11-2.11-5.02-3.42-8.21-3.42H17.34c-3.2,0-6.1,1.31-8.21,3.42c-2.11,2.11-3.42,5.02-3.42,8.21v66.64c0,3.2,1.31,6.1,3.42,8.21c2.11,2.11,5.02,3.42,8.21,3.42h80.04c3.2,0,6.1-1.31,8.21-3.42c2.11-2.11,3.42-5.02,3.42-8.21v-9.46h-18.4c-5.55,0-10.6-2.27-14.25-5.92c-3.65-3.65-5.92-8.7-5.92-14.25v-0.87c0-5.55,2.27-10.6,5.92-14.25C80.02,35.59,85.06,33.32,90.62,33.32L90.62,33.32z M114.73,33.43c2.07,0.31,3.92,1.29,5.33,2.71c1.74,1.74,2.81,4.14,2.81,6.78v21.6c0,2.76-1.12,5.26-2.93,7.07c-1.39,1.39-3.2,2.38-5.21,2.76v9.63c0,4.77-1.95,9.11-5.09,12.25c-3.14,3.14-7.48,5.09-12.25,5.09H17.34c-4.77,0-9.11-1.95-12.25-5.09C1.95,93.1,0,88.76,0,83.99V17.34c0-4.77,1.95-9.11,5.09-12.25C8.23,1.95,12.57,0,17.34,0h80.04c4.77,0,9.11,1.95,12.25,5.09c3.14,3.14,5.09,7.48,5.09,12.25V33.43L114.73,33.43z M88.14,46.11c4.05,0,7.33,3.28,7.33,7.33c0,4.05-3.28,7.33-7.33,7.33c-4.05,0-7.33-3.28-7.33-7.33C80.81,49.39,84.09,46.11,88.14,46.11L88.14,46.11z</StreamGeometry>
+    <!-- Settings gear icon (Heroicons outline, 24x24, two paths combined) -->
+    <StreamGeometry x:Key="NavIconSettings">M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z</StreamGeometry>
+
+    <!-- ═══ Simple geometric shapes (render well as StreamGeometry at small sizes) ═══ -->
+    <!-- Chevron down (Heroicons outline, 24x24) -->
+    <StreamGeometry x:Key="ChevronDown">M19 9l-7 7-7-7</StreamGeometry>
+    <!-- X/close icon (Heroicons outline, 24x24) — for cancel buttons -->
+    <StreamGeometry x:Key="XMark">M6 18L18 6M6 6l12 12</StreamGeometry>
+    <!-- Checkmark icon (Heroicons outline, 24x24) — for approve actions -->
+    <StreamGeometry x:Key="Checkmark">M5 13l4 4L19 7</StreamGeometry>
+    <!-- Chevron-left thick icon (solid, 320x512 viewBox) — bold left chevron, use with Fill -->
+    <StreamGeometry x:Key="ChevronLeftThick">M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z</StreamGeometry>
+    <!-- Chevron-right thick icon (solid, 320x512 viewBox) — bold right chevron, use with Fill -->
+    <StreamGeometry x:Key="ChevronRightThick">M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z</StreamGeometry>
+
+    <!-- ═══ Fill-based icons (solid shapes that render well at any size) ═══ -->
+    <!-- Badge-check filled icon (solid, 24x24) — wavy seal with checkmark, use with Fill -->
+    <StreamGeometry x:Key="BadgeCheckSolid">M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zM15.572 9.97a.75.75 0 00-1.144-.97l-3.47 4.11-1.665-1.663a.75.75 0 00-1.061 1.06l2.25 2.25a.75.75 0 001.102-.045l4-4.742z</StreamGeometry>
+    <!-- Check-circle filled icon (solid, 512x512 viewBox) — filled circle with checkmark cutout, use with Fill -->
+    <StreamGeometry x:Key="CheckCircleSolid">M256 512A256 256 0 10256 0a256 256 0 100 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z</StreamGeometry>
+
+    <!-- ═══ Home page hero icons (simple shapes, render well at 80px) ═══ -->
+    <!-- Lightning bolt outline (Heroicons, 24x24 viewBox, stroke-only) — from Vue prototype SVG -->
+    <StreamGeometry x:Key="LightningBoltHero">M13 10V3L4 14h7v7l9-11h-7z</StreamGeometry>
+
+    <!-- ═══ Removed icons (migrated to FontAwesome or PNG) ═══ -->
+    <!-- Lightning → fa-solid fa-bolt -->
+    <!-- Globe → fa-solid fa-globe -->
+    <!-- Palette → fa-solid fa-palette -->
+    <!-- Link → fa-solid fa-link -->
+    <!-- Server → fa-solid fa-server -->
+    <!-- Signal → fa-solid fa-signal -->
+    <!-- CurrencyDollar → fa-solid fa-dollar-sign -->
+    <!-- Key → fa-solid fa-key -->
+    <!-- Eye → fa-solid fa-eye -->
+    <!-- ExclamationTriangle → fa-solid fa-triangle-exclamation -->
+    <!-- Trash → fa-solid fa-trash -->
+    <!-- Plus → fa-solid fa-plus -->
+    <!-- Sun → fa-solid fa-sun -->
+    <!-- Shield → fa-solid fa-shield -->
+    <!-- Search → fa-solid fa-magnifying-glass -->
+    <!-- CloudUpload → fa-solid fa-cloud-arrow-up -->
+    <!-- Padlock → fa-solid fa-lock -->
+    <!-- Pencil → fa-solid fa-pen -->
+    <!-- Clock → fa-solid fa-clock -->
+    <!-- Calendar → fa-solid fa-calendar -->
+    <!-- ExternalLink → fa-solid fa-arrow-up-right-from-square -->
+    <!-- ChatBubble → fa-solid fa-comment -->
+    <!-- UserCircle → fa-solid fa-circle-user -->
+    <!-- User → fa-solid fa-user -->
+    <!-- InfoCircle → fa-solid fa-circle-info -->
+    <!-- Box → fa-solid fa-box -->
+    <!-- Cloud → fa-solid fa-cloud -->
+    <!-- ArrowRight → fa-solid fa-arrow-right (if needed) -->
+    <!-- Copy → fa-solid fa-copy -->
+    <!-- RefreshArrows → fa-solid fa-arrows-rotate -->
+    <!-- Share → fa-solid fa-share -->
+    <!-- BitcoinSymbol → fa-brands fa-bitcoin -->
+</ResourceDictionary>

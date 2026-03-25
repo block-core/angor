@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <OutputType>WinExe</OutputType>
+        <PublishTrimmed>true</PublishTrimmed>
+        <TrimMode>partial</TrimMode>
+        <PublishSingleFile>true</PublishSingleFile>
+        <PublishReadyToRun>true</PublishReadyToRun>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <RollForward>LatestMajor</RollForward>
+        <Nullable>enable</Nullable>
+        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+        <Company>Angor</Company>
+        <Product>Angor</Product>
+        <AssemblyName>Angor2</AssemblyName>
+        <RootNamespace>App.Desktop</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <ApplicationIcon>app.ico</ApplicationIcon>
+        <AssemblyTitle>Angor</AssemblyTitle>
+    </PropertyGroup>
+    
+    <!-- Platform icon files for packaging (macOS .icns, Linux .png) -->
+    <ItemGroup>
+        <None Include="AppIcon.icns" Pack="false" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="icon.png" Pack="false" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <!-- Exclude icons/ working directory from build -->
+    <ItemGroup>
+        <None Remove="icons/**" />
+        <Content Remove="icons/**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia.Desktop" />
+        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+        <PackageReference Include="Avalonia.Diagnostics">
+            <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+            <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\App\App.csproj" />
+    </ItemGroup>
+</Project>

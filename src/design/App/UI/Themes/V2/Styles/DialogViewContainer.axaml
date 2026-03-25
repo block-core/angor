@@ -1,0 +1,64 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+        xmlns:i="https://github.com/projektanker/icons.avalonia"
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections">
+    <Design.PreviewWith>
+        <controls:DialogViewContainer Width="500" Height="500" Title="Nice Dialog">
+            <controls:DialogControl Content="Some This is some text that gives context to the user about the dialog. It can be multiple lines and contain important information that the user needs to know before taking an action.">
+                <controls:DialogControl.Options>
+                    <generic:List x:TypeArguments="controls:IOption">
+                        <controls:OptionDesign Title="Primary" Role="Primary" />
+                        <controls:OptionDesign Title="Secondary" Role="Secondary" />
+                    </generic:List>
+                </controls:DialogControl.Options>
+            </controls:DialogControl>
+        </controls:DialogViewContainer>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|DialogViewContainer">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <!-- Backdrop scrim with fade transition -->
+                    <Border Background="{DynamicResource BodyText}" Opacity="0.2">
+                        <Border.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Opacity" Duration="0:0:0.3" />
+                            </Transitions>
+                        </Border.Transitions>
+                    </Border>
+                    <!-- Modal content with scale+opacity transition (Vue modal-fade) -->
+                    <Border Classes="ColorPanel White" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            RenderTransformOrigin="50%,50%"
+                            RenderTransform="scale(1)">
+                        <Border.Transitions>
+                            <Transitions>
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" />
+                                <DoubleTransition Property="Opacity" Duration="0:0:0.3" />
+                            </Transitions>
+                        </Border.Transitions>
+                        <StackPanel Classes="Gap-XL">
+                            <Panel>
+                                <TextBlock VerticalAlignment="Center" Classes="Size-XL Weight-Bold Center" Text="{TemplateBinding Title}" />
+                                <controls:IconButton Command="{TemplateBinding Close}"
+                                                IsCancel="True"
+                                                Padding="0"
+                                                Background="Transparent" 
+                                                BorderBrush="Transparent"
+                                                Foreground="{DynamicResource Dimmed}"
+                                                HorizontalAlignment="Right">
+                                    <controls:IconButton.Icon>
+                                        <i:Icon Value="fa-solid fa-xmark" FontSize="24" />
+                                    </controls:IconButton.Icon>
+                                </controls:IconButton>
+                            </Panel>
+                            <ContentPresenter Content="{TemplateBinding Content}" />
+                        </StackPanel>
+                    </Border>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+</Styles>

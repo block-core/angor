@@ -1,0 +1,224 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mp="clr-namespace:App.UI.Sections.MyProjects"
+             xmlns:modals="clr-namespace:App.UI.Sections.MyProjects.Modals"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="1400"
+             x:Class="App.UI.Sections.MyProjects.ManageProjectView"
+             x:DataType="mp:ManageProjectViewModel">
+
+    <!--
+        Vue ref: ManageFunds.vue — Manage Project detail screen.
+        Layout: floating sticky nav at top, single scrollable column,
+        max-width 1400px, 24px uniform section spacing (Rule 6).
+        Content sections extracted to ManageProjectContentView.
+        Modals extracted to Modals/ManageProjectModalsView.
+    -->
+
+    <UserControl.Styles>
+        <!-- Floating nav button hover: lift + enhanced shadow (matches ProjectDetailView) -->
+        <Style Selector="Border.FloatingBtn:pointerover">
+            <Setter Property="RenderTransform" Value="translate(0px, -1px)" />
+            <Setter Property="BoxShadow" Value="0 6 16 0 #33000000" />
+        </Style>
+        <!-- Kill FluentTheme button chrome on nav buttons -->
+        <Style Selector="Button.NavBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="Button.NavBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.NavBtn:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <!-- ═══ FLOATING NAV BAR (sticky at top, transparent bg) ═══ -->
+        <!--
+            Vue: .sticky-nav-bar — position: sticky, top 0, z-index 100,
+            justify-content: space-between.
+            Standardized pattern: DockPanel with Margin="24,24,24,0".
+        -->
+        <DockPanel VerticalAlignment="Top"
+                   ZIndex="100"
+                   Margin="24,24,24,0"
+                   IsHitTestVisible="True">
+
+            <!-- RIGHT: Private Keys, Refresh, Share (docked first so it hugs the right edge) -->
+            <!-- Vue: .nav-right-buttons — gap 12 -->
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="12">
+                <!-- View Private Keys button -->
+                <!-- Vue: .private-keys-button-floating — color #ea580c, h44 -->
+                <Border Classes="FloatingBtn"
+                        Background="{DynamicResource FloatingBtnBg}"
+                        BorderBrush="{DynamicResource FloatingBtnBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        BoxShadow="{DynamicResource FloatingBtnShadow}"
+                        Padding="16,0,16,0"
+                        Height="44"
+                        VerticalAlignment="Center"
+                        Cursor="Hand"
+                        RenderTransform="translate(0px, 0px)">
+                    <Border.Transitions>
+                        <Transitions>
+                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <Button Name="ViewPrivateKeysButton" Classes="NavBtn" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-lock"
+                                   FontSize="16"
+                                   Foreground="{DynamicResource PrivateKeysBtnText}" />
+                            <TextBlock Text="View Private Keys"
+                                       FontSize="14" FontWeight="Medium"
+                                       Foreground="{DynamicResource PrivateKeysBtnText}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Border>
+
+                <!-- Refresh button (icon only) -->
+                <!-- Vue: .refresh-button-floating — w44 h44 -->
+                <Border Classes="FloatingBtn"
+                        Background="{DynamicResource FloatingBtnBg}"
+                        BorderBrush="{DynamicResource FloatingBtnBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        BoxShadow="{DynamicResource FloatingBtnShadow}"
+                        Width="44" Height="44"
+                        VerticalAlignment="Center"
+                        Cursor="Hand"
+                        RenderTransform="translate(0px, 0px)">
+                    <Border.Transitions>
+                        <Transitions>
+                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <Button Classes="NavBtn" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand">
+                        <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="14" Foreground="{DynamicResource TextStrong}" />
+                    </Button>
+                </Border>
+
+                <!-- Share button (icon only) -->
+                <!-- Vue: .share-button-floating — w44 h44 -->
+                <Border Classes="FloatingBtn"
+                        Background="{DynamicResource FloatingBtnBg}"
+                        BorderBrush="{DynamicResource FloatingBtnBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        BoxShadow="{DynamicResource FloatingBtnShadow}"
+                        Width="44" Height="44"
+                        VerticalAlignment="Center"
+                        Cursor="Hand"
+                        RenderTransform="translate(0px, 0px)">
+                    <Border.Transitions>
+                        <Transitions>
+                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <Button Name="ShareButton" Classes="NavBtn" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand">
+                        <i:Icon Value="fa-solid fa-share" FontSize="14" Foreground="{DynamicResource TextStrong}"
+                                HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Button>
+                </Border>
+            </StackPanel>
+
+            <!-- LEFT: Back + Project Name (after Right so DockPanel pushes Right to edge) -->
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="12">
+                <!-- Back button — standardized: ChevronLeftThick + Fill (matches all other nav bars) -->
+                <Border Classes="FloatingBtn"
+                        Background="{DynamicResource FloatingBtnBg}"
+                        BorderBrush="{DynamicResource FloatingBtnBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        BoxShadow="{DynamicResource FloatingBtnShadow}"
+                        Padding="16,0,16,0"
+                        Height="44"
+                        VerticalAlignment="Center"
+                        Cursor="Hand"
+                        RenderTransform="translate(0px, 0px)">
+                    <Border.Transitions>
+                        <Transitions>
+                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <Button Name="BackButton"
+                            Classes="NavBtn"
+                            VerticalAlignment="Stretch"
+                            HorizontalAlignment="Stretch"
+                            Cursor="Hand">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Viewbox Width="10" Height="16">
+                                <Path Data="{StaticResource ChevronLeftThick}"
+                                      Fill="{DynamicResource TextStrong}"
+                                      Width="320" Height="512" Stretch="Uniform" />
+                            </Viewbox>
+                            <TextBlock Text="Back"
+                                       FontSize="14" FontWeight="Medium"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Border>
+
+                <!-- Project Name pill -->
+                <Border Classes="FloatingBtn"
+                        Background="{DynamicResource FloatingBtnBg}"
+                        BorderBrush="{DynamicResource FloatingBtnBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        BoxShadow="{DynamicResource FloatingBtnShadow}"
+                        Height="44"
+                        Padding="16,0,16,0"
+                        VerticalAlignment="Center"
+                        RenderTransform="translate(0px, 0px)">
+                    <Border.Transitions>
+                        <Transitions>
+                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <TextBlock Text="{Binding Project.Name}"
+                               FontSize="14" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextStrong}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               MaxWidth="400" />
+                </Border>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- ═══ SCROLLABLE CONTENT ═══ -->
+        <!--
+            Vue: .content-grid — gap 24. Rule 6: 24px uniform section spacing.
+            .main-column — max-width 1400px.
+            Spacer at top: nav margin(24) + nav height(44) + gap(24) = 92px.
+        -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Panel>
+                <StackPanel Spacing="24"
+                            Margin="24,0,24,24">
+                    <!-- Spacer for floating nav: 24 (nav top margin) + 44 (nav h) + 24 (gap below) = 92 -->
+                    <Panel Height="92" />
+
+                    <!-- Content sections (Project ID, Stats, Next Stage, Stages) -->
+                    <mp:ManageProjectContentView Name="ContentView" />
+                </StackPanel>
+            </Panel>
+        </ScrollViewer>
+
+        <!-- ═══ MODAL OVERLAYS (stacked above all content) ═══ -->
+        <modals:ManageProjectModalsView Name="ModalsView" ZIndex="200" />
+
+    </Panel>
+</UserControl>

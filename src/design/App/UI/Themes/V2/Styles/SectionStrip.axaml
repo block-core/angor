@@ -1,0 +1,160 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Sidebar navigation styles for ListBox.Nav.
+
+        Uses custom ControlThemes for ListBoxItem to fully replace the
+        FluentTheme's default template and avoid state conflicts.
+
+        Two item types:
+          - NavItem       → selectable nav button (icon + label)
+          - NavGroupHeader → non-selectable group divider (line + title)
+
+        Layout model (matches AngorApp SectionStrip):
+          ┌─ Border (sidebar wrapper, Padding="8") ───────────────────────────┐
+          │  ┌─ ListBox.Nav ────────────────────────────────────────────────┐  │
+          │  │  StackPanel                                                   │  │
+           │  │    [NavItem]        Margin="2,12,2,12" Padding="12,9,12,9"   │  │
+          │  │    [NavItem]                                                  │  │
+           │  │    [NavGroupHeader] Margin="0,32,0,24" Padding="0"          │  │
+          │  │    [NavItem]                                                  │  │
+          │  │    [NavItem]                                                  │  │
+          │  │    [NavGroupHeader]                                           │  │
+          │  │    [NavItem]                                                  │  │
+          │  │    [NavItem]                                                  │  │
+          │  └──────────────────────────────────────────────────────────────┘  │
+          └────────────────────────────────────────────────────────────────────┘
+    -->
+
+    <!-- ── ListBox.Nav: transparent, no chrome, ClipToBounds=False for shadows ── -->
+    <Style Selector="ListBox.Nav">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="ClipToBounds" Value="False" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <StackPanel />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Fix clipped drop shadow: every node in the render chain needs ClipToBounds=False -->
+    <Style Selector="ListBox.Nav /template/ ScrollViewer">
+        <Setter Property="ClipToBounds" Value="False" />
+    </Style>
+    <Style Selector="ListBox.Nav /template/ ItemsPresenter">
+        <Setter Property="ClipToBounds" Value="False" />
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         NavListBoxItem ControlTheme — selectable nav button
+         ══════════════════════════════════════════════════════════════════════ -->
+    <Styles.Resources>
+        <ControlTheme x:Key="NavListBoxItem" TargetType="ListBoxItem">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="12,9,12,9" />
+            <Setter Property="Margin" Value="2,12,2,12" />
+            <Setter Property="FontFamily" Value="{StaticResource FontFamilySans}" />
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBase}" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}"
+                            ClipToBounds="False">
+                        <!-- Vue: nav link transition background-color 0.2s ease, color 0.2s ease -->
+                        <!-- NOTE: BrushTransition on Background removed because Avalonia interpolates
+                             Transparent (#00FFFFFF) → dark color through visible white intermediate frames.
+                             BorderBrush transition is safe since both ends are opaque or same-hue. -->
+                        <Border.Transitions>
+                            <Transitions>
+                                <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
+                            </Transitions>
+                        </Border.Transitions>
+                        <ContentPresenter x:Name="PART_ContentPresenter"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+
+            <!-- ── Hover ─────────────────────────────────────────────── -->
+            <Style Selector="^:pointerover /template/ Border#Root">
+                <Setter Property="Background" Value="{DynamicResource NavItemHover}" />
+            </Style>
+
+            <!-- ── Selected ──────────────────────────────────────────── -->
+            <Style Selector="^:selected">
+                <Setter Property="Foreground" Value="{DynamicResource Highlight}" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+            </Style>
+            <Style Selector="^:selected /template/ Border#Root">
+                <Setter Property="Background" Value="{DynamicResource SurfaceSelected}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+                <Setter Property="BoxShadow" Value="{DynamicResource SectionShadow}" />
+            </Style>
+
+            <!-- ── Selected + Hover (keep selected look) ─────────────── -->
+            <Style Selector="^:selected:pointerover /template/ Border#Root">
+                <Setter Property="Background" Value="{DynamicResource SurfaceSelected}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+                <Setter Property="BoxShadow" Value="{DynamicResource SectionShadow}" />
+            </Style>
+
+            <!-- ── Pressed ───────────────────────────────────────────── -->
+            <Style Selector="^:pressed /template/ Border#Root">
+                <Setter Property="Background" Value="{DynamicResource NavItemHover}" />
+            </Style>
+        </ControlTheme>
+
+        <!-- ══════════════════════════════════════════════════════════════
+             NavGroupHeaderItem ControlTheme — non-selectable group header
+             
+             Vue: px-3 mt-8 mb-6 wrapper → Margin="0,32,0,24"
+             Divider: h-px mb-4 (1px height, 16px gap to label) — in DataTemplate
+             Font: 14px ExtraBold (800) Brand (primary green), LetterSpacing=1.4
+             (matches Vue web app: text-sm font-extrabold tracking-widest)
+             ══════════════════════════════════════════════════════════════ -->
+        <ControlTheme x:Key="NavGroupHeaderItem" TargetType="ListBoxItem">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="IsHitTestVisible" Value="False" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,32,0,24" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <ContentPresenter x:Name="PART_ContentPresenter"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Margin="{TemplateBinding Padding}" />
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </Styles.Resources>
+
+    <!-- Apply NavListBoxItem to nav items (default) -->
+    <Style Selector="ListBox.Nav ListBoxItem">
+        <Setter Property="Theme" Value="{StaticResource NavListBoxItem}" />
+    </Style>
+
+</Styles>

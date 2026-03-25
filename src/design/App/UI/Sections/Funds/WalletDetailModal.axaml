@@ -1,0 +1,243 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:funds="clr-namespace:App.UI.Sections.Funds"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
+             x:Class="App.UI.Sections.Funds.WalletDetailModal"
+             x:DataType="funds:FundsViewModel">
+
+    <!--
+        Wallet Detail / UTXO Management Modal — Vue Funds.vue:
+        Large modal: max-w-4xl (56rem/896px), max-h[90dvh], scrollable
+        Sticky header: wallet icon + name + type + close X
+                       Balance row: "Balance" label + 2xl bold amount + Send/Receive buttons
+        Body: UTXO section (Bitcoin icon + "UTXOs" + subtitle) → selectable UTXO card list
+        Each UTXO card: txid (truncated green monospace, copyable), amount, confirmations, checkbox
+        Selected UTXOs update Send button text ("Send", "Send 1 UTXO", "Send N UTXOs")
+    -->
+
+    <UserControl.Styles>
+        <!-- UTXO card selection styles — Rule #9: CSS class toggle, NO BrushTransition -->
+        <Style Selector="Border.UtxoCard">
+            <Setter Property="Background" Value="{DynamicResource UtxoCardUnselectedBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource UtxoCardUnselectedBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Border.UtxoCard.UtxoSelected">
+            <Setter Property="Background" Value="{DynamicResource UtxoCardSelectedBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+
+        <!-- UTXO checkbox styles — Rule #9: CSS class toggle, NO BrushTransition -->
+        <Style Selector="Border.UtxoCheckbox">
+            <Setter Property="Background" Value="{DynamicResource UtxoCheckboxBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource UtxoCheckboxBorder}" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
+        <Style Selector="Border.UtxoCheckbox.UtxoChecked">
+            <Setter Property="Background" Value="{DynamicResource PrimaryGreenBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+
+        <!-- Text color helper classes for code-behind created elements -->
+        <Style Selector="TextBlock.TextMuted">
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+        <Style Selector="TextBlock.TextStrong">
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+        <Style Selector="i|Icon.TextMuted">
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+
+        <!-- Kill FluentTheme chrome on copy buttons -->
+        <Style Selector="Button.ModalBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="Button.ModalBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.ModalBtn:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- MODAL CARD — max-w-4xl = 896px                          -->
+        <!-- Vue: rounded-2xl shadow-2xl bg-[#111]/bg-white          -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="640" MaxWidth="896"
+                MaxHeight="680"
+                CornerRadius="16"
+                Background="{DynamicResource DeployModalBackground}"
+                BorderBrush="{DynamicResource DeployModalBorder}"
+                BorderThickness="1"
+                BoxShadow="0 8 32 0 #40000000"
+                ClipToBounds="True"
+                RenderTransformOrigin="50%,50%"
+                RenderTransform="scale(1)">
+            <Border.Transitions>
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" />
+                </Transitions>
+            </Border.Transitions>
+
+            <DockPanel>
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- STICKY HEADER                                       -->
+                <!-- Vue: sticky top-0 z-10 p-6 border-b               -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <Border DockPanel.Dock="Top"
+                        BorderBrush="{DynamicResource ModalHeaderBorder}"
+                        BorderThickness="0,0,0,1"
+                        Padding="24,20">
+                    <StackPanel Spacing="16">
+                        <!-- Top row: wallet icon + name/type + close X -->
+                        <DockPanel>
+                            <Button Name="CloseBtn" Classes="ModalCloseBtn" DockPanel.Dock="Right"
+                                    VerticalAlignment="Top" />
+                            <StackPanel Orientation="Horizontal" Spacing="16">
+                                <!-- Wallet icon 48x48 (Bitcoin icon from Vue prototype) -->
+                                <Border Width="48" Height="48"
+                                        CornerRadius="10"
+                                        Background="#fef3c7"
+                                        Padding="10"
+                                        VerticalAlignment="Center">
+                                    <i:Icon Value="fa-brands fa-bitcoin"
+                                           FontSize="24"
+                                           Foreground="#f59e0b" />
+                                </Border>
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <!-- Vue: text-xl font-bold -->
+                                    <TextBlock Name="HeaderWalletName" Text="Bitcoin Wallet"
+                                               FontSize="20" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}" />
+                                    <!-- Vue: text-sm text-gray-400/text-gray-600 -->
+                                    <TextBlock Name="HeaderWalletType" Text="On-Chain"
+                                               FontSize="14"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!-- Balance row: label + big amount on left, Send/Receive buttons on right -->
+                        <!-- Vue: mt-4 flex items-center justify-between -->
+                        <DockPanel>
+                            <!-- Right: Send + Receive buttons -->
+                            <StackPanel DockPanel.Dock="Right"
+                                        Orientation="Horizontal"
+                                        Spacing="12"
+                                        VerticalAlignment="Center">
+                                <!-- Send button: green filled, px-4 py-2 rounded-lg font-semibold -->
+                                <Button Name="BtnHeaderSend"
+                                        Padding="16,8" CornerRadius="8"
+                                        Foreground="White"
+                                        FontWeight="SemiBold" FontSize="14"
+                                        BorderThickness="0"
+                                        Cursor="Hand">
+                                    <Button.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                            <GradientStop Color="#3D6448" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Button.Background>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <i:Icon Value="fa-solid fa-arrow-up"
+                                               FontSize="14" Foreground="White"
+                                               VerticalAlignment="Center" />
+                                        <TextBlock Name="SendBtnText" Text="Send"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <!-- Receive button: outlined green (btn-secondary-green) -->
+                                <Button Name="BtnHeaderReceive"
+                                        Padding="16,8" CornerRadius="8"
+                                        Background="Transparent"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                        BorderThickness="2"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}"
+                                        FontWeight="SemiBold" FontSize="14"
+                                        Cursor="Hand">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <i:Icon Value="fa-solid fa-arrow-down"
+                                               FontSize="14" Foreground="{DynamicResource PrimaryGreenBrush}"
+                                               VerticalAlignment="Center" />
+                                        <TextBlock Text="Receive" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <!-- Left: Balance label + amount -->
+                            <StackPanel Spacing="2" VerticalAlignment="Center">
+                                <!-- Vue: text-sm text-gray-400/text-gray-600 -->
+                                <TextBlock Text="Balance" FontSize="14"
+                                           Foreground="{DynamicResource TextMuted}" />
+                                <!-- Vue: text-2xl font-bold -->
+                                <TextBlock Name="HeaderBalance" Text="2.5431 BTC"
+                                           FontSize="26" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}" />
+                            </StackPanel>
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- SCROLLABLE BODY — UTXO Management Section          -->
+                <!-- Vue: p-6                                           -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="24" Spacing="16">
+                        <!-- UTXO Section Header -->
+                        <!-- Vue: mb-4 flex items-center gap-3 -->
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <!-- Bitcoin icon in rounded-lg bg -->
+                            <!-- Vue: w-10 h-10 rounded-lg bg-[#1a1a1a]/bg-gray-100 -->
+                            <Border Width="40" Height="40"
+                                    CornerRadius="8"
+                                    Background="{DynamicResource UtxoSectionIconBg}"
+                                    VerticalAlignment="Center">
+                                <i:Icon Value="fa-brands fa-bitcoin"
+                                       FontSize="22"
+                                       Foreground="#f59e0b" />
+                            </Border>
+                            <StackPanel Spacing="2" VerticalAlignment="Center">
+                                <!-- Vue: text-lg font-semibold mb-1 -->
+                                <TextBlock Text="UTXOs"
+                                           FontSize="18" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextStrong}" />
+                                <!-- Vue: text-sm text-gray-400/text-gray-600 -->
+                                <TextBlock Text="Manage your individual coins"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource TextMuted}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- ═══════════════════════════════════════════ -->
+                        <!-- UTXO LIST                                    -->
+                        <!-- Vue: space-y-3 (12px gap)                    -->
+                        <!-- ═══════════════════════════════════════════ -->
+                        <StackPanel Name="UtxoList" Spacing="12">
+                            <!-- UTXO cards are added in code-behind -->
+                        </StackPanel>
+
+                        <!-- Empty state (hidden when UTXOs exist) -->
+                        <Border Name="EmptyUtxoState" IsVisible="False"
+                                Padding="0,32">
+                            <TextBlock Text="No UTXOs available"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       HorizontalAlignment="Center" />
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Panel>
+</UserControl>

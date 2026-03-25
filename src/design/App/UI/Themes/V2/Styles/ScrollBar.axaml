@@ -1,0 +1,87 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        ScrollBar styling — Vue reference:
+        - scrollbar width: 12px (with 2px border = 8px visible thumb)
+        - thumb: rgba(0,0,0,0.2) light / rgba(255,255,255,0.2) dark
+        - thumb hover: rgba(0,0,0,0.3) light / rgba(255,255,255,0.3) dark
+        - track: transparent
+        - thumb border-radius: 10px (full round)
+        - track margin: 16px top/bottom
+    -->
+
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="ScrollBarThumbFill" Color="#33000000" />
+                    <SolidColorBrush x:Key="ScrollBarThumbFillHover" Color="#4D000000" />
+                    <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="#66000000" />
+                    <SolidColorBrush x:Key="ScrollBarTrackFill" Color="Transparent" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="ScrollBarThumbFill" Color="#33FFFFFF" />
+                    <SolidColorBrush x:Key="ScrollBarThumbFillHover" Color="#4DFFFFFF" />
+                    <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="#66FFFFFF" />
+                    <SolidColorBrush x:Key="ScrollBarTrackFill" Color="Transparent" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <!-- Vertical ScrollBar: thin 8px -->
+    <Style Selector="ScrollBar:vertical">
+        <Setter Property="Width" Value="12" />
+        <Setter Property="Margin" Value="0,16,0,16" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Horizontal ScrollBar: thin 8px -->
+    <Style Selector="ScrollBar:horizontal">
+        <Setter Property="Height" Value="12" />
+        <Setter Property="Margin" Value="16,0,16,0" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Track: transparent -->
+    <Style Selector="ScrollBar /template/ Border#TrackRect">
+        <Setter Property="Background" Value="{DynamicResource ScrollBarTrackFill}" />
+        <Setter Property="CornerRadius" Value="10" />
+    </Style>
+
+    <!-- Thumb: custom colors, rounded, with transition -->
+    <Style Selector="ScrollBar /template/ Thumb">
+        <Setter Property="MinHeight" Value="24" />
+        <Setter Property="MinWidth" Value="0" />
+    </Style>
+
+    <Style Selector="ScrollBar /template/ Thumb /template/ Border">
+        <Setter Property="Background" Value="{DynamicResource ScrollBarThumbFill}" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Margin" Value="2" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15" />
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- Thumb hover -->
+    <Style Selector="ScrollBar /template/ Thumb:pointerover /template/ Border">
+        <Setter Property="Background" Value="{DynamicResource ScrollBarThumbFillHover}" />
+    </Style>
+
+    <!-- Thumb pressed -->
+    <Style Selector="ScrollBar /template/ Thumb:pressed /template/ Border">
+        <Setter Property="Background" Value="{DynamicResource ScrollBarThumbFillPressed}" />
+    </Style>
+
+    <!-- Hide line-up/line-down buttons (Vue has no arrows) -->
+    <Style Selector="ScrollBar /template/ RepeatButton">
+        <Setter Property="IsVisible" Value="False" />
+        <Setter Property="Height" Value="0" />
+        <Setter Property="Width" Value="0" />
+    </Style>
+
+</Styles>
