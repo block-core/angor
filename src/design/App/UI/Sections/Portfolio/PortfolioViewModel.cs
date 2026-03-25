@@ -593,7 +593,7 @@ public partial class PortfolioViewModel : ReactiveObject
                 {
                     StageNumber = item.StageIndex + 1,
                     Amount = (item.Amount / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture),
-                    Status = item.IsSpent ? "Released" : (recovery.HasItemsInPenalty ? "Pending" : "Not Spent")
+                    Status = item.IsSpent ? "Released" : (recovery.HasSpendableItemsInPenalty ? "Pending" : "Not Spent")
                 });
             }
 
@@ -603,7 +603,7 @@ public partial class PortfolioViewModel : ReactiveObject
             investment.PenaltyDaysRemaining = Math.Max(0, daysLeft);
 
             // Update penalty state
-            if (recovery.HasItemsInPenalty)
+            if (recovery.HasSpendableItemsInPenalty)
                 investment.PenaltyState = "pending";
             else if (recovery.HasUnspentItems)
                 investment.PenaltyState = "canRelease";
@@ -663,8 +663,8 @@ public partial class PortfolioViewModel : ReactiveObject
             var walletId = new WalletId(investment.InvestmentWalletId);
             var projectId = new ProjectId(investment.ProjectIdentifier);
 
-            var buildResult = await _investmentAppService.BuildReleaseTransaction(
-                new BuildReleaseTransaction.BuildReleaseTransactionRequest(
+            var buildResult = await _investmentAppService.BuildUnfundedReleaseTransaction(
+                new BuildUnfundedReleaseTransaction.BuildUnfundedReleaseTransactionRequest(
                     walletId, projectId, new DomainFeerate(feeRateSatsPerVByte)));
 
             if (buildResult.IsFailure) return false;

@@ -655,7 +655,7 @@ public partial class InvestPageViewModel : ReactiveObject
             var monitorRequest = new MonitorOp.MonitorAddressForFundsRequest(
                 walletId,
                 addressResult.Value.Value,
-                new Angor.Sdk.Wallet.Domain.Amount(amountSats),
+                new Angor.Sdk.Common.Amount(amountSats),
                 TimeSpan.FromMinutes(30));
 
             var monitorResult = await _investmentAppService.MonitorAddressForFunds(
