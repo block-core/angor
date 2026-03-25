@@ -6,7 +6,7 @@
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="700"
              x:Class="Avalonia2.UI.Sections.Funds.SendFundsModal"
-             x:DataType="funds:FundsViewModel">
+             x:DataType="funds:SendFundsModalViewModel">
 
     <!--
         Send Funds Modal — Vue Funds.vue send flow:
@@ -65,7 +65,7 @@
                 <!-- ═══════════════════════════════════════════════════ -->
                 <!-- STEP 1: Send Form                                   -->
                 <!-- ═══════════════════════════════════════════════════ -->
-                <StackPanel Name="FormPanel" Spacing="0">
+                <StackPanel Name="FormPanel" IsVisible="{Binding IsFormStep}" Spacing="0">
                     <!-- Header: "Send" + close X, border-bottom -->
                     <Border BorderBrush="{DynamicResource ModalHeaderBorder}"
                             BorderThickness="0,0,0,1"
@@ -93,16 +93,16 @@
                                     CornerRadius="8"
                                     Padding="12">
                                 <DockPanel>
-                                    <TextBlock Name="FromBalance" DockPanel.Dock="Right"
-                                               Text="2.5432 BTC"
+                                    <TextBlock DockPanel.Dock="Right"
+                                               Text="{Binding WalletBalanceDisplay}"
                                                FontSize="14" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextStrong}"
                                                VerticalAlignment="Center" />
                                     <StackPanel Spacing="2">
-                                        <TextBlock Name="FromWalletName" Text="Bitcoin Wallet"
+                                        <TextBlock Text="{Binding WalletName}"
                                                    FontSize="14" FontWeight="SemiBold"
                                                    Foreground="{DynamicResource TextStrong}" />
-                                        <TextBlock Name="FromWalletType" Text="On-Chain"
+                                        <TextBlock Text="{Binding WalletType}"
                                                    FontSize="12"
                                                    Foreground="{DynamicResource TextMuted}" />
                                     </StackPanel>
@@ -115,6 +115,7 @@
                             <TextBlock Text="Recipient Address" FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMuted}" />
                             <TextBox Name="AddressInput"
+                                     Text="{Binding AddressText, Mode=TwoWay}"
                                      Watermark="Enter Bitcoin address"
                                      Background="{DynamicResource ModalInputBg}"
                                      BorderBrush="{DynamicResource StrokeSubtle}"
@@ -123,9 +124,9 @@
                                      FontSize="14"
                                      Foreground="{DynamicResource TextStrong}" />
                             <!-- Address validation error -->
-                            <TextBlock Name="AddressError" FontSize="13"
+                            <TextBlock Text="{Binding AddressError}" FontSize="13"
                                        Foreground="{DynamicResource ErrorFieldText}"
-                                       IsVisible="False" Margin="0,2,0,0" />
+                                       IsVisible="{Binding HasAddressError}" Margin="0,2,0,0" />
                         </StackPanel>
 
                         <!-- Amount -->
@@ -133,6 +134,7 @@
                             <TextBlock Text="Amount (BTC)" FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMuted}" />
                             <TextBox Name="AmountInput"
+                                     Text="{Binding AmountText, Mode=TwoWay}"
                                      Watermark="0.00000000"
                                      Background="{DynamicResource ModalInputBg}"
                                      BorderBrush="{DynamicResource StrokeSubtle}"
@@ -141,9 +143,9 @@
                                      FontSize="14"
                                      Foreground="{DynamicResource TextStrong}" />
                             <!-- Amount validation error -->
-                            <TextBlock Name="AmountError" FontSize="13"
+                            <TextBlock Text="{Binding AmountError}" FontSize="13"
                                        Foreground="{DynamicResource ErrorFieldText}"
-                                       IsVisible="False" Margin="0,2,0,0" />
+                                       IsVisible="{Binding HasAmountError}" Margin="0,2,0,0" />
                             <!-- Quick percentage buttons: 25% 50% 75% 100% -->
                             <!-- Vue: flex gap-2, each btn rounded-md px-3 py-1 text-sm -->
                             <StackPanel Orientation="Horizontal" Spacing="8">
@@ -266,7 +268,7 @@
                 <!-- ═══════════════════════════════════════════════════ -->
                 <!-- STEP 2: Success                                     -->
                 <!-- ═══════════════════════════════════════════════════ -->
-                <StackPanel Name="SuccessPanel" IsVisible="False" Spacing="16" Margin="24">
+                <StackPanel Name="SuccessPanel" IsVisible="{Binding IsSuccessStep}" Spacing="16" Margin="24">
                     <!-- Green checkmark circle -->
                     <Border Width="80" Height="80" CornerRadius="40"
                             Background="{DynamicResource CreateWalletGreenCircleBg}"
@@ -299,8 +301,8 @@
                             <DockPanel>
                                 <TextBlock Text="Amount" FontSize="13"
                                            Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock Name="SummaryAmount" DockPanel.Dock="Right"
-                                           Text="0.50000000 BTC" FontSize="13" FontWeight="SemiBold"
+                                <TextBlock Text="{Binding SummaryAmountText}" DockPanel.Dock="Right"
+                                           FontSize="13" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextStrong}"
                                            HorizontalAlignment="Right" />
                             </DockPanel>

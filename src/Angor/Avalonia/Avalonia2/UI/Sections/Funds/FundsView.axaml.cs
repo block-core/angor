@@ -82,7 +82,7 @@ public partial class FundsView : UserControl
         var shellView = this.FindAncestorOfType<ShellView>();
         if (shellView?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
         {
-            var modal = new SendFundsModal { DataContext = DataContext };
+            var modal = new SendFundsModal();
             modal.SetWallet(
                 card.WalletName ?? "Wallet",
                 card.WalletType ?? "On-Chain",
