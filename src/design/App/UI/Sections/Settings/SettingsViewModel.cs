@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Wallet.Application;
 using Angor.Shared;
 using Angor.Shared.Models;
+using Angor.Shared.Networks;
 using Angor.Shared.Services;
 using App.UI.Shell;
 
@@ -19,6 +21,7 @@ public partial class SettingsViewModel : ReactiveObject
     private readonly INetworkConfiguration _networkConfig;
     private readonly INetworkStorage _networkStorage;
     private readonly IWalletAppService _walletAppService;
+    private readonly IDatabaseManagementService _databaseManagementService;
 
     [Reactive] private string networkType;
     [Reactive] private bool isNetworkModalOpen;
@@ -76,12 +79,14 @@ public partial class SettingsViewModel : ReactiveObject
         INetworkConfiguration networkConfig,
         INetworkStorage networkStorage,
         IWalletAppService walletAppService,
+        IDatabaseManagementService databaseManagementService,
         PrototypeSettings prototypeSettings)
     {
         _networkService = networkService;
         _networkConfig = networkConfig;
         _networkStorage = networkStorage;
         _walletAppService = walletAppService;
+        _databaseManagementService = databaseManagementService;
         _prototypeSettings = prototypeSettings;
 
         // Ensure default settings exist
@@ -176,18 +181,30 @@ public partial class SettingsViewModel : ReactiveObject
 
     public void SelectNetworkOption(string network) => SelectedNetworkToSwitch = network;
 
-    public void ConfirmNetworkSwitch()
+    public async Task ConfirmNetworkSwitchAsync()
     {
         if (!NetworkChangeConfirmed || string.IsNullOrEmpty(SelectedNetworkToSwitch)) return;
         if (SelectedNetworkToSwitch == NetworkType) return;
 
         var newNetwork = SelectedNetworkToSwitch;
 
+        // Delete all document collections (projects, investments, sync data, etc.)
+        // This preserves the wallet file but clears all cached/synced data
+        await _databaseManagementService.DeleteAllDataAsync();
+
         // Persist new network to SDK storage
         _networkStorage.SetNetwork(newNetwork);
 
         // Clear settings for the new network
         _networkStorage.SetSettings(new SettingsInfo());
+
+        // Switch the runtime network object so Bitcoin operations use the correct parameters
+        _networkConfig.SetNetwork(newNetwork switch
+        {
+            "Mainnet" => new BitcoinMain(),
+            "Liquid" => new LiquidMain(),
+            _ => new Angornet()
+        });
 
         // Re-initialize defaults for the new network
         _networkService.AddSettingsIfNotExist();
@@ -197,6 +214,9 @@ public partial class SettingsViewModel : ReactiveObject
 
         // Reload settings from SDK for the new network
         LoadSettingsFromSdk();
+
+        // Rebuild wallet balance data for the new network
+        await _walletAppService.RebuildAllWalletBalancesAsync();
     }
 
     // Explorer list management
@@ -287,6 +307,9 @@ public partial class SettingsViewModel : ReactiveObject
     public async void ConfirmWipeData()
     {
         IsWipeDataModalOpen = false;
+
+        // Delete all document collections (projects, investments, sync data, etc.)
+        await _databaseManagementService.DeleteAllDataAsync();
 
         // Clear settings
         _networkStorage.SetSettings(new SettingsInfo());

@@ -103,6 +103,10 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
     private PortfolioViewModel? GetPortfolioVm() =>
         App.Services.GetService<PortfolioViewModel>();
 
+    /// <summary>
+    /// Routes the recovery confirmation to the correct SDK operation
+    /// based on the investment's RecoveryActionKey.
+    /// </summary>
     private async Task ProcessRecoveryConfirmAsync()
     {
         if (Vm == null || Vm.IsProcessing) return;
@@ -112,13 +116,20 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         if (portfolioVm != null)
         {
             var feeRate = GetFeeRate(Vm.SelectedFeePriority);
-            var success = await portfolioVm.RecoverFundsAsync(Vm, feeRate);
+            var success = Vm.RecoveryActionKey switch
+            {
+                "recovery" => await portfolioVm.RecoverFundsAsync(Vm, feeRate),
+                "unfundedRelease" => await portfolioVm.ReleaseFundsAsync(Vm, feeRate),
+                "endOfProject" => await portfolioVm.ClaimEndOfProjectAsync(Vm, feeRate),
+                "penaltyRelease" => await portfolioVm.PenaltyReleaseFundsAsync(Vm, feeRate),
+                _ => false
+            };
             Vm.IsProcessing = false;
 
             if (success)
             {
                 Vm.ShowRecoveryModal = false;
-                GetShellVm()?.HideModal();
+                Vm.ShowSuccessModal = true;
             }
         }
         else
@@ -141,9 +152,8 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
 
             if (success)
             {
-                Vm.PenaltyState = "canRelease";
                 Vm.ShowClaimModal = false;
-                GetShellVm()?.HideModal();
+                Vm.ShowSuccessModal = true;
             }
         }
         else
@@ -161,14 +171,18 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         if (portfolioVm != null)
         {
             var feeRate = GetFeeRate(Vm.SelectedFeePriority);
-            var success = await portfolioVm.ReleaseFundsAsync(Vm, feeRate);
+            // Route based on action key: could be unfundedRelease or penaltyRelease
+            var success = Vm.RecoveryActionKey switch
+            {
+                "penaltyRelease" => await portfolioVm.PenaltyReleaseFundsAsync(Vm, feeRate),
+                _ => await portfolioVm.ReleaseFundsAsync(Vm, feeRate)
+            };
             Vm.IsProcessing = false;
 
             if (success)
             {
                 Vm.ShowReleaseModal = false;
                 Vm.ShowSuccessModal = true;
-                // Don't HideModal — stay in modal overlay showing success
             }
         }
         else
