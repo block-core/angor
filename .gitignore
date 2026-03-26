@@ -406,6 +406,10 @@ FodyWeavers.xsd
 # Cursor IDE
 .cursor/
 
+# Claude Code
+CLAUDE.md
+.claude/
+
 # macOS
 .DS_Store
 
