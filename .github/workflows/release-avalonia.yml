@@ -17,7 +17,7 @@ env:
   SOLUTION_PATH: 'src/Angor/Avalonia/Angor.Avalonia.sln'
   AVALONIA_DIR: 'src/Angor/Avalonia'
   DESKTOP_PROJECT: 'src/Angor/Avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj'
-  ANDROID_PROJECT: 'src/Angor/Avalonia/AngorApp.Android/AngorApp.Android.csproj'
+  ANDROID_PROJECT: 'src/Angor/Avalonia/Avalonia2.Android/Avalonia2.Android.csproj'
   APP_NAME: 'Angor'
   APP_ID: 'io.blockcore.angor'
   VENDOR: 'Blockcore'
@@ -238,7 +238,7 @@ jobs:
       
       - name: Build APK
         run: |
-          dotnet publish AngorApp.Android/AngorApp.Android.csproj \
+          dotnet publish Avalonia2.Android/Avalonia2.Android.csproj \
             -c Release \
             -f net9.0-android \
             -p:ApplicationDisplayVersion=${{ needs.prepare.outputs.version }} \

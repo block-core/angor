@@ -39,7 +39,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         // No special cleanup needed — let the shell close the modal.
     }
 
-    private void OnButtonClick(object? sender, RoutedEventArgs e)
+    private async void OnButtonClick(object? sender, RoutedEventArgs e)
     {
         if (e.Source is not Button btn) return;
 
@@ -66,7 +66,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
                 break;
 
             case "BtnSubmitImport":
-                SubmitImport();
+                await SubmitImportAsync();
                 break;
 
             // ── Step 2b: Backup ──
@@ -76,11 +76,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
 
             case "BtnContinueBackup":
                 if (_seedDownloaded)
-                {
-                    // Vue: finishGenerateWallet() creates "Generated Account" group
-                    Vm?.AddWalletGroup("Generated Account", "generate");
-                    ShowStep("success");
-                }
+                    await GenerateWalletAsync();
                 break;
 
             case "BtnCancelBackup":
@@ -109,7 +105,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     /// Validate seed phrase and create "Imported Account" wallet group.
     /// Vue: submitSeedImport() — validates 12 or 24 words.
     /// </summary>
-    private void SubmitImport()
+    private async Task SubmitImportAsync()
     {
         var input = SeedPhraseInput.Text?.Trim() ?? "";
         var words = input.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
@@ -125,11 +121,45 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         SeedError.IsVisible = false;
         SeedSuccess.IsVisible = true;
 
-        // Add the imported wallet group to the ViewModel
-        Vm?.AddWalletGroup("Imported Account", "import");
+        // Show spinner, disable button to prevent double-tap
+        SetImportLoading(true);
 
-        // Show success step
+        // Add the imported wallet group (will be async once SDK is wired)
+        Vm?.AddWalletGroup("Imported Account", "import");
+        await Task.Delay(600); // let the UI settle before transition
+
+        SetImportLoading(false);
         ShowStep("success");
+    }
+
+    /// <summary>
+    /// Generate wallet with loading state on Continue button.
+    /// </summary>
+    private async Task GenerateWalletAsync()
+    {
+        SetGenerateLoading(true);
+
+        Vm?.AddWalletGroup("Generated Account", "generate");
+        await Task.Delay(600);
+
+        SetGenerateLoading(false);
+        ShowStep("success");
+    }
+
+    private void SetImportLoading(bool loading)
+    {
+        BtnSubmitImport.IsEnabled = !loading;
+        BtnCancelImport.IsEnabled = !loading;
+        ImportBtnContent.IsVisible = !loading;
+        ImportBtnSpinner.IsVisible = loading;
+    }
+
+    private void SetGenerateLoading(bool loading)
+    {
+        BtnContinueBackup.IsEnabled = !loading;
+        BtnCancelBackup.IsEnabled = !loading;
+        ContinueBtnContent.IsVisible = !loading;
+        ContinueBtnSpinner.IsVisible = loading;
     }
 
     /// <summary>

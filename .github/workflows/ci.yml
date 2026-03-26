@@ -85,21 +85,20 @@ jobs:
             --self-contained \
             -o publish/linux-x64
 
-  validate-android-build:
+  build-android-apk:
     runs-on: ubuntu-latest
     needs: build-and-test
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-      
+
       - name: Install Android workload
-        working-directory: ${{ env.AVALONIA_DIR }}
         run: dotnet workload install android
-      
+
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
@@ -108,10 +107,24 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-android-
             nuget-${{ runner.os }}-
-      
-      - name: Build Android (unsigned)
+
+      - name: Publish Android APK (unsigned)
         working-directory: ${{ env.AVALONIA_DIR }}
         run: |
-          dotnet build AngorApp.Android/AngorApp.Android.csproj \
+          dotnet publish Avalonia2.Android/Avalonia2.Android.csproj \
             -c Release \
-            -f net9.0-android
+            -f net9.0-android \
+            -o ${{ github.workspace }}/artifacts/
+
+      - name: Rename APK
+        run: |
+          APK_FILE=$(find artifacts -name "*.apk" -type f | head -1)
+          if [ -n "$APK_FILE" ]; then
+            mv "$APK_FILE" artifacts/Angor-test.apk
+          fi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: artifacts/*.apk

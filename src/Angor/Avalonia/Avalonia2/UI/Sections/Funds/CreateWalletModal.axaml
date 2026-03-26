@@ -174,13 +174,23 @@
                                     <GradientStop Color="#3D6448" Offset="1" />
                                 </LinearGradientBrush>
                             </Button.Background>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <i:Icon Value="fa-solid fa-upload"
-                                       FontSize="14"
-                                       Foreground="White"
-                                       VerticalAlignment="Center" />
-                                <TextBlock Text="Import Wallet" VerticalAlignment="Center" />
-                            </StackPanel>
+                            <Panel>
+                                <StackPanel Name="ImportBtnContent" Orientation="Horizontal" Spacing="8"
+                                            HorizontalAlignment="Center">
+                                    <i:Icon Value="fa-solid fa-upload"
+                                           FontSize="14"
+                                           Foreground="White"
+                                           VerticalAlignment="Center" />
+                                    <TextBlock Text="Import Wallet" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Name="ImportBtnSpinner" Orientation="Horizontal" Spacing="8"
+                                            HorizontalAlignment="Center" IsVisible="False">
+                                    <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                            Foreground="White" VerticalAlignment="Center"
+                                            Classes="spin" />
+                                    <TextBlock Text="Importing..." VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Panel>
                         </Button>
 
                         <!-- Cancel (outlined) -->
@@ -283,7 +293,16 @@
                                 FontWeight="SemiBold"
                                 IsEnabled="False"
                                 Cursor="Hand">
-                            <TextBlock Text="Continue" />
+                            <Panel>
+                                <TextBlock Name="ContinueBtnContent" Text="Continue" HorizontalAlignment="Center" />
+                                <StackPanel Name="ContinueBtnSpinner" Orientation="Horizontal" Spacing="8"
+                                            HorizontalAlignment="Center" IsVisible="False">
+                                    <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                            Foreground="White" VerticalAlignment="Center"
+                                            Classes="spin" />
+                                    <TextBlock Text="Creating..." VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Panel>
                         </Button>
 
                         <!-- Cancel (outlined) -->

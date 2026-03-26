@@ -108,4 +108,20 @@
         <Setter Property="CornerRadius" Value="{StaticResource RadiusLg}" />
     </Style>
 
+    <!-- ANIMATIONS -->
+
+    <!-- Continuous spin for loading spinners: apply Classes="spin" to any Icon -->
+    <Style Selector=":is(Control).spin">
+        <Style.Animations>
+            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                <KeyFrame Cue="0%">
+                    <Setter Property="RenderTransform" Value="rotate(0deg)" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="RenderTransform" Value="rotate(360deg)" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
 </Styles>
