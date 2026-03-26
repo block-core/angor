@@ -67,6 +67,9 @@ public class ProjectItemViewModel : INotifyPropertyChanged
     public string PayoutFrequency { get; set; } = "Monthly";
     public long SubscriptionPrice { get; set; } = 20000;
 
+    /// <summary>Formatted subscription price display, e.g. "0.0002 BTC"</summary>
+    public string SubscriptionPriceDisplay => $"{SubscriptionPrice / 100_000_000.0:G} {CurrencySymbol}";
+
     public ObservableCollection<InvestmentStageViewModel> Stages { get; set; } = new();
 
     private Shared.ProjectType TypeEnum => ProjectTypeExtensions.FromDisplayString(ProjectType);
@@ -83,6 +86,9 @@ public class ProjectItemViewModel : INotifyPropertyChanged
     public bool IsOpen => Status == "Open";
     public bool IsFunded => Status == "Funded";
     public bool IsFundingClosed => Status == "Funding Closed";
+
+    /// <summary>Currency symbol for display (e.g. "BTC", "TBTC")</summary>
+    public string CurrencySymbol { get; set; } = "BTC";
 
     /// <summary>
     /// Map an SDK ProjectDto to a UI ProjectItemViewModel.
@@ -158,6 +164,10 @@ public partial class FindProjectsViewModel : ReactiveObject
 {
     private readonly IProjectAppService _projectAppService;
     private readonly Func<ProjectItemViewModel, InvestPageViewModel> _investPageFactory;
+    private readonly ICurrencyService _currencyService;
+
+    /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
+    public string CurrencySymbol => _currencyService.Symbol;
 
     [Reactive] private ProjectItemViewModel? selectedProject;
     [Reactive] private InvestPageViewModel? investPageViewModel;
@@ -178,10 +188,12 @@ public partial class FindProjectsViewModel : ReactiveObject
 
     public FindProjectsViewModel(
         IProjectAppService projectAppService,
-        Func<ProjectItemViewModel, InvestPageViewModel> investPageFactory)
+        Func<ProjectItemViewModel, InvestPageViewModel> investPageFactory,
+        ICurrencyService currencyService)
     {
         _projectAppService = projectAppService;
         _investPageFactory = investPageFactory;
+        _currencyService = currencyService;
 
         // Load projects from SDK
         _ = LoadProjectsFromSdkAsync();
@@ -204,7 +216,9 @@ public partial class FindProjectsViewModel : ReactiveObject
                 Projects.Clear();
                 foreach (var dto in result.Value.Projects)
                 {
-                    Projects.Add(ProjectItemViewModel.FromDto(dto));
+                    var vm = ProjectItemViewModel.FromDto(dto);
+                    vm.CurrencySymbol = _currencyService.Symbol;
+                    Projects.Add(vm);
                 }
             }
         }

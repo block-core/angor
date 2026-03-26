@@ -361,7 +361,7 @@
                             <TextBlock Text="Fee to deploy"
                                        FontSize="12"
                                        Foreground="{DynamicResource DeployFeeLabel}" />
-                            <TextBlock Text="0.0001 BTC"
+                            <TextBlock Text="{Binding DeployFee}"
                                        FontSize="20" FontWeight="Bold"
                                        Foreground="{DynamicResource DeployFeeValue}" />
                         </StackPanel>

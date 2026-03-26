@@ -7,8 +7,10 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using Angor.Shared.Models;
+using App.UI.Shared;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
 using Projektanker.Icons.Avalonia;
 
 namespace App.UI.Sections.Funds;
@@ -33,6 +35,9 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
     private string _walletId = "";
     private readonly HashSet<string> _selectedUtxos = new();
     private List<UtxoData> _utxos = new();
+
+    private ICurrencyService CurrencyService =>
+        App.Services.GetRequiredService<ICurrencyService>();
 
     public WalletDetailModal()
     {
@@ -233,7 +238,7 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
         amountPanel.Children.Add(amountLabel);
         var amountValue = new TextBlock
         {
-            Text = $"{amountBtc:F8} BTC",
+            Text = CurrencyService.FormatBtc(amountBtc),
             FontSize = 13,
             FontWeight = FontWeight.SemiBold,
         };

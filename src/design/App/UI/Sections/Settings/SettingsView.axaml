@@ -536,7 +536,7 @@
                                            Foreground="{DynamicResource TextMuted}"
                                            VerticalAlignment="Center">
                                     <Run Text="Current: " />
-                                    <Run Text="BTC" FontWeight="Bold" />
+                                    <Run Text="{Binding CurrencyDisplay}" FontWeight="Bold" />
                                 </TextBlock>
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <i:Icon Value="fa-solid fa-dollar-sign"
@@ -563,11 +563,11 @@
                                               IsEnabled="False"
                                               MinWidth="150"
                                               Padding="10,10,40,10">
-                                        <ComboBoxItem Content="Bitcoin (BTC)" />
+                                        <ComboBoxItem Content="{Binding CurrencyDisplayName}" />
                                     </ComboBox>
                                 </StackPanel>
                                 <!-- Vue: .settings-help-text -->
-                                <TextBlock Text="Bitcoin-only application - currency display is fixed to BTC"
+                                <TextBlock Text="{Binding CurrencyHelpText}"
                                            FontSize="12"
                                            Foreground="{DynamicResource SettingsHelpText}" />
                             </StackPanel>

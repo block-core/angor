@@ -52,6 +52,10 @@ public partial class MyProjectsViewModel : ReactiveObject
     private readonly IProjectAppService _projectAppService;
     private readonly IWalletAppService _walletAppService;
     private readonly Func<MyProjectItemViewModel, ManageProjectViewModel> _manageFactory;
+    private readonly ICurrencyService _currencyService;
+
+    /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
+    public string CurrencySymbol => _currencyService.Symbol;
 
     [Reactive] private bool showCreateWizard;
     [Reactive] private ManageProjectViewModel? selectedManageProject;
@@ -82,12 +86,14 @@ public partial class MyProjectsViewModel : ReactiveObject
         IProjectAppService projectAppService,
         IWalletAppService walletAppService,
         Func<MyProjectItemViewModel, ManageProjectViewModel> manageFactory,
-        CreateProjectViewModel createProjectVm)
+        CreateProjectViewModel createProjectVm,
+        ICurrencyService currencyService)
     {
         _projectAppService = projectAppService;
         _walletAppService = walletAppService;
         _manageFactory = manageFactory;
         CreateProjectVm = createProjectVm;
+        _currencyService = currencyService;
 
         // Load founder projects from SDK
         _ = LoadFounderProjectsAsync();

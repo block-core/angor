@@ -21,7 +21,7 @@ public partial class SignatureRequestViewModel : ReactiveObject
     public int Id { get; set; }
     public string ProjectTitle { get; set; } = "";
     public string Amount { get; set; } = "0.0000";
-    public string Currency { get; set; } = "BTC";
+    public string Currency { get; set; } = "";
     public string Date { get; set; } = "";
     public string Time { get; set; } = "";
     /// <summary>Status: waiting, approved, rejected</summary>
@@ -76,6 +76,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     private readonly IProjectAppService _projectAppService;
     private readonly IWalletAppService _walletAppService;
     private readonly SignatureStore _signatureStore;
+    private readonly ICurrencyService _currencyService;
 
     [Reactive] private bool hasFunders;
     [Reactive] private string currentFilter = SignatureStatus.Waiting.ToLowerString();
@@ -102,12 +103,14 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
         IFounderAppService founderAppService,
         IProjectAppService projectAppService,
         IWalletAppService walletAppService,
-        SignatureStore signatureStore)
+        SignatureStore signatureStore,
+        ICurrencyService currencyService)
     {
         _founderAppService = founderAppService;
         _projectAppService = projectAppService;
         _walletAppService = walletAppService;
         _signatureStore = signatureStore;
+        _currencyService = currencyService;
 
         this.WhenAnyValue(x => x.CurrentFilter)
             .Subscribe(_ => UpdateFilteredSignatures())
@@ -174,7 +177,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
                             Id = idCounter++,
                             ProjectTitle = project.Name ?? "Unknown Project",
                             Amount = amountBtc.ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
-                            Currency = "BTC",
+                            Currency = _currencyService.Symbol,
                             Date = investment.CreatedOn.ToString("MMM dd, yyyy"),
                             Time = investment.CreatedOn.ToString("HH:mm"),
                             Status = status,

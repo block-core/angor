@@ -17,9 +17,6 @@ public static class Constants
     /// <summary>Angor fee rate (1%).</summary>
     public const double AngorFeeRate = 0.01;
 
-    /// <summary>Default miner fee estimate for display (used when dynamic fee estimation is unavailable).</summary>
-    public const string MinerFeeDisplay = "~0.00000391 BTC";
-
     /// <summary>Angor fee percentage for display.</summary>
     public const string AngorFeeDisplay = "1%";
 

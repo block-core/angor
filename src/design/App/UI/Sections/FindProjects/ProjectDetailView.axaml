@@ -360,7 +360,7 @@
                                        TextAlignment="Center"
                                        TextWrapping="Wrap"
                                        HorizontalAlignment="Center">
-                                <Run Text="Reached goal of " /><Run Text="{Binding Target, Mode=OneWay}" /><Run Text=" BTC (" /><Run Text="{Binding Progress, StringFormat={}{0:0}, Mode=OneWay}" /><Run Text="% of target)" />
+                                <Run Text="Reached goal of " /><Run Text="{Binding Target, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" /><Run Text=" (" /><Run Text="{Binding Progress, StringFormat={}{0:0}, Mode=OneWay}" /><Run Text="% of target)" />
                             </TextBlock>
                         </StackPanel>
                     </Border>
@@ -393,7 +393,7 @@
                                        TextAlignment="Center"
                                        TextWrapping="Wrap"
                                        HorizontalAlignment="Center">
-                                <Run Text="Raised " /><Run Text="{Binding Raised, Mode=OneWay}" /><Run Text=" BTC of " /><Run Text="{Binding Target, Mode=OneWay}" /><Run Text=" BTC goal (" /><Run Text="{Binding Progress, StringFormat={}{0:0}, Mode=OneWay}" /><Run Text="% funded)" />
+                                <Run Text="Raised " /><Run Text="{Binding Raised, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" /><Run Text=" of " /><Run Text="{Binding Target, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" /><Run Text=" goal (" /><Run Text="{Binding Progress, StringFormat={}{0:0}, Mode=OneWay}" /><Run Text="% funded)" />
                             </TextBlock>
                         </StackPanel>
                     </Border>
@@ -458,7 +458,7 @@
                                 </DockPanel>
                                 <TextBlock FontSize="24" FontWeight="Bold"
                                            Foreground="{DynamicResource StatsDetailValue}">
-                                    <Run Text="{Binding Target, Mode=OneWay}" /><Run Text=" BTC" />
+                                    <Run Text="{Binding Target, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                                 </TextBlock>
                             </StackPanel>
                         </Border>
@@ -484,7 +484,7 @@
                                 </DockPanel>
                                 <TextBlock FontSize="24" FontWeight="Bold"
                                            Foreground="{DynamicResource StatsDetailValue}">
-                                    <Run Text="{Binding Raised, Mode=OneWay}" /><Run Text=" BTC" />
+                                    <Run Text="{Binding Raised, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                                 </TextBlock>
                             </StackPanel>
                         </Border>
@@ -709,7 +709,7 @@
                             <StackPanel Spacing="8">
                                 <TextBlock Text="Subscription Price" FontSize="13" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock Text="0.0002 BTC" FontSize="20" FontWeight="Bold"
+                                <TextBlock Text="{Binding SubscriptionPriceDisplay}" FontSize="20" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                             </StackPanel>
                         </Border>

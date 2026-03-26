@@ -130,8 +130,14 @@
 
                         <!-- Amount -->
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Amount (BTC)" FontSize="13" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextMuted}" />
+                            <TextBlock FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextMuted}">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="Amount ({0})">
+                                        <Binding Path="CurrencySymbol" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                             <TextBox Name="AmountInput"
                                      Watermark="0.00000000"
                                      Background="{DynamicResource ModalInputBg}"
@@ -307,8 +313,8 @@
                             <DockPanel>
                                 <TextBlock Text="Fee" FontSize="13"
                                            Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock DockPanel.Dock="Right"
-                                           Text="0.00001200 BTC" FontSize="13" FontWeight="SemiBold"
+                                <TextBlock Name="SummaryFee" DockPanel.Dock="Right"
+                                           Text="0.00001200" FontSize="13" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextStrong}"
                                            HorizontalAlignment="Right" />
                             </DockPanel>
