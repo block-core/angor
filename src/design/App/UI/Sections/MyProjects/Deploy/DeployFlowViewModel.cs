@@ -50,6 +50,7 @@ public partial class DeployFlowViewModel : ReactiveObject
     [Reactive] private WalletItem? selectedWallet;
     [Reactive] private bool isDeploying;
     [Reactive] private string deployStatusText = "Waiting for payment...";
+    [Reactive] private long selectedFeeRate = 20;
 
     // ── Derived visibility ──
     public bool IsWalletSelector => CurrentScreen == DeployScreen.WalletSelector;
@@ -224,8 +225,7 @@ public partial class DeployFlowViewModel : ReactiveObject
 
             // Step 4: Create blockchain transaction
             DeployStatusText = "Building transaction...";
-            var feeRate = 20L; // sats/vByte default
-            var txResult = await _projectAppService.CreateProject(walletId, feeRate, ProjectData, infoEventId, projectSeed);
+            var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRate, ProjectData, infoEventId, projectSeed);
             if (txResult.IsFailure)
             {
                 DeployStatusText = $"Failed to create transaction: {txResult.Error}";
@@ -341,8 +341,7 @@ public partial class DeployFlowViewModel : ReactiveObject
 
             // Step 4: Create blockchain transaction
             DeployStatusText = "Building transaction...";
-            var feeRate = 20L;
-            var txResult = await _projectAppService.CreateProject(walletId, feeRate, ProjectData, infoEventId, projectSeed);
+            var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRate, ProjectData, infoEventId, projectSeed);
             if (txResult.IsFailure)
             {
                 DeployStatusText = $"Failed to create transaction: {txResult.Error}";

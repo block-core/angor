@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using App.UI.Shared;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,10 @@ namespace App.UI.Sections.Portfolio;
 /// Release Recovery Confirmation, Release Success.
 /// DataContext = InvestmentViewModel (set by InvestmentDetailView when opening).
 /// Implements IBackdropCloseable so the shell can notify on backdrop clicks.
+///
+/// Fee selection is delegated to the reusable FeeSelectionPopup:
+/// when the user clicks Confirm, this modal hides, the fee popup is shown,
+/// and the SDK call proceeds with the selected fee rate.
 /// </summary>
 public partial class RecoveryModalsView : UserControl, IBackdropCloseable
 {
@@ -23,7 +28,6 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
     {
         InitializeComponent();
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
-        AddHandler(Border.PointerPressedEvent, OnBorderPressed, RoutingStrategies.Bubble);
 
         // Wire copy button for claim project ID
         // Vue: copyToClipboard(recoveryProjectId) in Claim Penalties modal
@@ -93,35 +97,58 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
 
     // ── State transitions via real SDK calls ──
 
-    private static long GetFeeRate(string priority) => priority switch
-    {
-        "priority" => 50,
-        "economy" => 5,
-        _ => 20 // "standard"
-    };
-
     private PortfolioViewModel? GetPortfolioVm() =>
         App.Services.GetService<PortfolioViewModel>();
 
     /// <summary>
+    /// Shows the FeeSelectionPopup and returns the selected fee rate.
+    /// Temporarily hides the current recovery modal content to avoid visual overlap.
+    /// Returns null if the user cancelled.
+    /// </summary>
+    private async Task<long?> AskForFeeRateAsync()
+    {
+        var shellVm = GetShellVm();
+        if (shellVm == null) return null;
+
+        // Show the fee popup (replaces us as shell modal content)
+        var feeRate = await FeeSelectionPopup.ShowAsync(shellVm);
+
+        if (feeRate == null)
+        {
+            // User cancelled — re-show the recovery modals
+            shellVm.ShowModal(this);
+        }
+
+        return feeRate;
+    }
+
+    /// <summary>
     /// Routes the recovery confirmation to the correct SDK operation
     /// based on the investment's RecoveryActionKey.
+    /// Shows the fee selection popup first.
     /// </summary>
     private async Task ProcessRecoveryConfirmAsync()
     {
         if (Vm == null || Vm.IsProcessing) return;
+
+        var feeRate = await AskForFeeRateAsync();
+        if (feeRate == null) return; // user cancelled
+
         Vm.IsProcessing = true;
 
         var portfolioVm = GetPortfolioVm();
         if (portfolioVm != null)
         {
-            var feeRate = GetFeeRate(Vm.SelectedFeePriority);
+            // Re-show this modal so the user sees the processing spinner
+            var shellVm = GetShellVm();
+            shellVm?.ShowModal(this);
+
             var success = Vm.RecoveryActionKey switch
             {
-                "recovery" => await portfolioVm.RecoverFundsAsync(Vm, feeRate),
-                "unfundedRelease" => await portfolioVm.ReleaseFundsAsync(Vm, feeRate),
-                "endOfProject" => await portfolioVm.ClaimEndOfProjectAsync(Vm, feeRate),
-                "penaltyRelease" => await portfolioVm.PenaltyReleaseFundsAsync(Vm, feeRate),
+                "recovery" => await portfolioVm.RecoverFundsAsync(Vm, feeRate.Value),
+                "unfundedRelease" => await portfolioVm.ReleaseFundsAsync(Vm, feeRate.Value),
+                "endOfProject" => await portfolioVm.ClaimEndOfProjectAsync(Vm, feeRate.Value),
+                "penaltyRelease" => await portfolioVm.PenaltyReleaseFundsAsync(Vm, feeRate.Value),
                 _ => false
             };
             Vm.IsProcessing = false;
@@ -141,13 +168,20 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
     private async Task ProcessClaimPenaltyAsync()
     {
         if (Vm == null || Vm.IsProcessing) return;
+
+        var feeRate = await AskForFeeRateAsync();
+        if (feeRate == null) return; // user cancelled
+
         Vm.IsProcessing = true;
 
         var portfolioVm = GetPortfolioVm();
         if (portfolioVm != null)
         {
-            var feeRate = GetFeeRate(Vm.SelectedFeePriority);
-            var success = await portfolioVm.ClaimEndOfProjectAsync(Vm, feeRate);
+            // Re-show this modal so the user sees the processing spinner
+            var shellVm = GetShellVm();
+            shellVm?.ShowModal(this);
+
+            var success = await portfolioVm.ClaimEndOfProjectAsync(Vm, feeRate.Value);
             Vm.IsProcessing = false;
 
             if (success)
@@ -165,17 +199,24 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
     private async Task ProcessReleaseConfirmAsync()
     {
         if (Vm == null || Vm.IsProcessing) return;
+
+        var feeRate = await AskForFeeRateAsync();
+        if (feeRate == null) return; // user cancelled
+
         Vm.IsProcessing = true;
 
         var portfolioVm = GetPortfolioVm();
         if (portfolioVm != null)
         {
-            var feeRate = GetFeeRate(Vm.SelectedFeePriority);
+            // Re-show this modal so the user sees the processing spinner
+            var shellVm = GetShellVm();
+            shellVm?.ShowModal(this);
+
             // Route based on action key: could be unfundedRelease or penaltyRelease
             var success = Vm.RecoveryActionKey switch
             {
-                "penaltyRelease" => await portfolioVm.PenaltyReleaseFundsAsync(Vm, feeRate),
-                _ => await portfolioVm.ReleaseFundsAsync(Vm, feeRate)
+                "penaltyRelease" => await portfolioVm.PenaltyReleaseFundsAsync(Vm, feeRate.Value),
+                _ => await portfolioVm.ReleaseFundsAsync(Vm, feeRate.Value)
             };
             Vm.IsProcessing = false;
 
@@ -189,123 +230,6 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         {
             Vm.IsProcessing = false;
         }
-    }
-
-    // ── Fee priority border selection handling ──
-
-    private void OnBorderPressed(object? sender, PointerPressedEventArgs e)
-    {
-        var source = e.Source as Control;
-        Border? found = null;
-        string? foundName = null;
-
-        // Walk up the tree to find a named fee border
-        while (source != null)
-        {
-            if (source is Border b && !string.IsNullOrEmpty(b.Name))
-            {
-                var name = b.Name;
-                if (IsFeeBorderName(name))
-                {
-                    found = b;
-                    foundName = name;
-                    break;
-                }
-            }
-            source = source.Parent as Control;
-        }
-
-        if (found == null || foundName == null) return;
-
-        // Determine which set (Modal 1 or Modal 3) and which option
-        if (foundName.StartsWith("ReleaseFee"))
-        {
-            // Modal 3 fee buttons
-            SelectReleaseFee(foundName);
-        }
-        else
-        {
-            // Modal 1 fee buttons
-            SelectRecoveryFee(foundName);
-        }
-
-        e.Handled = true;
-    }
-
-    private static bool IsFeeBorderName(string name) =>
-        name is "FeePriority" or "FeeStandard" or "FeeEconomy"
-            or "ReleaseFeePriority" or "ReleaseFeeStandard" or "ReleaseFeeEconomy";
-
-    // ── Modal 1 fee selection ──
-
-    private void SelectRecoveryFee(string selectedName)
-    {
-        var priority = this.FindControl<Border>("FeePriority");
-        var standard = this.FindControl<Border>("FeeStandard");
-        var economy = this.FindControl<Border>("FeeEconomy");
-
-        SetFeeSelection(priority, selectedName == "FeePriority",
-            "FeePriorityLabel", "FeePriorityDesc", "FeePriorityRate");
-        SetFeeSelection(standard, selectedName == "FeeStandard",
-            "FeeStandardLabel", "FeeStandardDesc", "FeeStandardRate");
-        SetFeeSelection(economy, selectedName == "FeeEconomy",
-            "FeeEconomyLabel", "FeeEconomyDesc", "FeeEconomyRate");
-
-        if (Vm != null)
-        {
-            Vm.SelectedFeePriority = selectedName switch
-            {
-                "FeePriority" => "priority",
-                "FeeStandard" => "standard",
-                "FeeEconomy" => "economy",
-                _ => "standard"
-            };
-        }
-    }
-
-    // ── Modal 3 fee selection ──
-
-    private void SelectReleaseFee(string selectedName)
-    {
-        var priority = this.FindControl<Border>("ReleaseFeePriority");
-        var standard = this.FindControl<Border>("ReleaseFeeStandard");
-        var economy = this.FindControl<Border>("ReleaseFeeEconomy");
-
-        SetFeeSelection(priority, selectedName == "ReleaseFeePriority",
-            "ReleaseFeePriorityLabel", "ReleaseFeePriorityDesc", null);
-        SetFeeSelection(standard, selectedName == "ReleaseFeeStandard",
-            "ReleaseFeeStandardLabel", "ReleaseFeeStandardDesc", null);
-        SetFeeSelection(economy, selectedName == "ReleaseFeeEconomy",
-            "ReleaseFeeEconomyLabel", "ReleaseFeeEconomyDesc", null);
-    }
-
-    /// <summary>
-    /// Toggles FeeSelected CSS class and updates text foreground colors.
-    /// Per Rule #9: no BrushTransition — instant state changes only.
-    /// </summary>
-    private void SetFeeSelection(Border? border, bool isSelected,
-        string labelName, string descName, string? rateName)
-    {
-        if (border == null) return;
-
-        border.Classes.Set("FeeSelected", isSelected);
-
-        var selectedFg = Brushes.White;
-        var unselectedFg = this.TryFindResource("RecoveryFeeUnselectedText", out var res) && res is IBrush brush
-            ? brush
-            : Brushes.Gray;
-
-        var fg = isSelected ? selectedFg : unselectedFg;
-
-        SetTextForeground(labelName, fg);
-        SetTextForeground(descName, fg);
-        if (rateName != null) SetTextForeground(rateName, fg);
-    }
-
-    private void SetTextForeground(string name, IBrush fg)
-    {
-        var tb = this.FindControl<TextBlock>(name);
-        if (tb != null) tb.Foreground = fg;
     }
 
     // ── Helpers ──
@@ -325,7 +249,11 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
 
     private ShellViewModel? GetShellVm()
     {
+        // Try ancestor first (when we're in the visual tree)
         var shellView = this.FindAncestorOfType<ShellView>();
-        return shellView?.DataContext as ShellViewModel;
+        if (shellView?.DataContext is ShellViewModel vm1) return vm1;
+
+        // Fallback to service locator (when we've been temporarily removed from tree)
+        return App.Services.GetService<ShellViewModel>();
     }
 }
