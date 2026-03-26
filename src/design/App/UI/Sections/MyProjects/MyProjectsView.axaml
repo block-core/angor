@@ -135,7 +135,7 @@
                                         <TextBlock Text="{Binding TotalRaised}"
                                                    FontSize="18" FontWeight="Bold"
                                                    Foreground="{DynamicResource TextStrong}" />
-                                        <TextBlock Text="BTC"
+                                        <TextBlock Text="{Binding CurrencySymbol}"
                                                    FontSize="11"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Bottom" Margin="0,0,0,1" />
@@ -210,7 +210,7 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="mp:MyProjectItemViewModel">
-                                    <controls:ProjectCard
+                                     <controls:ProjectCard
                                         ProjectName="{Binding Name}"
                                         ShortDescription="{Binding Description}"
                                         InvestorCount="{Binding InvestorCount}"
@@ -223,7 +223,8 @@
                                         Status="{Binding Status}"
                                         Banner="{Binding BannerUrl}"
                                         Avatar="{Binding LogoUrl}"
-                                        ShowManageFunds="True" />
+                                        ShowManageFunds="True"
+                                        CurrencySymbol="{Binding $parent[UserControl].DataContext.CurrencySymbol}" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

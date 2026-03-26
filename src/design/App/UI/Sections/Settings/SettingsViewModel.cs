@@ -4,6 +4,7 @@ using Angor.Sdk.Wallet.Application;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
+using App.UI.Shared;
 using App.UI.Shell;
 
 namespace App.UI.Sections.Settings;
@@ -19,6 +20,7 @@ public partial class SettingsViewModel : ReactiveObject
     private readonly INetworkConfiguration _networkConfig;
     private readonly INetworkStorage _networkStorage;
     private readonly IWalletAppService _walletAppService;
+    private readonly ICurrencyService _currencyService;
 
     [Reactive] private string networkType;
     [Reactive] private bool isNetworkModalOpen;
@@ -38,7 +40,13 @@ public partial class SettingsViewModel : ReactiveObject
     [Reactive] private string newRelayUrl = "";
 
     // Currency Display
-    [Reactive] private string currencyDisplay = "BTC";
+    [Reactive] private string currencyDisplay;
+
+    /// <summary>Display name for the currency dropdown, e.g. "Bitcoin (BTC)" or "Bitcoin (TBTC)".</summary>
+    public string CurrencyDisplayName => $"Bitcoin ({_currencyService.Symbol})";
+
+    /// <summary>Help text below currency dropdown, e.g. "Bitcoin-only application - currency display is fixed to BTC".</summary>
+    public string CurrencyHelpText => $"Bitcoin-only application - currency display is fixed to {_currencyService.Symbol}";
 
     // Wipe data modal
     [Reactive] private bool isWipeDataModalOpen;
@@ -76,13 +84,18 @@ public partial class SettingsViewModel : ReactiveObject
         INetworkConfiguration networkConfig,
         INetworkStorage networkStorage,
         IWalletAppService walletAppService,
-        PrototypeSettings prototypeSettings)
+        PrototypeSettings prototypeSettings,
+        ICurrencyService currencyService)
     {
         _networkService = networkService;
         _networkConfig = networkConfig;
         _networkStorage = networkStorage;
         _walletAppService = walletAppService;
         _prototypeSettings = prototypeSettings;
+        _currencyService = currencyService;
+
+        // Initialize currency display from the network configuration
+        currencyDisplay = _currencyService.Symbol;
 
         // Ensure default settings exist
         _networkService.AddSettingsIfNotExist();

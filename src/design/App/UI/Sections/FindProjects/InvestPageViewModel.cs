@@ -81,6 +81,7 @@ public partial class InvestPageViewModel : ReactiveObject
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
     private readonly PortfolioViewModel _portfolioVm;
+    private readonly ICurrencyService _currencyService;
     private CancellationTokenSource? _invoiceMonitorCts;
 
     // ── Project Reference ──
@@ -113,14 +114,20 @@ public partial class InvestPageViewModel : ReactiveObject
         : "Choose Wallet";
 
     // ── Quick Amounts (investment type only) ──
-    // Vue ref: quickAmounts grid — 4 items, label is "BTC"
-    public ObservableCollection<QuickAmountOption> QuickAmounts { get; } = new()
-    {
-        new() { Amount = 0.001, AmountText = "0.001", Label = "BTC" },
-        new() { Amount = 0.01, AmountText = "0.01", Label = "BTC" },
-        new() { Amount = 0.1, AmountText = "0.1", Label = "BTC" },
-        new() { Amount = 0.5, AmountText = "0.5", Label = "BTC" }
-    };
+    // Vue ref: quickAmounts grid — 4 items, label is currency symbol
+    public ObservableCollection<QuickAmountOption> QuickAmounts { get; } = new();
+
+    /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
+    public string CurrencySymbol => _currencyService.Symbol;
+
+    /// <summary>e.g. "Enter amount (BTC)"</summary>
+    public string AmountLabel => _currencyService.AmountLabel;
+
+    /// <summary>e.g. "Minimum investment: 0.001 BTC"</summary>
+    public string MinInvestmentHint => _currencyService.MinInvestmentHint;
+
+    /// <summary>e.g. "1.2345 BTC" — pre-formatted raised amount with currency symbol for the floating pill.</summary>
+    public string RaisedWithSymbol => $"{Project.Raised} {_currencyService.Symbol}";
 
     // ── Subscription Plans (subscription type only) ──
     // Vue ref: subscription-patterns — 2 plan buttons
@@ -130,20 +137,20 @@ public partial class InvestPageViewModel : ReactiveObject
     public ObservableCollection<InvestStageRow> Stages { get; } = new();
 
     // ── Transaction Details (stubbed) ──
-    public string MinerFee { get; } = Constants.MinerFeeDisplay;
+    public string MinerFee => _currencyService.MinerFeeDisplay;
     public string AngorFee { get; } = Constants.AngorFeeDisplay;
     public string ProjectId => Project.ProjectId;
 
     // ── Computed totals ──
     public string TotalAmount => ComputeTotal();
     public string FormattedAmount => string.IsNullOrWhiteSpace(InvestmentAmount) ? "0.00000000" : $"{ParseAmount():F8}";
-    public string AngorFeeAmount => $"{ParseAmount() * Constants.AngorFeeRate:F8} BTC";
+    public string AngorFeeAmount => $"{ParseAmount() * Constants.AngorFeeRate:F8} {_currencyService.Symbol}";
 
     // Vue ref: subscription shows sats in transaction details
     public string TransactionAmountLabel => IsSubscription ? "Amount to Subscribe" : "Investment Amount";
     public string TransactionAmountValue => IsSubscription
         ? $"{BtcToSats(ParseAmount()):N0} Sats"
-        : $"{FormattedAmount} BTC";
+        : $"{FormattedAmount} {_currencyService.Symbol}";
 
     public bool CanSubmit => IsSubscription
         ? SelectedSubscriptionPattern != null && ParseAmount() > 0
@@ -176,7 +183,7 @@ public partial class InvestPageViewModel : ReactiveObject
 
     // ── Success message ──
     public string SuccessTitle => ProjectTypeTerminology.SuccessTitle(TypeEnum);
-    public string SuccessDescription => $"Your {Project.ProjectType.ToLower()} of {FormattedAmount} BTC to {Project.ProjectName} has been submitted successfully.";
+    public string SuccessDescription => $"Your {Project.ProjectType.ToLower()} of {FormattedAmount} {_currencyService.Symbol} to {Project.ProjectName} has been submitted successfully.";
     public string SuccessButtonText => ProjectTypeTerminology.SuccessButtonText(TypeEnum);
 
     // ── Wallets loaded from SDK ──
@@ -188,12 +195,21 @@ public partial class InvestPageViewModel : ReactiveObject
         ProjectItemViewModel project,
         IWalletAppService walletAppService,
         IInvestmentAppService investmentAppService,
-        PortfolioViewModel portfolioVm)
+        PortfolioViewModel portfolioVm,
+        ICurrencyService currencyService)
     {
         Project = project;
         _walletAppService = walletAppService;
         _investmentAppService = investmentAppService;
         _portfolioVm = portfolioVm;
+        _currencyService = currencyService;
+
+        // Initialize quick amounts with dynamic currency label
+        var symbol = currencyService.Symbol;
+        QuickAmounts.Add(new QuickAmountOption { Amount = 0.001, AmountText = "0.001", Label = symbol });
+        QuickAmounts.Add(new QuickAmountOption { Amount = 0.01, AmountText = "0.01", Label = symbol });
+        QuickAmounts.Add(new QuickAmountOption { Amount = 0.1, AmountText = "0.1", Label = symbol });
+        QuickAmounts.Add(new QuickAmountOption { Amount = 0.5, AmountText = "0.5", Label = symbol });
 
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
@@ -280,7 +296,7 @@ public partial class InvestPageViewModel : ReactiveObject
                 {
                     Name = meta.Name,
                     Network = "Bitcoin",
-                    Balance = $"{balanceBtc:F8} BTC",
+                    Balance = $"{balanceBtc:F8} {_currencyService.Symbol}",
                     WalletId = meta.Id.Value
                 });
             }
@@ -355,7 +371,7 @@ public partial class InvestPageViewModel : ReactiveObject
         var minerFee = Constants.MinerFee;
         var angorFee = amount * Constants.AngorFeeRate;
         var total = amount + minerFee + angorFee;
-        return $"{total:F8} BTC";
+        return $"{total:F8} {_currencyService.Symbol}";
     }
 
     private void RecomputeStages()
@@ -410,7 +426,7 @@ public partial class InvestPageViewModel : ReactiveObject
                     Percentage = s.Percentage,
                     Amount = $"{stageAmount:F8}",
                     LabelText = $"{prefix} {s.StageNumber}",
-                    AmountDisplayText = $"{stageAmount:F8} BTC",
+                    AmountDisplayText = $"{stageAmount:F8} {_currencyService.Symbol}",
                     IsSubscriptionRow = false
                 });
             }
@@ -427,7 +443,7 @@ public partial class InvestPageViewModel : ReactiveObject
                     Percentage = "25%",
                     Amount = $"{stageAmount:F8}",
                     LabelText = $"{prefix} {i}",
-                    AmountDisplayText = $"{stageAmount:F8} BTC",
+                    AmountDisplayText = $"{stageAmount:F8} {_currencyService.Symbol}",
                     IsSubscriptionRow = false
                 });
             }

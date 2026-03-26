@@ -5,6 +5,7 @@ using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Shared.Models;
 using App.UI.Shell;
+using App.UI.Shared;
 
 namespace App.UI.Sections.Funds;
 
@@ -14,7 +15,7 @@ namespace App.UI.Sections.Funds;
 public class WalletItemViewModel
 {
     public string Name { get; set; } = "";
-    public string Balance { get; set; } = "0.00000000 BTC";
+    public string Balance { get; set; } = "0.00000000";
     public string WalletType { get; set; } = "On-Chain";
     public string Label { get; set; } = "";
     /// <summary>bitcoin, lightning, liquid</summary>
@@ -42,6 +43,7 @@ public partial class FundsViewModel : ReactiveObject
     private readonly IWalletAppService _walletAppService;
     private readonly IWalletAccountBalanceService _balanceService;
     private readonly Func<BitcoinNetwork> _getNetwork;
+    private readonly ICurrencyService _currencyService;
 
     /// <summary>True when wallets exist and populated state should show.</summary>
     [Reactive] private bool hasWallets;
@@ -68,14 +70,19 @@ public partial class FundsViewModel : ReactiveObject
     /// <summary>Guard against concurrent LoadWalletsFromSdkAsync calls.</summary>
     private bool _isLoadingWallets;
 
+    /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
+    public string CurrencySymbol => _currencyService.Symbol;
+
     public FundsViewModel(
         IWalletAppService walletAppService,
         IWalletAccountBalanceService balanceService,
-        Func<BitcoinNetwork> getNetwork)
+        Func<BitcoinNetwork> getNetwork,
+        ICurrencyService currencyService)
     {
         _walletAppService = walletAppService;
         _balanceService = balanceService;
         _getNetwork = getNetwork;
+        _currencyService = currencyService;
 
         _ = LoadWalletsFromSdkAsync();
     }
@@ -147,7 +154,7 @@ public partial class FundsViewModel : ReactiveObject
                 group.Wallets.Add(new WalletItemViewModel
                 {
                     Name = meta.Name,
-                    Balance = $"{balanceBtc:F8} BTC",
+                    Balance = $"{balanceBtc:F8} {_currencyService.Symbol}",
                     WalletType = "On-Chain",
                     Label = "",
                     IconType = "bitcoin",

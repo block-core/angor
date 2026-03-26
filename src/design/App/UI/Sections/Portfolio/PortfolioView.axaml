@@ -162,7 +162,7 @@
                                         <TextBlock Text="{Binding TotalInvested}"
                                                    FontSize="18" FontWeight="Bold"
                                                    Foreground="{DynamicResource TextStrong}" />
-                                        <TextBlock Text="BTC"
+                                        <TextBlock Text="{Binding CurrencySymbol}"
                                                    FontSize="11"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Bottom" Margin="0,0,0,1" />
@@ -194,7 +194,7 @@
                                         <TextBlock Text="{Binding RecoveredToPenalty}"
                                                    FontSize="18" FontWeight="Bold"
                                                    Foreground="{DynamicResource TextStrong}" />
-                                        <TextBlock Text="BTC"
+                                        <TextBlock Text="{Binding CurrencySymbol}"
                                                    FontSize="11"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Bottom" Margin="0,0,0,1" />

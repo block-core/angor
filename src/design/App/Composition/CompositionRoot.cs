@@ -22,6 +22,7 @@ using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
+using App.UI.Shared;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -82,6 +83,9 @@ public static class CompositionRoot
         FundingContextServices.Register(services, serilogLogger);
         services.AddSingleton<ISeedwordsProvider, SeedwordsProvider>();
 
+        // Currency symbol service — reads ticker from INetworkConfiguration
+        services.AddSingleton<ICurrencyService, CurrencyService>();
+
         // ── Shared singletons (replaces SharedViewModels static class) ──
         services.AddSingleton<SignatureStore>();
         services.AddSingleton<PrototypeSettings>();
@@ -104,13 +108,15 @@ public static class CompositionRoot
                 project,
                 sp.GetRequiredService<IWalletAppService>(),
                 sp.GetRequiredService<IInvestmentAppService>(),
-                sp.GetRequiredService<PortfolioViewModel>()));
+                sp.GetRequiredService<PortfolioViewModel>(),
+                sp.GetRequiredService<ICurrencyService>()));
 
         services.AddSingleton<Func<MyProjectItemViewModel, ManageProjectViewModel>>(sp =>
             project => new ManageProjectViewModel(
                 project,
                 sp.GetRequiredService<IFounderAppService>(),
-                sp.GetRequiredService<IProjectService>()));
+                sp.GetRequiredService<IProjectService>(),
+                sp.GetRequiredService<ICurrencyService>()));
 
         // ── Section Views (transient — each receives its VM via constructor injection) ──
         services.AddTransient<HomeView>();

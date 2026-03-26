@@ -2,8 +2,10 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
+using App.UI.Shared;
 using App.UI.Shell;
 using App.UI.Shared.Controls;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace App.UI.Sections.Funds;
 
@@ -79,6 +81,9 @@ public partial class FundsView : UserControl
         return btn.FindAncestorOfType<WalletCard>();
     }
 
+    private ICurrencyService CurrencyService =>
+        App.Services.GetRequiredService<ICurrencyService>();
+
     /// <summary>
     /// Extract wallet info from a WalletCard and open the Send modal.
     /// </summary>
@@ -94,7 +99,7 @@ public partial class FundsView : UserControl
             modal.SetWallet(
                 card.WalletName ?? "Wallet",
                 card.WalletType ?? "On-Chain",
-                card.Balance ?? "0.0000 BTC",
+                card.Balance ?? $"0.0000 {CurrencyService.Symbol}",
                 card.WalletId);
             shellVm.ShowModal(modal);
         }
@@ -135,7 +140,7 @@ public partial class FundsView : UserControl
             modal.SetWallet(
                 card.WalletName ?? "Wallet",
                 card.WalletType ?? "On-Chain",
-                card.Balance ?? "0.0000 BTC",
+                card.Balance ?? $"0.0000 {CurrencyService.Symbol}",
                 card.WalletId ?? "");
             shellVm.ShowModal(modal);
         }

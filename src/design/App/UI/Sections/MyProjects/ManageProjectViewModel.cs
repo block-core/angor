@@ -11,6 +11,7 @@ using Angor.Sdk.Funding.Shared;
 using Nostr.Client.Utils;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
+using App.UI.Shared;
 
 namespace App.UI.Sections.MyProjects;
 
@@ -103,6 +104,10 @@ public partial class ManageProjectViewModel : ReactiveObject
 {
     private readonly IFounderAppService _founderAppService;
     private readonly IProjectService _projectService;
+    private readonly ICurrencyService _currencyService;
+
+    /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
+    public string CurrencySymbol => _currencyService.Symbol;
 
     /// <summary>The project being managed (from MyProjectsView).</summary>
     public MyProjectItemViewModel Project { get; }
@@ -170,10 +175,12 @@ public partial class ManageProjectViewModel : ReactiveObject
     public ManageProjectViewModel(
         MyProjectItemViewModel project,
         IFounderAppService founderAppService,
-        IProjectService projectService)
+        IProjectService projectService,
+        ICurrencyService currencyService)
     {
         _founderAppService = founderAppService;
         _projectService = projectService;
+        _currencyService = currencyService;
         Project = project;
         WalletPassword = "";
         ClaimedAmount = "0";

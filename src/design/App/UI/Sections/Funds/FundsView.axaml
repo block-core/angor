@@ -102,7 +102,7 @@
                                             <TextBlock Text="{Binding TotalBalance}"
                                                        FontSize="20" FontWeight="Bold"
                                                        Foreground="{DynamicResource StatsDetailValue}" />
-                                            <TextBlock Text="BTC"
+                                            <TextBlock Text="{Binding CurrencySymbol}"
                                                        FontSize="13"
                                                        Foreground="{DynamicResource StatsDetailSubtext}"
                                                        VerticalAlignment="Bottom" Margin="0,0,0,2" />
@@ -132,7 +132,7 @@
                                             <TextBlock Text="{Binding BitcoinBalance}"
                                                        FontSize="20" FontWeight="Bold"
                                                        Foreground="{DynamicResource StatsDetailValue}" />
-                                            <TextBlock Text="BTC"
+                                            <TextBlock Text="{Binding CurrencySymbol}"
                                                        FontSize="13"
                                                        Foreground="{DynamicResource StatsDetailSubtext}"
                                                        VerticalAlignment="Bottom" Margin="0,0,0,2" />
@@ -163,7 +163,7 @@
                                             <TextBlock Text="{Binding LiquidBalance}"
                                                        FontSize="20" FontWeight="Bold"
                                                        Foreground="{DynamicResource StatsDetailValue}" />
-                                            <TextBlock Text="BTC"
+                                            <TextBlock Text="{Binding CurrencySymbol}"
                                                        FontSize="13"
                                                        Foreground="{DynamicResource StatsDetailSubtext}"
                                                        VerticalAlignment="Bottom" Margin="0,0,0,2" />
@@ -224,7 +224,7 @@
                                                     <TextBlock Text="{Binding GroupBalance}"
                                                                FontSize="16" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource TextStrong}" />
-                                                    <TextBlock Text="BTC"
+                                                    <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}"
                                                                FontSize="13"
                                                                Foreground="{DynamicResource TextMuted}"
                                                                VerticalAlignment="Bottom" Margin="0,0,0,1" />
