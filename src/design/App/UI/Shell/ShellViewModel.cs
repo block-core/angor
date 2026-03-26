@@ -166,6 +166,13 @@ public partial class PrototypeSettings : ReactiveObject
     /// Default = true so the app starts populated for demos.
     /// </summary>
     [Reactive] private bool showPopulatedApp = true;
+
+    /// <summary>
+    /// When true (and on a testnet network), enables debug features:
+    /// prepopulate project creation wizard data, bypass some validations, etc.
+    /// Synced to <see cref="INetworkConfiguration.SetDebugMode"/>.
+    /// </summary>
+    [Reactive] private bool isDebugMode;
 }
 
 /// <summary>

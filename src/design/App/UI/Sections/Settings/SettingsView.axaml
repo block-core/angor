@@ -673,7 +673,54 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ 9. Danger Zone ═══ -->
+                <!-- ═══ 9. Debug Mode (testnet only) ═══ -->
+                <!-- Visible only on testnet networks. Enables debug features like project wizard
+                     data prepopulation and relaxed validation for easier testing. -->
+                <Border Background="{DynamicResource CardSurface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        ClipToBounds="True"
+                        BoxShadow="{DynamicResource ItemShadow}"
+                        IsVisible="{Binding IsTestnet}">
+                    <StackPanel>
+                        <Border BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="0,0,0,1"
+                                Padding="24,20">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-solid fa-bug"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                <TextBlock Text="Debug Mode"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <Border Padding="24">
+                            <DockPanel>
+                                <ToggleSwitch DockPanel.Dock="Right"
+                                              IsChecked="{Binding IsDebugMode, Mode=TwoWay}"
+                                              VerticalAlignment="Center"
+                                              OnContent="Enabled"
+                                              OffContent="Disabled" />
+                                <StackPanel Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="Enable Debug Features"
+                                               FontSize="14"
+                                               FontWeight="Medium"
+                                               Foreground="{DynamicResource TextStrong}" />
+                                    <TextBlock Text="Debug mode is only available on testnet networks. When enabled, additional debugging features will be available such as prepopulated project wizard data and relaxed validation."
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ 10. Danger Zone ═══ -->
                 <!-- Vue: border 2px solid #fee2e2 (light) / #7f1d1d (dark), no normal CardSurface bg -->
                 <Border BorderBrush="{DynamicResource DangerZoneBorder}"
                         BorderThickness="2"

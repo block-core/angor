@@ -51,6 +51,9 @@ public partial class SettingsViewModel : ReactiveObject
     // Wipe data modal
     [Reactive] private bool isWipeDataModalOpen;
 
+    // Debug mode (testnet only)
+    [Reactive] private bool isTestnet;
+
     private readonly PrototypeSettings _prototypeSettings;
 
     // Prototype settings toggle — delegates to injected PrototypeSettings
@@ -60,6 +63,21 @@ public partial class SettingsViewModel : ReactiveObject
         set
         {
             _prototypeSettings.ShowPopulatedApp = value;
+            this.RaisePropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Debug mode toggle — only effective on testnet networks.
+    /// Delegates to PrototypeSettings and syncs to INetworkConfiguration.SetDebugMode().
+    /// </summary>
+    public bool IsDebugMode
+    {
+        get => _prototypeSettings.IsDebugMode;
+        set
+        {
+            _prototypeSettings.IsDebugMode = value;
+            _networkConfig.SetDebugMode(value);
             this.RaisePropertyChanged();
         }
     }
@@ -102,6 +120,12 @@ public partial class SettingsViewModel : ReactiveObject
 
         // Load current network
         networkType = _networkStorage.GetNetwork() ?? "Angornet";
+
+        // Debug mode is only available on testnet networks
+        isTestnet = networkType != "Mainnet";
+
+        // Sync initial debug mode state to INetworkConfiguration
+        _networkConfig.SetDebugMode(_prototypeSettings.IsDebugMode);
 
         // Load settings from SDK storage
         LoadSettingsFromSdk();
@@ -207,6 +231,15 @@ public partial class SettingsViewModel : ReactiveObject
 
         NetworkType = newNetwork;
         IsNetworkModalOpen = false;
+
+        // Update testnet state (debug mode only available on testnet)
+        IsTestnet = newNetwork != "Mainnet";
+
+        // If switching to mainnet, disable debug mode
+        if (!IsTestnet && IsDebugMode)
+        {
+            IsDebugMode = false;
+        }
 
         // Reload settings from SDK for the new network
         LoadSettingsFromSdk();
