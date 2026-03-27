@@ -39,7 +39,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         // No special cleanup needed — let the shell close the modal.
     }
 
-    private void OnButtonClick(object? sender, RoutedEventArgs e)
+    private async void OnButtonClick(object? sender, RoutedEventArgs e)
     {
         if (e.Source is not Button btn) return;
 
@@ -66,7 +66,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
                 break;
 
             case "BtnSubmitImport":
-                SubmitImport();
+                await SubmitImportAsync();
                 break;
 
             // ── Step 2b: Backup ──
@@ -76,10 +76,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
 
             case "BtnContinueBackup":
                 if (_seedDownloaded)
-                {
-                    // Create wallet via SDK
-                    _ = CreateWalletViaSdkAsync("Generated Account");
-                }
+                    await CreateWalletViaSdkAsync("Generated Account");
                 break;
 
             case "BtnCancelBackup":
@@ -108,7 +105,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     /// Validate seed phrase and import wallet with user-provided seed words.
     /// Vue: submitSeedImport() — validates 12 or 24 words.
     /// </summary>
-    private void SubmitImport()
+    private async Task SubmitImportAsync()
     {
         var input = SeedPhraseInput.Text?.Trim() ?? "";
         var words = input.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
@@ -124,8 +121,12 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         SeedError.IsVisible = false;
         SeedSuccess.IsVisible = true;
 
-        // Import wallet with the user's seed words
-        _ = ImportWalletViaSdkAsync("Imported Account", string.Join(" ", words));
+        // Show spinner, disable button to prevent double-tap
+        SetImportLoading(true);
+
+        await ImportWalletViaSdkAsync("Imported Account", string.Join(" ", words));
+
+        SetImportLoading(false);
     }
 
     /// <summary>
@@ -137,23 +138,39 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
 
         var success = await Vm.ImportWalletAsync(walletName, seedWords, "default-key");
         if (success)
-        {
             ShowStep("success");
-        }
     }
 
     /// <summary>
-    /// Create a new wallet via the SDK (generate flow) and show success step.
+    /// Create a new wallet via the SDK (generate flow) with loading spinner.
     /// </summary>
     private async Task CreateWalletViaSdkAsync(string walletName)
     {
         if (Vm == null) return;
 
+        SetGenerateLoading(true);
+
         var (success, _) = await Vm.CreateWalletAsync(walletName, "default-key");
         if (success)
-        {
             ShowStep("success");
-        }
+
+        SetGenerateLoading(false);
+    }
+
+    private void SetImportLoading(bool loading)
+    {
+        BtnSubmitImport.IsEnabled = !loading;
+        BtnCancelImport.IsEnabled = !loading;
+        ImportBtnContent.IsVisible = !loading;
+        ImportBtnSpinner.IsVisible = loading;
+    }
+
+    private void SetGenerateLoading(bool loading)
+    {
+        BtnContinueBackup.IsEnabled = !loading;
+        BtnCancelBackup.IsEnabled = !loading;
+        ContinueBtnContent.IsVisible = !loading;
+        ContinueBtnSpinner.IsVisible = loading;
     }
 
     /// <summary>

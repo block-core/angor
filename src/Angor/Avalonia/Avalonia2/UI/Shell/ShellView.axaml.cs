@@ -10,6 +10,7 @@ using Avalonia.Media;
 using Avalonia.Media.Transformation;
 using Avalonia.Styling;
 using Avalonia2.UI.Shared;
+using Avalonia2.UI.Shared.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
 
@@ -147,6 +148,7 @@ public partial class ShellView : UserControl
         InitializeComponent();
         var vm = App.Services.GetRequiredService<ShellViewModel>();
         DataContext = vm;
+        ShellService.Register(vm);
 
         // ── Resolve layout controls ──
         _shellContent = this.FindControl<Grid>("ShellContent")!;
