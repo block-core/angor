@@ -161,6 +161,9 @@ public class SignatureStore
 /// </summary>
 public partial class PrototypeSettings : ReactiveObject
 {
+    private readonly IStore _store;
+    private const string SettingsKey = "prototype_settings.json";
+
     /// <summary>
     /// When true, sections show hardcoded sample data (populated state).
     /// When false, sections show empty states.
@@ -174,6 +177,35 @@ public partial class PrototypeSettings : ReactiveObject
     /// Synced to <see cref="INetworkConfiguration.SetDebugMode"/>.
     /// </summary>
     [Reactive] private bool isDebugMode;
+
+    public PrototypeSettings(IStore store)
+    {
+        _store = store;
+
+        // Load persisted values
+        var result = _store.Load<PrototypeSettingsData>(SettingsKey).GetAwaiter().GetResult();
+        if (result.IsSuccess)
+        {
+            isDebugMode = result.Value.IsDebugMode;
+        }
+
+        // Persist on changes
+        this.WhenAnyValue(x => x.IsDebugMode)
+            .Skip(1)
+            .Subscribe(async value =>
+            {
+                var saveResult = await _store.Save(SettingsKey, new PrototypeSettingsData { IsDebugMode = value });
+                if (saveResult.IsFailure)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[PrototypeSettings] Failed to save debug mode: {saveResult.Error}");
+                }
+            });
+    }
+
+    private class PrototypeSettingsData
+    {
+        public bool IsDebugMode { get; set; }
+    }
 }
 
 /// <summary>

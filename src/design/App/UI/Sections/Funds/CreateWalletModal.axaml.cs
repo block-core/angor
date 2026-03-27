@@ -93,7 +93,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
                 {
                     _logger.LogInformation("Seed downloaded confirmed, creating wallet via SDK");
                     // Create wallet via SDK
-                    _ = CreateWalletViaSdkAsync("Generated Account");
+                    _ = CreateWalletViaSdkAsync(Vm?.DefaultWalletName ?? "My Wallet");
                 }
                 else
                 {
@@ -148,7 +148,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         SeedSuccess.IsVisible = true;
 
         // Import wallet with the user's seed words
-        _ = ImportWalletViaSdkAsync("Imported Account", string.Join(" ", words));
+        _ = ImportWalletViaSdkAsync(Vm?.DefaultWalletName ?? "My Wallet", string.Join(" ", words));
     }
 
     /// <summary>
