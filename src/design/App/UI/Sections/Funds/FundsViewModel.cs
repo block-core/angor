@@ -262,8 +262,13 @@ public partial class FundsViewModel : ReactiveObject
                 await LoadWalletsFromSdkAsync();
                 return (true, result.Value.Value);
             }
+
+            _logger.LogError("SendAmount failed for wallet {WalletId} to address '{Address}' amount {Sats} sats feeRate {FeeRate}: {Error}", walletId, destinationAddress, sats, feeRateSatsPerVByte, result.Error);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "SendAsync threw an exception for wallet {WalletId}", walletId);
+        }
 
         return (false, null);
     }

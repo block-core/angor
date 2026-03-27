@@ -65,7 +65,8 @@
                 <!-- ═══════════════════════════════════════════════════ -->
                 <!-- STEP 1: Send Form                                   -->
                 <!-- ═══════════════════════════════════════════════════ -->
-                <StackPanel Name="FormPanel" Spacing="0">
+                <StackPanel Name="FormPanel" Spacing="0"
+                            AutomationProperties.AutomationId="SendFormPanel">
                     <!-- Header: "Send" + close X, border-bottom -->
                     <Border BorderBrush="{DynamicResource ModalHeaderBorder}"
                             BorderThickness="0,0,0,1"
@@ -115,6 +116,7 @@
                             <TextBlock Text="Recipient Address" FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMuted}" />
                             <TextBox Name="AddressInput"
+                                     AutomationProperties.AutomationId="SendAddressInput"
                                      Watermark="Enter Bitcoin address"
                                      Background="{DynamicResource ModalInputBg}"
                                      BorderBrush="{DynamicResource StrokeSubtle}"
@@ -139,6 +141,7 @@
                                 </TextBlock.Text>
                             </TextBlock>
                             <TextBox Name="AmountInput"
+                                     AutomationProperties.AutomationId="SendAmountInput"
                                      Watermark="0.00000000"
                                      Background="{DynamicResource ModalInputBg}"
                                      BorderBrush="{DynamicResource StrokeSubtle}"
@@ -245,6 +248,7 @@
                                     Cursor="Hand"
                                     Content="Cancel" />
                             <Button Name="BtnSend" Grid.Column="2"
+                                    AutomationProperties.AutomationId="BtnSendConfirm"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
                                     Padding="14,12" CornerRadius="8"
@@ -272,7 +276,8 @@
                 <!-- ═══════════════════════════════════════════════════ -->
                 <!-- STEP 2: Success                                     -->
                 <!-- ═══════════════════════════════════════════════════ -->
-                <StackPanel Name="SuccessPanel" IsVisible="False" Spacing="16" Margin="24">
+                <StackPanel Name="SuccessPanel" IsVisible="False" Spacing="16" Margin="24"
+                            AutomationProperties.AutomationId="SendSuccessPanel">
                     <!-- Green checkmark circle -->
                     <Border Width="80" Height="80" CornerRadius="40"
                             Background="{DynamicResource CreateWalletGreenCircleBg}"
@@ -335,6 +340,7 @@
                                                    Foreground="{DynamicResource TextMuted}" />
                                         </Button>
                                         <TextBlock Name="SummaryTxid" Text=""
+                               AutomationProperties.AutomationId="SummaryTxid"
                                                    FontSize="13"
                                                    FontFamily="Cascadia Mono, Consolas, monospace"
                                                     Foreground="{DynamicResource PrimaryGreenBrush}"
@@ -347,6 +353,7 @@
 
                     <!-- Done button -->
                     <Button Name="BtnDone" HorizontalAlignment="Stretch"
+                            AutomationProperties.AutomationId="BtnSendDone"
                             HorizontalContentAlignment="Center"
                             Padding="14,12" CornerRadius="8"
                             Foreground="White"
