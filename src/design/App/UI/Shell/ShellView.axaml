@@ -87,7 +87,8 @@
                             <i:Icon Value="fa-solid fa-sun" FontSize="16" Foreground="{DynamicResource TextMuted}" />
                         </ToggleButton.Content>
                     </ToggleButton>
-                    <Button Classes="Widget" Name="SettingsButton" Click="OnSettingsClick">
+                    <Button Classes="Widget" Name="SettingsButton" Click="OnSettingsClick"
+                            AutomationProperties.AutomationId="SettingsButton">
                         <Panel Width="24" Height="24">
                             <Path Data="{StaticResource NavIconSettings}"
                                   Stroke="{DynamicResource TextMuted}"
@@ -171,7 +172,8 @@
              hidden; code-behind adds the content control as a direct
              child, then makes the Panel visible. This guarantees the
              content is in the visual tree before the layout pass. -->
-        <Panel Name="ModalOverlay" IsVisible="False" ZIndex="1000">
+        <Panel Name="ModalOverlay" IsVisible="False" ZIndex="1000"
+               AutomationProperties.AutomationId="ModalOverlay">
             <Border Name="ShellModalBackdrop"
                     Background="{DynamicResource ModalBackdrop}"
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />

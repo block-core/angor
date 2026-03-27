@@ -52,7 +52,15 @@ public static class CompositionRoot
         };
 
         // Logging — Microsoft.Extensions.Logging with console output
-        services.AddLogging(builder => builder.AddConsole());
+        services.AddLogging(builder =>
+        {
+            builder.AddConsole();
+            // Suppress noisy per-request HTTP diagnostics (Sending/Received for every call)
+            builder.AddFilter("System.Net.Http.HttpClient", LogLevel.Warning);
+            // Suppress verbose per-address balance/utxo and derivation logs
+            builder.AddFilter("Angor.Shared.WalletOperations", LogLevel.Warning);
+            builder.AddFilter("Angor.Shared.DerivationOperations", LogLevel.Warning);
+        });
 
         // Minimal Serilog logger required by SDK Register methods (parameter signature)
         var serilogLogger = new LoggerConfiguration().CreateLogger();

@@ -116,7 +116,8 @@
                                        FontSize="14"
                                        Foreground="{DynamicResource TextMuted}" />
                             </Button>
-                            <TextBlock Name="AddressText"
+                             <TextBlock Name="AddressText"
+                                        AutomationProperties.AutomationId="ReceiveAddressText"
                                        Text="Loading..."
                                        FontSize="13"
                                        FontFamily="Cascadia Mono, Consolas, monospace"
@@ -127,7 +128,8 @@
                     </Border>
 
                     <!-- Done button (green gradient, full width) -->
-                    <Button Name="BtnDone" HorizontalAlignment="Stretch"
+                     <Button Name="BtnDone" HorizontalAlignment="Stretch"
+                            AutomationProperties.AutomationId="BtnReceiveDone"
                             HorizontalContentAlignment="Center"
                             Padding="14,12" CornerRadius="8"
                             Foreground="White"

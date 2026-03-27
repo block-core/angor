@@ -754,6 +754,7 @@
                             <StackPanel Spacing="20">
                                 <!-- Vue: Wipe Data button (solid red) -->
                                 <Button HorizontalAlignment="Left"
+                                        AutomationProperties.AutomationId="BtnWipeData"
                                         Padding="20,14"
                                         Background="{DynamicResource DangerButtonBg}"
                                         Foreground="{DynamicResource DangerButtonFg}"
@@ -1053,6 +1054,7 @@
                                         Click="OnCloseWipeDataModal"
                                         Content="Cancel" />
                                 <Button Padding="20,10"
+                                        AutomationProperties.AutomationId="BtnConfirmWipeData"
                                         Background="#EF4444"
                                         Foreground="White"
                                         BorderThickness="0"

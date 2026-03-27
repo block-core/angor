@@ -2,6 +2,8 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.Funds;
 
@@ -20,10 +22,14 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     /// <summary>Tracks whether the seed was "downloaded" (enables Continue button).</summary>
     private bool _seedDownloaded;
 
+    private readonly ILogger<CreateWalletModal> _logger;
+
     public CreateWalletModal()
     {
         InitializeComponent();
         AddHandler(Button.ClickEvent, OnButtonClick);
+
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<CreateWalletModal>();
     }
 
     private FundsViewModel? Vm => DataContext as FundsViewModel;
@@ -46,6 +52,8 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     {
         if (e.Source is not Button btn) return;
 
+        _logger.LogDebug("Button clicked: {ButtonName}", btn.Name);
+
         switch (btn.Name)
         {
             // ── Step 1: Choice ──
@@ -54,10 +62,12 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
                 break;
 
             case "BtnImport":
+                _logger.LogInformation("User chose Import path");
                 ShowStep("import");
                 break;
 
             case "BtnGenerate":
+                _logger.LogInformation("User chose Generate path");
                 _seedDownloaded = false;
                 GenerateAndDisplaySeed();
                 ShowStep("backup");
@@ -81,8 +91,13 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
             case "BtnContinueBackup":
                 if (_seedDownloaded)
                 {
+                    _logger.LogInformation("Seed downloaded confirmed, creating wallet via SDK");
                     // Create wallet via SDK
                     _ = CreateWalletViaSdkAsync("Generated Account");
+                }
+                else
+                {
+                    _logger.LogWarning("BtnContinueBackup clicked but seed not yet downloaded");
                 }
                 break;
 
@@ -92,6 +107,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
 
             // ── Step 3: Success ──
             case "BtnDone":
+                _logger.LogInformation("Wallet creation flow completed, closing modal");
                 ShellVm?.HideModal();
                 break;
         }
@@ -102,6 +118,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     /// </summary>
     private void ShowStep(string step)
     {
+        _logger.LogDebug("Showing step: {Step}", step);
         ChoicePanel.IsVisible = step == "choice";
         ImportPanel.IsVisible = step == "import";
         BackupPanel.IsVisible = step == "backup";
@@ -119,12 +136,14 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
 
         if (words.Length != 12 && words.Length != 24)
         {
+            _logger.LogWarning("Invalid seed phrase: {WordCount} words (expected 12 or 24)", words.Length);
             SeedError.Text = "Please enter exactly 12 or 24 seed words.";
             SeedError.IsVisible = true;
             SeedSuccess.IsVisible = false;
             return;
         }
 
+        _logger.LogInformation("Seed phrase validated: {WordCount} words, importing wallet", words.Length);
         SeedError.IsVisible = false;
         SeedSuccess.IsVisible = true;
 
@@ -139,10 +158,16 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     {
         if (Vm == null) return;
 
+        _logger.LogInformation("Importing wallet '{WalletName}' via SDK...", walletName);
         var success = await Vm.ImportWalletAsync(walletName, seedWords, "default-key");
         if (success)
         {
+            _logger.LogInformation("Wallet '{WalletName}' imported successfully", walletName);
             ShowStep("success");
+        }
+        else
+        {
+            _logger.LogError("Failed to import wallet '{WalletName}'", walletName);
         }
     }
 
@@ -152,10 +177,16 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     private void GenerateAndDisplaySeed()
     {
         if (Vm == null) return;
+        _logger.LogInformation("Generating seed words via SDK...");
         _generatedSeedWords = Vm.GenerateSeedWords();
         if (!string.IsNullOrEmpty(_generatedSeedWords))
         {
+            _logger.LogInformation("Seed words generated and displayed in backup panel");
             SeedPhraseDisplay.Text = _generatedSeedWords;
+        }
+        else
+        {
+            _logger.LogError("GenerateSeedWords returned empty result");
         }
     }
 
@@ -166,16 +197,24 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     {
         if (Vm == null || string.IsNullOrEmpty(_generatedSeedWords)) return;
 
+        _logger.LogInformation("Creating wallet '{WalletName}' via SDK (generate flow)...", walletName);
         var success = await Vm.ImportWalletAsync(walletName, _generatedSeedWords, "default-key");
         if (success)
         {
+            _logger.LogInformation("Wallet '{WalletName}' created successfully (generate flow)", walletName);
             ShowStep("success");
+        }
+        else
+        {
+            _logger.LogError("Failed to create wallet '{WalletName}' (generate flow)", walletName);
         }
     }
 
     /// <summary>
     /// Save seed phrase to a text file via file save dialog.
     /// Vue: downloadGeneratedSeed() — sets seedDownloaded = true.
+    /// In headless mode, SaveFilePickerAsync returns null (NoopStorageProvider)
+    /// but _seedDownloaded is still set to true, enabling the Continue button.
     /// </summary>
     private async void DownloadSeed()
     {
@@ -184,6 +223,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel?.StorageProvider != null)
         {
+            _logger.LogInformation("Opening file save dialog for seed backup...");
             var file = await topLevel.StorageProvider.SaveFilePickerAsync(
                 new Avalonia.Platform.Storage.FilePickerSaveOptions
                 {
@@ -194,15 +234,25 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
 
             if (file != null)
             {
+                _logger.LogInformation("Saving seed phrase to file: {FileName}", file.Name);
                 await using var stream = await file.OpenWriteAsync();
                 await using var writer = new System.IO.StreamWriter(stream);
                 await writer.WriteAsync(_generatedSeedWords);
             }
+            else
+            {
+                _logger.LogInformation("File save dialog cancelled or unavailable (headless mode)");
+            }
+        }
+        else
+        {
+            _logger.LogInformation("No StorageProvider available — skipping file save dialog");
         }
 
         _seedDownloaded = true;
         BtnContinueBackup.IsEnabled = true;
         BtnContinueBackup.BorderBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4B7C5A"));
         BtnContinueBackup.Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4B7C5A"));
+        _logger.LogInformation("Seed download acknowledged — Continue button enabled");
     }
 }

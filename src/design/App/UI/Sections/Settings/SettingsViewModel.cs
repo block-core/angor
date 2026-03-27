@@ -6,6 +6,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Services;
 using App.UI.Shared;
 using App.UI.Shell;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.Settings;
 
@@ -21,6 +22,7 @@ public partial class SettingsViewModel : ReactiveObject
     private readonly INetworkStorage _networkStorage;
     private readonly IWalletAppService _walletAppService;
     private readonly ICurrencyService _currencyService;
+    private readonly ILogger<SettingsViewModel> _logger;
 
     [Reactive] private string networkType;
     [Reactive] private bool isNetworkModalOpen;
@@ -103,7 +105,8 @@ public partial class SettingsViewModel : ReactiveObject
         INetworkStorage networkStorage,
         IWalletAppService walletAppService,
         PrototypeSettings prototypeSettings,
-        ICurrencyService currencyService)
+        ICurrencyService currencyService,
+        ILogger<SettingsViewModel> logger)
     {
         _networkService = networkService;
         _networkConfig = networkConfig;
@@ -111,6 +114,7 @@ public partial class SettingsViewModel : ReactiveObject
         _walletAppService = walletAppService;
         _prototypeSettings = prototypeSettings;
         _currencyService = currencyService;
+        _logger = logger;
 
         // Initialize currency display from the network configuration
         currencyDisplay = _currencyService.Symbol;
@@ -332,12 +336,14 @@ public partial class SettingsViewModel : ReactiveObject
 
     public async void ConfirmWipeData()
     {
+        _logger.LogInformation("Wipe data requested — clearing settings and deleting all wallets");
         IsWipeDataModalOpen = false;
 
         // Clear settings
         _networkStorage.SetSettings(new SettingsInfo());
         _networkService.AddSettingsIfNotExist();
         LoadSettingsFromSdk();
+        _logger.LogInformation("Network settings cleared and defaults re-initialized");
 
         // Delete all wallets
         try
@@ -345,18 +351,31 @@ public partial class SettingsViewModel : ReactiveObject
             var metadatas = await _walletAppService.GetMetadatas();
             if (metadatas.IsSuccess)
             {
-                foreach (var meta in metadatas.Value)
+                var walletList = metadatas.Value.ToList();
+                _logger.LogInformation("Found {Count} wallet(s) to delete", walletList.Count);
+
+                foreach (var meta in walletList)
                 {
+                    _logger.LogInformation("Deleting wallet {WalletId} (Name: '{WalletName}')", meta.Id, meta.Name);
                     await _walletAppService.DeleteWallet(meta.Id);
+                    _logger.LogInformation("Wallet {WalletId} deleted successfully", meta.Id);
                 }
             }
+            else
+            {
+                _logger.LogWarning("Failed to get wallet metadatas for wipe: {Error}", metadatas.Error);
+            }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while deleting wallets during wipe");
+        }
 
         // Clear cached views so sections reload with fresh data
         var shellVm = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
             .GetService<ShellViewModel>(App.Services);
         shellVm?.ClearViewCache();
+        _logger.LogInformation("Wipe data completed — view cache cleared");
     }
 }
 
