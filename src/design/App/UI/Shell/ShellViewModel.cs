@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Threading;
+using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Application;
 using App.UI.Sections.FindProjects;
 using App.UI.Sections.MyProjects;
@@ -255,12 +256,22 @@ public partial class ShellViewModel : ReactiveObject
             ? SelectedWallet.Balance.ToString("F4", CultureInfo.InvariantCulture) + " " + _currencyService.Symbol
             : "0.0000 " + _currencyService.Symbol;
 
-    public ShellViewModel(PortfolioViewModel portfolioVm, Func<string, object?> viewFactory, IWalletAppService walletAppService, ICurrencyService currencyService)
+    /// <summary>
+    /// Profile name shown in the header tag. Null when running the "Default" profile (tag hidden).
+    /// </summary>
+    public string? ProfileName { get; }
+
+    public ShellViewModel(PortfolioViewModel portfolioVm, Func<string, object?> viewFactory, IWalletAppService walletAppService, ICurrencyService currencyService, ProfileContext profileContext)
     {
         _portfolioVm = portfolioVm;
         _viewFactory = viewFactory;
         _walletAppService = walletAppService;
         _currencyService = currencyService;
+
+        // Hide profile tag for the default profile, show for all others
+        var profile = profileContext.ProfileName;
+        ProfileName = string.Equals(profile, "Default", StringComparison.OrdinalIgnoreCase) ? null : profile;
+
         NavEntries = new ObservableCollection<NavEntry>
         {
             // Ungrouped
