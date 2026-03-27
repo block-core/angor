@@ -26,8 +26,8 @@ public partial class SettingsView : UserControl
     private void OnCloseNetworkModal(object? sender, RoutedEventArgs e) =>
         Vm?.CloseNetworkModal();
 
-    private void OnConfirmNetworkSwitch(object? sender, RoutedEventArgs e) =>
-        Vm?.ConfirmNetworkSwitch();
+    private async void OnConfirmNetworkSwitch(object? sender, RoutedEventArgs e) =>
+        await (Vm?.ConfirmNetworkSwitchAsync() ?? Task.CompletedTask);
 
     private void OnSelectMainnet(object? sender, RoutedEventArgs e) => SelectNetworkOption("Mainnet");
     private void OnSelectTestnet(object? sender, RoutedEventArgs e) => SelectNetworkOption("Testnet");

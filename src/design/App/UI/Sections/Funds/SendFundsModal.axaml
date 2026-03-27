@@ -15,28 +15,7 @@
     -->
 
     <UserControl.Styles>
-        <!-- Fee tab: unselected (Rule #9 — CSS class toggling, no BrushTransition) -->
-        <Style Selector="Button.FeeBtn">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="{DynamicResource StrokeSubtle}" />
-        </Style>
-        <Style Selector="Button.FeeBtn TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource RecoveryFeeUnselectedText}" />
-        </Style>
-        <Style Selector="Button.FeeBtn TextBlock.FeeTime">
-            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
-        </Style>
-        <!-- Fee tab: selected -->
-        <Style Selector="Button.FeeBtn.FeeSelected">
-            <Setter Property="Background" Value="{DynamicResource RecoveryFeeSelectedBg}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource RecoveryFeeSelectedBorder}" />
-        </Style>
-        <Style Selector="Button.FeeBtn.FeeSelected TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource RecoveryFeeSelectedText}" />
-        </Style>
-        <Style Selector="Button.FeeBtn.FeeSelected TextBlock.FeeTime">
-            <Setter Property="Foreground" Value="#FFFFFFB3" />
-        </Style>
+        <!-- No local styles needed — fee selection is handled by the FeeSelectionPopup -->
     </UserControl.Styles>
 
     <Panel>
@@ -183,56 +162,8 @@
                             </StackPanel>
                         </StackPanel>
 
-                        <!-- Fee Priority Selector -->
-                        <!-- Vue: 3-column grid, selected = green bg + white text -->
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="Fee Priority" FontSize="13" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextMuted}" />
-                            <UniformGrid Columns="3" Rows="1">
-                                <Button Name="BtnFeeLow"
-                                        Classes="FeeBtn"
-                                        HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Center"
-                                        Padding="8,10" CornerRadius="8"
-                                        Margin="0,0,4,0"
-                                        BorderThickness="1"
-                                        FontSize="13" FontWeight="SemiBold"
-                                        Cursor="Hand">
-                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="Low" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="13" />
-                                        <TextBlock Classes="FeeTime" Text="~30 min" HorizontalAlignment="Center" FontSize="11" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Name="BtnFeeMedium"
-                                        Classes="FeeBtn FeeSelected"
-                                        HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Center"
-                                        Padding="8,10" CornerRadius="8"
-                                        Margin="2,0"
-                                        BorderThickness="1"
-                                        FontSize="13" FontWeight="SemiBold"
-                                        Cursor="Hand">
-                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="Medium" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="13" />
-                                        <TextBlock Classes="FeeTime" Text="~15 min" HorizontalAlignment="Center" FontSize="11" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Name="BtnFeeHigh"
-                                        Classes="FeeBtn"
-                                        HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Center"
-                                        Padding="8,10" CornerRadius="8"
-                                        Margin="4,0,0,0"
-                                        BorderThickness="1"
-                                        FontSize="13" FontWeight="SemiBold"
-                                        Cursor="Hand">
-                                    <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="High" HorizontalAlignment="Center" FontWeight="SemiBold" FontSize="13" />
-                                        <TextBlock Classes="FeeTime" Text="~5 min" HorizontalAlignment="Center" FontSize="11" />
-                                    </StackPanel>
-                                </Button>
-                            </UniformGrid>
-                        </StackPanel>
+                        <!-- Fee rate is selected via the reusable FeeSelectionPopup
+                             when the user clicks Send -->
 
                         <!-- Action buttons: Cancel + Send -->
                         <Grid ColumnDefinitions="*,8,*" Margin="0,4,0,0">

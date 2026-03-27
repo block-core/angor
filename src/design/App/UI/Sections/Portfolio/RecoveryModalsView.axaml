@@ -17,16 +17,6 @@
     -->
 
     <UserControl.Styles>
-        <!-- Fee priority button selection — Rule #9: NO BrushTransition on toggled elements -->
-        <Style Selector="Border.FeeBtn">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="{DynamicResource StrokeSubtle}" />
-        </Style>
-        <Style Selector="Border.FeeBtn.FeeSelected">
-            <Setter Property="Background" Value="{DynamicResource RecoveryFeeSelectedBg}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource RecoveryFeeSelectedBorder}" />
-        </Style>
-
         <!-- Kill FluentTheme chrome on all modal buttons -->
         <Style Selector="Button.ModalBtn">
             <Setter Property="Background" Value="Transparent" />
@@ -217,85 +207,8 @@
                             </Border>
                         </Grid>
 
-                        <!-- Transaction Fee section -->
-                        <StackPanel Spacing="12">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="Transaction Fee" FontSize="16" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextStrong}" />
-                                <!-- Info badge -->
-                                <Border CornerRadius="6" Padding="8,4"
-                                        Background="{DynamicResource RecoveryFeeBadgeBg}">
-                                    <TextBlock Text="Network fee for Bitcoin transaction"
-                                               FontSize="12"
-                                               Foreground="{DynamicResource RecoveryFeeBadgeText}" />
-                                </Border>
-                            </StackPanel>
-
-                            <!-- Fee Priority selector: 3-col grid -->
-                            <!-- Vue: grid-cols-3 gap-3 -->
-                            <Grid ColumnDefinitions="*,*,*">
-                                <Grid.ColumnSpacing>12</Grid.ColumnSpacing>
-
-                                <!-- Priority -->
-                                <Border Name="FeePriority" Grid.Column="0"
-                                        Classes="FeeBtn" CornerRadius="8" Padding="12"
-                                        BorderThickness="2" Cursor="Hand">
-                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                        <TextBlock Name="FeePriorityLabel" Text="Priority" FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
-                                                   HorizontalAlignment="Center" />
-                                        <TextBlock Name="FeePriorityDesc" Text="~1-3 blocks" FontSize="12"
-                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
-                                                   HorizontalAlignment="Center" Opacity="0.7" />
-                                        <TextBlock Name="FeePriorityRate" Text="1.1 sat/vB" FontSize="11"
-                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
-                                                   HorizontalAlignment="Center" Opacity="0.5" />
-                                    </StackPanel>
-                                </Border>
-
-                                <!-- Standard -->
-                                <Border Name="FeeStandard" Grid.Column="1"
-                                        Classes="FeeBtn FeeSelected" CornerRadius="8" Padding="12"
-                                        BorderThickness="2" Cursor="Hand">
-                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                        <TextBlock Name="FeeStandardLabel" Text="Standard" FontSize="14"
-                                                   FontWeight="SemiBold" Foreground="White"
-                                                   HorizontalAlignment="Center" />
-                                        <TextBlock Name="FeeStandardDesc" Text="~3-6 blocks" FontSize="12"
-                                                   Foreground="White"
-                                                   HorizontalAlignment="Center" Opacity="0.7" />
-                                        <TextBlock Name="FeeStandardRate" Text="0.8 sat/vB" FontSize="11"
-                                                   Foreground="White"
-                                                   HorizontalAlignment="Center" Opacity="0.5" />
-                                    </StackPanel>
-                                </Border>
-
-                                <!-- Economy -->
-                                <Border Name="FeeEconomy" Grid.Column="2"
-                                        Classes="FeeBtn" CornerRadius="8" Padding="12"
-                                        BorderThickness="2" Cursor="Hand">
-                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                        <TextBlock Name="FeeEconomyLabel" Text="Economy" FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
-                                                   HorizontalAlignment="Center" />
-                                        <TextBlock Name="FeeEconomyDesc" Text="~6+ blocks" FontSize="12"
-                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
-                                                   HorizontalAlignment="Center" Opacity="0.7" />
-                                        <TextBlock Name="FeeEconomyRate" Text="0.5 sat/vB" FontSize="11"
-                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
-                                                   HorizontalAlignment="Center" Opacity="0.5" />
-                                    </StackPanel>
-                                </Border>
-                            </Grid>
-
-                            <!-- Custom Fee Rate checkbox -->
-                            <CheckBox IsChecked="{Binding IsCustomFeeRate}" Margin="0,4,0,0">
-                                <TextBlock Text="Custom Fee Rate" FontSize="14"
-                                           Foreground="{DynamicResource TextStrong}" />
-                            </CheckBox>
-                        </StackPanel>
+                        <!-- Fee rate is selected via the reusable FeeSelectionPopup
+                             when the user clicks Confirm -->
 
                         <!-- Confirmation question -->
                         <TextBlock Text="Are you sure you want to recover these funds?"
@@ -597,55 +510,8 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Fee Priority selector (same as Modal 1) -->
-                        <StackPanel Spacing="12">
-                            <TextBlock Text="Fee Priority" FontSize="16" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextStrong}" />
-                            <Grid ColumnDefinitions="*,*,*">
-                                <Grid.ColumnSpacing>12</Grid.ColumnSpacing>
-
-                                <Border Name="ReleaseFeePriority" Grid.Column="0"
-                                        Classes="FeeBtn" CornerRadius="8" Padding="12"
-                                        BorderThickness="2" Cursor="Hand">
-                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                        <TextBlock Name="ReleaseFeePriorityLabel" Text="Priority" FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
-                                                   HorizontalAlignment="Center" />
-                                        <TextBlock Name="ReleaseFeePriorityDesc" Text="~1-3 blocks" FontSize="12"
-                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
-                                                   HorizontalAlignment="Center" Opacity="0.7" />
-                                    </StackPanel>
-                                </Border>
-
-                                <Border Name="ReleaseFeeStandard" Grid.Column="1"
-                                        Classes="FeeBtn FeeSelected" CornerRadius="8" Padding="12"
-                                        BorderThickness="2" Cursor="Hand">
-                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                        <TextBlock Name="ReleaseFeeStandardLabel" Text="Standard" FontSize="14"
-                                                   FontWeight="SemiBold" Foreground="White"
-                                                   HorizontalAlignment="Center" />
-                                        <TextBlock Name="ReleaseFeeStandardDesc" Text="~3-6 blocks" FontSize="12"
-                                                   Foreground="White"
-                                                   HorizontalAlignment="Center" Opacity="0.7" />
-                                    </StackPanel>
-                                </Border>
-
-                                <Border Name="ReleaseFeeEconomy" Grid.Column="2"
-                                        Classes="FeeBtn" CornerRadius="8" Padding="12"
-                                        BorderThickness="2" Cursor="Hand">
-                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                        <TextBlock Name="ReleaseFeeEconomyLabel" Text="Economy" FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
-                                                   HorizontalAlignment="Center" />
-                                        <TextBlock Name="ReleaseFeeEconomyDesc" Text="~6+ blocks" FontSize="12"
-                                                   Foreground="{DynamicResource RecoveryFeeUnselectedText}"
-                                                   HorizontalAlignment="Center" Opacity="0.7" />
-                                    </StackPanel>
-                                </Border>
-                            </Grid>
-                        </StackPanel>
+                        <!-- Fee rate is selected via the reusable FeeSelectionPopup
+                             when the user clicks Confirm -->
 
                     </StackPanel>
                 </ScrollViewer>

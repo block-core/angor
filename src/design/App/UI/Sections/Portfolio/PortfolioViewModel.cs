@@ -16,6 +16,46 @@ using App.UI.Shell;
 namespace App.UI.Sections.Portfolio;
 
 /// <summary>
+/// Recovery state model matching the Avalonia reference implementation.
+/// Uses all 5 boolean fields from the SDK's InvestorProjectRecoveryDto.
+/// </summary>
+public record RecoveryState(
+    bool HasUnspentItems,
+    bool HasSpendableItemsInPenalty,
+    bool HasReleaseSignatures,
+    bool EndOfProject,
+    bool IsAboveThreshold)
+{
+    public static readonly RecoveryState None = new(false, false, false, false, false);
+
+    /// <summary>
+    /// Determines which recovery action is available, matching the Avalonia reference priority order.
+    /// </summary>
+    public string ButtonLabel => this switch
+    {
+        { HasUnspentItems: true, HasReleaseSignatures: true } => "Recover without Penalty",
+        { HasUnspentItems: true, EndOfProject: true } or { HasUnspentItems: true, IsAboveThreshold: false } => "Recover",
+        { HasUnspentItems: true, HasSpendableItemsInPenalty: false } => "Recover to Penalty",
+        { HasSpendableItemsInPenalty: true } => "Recover from Penalty",
+        _ => string.Empty
+    };
+
+    /// <summary>
+    /// Maps to a recovery action key used by the modal routing.
+    /// </summary>
+    public string ActionKey => this switch
+    {
+        { HasUnspentItems: true, HasReleaseSignatures: true } => "unfundedRelease",
+        { HasUnspentItems: true, EndOfProject: true } or { HasUnspentItems: true, IsAboveThreshold: false } => "endOfProject",
+        { HasUnspentItems: true, HasSpendableItemsInPenalty: false } => "recovery",
+        { HasSpendableItemsInPenalty: true } => "penaltyRelease",
+        _ => "none"
+    };
+
+    public bool HasAction => !string.IsNullOrEmpty(ButtonLabel);
+}
+
+/// <summary>
 /// A stage in an investment's release schedule.
 /// </summary>
 public class InvestmentStageViewModel
@@ -226,46 +266,37 @@ public class InvestmentViewModel : INotifyPropertyChanged
     public string InvestmentTransactionId { get; set; } = "";
     public ObservableCollection<InvestmentStageViewModel> Stages { get; set; } = new();
 
-    // ── Recovery / Penalty State (Vue: penaltyState in InvestmentDetail.vue) ──
-    // State machine: none → pending → canRelease → released
+    // ── Recovery State (replaces simplified string-based PenaltyState) ──
+    // Uses all 5 boolean fields from SDK's InvestorProjectRecoveryDto
 
-    private string _penaltyState = "none";
-    /// <summary>Recovery penalty state: "none", "pending", "canRelease", "released"</summary>
-    public string PenaltyState
+    private RecoveryState _recoveryState = RecoveryState.None;
+    /// <summary>Full recovery state with all 5 SDK fields</summary>
+    public RecoveryState RecoveryState
     {
-        get => _penaltyState;
+        get => _recoveryState;
         set
         {
-            if (_penaltyState == value) return;
-            _penaltyState = value;
+            if (_recoveryState == value) return;
+            _recoveryState = value;
             OnPropertyChanged();
-            OnPropertyChanged(nameof(IsPenaltyNone));
-            OnPropertyChanged(nameof(IsPenaltyPending));
-            OnPropertyChanged(nameof(IsPenaltyCanRelease));
+            OnPropertyChanged(nameof(ShowRecoverButton));
             OnPropertyChanged(nameof(PenaltyButtonText));
             OnPropertyChanged(nameof(PenaltyButtonIcon));
-            OnPropertyChanged(nameof(ShowRecoverButton));
+            OnPropertyChanged(nameof(RecoveryActionKey));
         }
     }
 
-    // Penalty state visibility helpers
-    public bool IsPenaltyNone => PenaltyState == "none";
-    public bool IsPenaltyPending => PenaltyState == "pending";
-    public bool IsPenaltyCanRelease => PenaltyState == "canRelease";
+    /// <summary>Whether the recovery button should be shown</summary>
+    public bool ShowRecoverButton => ApprovalStatus == "Approved" && Step == 3 && RecoveryState.HasAction;
 
-    /// <summary>Whether the recovery button should be shown (Vue: isApproved && (investmentCompleted || currentStep === 3))</summary>
-    public bool ShowRecoverButton => ApprovalStatus == "Approved" && Step == 3 && PenaltyState != "released";
+    /// <summary>Dynamic button text per recovery state (matches Avalonia reference)</summary>
+    public string PenaltyButtonText => RecoveryState.ButtonLabel;
 
-    /// <summary>Dynamic button text per penalty state (Vue: computed penaltyButtonText)</summary>
-    public string PenaltyButtonText => PenaltyState switch
-    {
-        "pending" => "Claim Penalties",
-        "canRelease" => "Release Funds",
-        _ => "Recover Funds"
-    };
+    /// <summary>Action key for modal routing</summary>
+    public string RecoveryActionKey => RecoveryState.ActionKey;
 
-    /// <summary>Dynamic button icon per penalty state (Vue: refresh for none, check-circle for others)</summary>
-    public string PenaltyButtonIcon => PenaltyState switch
+    /// <summary>Dynamic button icon per recovery state</summary>
+    public string PenaltyButtonIcon => RecoveryState.ActionKey switch
     {
         "none" => "fa-solid fa-arrows-rotate",
         _ => "fa-solid fa-circle-check"
@@ -577,6 +608,7 @@ public partial class PortfolioViewModel : ReactiveObject
 
     /// <summary>
     /// Load recovery status for a specific investment from SDK.
+    /// Maps all 5 boolean fields from the SDK DTO to RecoveryState.
     /// </summary>
     public async Task LoadRecoveryStatusAsync(InvestmentViewModel investment)
     {
@@ -611,17 +643,17 @@ public partial class PortfolioViewModel : ReactiveObject
             var daysLeft = (recovery.ExpiryDate - DateTime.UtcNow).Days;
             investment.PenaltyDaysRemaining = Math.Max(0, daysLeft);
 
-            // Update penalty state
-            if (recovery.HasSpendableItemsInPenalty)
-                investment.PenaltyState = "pending";
-            else if (recovery.HasUnspentItems)
-                investment.PenaltyState = "canRelease";
-            else
-                investment.PenaltyState = "none";
+            // Map all 5 SDK fields to RecoveryState (replaces simplified 3-state string)
+            investment.RecoveryState = new RecoveryState(
+                recovery.HasUnspentItems,
+                recovery.HasSpendableItemsInPenalty,
+                recovery.HasReleaseSignatures,
+                recovery.EndOfProject,
+                recovery.IsAboveThreshold);
         }
         catch
         {
-            // Recovery status load failed
+            // Recovery status load failed — retain previous state (resilience pattern)
         }
     }
 
@@ -650,7 +682,8 @@ public partial class PortfolioViewModel : ReactiveObject
 
             if (publishResult.IsSuccess)
             {
-                investment.PenaltyState = "pending";
+                // Refresh recovery state from SDK after successful transaction
+                await LoadRecoveryStatusAsync(investment);
                 return true;
             }
         }
@@ -660,7 +693,7 @@ public partial class PortfolioViewModel : ReactiveObject
     }
 
     /// <summary>
-    /// Build and submit a release transaction (claim penalties after penalty period).
+    /// Build and submit a release transaction (unfunded release / recover without penalty).
     /// </summary>
     public async Task<bool> ReleaseFundsAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
     {
@@ -684,7 +717,8 @@ public partial class PortfolioViewModel : ReactiveObject
 
             if (publishResult.IsSuccess)
             {
-                investment.PenaltyState = "released";
+                // Refresh recovery state from SDK after successful transaction
+                await LoadRecoveryStatusAsync(investment);
                 return true;
             }
         }
@@ -716,7 +750,115 @@ public partial class PortfolioViewModel : ReactiveObject
                 new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
                     walletId.Value, projectId, buildResult.Value.TransactionDraft));
 
-            return publishResult.IsSuccess;
+            if (publishResult.IsSuccess)
+            {
+                // Refresh recovery state from SDK after successful transaction
+                await LoadRecoveryStatusAsync(investment);
+                return true;
+            }
+        }
+        catch { }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Build and submit a penalty release transaction (recover from penalty period).
+    /// </summary>
+    public async Task<bool> PenaltyReleaseFundsAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
+    {
+        if (string.IsNullOrEmpty(investment.ProjectIdentifier) ||
+            string.IsNullOrEmpty(investment.InvestmentWalletId)) return false;
+
+        try
+        {
+            var walletId = new WalletId(investment.InvestmentWalletId);
+            var projectId = new ProjectId(investment.ProjectIdentifier);
+
+            var buildResult = await _investmentAppService.BuildPenaltyReleaseTransaction(
+                new BuildPenaltyReleaseTransaction.BuildPenaltyReleaseTransactionRequest(
+                    walletId, projectId, new DomainFeerate(feeRateSatsPerVByte)));
+
+            if (buildResult.IsFailure) return false;
+
+            var publishResult = await _investmentAppService.SubmitTransactionFromDraft(
+                new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
+                    walletId.Value, projectId, buildResult.Value.TransactionDraft));
+
+            if (publishResult.IsSuccess)
+            {
+                // Refresh recovery state from SDK after successful transaction
+                await LoadRecoveryStatusAsync(investment);
+                return true;
+            }
+        }
+        catch { }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Publish an investment after founder has signed (Gap 1: ConfirmInvestment).
+    /// Only valid when status is FounderSignaturesReceived (Step 2).
+    /// </summary>
+    public async Task<bool> ConfirmInvestmentAsync(InvestmentViewModel investment)
+    {
+        if (string.IsNullOrEmpty(investment.ProjectIdentifier) ||
+            string.IsNullOrEmpty(investment.InvestmentWalletId) ||
+            string.IsNullOrEmpty(investment.InvestmentTransactionId)) return false;
+
+        try
+        {
+            var request = new PublishInvestment.PublishInvestmentRequest(
+                investment.InvestmentTransactionId,
+                new WalletId(investment.InvestmentWalletId),
+                new ProjectId(investment.ProjectIdentifier));
+
+            var result = await _investmentAppService.ConfirmInvestment(request);
+
+            if (result.IsSuccess)
+            {
+                // Advance to Step 3 (Investment Active)
+                investment.Step = 3;
+                investment.StatusText = "Investment Active";
+                investment.StatusClass = "active";
+                investment.StatusPill2 = "Investment Active";
+                investment.Status = "Active";
+                return true;
+            }
+        }
+        catch { }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Cancel a pending investment request (Gap 2: CancelInvestmentRequest).
+    /// Available in PendingFounderSignatures (Step 1) and FounderSignaturesReceived (Step 2).
+    /// </summary>
+    public async Task<bool> CancelInvestmentAsync(InvestmentViewModel investment)
+    {
+        if (string.IsNullOrEmpty(investment.ProjectIdentifier) ||
+            string.IsNullOrEmpty(investment.InvestmentWalletId) ||
+            string.IsNullOrEmpty(investment.InvestmentTransactionId)) return false;
+
+        try
+        {
+            var request = new CancelInvestmentRequest.CancelInvestmentRequestRequest(
+                new WalletId(investment.InvestmentWalletId),
+                new ProjectId(investment.ProjectIdentifier),
+                investment.InvestmentTransactionId);
+
+            var result = await _investmentAppService.CancelInvestmentRequest(request);
+
+            if (result.IsSuccess)
+            {
+                investment.StatusText = "Cancelled";
+                investment.StatusClass = "recovered";
+                investment.StatusPill2 = "Cancelled";
+                investment.Status = "Cancelled";
+                return true;
+            }
         }
         catch { }
 

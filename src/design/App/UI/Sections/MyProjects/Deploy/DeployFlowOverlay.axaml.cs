@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using App.UI.Shared;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
 
@@ -35,7 +36,11 @@ public partial class DeployFlowOverlay : UserControl, IBackdropCloseable
     {
         // Walk up the visual tree to find ShellView → ShellViewModel
         var shellView = this.FindAncestorOfType<ShellView>();
-        return shellView?.DataContext as ShellViewModel;
+        if (shellView?.DataContext is ShellViewModel vm1) return vm1;
+
+        // Fallback to service locator when removed from visual tree
+        return Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
+            .GetService<ShellViewModel>(App.Services);
     }
 
     /// <summary>
@@ -68,8 +73,8 @@ public partial class DeployFlowOverlay : UserControl, IBackdropCloseable
                 GetShellVm()?.HideModal();
                 break;
             case "PayWithWalletButton":
-                // Vue ref: payWithDeployWallet() → shows QR with "received" → success
-                Vm?.PayWithWallet();
+                // Show fee selection popup, then deploy with selected fee rate
+                _ = PayWithWalletViaFeePopupAsync();
                 break;
             case "PayInvoiceInsteadButton":
                 // Vue ref: proceedToDeployInvoice() → QR code modal
@@ -131,5 +136,29 @@ public partial class DeployFlowOverlay : UserControl, IBackdropCloseable
             _selectedWalletBorder = WalletSelectionHelper.UpdateWalletSelection(_selectedWalletBorder, walletBorder);
             e.Handled = true;
         }
+    }
+
+    /// <summary>
+    /// Shows the fee selection popup, then triggers wallet payment with the selected fee rate.
+    /// </summary>
+    private async Task PayWithWalletViaFeePopupAsync()
+    {
+        var shellVm = GetShellVm();
+        if (shellVm == null || Vm == null) return;
+
+        // Show fee popup (replaces deploy overlay as shell modal content)
+        var feeRate = await FeeSelectionPopup.ShowAsync(shellVm);
+
+        if (feeRate == null)
+        {
+            // User cancelled — re-show the deploy overlay
+            shellVm.ShowModal(this);
+            return;
+        }
+
+        // Set the fee rate and re-show the deploy overlay, then trigger payment
+        Vm.SelectedFeeRate = feeRate.Value;
+        shellVm.ShowModal(this);
+        Vm.PayWithWallet();
     }
 }

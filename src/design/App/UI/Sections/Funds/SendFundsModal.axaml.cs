@@ -10,11 +10,13 @@ namespace App.UI.Sections.Funds;
 
 /// <summary>
 /// Send Funds Modal — Vue Funds.vue send flow:
-///   Step 1 "form":    From wallet → address → amount (% buttons) → fee selector → Send
+///   Step 1 "form":    From wallet → address → amount (% buttons) → Send
 ///   Step 2 "success": Green check → summary (amount, fee, txid) → Done
 ///
 /// DataContext = FundsViewModel (set by FundsView when opening).
 /// The wallet name/balance are set via SetWallet() before showing.
+/// Fee selection is handled via the reusable FeeSelectionPopup
+/// when the user clicks Send.
 /// </summary>
 public partial class SendFundsModal : UserControl, IBackdropCloseable
 {
@@ -35,8 +37,14 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         AmountInput.TextChanged += (_, _) => ClearSendErrors();
     }
 
-    private ShellViewModel? ShellVm =>
-        this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+    private ShellViewModel? GetShellVm()
+    {
+        var shellView = this.FindAncestorOfType<ShellView>();
+        if (shellView?.DataContext is ShellViewModel vm1) return vm1;
+
+        // Fallback to service locator when removed from visual tree
+        return App.Services.GetService<ShellViewModel>();
+    }
 
     public void OnBackdropCloseRequested() { }
 
@@ -69,7 +77,7 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         {
             case "CloseForm":
             case "BtnCancel":
-                ShellVm?.HideModal();
+                GetShellVm()?.HideModal();
                 break;
 
             case "BtnPct25":
@@ -85,15 +93,9 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
                 SetPercentage(1.0);
                 break;
 
-            case "BtnFeeLow":
-            case "BtnFeeMedium":
-            case "BtnFeeHigh":
-                SelectFee(btn.Name);
-                break;
-
             case "BtnSend":
                 if (!ValidateSendForm()) return;
-                _ = SendAsync();
+                _ = SendWithFeePopupAsync();
                 break;
 
             case "BtnCopyTxid":
@@ -101,19 +103,35 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
                 break;
 
             case "BtnDone":
-                ShellVm?.HideModal();
+                GetShellVm()?.HideModal();
                 break;
         }
     }
 
-    private long GetSelectedFeeRate()
+    /// <summary>
+    /// Shows the fee selection popup, then sends the transaction with the selected fee rate.
+    /// </summary>
+    private async Task SendWithFeePopupAsync()
     {
-        if (BtnFeeHigh.Classes.Contains("FeeSelected")) return 50;
-        if (BtnFeeLow.Classes.Contains("FeeSelected")) return 5;
-        return 20; // medium/default
+        var shellVm = GetShellVm();
+        if (shellVm == null) return;
+
+        // Show fee popup (replaces send modal as shell modal content)
+        var feeRate = await FeeSelectionPopup.ShowAsync(shellVm);
+
+        if (feeRate == null)
+        {
+            // User cancelled — re-show the send modal
+            shellVm.ShowModal(this);
+            return;
+        }
+
+        // Re-show the send modal for the send operation
+        shellVm.ShowModal(this);
+        await SendAsync(feeRate.Value);
     }
 
-    private async Task SendAsync()
+    private async Task SendAsync(long feeRate)
     {
         if (DataContext is not FundsViewModel fundsVm) return;
         if (string.IsNullOrEmpty(_walletId)) return;
@@ -121,8 +139,6 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         var address = AddressInput.Text?.Trim() ?? "";
         if (!double.TryParse(AmountInput.Text, System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, out var amount)) return;
-
-        var feeRate = GetSelectedFeeRate();
 
         // Disable send button during operation
         var sendBtn = this.FindControl<Button>("BtnSend");
@@ -154,12 +170,6 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         {
             AmountInput.Text = (bal * pct).ToString("F8", System.Globalization.CultureInfo.InvariantCulture);
         }
-    }
-
-    private void SelectFee(string selectedName)
-    {
-        foreach (var btn in new[] { BtnFeeLow, BtnFeeMedium, BtnFeeHigh })
-            btn.Classes.Set("FeeSelected", btn.Name == selectedName);
     }
 
     private void ShowStep(string step)
