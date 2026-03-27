@@ -245,41 +245,15 @@
                                                             WalletType="{Binding WalletType}"
                                                             Label="{Binding Label}"
                                                             WalletId="{Binding WalletId}"
+                                                            PendingBalance="{Binding PendingBalance}"
+                                                            ReservedBalance="{Binding ReservedBalance}"
                                                             ShowFaucet="{Binding $parent[UserControl].((funds:FundsViewModel)DataContext).IsTestnet}" />
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>
                                         </StackPanel>
 
-                                        <!-- Add Wallet button at bottom of each group -->
-                                        <!--
-                                            Vue: p-4 border-t, green gradient button, full width
-                                            bg: linear-gradient(135deg, #4B7C5A, #3d6448), white text
-                                        -->
-                                        <Border BorderBrush="{DynamicResource Stroke}"
-                                                BorderThickness="0,1,0,0"
-                                                Padding="16">
-                                            <Button HorizontalAlignment="Stretch"
-                                                    HorizontalContentAlignment="Center"
-                                                    Padding="16,12"
-                                                    CornerRadius="8"
-                                                    Foreground="White"
-                                                    FontWeight="SemiBold">
-                                                <Button.Background>
-                                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                                        <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
-                                                        <GradientStop Color="#3D6448" Offset="1" />
-                                                    </LinearGradientBrush>
-                                                </Button.Background>
-                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                    <i:Icon Value="fa-solid fa-plus"
-                                                           FontSize="16"
-                                                           Foreground="White"
-                                                           VerticalAlignment="Center" />
-                                                    <TextBlock Text="Add Wallet" VerticalAlignment="Center" />
-                                                </StackPanel>
-                                            </Button>
-                                        </Border>
+
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>

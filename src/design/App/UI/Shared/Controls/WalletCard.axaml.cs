@@ -33,6 +33,18 @@ public class WalletCard : TemplatedControl
     public static readonly StyledProperty<bool> ShowFaucetProperty =
         AvaloniaProperty.Register<WalletCard, bool>(nameof(ShowFaucet));
 
+    /// <summary>
+    /// Pending (unconfirmed) balance string to display in yellow, or null/empty when none.
+    /// </summary>
+    public static readonly StyledProperty<string?> PendingBalanceProperty =
+        AvaloniaProperty.Register<WalletCard, string?>(nameof(PendingBalance));
+
+    /// <summary>
+    /// Reserved balance string to display in blue, or null/empty when none.
+    /// </summary>
+    public static readonly StyledProperty<string?> ReservedBalanceProperty =
+        AvaloniaProperty.Register<WalletCard, string?>(nameof(ReservedBalance));
+
     public string? WalletName
     {
         get => GetValue(WalletNameProperty);
@@ -67,5 +79,17 @@ public class WalletCard : TemplatedControl
     {
         get => GetValue(ShowFaucetProperty);
         set => SetValue(ShowFaucetProperty, value);
+    }
+
+    public string? PendingBalance
+    {
+        get => GetValue(PendingBalanceProperty);
+        set => SetValue(PendingBalanceProperty, value);
+    }
+
+    public string? ReservedBalance
+    {
+        get => GetValue(ReservedBalanceProperty);
+        set => SetValue(ReservedBalanceProperty, value);
     }
 }

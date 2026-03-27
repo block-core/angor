@@ -67,6 +67,32 @@
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center" />
                             </Grid>
+                            <!-- Pending balance row (yellow) — hidden when empty -->
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{TemplateBinding PendingBalance, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <TextBlock Grid.Column="0"
+                                           Text="Pending"
+                                           FontSize="12"
+                                           Foreground="#EAB308" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{TemplateBinding PendingBalance}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="#EAB308" />
+                            </Grid>
+                            <!-- Reserved balance row (blue) — hidden when empty -->
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{TemplateBinding ReservedBalance, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <TextBlock Grid.Column="0"
+                                           Text="Reserved"
+                                           FontSize="12"
+                                           Foreground="#3B82F6" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{TemplateBinding ReservedBalance}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="#3B82F6" />
+                            </Grid>
                             <!-- Bottom row: type left, label pill right -->
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0"

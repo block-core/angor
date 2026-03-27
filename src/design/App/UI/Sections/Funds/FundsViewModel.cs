@@ -6,6 +6,7 @@ using Angor.Sdk.Wallet.Domain;
 using Angor.Shared.Models;
 using App.UI.Shell;
 using App.UI.Shared;
+using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
 
@@ -24,6 +25,14 @@ public class WalletItemViewModel
     public string IconType { get; set; } = "bitcoin";
     /// <summary>SDK WalletId for operations</summary>
     public string WalletId { get; set; } = "";
+    /// <summary>Pending (unconfirmed) balance display string, or empty string when zero.</summary>
+    public string PendingBalance { get; set; } = "";
+    /// <summary>Reserved balance display string (UTXOs reserved for investments), or empty string when zero.</summary>
+    public string ReservedBalance { get; set; } = "";
+    /// <summary>True when there is a pending (unconfirmed) balance to display.</summary>
+    public bool HasPendingBalance => !string.IsNullOrEmpty(PendingBalance);
+    /// <summary>True when there is a reserved balance to display.</summary>
+    public bool HasReservedBalance => !string.IsNullOrEmpty(ReservedBalance);
 }
 
 /// <summary>
@@ -53,16 +62,16 @@ public partial class FundsViewModel : ReactiveObject
     [Reactive] private bool hasWallets;
 
     /// <summary>Sum of all wallet balances</summary>
-    public string TotalBalance { get; private set; } = "0.0000";
+    [Reactive] private string totalBalance = "0.0000";
 
     /// <summary>Total invested amount</summary>
-    public string TotalInvested { get; private set; } = "0.0000";
+    [Reactive] private string totalInvested = "0.0000";
 
     /// <summary>Bitcoin on-chain balance for stat card</summary>
-    public string BitcoinBalance { get; private set; } = "0.0000";
+    [Reactive] private string bitcoinBalance = "0.0000";
 
     /// <summary>Liquid balance for stat card</summary>
-    public string LiquidBalance { get; private set; } = "0.0000";
+    [Reactive] private string liquidBalance = "0.0000";
 
     [Reactive] private bool isLoading;
 
@@ -79,6 +88,9 @@ public partial class FundsViewModel : ReactiveObject
 
     /// <summary>True when running on a testnet network (faucet button visible).</summary>
     public bool IsTestnet => _getNetwork() != BitcoinNetwork.Mainnet;
+
+    /// <summary>Default wallet name based on the current network.</summary>
+    public string DefaultWalletName => _getNetwork() == BitcoinNetwork.Mainnet ? "Main Wallet" : "Test Wallet";
 
     public FundsViewModel(
         IWalletAppService walletAppService,
@@ -137,7 +149,6 @@ public partial class FundsViewModel : ReactiveObject
 
             _logger.LogInformation("Found {Count} wallet(s)", metadatas.Count);
 
-            SeedGroups.Clear();
             _walletBalanceInfos.Clear();
             long totalSats = 0;
             long btcSats = 0;
@@ -152,6 +163,8 @@ public partial class FundsViewModel : ReactiveObject
             {
                 var walletId = meta.Id;
                 long balanceSats = 0;
+                long pendingSats = 0;
+                long reservedSats = 0;
 
                 // Use AccountBalanceInfo for UTXO-based balance
                 var balanceInfoResult = await _walletAppService.RefreshAndGetAccountBalanceInfo(walletId);
@@ -160,12 +173,20 @@ public partial class FundsViewModel : ReactiveObject
                     var info = balanceInfoResult.Value;
                     _walletBalanceInfos[walletId.Value] = info;
                     balanceSats = info.TotalBalance + info.TotalUnconfirmedBalance + info.TotalBalanceReserved;
+                    pendingSats = info.TotalUnconfirmedBalance;
+                    reservedSats = info.TotalBalanceReserved;
                 }
 
                 totalSats += balanceSats;
                 btcSats += balanceSats;
 
                 double balanceBtc = balanceSats / 100_000_000.0;
+                string pendingStr = pendingSats > 0
+                    ? $"{pendingSats / 100_000_000.0:F8} {_currencyService.Symbol}"
+                    : "";
+                string reservedStr = reservedSats > 0
+                    ? $"{reservedSats / 100_000_000.0:F8} {_currencyService.Symbol}"
+                    : "";
 
                 group.Wallets.Add(new WalletItemViewModel
                 {
@@ -174,7 +195,9 @@ public partial class FundsViewModel : ReactiveObject
                     WalletType = "On-Chain",
                     Label = "",
                     IconType = "bitcoin",
-                    WalletId = walletId.Value
+                    WalletId = walletId.Value,
+                    PendingBalance = pendingStr,
+                    ReservedBalance = reservedStr
                 });
             }
 
@@ -182,15 +205,17 @@ public partial class FundsViewModel : ReactiveObject
             double btcBtc = btcSats / 100_000_000.0;
 
             group.GroupBalance = totalBtc.ToString("F4", CultureInfo.InvariantCulture);
-            SeedGroups.Add(group);
 
-            TotalBalance = totalBtc.ToString("F4", CultureInfo.InvariantCulture);
-            BitcoinBalance = btcBtc.ToString("F4", CultureInfo.InvariantCulture);
-            HasWallets = true;
-            _logger.LogInformation("Wallets loaded — TotalBalance: {TotalBalance} BTC ({TotalSats} sats)", TotalBalance, totalSats);
+            Dispatcher.UIThread.Post(() =>
+            {
+                SeedGroups.Clear();
+                SeedGroups.Add(group);
 
-            this.RaisePropertyChanged(nameof(TotalBalance));
-            this.RaisePropertyChanged(nameof(BitcoinBalance));
+                TotalBalance = totalBtc.ToString("F4", CultureInfo.InvariantCulture);
+                BitcoinBalance = btcBtc.ToString("F4", CultureInfo.InvariantCulture);
+                HasWallets = true;
+                _logger.LogInformation("Wallets loaded — TotalBalance: {TotalBalance} BTC ({TotalSats} sats)", TotalBalance, totalSats);
+            });
         }
         catch (Exception ex)
         {
@@ -403,16 +428,15 @@ public partial class FundsViewModel : ReactiveObject
     /// </summary>
     public void ClearToEmpty()
     {
-        SeedGroups.Clear();
-        TotalBalance = "0.0000";
-        TotalInvested = "0.0000";
-        BitcoinBalance = "0.0000";
-        LiquidBalance = "0.0000";
-        HasWallets = false;
-        this.RaisePropertyChanged(nameof(TotalBalance));
-        this.RaisePropertyChanged(nameof(TotalInvested));
-        this.RaisePropertyChanged(nameof(BitcoinBalance));
-        this.RaisePropertyChanged(nameof(LiquidBalance));
+        Dispatcher.UIThread.Post(() =>
+        {
+            SeedGroups.Clear();
+            TotalBalance = "0.0000";
+            TotalInvested = "0.0000";
+            BitcoinBalance = "0.0000";
+            LiquidBalance = "0.0000";
+            HasWallets = false;
+        });
     }
 
 }
