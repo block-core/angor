@@ -6,6 +6,8 @@ using Angor.Sdk.Wallet.Domain;
 using Angor.Shared.Models;
 using App.UI.Shell;
 using App.UI.Shared;
+using Microsoft.Extensions.Logging;
+using System.Net.Http;
 
 namespace App.UI.Sections.Funds;
 
@@ -44,6 +46,8 @@ public partial class FundsViewModel : ReactiveObject
     private readonly IWalletAccountBalanceService _balanceService;
     private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ICurrencyService _currencyService;
+    private readonly ILogger<FundsViewModel> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     /// <summary>True when wallets exist and populated state should show.</summary>
     [Reactive] private bool hasWallets;
@@ -73,16 +77,23 @@ public partial class FundsViewModel : ReactiveObject
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
 
+    /// <summary>True when running on a testnet network (faucet button visible).</summary>
+    public bool IsTestnet => _getNetwork() != BitcoinNetwork.Mainnet;
+
     public FundsViewModel(
         IWalletAppService walletAppService,
         IWalletAccountBalanceService balanceService,
         Func<BitcoinNetwork> getNetwork,
-        ICurrencyService currencyService)
+        ICurrencyService currencyService,
+        ILogger<FundsViewModel> logger,
+        IHttpClientFactory httpClientFactory)
     {
         _walletAppService = walletAppService;
         _balanceService = balanceService;
         _getNetwork = getNetwork;
         _currencyService = currencyService;
+        _logger = logger;
+        _httpClientFactory = httpClientFactory;
 
         _ = LoadWalletsFromSdkAsync();
     }
@@ -281,16 +292,78 @@ public partial class FundsViewModel : ReactiveObject
     }
 
     /// <summary>
-    /// Get test coins for a wallet (testnet/signet only).
+    /// Refresh all wallet balances.
     /// </summary>
-    public async Task<bool> GetTestCoinsAsync(string walletId)
+    public async Task RefreshAllBalancesAsync()
     {
-        var result = await _walletAppService.GetTestCoins(new WalletId(walletId));
-        if (result.IsSuccess)
+        await LoadWalletsFromSdkAsync();
+    }
+
+    /// <summary>
+    /// Get test coins for a wallet (testnet/signet only).
+    /// Bypasses the SDK's GetTestCoins to avoid needing wallet encryption key.
+    /// Uses cached AccountBalanceInfo for balance check and address, then calls the faucet HTTP API directly.
+    /// Returns (success, errorMessage) so the caller can display the error.
+    /// </summary>
+    public async Task<(bool Success, string? Error)> GetTestCoinsAsync(string walletId)
+    {
+        _logger.LogInformation("Requesting testnet coins for wallet {WalletId}", walletId);
+
+        try
         {
+            // Use cached balance info instead of SDK's GetBalance (which requires sensitive data)
+            if (!_walletBalanceInfos.TryGetValue(walletId, out var balanceInfo))
+            {
+                _logger.LogWarning("No cached balance info for wallet {WalletId}, refreshing first", walletId);
+
+                var refreshResult = await _walletAppService.RefreshAndGetAccountBalanceInfo(new WalletId(walletId));
+                if (refreshResult.IsFailure)
+                {
+                    _logger.LogWarning("Failed to refresh balance for wallet {WalletId}: {Error}", walletId, refreshResult.Error);
+                    return (false, "Cannot get wallet balance");
+                }
+
+                balanceInfo = refreshResult.Value;
+                _walletBalanceInfos[walletId] = balanceInfo;
+            }
+
+            // Guard: don't request coins if balance > 100 BTC
+            long totalSats = balanceInfo.TotalBalance + balanceInfo.TotalUnconfirmedBalance + balanceInfo.TotalBalanceReserved;
+            if (totalSats > 100_00000000)
+            {
+                _logger.LogInformation("Wallet {WalletId} already has {Sats} sats, exceeds 100 BTC limit", walletId, totalSats);
+                return (false, "You already have too much test coins!");
+            }
+
+            // Get receive address from cached AccountInfo (no sensitive data needed)
+            string? address = balanceInfo.AccountInfo.GetNextReceiveAddress();
+            if (string.IsNullOrEmpty(address))
+            {
+                _logger.LogWarning("No receive address available for wallet {WalletId}", walletId);
+                return (false, "Cannot get receive address");
+            }
+
+            // Call faucet API directly
+            _logger.LogInformation("Calling faucet API for address {Address}", address);
+            var httpClient = _httpClientFactory.CreateClient();
+            var response = await httpClient.GetAsync($"https://faucettmp.angor.io/api/faucet/send/{address}/10");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                string body = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Faucet HTTP request failed: {StatusCode} {Reason} {Body}", response.StatusCode, response.ReasonPhrase, body);
+                return (false, $"Faucet request failed: {response.ReasonPhrase} - {body}");
+            }
+
+            _logger.LogInformation("Faucet request succeeded for wallet {WalletId}, reloading balances", walletId);
             await LoadWalletsFromSdkAsync();
+            return (true, null);
         }
-        return result.IsSuccess;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Faucet request threw an exception for wallet {WalletId}", walletId);
+            return (false, ex.Message);
+        }
     }
 
     /// <summary>

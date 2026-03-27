@@ -242,7 +242,8 @@
                                                             Balance="{Binding Balance}"
                                                             WalletType="{Binding WalletType}"
                                                             Label="{Binding Label}"
-                                                            WalletId="{Binding WalletId}" />
+                                                            WalletId="{Binding WalletId}"
+                                                            ShowFaucet="{Binding $parent[UserControl].((funds:FundsViewModel)DataContext).IsTestnet}" />
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>

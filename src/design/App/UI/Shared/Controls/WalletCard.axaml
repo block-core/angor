@@ -140,6 +140,39 @@
                                        FontSize="14"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" />
                             </Button>
+                            <!-- Refresh button — 32x32 OUTLINED green, always visible -->
+                            <Button Name="BtnRefresh"
+                                    Width="32" Height="32"
+                                    Padding="0"
+                                    CornerRadius="6"
+                                    Background="Transparent"
+                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                    BorderThickness="2"
+                                    Cursor="Hand"
+                                    ToolTip.Tip="Refresh Balance">
+                                <i:Icon Value="fa-solid fa-sync"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                            </Button>
+                            <!-- Faucet button — 32x32 FILLED green gradient, testnet only -->
+                            <Button Name="BtnFaucet"
+                                    Width="32" Height="32"
+                                    Padding="0"
+                                    CornerRadius="6"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    IsVisible="{TemplateBinding ShowFaucet}"
+                                    ToolTip.Tip="Get Testnet Coins">
+                                <Button.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                        <GradientStop Color="#3D6448" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Button.Background>
+                                <i:Icon Value="fa-solid fa-plus"
+                                       FontSize="14"
+                                       Foreground="White" />
+                            </Button>
                         </StackPanel>
                     </Grid>
                 </Border>
